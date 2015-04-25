@@ -35,26 +35,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static void WriteRtti(this IType type, CWriter cWriter)
+        public static void WriteRttiDefinition(this IType type, CWriter cWriter)
         {
-            var rtti = type.ToRtti();
-            if (!cWriter.typeRttiDeclarationWritten.Add(rtti))
-            {
-                return;
-            }
-
-            cWriter.forwardTypeRttiDeclarationWritten.Add(rtti);
-
-            if (type.BaseType != null)
-            {
-                cWriter.WriteRttiDeclarationIfNotWrittenYet(type.BaseType);
-            }
-
-            foreach (var @interface in type.GetInterfaces())
-            {
-                cWriter.WriteRttiDeclarationIfNotWrittenYet(@interface);
-            }
-
             type.WriteRttiClassDefinition(cWriter);
             type.WriteRttiPointerClassDefinition(cWriter);
         }
@@ -78,6 +60,20 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(";");
         }
 
+        public static void WriteRttiForwardDeclaration(this IType type, CWriter cWriter)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("struct ");
+            writer.Write(type.GetRttiInfoName(cWriter));
+            writer.WriteLine(";");
+
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("struct ");
+            writer.Write(type.GetRttiPointerInfoName(cWriter));
+            writer.WriteLine(";");
+        }
         /// <summary>
         /// </summary>
         /// <param name="type">

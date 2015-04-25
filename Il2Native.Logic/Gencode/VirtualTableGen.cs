@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -341,6 +342,7 @@ namespace Il2Native.Logic.Gencode
             return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
         }
 
+        [Obsolete("Should be removed")]
         public static void WriteVirtualTableEmptyImplementationDeclarations(this IType type, CWriter cWriter)
         {
             var write = cWriter.Output;
@@ -445,6 +447,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
+        [Obsolete]
         public static void WriteVirtualTableEmptyImplementationDeclaration(
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             CWriter cWriter,

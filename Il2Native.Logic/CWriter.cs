@@ -80,14 +80,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> forwardTypeDeclarationWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> forwardTypeRttiDeclarationWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         public readonly ISet<IType> virtualTableImplementationsWritten = new NamespaceContainer<IType>();
 
         /// <summary>
@@ -97,10 +89,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public readonly ISet<IType> virtualTableDeclarationsWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> typeRttiDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -128,11 +116,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> postDeclarationsProcessedTypes = new NamespaceContainer<IType>();
+        private readonly ISet<IType> postDeclarations = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
+        private readonly ISet<IType> postDefinitions = new NamespaceContainer<IType>();
 
         public DebugInfoGenerator debugInfoGenerator;
 
@@ -142,10 +130,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public CWriter(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
+        public CWriter(string fileName, string fileExt, string sourceFilePath, string pdbFilePath, string[] args)
         {
-            this.SetSettings(fileName, sourceFilePath, pdbFilePath, args);
+            this.SetSettings(fileName, fileExt, sourceFilePath, pdbFilePath, args);
         }
+
+        /// <summary>
+        /// </summary>
+        public bool IsHeader { get; set; }
+
 
         /// <summary>
         /// </summary>
@@ -1969,17 +1962,6 @@ namespace Il2Native.Logic
             return "__this";
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool IsTypeDefinitionWritten(IType type)
-        {
-            return this.processedTypes.Contains(type.ToNormal());
-        }
-
         public void LoadElement(
             CIndentedTextWriter writer, OpCodePart opCode, string field, IType type = null, OpCodePart fixedArrayIndex = null, bool actualLoad = true)
         {
@@ -2193,9 +2175,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="count">
-        /// </param>
-        public void WriteAfterFields(int count)
+        public void WriteAfterFields()
         {
             this.Output.Indent--;
             this.Output.WriteLine("};");
@@ -2203,9 +2183,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="count">
-        /// </param>
-        public void WriteBeforeFields(int count)
+        public void WriteBeforeFields()
         {
             var baseType = this.ThisType.BaseType;
 
@@ -2459,18 +2437,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="field">
-        /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        public void WriteFieldEnd(IField field, int number, int count)
-        {
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="classType">
@@ -2504,11 +2470,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="field">
         /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        public void WriteFieldStart(IField field, int number, int count)
+        public void WriteField(IField field)
         {
             if (field.IsStatic)
             {
@@ -3037,23 +2999,42 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, operand);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void WritePostDeclarationsAndInternalDefinitions(IType type, bool staticOnly = false)
+        public void WritePostDeclarations(IType type)
         {
             if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }
 
-            if (!this.postDeclarationsProcessedTypes.Add(type))
+            if (!this.postDeclarations.Add(type))
             {
                 return;
             }
 
-            this.WriteStaticFieldDeclarations(type);
+            if (!type.IsPrivateImplementationDetails)
+            {
+                type.WriteRttiForwardDeclaration(this);
+                WriteVirtualTable(type);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void WritePostDefinitions(IType type, bool staticOnly = false)
+        {
+            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            if (!this.postDefinitions.Add(type))
+            {
+                return;
+            }
+
+            this.WriteStaticFieldDefinitions(type);
 
             if (staticOnly)
             {
@@ -3062,7 +3043,8 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                type.WriteRtti(this);
+                type.WriteRttiDefinition(this);
+                this.WriteVirtualTableImplementations(type);
             }
         }
 
@@ -3125,32 +3107,11 @@ namespace Il2Native.Logic
             }
         }
 
-        public bool WriteRttiDeclarationIfNotWrittenYet(IType type)
-        {
-            if (this.forwardTypeRttiDeclarationWritten.Add(type.ToRtti()))
-            {
-                if (type.AssemblyQualifiedName == AssemblyQualifiedName || type.IsArray || type.IsGenericType)
-                {
-                    type.WriteRtti(this);
-                }
-                else
-                {
-                    type.WriteRttiDeclaration(this);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// </summary>
-        public void WriteStart(IIlReader ilReader)
+        public void WriteStart()
         {
             this.Output = new CIndentedTextWriter(new StreamWriter(this.outputFile));
-
-            this.IlReader = ilReader;
 
             if (this.DebugInfo && !this.debugInfoGenerator.StartGenerating())
             {
@@ -3162,13 +3123,21 @@ namespace Il2Native.Logic
                 this.WriteDebugLine();
             }
 
-            // declarations
-            this.Output.WriteLine(Resources.c_declarations);
-            this.Output.WriteLine(string.Empty);
-
-            if (this.Gc)
+            if (this.IsHeader && this.IsCoreLib)
             {
-                this.Output.WriteLine(this.GcDebug ? Resources.gc_declarations_debug : Resources.gc_declarations);
+                // declarations
+                this.Output.WriteLine(Resources.c_declarations);
+                this.Output.WriteLine(string.Empty);
+
+                if (this.Gc)
+                {
+                    this.Output.WriteLine(this.GcDebug ? Resources.gc_declarations_debug : Resources.gc_declarations);
+                    this.Output.WriteLine(string.Empty);
+                }
+            }
+            else
+            {
+                this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.outputFile));
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -3304,13 +3273,11 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void WriteTypeEnd(IType type)
+        public void WriteForwardTypeDeclaration(IType type, IGenericContext genericContext)
         {
-            this.Output.WriteLine(string.Empty);
+            this.Output.Write("{0}struct ", this.declarationPrefix);
+            type.ToClass().WriteTypeName(this.Output, false);
+            this.Output.WriteLine(";");
         }
 
         /// <summary>
@@ -3321,15 +3288,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteTypeStart(IType type, IGenericContext genericContext)
         {
-            this.WriteTypeRequiredDeclarationsAndDefinitions(type);
-
-            if (!this.processedTypes.Add(type))
-            {
-                return;
-            }
+            this.Output.WriteLine(string.Empty);
 
             this.ReadTypeInfo(type);
-
             this.WriteTypeDeclarationStart(type);
         }
 
@@ -3891,10 +3852,10 @@ namespace Il2Native.Logic
             this.UnaryOper(writer, opCode, 1, ") = ", type);
         }
 
-        private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
+        private void SetSettings(string fileName, string fileExt, string sourceFilePath, string pdbFilePath, string[] args)
         {
             var extension = Path.GetExtension(fileName);
-            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".cpp" : fileName;
+            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + fileExt : fileName;
 
             this.ReadParameters(sourceFilePath, pdbFilePath, args);
         }
@@ -4249,7 +4210,7 @@ namespace Il2Native.Logic
             }
 
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
-            this.WriteMethodRequiredDeclarationsAndDefinitions(method, genericContext);
+            this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             this.ReadMethodInfo(method, genericContext);
@@ -4420,7 +4381,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodForwardDeclarationIfNotWrittenYet(IMethod methodDecl, IType ownerOfExplicitInterface)
+        public void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
         {
             this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface));
         }
@@ -4431,8 +4392,6 @@ namespace Il2Native.Logic
             {
                 return;
             }
-
-            this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(methodKey.Method);
 
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
@@ -4462,10 +4421,8 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredDeclarationsAndDefinitions(IMethod method, IGenericContext genericContext)
+        private void WriteMethodRequiredStringsAndConstArraysDefinitions()
         {
-            var any = false;
-
             // const strings
             foreach (var usedString in this.IlReader.UsedStrings)
             {
@@ -4486,167 +4443,6 @@ namespace Il2Native.Logic
             if (this.IlReader.UsedConstBytes.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
-            }
-
-            // locals
-            foreach (var requiredType in method.GetMethodBody(genericContext).LocalVariables.Select(ec => ec.LocalType.NormalizeType()))
-            {
-                any = true;
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
-            }
-
-            // exceptions
-            foreach (var requiredType in method.GetMethodBody(genericContext).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
-            {
-                any = true;
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // type definitions
-            foreach (var requiredType in this.IlReader.UsedTypeDefinitions)
-            {
-                any = true;
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            }
-
-            // arrays
-            foreach (var requiredType in this.IlReader.UsedArrayTypes)
-            {
-                any = true;
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // forward declarations
-            this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
-
-            // forward declarations - type from method body
-            foreach (var requiredType in this.IlReader.UsedTypeDeclarations)
-            {
-                any = true;
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // methods
-            foreach (var requiredDeclarationMethod in this.IlReader.CalledMethods)
-            {
-                any = true;
-                this.WriteMethodForwardDeclarationIfNotWrittenYet(requiredDeclarationMethod);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // static fields
-            foreach (var requiredStaticFieldDeclaration in this.IlReader.StaticFields)
-            {
-                any |= this.WriteStaticFieldDeclaration(requiredStaticFieldDeclaration, true);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // structs (including virtual tables)
-            foreach (var vtableType in this.IlReader.UsedVirtualTables)
-            {
-                any = true;
-                if (vtableType.IsVirtualTableImplementation)
-                {
-                    this.WriteVirtualTableImplementations(vtableType);
-                }
-                else if (vtableType.IsVirtualTable)
-                {
-                    this.WriteVirtualTable(vtableType);
-                }
-                else
-                {
-                    Debug.Assert(false, "this is not virtual table implementation");
-                }
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-
-            // rtti-s
-            foreach (var type in this.IlReader.UsedRtti)
-            {
-                any |= WriteRttiDeclarationIfNotWrittenYet(type);
-            }
-
-            // exception rttis
-            foreach (var type in method.GetMethodBody(genericContext).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
-            {
-                any |= WriteRttiDeclarationIfNotWrittenYet(type);
-            }
-
-            if (any)
-            {
-                this.Output.WriteLine(string.Empty);
-                any = false;
-            }
-        }
-
-        private void WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(IMethod method)
-        {
-            if (!method.IsStatic)
-            {
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(method.DeclaringType);
-            }
-
-            var returnType = method.ReturnType.NormalizeType();
-            if (!returnType.IsVoid() && !returnType.IsPrimitiveType() || method.ReturnType.UseAsClass)
-            {
-                if (returnType.IsStructureType())
-                {
-                    this.WriteTypeDefinitionIfNotWrittenYet(returnType);
-                }
-                else
-                {
-                    this.WriteTypeForwardDeclarationIfNotWrittenYet(returnType);
-                }
-            }
-
-            var parameters = method.GetParameters();
-            if (parameters != null)
-            {
-                foreach (var parameterType in
-                    parameters.Select(t => t.ParameterType.NormalizeType()).Where(parameter => !parameter.IsPrimitiveType()))
-                {
-                    if (parameterType.IsStructureType())
-                    {
-                        this.WriteTypeDefinitionIfNotWrittenYet(parameterType);
-                    }
-                    else
-                    {
-                        this.WriteTypeForwardDeclarationIfNotWrittenYet(parameterType);
-                    }
-                }
             }
         }
 
@@ -4715,91 +4511,70 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="externalRef">
         /// </param>
-        private bool WriteStaticFieldDeclaration(IField field, bool externalRef = false)
+        private void WriteStaticFieldDefinition(IField field)
         {
-            var isExternal = externalRef;
-
-            if (isExternal)
-            {
-                if (!this.forwardStaticDeclarationWritten.Add(field))
-                {
-                    return false;
-                }
-
-                this.Output.Write(this.declarationPrefix);
-            }
-
             this.forwardStaticDeclarationWritten.Add(field);
 
             var fieldType = field.FieldType;
-            if (fieldType.IsStructureType())
-            {
-                this.WriteTypeDefinitionIfNotWrittenYet(fieldType);
-            }
 
             fieldType.WriteTypePrefix(this, false);
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
-            if (!externalRef)
+            if (fieldType.IsStructureType())
             {
-                if (fieldType.IsStructureType())
+                this.Output.Write(" = ");
+                if (fieldType.IsStaticArrayInit)
                 {
-                    this.Output.Write(" = ");
-                    if (fieldType.IsStaticArrayInit)
+                    var staticArrayInitSize = fieldType.GetStaticArrayInitSize();
+                    this.Output.Write("{ (Void**) 0");
+                    this.Output.Write(", { ");
+                    var data = field.GetFieldRVAData();
+                    var index = 0;
+                    foreach (var b in data.Take(staticArrayInitSize))
                     {
-                        var staticArrayInitSize = fieldType.GetStaticArrayInitSize();
-                        this.Output.Write("{ (Void**) 0");
-                        this.Output.Write(", { ");
-                        var data = field.GetFieldRVAData();
-                        var index = 0;
-                        foreach (var b in data.Take(staticArrayInitSize))
+                        if (index++ > 0)
                         {
-                            if (index++ > 0)
-                            {
-                                this.Output.Write(", ");
-                            }
-
-                            this.Output.Write(b);
+                            this.Output.Write(", ");
                         }
 
-                        this.Output.Write("} }");
+                        this.Output.Write(b);
                     }
-                    else
-                    {
-                        fieldType.ToClass().WriteTypeWithoutModifiers(this);
-                        this.Output.Write("()/*undef*/");
-                    }
-                }
-                else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)
-                {
-                    var data = field.GetFieldRVAData();
-                    this.Output.Write(" = ");
-                    switch (fieldType.IntTypeBitSize())
-                    {
-                        case 8:
-                            this.Output.Write(data[0]);
-                            break;
-                        case 16:
-                            this.Output.Write(BitConverter.ToInt16(data, 0));
-                            break;
-                        case 32:
-                            this.Output.Write(BitConverter.ToInt32(data, 0));
-                            break;
-                        case 64:
-                            this.Output.Write(BitConverter.ToInt64(data, 0));
-                            break;
-                    }
+
+                    this.Output.Write("} }");
                 }
                 else
                 {
-                    this.Output.Write(" = 0/*undef*/");
+                    fieldType.ToClass().WriteTypeWithoutModifiers(this);
+                    this.Output.Write("()/*undef*/");
                 }
+            }
+            else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)
+            {
+                var data = field.GetFieldRVAData();
+                this.Output.Write(" = ");
+                switch (fieldType.IntTypeBitSize())
+                {
+                    case 8:
+                        this.Output.Write(data[0]);
+                        break;
+                    case 16:
+                        this.Output.Write(BitConverter.ToInt16(data, 0));
+                        break;
+                    case 32:
+                        this.Output.Write(BitConverter.ToInt32(data, 0));
+                        break;
+                    case 64:
+                        this.Output.Write(BitConverter.ToInt64(data, 0));
+                        break;
+                }
+            }
+            else
+            {
+                this.Output.Write(" = 0/*undef*/");
             }
 
             this.Output.WriteLine(";");
-
-            return true;
         }
 
         private void WriteStaticFieldName(IField field)
@@ -4812,11 +4587,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteStaticFieldDeclarations(IType type)
+        private void WriteStaticFieldDefinitions(IType type)
         {
             foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
             {
-                this.WriteStaticFieldDeclaration(field);
+                this.WriteStaticFieldDefinition(field);
             }
         }
 
@@ -4872,58 +4647,8 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.forwardTypeDeclarationWritten.Add(type);
-
             this.Output.Write("{0}struct ", this.declarationPrefix);
             type.ToClass().WriteTypeName(this.Output, false);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void WriteTypeDefinitionIfNotWrittenYet(IType type)
-        {
-            Debug.Assert(!type.IsByRef, "you can't use type byref here");
-            Debug.Assert(!type.IsPointer, "you can't use pointer type");
-
-            if (this.IsTypeDefinitionWritten(type))
-            {
-                return;
-            }
-
-            Il2Converter.WriteTypeDefinition(this, type, null);
-            this.Output.WriteLine(string.Empty);
-        }
-
-        private void WriteTypeForwardDeclarationIfNotWrittenYet(IType type)
-        {
-            Debug.Assert(!type.IsPointer, "you should use normolized type here");
-            Debug.Assert(!type.IsByRef, "you should use normolized type here");
-
-            if (!this.forwardTypeDeclarationWritten.Add(type))
-            {
-                return;
-            }
-
-            this.WriteTypeDeclarationStart(type);
-            this.Output.WriteLine(";");
-        }
-
-        private void WriteTypeRequiredDeclarationsAndDefinitions(IType type)
-        {
-            foreach (var requiredDeclarationType in
-                Il2Converter.GetRequiredDeclarationTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
-            {
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredDeclarationType);
-            }
-
-            foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
-            {
-                var normalizeType = requiredType.NormalizeType();
-                Debug.Assert(normalizeType.TypeNotEquals(type));
-                this.WriteTypeDefinitionIfNotWrittenYet(normalizeType);
-            }
         }
 
         /// <summary>
@@ -5004,11 +4729,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (this.WriteRttiDeclarationIfNotWrittenYet(type))
-            {
-                this.Output.WriteLine(";");
-            }
-
             // TODO: review next line (use sizeof)
             var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
 
@@ -5016,12 +4736,6 @@ namespace Il2Native.Logic
             if (type.HasAnyVirtualMethod(this))
             {
                 var virtualTable = type.GetVirtualTable(this);
-
-                // forward declarations
-                foreach (var method in virtualTable.Where(m => m.Value != null).Select(m => m.Value))
-                {
-                    this.WriteMethodForwardDeclarationIfNotWrittenYet(method, null);
-                }
 
                 virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
                 index++;
@@ -5043,13 +4757,6 @@ namespace Il2Native.Logic
 
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
 
-                // forward declarations
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(@interface);
-                foreach (var method in virtualInterfaceTable.Where(m => m.Value != null).Select(m => m.Value))
-                {
-                    this.WriteMethodForwardDeclarationIfNotWrittenYet(method, null);
-                }
-
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface, @interface);
 
                 this.Output.WriteLine(string.Empty);
@@ -5058,6 +4765,11 @@ namespace Il2Native.Logic
 
         private void WriteVirtualTable(IType typeParam)
         {
+            if (typeParam.IsEnum)
+            {
+                return;
+            }
+
             var table = typeParam.ToVirtualTable();
             if (!this.virtualTableDeclarationsWritten.Add(table))
             {
@@ -5068,38 +4780,10 @@ namespace Il2Native.Logic
 
             var writer = this.Output;
 
-            if (!type.IsInterface)
-            {
-                var virtualTable = type.GetVirtualTable(this);
-
-                foreach (var method in virtualTable.Select(v => v.Value))
-                {
-                    this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
-                }
-            }
-            else
-            {
-                var virtualTable = type.GetVirtualInterfaceTableLayout(this);
-
-                foreach (var method in virtualTable)
-                {
-                    this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
-                }
-
-                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
-                {
-                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
-                    foreach (var method in virtualTableOfSecondaryInterface)
-                    {
-                        this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
-                    }
-                }
-            }
-
             writer.Write(this.declarationPrefix);
             writer.Write("struct ");
             table.WriteTypeName(writer, false);
-            writer.WriteLine("_vtbl {");
+            writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;
 
             if (!type.IsInterface)

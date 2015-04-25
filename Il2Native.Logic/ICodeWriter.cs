@@ -17,6 +17,10 @@ namespace Il2Native.Logic
     /// </summary>
     public interface ICodeWriter : ITypeResolver
     {
+        bool IsHeader { get; set; }
+
+        IIlReader IlReader { get; set; }
+
         /// <summary>
         /// </summary>
         void Initialize(IType type);
@@ -27,29 +31,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        bool IsTypeDefinitionWritten(IType type);
-
-        /// <summary>
-        /// </summary>
         /// <param name="rawText">
         /// </param>
         void WriteRawText(string rawText);
 
         /// <summary>
         /// </summary>
-        /// <param name="count">
-        /// </param>
-        void WriteAfterFields(int count);
+        void WriteAfterFields();
 
         /// <summary>
         /// </summary>
-        /// <param name="count">
-        /// </param>
-        void WriteBeforeFields(int count);
+        void WriteBeforeFields();
 
         /// <summary>
         /// </summary>
@@ -59,21 +51,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="field">
         /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        void WriteFieldEnd(IField field, int number, int count);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="field">
-        /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        void WriteFieldStart(IField field, int number, int count);
+        void WriteField(IField field);
 
         /// <summary>
         /// </summary>
@@ -93,7 +71,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        void WritePostDeclarationsAndInternalDefinitions(IType type, bool staticOnly = false);
+        void WritePostDeclarations(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        void WritePostDefinitions(IType type, bool staticOnly = false);
 
         /// <summary>
         /// </summary>
@@ -106,13 +90,7 @@ namespace Il2Native.Logic
         /// <param name="allReference">
         /// </param>
         /// ///
-        void WriteStart(IIlReader ilReader);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        void WriteTypeEnd(IType type);
+        void WriteStart();
 
         /// <summary>
         /// </summary>
@@ -121,5 +99,17 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="genericContext"></param>
+        void WriteForwardTypeDeclaration(IType type, IGenericContext genericContext);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="methodDecl"></param>
+        /// <param name="ownerOfExplicitInterface"></param>
+        void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface);
     }
 }

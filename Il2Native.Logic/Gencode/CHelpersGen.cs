@@ -83,7 +83,8 @@ namespace Il2Native.Logic.Gencode
 #else
             writer.Write("((");
             (methodInfo.DeclaringType).WriteTypeName(writer, false);
-            writer.Write("_vtbl*)");
+            writer.Write(CWriter.VTable);
+            writer.Write("*)");
 
             if (requiredInterface != null || effectiveType.IsInterface)
             {

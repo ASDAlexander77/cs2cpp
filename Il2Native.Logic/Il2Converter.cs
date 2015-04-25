@@ -26,9 +26,9 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredDefinitionTypes = new SortedDictionary<IType, IEnumerable<IType>>();
+        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredFullDeclarationTypes = new SortedDictionary<IType, IEnumerable<IType>>();
 
-        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredDeclarationTypes = new SortedDictionary<IType, IEnumerable<IType>>();
+        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredForwardDeclarationTypes = new SortedDictionary<IType, IEnumerable<IType>>();
 
         private static bool concurrent;
 
@@ -42,7 +42,19 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
+            ForwardDeclaration,
+
+            /// <summary>
+            /// </summary>
             Declaration,
+
+            /// <summary>
+            /// </summary>
+            PostDeclaration,
+
+            /// <summary>
+            /// </summary>
+            ForwardMethodDeclaration,
 
             /// <summary>
             /// </summary>
@@ -97,27 +109,23 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
+        public static void WriteTypeFullDeclaration(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
             codeWriter.WriteTypeStart(type, genericContext);
 
             var fields = IlReader.Fields(type, codeWriter);
-            var count = fields.Count();
-            var number = 1;
 
             Debug.Assert(!type.IsGenericTypeDefinition);
 
-            codeWriter.WriteBeforeFields(count);
+            codeWriter.WriteBeforeFields();
 
+            // fields
             foreach (var field in fields)
             {
-                codeWriter.WriteFieldStart(field, number, count);
-                codeWriter.WriteFieldEnd(field, number, count);
-
-                number++;
+                codeWriter.WriteField(field);
             }
 
-            codeWriter.WriteAfterFields(count);
+            codeWriter.WriteAfterFields();
         }
 
         /// <summary>
@@ -161,12 +169,35 @@ namespace Il2Native.Logic
                 IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
                 genMethodSpec.TryGetValue(type, out genericMethodSpecializatonsForType);
 
-                ConvertType(
-                    codeWriter,
-                    type,
-                    genericMethodSpecializatonsForType,
-                    mode,
-                    processGenericMethodsOnly);
+                if (mode == ConvertingMode.ForwardDeclaration)
+                {
+                    ConvertForwardTypeDeclaration(codeWriter, type);
+                }
+                else if (mode == ConvertingMode.Declaration)
+                {
+                    ConvertTypeDeclaration(codeWriter, type);
+                }
+                if (mode == ConvertingMode.PostDeclaration)
+                {
+                    codeWriter.WritePostDeclarations(type);
+                }
+                else if (mode == ConvertingMode.ForwardMethodDeclaration)
+                {
+                    ConvertTypeDefinition(
+                        codeWriter,
+                        type,
+                        genericMethodSpecializatonsForType,
+                        processGenericMethodsOnly,
+                        true);
+                }
+                else if (mode == ConvertingMode.Definition)
+                {
+                    ConvertTypeDefinition(
+                        codeWriter,
+                        type,
+                        genericMethodSpecializatonsForType,
+                        processGenericMethodsOnly);
+                }
             }
         }
 
@@ -188,6 +219,15 @@ namespace Il2Native.Logic
             }
         }
 
+        private static void ConvertForwardTypeDeclaration(ICodeWriter codeWriter, IType type)
+        {
+            IType typeDefinition;
+            IType typeSpecialization;
+            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
+
+            codeWriter.WriteForwardTypeDeclaration(type, genericTypeContext);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="ilReader">
@@ -204,83 +244,121 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="processGenericMethodsOnly">
         /// </param>
-        private static void ConvertType(
-            ICodeWriter codeWriter,
-            IType type,
-            IEnumerable<IMethod> genericMethodSpecializatons,
-            ConvertingMode mode,
-            bool processGenericMethodsOnly = false)
+        private static void ConvertTypeDeclaration(ICodeWriter codeWriter, IType type)
         {
             if (VerboseOutput)
             {
-                Trace.WriteLine(string.Format("Converting {0}, Mode: {1}", type, mode));
+                Trace.WriteLine(string.Format("Converting {0} (declarations)", type));
             }
 
-            var typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
-            var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
-            var genericTypeContext = typeDefinition != null || typeSpecialization != null
-                                         ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
-                                         : null;
+            IType typeDefinition;
+            IType typeSpecialization;
+            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            if (mode == ConvertingMode.Declaration)
+            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext);
+        }
+
+        private static void ConvertTypeDefinition(
+            ICodeWriter codeWriter,
+            IType type,
+            IEnumerable<IMethod> genericMethodSpecializatons,
+            bool processGenericMethodsOnly = false,
+            bool forwardDeclarations = false)
+        {
+            if (VerboseOutput)
             {
-                if (!codeWriter.IsTypeDefinitionWritten(type))
-                {
-                    WriteTypeDefinition(codeWriter, type, genericTypeContext);
-                }
-
-                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+                Trace.WriteLine(string.Format("Converting {0} (definition)"));
             }
 
-            if (mode == ConvertingMode.Definition)
+            if (!forwardDeclarations)
             {
-                if (!processGenericMethodsOnly)
+                codeWriter.WritePostDefinitions(type);
+            }
+
+            IType typeDefinition;
+            IType typeSpecialization;
+            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
+
+            if (!processGenericMethodsOnly)
+            {
+                foreach (var ctor in IlReader.Constructors(type, codeWriter).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                 {
-                    foreach (var ctor in IlReader.Constructors(type, codeWriter).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
+                    if (!forwardDeclarations)
                     {
-                        codeWriter.WriteMethod(ctor, type.IsGenericType ? ctor.GetMethodDefinition() : null, genericTypeContext);
+                        codeWriter.WriteMethod(
+                            ctor,
+                            type.IsGenericType ? ctor.GetMethodDefinition() : null,
+                            genericTypeContext);
+                    }
+                    else
+                    {
+                        codeWriter.WriteMethodForwardDeclaration(ctor, null);
                     }
                 }
             }
 
-            if (mode == ConvertingMode.Definition)
+            foreach (
+                var method in
+                    IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
             {
-                foreach (
-                    var method in
-                        IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
+                if (VerboseOutput)
                 {
-                    if (VerboseOutput)
-                    {
-                        Trace.WriteLine(string.Format("writing method {0}", method));
-                    }
+                    Trace.WriteLine(string.Format("writing method {0}", method));
+                }
 
-                    if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
-                    {
-                        var genericMethodContext = method.IsGenericMethod
-                                                       ? MetadataGenericContext.Create(typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
-                                                       : genericTypeContext;
-                        codeWriter.WriteMethod(method, type.IsGenericType ? method.GetMethodDefinition() : null, genericMethodContext);
-                    }
+                if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
+                {
+                    var genericMethodContext = method.IsGenericMethod
+                                                   ? MetadataGenericContext.Create(typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
+                                                   : genericTypeContext;
 
-                    if (genericMethodSpecializatons != null && (method.IsGenericMethodDefinition || method.IsGenericMethod))
+                    if (!forwardDeclarations)
                     {
-                        // write all specializations of a method
-                        var methodDefinition = method.GetMethodDefinition();
-                        foreach (var methodSpecialization in
-                            genericMethodSpecializatons.Where(
-                                methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
+                        codeWriter.WriteMethod(
+                            method,
+                            type.IsGenericType ? method.GetMethodDefinition() : null,
+                            genericMethodContext);
+                    }
+                    else
+                    {
+                        codeWriter.WriteMethodForwardDeclaration(method, null);
+                    }
+                }
+
+                if (genericMethodSpecializatons != null && (method.IsGenericMethodDefinition || method.IsGenericMethod))
+                {
+                    // write all specializations of a method
+                    var methodDefinition = method.GetMethodDefinition();
+                    foreach (var methodSpecialization in
+                        genericMethodSpecializatons.Where(
+                            methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
+                    {
+                        var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, methodSpecialization);
+
+                        if (!forwardDeclarations)
                         {
-                            var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, methodSpecialization);
                             codeWriter.WriteMethod(methodSpecialization, methodDefinition, genericMethodContext);
+                        }
+                        else
+                        {
+                            codeWriter.WriteMethodForwardDeclaration(methodSpecialization, null);
                         }
                     }
                 }
             }
 
-            if (mode == ConvertingMode.Declaration)
-            {
-                codeWriter.WriteTypeEnd(type);
-            }
+        }
+
+        private static IGenericContext GetGenericTypeContext(
+            IType type,
+            out IType typeDefinition,
+            out IType typeSpecialization)
+        {
+            typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
+            typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
+            return typeDefinition != null || typeSpecialization != null
+                ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
+                : null;
         }
 
         /// <summary>
@@ -291,18 +369,17 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true);
+            codeWriter.WritePostDefinitions(type, true);
             ConvertMethod(codeWriter, type, method);
         }
 
         private static void ConvertMethod(ICodeWriter codeWriter, IType type, IMethod method, IMethod methodOpCodeHolder = null)
         {
-            var typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
-            var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
+            IType typeDefinition;
+            IType typeSpecialization;
+            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, null);
-
-            codeWriter.WriteMethod(method, methodOpCodeHolder, genericMethodContext);
+            codeWriter.WriteMethod(method, methodOpCodeHolder, genericTypeContext);
         }
 
         private static void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
@@ -603,10 +680,12 @@ namespace Il2Native.Logic
             }
         }
 
-        private static ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings)
+        private static ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
         {
-            var codeWriter = GetCWriter(settings.FileName, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
+            var codeWriter = GetCWriter(settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
+            codeWriter.IsHeader = isHeader;
             ilReader.TypeResolver = codeWriter;
+            codeWriter.IlReader = ilReader;
             _codeWriter = codeWriter;
             _codeWriter.Initialize(ilReader.Types().First());
             return codeWriter;
@@ -622,7 +701,8 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, Settings settings)
         {
-            var codeWriter = GetCodeWriter(ilReader, settings);
+            settings.FileExt = ".h";
+            var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
 
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             var sortedListOfTypes = ReadingTypes(
@@ -630,56 +710,62 @@ namespace Il2Native.Logic
                 settings.Filter,
                 out genericMethodSpecializationsSorted);
 
-            Writing(
-                ilReader,
-                codeWriter,
-                sortedListOfTypes,
-                genericMethodSpecializationsSorted);
+            WritingDeclarations(ilReader, codeHeaderWriter, sortedListOfTypes, genericMethodSpecializationsSorted);
+
+            settings.FileExt = ".cpp";
+            var codeWriter = GetCodeWriter(ilReader, settings);
+            WritingDefinitions(ilReader, codeWriter, sortedListOfTypes, genericMethodSpecializationsSorted);
         }
 
         private static void GenerateMultiSources(IlReader ilReader, IEnumerable<string> namespaces, Settings settings)
         {
-            // initialize step
-            GetCodeWriter(ilReader, settings);
+            settings.FileExt = ".h";
+            var codeHeaderWriter = GetCodeWriter(ilReader, settings);
 
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
-            var sortedListOfTypes = ReadingTypes(ilReader, settings.Filter, out genericMethodSpecializationsSorted);
+            var sortedListOfTypes = ReadingTypes(
+                ilReader,
+                settings.Filter,
+                out genericMethodSpecializationsSorted);
+
+            WritingDeclarations(
+                ilReader,
+                codeHeaderWriter,
+                sortedListOfTypes,
+                genericMethodSpecializationsSorted);
 
             var fileName = settings.FileName;
 
             foreach (var ns in namespaces)
             {
-                // TODO: remove next line
-                if (ns != "System")
-                    continue;
-
-
                 settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
+                settings.FileExt = ".cpp";
+
                 var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
-                Writing(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
+                WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
             }
         }
 
-        public static IEnumerable<IType> GetRequiredDeclarationTypes(IType typeSource)
+        public static IEnumerable<IType> GetRequiredForwardDeclarationTypes(IType typeSource)
         {
             Debug.Assert(typeSource != null, "Type is null");
 
-            lock (cachedRequiredDeclarationTypes)
+            lock (cachedRequiredForwardDeclarationTypes)
             {
                 IEnumerable<IType> cachedQuery;
-                if (cachedRequiredDeclarationTypes.TryGetValue(typeSource, out cachedQuery))
+                if (cachedRequiredForwardDeclarationTypes.TryGetValue(typeSource, out cachedQuery))
                 {
                     return cachedQuery;
                 }
             }
 
-            var query = IterateRequiredDeclarationTypes(typeSource).ToList();
+            var query = IterateRequiredForwardDeclarationTypes(typeSource).ToList();
 
-            lock (cachedRequiredDeclarationTypes)
+            lock (cachedRequiredForwardDeclarationTypes)
             {
-                if (!cachedRequiredDeclarationTypes.ContainsKey(typeSource))
+                if (!cachedRequiredForwardDeclarationTypes.ContainsKey(typeSource))
                 {
-                    cachedRequiredDeclarationTypes.Add(typeSource, query);
+                    cachedRequiredForwardDeclarationTypes.Add(typeSource, query);
                 }
             }
 
@@ -696,33 +782,33 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IType> GetRequiredDefinitionTypes(IType typeSource)
+        public static IEnumerable<IType> GetRequiredFullDeclarationTypes(IType typeSource)
         {
             Debug.Assert(typeSource != null, "Type is null");
 
-            lock (cachedRequiredDefinitionTypes)
+            lock (cachedRequiredFullDeclarationTypes)
             {
                 IEnumerable<IType> cachedQuery;
-                if (cachedRequiredDefinitionTypes.TryGetValue(typeSource, out cachedQuery))
+                if (cachedRequiredFullDeclarationTypes.TryGetValue(typeSource, out cachedQuery))
                 {
                     return cachedQuery;
                 }
             }
 
-            var query = IterateRequiredDefinitionTypes(typeSource).ToList();
+            var query = IterateRequiredFullDeclarationTypes(typeSource).ToList();
 
-            lock (cachedRequiredDefinitionTypes)
+            lock (cachedRequiredFullDeclarationTypes)
             {
-                if (!cachedRequiredDefinitionTypes.ContainsKey(typeSource))
+                if (!cachedRequiredFullDeclarationTypes.ContainsKey(typeSource))
                 {
-                    cachedRequiredDefinitionTypes.Add(typeSource, query);
+                    cachedRequiredFullDeclarationTypes.Add(typeSource, query);
                 }
             }
 
             return query;
         }
 
-        private static IEnumerable<IType> IterateRequiredDefinitionTypes(IType type)
+        private static IEnumerable<IType> IterateRequiredFullDeclarationTypes(IType type)
         {
             Debug.Assert(type != null, "Type is null");
 
@@ -752,7 +838,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static IEnumerable<IType> IterateRequiredDeclarationTypes(IType type)
+        private static IEnumerable<IType> IterateRequiredForwardDeclarationTypes(IType type)
         {
             Debug.Assert(type != null, "Type is null");
 
@@ -850,12 +936,13 @@ namespace Il2Native.Logic
         /// </returns>
         private static ICodeWriter GetCWriter(
             string fileName,
+            string fileExt,
             string sourceFilePath,
             string pdbFilePath,
             string outputFolder,
             string[] args)
         {
-            return new CWriter(Path.Combine(outputFolder, fileName), sourceFilePath, pdbFilePath, args);
+            return new CWriter(Path.Combine(outputFolder, fileName), fileExt, sourceFilePath, pdbFilePath, args);
         }
 
         /// <summary>
@@ -993,8 +1080,8 @@ namespace Il2Native.Logic
             string[] filter,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            cachedRequiredDefinitionTypes.Clear();
-            cachedRequiredDeclarationTypes.Clear();
+            cachedRequiredFullDeclarationTypes.Clear();
+            cachedRequiredForwardDeclarationTypes.Clear();
 
             // clean it as you are using IlReader
             IlReader.GenericMethodSpecializations = null;
@@ -1084,26 +1171,99 @@ namespace Il2Native.Logic
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
 
-            return usedTypes;
+            var assemblyQualifiedName = types.First().AssemblyQualifiedName;
+
+            var list = new List<IType>();
+            var usedTypesForOrder = new NamespaceContainer<IType>();
+            foreach (var usedType in usedTypes)
+            {
+                AddType(list, usedTypesForOrder, usedType, assemblyQualifiedName);
+            }
+
+            return list;
         }
 
-        private static void Writing(
+        private static void AddType(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName)
+        {
+            if (type == null || (type.AssemblyQualifiedName != assemblyQualifiedName && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
+            {
+                return;
+            }
+
+            // add base type first
+            AddType(order, usedTypes, type.BaseType, assemblyQualifiedName);
+
+            // then all interfaces
+            foreach (var @interface in type.GetInterfaces())
+            {
+                AddType(order, usedTypes, @interface, assemblyQualifiedName);
+            }
+
+            // then all structures in fields
+            foreach (var field in type.GetFields(IlReader.DefaultFlags).Where(f => !f.IsStatic && !f.IsConst && f.FieldType.IsStructureType()))
+            {
+                AddType(order, usedTypes, field.FieldType, assemblyQualifiedName);
+            }
+
+            // add type
+            if (usedTypes.Add(type))
+            {
+                order.Add(type);
+            }
+        }
+
+        private static void WritingDeclarations(
+            IlReader ilReader,
+            ICodeWriter codeHeaderWriter,
+            IEnumerable<IType> sortedListOfTypes,
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+        {
+            // we need to generate sgettype for Generic definitions
+            ilReader.UsedTypeTokens = ilReader.UsedTypeTokens ?? new NamespaceContainer<IType>();
+
+            // writing
+            codeHeaderWriter.WriteStart();
+
+            ConvertAllTypes(
+                codeHeaderWriter,
+                sortedListOfTypes,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.ForwardDeclaration);
+
+            ConvertAllTypes(
+                codeHeaderWriter,
+                sortedListOfTypes,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.Declaration);
+
+            ConvertAllTypes(
+                codeHeaderWriter,
+                sortedListOfTypes,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.PostDeclaration);
+
+            ConvertAllTypes(
+                codeHeaderWriter,
+                sortedListOfTypes,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.ForwardMethodDeclaration);
+
+            codeHeaderWriter.WriteEnd();
+
+            codeHeaderWriter.Close();
+        }
+
+        private static void WritingDefinitions(
             IlReader ilReader,
             ICodeWriter codeWriter,
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // we need to generate sgettype for Generic definitions
-            ilReader.UsedTypeTokens = new NamespaceContainer<IType>();
+            ilReader.UsedTypeTokens = ilReader.UsedTypeTokens ?? new NamespaceContainer<IType>();
 
             // writing
-            codeWriter.WriteStart(ilReader);
-
-            ConvertAllTypes(
-                codeWriter,
-                types,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Declaration);
+            codeWriter.WriteStart();
 
             ConvertAllTypes(
                 codeWriter,
@@ -1129,6 +1289,7 @@ namespace Il2Native.Logic
             codeWriter.Close();
         }
     }
+
 
     public class ReadingTypesContext
     {
@@ -1162,6 +1323,8 @@ namespace Il2Native.Logic
     public class Settings
     {
         public string FileName { get; set; }
+
+        public string FileExt { get; set; }
 
         public string SourceFilePath { get; set; }
 
