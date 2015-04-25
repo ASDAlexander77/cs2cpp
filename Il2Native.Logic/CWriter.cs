@@ -48,7 +48,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// append declaration
         /// </summary>
-        public string declarationPrefix = "extern \"C\" ";
+        public string declarationPrefix = "static ";
 
         /// <summary>
         /// </summary>
@@ -2820,7 +2820,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        private void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false, bool noLocalVars = false)
+        private void WriteMethodStart(IMethod method, IGenericContext genericContext)
         {
             this.StartProcess();
 
@@ -3016,7 +3016,8 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                type.WriteRttiDeclaration(this);
+                type.WriteRttiDefinition(this);
+                this.WriteVirtualTableImplementations(type);
 
                 StartPreprocessorIf(type, "DP");
 
@@ -3030,7 +3031,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void WritePostDefinitions(IType type, bool staticOnly = false)
+        public void WritePreDefinitions(IType type, bool staticOnly = false)
         {
             if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
@@ -3051,8 +3052,7 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                type.WriteRttiDefinition(this);
-                this.WriteVirtualTableImplementations(type);
+                //this.WriteVirtualTableImplementations(type);
             }
         }
 
@@ -3284,7 +3284,7 @@ namespace Il2Native.Logic
 
         public void WriteForwardTypeDeclaration(IType type, IGenericContext genericContext)
         {
-            this.Output.Write("{0}struct ", this.declarationPrefix);
+            this.Output.Write("struct ");
             type.ToClass().WriteTypeName(this.Output, false);
             this.Output.WriteLine(";");
         }
@@ -3300,7 +3300,15 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
 
             this.ReadTypeInfo(type);
-            this.WriteTypeDeclarationStart(type);
+
+#if EXTRA_VALIDATION
+            Debug.Assert(!type.IsGenericTypeDefinition);
+#endif
+
+            this.StartPreprocessorIf(type, "D");
+
+            this.Output.Write("struct ");
+            type.ToClass().WriteTypeName(this.Output, false);
         }
 
         /// <summary>
@@ -4222,43 +4230,81 @@ namespace Il2Native.Logic
             this.ReadMethodInfo(method, genericContext);
 
             // debug info
-            if (this.DebugInfo)
-            {
-                if (method.Token.HasValue)
-                {
-                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
-                    // to find first debug line of method
-                    this.ReadDbgLine(OpCodePart.CreateNop);
-                }
-                else
-                {
-                    this.debugInfoGenerator.GenerateFunction(-1);
-                }
+            this.WriteDebugInfoForMethod(method);
 
-                if (IsMain(method))
-                {
-                    this.MainDebugInfoStartLine = this.debugInfoGenerator.CurrentDebugLine ?? 1;
-                }
+            if (this.WriteMethodProlog(method))
+            {
+                return;
             }
 
-            // extern "c"
-            this.Output.Write(this.declarationPrefix);
+            bool isDelegateBodyFunctions = method.IsDelegateFunctionBody();
+            // write local declarations
+            var methodBodyBytes = method.ResolveMethodBody(genericContext);
+            if (methodBodyBytes.HasBody)
+            {
+                this.Output.WriteLine(" {");
+                this.Output.Indent++;
 
+                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
+
+                this.Output.StartMethodBody();
+            }
+            else if (isDelegateBodyFunctions)
+            {
+                this.WriteDelegateStubFunctionBody(method);
+                this.Output.WriteLine(string.Empty);
+            }
+            else if (!this.Stubs)
+            {
+                this.Output.WriteLine(";");
+            }
+        }
+
+        private void WriteDebugInfoForMethod(IMethod method)
+        {
+            if (!this.DebugInfo)
+            {
+                return;
+            }
+
+            if (method.Token.HasValue)
+            {
+                this.debugInfoGenerator.GenerateFunction(method.Token.Value);
+                // to find first debug line of method
+                this.ReadDbgLine(OpCodePart.CreateNop);
+            }
+            else
+            {
+                this.debugInfoGenerator.GenerateFunction(-1);
+            }
+
+            if (IsMain(method))
+            {
+                this.MainDebugInfoStartLine = this.debugInfoGenerator.CurrentDebugLine ?? 1;
+            }
+        }
+
+        private bool WriteMethodProlog(IMethod method)
+        {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
             {
                 if (!method.IsUnmanagedMethodReference && this.methodsHaveDefinition.Contains(method))
                 {
-                    return;
+                    return true;
                 }
 
                 if (method.IsUnmanagedDllImport)
                 {
                     this.Output.Write("__declspec( dllimport ) ");
                 }
-                else if (method.IsUnmanagedMethodReference && string.IsNullOrEmpty(this.declarationPrefix))
+                else if (method.IsUnmanagedMethodReference)
                 {
                     this.Output.Write("extern ");
+                }
+                else if (method.IsUnmanaged)
+                {
+                    this.Output.Write("extern \"C\" ");
                 }
 
                 if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
@@ -4291,28 +4337,7 @@ namespace Il2Native.Logic
                 method.ReturnType,
                 method.IsUnmanagedMethodReference);
 
-            // write local declarations
-            var methodBodyBytes = method.ResolveMethodBody(genericContext);
-            if (methodBodyBytes.HasBody)
-            {
-                this.Output.WriteLine(" {");
-                this.Output.Indent++;
-
-                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-
-                this.Output.StartMethodBody();
-            }
-            else if (isDelegateBodyFunctions)
-            {
-                this.WriteDelegateStubFunctionBody(method);
-                this.Output.WriteLine(string.Empty);
-            }
-            else if (!this.Stubs)
-            {
-                Debug.Assert(method.MetadataName != "CompareExchange`1");
-
-                this.Output.WriteLine(";");
-            }
+            return false;
         }
 
         private void ReadDbgLine(OpCodePart opCode)
@@ -4402,12 +4427,7 @@ namespace Il2Native.Logic
             if (ctor != null)
             {
                 this.ReadMethodInfo(ctor, null);
-
-                // extern "c"
-                this.Output.Write(this.declarationPrefix);
-                this.WriteMethodReturnType(this.Output, ctor);
-                this.WriteMethodDefinitionName(this.Output, ctor);
-                this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, this.ThisType, this.System.System_Void);
+                this.WriteMethodProlog(ctor);
                 this.Output.WriteLine(";");
                 return;
             }
@@ -4416,12 +4436,7 @@ namespace Il2Native.Logic
             if (method != null)
             {
                 this.ReadMethodInfo(method, null);
-
-                // extern "c"
-                this.Output.Write(this.declarationPrefix);
-                this.WriteMethodReturnType(this.Output, method);
-                this.WriteMethodDefinitionName(this.Output, method, methodKey.OwnerOfExplicitInterface);
-                this.WriteMethodParamsDef(this.Output, method, this.HasMethodThis, methodKey.OwnerOfExplicitInterface ?? this.ThisType, method.ReturnType);
+                this.WriteMethodProlog(method);
                 this.Output.WriteLine(";");
             }
         }
@@ -4642,22 +4657,6 @@ namespace Il2Native.Logic
             Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void WriteTypeDeclarationStart(IType type)
-        {
-#if EXTRA_VALIDATION
-            Debug.Assert(!type.IsGenericTypeDefinition);
-#endif
-
-            this.StartPreprocessorIf(type, "D");
-
-            this.Output.Write("{0}struct ", this.declarationPrefix);
-            type.ToClass().WriteTypeName(this.Output, false);
-        }
-
         private void StartPreprocessorIf(IType type, string prefix)
         {
             if (type.IsGenericType || type.IsArray)
@@ -4796,7 +4795,6 @@ namespace Il2Native.Logic
 
             var writer = this.Output;
 
-            writer.Write(this.declarationPrefix);
             writer.Write("struct ");
             table.WriteTypeName(writer, false);
             writer.WriteLine("{0} {1}", VTable, "{");

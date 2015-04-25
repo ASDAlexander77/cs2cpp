@@ -77,7 +77,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        void WritePostDefinitions(IType type, bool staticOnly = false);
+        void WritePreDefinitions(IType type, bool staticOnly = false);
 
         /// <summary>
         /// </summary>

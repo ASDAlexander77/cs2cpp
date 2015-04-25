@@ -196,7 +196,7 @@ namespace Il2Native.Logic
                 }
                 else if (mode == ConvertingMode.PreDefinition)
                 {
-                    codeWriter.WritePostDefinitions(type);
+                    codeWriter.WritePreDefinitions(type);
                 }
                 else if (mode == ConvertingMode.Definition)
                 {
@@ -372,7 +372,7 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WritePostDefinitions(type, true);
+            codeWriter.WritePreDefinitions(type, true);
             ConvertMethod(codeWriter, type, method);
         }
 
@@ -1243,13 +1243,13 @@ namespace Il2Native.Logic
                 codeHeaderWriter,
                 sortedListOfTypes,
                 genericMethodSpecializationsSorted,
-                ConvertingMode.PostDeclaration);
+                ConvertingMode.ForwardMethodDeclaration);
 
             ConvertAllTypes(
                 codeHeaderWriter,
                 sortedListOfTypes,
                 genericMethodSpecializationsSorted,
-                ConvertingMode.ForwardMethodDeclaration);
+                ConvertingMode.PostDeclaration);
 
             codeHeaderWriter.WriteEnd();
 
