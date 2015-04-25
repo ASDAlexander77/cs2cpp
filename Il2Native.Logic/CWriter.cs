@@ -3022,6 +3022,7 @@ namespace Il2Native.Logic
             if (!type.IsPrivateImplementationDetails)
             {
                 type.WriteRttiDefinition(this);
+
                 this.WriteVirtualTableImplementations(type);
 
                 StartPreprocessorIf(type, "DP");
