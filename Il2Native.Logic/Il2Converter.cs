@@ -372,7 +372,7 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WritePreDefinitions(type, true);
+            codeWriter.WritePreDefinitions(type);
             ConvertMethod(codeWriter, type, method);
         }
 

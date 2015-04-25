@@ -3025,13 +3025,15 @@ namespace Il2Native.Logic
 
                 EndPreprocessorIf(type);
             }
+
+            this.WriteStaticFieldDeclaration(type);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void WritePreDefinitions(IType type, bool staticOnly = false)
+        public void WritePreDefinitions(IType type)
         {
             if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
@@ -3044,16 +3046,6 @@ namespace Il2Native.Logic
             }
 
             this.WriteStaticFieldDefinitions(type);
-
-            if (staticOnly)
-            {
-                return;
-            }
-
-            if (!type.IsPrivateImplementationDetails)
-            {
-                //this.WriteVirtualTableImplementations(type);
-            }
         }
 
         /// <summary>
@@ -4533,16 +4525,33 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="externalRef">
         /// </param>
-        private void WriteStaticFieldDefinition(IField field)
+        private void WriteStaticField(IField field, bool definition = true)
         {
             this.forwardStaticDeclarationWritten.Add(field);
 
             var fieldType = field.FieldType;
 
+            if (!definition)
+            {
+                this.Output.Write("extern ");
+            }
+
             fieldType.WriteTypePrefix(this, false);
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
+            if (definition)
+            {
+                this.WriteStaticFieldInitialization(field);
+            }
+
+            this.Output.WriteLine(";");
+        }
+
+        private void WriteStaticFieldInitialization(IField field)
+        {
+            var fieldType = field.FieldType;
+
             if (fieldType.IsStructureType())
             {
                 this.Output.Write(" = ");
@@ -4595,8 +4604,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write(" = 0/*undef*/");
             }
-
-            this.Output.WriteLine(";");
         }
 
         private void WriteStaticFieldName(IField field)
@@ -4613,7 +4620,15 @@ namespace Il2Native.Logic
         {
             foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
             {
-                this.WriteStaticFieldDefinition(field);
+                this.WriteStaticField(field);
+            }
+        }
+
+        private void WriteStaticFieldDeclaration(IType type)
+        {
+            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+            {
+                this.WriteStaticField(field, false);
             }
         }
 
