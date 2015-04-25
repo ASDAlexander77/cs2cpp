@@ -60,20 +60,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(";");
         }
 
-        public static void WriteRttiForwardDeclaration(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("struct ");
-            writer.Write(type.GetRttiInfoName(cWriter));
-            writer.WriteLine(";");
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("struct ");
-            writer.Write(type.GetRttiPointerInfoName(cWriter));
-            writer.WriteLine(";");
-        }
         /// <summary>
         /// </summary>
         /// <param name="type">

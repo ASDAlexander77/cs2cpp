@@ -2179,6 +2179,8 @@ namespace Il2Native.Logic
         {
             this.Output.Indent--;
             this.Output.WriteLine("};");
+
+            EndPreprocessorIf(this.ThisType);
         }
 
         /// <summary>
@@ -2257,12 +2259,13 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteEnd()
         {
-            this.WriteGlobalConstructors();
-
-            if (this.MainMethod != null && !this.Gctors)
+            if (IsHeader)
             {
-                this.Output.WriteLine(string.Empty);
                 this.WriteGctorsForwardDeclarations();
+            }
+            else
+            {
+                this.WriteGlobalConstructors();
             }
 
             if (this.MainMethod != null)
@@ -2646,7 +2649,7 @@ namespace Il2Native.Logic
         /// <param name="varArgs">
         /// </param>
         public void WriteMethodParamsDef(
-            CIndentedTextWriter writer, IMethod method, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false, bool varArgs = false)
+            CIndentedTextWriter writer, IMethod method, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
         {
             var parameterInfos = method.GetParameters();
 
@@ -2701,7 +2704,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (varArgs)
+            if (method.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
                 if (hasParameterWritten)
                 {
@@ -3013,8 +3016,13 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                type.WriteRttiForwardDeclaration(this);
+                type.WriteRttiDeclaration(this);
+
+                StartPreprocessorIf(type, "DP");
+
                 WriteVirtualTable(type);
+
+                EndPreprocessorIf(type);
             }
         }
 
@@ -3135,7 +3143,8 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                 }
             }
-            else
+            
+            if (!this.IsHeader)
             {
                 this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.outputFile));
                 this.Output.WriteLine(string.Empty);
@@ -3908,14 +3917,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var type = System.System_Byte.ToArrayType(1);
-
-            if (this.virtualTableImplementationDeclarationsWritten.Add(type))
-            {
-                // as type is Array (as generic) it will be defined in current assembly
-                this.WriteVirtualTableImplementations(type);
-            }
-
             var bytes = constBytes.Data;
 
             this.Output.Write(this.declarationPrefix);
@@ -3949,7 +3950,7 @@ namespace Il2Native.Logic
         private void WriteGctorsForwardDeclarations()
         {
             // get all references
-            foreach (var reference in this.AllReferences.Skip(1).Reverse().Distinct())
+            foreach (var reference in this.AllReferences.Reverse().Distinct())
             {
                 this.Output.Write(this.declarationPrefix);
                 this.Output.WriteLine("void {0}();", this.GetGlobalConstructorsFunctionName(reference));
@@ -4209,6 +4210,11 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (!IsHeader && NoBody)
+            {
+                return;
+            }
+
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
             this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
@@ -4283,8 +4289,7 @@ namespace Il2Native.Logic
                 this.HasMethodThis,
                 this.ThisType,
                 method.ReturnType,
-                method.IsUnmanagedMethodReference,
-                method.CallingConvention.HasFlag(CallingConventions.VarArgs));
+                method.IsUnmanagedMethodReference);
 
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
@@ -4647,8 +4652,31 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
+            this.StartPreprocessorIf(type, "D");
+
             this.Output.Write("{0}struct ", this.declarationPrefix);
             type.ToClass().WriteTypeName(this.Output, false);
+        }
+
+        private void StartPreprocessorIf(IType type, string prefix)
+        {
+            if (type.IsGenericType || type.IsArray)
+            {
+                this.Output.Write("#ifndef {0}__", prefix);
+                type.ToClass().WriteTypeName(this.Output, false);
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write("#define {0}__", prefix);
+                type.ToClass().WriteTypeName(this.Output, false);
+                this.Output.WriteLine(string.Empty);
+            }
+        }
+
+        private void EndPreprocessorIf(IType type)
+        {
+            if (type.IsGenericType || type.IsArray)
+            {
+                this.Output.WriteLine("#endif");
+            }
         }
 
         /// <summary>
@@ -4660,18 +4688,6 @@ namespace Il2Native.Logic
             if (!this.stringTokenDefinitionWritten.Add(pair.Key))
             {
                 return;
-            }
-
-            if (this.virtualTableImplementationDeclarationsWritten.Add(System.System_String))
-            {
-                if (this.AssemblyQualifiedName == System.System_String.AssemblyQualifiedName)
-                {
-                    this.WriteVirtualTableImplementations(System.System_String);
-                }
-                else
-                {
-                    System.System_String.WriteVirtualTableEmptyImplementationDeclarations(this);
-                }
             }
 
             var align = pair.Value.Length % 2 == 0;

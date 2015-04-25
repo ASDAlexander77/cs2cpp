@@ -342,21 +342,6 @@ namespace Il2Native.Logic.Gencode
             return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
         }
 
-        [Obsolete("Should be removed")]
-        public static void WriteVirtualTableEmptyImplementationDeclarations(this IType type, CWriter cWriter)
-        {
-            var write = cWriter.Output;
-
-            type.GetVirtualTable(cWriter).WriteVirtualTableEmptyImplementationDeclaration(cWriter, type);
-            write.WriteLine(";");
-
-            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
-            {
-                type.GetVirtualInterfaceTable(@interface, cWriter).WriteVirtualTableEmptyImplementationDeclaration(cWriter, type, @interface);
-                write.WriteLine(";");
-            }           
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="virtualTable">
@@ -436,28 +421,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write(cWriter.declarationPrefix);
             writer.Write("const struct ");
             VirtualTableDeclaration(virtualTable, cWriter);
-            cWriter.Output.Write(" ");
-            if (interfaceType == null)
-            {
-                writer.Write(type.GetVirtualTableName(cWriter, true));
-            }
-            else
-            {
-                writer.Write(type.GetVirtualInterfaceTableName(interfaceType, cWriter, true));
-            }
-        }
-
-        [Obsolete]
-        public static void WriteVirtualTableEmptyImplementationDeclaration(
-            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
-            CWriter cWriter,
-            IType type,
-            IType interfaceType = null)
-        {
-            var writer = cWriter.Output;
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("const struct {}");
             cWriter.Output.Write(" ");
             if (interfaceType == null)
             {

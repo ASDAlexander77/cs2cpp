@@ -88,6 +88,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public IModule Module { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public IType ThisType { get; set; }
 
         /// <summary>
@@ -105,10 +109,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected IType[] GenericMethodArguments { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected bool IsInterface { get; set; }
 
         /// <summary>
         /// </summary>
@@ -146,8 +146,10 @@ namespace Il2Native.Logic
 
         public void Initialize(IType type)
         {
-            this.ReadTypeInfo(type);
-            this.System = new SystemTypes(this.ThisType.Module);
+            Debug.Assert(type != null, "You should provide type here");
+
+            this.Module = type.Module;
+            this.System = new SystemTypes(this.Module);
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }
@@ -250,7 +252,7 @@ namespace Il2Native.Logic
         {
             if (genericContext != null && !genericContext.IsEmpty)
             {
-                return this.ThisType.Module.ResolveType(fullTypeName, genericContext);
+                return this.Module.ResolveType(fullTypeName, genericContext);
             }
 
             IType result;
@@ -259,7 +261,7 @@ namespace Il2Native.Logic
                 return result;
             }
 
-            result = this.ThisType.Module.ResolveType(fullTypeName, null);
+            result = this.Module.ResolveType(fullTypeName, null);
             this.ResolvedTypes[result.FullName] = result;
             return result;
         }
@@ -1740,7 +1742,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void ReadTypeInfo(IType type)
         {
-            this.IsInterface = type.IsInterface;
             this.ThisType = type;
         }
 

@@ -58,6 +58,10 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
+            PreDefinition,
+
+            /// <summary>
+            /// </summary>
             Definition
         }
 
@@ -190,6 +194,10 @@ namespace Il2Native.Logic
                         processGenericMethodsOnly,
                         true);
                 }
+                else if (mode == ConvertingMode.PreDefinition)
+                {
+                    codeWriter.WritePostDefinitions(type);
+                }
                 else if (mode == ConvertingMode.Definition)
                 {
                     ConvertTypeDefinition(
@@ -268,11 +276,6 @@ namespace Il2Native.Logic
             if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Converting {0} (definition)"));
-            }
-
-            if (!forwardDeclarations)
-            {
-                codeWriter.WritePostDefinitions(type);
             }
 
             IType typeDefinition;
@@ -1265,19 +1268,8 @@ namespace Il2Native.Logic
             // writing
             codeWriter.WriteStart();
 
-            ConvertAllTypes(
-                codeWriter,
-                types,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Definition);
-
-            // Append definition of Generic Methods of not used non-generic types
-            ConvertAllTypes(
-                codeWriter,
-                genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Definition,
-                true);
+            WriteDefinitionsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
+            WriteDefinitionsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
 
             // Append not generated sgettypes
             ConvertAllRuntimeTypes(
@@ -1287,6 +1279,27 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
+        }
+
+        private static void WriteDefinitionsStep(
+            ICodeWriter codeWriter,
+            IEnumerable<IType> types,
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted,
+            ConvertingMode step)
+        {
+            ConvertAllTypes(
+                codeWriter,
+                types,
+                genericMethodSpecializationsSorted,
+                step);
+
+            // Append definition of Generic Methods of not used non-generic types
+            ConvertAllTypes(
+                codeWriter,
+                genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
+                genericMethodSpecializationsSorted,
+                step,
+                true);
         }
     }
 
