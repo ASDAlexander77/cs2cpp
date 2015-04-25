@@ -3149,6 +3149,14 @@ namespace Il2Native.Logic
                 this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.outputFile));
                 this.Output.WriteLine(string.Empty);
             }
+            else
+            {
+                foreach (var reference in this.IlReader.References())
+                {
+                    this.Output.WriteLine("#include \"{0}.h\"", reference);
+                    this.Output.WriteLine(string.Empty);                    
+                }
+            }
 
             this.StaticConstructors.Clear();
             VirtualTableGen.Clear();

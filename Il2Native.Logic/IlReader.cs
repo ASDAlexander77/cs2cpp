@@ -905,6 +905,11 @@ namespace Il2Native.Logic
             return this.lazyAllReferencedTypes.Value;
         }
 
+        public IEnumerable<string> References()
+        {
+            return this.AllReferencesHelper(this.Assembly, true);
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -1690,9 +1695,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata)
+        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata, bool excludingCurrent = false)
         {
-            yield return assemblyMetadata.Assembly.Identity.Name;
+            if (!excludingCurrent)
+            {
+                yield return assemblyMetadata.Assembly.Identity.Name;
+            }
 
             foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
             {

@@ -64,6 +64,12 @@
         /// </summary>
         /// <returns>
         /// </returns>
+        IEnumerable<string> References();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IEnumerable<string> AllReferences();
 
         /// <summary>
