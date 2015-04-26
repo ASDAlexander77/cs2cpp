@@ -1130,7 +1130,7 @@ namespace Il2Native.Logic
 
             var allTypes = ilReader.AllTypes().ToList();
 
-            var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext);
+            var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext, ilReader.TypeResolver);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
@@ -1185,7 +1185,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> FindUsedTypes(IEnumerable<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext)
+        private static IList<IType> FindUsedTypes(IEnumerable<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
         {
             var usedTypes = new NamespaceContainer<IType>();
 
@@ -1213,13 +1213,13 @@ namespace Il2Native.Logic
             var usedTypesForOrder = new NamespaceContainer<IType>();
             foreach (var usedType in usedTypes)
             {
-                AddType(list, usedTypesForOrder, usedType, assemblyQualifiedName);
+                AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, assemblyQualifiedName, typeResolver);
             }
 
             return list;
         }
 
-        private static void AddType(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName)
+        private static void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
         {
             if (type == null || (type.AssemblyQualifiedName != assemblyQualifiedName && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
             {
@@ -1227,18 +1227,25 @@ namespace Il2Native.Logic
             }
 
             // add base type first
-            AddType(order, usedTypes, type.BaseType, assemblyQualifiedName);
+            AddTypeInOrderOfUsage(order, usedTypes, type.BaseType, assemblyQualifiedName, typeResolver);
 
             // then all interfaces
             foreach (var @interface in type.GetInterfaces())
             {
-                AddType(order, usedTypes, @interface, assemblyQualifiedName);
+                AddTypeInOrderOfUsage(order, usedTypes, @interface, assemblyQualifiedName, typeResolver);
             }
 
             // then all structures in fields
-            foreach (var field in type.GetFields(IlReader.DefaultFlags).Where(f => !f.IsStatic && !f.IsConst && f.FieldType.IsStructureType()))
+            foreach (var field in IlReader.Fields(type, typeResolver).Where(f => !f.IsStatic && !f.IsConst && (f.FieldType.IsStructureType() || f.IsFixed)))
             {
-                AddType(order, usedTypes, field.FieldType, assemblyQualifiedName);
+                if (field.IsFixed && field.FieldType.GetElementType().IsStructureType())
+                {
+                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType.GetElementType(), assemblyQualifiedName, typeResolver);
+                }
+                else
+                {
+                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType, assemblyQualifiedName, typeResolver);
+                }
             }
 
             // add type
