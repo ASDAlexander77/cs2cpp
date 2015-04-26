@@ -4302,13 +4302,9 @@ namespace Il2Native.Logic
 
                 if (method.IsUnmanagedDllImport)
                 {
-                    this.Output.Write("__declspec( dllimport ) ");
+                    this.Output.Write("extern \"C\" __declspec( dllimport ) ");
                 }
-                else if (method.IsUnmanagedMethodReference)
-                {
-                    this.Output.Write("extern ");
-                }
-                else if (method.IsUnmanaged)
+                else if (method.IsUnmanaged || method.IsUnmanagedMethodReference)
                 {
                     this.Output.Write("extern \"C\" ");
                 }

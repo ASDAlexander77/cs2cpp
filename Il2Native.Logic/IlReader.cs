@@ -907,7 +907,7 @@ namespace Il2Native.Logic
 
         public IEnumerable<string> References()
         {
-            return this.AllReferencesHelper(this.Assembly, true);
+            return this.AllReferencesHelper(this.Assembly, true).Distinct();
         }
 
         /// <summary>
@@ -916,7 +916,7 @@ namespace Il2Native.Logic
         /// </returns>
         public IEnumerable<string> AllReferences()
         {
-            return this.AllReferencesHelper(this.Assembly);
+            return this.AllReferencesHelper(this.Assembly).Distinct();
         }
 
         /// <summary>

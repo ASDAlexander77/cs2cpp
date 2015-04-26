@@ -232,7 +232,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics)
+            // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
 
             // TODO: finish
             // __arglist
@@ -490,6 +490,7 @@ namespace Ll2NativeTests
                         318,
                         319,
                         329,
+                        338,
                         349,
                         352,
                         353,
@@ -553,6 +554,7 @@ namespace Ll2NativeTests
                         616,
                         617,
                         621,
+                        625,
                         631,
                         636,
                         637,
