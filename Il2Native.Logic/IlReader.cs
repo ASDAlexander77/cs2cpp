@@ -1839,7 +1839,7 @@ namespace Il2Native.Logic
 
             // disover it again in specialized method
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, stackCall, this.TypeResolver);
+                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, this._usedTypeTokens, stackCall, this.TypeResolver);
 
             stackCall.Dequeue();
         }

@@ -209,6 +209,25 @@ namespace Il2Native.Logic
             }
         }
 
+        private static void ConvertAllRuntimeTypesForwardDeclaration(
+            ICodeWriter codeWriter,
+            IEnumerable<IType> types)
+        {
+            foreach (var type in types)
+            {
+                Debug.Assert(type != null);
+                if (type == null)
+                {
+                    continue;
+                }
+
+                ConvertRuntimeTypeInfoForwardDeclaration(
+                    codeWriter,
+                    type);
+            }
+        }
+
+
         private static void ConvertAllRuntimeTypes(
             ICodeWriter codeWriter,
             IEnumerable<IType> types)
@@ -362,6 +381,14 @@ namespace Il2Native.Logic
             return typeDefinition != null || typeSpecialization != null
                 ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
                 : null;
+        }
+
+        private static void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
+        {
+            Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
+
+            var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
+            codeWriter.WriteMethodForwardDeclaration(method, null);
         }
 
         /// <summary>
@@ -575,6 +602,7 @@ namespace Il2Native.Logic
                         readingTypesContext.GenericMethodSpecializations,
                         null,
                         readingTypesContext.AdditionalTypesToProcess,
+                        readingTypesContext.UsedTypeTokens,
                         new Queue<IMethod>(),
                         _codeWriter);
 
@@ -627,6 +655,7 @@ namespace Il2Native.Logic
                     readingTypesContext.GenericMethodSpecializations,
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
+                    readingTypesContext.UsedTypeTokens,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -893,6 +922,7 @@ namespace Il2Native.Logic
                     readingTypesContext.GenericMethodSpecializations,
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
+                    readingTypesContext.UsedTypeTokens,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -919,7 +949,7 @@ namespace Il2Native.Logic
 
                 var usedStructTypes = new NamespaceContainer<IType>();
                 methodWithCustomBodyOrDefault
-                    .DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(null, null, usedStructTypes, null, new Queue<IMethod>(), _codeWriter);
+                    .DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(null, null, usedStructTypes, null, null, new Queue<IMethod>(), _codeWriter);
                 foreach (var usedStructType in usedStructTypes)
                 {
                     yield return usedStructType;
@@ -1106,6 +1136,8 @@ namespace Il2Native.Logic
             Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
             Debug.Assert(usedTypes.All(t => !t.IsPointer), "Type is used with flag IsPointer");
 
+            ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
+
             return usedTypes;
         }
 
@@ -1218,36 +1250,40 @@ namespace Il2Native.Logic
         private static void WritingDeclarations(
             IlReader ilReader,
             ICodeWriter codeHeaderWriter,
-            IEnumerable<IType> sortedListOfTypes,
+            IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            // we need to generate sgettype for Generic definitions
-            ilReader.UsedTypeTokens = ilReader.UsedTypeTokens ?? new NamespaceContainer<IType>();
+            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList();
 
             // writing
             codeHeaderWriter.WriteStart();
 
             ConvertAllTypes(
                 codeHeaderWriter,
-                sortedListOfTypes,
+                types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.ForwardDeclaration);
 
+            // Append not generated sgettypes
+            ConvertAllRuntimeTypesForwardDeclaration(
+                codeHeaderWriter,
+                runtimeTypes);
+
             ConvertAllTypes(
                 codeHeaderWriter,
-                sortedListOfTypes,
+                types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
             WriteTypesWithGenericsStep(
                 codeHeaderWriter,
-                sortedListOfTypes,
+                types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.ForwardMethodDeclaration);
 
             ConvertAllTypes(
                 codeHeaderWriter,
-                sortedListOfTypes,
+                types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.PostDeclaration);
 
@@ -1262,8 +1298,7 @@ namespace Il2Native.Logic
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            // we need to generate sgettype for Generic definitions
-            ilReader.UsedTypeTokens = ilReader.UsedTypeTokens ?? new NamespaceContainer<IType>();
+            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList();
 
             // writing
             codeWriter.WriteStart();
@@ -1275,7 +1310,7 @@ namespace Il2Native.Logic
             // Append not generated sgettypes
             ConvertAllRuntimeTypes(
                 codeWriter,
-                ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList());
+                runtimeTypes);
 
             codeWriter.WriteEnd();
 
@@ -1312,6 +1347,7 @@ namespace Il2Native.Logic
             this.GenericTypeSpecializations = new NamespaceContainer<IType>();
             this.GenericMethodSpecializations = new NamespaceContainer<IMethod>();
             this.AdditionalTypesToProcess = new NamespaceContainer<IType>();
+            this.UsedTypeTokens = new NamespaceContainer<IType>();
             this.DiscoveredTypes = new NamespaceContainer<IType>();
         }
 
@@ -1321,16 +1357,13 @@ namespace Il2Native.Logic
 
         public ISet<IType> AdditionalTypesToProcess { get; set; }
 
+        public ISet<IType> UsedTypeTokens { get; set; }
+
         public ISet<IType> DiscoveredTypes { get; set; }
 
         public static ReadingTypesContext New()
         {
-            var context = new ReadingTypesContext();
-            context.GenericTypeSpecializations = new NamespaceContainer<IType>();
-            context.GenericMethodSpecializations = new NamespaceContainer<IMethod>();
-            context.AdditionalTypesToProcess = new NamespaceContainer<IType>();
-            context.DiscoveredTypes = new NamespaceContainer<IType>();
-            return context;
+            return new ReadingTypesContext();
         }
     }
 

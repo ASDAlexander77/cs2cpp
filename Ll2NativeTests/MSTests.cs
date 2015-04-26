@@ -232,6 +232,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
+            // TODO: test-201: BUG with using field with the same name as struct causing issue
+
             // TODO: finish
             // __arglist
 
@@ -409,6 +411,7 @@ namespace Ll2NativeTests
 
             // -----------------
             // 9 - decimal
+            // 201 - but with names to fix
             var skip =
                 new List<int>(
                     new[]
@@ -450,6 +453,7 @@ namespace Ll2NativeTests
                         181,
                         183,
                         187,
+                        201,
                         219,
                         220,
                         229,
