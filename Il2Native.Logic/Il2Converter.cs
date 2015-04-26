@@ -510,11 +510,12 @@ namespace Il2Native.Logic
 
             if (!type.IsInterface)
             {
-                ////var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
-                ////foreach (var field in fields)
-                ////{
-                ////    DiscoverGenericSpecializedTypesAndAdditionalTypes(field.FieldType, readingTypesContext);
-                ////}
+                var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
+                foreach (var field in fields)
+                {
+                    AddTypeIfSpecializedTypeOrAdditionalType(field.FieldType, readingTypesContext);
+                    //DiscoverGenericSpecializedTypesAndAdditionalTypes(field.FieldType, readingTypesContext);
+                }
 
                 var ctors = IlReader.Constructors(type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var ctor in ctors)
