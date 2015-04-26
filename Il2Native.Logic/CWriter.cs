@@ -2273,6 +2273,11 @@ namespace Il2Native.Logic
                 this.WriteMainFunction();
             }
 
+            if (this.IsHeader)
+            {
+                this.EndPreprocessorIf();
+            }
+
             this.Output.Close();
         }
 
@@ -3125,6 +3130,11 @@ namespace Il2Native.Logic
         {
             this.Output = new CIndentedTextWriter(new StreamWriter(this.outputFile));
 
+            if (this.IsHeader)
+            {
+                StartPreprocessorIf(this.AssemblyQualifiedName.CleanUpName(), "H");
+            }
+
             if (this.DebugInfo && !this.debugInfoGenerator.StartGenerating())
             {
                 this.DebugInfo = false;
@@ -3151,16 +3161,16 @@ namespace Il2Native.Logic
             if (!this.IsHeader)
             {
                 this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.outputFile));
-                this.Output.WriteLine(string.Empty);
             }
             else
             {
                 foreach (var reference in this.IlReader.References())
                 {
                     this.Output.WriteLine("#include \"{0}.h\"", reference);
-                    this.Output.WriteLine(string.Empty);                    
                 }
             }
+
+            this.Output.WriteLine(string.Empty);
 
             this.StaticConstructors.Clear();
             VirtualTableGen.Clear();
@@ -4701,6 +4711,19 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine("#endif");
             }
+        }
+
+        private void StartPreprocessorIf(string id, string prefix)
+        {
+            this.Output.Write("#ifndef {0}__{1}", prefix, id);
+            this.Output.WriteLine(string.Empty);
+            this.Output.Write("#define {0}__{1}", prefix, id);
+            this.Output.WriteLine(string.Empty);
+        }
+
+        private void EndPreprocessorIf()
+        {
+            this.Output.WriteLine("#endif");
         }
 
         /// <summary>
