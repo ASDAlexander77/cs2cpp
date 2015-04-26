@@ -4417,12 +4417,12 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
+        public void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext)
         {
-            this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface));
+            this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface), genericContext);
         }
 
-        private void WriteMethodForwardDeclarationIfNotWrittenYet(MethodKey methodKey)
+        private void WriteMethodForwardDeclarationIfNotWrittenYet(MethodKey methodKey, IGenericContext genericContext)
         {
             if (!this.forwardMethodDeclarationWritten.Add(methodKey))
             {
@@ -4432,7 +4432,7 @@ namespace Il2Native.Logic
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
             {
-                this.ReadMethodInfo(ctor, null);
+                this.ReadMethodInfo(ctor, genericContext);
                 this.WriteMethodProlog(ctor);
                 this.Output.WriteLine(";");
                 return;
@@ -4441,7 +4441,7 @@ namespace Il2Native.Logic
             var method = methodKey.Method;
             if (method != null)
             {
-                this.ReadMethodInfo(method, null);
+                this.ReadMethodInfo(method, genericContext);
                 this.WriteMethodProlog(method);
                 this.Output.WriteLine(";");
             }

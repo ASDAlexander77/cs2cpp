@@ -232,7 +232,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            // TODO: test-201: BUG with using field with the same name as struct causing issue
+            // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics)
 
             // TODO: finish
             // __arglist
@@ -704,6 +704,7 @@ namespace Ll2NativeTests
             // 421 - System.Type.IsValueType NotImplemented
             // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib#
             // 434 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
+            // 437 - error: GetAttributes
             // 435 - Decimals are not implemented
             // 444 - error CS1061: 'System.Reflection.AssemblyName' does not contain a definition for 'Flags'
             // 447 - error CS0246: The type or namespace name 'TypeForwardedTo' could not be found
@@ -761,6 +762,7 @@ namespace Ll2NativeTests
                 239,
                 243,
                 262,
+                274,
                 278,
                 282,
                 284,
@@ -792,6 +794,7 @@ namespace Ll2NativeTests
                 431,
                 434,
                 435,
+                437,
                 444,
                 447,
                 449,

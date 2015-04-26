@@ -314,7 +314,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        codeWriter.WriteMethodForwardDeclaration(ctor, null);
+                        codeWriter.WriteMethodForwardDeclaration(ctor, null, genericTypeContext);
                     }
                 }
             }
@@ -343,7 +343,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        codeWriter.WriteMethodForwardDeclaration(method, null);
+                        codeWriter.WriteMethodForwardDeclaration(method, null, genericMethodContext);
                     }
                 }
 
@@ -363,7 +363,7 @@ namespace Il2Native.Logic
                         }
                         else
                         {
-                            codeWriter.WriteMethodForwardDeclaration(methodSpecialization, null);
+                            codeWriter.WriteMethodForwardDeclaration(methodSpecialization, null, genericMethodContext);
                         }
                     }
                 }
@@ -388,7 +388,7 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WriteMethodForwardDeclaration(method, null);
+            codeWriter.WriteMethodForwardDeclaration(method, null, null);
         }
 
         /// <summary>

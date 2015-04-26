@@ -110,6 +110,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="methodDecl"></param>
         /// <param name="ownerOfExplicitInterface"></param>
-        void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface);
+        void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext);
     }
 }
