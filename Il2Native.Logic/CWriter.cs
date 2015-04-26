@@ -2730,7 +2730,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = false)
+        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = false, string suffix = null)
         {
             var methodInfo = methodBase;
             this.WriteMethodReturnType(writer, methodBase);
@@ -2740,7 +2740,13 @@ namespace Il2Native.Logic
                 this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);
             }
 
+            if (!string.IsNullOrEmpty(suffix))
+            {
+                writer.Write(suffix);
+            }
+
             writer.Write(")(");
+
             var hasThis = !methodInfo.IsStatic && !asStatic;
             if (hasThis)
             {
@@ -4835,12 +4841,17 @@ namespace Il2Native.Logic
             }
             else
             {
+                var usedMethods = new HashSet<IMethod>();
+
                 var virtualTable = type.GetVirtualInterfaceTableLayout(this);
 
                 foreach (var method in virtualTable)
                 {
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
+                    var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", usedMethods.Count) : null;
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
                     writer.WriteLine(";");
+
+                    usedMethods.Add(method);
                 }
 
                 foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
@@ -4848,8 +4859,11 @@ namespace Il2Native.Logic
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
                     foreach (var method in virtualTableOfSecondaryInterface)
                     {
-                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
+                        var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", usedMethods.Count) : null;
+                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
                         writer.WriteLine(";");
+
+                        usedMethods.Add(method);
                     }
                 }
             }
