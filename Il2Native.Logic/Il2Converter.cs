@@ -1019,6 +1019,7 @@ namespace Il2Native.Logic
             subSetReadingContext.GenericTypeSpecializations = subSetGenericTypeSpecializations;
             subSetReadingContext.GenericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
             subSetReadingContext.AdditionalTypesToProcess = subSetAdditionalTypesToProcess;
+            subSetReadingContext.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
             subSetReadingContext.DiscoveredTypes = readingTypesContext.DiscoveredTypes;
 
             // the same for generic specialized types
@@ -1221,7 +1222,7 @@ namespace Il2Native.Logic
 
         private static void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
         {
-            if (type == null || (type.AssemblyQualifiedName != assemblyQualifiedName && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
+            if (type == null || type.IsPointer || type.IsByRef || (type.AssemblyQualifiedName != assemblyQualifiedName && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
             {
                 return;
             }
@@ -1251,6 +1252,8 @@ namespace Il2Native.Logic
             // add type
             if (usedTypes.Add(type))
             {
+                Debug.Assert(!type.IsPointer && !type.IsByRef);
+
                 order.Add(type);
             }
         }
