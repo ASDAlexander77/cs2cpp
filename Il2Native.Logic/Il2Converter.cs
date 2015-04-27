@@ -187,6 +187,11 @@ namespace Il2Native.Logic
                 }
                 else if (mode == ConvertingMode.ForwardMethodDeclaration)
                 {
+                    if (type.IsInterface)
+                    {
+                        continue;
+                    }
+
                     ConvertTypeDefinition(
                         codeWriter,
                         type,
