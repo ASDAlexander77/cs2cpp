@@ -1074,6 +1074,7 @@ namespace Il2Native.Logic
 
             Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
             Debug.Assert(usedTypes.All(t => !t.IsPointer), "Type is used with flag IsPointer");
+            Debug.Assert(usedTypes.All(t => !t.IsGenericTypeDefinition), "Generic DefinitionType is used");
 
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
@@ -1189,7 +1190,7 @@ namespace Il2Native.Logic
             // add type
             if (usedTypes.Add(type))
             {
-                Debug.Assert(!type.IsPointer && !type.IsByRef);
+                Debug.Assert(!type.IsPointer && !type.IsByRef && !type.IsGenericTypeDefinition, "Not allowble type here");
                 order.Add(type);
             }
         }
@@ -1200,7 +1201,8 @@ namespace Il2Native.Logic
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList();
+            var fullNames = types.Select(t => t.FullName).ToList();
+            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName)).ToList();
 
             // writing
             codeHeaderWriter.WriteStart();
@@ -1245,7 +1247,8 @@ namespace Il2Native.Logic
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList();
+            var fullNames = types.Select(t => t.FullName).ToList();
+            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName)).ToList();
 
             // writing
             codeWriter.WriteStart();
