@@ -187,11 +187,6 @@ namespace Il2Native.Logic
                 }
                 else if (mode == ConvertingMode.ForwardMethodDeclaration)
                 {
-                    if (type.IsInterface)
-                    {
-                        continue;
-                    }
-
                     ConvertTypeDefinition(
                         codeWriter,
                         type,
@@ -390,8 +385,6 @@ namespace Il2Native.Logic
 
         private static void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
         {
-            Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
-
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
             codeWriter.WriteMethodForwardDeclaration(method, null, null);
         }
@@ -469,49 +462,10 @@ namespace Il2Native.Logic
                 return;
             }
 
-            ////var additionalTypesToProcess = readingTypesContext.AdditionalTypesToProcess;
-            ////var genericSpecializations = readingTypesContext.GenericTypeSpecializations;
-            ////var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
-
-            ////if (additionalTypesToProcess != null && !type.IsGenericTypeDefinition && type.IsArray)
-            ////{
-            ////    additionalTypesToProcess.Add(type);
-            ////}
-
-            ////if (genericSpecializations == null && genericMethodSpecializations == null)
-            ////{
-            ////    return;
-            ////}
-
-            ////var isGenericToDiscover = type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type)
-            ////                          && !TypeHasGenericParameterInGenericArguments(type);
-            ////if (isGenericToDiscover)
-            ////{
-            ////    var bareType = type.ToBareType().ToNormal();
-            ////    if (genericSpecializations == null)
-            ////    {
-            ////        genericSpecializations.Add(bareType);
-            ////    }
-            ////}
-
-            ////if (type.BaseType != null)
-            ////{
-            ////    DiscoverGenericSpecializedTypesAndAdditionalTypes(type.BaseType, readingTypesContext);
-            ////}
-
-            ////if (type.HasElementType)
-            ////{
-            ////    DiscoverGenericSpecializedTypesAndAdditionalTypes(type.GetElementType(), readingTypesContext);
-            ////}
-
-            ////var interfaces = type.GetInterfaces();
-            ////if (interfaces != null)
-            ////{
-            ////    foreach (var @interface in interfaces)
-            ////    {
-            ////        DiscoverGenericSpecializedTypesAndAdditionalTypes(@interface, readingTypesContext);
-            ////    }
-            ////}
+            foreach (var @interface in type.GetInterfaces())
+            {
+                DiscoverGenericSpecializedTypesAndAdditionalTypes(@interface, readingTypesContext);
+            }
 
             if (!type.IsInterface)
             {
@@ -934,35 +888,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private static IEnumerable<IType> IterateRequiredDefinitionTypesInMethodBody(IMethod method)
-        {
-            if (method.DeclaringType.IsInterface)
-            {
-                yield break;
-            }
-
-            var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
-            var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
-            if (methodBody != null)
-            {
-                foreach (
-                    var localVar in
-                        methodBody.LocalVariables.Where(
-                            localVar => localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer && !localVar.LocalType.IsByRef))
-                {
-                    yield return localVar.LocalType;
-                }
-
-                var usedStructTypes = new NamespaceContainer<IType>();
-                methodWithCustomBodyOrDefault
-                    .DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(null, null, usedStructTypes, null, null, new Queue<IMethod>(), _codeWriter);
-                foreach (var usedStructType in usedStructTypes)
-                {
-                    yield return usedStructType;
-                }
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="fileName">
@@ -1120,8 +1045,15 @@ namespace Il2Native.Logic
             string[] filter,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            cachedRequiredFullDeclarationTypes.Clear();
-            cachedRequiredForwardDeclarationTypes.Clear();
+            lock (cachedRequiredFullDeclarationTypes)
+            {
+                cachedRequiredFullDeclarationTypes.Clear();
+            }
+
+            lock (cachedRequiredForwardDeclarationTypes)
+            {
+                cachedRequiredForwardDeclarationTypes.Clear();
+            }
 
             // clean it as you are using IlReader
             IlReader.GenericMethodSpecializations = null;
@@ -1258,7 +1190,6 @@ namespace Il2Native.Logic
             if (usedTypes.Add(type))
             {
                 Debug.Assert(!type.IsPointer && !type.IsByRef);
-
                 order.Add(type);
             }
         }

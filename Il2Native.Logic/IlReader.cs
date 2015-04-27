@@ -1249,6 +1249,7 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
+                            this.AddGenericSpecializedType(typeToken);
                             this.AddUsedTypeDeclaration(typeToken);
                             this.AddVirtualTable(typeToken);
                             this.AddTypeToken(typeToken);
@@ -1280,6 +1281,7 @@ namespace Il2Native.Logic
                         if (methodMember != null)
                         {
                             this.AddUsedTypeDeclaration(methodMember.DeclaringType);
+                            this.AddGenericSpecializedMethod(methodMember, stackCall);
 
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
