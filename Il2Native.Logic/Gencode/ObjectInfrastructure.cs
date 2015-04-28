@@ -216,7 +216,7 @@ namespace Il2Native.Logic.Gencode
                     ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
                 }
 
-                ilCodeBuilder.CopyObject(declaringClassType);
+                ilCodeBuilder.CopyObject(normal);
             }
 
             ilCodeBuilder.Add(Code.Dup);

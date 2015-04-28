@@ -503,6 +503,11 @@ namespace Il2Native.Logic.Gencode
                 return requiredType.GetElementType().TypeNotEquals(dereferencedEstimatedResultType);
             }
 
+            if ((resultType.IsClass || resultType.IsPointer || resultType.IsByRef) && requiredType.UseAsClass)
+            {
+                return requiredType.ToNormal().TypeNotEquals(dereferencedEstimatedResultType);
+            }
+
             if (requiredType.TypeNotEquals(dereferencedEstimatedResultType))
             {
                 if (requiredType.IsAssignableFrom(dereferencedEstimatedResultType) || dereferencedEstimatedResultType.IsArray && requiredType.FullName == "System.Array")

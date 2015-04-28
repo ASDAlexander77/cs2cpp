@@ -707,6 +707,12 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsClass.CompareTo(type.IsClass);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             cmp = this.IsByRef.CompareTo(type.IsByRef);
             if (cmp != 0)
             {

@@ -1134,21 +1134,20 @@ namespace Il2Native.Logic
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
-                    var intPtrType = this.System.System_IntPtr.ToClass();
-                    var voidPtrType = this.System.System_Void.ToPointerType();
-                    var convertString = this.WriteToString(
-                        () =>
-                        {
-                            this.Output.Write("(Byte*) &");
-                            this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPart.Operand);
-                        });
+                    System.System_IntPtr.WriteTypePrefix(this);
+                    var ptrVar = string.Format("_ptr{0}", opCode.AddressStart);
+                    this.Output.WriteLine(" {0};", ptrVar);
+                    this.Output.Write("{0}.", ptrVar);
+                    this.WriteFieldAccessLeftExpression(
+                        this.Output,
+                        System.System_IntPtr,
+                        System.System_IntPtr.GetFieldByFieldNumber(0, this),
+                        null);
+                    this.Output.Write(" = (Byte*) &");
+                    this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPart.Operand);
+                    this.Output.WriteLine(";");
 
-                    var value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
-
-                    var objectReference = this.WriteVariableForNew(opCodeMethodInfoPart, intPtrType);
-                    opCode.Result = objectReference;
-
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
+                    opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
 
                     break;
 
@@ -1158,9 +1157,7 @@ namespace Il2Native.Logic
 
                     var methodInfo = opCodeMethodInfoPart.Operand;
 
-                    intPtrType = this.System.System_IntPtr.ToClass();
-                    voidPtrType = this.System.System_Void.ToPointerType();
-                    convertString = this.WriteToString(
+                    var convertString = this.WriteToString(
                         () =>
                         {
                             IType thisType;
@@ -1194,12 +1191,21 @@ namespace Il2Native.Logic
                             }
                         });
 
-                    value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
+                    System.System_IntPtr.WriteTypePrefix(this);
+                    ptrVar = string.Format("_ptr{0}", opCode.AddressStart);
+                    this.Output.WriteLine(" {0};", ptrVar);
+                    this.Output.Write("{0}.", ptrVar);
+                    this.WriteFieldAccessLeftExpression(
+                        this.Output,
+                        System.System_IntPtr,
+                        System.System_IntPtr.GetFieldByFieldNumber(0, this),
+                        null);
 
-                    objectReference = this.WriteVariableForNew(opCodeMethodInfoPart, intPtrType);
-                    opCode.Result = objectReference;
+                    this.Output.Write(" = ");
+                    this.Output.Write(convertString);
+                    this.Output.WriteLine(";");
 
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
+                    opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
 
                     break;
 
@@ -2241,6 +2247,7 @@ namespace Il2Native.Logic
             Debug.Assert(!fromTypeOriginal.Type.IsEnum);
             Debug.Assert(!fromType.Type.IsEnum);
             Debug.Assert(!fromType.Type.IsGenericTypeDefinition);
+            Debug.Assert(fromType.Type.ToNormal().NormalizeType().TypeNotEquals(toType.ToNormal().NormalizeType()));
 
             writer.Write("((");
             toType.WriteTypePrefix(this);
@@ -2456,7 +2463,7 @@ namespace Il2Native.Logic
             var writer = this.Output;
 
             var targetType = fieldInfo.DeclaringType;
-            var type = classType;
+            var type = classType.ToNormal();
 
             while (type.TypeNotEquals(targetType))
             {
@@ -3238,6 +3245,11 @@ namespace Il2Native.Logic
                 {
                     this.WriteInterfaceToObjectCast(writer, opCode, type);
                     return true;
+                }
+                else if (estimatedResult.Type.UseAsClass && !type.UseAsClass && estimatedResult.Type.ToNormal().TypeEquals(type))
+                {
+                    // load value
+                    writer.Write("*");
                 }
                 else
                 {
