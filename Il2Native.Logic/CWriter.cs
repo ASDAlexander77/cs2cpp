@@ -1767,7 +1767,7 @@ namespace Il2Native.Logic
             }
 
             // when you send class as value (high priority)
-            if (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
+            if (typeDest.TypeEquals(estimatedResult.Type.ToNormal()) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
             {
                 var opCodeNope = OpCodePart.CreateNop;
                 opCodeNope.OpCodeOperands = new[] { opCode };

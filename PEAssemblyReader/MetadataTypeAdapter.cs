@@ -707,6 +707,12 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsArray.CompareTo(type.IsArray);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             cmp = this.IsClass.CompareTo(type.IsClass);
             if (cmp != 0)
             {
@@ -714,6 +720,12 @@ namespace PEAssemblyReader
             }
 
             cmp = this.IsByRef.CompareTo(type.IsByRef);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            cmp = this.IsPointer.CompareTo(type.IsPointer);
             if (cmp != 0)
             {
                 return cmp;
