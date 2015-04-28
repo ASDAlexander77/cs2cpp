@@ -1182,6 +1182,7 @@ namespace Il2Native.Logic
 
                             if (isIndirectMethodCall)
                             {
+                                this.Output.Write("(Void*)");
                                 this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
                             }
                             else
