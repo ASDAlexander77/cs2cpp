@@ -406,6 +406,7 @@ namespace Ll2NativeTests
             // 641 - Decimal not implemented
             // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
             // 647 - Enum.Parse NotImplemented
+            // 649 - Decimal not implemented
             // -----------
             // 32, 55, 74 - missing class
 
@@ -560,7 +561,8 @@ namespace Ll2NativeTests
                         637,
                         641,
                         645,
-                        647
+                        647,
+                        649
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -576,7 +578,7 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485, 643 });
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(650, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
@@ -722,6 +724,7 @@ namespace Ll2NativeTests
             // 511 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetGenericArguments'
             // 528 - error CS0315: The type 'int' cannot be used as type parameter 'U' in the generic type or method 'GenericType<U>'. There is no boxing conversion from 'int' to 'System.IEquatable<int>'. TODO: Investigate
             // 529 - error CS0315: The type 'byte' cannot be used as type parameter 'V' in the generic type or method 'Base<V>'. There is no boxing conversion from 'byte' to 'System.IEquatable<byte>'.
+            // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
 
             // 53 - ValueType.ToString() not implemented
 
@@ -810,7 +813,8 @@ namespace Ll2NativeTests
                 507,
                 511,
                 528,
-                529
+                529,
+                554
             });
 
             // TODO: remove when overflow ops are done
@@ -831,28 +835,7 @@ namespace Ll2NativeTests
 
             // Do not forget to set MSCORLIB variable
 
-            // you need to compile it with optimization, otherwise it will not be compiled as being to big
-            /*
-                IF NOT EXIST mscorlib.obj opt mscorlib.ll -o mscorlib.bc -O2
-                IF NOT EXIST mscorlib.obj llc -filetype=obj -mtriple=i686-w64-mingw32 mscorlib.bc
-                opt test-1.ll -o test-1.bc -O3 
-                llc -filetype=obj -mtriple=i686-w64-mingw32 test-1.bc
-                g++.exe -o test-1.exe mscorlib.obj test-1.obj -lstdc++ -lgc-lib -march=i686 -L .
-                del test-1.obj
-                del test-1.bc
-             */
-
-            // alternative way to compile
-            /*
-                llvm-link -o=test-1.bc test-1.ll mscorlib.ll
-                llc -filetype=obj -mtriple=i686-w64-mingw32 test-1.bc
-                g++.exe -o test-1.exe test-1.obj -lstdc++ -lgc-lib -march=i686 -L .
-                del test-1.o
-             */
-
             // WHAT TODO here
-            // remove static dependancy on count of interfaces
-            // adjust creating string as MSCORLIB does
             // adjust creating RuntimeType as MSCORLIB does
 
             Il2Converter.Convert(

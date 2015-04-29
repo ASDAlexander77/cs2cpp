@@ -199,7 +199,7 @@ namespace Il2Native.Logic.Gencode
                     }
                     else
                     {
-                        Debug.Assert(false, "only Int type allowed");
+                        Debug.Assert(!primitiveType.IsEnum, "only Int type or Enum allowed");
                     }
                 }
                 else
