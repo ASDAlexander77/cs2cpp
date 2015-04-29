@@ -662,12 +662,7 @@ namespace Il2Native.Logic
             else
             {
                 // generate file for each namespace
-                var namespaces = ilReader.Types().Select(t => t.Namespace).Distinct().ToList();
-                if (!namespaces.Contains(string.Empty))
-                {
-                    namespaces.Add(string.Empty);
-                }
-
+                var namespaces = ilReader.Types().Where(t => !string.IsNullOrEmpty(t.Namespace)).Select(t => t.Namespace).Distinct().ToList();
                 GenerateMultiSources(ilReader, namespaces, settings);
             }
         }
@@ -730,12 +725,21 @@ namespace Il2Native.Logic
 
             foreach (var ns in namespaces)
             {
-                settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
-                settings.FileExt = ".cpp";
-
-                var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
-                WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
+                GenerateSourceForNamespace(ilReader, settings, fileName, ns, sortedListOfTypes, genericMethodSpecializationsSorted);
             }
+
+            // very important step to generate code for empty space
+            GenerateSourceForNamespace(ilReader, settings, fileName, string.Empty, sortedListOfTypes, genericMethodSpecializationsSorted);
+        }
+
+        private static void GenerateSourceForNamespace(
+            IlReader ilReader, Settings settings, string fileName, string ns, IEnumerable<IType> sortedListOfTypes, IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+        {
+            settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
+            settings.FileExt = ".cpp";
+
+            var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
+            WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
         }
 
         public static IEnumerable<IType> GetRequiredForwardDeclarationTypes(IType typeSource)

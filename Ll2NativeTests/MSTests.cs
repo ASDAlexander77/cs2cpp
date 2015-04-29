@@ -870,10 +870,10 @@ namespace Ll2NativeTests
                 //Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
                 CompilerHelper.MscorlibPath,
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false),
+                CompilerHelper.GetConverterArgs(false, split: true),
                 new[]
                 {
-                    "System.Object",
+                    "System*",
                 });
         }
 
