@@ -1286,7 +1286,7 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 step);
 
-            if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
+            if (codeWriter.IsHeader || !codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
             {
                 // Append definition of Generic Methods of not used non-generic types
                 ConvertAllTypes(
