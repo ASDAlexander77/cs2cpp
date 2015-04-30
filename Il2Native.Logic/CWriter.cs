@@ -139,6 +139,13 @@ namespace Il2Native.Logic
         /// </summary>
         public bool IsHeader { get; set; }
 
+        /// <summary>
+        /// </summary>
+        public bool IsSplit { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public string SplitNamespace { get; set; }
 
         /// <summary>
         /// </summary>
@@ -3169,7 +3176,7 @@ namespace Il2Native.Logic
             
             if (!this.IsHeader)
             {
-                this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.outputFile));
+                this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.AssemblyQualifiedName).CleanUpName());
             }
             else
             {
@@ -4119,6 +4126,12 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteGlobalConstructors()
         {
+            if (this.IsSplit && !string.IsNullOrWhiteSpace(this.SplitNamespace))
+            {
+                // for multi source we generate it only in empty namespace
+                return;
+            }
+
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");

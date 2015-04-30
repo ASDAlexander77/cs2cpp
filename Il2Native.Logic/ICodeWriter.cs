@@ -19,6 +19,10 @@ namespace Il2Native.Logic
     {
         bool IsHeader { get; set; }
 
+        bool IsSplit { get; set; }
+
+        string SplitNamespace { get; set; }
+
         IIlReader IlReader { get; set; }
 
         /// <summary>

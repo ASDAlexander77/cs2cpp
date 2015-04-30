@@ -707,7 +707,7 @@ namespace Il2Native.Logic
         private static void GenerateMultiSources(IlReader ilReader, IEnumerable<string> namespaces, Settings settings)
         {
             settings.FileExt = ".h";
-            var codeHeaderWriter = GetCodeWriter(ilReader, settings);
+            var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
 
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             var sortedListOfTypes = ReadingTypes(
@@ -739,6 +739,8 @@ namespace Il2Native.Logic
             settings.FileExt = ".cpp";
 
             var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
+            codeWriterForNameSpace.IsSplit = true;
+            codeWriterForNameSpace.SplitNamespace = ns;
             WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
         }
 
