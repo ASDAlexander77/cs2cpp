@@ -350,6 +350,7 @@ namespace Il2Native.Logic
         /// </summary>
         public IlReader()
         {
+            this.StaticConstructors = new List<IMethod>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
             this.lazyAllReferencedTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true, true));
@@ -634,6 +635,9 @@ namespace Il2Native.Logic
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public IList<IMethod> StaticConstructors { get; set; }
 
         /// <summary>
         /// </summary>

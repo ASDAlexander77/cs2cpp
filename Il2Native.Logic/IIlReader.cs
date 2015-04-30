@@ -62,6 +62,10 @@
 
         /// <summary>
         /// </summary>
+        IList<IMethod> StaticConstructors { get; set; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         IEnumerable<string> References();

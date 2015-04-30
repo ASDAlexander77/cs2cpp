@@ -1253,9 +1253,6 @@ namespace Il2Native.Logic
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            var fullNames = types.Select(t => t.FullName).ToList();
-            var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName)).ToList();
-
             // writing
             codeWriter.WriteStart();
 
@@ -1263,10 +1260,14 @@ namespace Il2Native.Logic
 
             WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
 
-            // Append not generated sgettypes
-            ConvertAllRuntimeTypes(
-                codeWriter,
-                runtimeTypes);
+            if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
+            {
+                // Append not generated sgettypes
+                var fullNames = types.Select(t => t.FullName).ToList();
+                var runtimeTypes = ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName)).ToList();
+
+                ConvertAllRuntimeTypes(codeWriter, runtimeTypes);
+            }
 
             codeWriter.WriteEnd();
 
@@ -1285,13 +1286,12 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 step);
 
-            // Append definition of Generic Methods of not used non-generic types
-            ConvertAllTypes(
-                codeWriter,
-                genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
-                genericMethodSpecializationsSorted,
-                step,
-                true);
+            if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
+            {
+                // Append definition of Generic Methods of not used non-generic types
+                ConvertAllTypes(
+                    codeWriter, genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(), genericMethodSpecializationsSorted, step, true);
+            }
         }
     }
 

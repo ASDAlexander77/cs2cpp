@@ -40,7 +40,6 @@ namespace Il2Native.Logic
         /// </summary>
         public BaseWriter()
         {
-            this.StaticConstructors = new List<IMethod>();
             this.Ops = new List<OpCodePart>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
@@ -133,10 +132,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected List<IMethod> StaticConstructors { get; set; }
 
         public static bool IsVirtualCallThisExpression(OpCodePart opCode)
         {

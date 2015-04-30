@@ -2832,7 +2832,7 @@ namespace Il2Native.Logic
         {
             if (method is IConstructor && method.IsStatic)
             {
-                this.StaticConstructors.Add(method);
+                this.IlReader.StaticConstructors.Add(method);
             }
 
             this.WriteMethodStart(method, genericMethodContext);
@@ -3188,7 +3188,6 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(string.Empty);
 
-            this.StaticConstructors.Clear();
             VirtualTableGen.Clear();
             TypeGen.Clear();
         }
@@ -3925,7 +3924,7 @@ namespace Il2Native.Logic
         private void SortStaticConstructorsByUsage()
         {
             var staticConstructors = new Dictionary<IMethod, ISet<IType>>();
-            foreach (var staticCtor in this.StaticConstructors)
+            foreach (var staticCtor in this.IlReader.StaticConstructors)
             {
                 var methodWalker = new MethodsWalker(staticCtor, this);
                 var reaquiredTypesWithStaticFields = methodWalker.DiscoverAllStaticFieldsDependencies();
@@ -3956,7 +3955,7 @@ namespace Il2Native.Logic
             // add rest as is
             newStaticConstructors.AddRange(staticConstructors.Keys);
 
-            this.StaticConstructors = newStaticConstructors;
+            this.IlReader.StaticConstructors = newStaticConstructors;
         }
 
         /// <summary>
@@ -4144,7 +4143,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine("GC_INIT();");
             }
 
-            foreach (var staticCtor in this.StaticConstructors)
+            foreach (var staticCtor in this.IlReader.StaticConstructors)
             {
                 WriteMethodDefinitionName(this.Output, staticCtor);
                 this.Output.WriteLine("();");
