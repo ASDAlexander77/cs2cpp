@@ -1286,11 +1286,21 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 step);
 
-            if (codeWriter.IsHeader || !codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
+            if (codeWriter.IsHeader || !codeWriter.IsSplit)
             {
                 // Append definition of Generic Methods of not used non-generic types
                 ConvertAllTypes(
                     codeWriter, genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(), genericMethodSpecializationsSorted, step, true);
+            }
+            else if (codeWriter.IsSplit)
+            {
+                // Append definition of Generic Methods of not used non-generic types
+                ConvertAllTypes(
+                    codeWriter,
+                    genericMethodSpecializationsSorted.Keys.Where(k => k.Namespace == codeWriter.SplitNamespace && !types.Contains(k)).ToList(),
+                    genericMethodSpecializationsSorted,
+                    step,
+                    true);
             }
         }
     }
