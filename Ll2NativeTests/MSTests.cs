@@ -597,8 +597,7 @@ namespace Ll2NativeTests
             CompilerHelper.ExecCmd(
                 "g++",
                 string.Format(
-                    "{1}-o CoreLib.obj -c CoreLib.cpp{2}",
-                    CompilerHelper.Target,
+                    "{0}-o CoreLib.obj -c CoreLib.cpp{1}",
                     CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
                     CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }

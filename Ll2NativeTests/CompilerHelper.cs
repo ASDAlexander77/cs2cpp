@@ -24,7 +24,6 @@
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
 
         public const string OutputObjectFileExt = "obj";
-        public const string Target = "i686-w64-mingw32";
 
         public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
 #endif
@@ -49,7 +48,6 @@
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
         public const string OutputObjectFileExt = "obj";
-        public const string Target = "i686-w64-mingw32";
 
         public const string GcHeaders = @"E:\Gits\bdwgc\include";
 #endif
