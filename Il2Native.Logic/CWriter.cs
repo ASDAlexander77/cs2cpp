@@ -149,6 +149,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string FileHeader { get; set; }
+
+        /// <summary>
+        /// </summary>
         public IEnumerable<string> AllReferences
         {
             get
@@ -2601,10 +2605,15 @@ namespace Il2Native.Logic
 
         private static bool IsGeneric(IMethod methodBase, IType ownerOfExplicitInterface, bool shortName)
         {
-            return !shortName && methodBase.DeclaringType != null
-                   && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
-                       || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)
-                       || (methodBase.IsExplicitInterfaceImplementation && (methodBase.ExplicitInterface.IsGenericType || methodBase.ExplicitInterface.IsArray)));
+            return !shortName && methodBase.DeclaringType != null &&
+                   (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsGenericTypeDefinition ||
+                    methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod ||
+                    methodBase.IsGenericMethodDefinition ||
+                    (ownerOfExplicitInterface != null &&
+                     (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition)) ||
+                    (methodBase.IsExplicitInterfaceImplementation &&
+                     (methodBase.ExplicitInterface.IsGenericType || methodBase.ExplicitInterface.IsGenericTypeDefinition ||
+                      methodBase.ExplicitInterface.IsArray)));
         }
 
         public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
@@ -3176,7 +3185,7 @@ namespace Il2Native.Logic
             
             if (!this.IsHeader)
             {
-                this.Output.WriteLine("#include \"{0}.h\"", Path.GetFileNameWithoutExtension(this.AssemblyQualifiedName).CleanUpName());
+                this.Output.WriteLine("#include \"{0}.h\"", this.FileHeader.CleanUpName());
             }
             else
             {
@@ -4720,7 +4729,7 @@ namespace Il2Native.Logic
 
         private void StartPreprocessorIf(IType type, string prefix)
         {
-            if (type.IsGenericType || type.IsArray)
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
             {
                 this.Output.Write("#ifndef {0}__", prefix);
                 type.ToClass().WriteTypeName(this.Output, false);
@@ -4733,7 +4742,7 @@ namespace Il2Native.Logic
 
         private void EndPreprocessorIf(IType type)
         {
-            if (type.IsGenericType || type.IsArray)
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
             {
                 this.Output.WriteLine("#endif");
             }

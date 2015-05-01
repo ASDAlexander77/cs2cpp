@@ -23,6 +23,8 @@ namespace Il2Native.Logic
 
         string SplitNamespace { get; set; }
 
+        string FileHeader { get; set; }
+
         IIlReader IlReader { get; set; }
 
         /// <summary>

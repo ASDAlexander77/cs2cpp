@@ -701,6 +701,7 @@ namespace Il2Native.Logic
 
             settings.FileExt = ".cpp";
             var codeWriter = GetCodeWriter(ilReader, settings);
+            codeWriter.FileHeader = settings.FileName;
             WritingDefinitions(ilReader, codeWriter, sortedListOfTypes, genericMethodSpecializationsSorted);
         }
 
@@ -741,6 +742,7 @@ namespace Il2Native.Logic
             var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
             codeWriterForNameSpace.IsSplit = true;
             codeWriterForNameSpace.SplitNamespace = ns;
+            codeWriterForNameSpace.FileHeader = fileName;
             WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
         }
 
