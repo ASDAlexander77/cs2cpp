@@ -105,12 +105,24 @@
 
             unsafe
             {
-                fixed (byte* fileNamePtr = &Encoding.ASCII.GetBytes(fileName)[0])
-                fixed (byte* modePtr = &Encoding.ASCII.GetBytes(fileMode)[0])
+                fixed (byte* fileNamePtr = ToAsciiString(fileName))
+                fixed (byte* modePtr = ToAsciiString(fileMode))
                 {
                     this.file = fopen(fileNamePtr, modePtr);
                 }
             }
+        }
+
+        public static byte[] ToAsciiString(string s)
+        {
+            if (s == null)
+                throw new ArgumentNullException("s", "String");
+
+            int byteCount = Encoding.ASCII.GetByteCount(s);
+            // +1 needed for ending \0
+            byte[] bytes = new byte[byteCount + 1];
+            int bytesReceived = Encoding.ASCII.GetBytes(s, 0, s.Length, bytes, 0);
+            return bytes;
         }
 
         internal int ReadFile(byte[] bytes, int offset, int count)
