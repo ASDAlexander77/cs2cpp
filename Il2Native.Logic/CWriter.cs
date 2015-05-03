@@ -72,31 +72,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<MethodKey> forwardMethodDeclarationWritten = new NamespaceContainer<MethodKey>();
-
-        /// <summary>
-        /// </summary>
-        private readonly ISet<IField> forwardStaticDeclarationWritten = new NamespaceContainer<IField>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> virtualTableImplementationsWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> virtualTableImplementationDeclarationsWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> virtualTableDeclarationsWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         public readonly ISet<int> stringTokenDefinitionWritten = new HashSet<int>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<string> constBytesDefinitionWritten = new HashSet<string>();
 
         /// <summary>
         /// </summary>
@@ -113,14 +89,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly IDictionary<string, int> poisitionByFieldInfo = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
-        private readonly ISet<IType> postDeclarations = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        private readonly ISet<IType> postDefinitions = new NamespaceContainer<IType>();
 
         public DebugInfoGenerator debugInfoGenerator;
 
@@ -3049,11 +3017,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!this.postDeclarations.Add(type))
-            {
-                return;
-            }
-
             if (!type.IsPrivateImplementationDetails)
             {
                 type.WriteRttiDefinition(this);
@@ -3078,11 +3041,6 @@ namespace Il2Native.Logic
         {
             // we allow IsGenericTypeDefinition to support Generic "typeof"
             if (!(type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
-            {
-                return;
-            }
-
-            if (!this.postDefinitions.Add(type))
             {
                 return;
             }
@@ -3185,7 +3143,7 @@ namespace Il2Native.Logic
             
             if (!this.IsHeader)
             {
-                this.Output.WriteLine("#include \"{0}.h\"", this.FileHeader.CleanUpName());
+                this.Output.WriteLine("#include \"{0}.h\"", this.FileHeader);
             }
             else
             {
@@ -3971,11 +3929,6 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteConstBytes(IConstBytes constBytes)
         {
-            if (!this.constBytesDefinitionWritten.Add(constBytes.Reference))
-            {
-                return;
-            }
-
             var bytes = constBytes.Data;
 
             this.Output.Write(this.declarationPrefix);
@@ -4274,7 +4227,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
             this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
@@ -4465,11 +4417,6 @@ namespace Il2Native.Logic
 
         private void WriteMethodForwardDeclarationIfNotWrittenYet(MethodKey methodKey, IGenericContext genericContext)
         {
-            if (!this.forwardMethodDeclarationWritten.Add(methodKey))
-            {
-                return;
-            }
-
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
             {
@@ -4580,8 +4527,6 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticField(IField field, bool definition = true)
         {
-            this.forwardStaticDeclarationWritten.Add(field);
-
             var fieldType = field.FieldType;
 
             if (!definition)
@@ -4822,11 +4767,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!this.virtualTableImplementationsWritten.Add(type.ToVirtualTableImplementation()))
-            {
-                return;
-            }
-
             // TODO: review next line (use sizeof)
             var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
 
@@ -4869,11 +4809,6 @@ namespace Il2Native.Logic
             }
 
             var table = typeParam.ToVirtualTable();
-            if (!this.virtualTableDeclarationsWritten.Add(table))
-            {
-                return;
-            }
-
             var type = typeParam.ToNormal();
 
             var writer = this.Output;
