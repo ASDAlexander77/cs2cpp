@@ -16,7 +16,7 @@
         public const string OutputPath = @"C:\Temp\IlCTests\";
         public const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
-        public const string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
+        public static string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         public const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
@@ -99,7 +99,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool Mscorlib = false;
+        public static bool Mscorlib = false;
 
         /// <summary>
         /// </summary>
@@ -219,16 +219,24 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-
             // compile CoreLib
-            if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
+            if (!CompilerHelper.Mscorlib)
             {
-                if (!File.Exists(Path.Combine(OutputPath, "CoreLib.cpp")))
+                if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
                 {
-                    Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
-                }
+                    if (!File.Exists(Path.Combine(OutputPath, "CoreLib.cpp")))
+                    {
+                        Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+                    }
 
-                ExecCmd("g++", string.Format("-c {0}-o CoreLib.{1} CoreLib.cpp{2}", opt ? "-O3 " : string.Empty, OutputObjectFileExt, GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+                    ExecCmd(
+                        "g++",
+                        string.Format(
+                            "-c {0}-o CoreLib.{1} CoreLib.cpp{2}",
+                            opt ? "-O3 " : string.Empty,
+                            OutputObjectFileExt,
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+                }
             }
 
             if (!justCompile)
@@ -238,18 +246,41 @@
                     throw new FileNotFoundException("libgc-lib.a could not be found");
                 }
 
-                // file exe
-                ExecCmd(
-                    "g++",
-                    string.Format(
-                        "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .{3}",
-                        fileName,
-                        OutputObjectFileExt,
-                        opt ? "-O3 " : string.Empty,
-                        GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+                if (CompilerHelper.Mscorlib)
+                {
+                    if (!File.Exists(Path.Combine(OutputPath, "libmscorlib.a")))
+                    {
+                        throw new FileNotFoundException("libmscorlib.a could not be found");
+                    }
 
-                // test execution
-                ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
+                    // file exe
+                    ExecCmd(
+                        "g++",
+                        string.Format(
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -lgc-lib -march=i686 -L .{2}",
+                            fileName,
+                            opt ? "-O3 " : string.Empty,
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+
+                    Assert.IsTrue(
+                        File.Exists(
+                            Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, fileName))));
+                }
+                else
+                {
+                    // file exe
+                    ExecCmd(
+                        "g++",
+                        string.Format(
+                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .{3}",
+                            fileName,
+                            OutputObjectFileExt,
+                            opt ? "-O3 " : string.Empty,
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+
+                    // test execution
+                    ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
+                }
             }
             else
             {

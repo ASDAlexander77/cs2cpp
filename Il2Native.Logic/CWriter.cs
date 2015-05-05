@@ -2605,7 +2605,7 @@ namespace Il2Native.Logic
 
         public string GetAssemblyPrefix(IType type = null)
         {
-            if (type != null && !(type.IsArray || type.IsGenericType))
+            if (type != null && !(type.IsArray || type.IsGenericType || type.IsGenericTypeDefinition))
             {
                 return string.Empty;
             }

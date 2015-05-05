@@ -230,6 +230,21 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void TestCompileWithMscorlib()
+        {
+            var skip = new List<int>();
+            CompilerHelper.Mscorlib = true;
+            CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";
+
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("test-{0}", index), ignoreBadFiles:true);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void TestCompileAndRunLlvm()
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
