@@ -553,10 +553,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(" = ");
 
-            if (!cWriter.AdjustToType(opCode.OpCodeOperands[operandIndex], typeToSave))
-            {
-                cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
-            }
+            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
         public static void WriteSavePrimitiveIntoStructure(

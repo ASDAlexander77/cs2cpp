@@ -112,7 +112,7 @@ namespace Il2Native.Logic.Gencode
                         writer.Write(", ");
                     }
 
-                    cWriter.WriteFunctionCallParameterArgument(usedItem, parameter);
+                    cWriter.WriteFunctionCallParameterArgument(usedItem);
 
                     comaRequired = true;
                     index++;
@@ -195,7 +195,6 @@ namespace Il2Native.Logic.Gencode
                         var declType = opCodeMethodInfoPart.Operand.DeclaringType;
                         Debug.Assert(declType != null && declType.IsStructureType(), "only Struct type can be used");
                         primitiveType = declType.ToClass();
-                        cWriter.AdjustIntConvertableTypes(writer, opCodeMethodInfo.OpCodeOperands[0], declType.ToPointerType());
                     }
                     else
                     {
@@ -345,17 +344,6 @@ namespace Il2Native.Logic.Gencode
             OpCodePart operand)
         {
             cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
-        }
-
-        private static void WriteFunctionCallParameterArgument(
-            this CWriter cWriter,
-            OpCodePart operand,
-            IParameter parameter)
-        {
-            if (!cWriter.AdjustToType(operand, parameter.ParameterType))
-            {
-                cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
-            }
         }
     }
 }

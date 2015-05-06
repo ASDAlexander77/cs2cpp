@@ -1676,117 +1676,6 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="destType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        [Obsolete]
-        public bool AdjustIntConvertableTypes(CIndentedTextWriter writer, OpCodePart opCode, IType destType)
-        {
-            if (opCode.Result is ConstValue)
-            {
-                return false;
-            }
-
-            var sourceType = opCode.RequiredOutgoingType ?? EstimatedResultOf(opCode).Type;
-            if (!destType.IsPointer && !sourceType.IsPointer && destType.IsIntValueTypeExtCastRequired(sourceType))
-            {
-                this.WriteCCastOnly(destType);
-                return true;
-            }
-
-            if (!destType.IsPointer && !sourceType.IsPointer && destType.IsIntValueTypeTruncCastRequired(sourceType))
-            {
-                this.WriteCCastOnly(destType);
-                return true;
-            }
-
-            // pointer to int, int to pointerf
-            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef && (sourceType.IsPointer || sourceType.IsByRef))
-            {
-                this.WriteCCastOnly(destType);
-                return true;
-            }
-
-            if (sourceType.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) && !sourceType.IsPointer && !sourceType.IsByRef)
-            {
-                this.WriteCCastOnly(destType);
-                return true;
-            }
-
-            if ((sourceType.IsPointer || sourceType.IsByRef) && (destType.IsPointer || destType.IsByRef)
-                && sourceType.GetElementType().TypeNotEquals(destType.GetElementType()))
-            {
-                this.WriteCCastOnly(destType);
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        [Obsolete("move all code into BaseWriter to use step MissingTypeCasts")]
-        public bool AdjustToType(OpCodePart opCode)
-        {
-            return this.AdjustToType(opCode, opCode.RequiredIncomingTypes[0]);
-        }
-
-        /// <summary>
-        /// </summary>
-        [Obsolete("move all code into BaseWriter to use step MissingTypeCasts")]
-        public bool AdjustToType(OpCodePart opCode, IType typeDest)
-        {
-            // cast result if required
-            var estimatedResult = this.EstimatedResultOf(opCode);
-
-            if (typeDest == null || estimatedResult == null
-                || (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass == estimatedResult.Type.IsClass))
-            {
-                return false;
-            }
-
-            // when you send class as value (high priority)
-            if (typeDest.TypeEquals(estimatedResult.Type.ToNormal()) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
-            {
-                var opCodeNope = OpCodePart.CreateNop;
-                opCodeNope.OpCodeOperands = new[] { opCode };
-                this.LoadIndirect(this.Output, opCodeNope, typeDest);
-                return true;
-            }
-
-            // when you send pointer when value should be (high priority)
-            if (estimatedResult.Type.IsPointer && typeDest.TypeEquals(estimatedResult.Type.GetElementType()))
-            {
-                var opCodeNope = OpCodePart.CreateNop;
-                opCodeNope.OpCodeOperands = new[] { opCode };
-                this.LoadIndirect(this.Output, opCodeNope, typeDest);
-                return true;
-            }
-
-            bool castRequired;
-            bool intAdjustmentRequired;
-            this.DetectConversion(estimatedResult.Type, typeDest, out castRequired, out intAdjustmentRequired);
-
-            if (castRequired)
-            {
-                return this.WriteCast(opCode, opCode, typeDest);
-            }
-
-            if (intAdjustmentRequired)
-            {
-                this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="op">
         /// </param>
         /// <param name="options">
@@ -1980,7 +1869,6 @@ namespace Il2Native.Logic
                         // using int as intptr
                         loadingIntPtrFromVoidPtr = true;
                         type = this.System.System_IntPtr;
-                        this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], type.ToPointerType());
                     }
 
                     break;
@@ -2135,10 +2023,7 @@ namespace Il2Native.Logic
         public void UnaryOper(CIndentedTextWriter writer, OpCodePart opCode, int operand, string op, IType resultType = null)
         {
             writer.Write(op);
-            if (resultType == null || !this.AdjustToType(opCode.OpCodeOperands[operand], resultType))
-            {
-                this.WriteOperandResultOrActualWrite(writer, opCode, operand);
-            }
+            this.WriteOperandResultOrActualWrite(writer, opCode, operand);
         }
 
         /// <summary>
@@ -3499,86 +3384,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="sourceType">
-        /// </param>
-        /// <param name="requiredType">
-        /// </param>
-        /// <param name="castRequired">
-        /// </param>
-        /// <param name="intAdjustmentRequired">
-        /// </param>
-        [Obsolete("should use InsertMissingTypes instead")]
-        private void DetectConversion(IType sourceType, IType requiredType, out bool castRequired, out bool intAdjustmentRequired)
-        {
-            Debug.Assert(sourceType != null);
-
-            castRequired = false;
-            intAdjustmentRequired = false;
-            if (sourceType.TypeEquals(requiredType))
-            {
-                return;
-            }
-
-            var sourceTypePointer = sourceType.IsPointer;
-            var requiredTypePointer = requiredType.IsPointer;
-            if (sourceTypePointer && requiredTypePointer)
-            {
-                castRequired = true;
-                return;
-            }
-
-            var sourceIntType = sourceType.IntTypeBitSize() > 0;
-            var requiredIntType = requiredType.IntTypeBitSize() > 0;
-            if (sourceIntType && requiredIntType)
-            {
-                if (requiredType.IsIntValueTypeExtCastRequired(sourceType) || requiredType.IsIntValueTypeTruncCastRequired(sourceType))
-                {
-                    intAdjustmentRequired = true;
-                }
-
-                // pointer to int, int to pointer
-                if (!sourceType.IsByRef && !sourceType.IsPointer && sourceType.IntTypeBitSize() > 0 && requiredType.IsPointer)
-                {
-                    intAdjustmentRequired = true;
-                }
-
-                return;
-            }
-
-            if ((sourceType.IsByRef && requiredType.IsPointer || requiredType.IsByRef && sourceType.IsPointer)
-                && sourceType.GetElementType().Equals(requiredType.GetElementType()))
-            {
-                return;
-            }
-
-            if ((sourceType.IsByRef && requiredType.IsPointer || requiredType.IsByRef && sourceType.IsClass)
-                && sourceType.ToNormal().Equals(requiredType.GetElementType()))
-            {
-                return;
-            }
-
-            if (sourceIntType && requiredType.IsPointer || requiredIntType && sourceType.IsPointer)
-            {
-                intAdjustmentRequired = true;
-                return;
-            }
-
-            if (sourceType.IntTypeBitSize() > 0 && requiredType.IntTypeBitSize() > 0)
-            {
-                return;
-            }
-
-            if (sourceType.IntTypeBitSize() > 0 && (requiredType.IsEnum || requiredType.IsStructureType())
-                || requiredType.IntTypeBitSize() > 0 && (sourceType.IsEnum || sourceType.IsStructureType()))
-            {
-                return;
-            }
-
-            castRequired = true;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodeFieldInfoPart">
         /// </param>
         private void FieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
@@ -3796,10 +3601,7 @@ namespace Il2Native.Logic
 
             writer.Write(" = ");
 
-            if (!AdjustToType(opCode.OpCodeOperands[operandIndex], type))
-            {
-                this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
-            }
+            this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
         /// <summary>

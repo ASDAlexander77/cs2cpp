@@ -575,6 +575,16 @@ namespace Il2Native.Logic
                 return ConversionType.InterfaceToObject;
             }
 
+            if (sourceType.IsByRef && destinationType.IsPointer || sourceType.IsPointer && destinationType.IsByRef)
+            {
+                return ConversionType.CCast;
+            }
+
+            if (sourceType.IsPointer && destinationType.IsPointer && sourceType.GetElementType().TypeNotEquals(destinationType.GetElementType()))
+            {
+                return ConversionType.CCast;
+            }
+
             if (sourceType.IsVoidPointer() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.CCast;
