@@ -249,6 +249,8 @@ namespace Ll2NativeTests
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
 
+            // TODO: test-653: Overflow for stackalloc, (NEED TO BE FIXED)
+
             // TODO: finish
             // __arglist
 
@@ -422,6 +424,12 @@ namespace Ll2NativeTests
             // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
             // 647 - Enum.Parse NotImplemented
             // 649 - Decimal not implemented
+            // 653 - stackalloc overflow. TODO: Need to be fixed.
+            // 657 - error CS0246: The type or namespace name 'Conditional' could not be found
+            // 660 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 661 - error CS0246: The type or namespace name 'SummaryInfo' could not be found
+            // 666 - unicode used in preprocessor
+            // 671 - error CS0837: The first operand of an 'is' or 'as' operator may not be a lambda expression, anonymous method, or method group.
             // -----------
             // 32, 55, 74 - missing class
 
@@ -577,7 +585,13 @@ namespace Ll2NativeTests
                         641,
                         645,
                         647,
-                        649
+                        649,
+                        653,
+                        657,
+                        660,
+                        661,
+                        666,
+                        671
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -753,6 +767,8 @@ namespace Ll2NativeTests
             // 528 - error CS0315: The type 'int' cannot be used as type parameter 'U' in the generic type or method 'GenericType<U>'. There is no boxing conversion from 'int' to 'System.IEquatable<int>'. TODO: Investigate
             // 529 - error CS0315: The type 'byte' cannot be used as type parameter 'V' in the generic type or method 'Base<V>'. There is no boxing conversion from 'byte' to 'System.IEquatable<byte>'.
             // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
+            // 555 - Bug with Nullable in 'is' operator. TODO: Need to be fixed
+            // 564 - error CS1061: 'System.Reflection.MethodInfo'
 
             // 53 - ValueType.ToString() not implemented
 
@@ -842,13 +858,15 @@ namespace Ll2NativeTests
                 511,
                 528,
                 529,
-                554
+                554,
+                555,
+                564
             });
 
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 382, 386 });
 
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(564, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

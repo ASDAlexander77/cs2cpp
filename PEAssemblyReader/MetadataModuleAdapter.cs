@@ -1298,7 +1298,15 @@ namespace PEAssemblyReader
                 {
                     var typeDef = (method.DeclaringType as MetadataTypeAdapter).TypeDef;
                     constructedContainingType = SubstituteTypeSymbolIfNeeded(typeDef, genericContext);
-                    resolvedMethodSymbol = (constructedContainingType as ArrayTypeSymbol).GetMembers(methodSymbol.Name)[0] as MethodSymbol;
+                    var arrayTypeSymbol = constructedContainingType as ArrayTypeSymbol;
+                    if (arrayTypeSymbol != null)
+                    {
+                        resolvedMethodSymbol = arrayTypeSymbol.GetMembers(methodSymbol.Name)[0] as MethodSymbol;
+                    }
+                    else
+                    {
+                        Debug.Fail("Not implemented yet");
+                    }
                 }
             }
 
