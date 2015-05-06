@@ -52,10 +52,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IField> _staticFields;
-
-        /// <summary>
-        /// </summary>
         private ISet<IType> _usedArrayTypes;
 
         /// <summary>
@@ -72,20 +68,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> _usedTypeDefinitions;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedVirtualTables;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedRtti;
-
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
+        /// <summary>
+        /// </summary>
         private readonly bool isDll;
 
         /// <summary>
@@ -115,10 +101,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private ISet<IField> usedStaticFieldsToRead;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> usedTypeDeclarations;
 
         /// <summary>
         /// </summary>
@@ -447,24 +429,13 @@ namespace Il2Native.Logic
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string PdbFilePath { get; private set; }
-
-        public string SourceFilePath { get; private set; }
 
         /// <summary>
         /// </summary>
-        public ISet<IField> StaticFields
-        {
-            get
-            {
-                return this._staticFields;
-            }
-
-            set
-            {
-                this._staticFields = value;
-            }
-        }
+        public string SourceFilePath { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -577,66 +548,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedTypeDefinitions
-        {
-            get
-            {
-                return this._usedTypeDefinitions;
-            }
-
-            set
-            {
-                this._usedTypeDefinitions = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedTypeDeclarations
-        {
-            get
-            {
-                return this.usedTypeDeclarations;
-            }
-
-            set
-            {
-                this.usedTypeDeclarations = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedVirtualTables
-        {
-            get
-            {
-                return this._usedVirtualTables;
-            }
-
-            set
-            {
-                this._usedVirtualTables = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedRtti
-        {
-            get
-            {
-                return this._usedRtti;
-            }
-
-            set
-            {
-                this._usedRtti = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public IList<IMethod> StaticConstructors { get; set; }
 
         /// <summary>
@@ -647,6 +558,8 @@ namespace Il2Native.Logic
         /// </summary>
         protected AssemblyMetadata Assembly { get; private set; }
 
+        /// <summary>
+        /// </summary>
         protected string FirstSource { get; private set; }
 
         /// <summary>
@@ -1135,7 +1048,6 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var @string = module.ResolveString(token);
                         this.AddString(token, @string);
-                        this.AddUsedTypeDeclaration(this.TypeResolver.System.System_String);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, new KeyValuePair<int, string>(token, @string));
                         continue;
                     case Code.Newobj:
@@ -1145,12 +1057,8 @@ namespace Il2Native.Logic
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
                         this.AddGenericSpecializedType(constructor.DeclaringType);
                         this.AddGenericSpecializedMethod(constructor, stackCall);
-                        foreach (var methodParameter in constructor.GetParameters())
-                        {
-                            this.AddStructType(methodParameter.ParameterType);
-                        }
 
-                        this.AddUsedTypeDeclaration(constructor.DeclaringType);
+                        this.AddArrayType(constructor.DeclaringType);
                         this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
                         this.AddCalledMethod(constructor);
 
@@ -1165,7 +1073,6 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
-                        this.AddStructType(method.ReturnType);
                         this.AddGenericSpecializedType(method.ReturnType);
 
                         var methodParameters = method.GetParameters();
@@ -1173,7 +1080,6 @@ namespace Il2Native.Logic
                         {
                             foreach (var methodParameter in methodParameters)
                             {
-                                this.AddStructType(methodParameter.ParameterType);
                                 this.AddGenericSpecializedType(methodParameter.ParameterType);
                             }
                         }
@@ -1205,7 +1111,7 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
-                        this.AddUsedTypeDeclaration(method.DeclaringType);
+                        this.AddArrayType(method.DeclaringType);
 
                         this.AddCalledMethod(method);
 
@@ -1229,17 +1135,12 @@ namespace Il2Native.Logic
                         Debug.Assert(field != null);
                         this.AddGenericSpecializedType(field.FieldType);
                         this.AddGenericSpecializedType(field.DeclaringType);
-                        this.AddUsedTypeDeclaration(field.FieldType);
-                        this.AddUsedTypeDeclaration(field.DeclaringType);
+                        this.AddArrayType(field.FieldType);
+                        this.AddArrayType(field.DeclaringType);
 
                         if (code == Code.Ldsfld || code == Code.Ldsflda)
                         {
                             this.AddUsedStaticFieldToRead(field);
-                        }
-
-                        if (code == Code.Stsfld || code == Code.Ldsfld || code == Code.Ldsflda)
-                        {
-                            this.AddStaticField(field);
                         }
 
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
@@ -1254,8 +1155,7 @@ namespace Il2Native.Logic
                         if (typeToken != null)
                         {
                             this.AddGenericSpecializedType(typeToken);
-                            this.AddUsedTypeDeclaration(typeToken);
-                            this.AddVirtualTable(typeToken);
+                            this.AddArrayType(typeToken);
                             this.AddTypeToken(typeToken);
 
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
@@ -1274,7 +1174,7 @@ namespace Il2Native.Logic
                             }
                             else
                             {
-                                this.AddUsedTypeDeclaration(fieldMember.DeclaringType);
+                                this.AddArrayType(fieldMember.DeclaringType);
                             }
 
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
@@ -1284,7 +1184,7 @@ namespace Il2Native.Logic
                         var methodMember = resolvedToken as IMethod;
                         if (methodMember != null)
                         {
-                            this.AddUsedTypeDeclaration(methodMember.DeclaringType);
+                            this.AddArrayType(methodMember.DeclaringType);
                             this.AddGenericSpecializedMethod(methodMember, stackCall);
 
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
@@ -1316,7 +1216,7 @@ namespace Il2Native.Logic
                         var type = module.ResolveType(token, genericContext);
 
                         this.AddGenericSpecializedType(type);
-                        this.AddUsedTypeDeclaration(type);
+                        this.AddArrayType(type);
 
                         if (code == Code.Initobj)
                         {
@@ -1342,11 +1242,6 @@ namespace Il2Native.Logic
                                             && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
                                 this.AddCalledMethod(constructorInfo);
                             }
-                        }
-
-                        if (code == Code.Isinst || code == Code.Castclass)
-                        {
-                            this.AddRtti(type.ToRtti());
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
@@ -1592,16 +1487,6 @@ namespace Il2Native.Logic
             this.usedGenericSpecialiazedTypes.Add(type.NormalizeType());
         }
 
-        public void AddStaticField(IField field)
-        {
-            if (this._staticFields == null || field == null)
-            {
-                return;
-            }
-
-            this._staticFields.Add(field);
-        }
-
         private void AddString(int token, string usedString)
         {
             if (this._usedStrings == null || usedString == null)
@@ -1624,20 +1509,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void AddStructType(IType type)
-        {
-            if (this._usedTypeDefinitions == null || type == null || !type.IsStructureType())
-            {
-                return;
-            }
-
-            this._usedTypeDefinitions.Add(type.NormalizeType());
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="field">
         /// </param>
         private void AddUsedStaticFieldToRead(IField field)
@@ -1648,51 +1519,6 @@ namespace Il2Native.Logic
             }
 
             this.usedStaticFieldsToRead.Add(field);
-        }
-
-        public void AddUsedTypeDefinition(IType type)
-        {
-            if (this._usedTypeDefinitions == null || type == null)
-            {
-                return;
-            }
-
-            this._usedTypeDefinitions.Add(type.NormalizeType());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void AddUsedTypeDeclaration(IType type)
-        {
-            this.AddArrayType(type);
-            if (this.usedTypeDeclarations == null || type == null || type.SpecialUsage())
-            {
-                return;
-            }
-
-            this.usedTypeDeclarations.Add(type.NormalizeType());
-        }
-
-        public void AddVirtualTable(IType type)
-        {
-            if (this._usedVirtualTables == null || type == null || !(type.IsVirtualTableImplementation || type.IsVirtualTable))
-            {
-                return;
-            }
-
-            this._usedVirtualTables.Add(type);
-        }
-
-        public void AddRtti(IType type)
-        {
-            if (this._usedRtti == null || type == null || !type.IsRtti || type.IsObject)
-            {
-                return;
-            }
-
-            this._usedRtti.Add(type);
         }
 
         /// <summary>

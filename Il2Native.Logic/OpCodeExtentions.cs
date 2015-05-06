@@ -237,8 +237,6 @@ namespace Il2Native.Logic
         {
             // read method body to extract all types
             var reader = new IlReader();
-
-            reader.UsedTypeDeclarations = structTypes;
             reader.CalledMethods = calledMethods;
             reader.UsedStaticFieldsToRead = readStaticFields;
             reader.TypeResolver = typeResolver;
@@ -279,7 +277,6 @@ namespace Il2Native.Logic
             // read method body to extract all types
             var reader = new IlReader();
 
-            reader.UsedTypeDefinitions = structTypes;
             reader.UsedArrayTypes = arrayTypes;
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;

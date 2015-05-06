@@ -2859,12 +2859,7 @@ namespace Il2Native.Logic
             this.IlReader.UsedStrings = new SortedDictionary<int, string>();
             this.IlReader.UsedConstBytes = new List<IConstBytes>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
-            this.IlReader.StaticFields = new NamespaceContainer<IField>();
-            this.IlReader.UsedTypeDeclarations = new NamespaceContainer<IType>();
-            this.IlReader.UsedTypeDefinitions = new NamespaceContainer<IType>();
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
-            this.IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
-            this.IlReader.UsedRtti = new NamespaceContainer<IType>();
         }
 
         private static bool IsMain(IMethod method)

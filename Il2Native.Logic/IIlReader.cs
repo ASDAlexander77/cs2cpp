@@ -26,31 +26,11 @@
 
         /// <summary>
         /// </summary>
-        ISet<IField> StaticFields { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedTypeDefinitions { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedTypeDeclarations { get; set; }
-
-        /// <summary>
-        /// </summary>
         ISet<IType> UsedArrayTypes { get; set; }
 
         /// <summary>
         /// </summary>
         ISet<IType> UsedTypeTokens { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedVirtualTables { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedRtti { get; set; }
 
         /// <summary>
         /// </summary>
@@ -81,37 +61,6 @@
         /// <param name="source"></param>
         /// <returns></returns>
         IEnumerable<IType> CompileSourceWithRoslyn(params string[] source);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type"></param>
-        void AddArrayType(IType type);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type"></param>
-        void AddTypeToken(IType type);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type"></param>
-        void AddRtti(IType type);
-
-        /// <summary>
-        /// </summary>
-        void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null);
-
-        /// <summary>
-        /// </summary>
-        void AddUsedTypeDefinition(IType type);
-
-        /// <summary>
-        /// </summary>
-        void AddVirtualTable(IType type);
-
-        /// <summary>
-        /// </summary>
-        void AddStaticField(IField field);
 
         /// <summary>
         /// </summary>
