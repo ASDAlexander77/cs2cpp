@@ -163,65 +163,6 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter)
         {
             var writer = cWriter.Output;
-
-            // check if you need to cast this parameter
-            var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
-            var isPrimitivePointer = resultOfFirstOperand.Type.IsPointer &&
-                                     resultOfFirstOperand.Type.GetElementType().IsPrimitiveTypeOrEnum();
-
-            var dynamicCastRequired = false;
-            if (!isPrimitive && !isPrimitivePointer &&
-                thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
-            {
-                cWriter.WriteCCastOnly(thisType);
-            }
-
-            if (dynamicCastRequired)
-            {
-                cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
-                return;
-            }
-
-            var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
-            if (isPrimitive || isPrimitivePointer)
-            {
-                var primitiveType = resultOfFirstOperand.Type;
-                if (!isPrimitivePointer)
-                {
-                    var intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
-                    var uintType = cWriter.GetUIntTypeByByteSize(CWriter.PointerSize);
-                    if (intType.TypeEquals(primitiveType) || uintType.TypeEquals(primitiveType))
-                    {
-                        var declType = opCodeMethodInfoPart.Operand.DeclaringType;
-                        Debug.Assert(declType != null && declType.IsStructureType(), "only Struct type can be used");
-                        primitiveType = declType.ToClass();
-                    }
-                    else
-                    {
-                        Debug.Assert(primitiveType.IsEnum, "only Int type or Enum allowed");
-                    }
-                }
-                else
-                {
-                    primitiveType = resultOfFirstOperand.Type.GetElementType();
-                }
-
-                // TODO: you need to review of this code (whole function), and check if you need to box it in case of Pointer operations on Array
-                var @class = primitiveType.ToClass();
-                if (@class.TypeNotEquals(thisType) && isPrimitivePointer && !thisType.IsPrimitive)
-                {
-                    // in case Void* used or Byte* used, you do not need to box it as it may be array operation.
-                    cWriter.WriteCCastOnly(thisType);
-                }
-                else
-                {
-                    var opCodeNone = OpCodePart.CreateNop;
-                    opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
-                    @class.WriteCallBoxObjectMethod(cWriter, opCodeNone);
-                    return;
-                }
-            }
-
             cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
         }
 

@@ -448,6 +448,7 @@ namespace Il2Native.Logic
             InterfaceToObject,
             PointerToValue,
             ValueToPointer,
+            PointerToBoxedValue,
             IntPtrToInt,
             CCast
         }
@@ -489,19 +490,31 @@ namespace Il2Native.Logic
         {
             IType destinationType;
             var conversionType = this.GetConversionType(opCodeOperand, out destinationType);
+            if (conversionType == ConversionType.None)
+            {
+                return opCodeOperand;
+            }
+
             if (IsCastConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
-            else if (IsLoadObjectConversion(conversionType))
+            
+            if (IsLoadObjectConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
-            else if (conversionType == ConversionType.IntPtrToInt)
+            
+            if (conversionType == ConversionType.PointerToBoxedValue)
+            {
+                return this.LoadValueAndBox(opCodeOperand, destinationType);
+            }
+            
+            if (conversionType == ConversionType.IntPtrToInt)
             {
                 return this.LoadFieldAndCast(opCodeOperand, this.System.System_IntPtr.GetFieldByFieldNumber(0, this), destinationType);
             }
@@ -565,6 +578,12 @@ namespace Il2Native.Logic
                 return ConversionType.PointerToValue;
             }
 
+            if (sourceType.IsPointer && destinationType.UseAsClass && destinationType.ToNormal().TypeEquals(sourceType.GetElementType())
+                && !sourceType.GetElementType().IsStructureType())
+            {
+                return ConversionType.PointerToBoxedValue;
+            }
+
             if (sourceType.IsDerivedFrom(destinationType))
             {
                 return ConversionType.DerivedToBase;
@@ -593,6 +612,11 @@ namespace Il2Native.Logic
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.IntPtrToInt;
+            }
+
+            if (destinationType.IsDerivedFrom(sourceType))
+            {
+                return ConversionType.BaseToDerived;
             }
 
             return ConversionType.None;
@@ -678,6 +702,18 @@ namespace Il2Native.Logic
             var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
             this.InsertOperand(ldfldOpCode, castOpCode);
             return castOpCode;
+        }
+
+        private OpCodePart LoadValueAndBox(OpCodePart opCodeOperand, IType destinationType)
+        {
+            // 2 steps, load value, box it
+            var type = destinationType.ToNormal();
+
+            var ldobjOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, type);
+            this.InsertOperand(opCodeOperand, ldobjOpCode);
+            var boxOpCode = new OpCodeTypePart(OpCodesEmit.Box, 0, 0, type);
+            this.InsertOperand(ldobjOpCode, boxOpCode);
+            return boxOpCode;
         }
 
         private void FixAddSubPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand0, OpCodePart opCodeOperand1, ReturnResult op0, ReturnResult op1)
@@ -1611,6 +1647,9 @@ namespace Il2Native.Logic
                 case Code.Stelem_I:
                     return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_IntPtr : null;
 
+                case Code.Stelem:
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? (opCodePart as OpCodeTypePart).Operand : null;
+
                 case Code.Stelem_I1:
 
                     if (operandPosition == 2)
@@ -1661,7 +1700,7 @@ namespace Il2Native.Logic
                     if (operandPosition == 0)
                     {
                         retType = ((OpCodeTypePart)opCodePart).Operand;
-                        return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+                        return retType.ToClass();
                     }
 
                     return null;
@@ -1734,6 +1773,7 @@ namespace Il2Native.Logic
 
                     break;
 
+                case Code.Newarr:
                 case Code.Localloc:
                     return System.System_Int32;
 

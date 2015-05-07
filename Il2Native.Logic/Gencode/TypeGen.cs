@@ -474,60 +474,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="requiredType">
-        /// </param>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="dynamicCastRequired">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsClassCastRequired(
-            this IType requiredType,
-            CWriter cWriter,
-            OpCodePart opCodePart,
-            out bool dynamicCastRequired)
-        {
-            dynamicCastRequired = false;
-
-            var resultType = cWriter.EstimatedResultOf(opCodePart).Type;
-            var dereferencedEstimatedResultType = resultType.IsPointer || resultType.IsByRef ? resultType.GetElementType() : resultType;
-            var constValue = opCodePart.Result as ConstValue;
-            if (constValue != null && constValue.IsNull)
-            {
-                return false;
-            }
-
-            if ((resultType.IsClass || resultType.IsPointer || resultType.IsByRef) && requiredType.IsByRef)
-            {
-                return requiredType.GetElementType().TypeNotEquals(dereferencedEstimatedResultType);
-            }
-
-            if ((resultType.IsClass || resultType.IsPointer || resultType.IsByRef) && requiredType.UseAsClass)
-            {
-                return requiredType.ToNormal().TypeNotEquals(dereferencedEstimatedResultType);
-            }
-
-            if (requiredType.TypeNotEquals(dereferencedEstimatedResultType))
-            {
-                if (requiredType.IsAssignableFrom(dereferencedEstimatedResultType) || dereferencedEstimatedResultType.IsArray && requiredType.FullName == "System.Array")
-                {
-                    return true;
-                }
-
-                if (resultType.IsPointer && dereferencedEstimatedResultType.IsVoid())
-                {
-                    return true;
-                }
-
-                dynamicCastRequired = true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <param name="isPointerOpt">
