@@ -196,9 +196,9 @@ namespace Il2Native.Logic
             this.AssignJumpBlocks(ops);
             this.ProcessAll(ops);
             this.AssignExceptionsToOpCodes();
+            this.SanitizePointerOperations(ops);
             this.InsertMissingTypeCasts(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
-            this.SanitizePointerOperations(ops);
             return ops;
         }
 
@@ -630,16 +630,18 @@ namespace Il2Native.Logic
                         {
                             if (op0.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
-                                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                                var pointerType = this.System.System_Byte.ToPointerType();
+                                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                                 // to force recalculation
-                                opCodePart.RequiredOutgoingType = null;
+                                opCodePart.RequiredOutgoingType = pointerType;
                             }
 
                             if (op1.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
-                                this.InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                                var pointerType = this.System.System_Byte.ToPointerType();
+                                this.InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                                 // to force recalculation
-                                opCodePart.RequiredOutgoingType = null;
+                                opCodePart.RequiredOutgoingType = pointerType;
                             }
                         }
 
@@ -683,9 +685,10 @@ namespace Il2Native.Logic
             var pointerOpFixed = this.FixPointerOperation(opCodeOperand0, opCodeOperand1, op0.Type.GetElementType());
             if (!pointerOpFixed && this.GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
             {
-                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                var pointerType = this.System.System_Byte.ToPointerType();
+                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                 // to force recalculation
-                opCodePart.RequiredOutgoingType = null;
+                opCodePart.RequiredOutgoingType = pointerType;
             }
         }
 
@@ -1606,7 +1609,7 @@ namespace Il2Native.Logic
                     return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
 
                 case Code.Stelem_I:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Void.ToPointerType() : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_IntPtr : null;
 
                 case Code.Stelem_I1:
 

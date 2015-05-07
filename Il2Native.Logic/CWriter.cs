@@ -1535,7 +1535,7 @@ namespace Il2Native.Logic
 
                     if (opCodeTypePart.Operand.IsStructureType())
                     {
-                        // TODO: IntPtr hack
+                        // TODO: IntPtr hack, cast operation (review it)
                         if (opCodeTypePart.Operand.IsIntPtrOrUIntPtr())
                         {
                             this.WriteCCastOnly(@class);
