@@ -463,14 +463,12 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (opCodePart.AlternativeValues == null)
+                foreach (var opCodeOperand in opCodePart.OpCodeOperands)
                 {
-                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
-                    {
-                        this.InsertCastFixOperation(opCodeOperand);
-                    }
+                    this.InsertCastFixOperation(opCodeOperand);
                 }
-                else
+
+                if (opCodePart.AlternativeValues != null)
                 {
                     foreach (var alternativeValue in opCodePart.AlternativeValues)
                     {
@@ -502,19 +500,19 @@ namespace Il2Native.Logic
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
-            
+
             if (IsLoadObjectConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
-            
+
             if (conversionType == ConversionType.PointerToBoxedValue)
             {
                 return this.LoadValueAndBox(opCodeOperand, destinationType);
             }
-            
+
             if (conversionType == ConversionType.IntPtrToInt)
             {
                 return this.LoadFieldAndCast(opCodeOperand, this.System.System_IntPtr.GetFieldByFieldNumber(0, this), destinationType);
@@ -615,10 +613,10 @@ namespace Il2Native.Logic
             {
                 return ConversionType.BaseToDerived;
             }
-            
+
             if (sourceType.IsArray && destinationType.IsArray && sourceType.GetElementType().IsDerivedFrom(destinationType.GetElementType()))
             {
-                return ConversionType.CCast;               
+                return ConversionType.CCast;
             }
 
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
