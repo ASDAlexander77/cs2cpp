@@ -450,6 +450,7 @@ namespace Il2Native.Logic
             ValueToPointer,
             PointerToBoxedValue,
             IntPtrToInt,
+            PointerToInt,
             CCast
         }
 
@@ -533,6 +534,7 @@ namespace Il2Native.Logic
                 case ConversionType.ObjectToInterface:
                 case ConversionType.InterfaceToObject:
                 case ConversionType.CCast:
+                case ConversionType.PointerToInt:
                     return true;
             }
 
@@ -609,14 +611,24 @@ namespace Il2Native.Logic
                 return ConversionType.CCast;
             }
 
+            if (destinationType.IsDerivedFrom(sourceType))
+            {
+                return ConversionType.BaseToDerived;
+            }
+            
+            if (sourceType.IsArray && destinationType.IsArray && sourceType.GetElementType().IsDerivedFrom(destinationType.GetElementType()))
+            {
+                return ConversionType.CCast;               
+            }
+
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.IntPtrToInt;
             }
 
-            if (destinationType.IsDerivedFrom(sourceType))
+            if (sourceType.IsPointer && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
-                return ConversionType.BaseToDerived;
+                return ConversionType.PointerToInt;
             }
 
             return ConversionType.None;
@@ -1710,6 +1722,11 @@ namespace Il2Native.Logic
                     if (operandPosition == 0)
                     {
                         retType = ((OpCodeTypePart)opCodePart).Operand;
+                        if (retType.IsPointer)
+                        {
+                            return this.System.System_Int32;
+                        }
+
                         return retType.UseAsClass ? retType.ToNormal() : retType;
                     }
 
@@ -1983,15 +2000,20 @@ namespace Il2Native.Logic
                     Debug.Assert(retType != null && retType.GetElementType() != null);
                     return retType.GetElementType();
 
+                case Code.Box:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    if (retType.IsPointer)
+                    {
+                        return System.System_Int32.ToClass();
+                    }
+
+                    var isNullable = retType.TypeEquals(this.System.System_Nullable_T);
+                    return isNullable ? retType.GenericTypeArguments.First().ToClass() : retType.ToClass();
+
                 case Code.Unbox:
                 case Code.Unbox_Any:
                     retType = ((OpCodeTypePart)opCodePart).Operand;
-                    return retType.UseAsClass ? retType.ToNormal() : retType;
-
-                case Code.Box:
-                    retType = ((OpCodeTypePart)opCodePart).Operand;
-                    var isNullable = retType.TypeEquals(this.System.System_Nullable_T);
-                    return isNullable ? retType.GenericTypeArguments.First().ToClass() : retType.ToClass();
+                    return retType.ToNormal();
 
                 case Code.Call:
                 case Code.Callvirt:

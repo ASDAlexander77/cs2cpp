@@ -505,7 +505,8 @@ namespace Il2Native.Logic.Gencode
                      || toType.IsPointer
                      || toType.IsByRef
                      || bareType.IsDerivedFrom(toType)
-                     || (toType.IsArray && estimatedOperandResultOf.Type.TypeEquals(toType.BaseType)))
+                     || (toType.IsArray && estimatedOperandResultOf.Type.TypeEquals(toType.BaseType))
+                     || estimatedOperandResultOf.Type.IsPointer && toType.IntTypeBitSize() == CWriter.PointerSize * 8)
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
             }
@@ -562,8 +563,6 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference source,
             FullyDefinedReference destination)
         {
-            var writer = cWriter.Output;
-
             // write access to a field
             IField field;
             if ((field = cWriter.WriteFieldAccess(
