@@ -2161,8 +2161,7 @@ namespace Il2Native.Logic
                 usedByAlternativeValues = usedByAlternativeValues.UsedByAlternativeValues;
             }
 
-            var firstOpCode = usedByAlternativeValues.Values[0];
-            var addressStart = firstOpCode.AddressStart;
+            var addressStart = GetPhiValuesAddressStart(usedByAlternativeValues);
             if (opCode.Result != null)
             {
                 this.Output.WriteLine(";");
@@ -2172,6 +2171,17 @@ namespace Il2Native.Logic
 
             opCode.Result = new FullyDefinedReference(
                 "_phi" + addressStart, usedByAlternativeValues.RequiredOutgoingType);
+        }
+
+        public int GetPhiValuesAddressStart(PhiNodes phiNodes)
+        {
+            var firstOpCode = phiNodes.Values[0];
+            while (firstOpCode.AddressEnd == 0)
+            {
+                firstOpCode = firstOpCode.OpCodeOperands.FirstOrDefault();
+            }
+
+            return firstOpCode.AddressStart;
         }
 
         /// <summary>
@@ -3050,7 +3060,7 @@ namespace Il2Native.Logic
             }
 
             var firstOpCode = usedByAlternativeValues.Values[0];
-            var addressStart = firstOpCode.AddressStart;
+            var addressStart = GetPhiValuesAddressStart(usedByAlternativeValues);
             if (opCode == firstOpCode)
             {
                 usedByAlternativeValues.RequiredOutgoingType.WriteTypePrefix(this);

@@ -567,12 +567,7 @@ namespace Il2Native.Logic
                 return ConversionType.None;
             }
 
-            var sourceType = opCodeOperand.RequiredOutgoingType;
-            if (sourceType == null && opCodeOperand.UsedByAlternativeValues != null)
-            {
-                sourceType = opCodeOperand.UsedByAlternativeValues.RequiredOutgoingType;
-            }
-
+            var sourceType = opCodeOperand.RequiredOutgoingType ?? this.RequiredOutgoingType(opCodeOperand);
             if (opCodeOperand.UsedByAlternativeValues != null)
             {
                 var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
@@ -590,6 +585,11 @@ namespace Il2Native.Logic
             }
             
             if (sourceType == null || destinationType == null)
+            {
+                return ConversionType.None;
+            }
+
+            if (sourceType.TypeEquals(destinationType))
             {
                 return ConversionType.None;
             }
@@ -963,11 +963,34 @@ namespace Il2Native.Logic
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
         {
-            OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
-            usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
-            newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, oldOperand.UsedBy.OperandPosition);
-            newOperand.OpCodeOperands = new[] { oldOperand };
-            oldOperand.UsedBy = new UsedByInfo(newOperand, 0);
+            if (oldOperand.UsedBy != null)
+            {
+                OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
+                usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
+                newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, oldOperand.UsedBy.OperandPosition);
+                newOperand.OpCodeOperands = new[] { oldOperand };
+                oldOperand.UsedBy = new UsedByInfo(newOperand, 0);
+            }
+            else if (oldOperand.UsedByAlternativeValues != null)
+            {
+                // in case it is used in AlternativeValues
+                var usedByAlternativeValues = oldOperand.UsedByAlternativeValues;
+                for (var index = 0; index < usedByAlternativeValues.Values.Count; index++)
+                {
+                    var opCodePart = usedByAlternativeValues.Values[index];
+                    if (opCodePart == oldOperand)
+                    {
+                        usedByAlternativeValues.Values[index] = newOperand;
+                        newOperand.OpCodeOperands = new[] { oldOperand };
+                        oldOperand.UsedBy = new UsedByInfo(newOperand, 0);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                Debug.Assert(false, "Could not insert operand as it is not used");
+            }
 
             newOperand.Next = oldOperand.Next;
             newOperand.Previous = oldOperand;
