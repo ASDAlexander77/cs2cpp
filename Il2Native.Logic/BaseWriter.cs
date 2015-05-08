@@ -451,6 +451,7 @@ namespace Il2Native.Logic
             PointerToBoxedValue,
             IntPtrToInt,
             PointerToInt,
+            IntToPointer,
             CCast
         }
 
@@ -541,14 +542,13 @@ namespace Il2Native.Logic
         {
             switch (conversionType)
             {
-                case ConversionType.None:
-                    break;
                 case ConversionType.BaseToDerived:
                 case ConversionType.DerivedToBase:
                 case ConversionType.ObjectToInterface:
                 case ConversionType.InterfaceToObject:
                 case ConversionType.CCast:
                 case ConversionType.PointerToInt:
+                case ConversionType.IntToPointer:
                     return true;
             }
 
@@ -666,6 +666,11 @@ namespace Il2Native.Logic
             if (sourceType.IsPointer && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.PointerToInt;
+            }
+
+            if (sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize && destinationType.IsPointer)
+            {
+                return ConversionType.IntToPointer;
             }
 
             return ConversionType.None;
