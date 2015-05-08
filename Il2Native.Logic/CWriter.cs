@@ -4118,7 +4118,7 @@ namespace Il2Native.Logic
             // Temp hack to delcare all temp variables;
             foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
             {
-                var estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                var estimatedResult = this.EstimatedResultOf(opCodePart);
                 this.WriteVariableDeclare(opCodePart, estimatedResult.Type, "_dup");
             }
 
