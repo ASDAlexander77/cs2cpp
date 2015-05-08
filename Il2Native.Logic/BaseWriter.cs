@@ -1668,7 +1668,7 @@ namespace Il2Native.Logic
                     return retType;
 
                 case Code.Stind_I:
-                    return operandPosition == 1 ? this.System.System_Void.ToPointerType() : null;
+                    return operandPosition == 1 ? this.GetTypeOfReference(opCodePart) : null;
 
                 case Code.Stind_I1:
                     if (operandPosition == 1)
