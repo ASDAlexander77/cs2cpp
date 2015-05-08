@@ -33,7 +33,7 @@
         public const string OutputPath = @"M:\";
         public const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
-        public const string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
+        public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
 
         public const string OpenGlLibPath =

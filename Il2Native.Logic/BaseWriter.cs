@@ -633,12 +633,8 @@ namespace Il2Native.Logic
                 return ConversionType.InterfaceToObject;
             }
 
-            if (sourceType.IsByRef && destinationType.IsPointer || sourceType.IsPointer && destinationType.IsByRef)
-            {
-                return ConversionType.CCast;
-            }
-
-            if (sourceType.IsPointer && destinationType.IsPointer && sourceType.GetElementType().TypeNotEquals(destinationType.GetElementType()))
+            if ((sourceType.IsPointer || sourceType.IsByRef) && (destinationType.IsPointer || destinationType.IsByRef) &&
+                sourceType.GetElementType().TypeNotEquals(destinationType.GetElementType()))
             {
                 return ConversionType.CCast;
             }
@@ -1864,15 +1860,6 @@ namespace Il2Native.Logic
                     else if (operandPosition == 2)
                     {
                         return System.System_Int32;
-                    }
-
-                    return null;
-
-                case Code.Dup:
-                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    if (retType != null)
-                    {
-                        return retType;
                     }
 
                     return null;
