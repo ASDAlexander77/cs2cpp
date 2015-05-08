@@ -458,20 +458,18 @@ namespace Il2Native.Logic
         {
             foreach (var opCodePart in opCodes)
             {
-                if (opCodePart.OpCodeOperands == null || opCodePart.OpCodeOperands.Length == 0)
+                if (opCodePart.OpCodeOperands != null && opCodePart.OpCodeOperands.Length > 0)
                 {
-                    continue;
-                }
-
-                foreach (var opCodeOperand in opCodePart.OpCodeOperands)
-                {
-                    if (opCodeOperand.UsedByAlternativeValues != null)
+                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
                     {
-                        // it will be process in next step
-                        continue;
-                    }
+                        if (opCodeOperand.UsedByAlternativeValues != null)
+                        {
+                            // it will be process as value for alternatives
+                            continue;
+                        }
 
-                    this.InsertCastFixOperation(opCodeOperand);
+                        this.InsertCastFixOperation(opCodeOperand);
+                    }
                 }
 
                 if (opCodePart.AlternativeValues != null)
@@ -571,7 +569,6 @@ namespace Il2Native.Logic
             if (opCodeOperand.UsedByAlternativeValues != null)
             {
                 var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
-                Debug.Assert(opCodeUsedByFromAlternativeValues != null, "PhiNodes are not used");
                 if (opCodeUsedByFromAlternativeValues != null)
                 {
                     usedByInfo = opCodeUsedByFromAlternativeValues.UsedBy;
