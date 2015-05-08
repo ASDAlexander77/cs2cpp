@@ -197,8 +197,8 @@ namespace Il2Native.Logic
             this.ProcessAll(ops);
             this.AssignExceptionsToOpCodes();
             this.SanitizePointerOperations(ops);
-            this.InsertMissingTypeCasts(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
+            this.InsertMissingTypeCasts(ops);
             return ops;
         }
 
@@ -465,6 +465,12 @@ namespace Il2Native.Logic
 
                 foreach (var opCodeOperand in opCodePart.OpCodeOperands)
                 {
+                    if (opCodeOperand.UsedByAlternativeValues != null)
+                    {
+                        // it will be process in next step
+                        continue;
+                    }
+
                     this.InsertCastFixOperation(opCodeOperand);
                 }
 
@@ -554,14 +560,35 @@ namespace Il2Native.Logic
         {
             destinationType = null;
 
-            if (opCodeOperand.UsedBy == null)
+            var usedByInfo = opCodeOperand.UsedBy;
+            if (usedByInfo == null && opCodeOperand.UsedByAlternativeValues == null)
             {
+                Debug.Assert(false, "OpCode is not used at all");
                 return ConversionType.None;
             }
 
             var sourceType = opCodeOperand.RequiredOutgoingType;
-            var requiredIncomingTypes = opCodeOperand.UsedBy.OpCode.RequiredIncomingTypes;
-            destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[opCodeOperand.UsedBy.OperandPosition] : null;
+            if (sourceType == null && opCodeOperand.UsedByAlternativeValues != null)
+            {
+                sourceType = opCodeOperand.UsedByAlternativeValues.RequiredOutgoingType;
+            }
+
+            if (opCodeOperand.UsedByAlternativeValues != null)
+            {
+                var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
+                Debug.Assert(opCodeUsedByFromAlternativeValues != null, "PhiNodes are not used");
+                if (opCodeUsedByFromAlternativeValues != null)
+                {
+                    usedByInfo = opCodeUsedByFromAlternativeValues.UsedBy;
+                }
+            }
+
+            if (usedByInfo != null)
+            {
+                var requiredIncomingTypes = usedByInfo.OpCode.RequiredIncomingTypes;
+                destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[usedByInfo.OperandPosition] : null;
+            }
+            
             if (sourceType == null || destinationType == null)
             {
                 return ConversionType.None;
@@ -965,25 +992,8 @@ namespace Il2Native.Logic
                     OpCodePart opCodeUsedFromAlternativeValues = null;
                     IType requiredType = null;
 
-                    var current = alternativeValues;
                     // detect required types in alternative values
-                    while (opCodeUsedFromAlternativeValues == null)
-                    {
-                        opCodeUsedFromAlternativeValues = current.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
-                        if (opCodeUsedFromAlternativeValues == null)
-                        {
-                            var usedByAlternativeValues = current.Values.LastOrDefault(v => v.UsedByAlternativeValues != null);
-                            if (usedByAlternativeValues != null && current != usedByAlternativeValues.UsedByAlternativeValues)
-                            {
-                                current = usedByAlternativeValues.UsedByAlternativeValues;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                    }
-
+                    opCodeUsedFromAlternativeValues = GetUsedByFromAlternativeValues(alternativeValues);
                     if (opCodeUsedFromAlternativeValues != null)
                     {
                         var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
@@ -1025,6 +1035,29 @@ namespace Il2Native.Logic
                     alternativeValues.RequiredOutgoingType = requiredType;
                 }
             }
+        }
+
+        private static OpCodePart GetUsedByFromAlternativeValues(PhiNodes phiNodes)
+        {
+            OpCodePart opCodeUsedFromAlternativeValues = null;
+            while (opCodeUsedFromAlternativeValues == null)
+            {
+                opCodeUsedFromAlternativeValues = phiNodes.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                if (opCodeUsedFromAlternativeValues == null)
+                {
+                    var usedByAlternativeValues = phiNodes.Values.LastOrDefault(v => v.UsedByAlternativeValues != null);
+                    if (usedByAlternativeValues != null && phiNodes != usedByAlternativeValues.UsedByAlternativeValues)
+                    {
+                        phiNodes = usedByAlternativeValues.UsedByAlternativeValues;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return opCodeUsedFromAlternativeValues;
         }
 
         /// <summary>
