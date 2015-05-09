@@ -1602,200 +1602,256 @@ namespace Il2Native.Logic
             int operandPosition,
             bool forArithmeticOperations = false)
         {
-            IType retType = null;
-            ReturnResult result = null;
-            IType type = null;
-            switch (opCodePart.ToCode())
+            if (opCodePart.Discovering)
             {
-                case Code.Ret:
-                    retType = this.MethodReturnType;
-                    return retType;
+                // to prevent cercular calls
+                return null;
+            }
 
-                case Code.Stloc:
-                case Code.Stloc_0:
-                case Code.Stloc_1:
-                case Code.Stloc_2:
-                case Code.Stloc_3:
-                case Code.Stloc_S:
-                    retType = opCodePart.GetLocalType(this);
-                    return retType;
+            opCodePart.Discovering = true;
 
-                case Code.Starg:
-                case Code.Starg_S:
-                    var index = opCodePart.GetArgIndex();
-                    if (this.HasMethodThis && index == 0)
-                    {
-                        retType = this.ThisType;
+            try
+            {
+
+                IType retType = null;
+                ReturnResult result = null;
+                IType type = null;
+                switch (opCodePart.ToCode())
+                {
+                    case Code.Ret:
+                        retType = this.MethodReturnType;
                         return retType;
-                    }
 
-                    retType = this.GetArgType(index);
-                    return retType;
+                    case Code.Stloc:
+                    case Code.Stloc_0:
+                    case Code.Stloc_1:
+                    case Code.Stloc_2:
+                    case Code.Stloc_3:
+                    case Code.Stloc_S:
+                        retType = opCodePart.GetLocalType(this);
+                        return retType;
 
-                case Code.Stsfld:
-                    var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    retType = operand.FieldType;
-                    return retType;
-                case Code.Stfld:
-                    operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
-                    return retType;
-
-                case Code.Stobj:
-                    type = ((OpCodeTypePart)opCodePart).Operand;
-                    retType = operandPosition == 1 ? type : null;
-                    return retType;
-
-                case Code.Stind_Ref:
-                    retType = null;
-                    if (operandPosition == 1)
-                    {
-                        retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                        if (retType == null)
+                    case Code.Starg:
+                    case Code.Starg_S:
+                        var index = opCodePart.GetArgIndex();
+                        if (this.HasMethodThis && index == 0)
                         {
-                            retType = this.System.System_Void.ToPointerType();
-                        }
-                        else if (retType.IsByRef)
-                        {
-                            retType = retType.GetElementType();
-                        }
-                    }
-
-                    return retType;
-
-                case Code.Stind_I:
-                    return operandPosition == 1 ? this.GetTypeOfReference(opCodePart) : null;
-
-                case Code.Stind_I1:
-                    if (operandPosition == 1)
-                    {
-                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                        type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                        if (type.IsVoid() || type.IntTypeBitSize() > 8)
-                        {
-                            type = this.System.System_SByte;
+                            retType = this.ThisType;
+                            return retType;
                         }
 
-                        return type;
-                    }
-                    else
-                    {
-                        return null;
-                    }
+                        retType = this.GetArgType(index);
+                        return retType;
 
-                case Code.Stind_I2:
-                    return operandPosition == 1 ? this.System.System_Int16 : null;
+                    case Code.Stsfld:
+                        var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                        retType = operand.FieldType;
+                        return retType;
+                    case Code.Stfld:
+                        operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                        retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
+                        return retType;
 
-                case Code.Stind_I4:
-                    return operandPosition == 1 ? this.System.System_Int32 : null;
+                    case Code.Stobj:
+                        type = ((OpCodeTypePart)opCodePart).Operand;
+                        retType = operandPosition == 1 ? type : null;
+                        return retType;
 
-                case Code.Stind_I8:
-                    return operandPosition == 1 ? this.System.System_Int64 : null;
-
-                case Code.Stind_R4:
-                    return operandPosition == 1 ? this.System.System_Single : null;
-
-                case Code.Stind_R8:
-                    return operandPosition == 1 ? this.System.System_Double : null;
-
-                case Code.Stelem_Ref:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
-
-                case Code.Stelem_I:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_IntPtr : null;
-
-                case Code.Stelem:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? (opCodePart as OpCodeTypePart).Operand : null;
-
-                case Code.Stelem_I1:
-
-                    if (operandPosition == 2)
-                    {
-                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                        type = result.Type.GetElementType();
-                        if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    case Code.Stind_Ref:
+                        retType = null;
+                        if (operandPosition == 1)
                         {
-                            type = this.System.System_SByte;
+                            retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                            if (retType == null)
+                            {
+                                retType = this.System.System_Void.ToPointerType();
+                            }
+                            else if (retType.IsByRef)
+                            {
+                                retType = retType.GetElementType();
+                            }
                         }
 
-                        return type;
-                    }
-                    else
-                    {
+                        return retType;
+
+                    case Code.Stind_I:
+                        return operandPosition == 1 ? this.GetTypeOfReference(opCodePart) : null;
+
+                    case Code.Stind_I1:
+                        if (operandPosition == 1)
+                        {
+                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                            if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                            {
+                                type = this.System.System_SByte;
+                            }
+
+                            return type;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+
+                    case Code.Stind_I2:
+                        return operandPosition == 1 ? this.System.System_Int16 : null;
+
+                    case Code.Stind_I4:
                         return operandPosition == 1 ? this.System.System_Int32 : null;
-                    }
 
-                case Code.Stelem_I2:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int16 : null;
+                    case Code.Stind_I8:
+                        return operandPosition == 1 ? this.System.System_Int64 : null;
 
-                case Code.Stelem_I4:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int32 : null;
+                    case Code.Stind_R4:
+                        return operandPosition == 1 ? this.System.System_Single : null;
 
-                case Code.Stelem_I8:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int64 : null;
+                    case Code.Stind_R8:
+                        return operandPosition == 1 ? this.System.System_Double : null;
 
-                case Code.Stelem_R4:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Single : null;
+                    case Code.Stelem_Ref:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
 
-                case Code.Stelem_R8:
-                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Double : null;
+                    case Code.Stelem_I:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_IntPtr : null;
 
-                case Code.Ldelem_Ref:
-                case Code.Ldelem_I:
-                case Code.Ldelem_I1:
-                case Code.Ldelem_I2:
-                case Code.Ldelem_I4:
-                case Code.Ldelem_U1:
-                case Code.Ldelem_U2:
-                case Code.Ldelem_U4:
-                case Code.Ldelem_R4:
-                case Code.Ldelem_R8:
-                    return operandPosition == 1 ? this.System.System_Int32 : null;
+                    case Code.Stelem:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? (opCodePart as OpCodeTypePart).Operand : null;
 
-                case Code.Unbox:
-                case Code.Unbox_Any:
-                    if (operandPosition == 0)
-                    {
-                        retType = ((OpCodeTypePart)opCodePart).Operand;
-                        return retType.ToClass();
-                    }
+                    case Code.Stelem_I1:
 
-                    return null;
-
-                case Code.Box:
-
-                    if (operandPosition == 0)
-                    {
-                        retType = ((OpCodeTypePart)opCodePart).Operand;
-                        if (retType.IsPointer)
+                        if (operandPosition == 2)
                         {
-                            return this.System.System_Int32;
+                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            type = result.Type.GetElementType();
+                            if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                            {
+                                type = this.System.System_SByte;
+                            }
+
+                            return type;
+                        }
+                        else
+                        {
+                            return operandPosition == 1 ? this.System.System_Int32 : null;
                         }
 
-                        return retType.UseAsClass ? retType.ToNormal() : retType;
-                    }
+                    case Code.Stelem_I2:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_Int16 : null;
 
-                    return null;
+                    case Code.Stelem_I4:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_Int32 : null;
 
-                case Code.Call:
-                case Code.Callvirt:
-                    var effectiveOperandPosition = operandPosition;
-                    var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                    if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
-                    {
+                    case Code.Stelem_I8:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_Int64 : null;
+
+                    case Code.Stelem_R4:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_Single : null;
+
+                    case Code.Stelem_R8:
+                        return operandPosition == 1
+                            ? this.System.System_Int32
+                            : operandPosition == 2 ? this.System.System_Double : null;
+
+                    case Code.Ldelem_Ref:
+                    case Code.Ldelem_I:
+                    case Code.Ldelem_I1:
+                    case Code.Ldelem_I2:
+                    case Code.Ldelem_I4:
+                    case Code.Ldelem_U1:
+                    case Code.Ldelem_U2:
+                    case Code.Ldelem_U4:
+                    case Code.Ldelem_R4:
+                    case Code.Ldelem_R8:
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Unbox:
+                    case Code.Unbox_Any:
                         if (operandPosition == 0)
                         {
-                            var requiredIncomingType = opCodePartMethod.Operand.DeclaringType;
-                            return requiredIncomingType.IsValueType() ? requiredIncomingType.ToClass() : requiredIncomingType;
+                            retType = ((OpCodeTypePart)opCodePart).Operand;
+                            return retType.ToClass();
                         }
 
-                        effectiveOperandPosition--;
-                    }
+                        return null;
 
-                    var parameters = opCodePartMethod.Operand.GetParameters();
-                    index = 0;
-                    if (parameters != null)
-                    {
+                    case Code.Box:
+
+                        if (operandPosition == 0)
+                        {
+                            retType = ((OpCodeTypePart)opCodePart).Operand;
+                            if (retType.IsPointer)
+                            {
+                                return this.System.System_Int32;
+                            }
+
+                            return retType.UseAsClass ? retType.ToNormal() : retType;
+                        }
+
+                        return null;
+
+                    case Code.Call:
+                    case Code.Callvirt:
+                        var effectiveOperandPosition = operandPosition;
+                        var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                        if (opCodePart.Any(Code.Callvirt) ||
+                            opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                        {
+                            if (operandPosition == 0)
+                            {
+                                var requiredIncomingType = opCodePartMethod.Operand.DeclaringType;
+                                return requiredIncomingType.IsValueType()
+                                    ? requiredIncomingType.ToClass()
+                                    : requiredIncomingType;
+                            }
+
+                            effectiveOperandPosition--;
+                        }
+
+                        var parameters = opCodePartMethod.Operand.GetParameters();
+                        index = 0;
+                        if (parameters != null)
+                        {
+                            foreach (var parameter in parameters)
+                            {
+                                if (index == effectiveOperandPosition)
+                                {
+                                    retType = parameter.ParameterType;
+                                    break;
+                                }
+
+                                index++;
+                            }
+                        }
+
+                        break;
+
+                    case Code.Newobj:
+
+                        if (opCodePart.ReadExceptionFromStack)
+                        {
+                            retType = opCodePart.ReadExceptionFromStackType;
+                            break;
+                        }
+
+                        effectiveOperandPosition = operandPosition;
+                        var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                        parameters = opCodeConstructorInfoPart.Operand.GetParameters();
+                        index = 0;
                         foreach (var parameter in parameters)
                         {
                             if (index == effectiveOperandPosition)
@@ -1806,71 +1862,55 @@ namespace Il2Native.Logic
 
                             index++;
                         }
-                    }
 
-                    break;
-
-                case Code.Newobj:
-
-                    if (opCodePart.ReadExceptionFromStack)
-                    {
-                        retType = opCodePart.ReadExceptionFromStackType;
                         break;
-                    }
 
-                    effectiveOperandPosition = operandPosition;
-                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                    parameters = opCodeConstructorInfoPart.Operand.GetParameters();
-                    index = 0;
-                    foreach (var parameter in parameters)
-                    {
-                        if (index == effectiveOperandPosition)
+                    case Code.Newarr:
+                    case Code.Localloc:
+                        return System.System_Int32;
+
+                    case Code.Initblk:
+                        if (operandPosition == 0)
                         {
-                            retType = parameter.ParameterType;
-                            break;
+                            return System.System_Byte.ToPointerType();
+                        }
+                        else if (operandPosition == 1)
+                        {
+                            return System.System_Int32;
                         }
 
-                        index++;
-                    }
+                        return null;
 
-                    break;
+                    case Code.Cpblk:
 
-                case Code.Newarr:
-                case Code.Localloc:
-                    return System.System_Int32;
+                        if (operandPosition <= 1)
+                        {
+                            return System.System_Byte.ToPointerType();
+                        }
+                        else if (operandPosition == 2)
+                        {
+                            return System.System_Int32;
+                        }
 
-                case Code.Initblk:
-                    if (operandPosition == 0)
-                    {
-                        return System.System_Byte.ToPointerType();
-                    }
-                    else if (operandPosition == 1)
-                    {
-                        return System.System_Int32;
-                    }
+                        return null;
 
-                    return null;
+                    case Code.Dup:
+                        // to fix issue wich changing type in RequiredOutgoing type when fixing Pointers in SanitizePointers func.
+                        retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                        return retType;
+                }
 
-                case Code.Cpblk:
+                if (forArithmeticOperations)
+                {
+                    return this.RequiredArithmeticIncomingType(opCodePart) ?? retType;
+                }
 
-                    if (operandPosition <= 1)
-                    {
-                        return System.System_Byte.ToPointerType();
-                    }
-                    else if (operandPosition == 2)
-                    {
-                        return System.System_Int32;
-                    }
-
-                    return null;
+                return retType;
             }
-
-            if (forArithmeticOperations)
+            finally
             {
-                return this.RequiredArithmeticIncomingType(opCodePart) ?? retType;
+                opCodePart.Discovering = false;
             }
-
-            return retType;
         }
 
         /// <summary>

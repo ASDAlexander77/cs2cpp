@@ -194,6 +194,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// used to show if the opCode was discovered (to speed up the process)
         /// </summary>
-        public bool Discovered { get; set; }
+        public bool Discovering { get; set; }
     }
 }
