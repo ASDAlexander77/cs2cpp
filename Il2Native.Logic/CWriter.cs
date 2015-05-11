@@ -909,7 +909,6 @@ namespace Il2Native.Logic
 
                 case Code.Dup:
 
-                    var estimatedResult = this.EstimatedResultOf(firstOpCodeOperand);
                     var dupVar = string.Concat("_dup", opCode.AddressStart);
 
                     // TEMP HACK
@@ -921,7 +920,7 @@ namespace Il2Native.Logic
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
 
                     // do not remove next live, it contains _dup variable
-                    opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, estimatedResult.Type);
+                    opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, opCode.RequiredOutgoingType);
 
                     // TEMP HACK
                     if (opCode.UsedBy.Any(Code.Call, Code.Callvirt, Code.Newobj, Code.Newarr))
@@ -995,7 +994,7 @@ namespace Il2Native.Logic
 
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                     var estResult = this.EstimatedResultOf(firstOpCodeOperand);
-                    if (localType.IsStructureType() && !localType.IsByRef && estResult.Type.IsPrimitiveType())
+                    if (IsStructSave(localType, estResult))
                     {
                         this.WriteSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                     }
@@ -1098,7 +1097,7 @@ namespace Il2Native.Logic
                     var argType = this.GetArgType(index);
                     destination = new FullyDefinedReference(this.GetArgVarName(actualIndex, index), this.GetArgType(index));
                     estResult = this.EstimatedResultOf(firstOpCodeOperand);
-                    if (argType.IsStructureType() && !argType.IsByRef && estResult.Type.IsPrimitiveType())
+                    if (IsStructSave(argType, estResult))
                     {
                         this.WriteSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                     }
@@ -1653,6 +1652,22 @@ namespace Il2Native.Logic
                 case Code.Ckfinite:
                     throw new NotImplementedException();
             }
+        }
+
+        private bool IsStructSave(IType localType, ReturnResult estResult)
+        {
+            if (!localType.IsStructureType() || localType.IsByRef || localType.TypeEquals(estResult.Type))
+            {
+                return false;
+            }
+
+            var fieldByFieldNumber = localType.GetFieldByFieldNumber(0, this);
+            if (fieldByFieldNumber == null)
+            {
+                return false;
+            }
+
+            return fieldByFieldNumber.FieldType.TypeEquals(estResult.Type);
         }
 
         private string WriteVariableDeclare(OpCodePart opCode, IType type, string name)
@@ -4118,8 +4133,7 @@ namespace Il2Native.Logic
             // Temp hack to delcare all temp variables;
             foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
             {
-                var estimatedResult = this.EstimatedResultOf(opCodePart);
-                this.WriteVariableDeclare(opCodePart, estimatedResult.Type, "_dup");
+                this.WriteVariableDeclare(opCodePart, opCodePart.RequiredOutgoingType, "_dup");
             }
 
             this.IterateMethodBodyOpCodes(rest);

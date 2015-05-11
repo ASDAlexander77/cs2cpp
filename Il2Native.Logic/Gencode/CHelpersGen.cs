@@ -502,6 +502,7 @@ namespace Il2Native.Logic.Gencode
             }
             else if (estimatedOperandResultOf.Type.IsArray
                      || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
+                     || (estimatedOperandResultOf.Type.IsPointer && toType.UseAsClass)
                      || toType.IsPointer
                      || toType.IsByRef
                      || bareType.IsDerivedFrom(toType)

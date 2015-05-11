@@ -452,6 +452,10 @@ namespace Il2Native.Logic
             IntPtrToInt,
             PointerToInt,
             IntToPointer,
+            ArrayOfDerivedTypeToArrayOfBaseType,
+            ArrayOfInterfaceToArrayOfObject,
+            ArrayOfObjectToArrayOfInterface,
+            ValueToStructureType,
             CCast
         }
 
@@ -535,6 +539,14 @@ namespace Il2Native.Logic
                 return castOpCode;
             }
 
+            if (conversionType == ConversionType.ValueToStructureType)
+            {
+                // cast to type of first field
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType.GetFieldByFieldNumber(0, this).FieldType);
+                this.InsertOperand(opCodeOperand, castOpCode, actualUsedByInfo);
+                return castOpCode;                
+            }
+
             return opCodeOperand;
         }
 
@@ -542,13 +554,16 @@ namespace Il2Native.Logic
         {
             switch (conversionType)
             {
+                case ConversionType.CCast:
                 case ConversionType.BaseToDerived:
                 case ConversionType.DerivedToBase:
                 case ConversionType.ObjectToInterface:
                 case ConversionType.InterfaceToObject:
-                case ConversionType.CCast:
                 case ConversionType.PointerToInt:
                 case ConversionType.IntToPointer:
+                case ConversionType.ArrayOfDerivedTypeToArrayOfBaseType:
+                case ConversionType.ArrayOfInterfaceToArrayOfObject:
+                case ConversionType.ArrayOfObjectToArrayOfInterface:
                     return true;
             }
 
@@ -606,7 +621,6 @@ namespace Il2Native.Logic
                 return ConversionType.None;
             }
 
-            // detect conversion
             if (sourceType.GetAllInterfaces().Contains(destinationType))
             {
                 return ConversionType.ObjectToInterface;
@@ -644,6 +658,12 @@ namespace Il2Native.Logic
                 return ConversionType.CCast;
             }
 
+            // in case we send pointer to call method
+            if (sourceType.IsPointer && destinationType.UseAsClass && sourceType.GetElementType().TypeNotEquals(destinationType.ToNormal()))
+            {
+                return ConversionType.CCast;
+            }
+
             if (destinationType.IsDerivedFrom(sourceType))
             {
                 return ConversionType.BaseToDerived;
@@ -651,7 +671,19 @@ namespace Il2Native.Logic
 
             if (sourceType.IsArray && destinationType.IsArray && sourceType.GetElementType().IsDerivedFrom(destinationType.GetElementType()))
             {
-                return ConversionType.CCast;
+                return ConversionType.ArrayOfDerivedTypeToArrayOfBaseType;
+            }
+
+            // TODO: warning: casting Array of Interfaces to Array of Objects (may not work)
+            if (sourceType.IsArray && destinationType.IsArray && sourceType.GetElementType().IsInterface && destinationType.GetElementType().IsObject)
+            {
+                return ConversionType.ArrayOfInterfaceToArrayOfObject;
+            }
+
+            // TODO: warning: casting Array of Objects to Array of Generic Interfaces (may not work)
+            if (sourceType.IsArray && destinationType.IsInterface)
+            {
+                return ConversionType.ArrayOfObjectToArrayOfInterface;
             }
 
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
@@ -667,6 +699,17 @@ namespace Il2Native.Logic
             if (sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize && destinationType.IsPointer)
             {
                 return ConversionType.IntToPointer;
+            }
+
+            if (sourceType.IsPrimitiveTypeOrEnum() && destinationType.IsStructureType())
+            {
+                return ConversionType.ValueToStructureType;
+            }
+
+            // in case we need to cast object to other object using Object inheritance
+            if (sourceType.UseAsClass && destinationType.UseAsClass && sourceType.TypeNotEquals(destinationType))
+            {
+                return ConversionType.CCast;
             }
 
             return ConversionType.None;
@@ -1896,8 +1939,12 @@ namespace Il2Native.Logic
 
                     case Code.Dup:
                         // to fix issue wich changing type in RequiredOutgoing type when fixing Pointers in SanitizePointers func.
-                        retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                        return retType;
+                        if (opCodePart.UsedBy == null)
+                        {
+                            return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                        }
+
+                        return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
                 }
 
                 if (forArithmeticOperations)
@@ -1921,7 +1968,6 @@ namespace Il2Native.Logic
         /// </returns>
         protected IType RequiredOutgoingType(OpCodePart opCodePart)
         {
-            // TODO: need a good review of required types etc
             IType retType = null;
             var code = opCodePart.ToCode();
             switch (code)
