@@ -486,8 +486,6 @@ namespace Il2Native.Logic
                         var index = 0;
                         foreach (var opCodeOperand in alternativeValue.Values.ToArray())
                         {
-                            Debug.Assert(!(opCodeOperand.Any(Code.Newobj) && opCodeOperand.AddressStart == 297));
-
                             var insertCastFixOperation = this.InsertCastFixOperation(opCodeOperand);
                             opCodeOperand.UsedByAlternativeValues = null;
                             alternativeValue.Values[index++] = insertCastFixOperation;
