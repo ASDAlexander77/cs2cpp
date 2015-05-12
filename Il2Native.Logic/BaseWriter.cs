@@ -486,6 +486,8 @@ namespace Il2Native.Logic
                         var index = 0;
                         foreach (var opCodeOperand in alternativeValue.Values.ToArray())
                         {
+                            Debug.Assert(!(opCodeOperand.Any(Code.Newobj) && opCodeOperand.AddressStart == 297));
+
                             var insertCastFixOperation = this.InsertCastFixOperation(opCodeOperand);
                             opCodeOperand.UsedByAlternativeValues = null;
                             alternativeValue.Values[index++] = insertCastFixOperation;
@@ -598,10 +600,18 @@ namespace Il2Native.Logic
             var sourceType = opCodeOperand.RequiredOutgoingType ?? this.RequiredOutgoingType(opCodeOperand);
             if (opCodeOperand.UsedByAlternativeValues != null)
             {
+                // in case of AlternativeValues
                 var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
                 if (opCodeUsedByFromAlternativeValues != null)
                 {
                     usedByInfo = opCodeUsedByFromAlternativeValues.UsedBy;
+                    var requiredIncomingTypes = usedByInfo.OpCode.RequiredIncomingTypes;
+                    destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[usedByInfo.OperandPosition] : null;
+                    if (destinationType == null)
+                    {
+                        usedByInfo = null;
+                        destinationType = opCodeUsedByFromAlternativeValues.RequiredOutgoingType;
+                    }
                 }
             }
 
@@ -707,7 +717,7 @@ namespace Il2Native.Logic
             }
 
             // in case we need to cast object to other object using Object inheritance
-            if (sourceType.UseAsClass && destinationType.UseAsClass && sourceType.TypeNotEquals(destinationType))
+            if (sourceType.IsReference() && destinationType.IsReference() && sourceType.NormalizeType().TypeNotEquals(destinationType.NormalizeType()))
             {
                 return ConversionType.CCast;
             }
@@ -1938,10 +1948,16 @@ namespace Il2Native.Logic
                         return null;
 
                     case Code.Dup:
-                        // to fix issue wich changing type in RequiredOutgoing type when fixing Pointers in SanitizePointers func.
+                        // TODO: TEMP HACK
+                        // to fix issue which changing type in RequiredOutgoing type when fixing Pointers in SanitizePointers func.
                         if (opCodePart.UsedBy == null)
                         {
-                            return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                            if (!opCodePart.OpCodeOperands[0].Any(Code.Ldnull))
+                            {
+                                return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                            }
+
+                            return null;
                         }
 
                         return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
@@ -2089,7 +2105,7 @@ namespace Il2Native.Logic
                 case Code.Ldind_I:
 
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    if (retType.IsByRef || retType.IsPointer)
+                    if ((retType.IsByRef || retType.IsPointer) && !retType.IsVoidPointer())
                     {
                         return retType.GetElementType();
                     }

@@ -598,27 +598,24 @@ namespace Il2Native.Logic
             return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsBranch(this OpCodePart opCodePart)
+        public static bool IsReference(this IType type)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Branch && opCodePart.ToCode() != Code.Switch;
-        }
+            if (type == null)
+            {
+                return false;
+            }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsCondBranch(this OpCodePart opCodePart)
-        {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() != Code.Switch && opCodePart.ToCode() != Code.Leave
-                   && opCodePart.ToCode() != Code.Leave_S;
+            if (type.IsPointer || type.IsByRef || type.UseAsClass)
+            {
+                return true;
+            }
+
+            if (type.IsValueType)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
