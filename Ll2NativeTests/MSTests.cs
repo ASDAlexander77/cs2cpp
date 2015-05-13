@@ -425,6 +425,7 @@ namespace Ll2NativeTests
             // 647 - Enum.Parse NotImplemented
             // 649 - Decimal not implemented
             // 653 - stackalloc overflow. TODO: Need to be fixed.
+            // 654 - ??? 
             // 657 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 660 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 661 - error CS0246: The type or namespace name 'SummaryInfo' could not be found
@@ -587,6 +588,7 @@ namespace Ll2NativeTests
                         647,
                         649,
                         653,
+                        654,
                         657,
                         660,
                         661,
@@ -601,7 +603,7 @@ namespace Ll2NativeTests
             }
             else
             {
-                skip.AddRange(new[] { 499 });
+                skip.AddRange(new[] { 499, 591 });
             }
 
             // TODO: remove when overflow ops are done

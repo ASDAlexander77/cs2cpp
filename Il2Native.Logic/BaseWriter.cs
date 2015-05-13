@@ -559,7 +559,7 @@ namespace Il2Native.Logic
                 // cast to type of first field
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType.GetFieldByFieldNumber(0, this).FieldType);
                 this.InsertOperand(opCodeOperand, castOpCode, actualUsedByInfo);
-                return castOpCode;                
+                return castOpCode;
             }
 
             return opCodeOperand;
@@ -817,11 +817,15 @@ namespace Il2Native.Logic
 
         private void FixDivPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand0, ReturnResult op0, OpCodePart opCodeOperand1)
         {
-            if (op0.Type.GetElementType().GetTypeSize(this, true) == this.GetIntegerValueFromOpCode(opCodeOperand1))
+            var elementType = op0.Type.GetElementType();
+            var typePart = opCodeOperand1 as OpCodeTypePart;
+            var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperand1);
+            if ((opCodeOperand1.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
+                || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
             {
                 this.ReplaceOperand(opCodePart, opCodeOperand0);
             }
-            else if (1 == this.GetIntegerValueFromOpCode(opCodeOperand1))
+            else if (1 == integerValueFromOpCode)
             {
                 // in case pointers casted to Byte*
                 switch (opCodeOperand0.ToCode())
