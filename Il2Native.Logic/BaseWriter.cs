@@ -481,6 +481,7 @@ namespace Il2Native.Logic
 
                 if (opCodePart.AlternativeValues != null)
                 {
+                    // adjust when you set phi nodes
                     foreach (var alternativeValue in opCodePart.AlternativeValues)
                     {
                         var index = 0;
@@ -490,6 +491,20 @@ namespace Il2Native.Logic
                             opCodeOperand.UsedByAlternativeValues = null;
                             alternativeValue.Values[index++] = insertCastFixOperation;
                             insertCastFixOperation.UsedByAlternativeValues = alternativeValue;
+                        }
+                    }
+
+                    // adjust when you read phi noes
+                    foreach (var alternativeValue in opCodePart.AlternativeValues)
+                    {
+                        foreach (var opCodeOperand in alternativeValue.Values.ToArray())
+                        {
+                            if (opCodeOperand.UsedBy == null)
+                            {
+                                continue;
+                            }
+
+                            this.InsertCastFixOperation(opCodeOperand, opCodeOperand.UsedBy);
                         }
                     }
                 }
@@ -596,16 +611,14 @@ namespace Il2Native.Logic
             }
 
             var sourceType = opCodeOperand.RequiredOutgoingType ?? this.RequiredOutgoingType(opCodeOperand);
-            if (opCodeOperand.UsedByAlternativeValues != null)
+            if (actualUsedByInfo == null && opCodeOperand.UsedByAlternativeValues != null)
             {
                 // in case of AlternativeValues
                 var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
                 if (opCodeUsedByFromAlternativeValues != null)
                 {
                     usedByInfo = opCodeUsedByFromAlternativeValues.UsedBy;
-                    var requiredIncomingTypes = usedByInfo.OpCode.RequiredIncomingTypes;
-                    destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[usedByInfo.OperandPosition] : null;
-                    if (destinationType == null)
+                    if (opCodeUsedByFromAlternativeValues.RequiredOutgoingType != null)
                     {
                         usedByInfo = null;
                         destinationType = opCodeUsedByFromAlternativeValues.RequiredOutgoingType;
