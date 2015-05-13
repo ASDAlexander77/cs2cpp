@@ -604,25 +604,21 @@ namespace Il2Native.Logic
             destinationType = null;
 
             var usedByInfo = actualUsedByInfo ?? opCodeOperand.UsedBy;
-            if (usedByInfo == null && opCodeOperand.UsedByAlternativeValues == null)
+            var usedByAlternativeValues = opCodeOperand.UsedByAlternativeValues;
+            if (usedByInfo == null && usedByAlternativeValues == null)
             {
                 Debug.Assert(false, "OpCode is not used at all");
                 return ConversionType.None;
             }
 
             var sourceType = opCodeOperand.RequiredOutgoingType ?? this.RequiredOutgoingType(opCodeOperand);
-            if (actualUsedByInfo == null && opCodeOperand.UsedByAlternativeValues != null)
+            if (actualUsedByInfo == null && usedByAlternativeValues != null)
             {
                 // in case of AlternativeValues
-                var opCodeUsedByFromAlternativeValues = GetUsedByFromAlternativeValues(opCodeOperand.UsedByAlternativeValues);
-                if (opCodeUsedByFromAlternativeValues != null)
+                if (usedByAlternativeValues.RequiredOutgoingType != null)
                 {
-                    usedByInfo = opCodeUsedByFromAlternativeValues.UsedBy;
-                    if (opCodeUsedByFromAlternativeValues.RequiredOutgoingType != null)
-                    {
-                        usedByInfo = null;
-                        destinationType = opCodeUsedByFromAlternativeValues.RequiredOutgoingType;
-                    }
+                    usedByInfo = null;
+                    destinationType = usedByAlternativeValues.RequiredOutgoingType;
                 }
             }
 
