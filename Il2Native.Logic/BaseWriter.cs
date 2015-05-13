@@ -1187,6 +1187,8 @@ namespace Il2Native.Logic
                 ReplaceOperand(firstOperand, constrained, true);
                 constrained.OpCodeOperands = new[] { firstOperand };
                 firstOperand.UsedBy = new UsedByInfo(constrained, 0);
+
+                this.RequiredIncomingOutgoingTypes(constrained);
             }
         }
 
