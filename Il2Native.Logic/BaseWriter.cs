@@ -2431,6 +2431,11 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (retType.IsPinned)
+            {
+                return this.System.System_Void.ToPointerType();
+            }
+
             if (retType.IsByRef && retType.GetElementType().TypeNotEquals(convType))
             {
                 return retType.GetElementType().ToPointerType();
