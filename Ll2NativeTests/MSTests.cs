@@ -431,6 +431,7 @@ namespace Ll2NativeTests
             // 661 - error CS0246: The type or namespace name 'SummaryInfo' could not be found
             // 666 - unicode used in preprocessor
             // 671 - error CS0837: The first operand of an 'is' or 'as' operator may not be a lambda expression, anonymous method, or method group.
+            // 678 - issue with comparing NaN to 0.0 in C code. TODO: Investigate
             // -----------
             // 32, 55, 74 - missing class
 
@@ -593,7 +594,8 @@ namespace Ll2NativeTests
                         660,
                         661,
                         666,
-                        671
+                        671,
+                        678
                     });
 
             if (CompilerHelper.UsingRoslyn)

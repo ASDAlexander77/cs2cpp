@@ -2075,7 +2075,7 @@ namespace Il2Native.Logic
                     return retType;
 
                 case Code.Ldelem_I:
-                    return this.System.System_Int32;
+                    return this.System.System_IntPtr;
 
                 case Code.Ldelem_I1:
                     return this.System.System_SByte;
