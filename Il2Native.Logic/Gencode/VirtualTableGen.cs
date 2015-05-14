@@ -202,13 +202,6 @@ namespace Il2Native.Logic.Gencode
             return string.Concat("(Void**) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
         }
 
-        public static void WriteVirtualInterfaceTableNameReferenceDeclaration(this IType type, IType @interface, CWriter cWriter)
-        {
-            cWriter.Output.Write(cWriter.declarationPrefix);
-            cWriter.Output.Write("struct {} ");
-            cWriter.Output.Write(GetVirtualInterfaceTableName(type, @interface, cWriter, true));
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="thisType">

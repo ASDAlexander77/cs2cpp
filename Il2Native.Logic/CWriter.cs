@@ -4554,7 +4554,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
+            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
             {
                 var current = type;
                 IType typeContainingInterface = null;
@@ -4608,13 +4608,16 @@ namespace Il2Native.Logic
 
                 var virtualTable = type.GetVirtualInterfaceTableLayout(this);
 
+                var index = 0;
+
                 foreach (var method in virtualTable)
                 {
-                    var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", usedMethods.Count) : null;
+                    var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
                     this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
                     writer.WriteLine(";");
 
                     usedMethods.Add(method);
+                    index++;
                 }
 
                 foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
@@ -4622,11 +4625,12 @@ namespace Il2Native.Logic
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
                     foreach (var method in virtualTableOfSecondaryInterface)
                     {
-                        var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", usedMethods.Count) : null;
+                        var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
                         this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
                         writer.WriteLine(";");
 
                         usedMethods.Add(method);
+                        index++;
                     }
                 }
             }

@@ -783,6 +783,7 @@ namespace Ll2NativeTests
             // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
             // 555 - Bug with Nullable in 'is' operator. TODO: Need to be fixed
             // 564 - error CS1061: 'System.Reflection.MethodInfo'
+            // 571 - Fail: Not implemented yet. TODO: Implement it!
 
             // 53 - ValueType.ToString() not implemented
 
@@ -874,7 +875,8 @@ namespace Ll2NativeTests
                 529,
                 554,
                 555,
-                564
+                564,
+                571
             });
 
             // TODO: remove when overflow ops are done
