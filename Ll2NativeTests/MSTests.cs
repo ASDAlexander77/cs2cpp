@@ -784,6 +784,8 @@ namespace Ll2NativeTests
             // 555 - Bug with Nullable in 'is' operator. TODO: Need to be fixed
             // 564 - error CS1061: 'System.Reflection.MethodInfo'
             // 571 - Fail: Not implemented yet. TODO: Implement it!
+            // 582 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
+            // 583 - lib with IL
 
             // 53 - ValueType.ToString() not implemented
 
@@ -876,7 +878,9 @@ namespace Ll2NativeTests
                 554,
                 555,
                 564,
-                571
+                571,
+                582,
+                583
             });
 
             // TODO: remove when overflow ops are done
