@@ -1512,6 +1512,7 @@ namespace Il2Native.Logic
                         if (!isIntPtrOrUIntPtr)
                         {
                             this.Output.WriteLine(";");
+                            // TODO: this is hack to init structure if it is from Class member (ideally you need to initialize it when you call new on Class)
                             @class.WriteCallInitObjectMethod(this, opCode);
                         }
                     }
