@@ -201,6 +201,10 @@ namespace System
             }
 
             int[] other = ((Guid)obj).m_data;
+            if (other == null)
+            {
+                return false;
+            }
 
             return (m_data[0] == other[0]) && (m_data[1] == other[1]) && (m_data[2] == other[2]) && (m_data[3] == other[3]);
         }

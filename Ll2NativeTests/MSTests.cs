@@ -455,6 +455,19 @@ namespace Ll2NativeTests
             // 792 - lib with IL
             // 793 - test works but returns 1 as sizeof in C# and C++ have different result (maybe will be fixed in future)
             // 795 - error CS0246: The type or namespace name 'AppDomainSetup' could not be found
+            // 801 - error CS0034: Operator '-' is ambiguous on operands of type 'C.E' and 'C'
+            // 805 - lib with IL
+            // 806 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 810 - lib with IL
+            // 811 - error CS0246: The type or namespace name 'ArgIterator' could not be found
+            // 814 - Mono
+            // 816 - error CS1061: 'System.AppDomain' does not contain a definition for 'TypeResolve'
+            // 819 - error in generated C (conflict of System.Int32)
+            // 820 - using two Main
+            // 823 - lib with IL
+            // 825 - error CS0246: The type or namespace name 'Conditional' could not be found. TODO: Can be fixed
+            // 826 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes' 
+            // 831 - error CS0246: The type or namespace name 'Conditional' could not be found. TODO: Can be fixed
             // -----------
             // 32, 55, 74 - missing class
 
@@ -641,7 +654,20 @@ namespace Ll2NativeTests
                         782,
                         792,
                         793,
-                        795
+                        795,
+                        801,
+                        805,
+                        806,
+                        810,
+                        811,
+                        814,
+                        816,
+                        819,
+                        820,
+                        823,
+                        825,
+                        826,
+                        831
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -657,7 +683,7 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485, 643 });
 
-            foreach (var index in Enumerable.Range(795, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(831, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
