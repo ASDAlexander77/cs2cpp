@@ -1135,41 +1135,6 @@ namespace Il2Native.Logic
 
                     var methodInfo = opCodeMethodInfoPart.Operand;
 
-                    var convertString = this.WriteToString(
-                        () =>
-                        {
-                            IType thisType;
-                            bool hasThisArgument;
-                            OpCodePart opCodeFirstOperand;
-                            ReturnResult resultOfFirstOperand;
-                            bool isIndirectMethodCall;
-                            IType ownerOfExplicitInterface;
-                            IType requiredType;
-                            methodInfo.FunctionCallProlog(
-                                opCodeMethodInfoPart,
-                                true,
-                                true,
-                                this,
-                                out thisType,
-                                out hasThisArgument,
-                                out opCodeFirstOperand,
-                                out resultOfFirstOperand,
-                                out isIndirectMethodCall,
-                                out ownerOfExplicitInterface,
-                                out requiredType);
-
-                            if (isIndirectMethodCall)
-                            {
-                                this.Output.Write("(Void*)");
-                                this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
-                            }
-                            else
-                            {
-                                this.Output.Write("(Byte*) &");
-                                this.WriteMethodDefinitionName(writer, methodInfo);
-                            }
-                        });
-
                     System.System_IntPtr.WriteTypePrefix(this);
                     ptrVar = string.Format("_ptr{0}", opCode.AddressStart);
                     this.Output.WriteLine(" {0};", ptrVar);
@@ -1181,7 +1146,7 @@ namespace Il2Native.Logic
                         null);
 
                     this.Output.Write(" = ");
-                    this.Output.Write(convertString);
+                    this.WriteFunctionAddressForVirtualMethod(writer, methodInfo, opCodeMethodInfoPart);
                     this.Output.WriteLine(";");
 
                     opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
@@ -1535,12 +1500,20 @@ namespace Il2Native.Logic
                     if (opCodeTypePart.Operand.IsStructureType())
                     {
                         // TODO: IntPtr hack, cast operation (review it)
-                        if (opCodeTypePart.Operand.IsIntPtrOrUIntPtr())
+                        var isIntPtrOrUIntPtr = opCodeTypePart.Operand.IsIntPtrOrUIntPtr();
+                        if (isIntPtrOrUIntPtr)
                         {
                             this.WriteCCastOnly(@class);
                         }
 
                         WriteOperandResultOrActualWrite(this.Output, opCode, 0);
+                        opCode.Result = new FullyDefinedReference(constrVar, @class);
+
+                        if (!isIntPtrOrUIntPtr)
+                        {
+                            this.Output.WriteLine(";");
+                            @class.WriteCallInitObjectMethod(this, opCode);
+                        }
                     }
                     else if (opCodeTypePart.Operand.IsValueType())
                     {
@@ -1651,6 +1624,40 @@ namespace Il2Native.Logic
 
                 case Code.Ckfinite:
                     throw new NotImplementedException();
+            }
+        }
+
+        private void WriteFunctionAddressForVirtualMethod(CIndentedTextWriter writer, IMethod methodInfo, OpCodeMethodInfoPart opCodeMethodInfoPart)
+        {
+            IType thisType;
+            bool hasThisArgument;
+            OpCodePart opCodeFirstOperand;
+            ReturnResult resultOfFirstOperand;
+            bool isIndirectMethodCall;
+            IType ownerOfExplicitInterface;
+            IType requiredType;
+            methodInfo.FunctionCallProlog(
+                opCodeMethodInfoPart,
+                true,
+                true,
+                this,
+                out thisType,
+                out hasThisArgument,
+                out opCodeFirstOperand,
+                out resultOfFirstOperand,
+                out isIndirectMethodCall,
+                out ownerOfExplicitInterface,
+                out requiredType);
+
+            if (isIndirectMethodCall)
+            {
+                this.Output.Write("(Void*)");
+                this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+            }
+            else
+            {
+                this.Output.Write("(Byte*) &");
+                this.WriteMethodDefinitionName(writer, methodInfo);
             }
         }
 

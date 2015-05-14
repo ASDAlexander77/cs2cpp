@@ -2009,13 +2009,7 @@ namespace Il2Native.Logic
                     return this.System.System_String;
 
                 case Code.Ldnull:
-                    if (opCodePart.UsedBy == null)
-                    {
-                        // could not detect it yet
-                        return System.System_Void.ToPointerType();
-                    }
-
-                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition) ?? System.System_Void.ToPointerType();
+                    return System.System_Void.ToPointerType();
 
                 case Code.Ldloc:
                 case Code.Ldloc_0:

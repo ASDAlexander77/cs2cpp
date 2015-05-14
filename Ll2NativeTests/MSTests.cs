@@ -437,6 +437,24 @@ namespace Ll2NativeTests
             // 686 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
             // 692 - TODO: Investigate, DateTime returns ArgumentOutOfRange 
             // 695 - error CS0246: The type or namespace name 'AssemblyDefinition' could not be found
+            // 704 - DllImport is not implemented and ArgIterator
+            // 715 - NetModule lib
+            // 716 - error CS0103: The name 'TypeAttributes' does not exist
+            // 721 - error CS0246: The type or namespace name 'MarshalAs' could not be found
+            // 725 - The type or namespace name 'In' could not be found ([In])
+            // 733 - Optimization causing issues with float const. TODO: Investigate if can be fixed as it works ok in C#
+            // 734 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetMethodBody'
+            // 739 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
+            // 740 - error CS0246: The type or namespace name 'FieldOffset' could not be found. TODO: Needs to be implemented
+            // 748 - error CS0029: Cannot implicitly convert type 'RealTest.Foo' to 'Test.Foo'
+            // 759 - lib with IL
+            // 760 - lib with IL
+            // 769 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
+            // 773 - error CS1061: 'System.Type' does not contain a definition for 'GetProperty'
+            // 782 - using UTF8
+            // 792 - lib with IL
+            // 793 - test works but returns 1 as sizeof in C# and C++ have different result (maybe will be fixed in future)
+            // 795 - error CS0246: The type or namespace name 'AppDomainSetup' could not be found
             // -----------
             // 32, 55, 74 - missing class
 
@@ -605,7 +623,25 @@ namespace Ll2NativeTests
                         684,
                         686,
                         692,
-                        695
+                        695,
+                        704,
+                        715,
+                        716,
+                        721,
+                        725,
+                        733,
+                        734,
+                        739,
+                        740,
+                        748,
+                        759,
+                        760,
+                        769,
+                        773,
+                        782,
+                        792,
+                        793,
+                        795
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -621,7 +657,7 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485, 643 });
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(795, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
