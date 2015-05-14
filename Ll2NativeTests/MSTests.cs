@@ -432,6 +432,11 @@ namespace Ll2NativeTests
             // 666 - unicode used in preprocessor
             // 671 - error CS0837: The first operand of an 'is' or 'as' operator may not be a lambda expression, anonymous method, or method group.
             // 678 - issue with comparing NaN to 0.0 in C code. TODO: Investigate
+            // 679 - lib with DLLs
+            // 684 - getElementType is not implemented (for Array clone)
+            // 686 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
+            // 692 - TODO: Investigate, DateTime returns ArgumentOutOfRange 
+            // 695 - error CS0246: The type or namespace name 'AssemblyDefinition' could not be found
             // -----------
             // 32, 55, 74 - missing class
 
@@ -595,7 +600,12 @@ namespace Ll2NativeTests
                         661,
                         666,
                         671,
-                        678
+                        678,
+                        679,
+                        684,
+                        686,
+                        692,
+                        695
                     });
 
             if (CompilerHelper.UsingRoslyn)

@@ -506,7 +506,7 @@ namespace Il2Native.Logic.Gencode
                      || toType.IsPointer
                      || toType.IsByRef
                      || bareType.IsDerivedFrom(toType)
-                     || (toType.IsArray && estimatedOperandResultOf.Type.TypeEquals(toType.BaseType))
+                     || (toType.IsArray && (estimatedOperandResultOf.Type.TypeEquals(toType.BaseType) || estimatedOperandResultOf.Type.IsObject))
                      || estimatedOperandResultOf.Type.IsPointer && toType.IntTypeBitSize() == CWriter.PointerSize * 8)
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
