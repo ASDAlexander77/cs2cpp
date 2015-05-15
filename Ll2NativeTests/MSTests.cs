@@ -462,12 +462,20 @@ namespace Ll2NativeTests
             // 811 - error CS0246: The type or namespace name 'ArgIterator' could not be found
             // 814 - Mono
             // 816 - error CS1061: 'System.AppDomain' does not contain a definition for 'TypeResolve'
-            // 819 - error in generated C (conflict of System.Int32)
+            // 817 - error in generated C (conflict of System.Int32)
+            // 819 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 820 - using two Main
             // 823 - lib with IL
             // 825 - error CS0246: The type or namespace name 'Conditional' could not be found. TODO: Can be fixed
             // 826 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes' 
             // 831 - error CS0246: The type or namespace name 'Conditional' could not be found. TODO: Can be fixed
+            // 846 - lib with IL
+            // 847 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 851 - lib with IL
+            // 858 - lib with IL
+            // 860 - error CS0117: 'System.Attribute' does not contain a definition for 'GetCustomAttribute'
+            // 863 - NotImplemented __refanytipe. TODO: Can be implemeneted
+            // 868 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'Location'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -662,12 +670,20 @@ namespace Ll2NativeTests
                         811,
                         814,
                         816,
+                        817,
                         819,
                         820,
                         823,
                         825,
                         826,
-                        831
+                        831,
+                        846,
+                        847,
+                        851,
+                        858,
+                        860,
+                        863,
+                        868
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -683,7 +699,7 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485, 643 });
 
-            foreach (var index in Enumerable.Range(831, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

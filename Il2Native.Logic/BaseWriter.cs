@@ -2409,6 +2409,9 @@ namespace Il2Native.Logic
 
                     return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
 
+                case Code.Refanyval:
+                    return this.System.System_Void.ToPointerType();
+
                 case Code.Constrained:
                     opCodeTypePart = opCodePart as OpCodeTypePart;
                     if (opCodeTypePart != null)
