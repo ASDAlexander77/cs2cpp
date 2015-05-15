@@ -245,7 +245,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestCompileAndRunLlvm()
+        public void Test_Mono_Tests()
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
 
@@ -699,9 +699,31 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485, 643 });
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_Tests_Anon()
+        {
+            // 34 - error CS0234: The type or namespace name 'Timers' does not exist in the namespace 'System' (are you missing an assembly reference?)
+            // 42 - compiling with -Ofast causing C app to crash
+            // 73 - error CS0234: The type or namespace name 'ThreadPool' does not exist in the namespace 'System.Threading' (are you missing an assembly reference?)
+
+            var skip = new List<int>(new[]
+            {
+                34,
+                42,
+                73
+            });
+
+            foreach (var index in Enumerable.Range(73, 171).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("test-anon-{0:00}", index));
             }
         }
 
@@ -775,7 +797,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestGenCompileAndRunLlvm()
+        public void Test_Mono_GTests()
         {
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
@@ -967,6 +989,30 @@ namespace Ll2NativeTests
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Anon()
+        {
+            // 9 - compiling with -Ofast causing C app to crash
+            // 19 - error CS0234: The type or namespace name 'RegularExpressions' does not exist in the namespace 'System.Text'
+            // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 33 - StringBuilder enumerator is not impelemented. TODO: Investigate
+
+            var skip = new List<int>(new[]
+            {
+                9,
+                19,
+                22,
+                33
+            });
+
+            foreach (var index in Enumerable.Range(33, 56).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-anon-{0}", index));
             }
         }
 

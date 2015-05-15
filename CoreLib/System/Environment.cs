@@ -7,6 +7,9 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern unsafe int clock_gettime(int type, long* time);
 
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static extern int exit(int exitCode);
+
         public static string NewLine = "\r\n";
 
         public static string Space = " ";
@@ -56,6 +59,11 @@
         public static string GetResourceString(string name, string value, string value2)
         {
             return name + Space + value + Space + value2;
+        }
+
+        public static void Exit(int exitCode)
+        {
+            exit(exitCode);
         }
     }
 }
