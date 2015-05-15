@@ -1207,6 +1207,11 @@ namespace Il2Native.Logic
             {
                 type = opCode.Result.Type;
             }
+            else if (opCode.RequiredOutgoingType != null)
+            {
+                type = opCode.RequiredOutgoingType;
+                return type;
+            }
             else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
             {
                 var resultOf = this.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
@@ -1607,7 +1612,8 @@ namespace Il2Native.Logic
             {
                 if (opCode.Any(Code.Dup))
                 {
-                    this.Stacks.Push(opCode.OpCodeOperands[0]);
+                    ////this.Stacks.Push(opCode.OpCodeOperands[0]);
+                    this.Stacks.Push(opCode);
                 }
 
                 this.Stacks.Push(opCode);

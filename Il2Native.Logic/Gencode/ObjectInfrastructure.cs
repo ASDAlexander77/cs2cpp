@@ -596,10 +596,40 @@ namespace Il2Native.Logic.Gencode
             var @class = declaringType.ToClass();
             var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, @class);
 
-            @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+            if (!declaringType.IsString)
+            {
+                @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
 
-            opCodeConstructorInfoPart.Result = objectReference;
-            cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+                opCodeConstructorInfoPart.Result = objectReference;
+
+                cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+            }
+            else
+            {
+                // special string case
+                var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                    declaringType, opCodeConstructorInfoPart.Operand.GetParameters(), cWriter);
+                var hasThis = stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis);
+
+                OpCodePart opCodeNope = opCodeConstructorInfoPart;
+                if (hasThis)
+                {
+                    // insert 'This' as null
+                    opCodeNope = OpCodePart.CreateNop;
+                    var operands = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length);
+                    operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+
+                    var opCodeThis = OpCodePart.CreateNop;
+                    opCodeThis.Result = new ConstValue("0/*null*/", declaringType);
+                    operands.Insert(0, opCodeThis);
+
+                    opCodeNope.OpCodeOperands = operands.ToArray();
+                }
+
+                cWriter.WriteCall(opCodeNope, stringCtorMethodBase, false, hasThis, false, null, cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
+
+                opCodeConstructorInfoPart.Result = objectReference;
+            }
         }
 
         public static void WriteNew(
@@ -704,12 +734,12 @@ namespace Il2Native.Logic.Gencode
 
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("obj"));
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("cd"));
-            
+
             ilCodeBuilder.LoadArgument(0);
             // TODO: can be removed when InsertMissingTypes is finished
             ilCodeBuilder.Castclass(type);
             ilCodeBuilder.Call(IlReader.FindFinalizer(type, typeResolver));
-            
+
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
         }

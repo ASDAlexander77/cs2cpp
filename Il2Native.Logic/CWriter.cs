@@ -922,12 +922,6 @@ namespace Il2Native.Logic
                     // do not remove next live, it contains _dup variable
                     opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, opCode.RequiredOutgoingType);
 
-                    // TEMP HACK
-                    if (opCode.UsedBy.Any(Code.Call, Code.Callvirt, Code.Newobj, Code.Newarr))
-                    {
-                        opCode.Result = null;
-                    }
-
                     break;
 
                 case Code.Box:
@@ -1415,33 +1409,9 @@ namespace Il2Native.Logic
                     }
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    if (opCodeConstructorInfoPart != null && !opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    if (opCodeConstructorInfoPart != null)
                     {
                         this.WriteNewObject(opCodeConstructorInfoPart);
-                    }
-                    else
-                    {
-                        // special string case
-                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
-                            this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
-                        var hasThis = stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis);
-
-                        OpCodePart opCodeNope = opCodeConstructorInfoPart;
-                        if (hasThis)
-                        {
-                            // insert 'This' as null
-                            opCodeNope = OpCodePart.CreateNop;
-                            var operands = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length);
-                            operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
-
-                            var opCodeThis = OpCodePart.CreateNop;
-                            opCodeThis.Result = new ConstValue("0/*null*/", this.System.System_String);
-                            operands.Insert(0, opCodeThis);
-
-                            opCodeNope.OpCodeOperands = operands.ToArray();
-                        }
-
-                        this.WriteCall(opCodeNope, stringCtorMethodBase, false, hasThis, false, null, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
                     }
 
                     break;
@@ -4650,6 +4620,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         [Flags]
+        [Obsolete("this must be removed")]
         public enum OperandOptions
         {
             /// <summary>
