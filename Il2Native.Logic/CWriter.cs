@@ -4562,7 +4562,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces(null).Distinct())
             {
                 var current = type;
                 IType typeContainingInterface = null;
@@ -4628,7 +4628,7 @@ namespace Il2Native.Logic
                     index++;
                 }
 
-                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
+                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces(null).Skip(1))
                 {
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
                     foreach (var method in virtualTableOfSecondaryInterface)

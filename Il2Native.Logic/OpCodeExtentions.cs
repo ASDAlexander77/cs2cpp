@@ -1159,11 +1159,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
+        public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type, Stack<IType> nesting)
         {
             if (type.BaseType != null)
             {
-                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces(nesting))
                 {
                     yield return baseInterface;
                 }
@@ -1173,10 +1173,20 @@ namespace Il2Native.Logic
             {
                 yield return topInterface;
 
+                if (nesting != null)
+                {
+                    nesting.Push(topInterface);
+                }
+
                 // enumerate all children except first
                 foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
                 {
                     yield return notFirstChild;
+                }
+
+                if (nesting != null)
+                {
+                    nesting.Pop();
                 }
             }
         }

@@ -103,7 +103,7 @@ namespace Il2Native.Logic.Gencode
             sb.Append("Byte* vtable");
 
             var index = 0;
-            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
             {
                 if (sb.Length > 0)
                 {
@@ -140,7 +140,7 @@ namespace Il2Native.Logic.Gencode
             sb.Append("(Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
 
-            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
             {
                 if (sb.Length > 0)
                 {
