@@ -823,7 +823,7 @@ namespace Il2Native.Logic
             if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
                 || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
             {
-                this.ReplaceOperand(new UsedByInfo(opCodePart, useOperand), opCodePart, opCodeOperand);
+                this.ReplaceOperand(opCodePart.UsedBy, opCodePart, opCodeOperand);
             }
             else if (1 == integerValueFromOpCode)
             {
@@ -848,7 +848,7 @@ namespace Il2Native.Logic
                         break;
                 }
 
-                this.ReplaceOperand(new UsedByInfo(opCodePart, useOperand), opCodePart, opCodeOperand);
+                this.ReplaceOperand(opCodePart.UsedBy, opCodePart, opCodeOperand);
             }
         }
 
