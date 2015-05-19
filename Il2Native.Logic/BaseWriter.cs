@@ -791,11 +791,11 @@ namespace Il2Native.Logic
 
                         if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
-                            this.FixDivPointerOperation(opCodePart, opCodeOperand0, op0, opCodeOperand1);
+                            this.FixDivPointerOperation(opCodePart, opCodeOperand0, op0, opCodeOperand1, 0);
                         }
                         else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
-                            this.FixDivPointerOperation(opCodePart, opCodeOperand1, op1, opCodeOperand0);
+                            this.FixDivPointerOperation(opCodePart, opCodeOperand1, op1, opCodeOperand0, 1);
                         }
 
                         break;
@@ -815,20 +815,20 @@ namespace Il2Native.Logic
             }
         }
 
-        private void FixDivPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand0, ReturnResult op0, OpCodePart opCodeOperand1)
+        private void FixDivPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand, ReturnResult op, OpCodePart opCodeOperandOther, int useOperand)
         {
-            var elementType = op0.Type.GetElementType();
-            var typePart = opCodeOperand1 as OpCodeTypePart;
-            var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperand1);
-            if ((opCodeOperand1.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
+            var elementType = op.Type.GetElementType();
+            var typePart = opCodeOperandOther as OpCodeTypePart;
+            var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperandOther);
+            if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
                 || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
             {
-                this.ReplaceOperand(new UsedByInfo(opCodePart, 0), opCodePart, opCodeOperand0);
+                this.ReplaceOperand(new UsedByInfo(opCodePart, useOperand), opCodePart, opCodeOperand);
             }
             else if (1 == integerValueFromOpCode)
             {
                 // in case pointers casted to Byte*
-                switch (opCodeOperand0.ToCode())
+                switch (opCodeOperand.ToCode())
                 {
                     case Code.Add:
                     case Code.Add_Ovf:
@@ -836,19 +836,19 @@ namespace Il2Native.Logic
                     case Code.Sub:
                     case Code.Sub_Ovf:
                     case Code.Sub_Ovf_Un:
-                        this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand0.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
-                        this.InsertOperand(new UsedByInfo(opCodePart, 1), opCodeOperand0.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(new UsedByInfo(opCodePart, 1), opCodeOperand.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
                         // to force recalculation
                         opCodePart.RequiredOutgoingType = null;
                         break;
                     default:
-                        this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(new UsedByInfo(opCodePart, useOperand), opCodeOperand, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
                         // to force recalculation
                         opCodePart.RequiredOutgoingType = null;
                         break;
                 }
 
-                this.ReplaceOperand(new UsedByInfo(opCodePart, 0), opCodePart, opCodeOperand0);
+                this.ReplaceOperand(new UsedByInfo(opCodePart, useOperand), opCodePart, opCodeOperand);
             }
         }
 
