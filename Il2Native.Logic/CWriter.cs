@@ -916,8 +916,7 @@ namespace Il2Native.Logic
 
                     // if this is virtual copy of Dup then process Dup from operand
                     var isVirtualDup = opCode.IsVirtual();
-                    var effectiveDup = (opCode.IsVirtual() ? opCode.OpCodeOperands[0] : opCode);
-                    var dupVar = string.Concat("_dup", effectiveDup.AddressStart);
+                    var dupVar = string.Concat("_dup", opCode.AddressStart);
 
                     // effectiveDup HACK
                     var resultOfFirstOpDup = opCode.OpCodeOperands[0].Result;
@@ -927,9 +926,9 @@ namespace Il2Native.Logic
                         this.WriteVariable(opCode, "_dup");
                     }
 
-                    if (!(isVirtualDup && variableDeclarationStage))
+                    if (!isVirtualDup || !variableDeclarationStage)
                     {
-                        this.WriteOperandResultOrActualWrite(writer, effectiveDup, 0);
+                        this.WriteOperandResultOrActualWrite(writer, opCode, 0);
                     }
 
                     // do not remove next live, it contains _dup variable
