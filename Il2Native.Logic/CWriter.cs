@@ -914,15 +914,23 @@ namespace Il2Native.Logic
 
                 case Code.Dup:
 
-                    var dupVar = string.Concat("_dup", opCode.AddressStart);
+                    // if this is virtual copy of Dup then process Dup from operand
+                    var isVirtualDup = opCode.IsVirtual();
+                    var effectiveDup = (opCode.IsVirtual() ? opCode.OpCodeOperands[0] : opCode);
+                    var dupVar = string.Concat("_dup", effectiveDup.AddressStart);
 
-                    // TEMP HACK
-                    if (opCode.OpCodeOperands[0].Result == null || opCode.OpCodeOperands[0].Result.Name != dupVar)
+                    // effectiveDup HACK
+                    var resultOfFirstOpDup = opCode.OpCodeOperands[0].Result;
+                    var variableDeclarationStage = resultOfFirstOpDup == null || resultOfFirstOpDup.Name != dupVar;
+                    if (variableDeclarationStage)
                     {
                         this.WriteVariable(opCode, "_dup");
                     }
 
-                    this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                    if (!(isVirtualDup && variableDeclarationStage))
+                    {
+                        this.WriteOperandResultOrActualWrite(writer, effectiveDup, 0);
+                    }
 
                     // do not remove next live, it contains _dup variable
                     opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, opCode.RequiredOutgoingType);
@@ -3025,7 +3033,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                 }
             }
-            
+
             if (!this.IsHeader)
             {
                 this.Output.WriteLine("#include \"{0}.h\"", this.FileHeader);
@@ -4114,7 +4122,7 @@ namespace Il2Native.Logic
         private void WriteMethodBody(IEnumerable<OpCodePart> rest)
         {
             // Temp hack to delcare all temp variables;
-            foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
+            foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup) && !opCodePart.IsVirtual()))
             {
                 this.WriteVariableDeclare(opCodePart, opCodePart.RequiredOutgoingType, "_dup");
             }
@@ -4156,6 +4164,9 @@ namespace Il2Native.Logic
                     }
                 }
 
+                // we need to preprocess all virtual OpCodes before
+                this.ActualWriteForVirtualOpCodes(item);
+
                 this.ActualWrite(this.Output, item, true);
 
                 Debug.Assert(item != item.Next, "circular reference detected");
@@ -4164,6 +4175,20 @@ namespace Il2Native.Logic
                     "circular reference detected");
 
                 item = item.Next;
+            }
+        }
+
+        private void ActualWriteForVirtualOpCodes(OpCodePart item)
+        {
+            if (item.OpCodeOperands != null)
+            {
+                bool isVirtualCall;
+                foreach (var opCodeOperand in
+                    item.OpCodeOperands.Where(
+                        opCodeOperand => opCodeOperand.IsVirtual() && this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall)))
+                {
+                    this.ActualWrite(this.Output, opCodeOperand, true);
+                }
             }
         }
 

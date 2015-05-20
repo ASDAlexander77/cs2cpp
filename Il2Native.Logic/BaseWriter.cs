@@ -523,14 +523,14 @@ namespace Il2Native.Logic
             if (IsCastConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
-                this.InsertOperand(actualUsedByInfo, opCodeOperand, castOpCode);
+                this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
 
             if (IsLoadObjectConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, destinationType);
-                this.InsertOperand(actualUsedByInfo, opCodeOperand, castOpCode);
+                this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
 
@@ -538,9 +538,9 @@ namespace Il2Native.Logic
             {
                 var type = destinationType.ToNormal();
                 var ldobjOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, type);
-                this.InsertOperand(actualUsedByInfo, opCodeOperand, ldobjOpCode);
+                this.InsertOperand(opCodeOperand, ldobjOpCode);
                 var boxOpCode = new OpCodeTypePart(OpCodesEmit.Box, 0, 0, type);
-                this.InsertOperand(actualUsedByInfo, ldobjOpCode, boxOpCode);
+                this.InsertOperand(ldobjOpCode, boxOpCode);
                 return boxOpCode;
             }
 
@@ -548,9 +548,9 @@ namespace Il2Native.Logic
             {
                 var field = this.System.System_IntPtr.GetFieldByFieldNumber(0, this);
                 var ldfldOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
-                this.InsertOperand(actualUsedByInfo, opCodeOperand, ldfldOpCode);
+                this.InsertOperand(opCodeOperand, ldfldOpCode);
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
-                this.InsertOperand(actualUsedByInfo, ldfldOpCode, castOpCode);
+                this.InsertOperand(ldfldOpCode, castOpCode);
                 return castOpCode;
             }
 
@@ -558,7 +558,7 @@ namespace Il2Native.Logic
             {
                 // cast to type of first field
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType.GetFieldByFieldNumber(0, this).FieldType);
-                this.InsertOperand(actualUsedByInfo, opCodeOperand, castOpCode);
+                this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
 
@@ -765,7 +765,7 @@ namespace Il2Native.Logic
                             if (op0.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
                                 var pointerType = this.System.System_Byte.ToPointerType();
-                                this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
+                                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                                 // to force recalculation
                                 opCodePart.RequiredOutgoingType = pointerType;
                             }
@@ -773,7 +773,7 @@ namespace Il2Native.Logic
                             if (op1.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
                                 var pointerType = this.System.System_Byte.ToPointerType();
-                                this.InsertOperand(new UsedByInfo(opCodePart, 1), opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
+                                this.InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                                 // to force recalculation
                                 opCodePart.RequiredOutgoingType = pointerType;
                             }
@@ -809,7 +809,7 @@ namespace Il2Native.Logic
             if (!pointerOpFixed && this.GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
             {
                 var pointerType = this.System.System_Byte.ToPointerType();
-                this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
+                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, pointerType));
                 // to force recalculation
                 opCodePart.RequiredOutgoingType = pointerType;
             }
@@ -823,7 +823,7 @@ namespace Il2Native.Logic
             if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
                 || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
             {
-                this.ReplaceOperand(opCodePart.UsedBy, opCodePart, opCodeOperand);
+                this.ReplaceOperand(opCodePart, opCodeOperand);
             }
             else if (1 == integerValueFromOpCode)
             {
@@ -836,19 +836,19 @@ namespace Il2Native.Logic
                     case Code.Sub:
                     case Code.Sub_Ovf:
                     case Code.Sub_Ovf_Un:
-                        this.InsertOperand(new UsedByInfo(opCodePart, 0), opCodeOperand.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
-                        this.InsertOperand(new UsedByInfo(opCodePart, 1), opCodeOperand.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(opCodeOperand.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(opCodeOperand.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
                         // to force recalculation
                         opCodePart.RequiredOutgoingType = null;
                         break;
                     default:
-                        this.InsertOperand(new UsedByInfo(opCodePart, useOperand), opCodeOperand, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(opCodeOperand, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
                         // to force recalculation
                         opCodePart.RequiredOutgoingType = null;
                         break;
                 }
 
-                this.ReplaceOperand(opCodePart.UsedBy, opCodePart, opCodeOperand);
+                this.ReplaceOperand(opCodePart, opCodeOperand);
             }
         }
 
@@ -879,7 +879,7 @@ namespace Il2Native.Logic
                     var value = GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
                     if (value > 0 && value % typeSize == 0)
                     {
-                        this.ReplaceOperand(new UsedByInfo(opCodePart, 0), opCodePart.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
+                        this.ReplaceOperand(opCodePart.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
                         return true;
                     }
 
@@ -896,7 +896,7 @@ namespace Il2Native.Logic
                     if (opCodeOperand0.Any(Code.Sizeof) && (opCodeOperand0 as OpCodeTypePart).Operand.Equals(type))
                     {
                         // disable which mul
-                        this.ReplaceOperand(new UsedByInfo(opCodePart, 1), opCodePart, opCodeOperand1);
+                        this.ReplaceOperand(opCodePart, opCodeOperand1);
                         return true;
                     }
 
@@ -904,7 +904,7 @@ namespace Il2Native.Logic
                     if (opCodeOperand1.Any(Code.Sizeof) && (opCodeOperand1 as OpCodeTypePart).Operand.Equals(type))
                     {
                         // disable which mul
-                        this.ReplaceOperand(new UsedByInfo(opCodePart, 0), opCodePart, opCodeOperand0);
+                        this.ReplaceOperand(opCodePart, opCodeOperand0);
                         return true;
                     }
 
@@ -912,7 +912,7 @@ namespace Il2Native.Logic
                     if (op0Size > 0 && typeSize == op0Size)
                     {
                         // disable which mul
-                        this.ReplaceOperand(new UsedByInfo(opCodePart, 1), opCodePart, opCodeOperand1);
+                        this.ReplaceOperand(opCodePart, opCodeOperand1);
                         return true;
                     }
 
@@ -920,7 +920,7 @@ namespace Il2Native.Logic
                     if (op1Size > 0 && typeSize == op1Size)
                     {
                         // disable which mul
-                        this.ReplaceOperand(new UsedByInfo(opCodePart, 0), opCodePart, opCodeOperand0);
+                        this.ReplaceOperand(opCodePart, opCodeOperand0);
                         return true;
                     }
 
@@ -989,9 +989,9 @@ namespace Il2Native.Logic
             return -2;
         }
 
-        private void ReplaceOperand(UsedByInfo actualUsedBy, OpCodePart oldOperand, OpCodePart newOperand, bool doNotChangeFlowOrder = false)
+        private void ReplaceOperand(OpCodePart oldOperand, OpCodePart newOperand, bool doNotChangeFlowOrder = false)
         {
-            var usedByInfo = actualUsedBy ?? oldOperand.UsedBy;
+            var usedByInfo = oldOperand.UsedBy;
             OpCodePart usedByOpCodePart = usedByInfo.OpCode;
             usedByOpCodePart.OpCodeOperands[usedByInfo.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, usedByInfo.OperandPosition);
@@ -1016,9 +1016,9 @@ namespace Il2Native.Logic
             }
         }
 
-        private void InsertOperand(UsedByInfo actualUsedByInfo, OpCodePart oldOperand, OpCodePart newOperand)
+        private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
         {
-            var usedByInfo = actualUsedByInfo ?? oldOperand.UsedBy;
+            var usedByInfo = oldOperand.UsedBy;
             if (usedByInfo != null)
             {
                 OpCodePart usedByOpCodePart = usedByInfo.OpCode;
@@ -1185,7 +1185,7 @@ namespace Il2Native.Logic
             {
                 var constrained = opCodePart.Previous;
                 var firstOperand = opCodePart.OpCodeOperands[0];
-                this.ReplaceOperand(new UsedByInfo(opCodePart, 0), firstOperand, constrained, doNotChangeFlowOrder: true);
+                this.ReplaceOperand(firstOperand, constrained, doNotChangeFlowOrder: true);
                 constrained.OpCodeOperands = new[] { firstOperand };
                 firstOperand.UsedBy = new UsedByInfo(constrained, 0);
 
@@ -1613,8 +1613,9 @@ namespace Il2Native.Logic
             {
                 if (opCode.Any(Code.Dup))
                 {
-                    ////this.Stacks.Push(opCode.OpCodeOperands[0]);
-                    this.Stacks.Push(opCode);
+                    var newDup = new OpCodePart(opCode.OpCode, opCode.AddressStart, 0);
+                    newDup.OpCodeOperands = new [] { opCode };
+                    this.Stacks.Push(newDup);
                 }
 
                 this.Stacks.Push(opCode);
