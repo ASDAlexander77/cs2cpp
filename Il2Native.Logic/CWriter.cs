@@ -920,13 +920,13 @@ namespace Il2Native.Logic
 
                     // effectiveDup HACK
                     var resultOfFirstOpDup = opCode.OpCodeOperands[0].Result;
-                    var variableDeclarationStage = resultOfFirstOpDup == null || resultOfFirstOpDup.Name != dupVar;
+                    var variableDeclarationStage = resultOfFirstOpDup == null;
+                    var initVirtualDup = isVirtualDup && opCode.Result == null;
                     if (variableDeclarationStage)
                     {
                         this.WriteVariable(opCode, "_dup");
                     }
 
-                    var initVirtualDup = isVirtualDup && opCode.Result == null;
                     if (!initVirtualDup)
                     {
                         this.WriteOperandResultOrActualWrite(writer, opCode, 0);
