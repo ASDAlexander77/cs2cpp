@@ -926,7 +926,8 @@ namespace Il2Native.Logic
                         this.WriteVariable(opCode, "_dup");
                     }
 
-                    if (!isVirtualDup || !variableDeclarationStage)
+                    var initVirtualDup = isVirtualDup && opCode.Result == null;
+                    if (!initVirtualDup)
                     {
                         this.WriteOperandResultOrActualWrite(writer, opCode, 0);
                     }
