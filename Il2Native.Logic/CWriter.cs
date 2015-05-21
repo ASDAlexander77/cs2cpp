@@ -4125,7 +4125,7 @@ namespace Il2Native.Logic
         private void WriteMethodBody(IEnumerable<OpCodePart> rest)
         {
             // Temp hack to delcare all temp variables;
-            foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup) && !opCodePart.IsVirtual()))
+            foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
             {
                 this.WriteVariableDeclare(opCodePart, opCodePart.RequiredOutgoingType, "_dup");
             }
@@ -4188,12 +4188,15 @@ namespace Il2Native.Logic
                 return;
             }
 
-            bool isVirtualCall;
-            foreach (var opCodeOperand in
-                item.OpCodeOperands.Where(
-                    opCodeOperand => opCodeOperand.IsVirtual() && this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall)))
+            foreach (var opCodeOperand in item.OpCodeOperands.Where(opCodeOperand => opCodeOperand.IsVirtual()))
             {
-                this.ActualWrite(this.Output, opCodeOperand, true);
+                ActualWriteForVirtualOpCodes(opCodeOperand);
+
+                bool isVirtualCall;
+                if (this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall))
+                {
+                    this.ActualWrite(this.Output, opCodeOperand, true);
+                }
             }
         }
 

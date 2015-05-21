@@ -1630,6 +1630,11 @@ namespace Il2Native.Logic
                     var newDup = new OpCodePart(opCode.OpCode, opCode.AddressStart, 0);
                     newDup.OpCodeOperands = new[] { opCode };
                     this.Stacks.Push(newDup);
+
+                    // make proper chain
+                    newDup.Previous = opCode.Previous;
+                    newDup.Next = opCode.Next;
+                    opCode.Next = newDup;
                 }
 
                 this.Stacks.Push(opCode);
