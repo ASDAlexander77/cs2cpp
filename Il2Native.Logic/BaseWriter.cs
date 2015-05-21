@@ -1094,13 +1094,13 @@ namespace Il2Native.Logic
                                    : null;
 
                 requiredType = requiredType
-                               ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
-                               ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                               ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues, true)
+                               ?? alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null)
                                ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues, ignoreAlternativeValues: true).Type;
             }
             else
             {
-                requiredType = alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                requiredType = alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null);
             }
 
             if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(v.RequiredOutgoingType)))
