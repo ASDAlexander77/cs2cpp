@@ -405,6 +405,7 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Dup:
+                    return !opCode.IsVirtual();
                 case Code.Newobj:
                 case Code.Newarr:
                 case Code.Ldftn:
@@ -915,25 +916,28 @@ namespace Il2Native.Logic
                 case Code.Dup:
 
                     // if this is virtual copy of Dup then process Dup from operand
-                    var isVirtualDup = opCode.IsVirtual();
                     var dupVar = string.Concat("_dup", opCode.AddressStart);
 
-                    // effectiveDup HACK
-                    var resultOfFirstOpDup = opCode.OpCodeOperands[0].Result;
-                    var variableDeclarationStage = resultOfFirstOpDup == null;
-                    var initVirtualDup = isVirtualDup && opCode.Result == null;
-                    if (variableDeclarationStage)
+                    if (opCode.Result == null)
                     {
-                        this.WriteVariable(opCode, "_dup");
-                    }
+                        if (!opCode.IsVirtual())
+                        {
+                            this.WriteVariable(opCode, "_dup");
 
-                    if (!initVirtualDup)
+                            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+
+                            // do not remove next live, it contains _dup variable
+                            opCode.Result = new FullyDefinedReference(dupVar, opCode.RequiredOutgoingType);
+                        }
+                        else
+                        {
+                            opCode.Result = opCode.OpCodeOperands[0].Result;
+                        }
+                    }
+                    else
                     {
-                        this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                        this.WriteResultOrActualWrite(writer, opCode);
                     }
-
-                    // do not remove next live, it contains _dup variable
-                    opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, opCode.RequiredOutgoingType);
 
                     break;
 
