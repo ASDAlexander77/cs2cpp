@@ -4406,7 +4406,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDefinitions(IType type)
         {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
             {
                 this.WriteStaticField(field);
             }
@@ -4414,7 +4414,7 @@ namespace Il2Native.Logic
 
         private void WriteStaticFieldDeclaration(IType type)
         {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
             {
                 this.WriteStaticField(field, false);
             }
