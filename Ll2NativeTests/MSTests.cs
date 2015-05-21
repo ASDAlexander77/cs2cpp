@@ -713,12 +713,14 @@ namespace Ll2NativeTests
             // 34 - error CS0234: The type or namespace name 'Timers' does not exist in the namespace 'System' (are you missing an assembly reference?)
             // 42 - compiling with -Ofast causing C app to crash
             // 73 - error CS0234: The type or namespace name 'ThreadPool' does not exist in the namespace 'System.Threading' (are you missing an assembly reference?)
+            // 119 - error CS0234: The type or namespace name 'RegularExpressions' does not exist
 
             var skip = new List<int>(new[]
             {
                 34,
                 42,
-                73
+                73,
+                119
             });
 
             foreach (var index in Enumerable.Range(73, 171).Where(n => !skip.Contains(n)))
@@ -1001,16 +1003,18 @@ namespace Ll2NativeTests
             // 19 - error CS0234: The type or namespace name 'RegularExpressions' does not exist in the namespace 'System.Text'
             // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 33 - StringBuilder enumerator is not impelemented. TODO: Investigate
+            // 35 - GetFields - NotImplemeneted
 
             var skip = new List<int>(new[]
             {
                 9,
                 19,
                 22,
-                33
+                33,
+                35
             });
 
-            foreach (var index in Enumerable.Range(33, 56).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 56).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-anon-{0}", index));
             }
