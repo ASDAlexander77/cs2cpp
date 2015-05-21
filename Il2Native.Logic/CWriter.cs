@@ -405,7 +405,6 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Dup:
-                    return !opCode.IsVirtual();
                 case Code.Newobj:
                 case Code.Newarr:
                 case Code.Ldftn:
@@ -4184,15 +4183,17 @@ namespace Il2Native.Logic
 
         private void ActualWriteForVirtualOpCodes(OpCodePart item)
         {
-            if (item.OpCodeOperands != null)
+            if (item.OpCodeOperands == null)
             {
-                bool isVirtualCall;
-                foreach (var opCodeOperand in
-                    item.OpCodeOperands.Where(
-                        opCodeOperand => opCodeOperand.IsVirtual() && this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall)))
-                {
-                    this.ActualWrite(this.Output, opCodeOperand, true);
-                }
+                return;
+            }
+
+            bool isVirtualCall;
+            foreach (var opCodeOperand in
+                item.OpCodeOperands.Where(
+                    opCodeOperand => opCodeOperand.IsVirtual() && this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall)))
+            {
+                this.ActualWrite(this.Output, opCodeOperand, true);
             }
         }
 

@@ -197,7 +197,6 @@ namespace Il2Native.Logic
             this.ProcessAll(ops);
             this.AssignExceptionsToOpCodes();
             this.SanitizePointerOperations(ops);
-            this.CalculateRequiredTypesForAlternativeValues(ops);
             this.InsertMissingTypeCasts(ops);
             return ops;
         }
@@ -285,7 +284,7 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.RequiredOutgoingType);
             }
 
-            return new ReturnResult(this.RequiredOutgoingType(opCode));
+            return new ReturnResult(this.RequiredOutgoingType(opCode, ignoreAlternativeValues));
         }
 
         /// <summary>
@@ -820,7 +819,7 @@ namespace Il2Native.Logic
             var elementType = op.Type.GetElementType();
             var typePart = opCodeOperandOther as OpCodeTypePart;
             var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperandOther);
-            if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand)) 
+            if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand))
                 || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
             {
                 this.ReplaceOperand(opCodePart, opCodeOperand);
@@ -1053,67 +1052,82 @@ namespace Il2Native.Logic
             oldOperand.Next = newOperand;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodes">
-        /// </param>
-        protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
+        private void CalculateRequiredTypesForAlternativeValues(OpCodePart opCodePart)
         {
-            foreach (var opCodePart in opCodes)
+            if (opCodePart.AlternativeValues == null)
             {
-                if (opCodePart.AlternativeValues == null)
+                return;
+            }
+
+            foreach (var alternativeValues in opCodePart.AlternativeValues)
+            {
+                this.CalculateRequiredTypesForAlternativeValues(alternativeValues);
+            }
+        }
+
+        private void CalculateRequiredTypesForAlternativeValues(PhiNodes alternativeValues)
+        {
+            if (alternativeValues.RequiredOutgoingType != null)
+            {
+                return;
+            }
+
+            // before we need to ensure all requiredOutgoingTypes are calculated
+            foreach (var opCodeValue in alternativeValues.Values.Where(v => v.RequiredOutgoingType == null))
+            {
+                opCodeValue.RequiredOutgoingType = RequiredOutgoingType(opCodeValue, true);
+            }
+
+            OpCodePart opCodeUsedFromAlternativeValues = null;
+            IType requiredType = null;
+
+            // detect required types in alternative values
+            opCodeUsedFromAlternativeValues = GetUsedByFromAlternativeValues(alternativeValues);
+            if (opCodeUsedFromAlternativeValues != null)
+            {
+                var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
+
+                requiredType = opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes != null
+                                   ? alternativeValues.Values.Where(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop))
+                                                      .Select(v => opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes[v.UsedBy.OperandPosition])
+                                                      .LastOrDefault(v => v != null)
+                                   : null;
+
+                requiredType = requiredType
+                               ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
+                               ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                               ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues, ignoreAlternativeValues: true).Type;
+            }
+            else
+            {
+                requiredType = alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null);
+            }
+
+            if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(v.RequiredOutgoingType)))
+            {
+                // find base type, for example if first value is IDictionary and second is Object then required type should be Object
+                foreach (var alternateValueOutgoingType in
+                    alternativeValues.Values.Select(v => v.RequiredOutgoingType)
+                                     .Where(t => t != null)
+                                     .Where(alternateValueOutgoingType => requiredType.TypeNotEquals(alternateValueOutgoingType)))
                 {
-                    continue;
-                }
-
-                foreach (var alternativeValues in opCodePart.AlternativeValues)
-                {
-                    OpCodePart opCodeUsedFromAlternativeValues = null;
-                    IType requiredType = null;
-
-                    // detect required types in alternative values
-                    opCodeUsedFromAlternativeValues = GetUsedByFromAlternativeValues(alternativeValues);
-                    if (opCodeUsedFromAlternativeValues != null)
+                    if ((requiredType.IsDerivedFrom(alternateValueOutgoingType) || requiredType.GetAllInterfaces().Contains(alternateValueOutgoingType))
+                        || alternateValueOutgoingType.IsObject)
                     {
-                        var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
-
-                        requiredType = opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes != null
-                                           ? alternativeValues.Values.Where(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop))
-                                                              .Select(v => opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes[v.UsedBy.OperandPosition])
-                                                              .LastOrDefault(v => v != null)
-                                           : null;
-
-                        requiredType = requiredType
-                                       ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
-                                       ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                       ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues).Type;
-                    }
-                    else
-                    {
-                        requiredType = alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                        requiredType = alternateValueOutgoingType;
+                        continue;
                     }
 
-                    if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
+                    // special case when ValueType used in mixture with ValueTypePointer
+                    if (alternateValueOutgoingType.IsValueType && requiredType.NormalizeType().TypeEquals(alternateValueOutgoingType))
                     {
-                        // find base type, for example if first value is IDictionary and second is Object then required type should be Object
-                        foreach (var alternateValueOutgoingType in
-                            alternativeValues.Values.Select(this.RequiredOutgoingType)
-                                .Where(t => t != null)
-                                .Where(
-                                    alternateValueOutgoingType =>
-                                        requiredType.TypeNotEquals(alternateValueOutgoingType) &&
-                                        (requiredType.IsDerivedFrom(alternateValueOutgoingType) ||
-                                         requiredType.GetAllInterfaces().Contains(alternateValueOutgoingType)) ||
-                                        alternateValueOutgoingType.IsObject))
-                        {
-                            requiredType = alternateValueOutgoingType;
-                        }
+                        requiredType = alternateValueOutgoingType;
                     }
-
-                    Debug.Assert(requiredType != null, "Required Type for Phi nodes can't be calculated");
-                    alternativeValues.RequiredOutgoingType = requiredType;
                 }
             }
+
+            Debug.Assert(requiredType != null, "Required Type for Phi nodes can't be calculated");
+            alternativeValues.RequiredOutgoingType = requiredType;
         }
 
         private static OpCodePart GetUsedByFromAlternativeValues(PhiNodes phiNodes)
@@ -1614,7 +1628,7 @@ namespace Il2Native.Logic
                 if (opCode.Any(Code.Dup))
                 {
                     var newDup = new OpCodePart(opCode.OpCode, opCode.AddressStart, 0);
-                    newDup.OpCodeOperands = new [] { opCode };
+                    newDup.OpCodeOperands = new[] { opCode };
                     this.Stacks.Push(newDup);
                 }
 
@@ -1654,8 +1668,13 @@ namespace Il2Native.Logic
             opCodePart.RequiredIncomingTypes = new RequiredIncomingTypes(opCodePart.OpCodeOperands.Length);
             foreach (var opCodeOperand in opCodePart.OpCodeOperands)
             {
+                if (opCodeOperand.UsedByAlternativeValues != null)
+                {
+                    CalculateRequiredTypesForAlternativeValues(opCodeOperand.UsedByAlternativeValues);
+                }
+
                 opCodePart.RequiredIncomingTypes[index] = this.RequiredIncomingType(opCodePart, index++);
-                opCodeOperand.RequiredOutgoingType = this.RequiredOutgoingType(opCodeOperand);
+                opCodeOperand.RequiredOutgoingType = this.RequiredOutgoingType(opCodeOperand, true);
             }
 
             // TODO: double check if you process Code.Constrained
@@ -1948,7 +1967,7 @@ namespace Il2Native.Logic
                         {
                             return System.System_Byte.ToPointerType();
                         }
-                        else if (operandPosition == 1)
+                        else if (operandPosition >= 1)
                         {
                             return System.System_Int32;
                         }
@@ -1997,14 +2016,24 @@ namespace Il2Native.Logic
             }
         }
 
+        protected IType RequiredOutgoingType(OpCodePart opCodePart)
+        {
+            return RequiredOutgoingType(opCodePart, false);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredOutgoingType(OpCodePart opCodePart)
+        protected IType RequiredOutgoingType(OpCodePart opCodePart, bool ignoreAlternativeValues)
         {
+            if (!ignoreAlternativeValues && opCodePart.UsedByAlternativeValues != null)
+            {
+                return opCodePart.UsedByAlternativeValues.RequiredOutgoingType;
+            }
+
             IType retType = null;
             var code = opCodePart.ToCode();
             switch (code)
