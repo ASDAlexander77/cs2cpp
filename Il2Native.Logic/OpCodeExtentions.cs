@@ -1452,12 +1452,7 @@ namespace Il2Native.Logic
             var params1 = parameters.ToArray();
             var params2 = otherParameters.ToArray();
 
-            if (!IsMatchingParams(params1, params2))
-            {
-                return false;
-            }
-
-            return false;
+            return IsMatchingParams(params1, params2);
         }
 
         public static bool IsMatchingParams(this IParameter[] params1, IParameter[] params2)
