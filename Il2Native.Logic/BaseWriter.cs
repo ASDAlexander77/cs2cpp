@@ -1072,6 +1072,11 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (alternativeValues.UsedByAlternativeValues != null && alternativeValues != alternativeValues.UsedByAlternativeValues)
+            {
+                CalculateRequiredTypesForAlternativeValues(alternativeValues.UsedByAlternativeValues);
+            }
+
             // before we need to ensure all requiredOutgoingTypes are calculated
             foreach (var opCodeValue in alternativeValues.Values.Where(v => v.RequiredOutgoingType == null))
             {
