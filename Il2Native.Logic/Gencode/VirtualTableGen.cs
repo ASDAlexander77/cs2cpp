@@ -53,13 +53,14 @@ namespace Il2Native.Logic.Gencode
             var allPublic = IlReader.Methods(
                 thisType,
                 BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver).ToList();
+                typeResolver).Reverse().ToList();
 #else
             var allPublic = IlReader.Methods(
                 thisType,
                 BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver);
+                typeResolver).Reverse();
 #endif
+            // we need to use reverse to be able to select first possible method from direved class first
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic, typeResolver);
         }
 
@@ -528,6 +529,7 @@ namespace Il2Native.Logic.Gencode
 #else
             var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
 #endif
+
             ResolveAndAppendInterfaceMethods(virtualTable, allPublic, interfaceMethods);
         }
 
