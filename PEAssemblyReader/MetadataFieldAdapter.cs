@@ -258,6 +258,44 @@ namespace PEAssemblyReader
         /// </summary>
         public string ConstByteArrayReference { get; set; }
 
+        public bool IsPublic
+        {
+            get
+            {
+                return this.fieldDef.DeclaredAccessibility == Accessibility.Public;
+            }
+        }
+
+        public bool IsInternal
+        {
+            get
+            {
+                return this.fieldDef.DeclaredAccessibility == Accessibility.Internal
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedAndInternal
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
+            }
+        }
+
+        public bool IsProtected
+        {
+            get
+            {
+                return this.fieldDef.DeclaredAccessibility == Accessibility.Protected
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedAndInternal
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedOrInternal
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedAndFriend
+                       || this.fieldDef.DeclaredAccessibility == Accessibility.ProtectedOrFriend;
+            }
+        }
+
+        public bool IsPrivate
+        {
+            get
+            {
+                return this.fieldDef.DeclaredAccessibility == Accessibility.Private;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string MetadataFullName

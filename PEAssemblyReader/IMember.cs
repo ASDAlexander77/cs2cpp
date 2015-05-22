@@ -30,6 +30,22 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsPublic { get; }
+        
+        /// <summary>
+        /// </summary>
+        bool IsInternal { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsProtected { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsPrivate { get; }
+
+        /// <summary>
+        /// </summary>
         IModule Module { get; }
     }
 }

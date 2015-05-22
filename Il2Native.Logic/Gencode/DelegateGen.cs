@@ -550,6 +550,34 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsPublic
+            {
+                get { return false; }
+            }
+
+            /// <summary>
+            /// </summary>
+            public bool IsInternal
+            {
+                get { return true; }
+            }
+
+            /// <summary>
+            /// </summary>
+            public bool IsProtected
+            {
+                get { return false; }
+            }
+
+            /// <summary>
+            /// </summary>
+            public bool IsPrivate
+            {
+                get { return false; }
+            }
+
+            /// <summary>
+            /// </summary>
             /// <param name="obj">
             /// </param>
             /// <returns>

@@ -1433,6 +1433,11 @@ namespace Il2Native.Logic
             var parameters = method.GetParameters();
             var otherParameters = overridingMethod.GetParameters();
 
+            if (!CompareTypeParam(method.ReturnType, overridingMethod.ReturnType))
+            {
+                return false;
+            }
+
             if ((parameters != null ? parameters.Count() : 0) == 0 &&
                 (otherParameters != null ? otherParameters.Count() : 0) == 0)
             {
@@ -1452,7 +1457,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+            return false;
         }
 
         public static bool IsMatchingParams(this IParameter[] params1, IParameter[] params2)

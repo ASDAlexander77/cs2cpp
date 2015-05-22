@@ -67,6 +67,34 @@
 
         public IField FixedElementField { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        public bool IsPublic
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsInternal
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsProtected
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsPrivate
+        {
+            get { return false; }
+        }
+
         public byte[] GetFieldRVAData()
         {
             return null;

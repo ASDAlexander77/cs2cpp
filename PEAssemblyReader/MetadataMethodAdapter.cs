@@ -355,6 +355,44 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsPublic
+        {
+            get
+            {
+                return this.methodDef.DeclaredAccessibility == Accessibility.Public;
+            }
+        }
+
+        public bool IsInternal
+        {
+            get
+            {
+                return this.methodDef.DeclaredAccessibility == Accessibility.Internal
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedAndInternal
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
+            }
+        }
+
+        public bool IsProtected
+        {
+            get
+            {
+                return this.methodDef.DeclaredAccessibility == Accessibility.Protected
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedAndInternal
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedOrInternal
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedAndFriend
+                       || this.methodDef.DeclaredAccessibility == Accessibility.ProtectedOrFriend;
+            }
+        }
+
+        public bool IsPrivate
+        {
+            get
+            {
+                return this.methodDef.DeclaredAccessibility == Accessibility.Private;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string MetadataFullName

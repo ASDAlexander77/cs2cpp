@@ -49,19 +49,18 @@ namespace Il2Native.Logic.Gencode
             IType @interface,
             ITypeResolver typeResolver)
         {
-#if DEBUG
-            var allPublic = IlReader.Methods(
+            var allExplicit = IlReader.Methods(
                 thisType,
-                BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver).Reverse().ToList();
-#else
-            var allPublic = IlReader.Methods(
+                BindingFlags.FlattenHierarchy | BindingFlags.Instance,
+                typeResolver).Where(m => m.IsExplicitInterfaceImplementation).ToList();
+
+            var allPublicAndInternal = IlReader.Methods(
                 thisType,
-                BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver).Reverse();
-#endif
+                BindingFlags.FlattenHierarchy | BindingFlags.Instance,
+                typeResolver).Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
+
             // we need to use reverse to be able to select first possible method from direved class first
-            virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic, typeResolver);
+            virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allExplicit, allPublicAndInternal, typeResolver);
         }
 
         /// <summary>
@@ -507,12 +506,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="interface">
         /// </param>
-        /// <param name="allPublic">
+        /// <param name="allPublicAndInternal">
         /// </param>
         private static void AddMethodsToVirtualInterfaceTable(
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             IType @interface,
-            IEnumerable<IMethod> allPublic,
+            IEnumerable<IMethod> allExplicit,
+            IEnumerable<IMethod> allPublicAndInternal,
             ITypeResolver typeResolver)
         {
             var baseInterfaces = @interface.GetInterfaces();
@@ -520,7 +520,7 @@ namespace Il2Native.Logic.Gencode
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allPublic, typeResolver);
+                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allExplicit, allPublicAndInternal, typeResolver);
             }
 
             // get all virtual methods in current type and replace or append
@@ -530,10 +530,10 @@ namespace Il2Native.Logic.Gencode
             var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
 #endif
 
-            ResolveAndAppendInterfaceMethods(virtualTable, allPublic, interfaceMethods);
+            ResolveAndAppendInterfaceMethods(virtualTable, allExplicit, allPublicAndInternal, interfaceMethods);
         }
 
-        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allPublic, IEnumerable<IMethod> interfaceMethods)
+        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allExplicit, IEnumerable<IMethod> allPublicAndInternal, IEnumerable<IMethod> interfaceMethods)
         {
             var list =
                 interfaceMethods.Select(
@@ -542,7 +542,10 @@ namespace Il2Native.Logic.Gencode
                         {
                             Key = interfaceMember,
                             Value =
-                                allPublic.Where(interfaceMember.IsMatchingInterfaceOverride)
+                                allExplicit.Where(interfaceMember.IsMatchingInterfaceOverride)
+                                         .OrderByDescending(x => x.IsExplicitInterfaceImplementation)
+                                         .FirstOrDefault()
+                                ?? allPublicAndInternal.Where(interfaceMember.IsMatchingInterfaceOverride)
                                          .OrderByDescending(x => x.IsExplicitInterfaceImplementation)
                                          .FirstOrDefault()
                         }).ToList();

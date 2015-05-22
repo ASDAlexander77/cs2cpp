@@ -49,6 +49,41 @@
                 IlReader.Constructors(arraySegmentType.GetNestedTypes().First(), typeResolver).First(c => c.GetParameters().Count() == 1));
         }
 
+        /// <summary>
+        /// </summary>
+        public override bool IsExplicitInterfaceImplementation
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public override bool IsPublic
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public override bool IsInternal
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public override bool IsProtected
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public override bool IsPrivate
+        {
+            get { return true; }
+        }
+
         public override IEnumerable<IParameter> GetParameters()
         {
             return this._parameters;

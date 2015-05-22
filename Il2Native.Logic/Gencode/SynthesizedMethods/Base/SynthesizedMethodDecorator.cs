@@ -215,6 +215,34 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return this.method.HasProceduralBody; }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool IsPublic
+        {
+            get { return this.method.IsPublic; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsInternal
+        {
+            get { return this.method.IsInternal; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsProtected
+        {
+            get { return method.IsProtected; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsPrivate
+        {
+            get { return this.method.IsPrivate; }
+        }
+
         public int CompareTo(object obj)
         {
             return this.method.CompareTo(obj);

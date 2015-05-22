@@ -105,7 +105,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public bool IsExplicitInterfaceImplementation
+        public virtual bool IsExplicitInterfaceImplementation
         {
             get { return false; }
         }
@@ -206,6 +206,34 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <summary>
         /// </summary>
         public bool HasProceduralBody { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public virtual bool IsPublic
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public virtual bool IsInternal
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public virtual bool IsProtected
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public virtual bool IsPrivate
+        {
+            get { return false; }
+        }
 
         /// <summary>
         /// </summary>

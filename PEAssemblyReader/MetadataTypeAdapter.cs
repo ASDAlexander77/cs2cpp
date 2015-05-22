@@ -1838,6 +1838,18 @@ namespace PEAssemblyReader
         /// </returns>
         private IEnumerable<IMethod> IterateMethods(BindingFlags bindingFlags)
         {
+            if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))
+            {
+                var baseType = this.BaseType;
+                if (baseType != null)
+                {
+                    foreach (var method in baseType.GetMethods(bindingFlags))
+                    {
+                        yield return method;
+                    }
+                }
+            }
+
             if (this.typeDef.IsUnboundGenericType())
             {
                 foreach (var method in
@@ -1856,18 +1868,6 @@ namespace PEAssemblyReader
                         .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
                 {
                     yield return method;
-                }
-            }
-
-            if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))
-            {
-                var baseType = this.BaseType;
-                if (baseType != null)
-                {
-                    foreach (var method in baseType.GetMethods(bindingFlags))
-                    {
-                        yield return method;
-                    }
                 }
             }
         }
