@@ -1041,6 +1041,123 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void Test_Mono_GTests_AnonType()
+        {
+            // 13 - rror CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+
+            var skip = new List<int>(new[]
+            {
+                13
+            });
+
+            foreach (var index in Enumerable.Range(1, 13).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-anontype-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Autoproperty()
+        {
+            // 3 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
+
+            var skip = new List<int>(new[]
+            {
+                3
+            });
+
+            foreach (var index in Enumerable.Range(1, 7).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-autoproperty-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Collectioninit()
+        {
+            // 
+
+            var skip = new List<int>(new[]
+            {
+                0
+            });
+
+            foreach (var index in Enumerable.Range(1, 3).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-collectioninit-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_ExMethod()
+        {
+            // 1 - error CS1061: 'System.Type' does not contain a definition for 'IsDefined'
+            // 8 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 12 - error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections'
+            // 15 - error CS0246: The type or namespace name 'ICustomAttributeProvider' could not be found
+            // 19 - error CS1061: 'string' does not contain a definition for 'Test_2' and no extension method 'Test_2' accepting a first argument of type 'string' could be found (TODO: Review it)
+            // 26 - error CS0121: The call is ambiguous between the following methods or properties: 'Test2.Extensions.IsNullable(System.Type)' and 'test.TypeExtensions.IsNullable(System.Type)' (TODO: Review it)
+            // 30 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 32 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 35 - Redeclaring attribute which used in Core lib
+            // 44 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 45 - lib with IL
+            // 46 - error CS1061: 'string' does not contain a definition for 'All' and no extension method 'All' accepting a first argument of type 'string' could be found (TODO: Review it)
+
+            var skip = new List<int>(new[]
+            {
+                1,
+                8,
+                12,
+                15,
+                19,
+                26,
+                30,
+                32,
+                35,
+                44,
+                45,
+                46
+            });
+
+            foreach (var index in Enumerable.Range(1, 46).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-exmethod-{0:00}", index));
+            }
+        }
+
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_FixedBuffer()
+        {
+            // 1 - error CS0246: The type or namespace name 'DefaultCharSet' could not be found
+            // 8 - error CS1061: 'System.Type' does not contain a definition for 'StructLayoutAttribute', (TODO: finish it when StructLayoutAttribute is done)
+            // 9 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
+
+            var skip = new List<int>(new[]
+            {
+                1,
+                8,
+                9
+            });
+
+            foreach (var index in Enumerable.Range(1, 10).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-fixedbuffer-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
