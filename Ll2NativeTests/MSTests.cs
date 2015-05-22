@@ -716,6 +716,11 @@ namespace Ll2NativeTests
             // 119 - error CS0234: The type or namespace name 'RegularExpressions' does not exist
             // 122 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 124 - error CS0315: The type 'ulong' cannot be used as type parameter 'T' in the generic type or method 'Test.NestedTypeMutate<T>()'. There is no boxing conversion from 'ulong' to 'System.IEquatable<ulong>'. (but it can be compiled with .NET)
+            // 135 - GetFields - NotImplemeneted
+            // 138 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' 
+            // 141 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 160 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 169 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
 
             var skip = new List<int>(new[]
             {
@@ -724,10 +729,15 @@ namespace Ll2NativeTests
                 73,
                 119,
                 122,
-                124
+                124,
+                135,
+                138,
+                141,
+                160,
+                169
             });
 
-            foreach (var index in Enumerable.Range(124, 171).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 171).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-anon-{0:00}", index));
             }

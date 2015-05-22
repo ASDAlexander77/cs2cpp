@@ -349,6 +349,24 @@ namespace System.Collections.Generic
                 throw new InvalidOperationException("EnumFailedVersion");
         }
 
+        public List<T> FindAll(Predicate<T> match)
+        {
+            if (match == null)
+            {
+                throw new ArgumentNullException("match");
+            }
+
+            List<T> list = new List<T>();
+            for (int i = 0; i < _size; i++)
+            {
+                if (match(_items[i]))
+                {
+                    list.Add(_items[i]);
+                }
+            }
+            return list;
+        }
+
         public Enumerator GetEnumerator()
         {
             return new Enumerator(this);

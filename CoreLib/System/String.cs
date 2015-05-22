@@ -991,6 +991,11 @@ namespace System
 
         public extern int IndexOfAny(char[] anyOf, int startIndex, int count);
 
+        public bool Contains(string value)
+        {
+            return (IndexOf(value) >= 0);
+        }
+
         public int IndexOf(String value)
         {
             var source = this;
