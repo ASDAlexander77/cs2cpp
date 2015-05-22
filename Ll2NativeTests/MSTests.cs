@@ -1227,6 +1227,7 @@ namespace Ll2NativeTests
             // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 25 - (TODO: you can fix it if you have time), forcing conflict with generic params
             // 30 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 31 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
 
             var skip = new List<int>(new[]
             {
@@ -1235,7 +1236,8 @@ namespace Ll2NativeTests
                 8,
                 22,
                 25,
-                30
+                30,
+                31
             });
 
             foreach (var index in Enumerable.Range(1, 31).Where(n => !skip.Contains(n)))
