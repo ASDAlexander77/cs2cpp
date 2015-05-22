@@ -2391,7 +2391,7 @@ namespace Il2Native.Logic
                     return this.System.System_Void.ToPointerType();
 
                 case Code.Dup:
-                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0], ignoreAlternativeValues);
+                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
 
                 case Code.Ldtoken:
 
