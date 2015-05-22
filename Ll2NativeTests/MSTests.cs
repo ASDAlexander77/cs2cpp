@@ -1018,6 +1018,8 @@ namespace Ll2NativeTests
             // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 33 - StringBuilder enumerator is not impelemented. TODO: Investigate
             // 35 - GetFields - NotImplemeneted
+            // 38 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 41 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
 
             var skip = new List<int>(new[]
             {
@@ -1025,7 +1027,9 @@ namespace Ll2NativeTests
                 19,
                 22,
                 33,
-                35
+                35,
+                38,
+                41
             });
 
             foreach (var index in Enumerable.Range(1, 56).Where(n => !skip.Contains(n)))
