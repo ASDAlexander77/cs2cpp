@@ -27,6 +27,7 @@
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
             yield return intType.ToField(arrayType, "elementSize");
+            yield return intType.ToField(arrayType, "length");
             yield return intType.ToArrayType(1).ToField(arrayType, "lowerBounds");
             yield return intType.ToArrayType(1).ToField(arrayType, "lengths");
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
@@ -55,6 +56,7 @@
                         Code.Ldarg_0,
                         Code.Dup,
                         Code.Dup,
+                        Code.Dup
                     });
 
             codeList.AppendLoadInt(arrayRank);
@@ -63,6 +65,18 @@
             codeList.AppendInt(Code.Stfld, 2);
             codeList.AppendLoadInt(elementSize);
             codeList.AppendInt(Code.Stfld, 3);
+
+            // init length
+            // init multiplier
+            codeList.Add(Code.Ldc_I4_1);
+
+            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
+            {
+                codeList.AppendLoadArgument(arrayType.ArrayRank - i);
+                codeList.Add(Code.Mul);
+            }
+
+            codeList.AppendInt(Code.Stfld, 8);
 
             // init lowerBounds
             // set all 0
@@ -143,6 +157,7 @@
             // bounds
             tokenResolutions.Add(typeResolver.System.System_Int32);
             tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("length", typeResolver));
 
             // code
             code = codeList.ToArray();
