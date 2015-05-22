@@ -18,9 +18,6 @@
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
-        public const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
-        public const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
-        public const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
 
         public const string OutputObjectFileExt = "obj";
@@ -35,20 +32,10 @@
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
-
-        public const string OpenGlLibPath =
-            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
-
-        public const string OpenGlExePath =
-            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
-
-        public const string AndroidPath =
-            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
-
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
-
+        
         public const string OutputObjectFileExt = "obj";
-
+        
         public const string GcHeaders = @"E:\Gits\bdwgc\include";
 #endif
 

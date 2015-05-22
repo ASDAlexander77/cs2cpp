@@ -36,6 +36,7 @@ namespace Ll2NativeTests
         public TestContext TestContext { get; set; }
 
         [TestMethod]
+        [Ignore]
         public void GenerateTestFromMonoTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -138,6 +139,7 @@ namespace Ll2NativeTests
         }
 
         [TestMethod]
+        [Ignore]
         public void GenerateTestFromSscliTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -219,17 +221,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestAndroid()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.AndroidPath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
+        [Ignore]
         public void TestCompileWithMscorlib()
         {
             var skip = new List<int>(new[] { 100 });
@@ -764,6 +756,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Ignore]
         public void TestMscolibCSNative()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -799,6 +792,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Ignore]
         public void TestGenCompileWithMscorlib()
         {
             var skip = new List<int>();
@@ -1077,6 +1071,26 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void Test_Mono_Tests_Iter()
+        {
+            // 18 - Reflection NotImplemented
+            // 23 - error CS0103: The name 'ThreadPool' does not exist in the current context
+
+            var skip = new List<int>(new[]
+            {
+                18,
+                23
+            });
+
+            foreach (var index in Enumerable.Range(1, 26).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("test-iter-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void Test_Mono_GTests_Collectioninit()
         {
             // 
@@ -1158,6 +1172,82 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void Test_Mono_GTests_ImplicitArray()
+        {
+            // 3 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+
+            var skip = new List<int>(new[]
+            {
+                3
+            });
+
+            foreach (var index in Enumerable.Range(1, 3).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-implicitarray-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Initialize()
+        {
+            foreach (var index in Enumerable.Range(1, 12))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-initialize-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Iter()
+        {
+            // 
+
+            var skip = new List<int>(new[]
+            {
+                0
+            });
+
+            foreach (var index in Enumerable.Range(1, 29).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-iter-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Lambda()
+        {
+            // 3 - error CS0117: 'System.TimeSpan' does not contain a definition for 'Parse' (TODO: Review it)
+            // 4 - error CS0117: 'System.TimeSpan' does not contain a definition for 'Parse' (TODO: Review it)
+            // 8 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' (are you missing an assembly reference?)
+            // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 25 - (TODO: you can fix it if you have time), forcing conflict with generic params
+            // 30 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+
+            var skip = new List<int>(new[]
+            {
+                3,
+                4,
+                8,
+                22,
+                25,
+                30
+            });
+
+            foreach (var index in Enumerable.Range(1, 31).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-lambda-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        [Ignore]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -1177,6 +1267,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Ignore]
         public void TestMscorlibCompile_TypeTest()
         {
             // Do not forget to set MSCORLIB variable
@@ -1186,54 +1277,6 @@ namespace Ll2NativeTests
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false),
                 new[] { "System.Delegate" });
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestOpenGlExe()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.OpenGlExePath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestOpenGlLib()
-        {
-            // todo: 
-            // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
-            // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.OpenGlLibPath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestPdbReader()
-        {
-            Converter.Convert(CompilerHelper.CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
-        }
-
-        /// </summary>
-        [TestMethod]
-        public void TestSscli()
-        {
-            foreach (
-                var file in
-                    Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
-            {
-                CompilerHelper.CompileAndRun(
-                    Path.GetFileNameWithoutExtension(file),
-                    Path.GetDirectoryName(file) + "\\",
-                    true);
-            }
         }
 
         #region Additional test attributes
