@@ -714,16 +714,20 @@ namespace Ll2NativeTests
             // 42 - compiling with -Ofast causing C app to crash
             // 73 - error CS0234: The type or namespace name 'ThreadPool' does not exist in the namespace 'System.Threading' (are you missing an assembly reference?)
             // 119 - error CS0234: The type or namespace name 'RegularExpressions' does not exist
+            // 122 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 124 - error CS0315: The type 'ulong' cannot be used as type parameter 'T' in the generic type or method 'Test.NestedTypeMutate<T>()'. There is no boxing conversion from 'ulong' to 'System.IEquatable<ulong>'. (but it can be compiled with .NET)
 
             var skip = new List<int>(new[]
             {
                 34,
                 42,
                 73,
-                119
+                119,
+                122,
+                124
             });
 
-            foreach (var index in Enumerable.Range(73, 171).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(124, 171).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-anon-{0:00}", index));
             }

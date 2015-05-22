@@ -2021,18 +2021,13 @@ namespace Il2Native.Logic
             }
         }
 
-        protected IType RequiredOutgoingType(OpCodePart opCodePart)
-        {
-            return RequiredOutgoingType(opCodePart, false);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredOutgoingType(OpCodePart opCodePart, bool ignoreAlternativeValues)
+        protected IType RequiredOutgoingType(OpCodePart opCodePart, bool ignoreAlternativeValues = false)
         {
             if (!ignoreAlternativeValues && opCodePart.UsedByAlternativeValues != null)
             {
@@ -2147,7 +2142,7 @@ namespace Il2Native.Logic
                         return retType;
                     }
 
-                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0], ignoreAlternativeValues);
                     Debug.Assert(retType.HasElementType);
                     return retType.GetElementType();
 
@@ -2349,8 +2344,8 @@ namespace Il2Native.Logic
                         return opArithmetic;
                     }
 
-                    var op1 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    var op2 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[1]);
+                    var op1 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0], ignoreAlternativeValues);
+                    var op2 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[1], ignoreAlternativeValues);
                     var returnOp = op1.TypeEquals(op2) || op1.IsPointer || op1.IsByRef || op1.IntTypeBitSize() > op2.IntTypeBitSize() ? op1 : op2;
 
                     // in case of Pointer operations
@@ -2396,7 +2391,7 @@ namespace Il2Native.Logic
                     return this.System.System_Void.ToPointerType();
 
                 case Code.Dup:
-                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0], ignoreAlternativeValues);
 
                 case Code.Ldtoken:
 
