@@ -190,7 +190,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public string Namespace { get; private set; }
+        public virtual string Namespace { get; private set; }
 
         /// <summary>
         /// </summary>

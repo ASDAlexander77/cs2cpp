@@ -443,7 +443,7 @@ namespace Il2Native.Logic.Gencode
             foreach (var virtualMethod in virtualTable)
             {
                 var method = virtualMethod.Key;
-                cWriter.WriteMethodPointerType(writer, method, declarationType ?? method.DeclaringType, withName: true, shortName: methodsOnly);
+                cWriter.WriteMethodPointerType(writer, method, declarationType ?? method.DeclaringType, withName: true, shortName: false, excludeNamespace: true);
                 writer.WriteLine(";");
             }
 

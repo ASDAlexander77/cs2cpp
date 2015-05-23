@@ -1381,7 +1381,7 @@ namespace PEAssemblyReader
             var sb = new StringBuilder();
             if (!this.IsGenericParameter)
             {
-                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, false, '.');
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, false, '_');
             }
 
             sb.Append(this.Name);

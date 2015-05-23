@@ -51,6 +51,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        void WriteAfterMethods(IType type);
+
+        /// <summary>
+        /// </summary>
+        void WriteBeforeMethods(IType type);
+
+
+        /// <summary>
+        /// </summary>
         void WriteEnd();
 
         /// <summary>
@@ -105,6 +114,8 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
+
+        void WriteTypeEnd(IType type);
 
         /// <summary>
         /// </summary>

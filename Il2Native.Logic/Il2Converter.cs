@@ -54,10 +54,6 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            ForwardMethodDeclaration,
-
-            /// <summary>
-            /// </summary>
             PreDefinition,
 
             /// <summary>
@@ -113,7 +109,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public static void WriteTypeFullDeclaration(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
+        public static void WriteTypeFullDeclaration(
+            ICodeWriter codeWriter, 
+            IType type, 
+            IGenericContext genericContext, 
+            IEnumerable<IMethod> genericMethodSpecializatons,
+            bool processGenericMethodsOnly = false,
+            bool forwardDeclarations = false)
         {
             codeWriter.WriteTypeStart(type, genericContext);
 
@@ -130,6 +132,15 @@ namespace Il2Native.Logic
             }
 
             codeWriter.WriteAfterFields();
+
+            ConvertTypeDefinition(
+                codeWriter,
+                type,
+                genericMethodSpecializatons,
+                processGenericMethodsOnly,
+                true);
+
+            codeWriter.WriteTypeEnd(type);
         }
 
         /// <summary>
@@ -179,20 +190,15 @@ namespace Il2Native.Logic
                 }
                 else if (mode == ConvertingMode.Declaration)
                 {
-                    ConvertTypeDeclaration(codeWriter, type);
+                    ConvertTypeDeclaration(
+                        codeWriter, 
+                        type,
+                        genericMethodSpecializatonsForType,
+                        processGenericMethodsOnly);
                 }
                 if (mode == ConvertingMode.PostDeclaration)
                 {
                     codeWriter.WritePostDeclarations(type);
-                }
-                else if (mode == ConvertingMode.ForwardMethodDeclaration)
-                {
-                    ConvertTypeDefinition(
-                        codeWriter,
-                        type,
-                        genericMethodSpecializatonsForType,
-                        processGenericMethodsOnly,
-                        true);
                 }
                 else if (mode == ConvertingMode.PreDefinition)
                 {
@@ -271,7 +277,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="processGenericMethodsOnly">
         /// </param>
-        private static void ConvertTypeDeclaration(ICodeWriter codeWriter, IType type)
+        private static void ConvertTypeDeclaration(
+            ICodeWriter codeWriter, 
+            IType type, 
+            IEnumerable<IMethod> genericMethodSpecializatons,
+            bool processGenericMethodsOnly = false,
+            bool forwardDeclarations = false)
         {
             if (VerboseOutput)
             {
@@ -282,7 +293,7 @@ namespace Il2Native.Logic
             IType typeSpecialization;
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext);
+            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, processGenericMethodsOnly, forwardDeclarations);
         }
 
         private static void ConvertTypeDefinition(
@@ -296,6 +307,8 @@ namespace Il2Native.Logic
             {
                 Trace.WriteLine(string.Format("Converting {0} (definition)"));
             }
+
+            codeWriter.WriteBeforeMethods(type);
 
             IType typeDefinition;
             IType typeSpecialization;
@@ -369,6 +382,7 @@ namespace Il2Native.Logic
                 }
             }
 
+            codeWriter.WriteAfterMethods(type);
         }
 
         private static IGenericContext GetGenericTypeContext(
@@ -1232,11 +1246,11 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
-            WriteTypesWithGenericsStep(
-                codeHeaderWriter,
-                types,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.ForwardMethodDeclaration);
+            ////WriteTypesWithGenericsStep(
+            ////    codeHeaderWriter,
+            ////    types,
+            ////    genericMethodSpecializationsSorted,
+            ////    ConvertingMode.ForwardMethodDeclaration);
 
             ConvertAllTypes(
                 codeHeaderWriter,

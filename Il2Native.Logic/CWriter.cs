@@ -16,7 +16,7 @@ namespace Il2Native.Logic
     using System.Reflection.Emit;
     using System.Runtime.InteropServices;
     using System.Text;
-
+    using System.Threading;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.DebugInfo;
     using Il2Native.Logic.Exceptions;
@@ -24,7 +24,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.Gencode.InlineMethods;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
     using Il2Native.Logic.Properties;
-
+    using Microsoft.Win32;
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -2066,10 +2066,6 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteAfterFields()
         {
-            this.Output.Indent--;
-            this.Output.WriteLine("};");
-
-            EndPreprocessorIf(this.ThisType);
         }
 
         /// <summary>
@@ -2092,7 +2088,7 @@ namespace Il2Native.Logic
             {
                 @interface.WriteTypeWithoutModifiers(this);
                 this.Output.Write(" ifce_");
-                @interface.WriteTypeName(this.Output, false);
+                this.Output.Write(@interface.FullName.CleanUpName());
                 this.Output.WriteLine(";");
                 index++;
             }
@@ -2471,14 +2467,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="ownerOfExplicitInterface">
         /// </param>
-        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
+        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
         {
-            if (IsGeneric(methodBase, ownerOfExplicitInterface, shortName))
+            if (!excludeNamespace && IsGeneric(methodBase, ownerOfExplicitInterface, shortName))
             {
                 writer.Write(this.GetAssemblyPrefix());
             }
 
-            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
+            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace);
         }
 
         private static bool IsGeneric(IMethod methodBase, IType ownerOfExplicitInterface, bool shortName)
@@ -2494,7 +2490,7 @@ namespace Il2Native.Logic
                       methodBase.ExplicitInterface.IsArray)));
         }
 
-        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
+        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
         {
             if (methodBase.DeclaringType == null)
             {
@@ -2502,7 +2498,18 @@ namespace Il2Native.Logic
             }
             else
             {
+                ////var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+                ////writer.Write(name);
+
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+                if (!excludeNamespace && methodBase.Namespace != null)
+                {
+                    writer.Write(methodBase.Namespace.Replace(".", "::"));
+                    writer.Write("::");
+                    this.WriteClassName(methodBase.DeclaringType);
+                    writer.Write("::");
+                }
+
                 writer.Write(name);
             }
         }
@@ -2512,7 +2519,7 @@ namespace Il2Native.Logic
             return this.Gc;
         }
 
-        public string GetAssemblyPrefix(IType type = null)
+        public string GetAssemblyPrefix(IType type = null, bool ending = true)
         {
             if (type != null && !(type.IsArray || type.IsGenericType || type.IsGenericTypeDefinition))
             {
@@ -2526,7 +2533,7 @@ namespace Il2Native.Logic
             return string.Concat(
                 (length == 0 || Char.IsDigit(this.AssemblyQualifiedName[0])) ? "_" : string.Empty,
                 this.AssemblyQualifiedName.Substring(0, length).CleanUpName(),
-                "_");
+                ending ? "::" : string.Empty);
         }
 
         /// <summary>
@@ -2636,14 +2643,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = false, string suffix = null)
+        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = true, string suffix = null, bool excludeNamespace = false)
         {
             var methodInfo = methodBase;
             this.WriteMethodReturnType(writer, methodBase);
             writer.Write("(*");
             if (withName)
             {
-                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);
+                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName, excludeNamespace: excludeNamespace);
             }
 
             if (!string.IsNullOrEmpty(suffix))
@@ -2703,15 +2710,16 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodReturnType(CIndentedTextWriter writer, IMethod method)
         {
-            if (!method.ReturnType.IsVoid())
-            {
-                method.ReturnType.WriteTypePrefix(this);
-                writer.Write(" ");
-            }
-            else
-            {
-                this.Output.Write("Void ");
-            }
+            method.ReturnType.WriteTypePrefix(this);
+            writer.Write(" ");
+        }
+
+        public void WriteBeforeMethods(IType type)
+        {
+        }
+
+        public void WriteAfterMethods(IType type)
+        {
         }
 
         public void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericMethodContext)
@@ -2927,11 +2935,11 @@ namespace Il2Native.Logic
 
                 this.WriteVirtualTableImplementations(type);
 
-                StartPreprocessorIf(type, "DP");
+                ////StartPreprocessorIf(type, "DP");
 
                 WriteVirtualTable(type);
 
-                EndPreprocessorIf(type);
+                ////EndPreprocessorIf(type);
             }
 
             this.WriteStaticFieldDeclaration(type);
@@ -3153,9 +3161,15 @@ namespace Il2Native.Logic
 
         public void WriteForwardTypeDeclaration(IType type, IGenericContext genericContext)
         {
+            this.WriteTypeNamespaceStart(type);
+
             this.Output.Write("struct ");
-            type.ToClass().WriteTypeName(this.Output, false);
+
+            this.WriteClassName(type);
+
             this.Output.WriteLine(";");
+
+            this.WriteTypeNamespaceEnd(type);
         }
 
         /// <summary>
@@ -3174,10 +3188,40 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.StartPreprocessorIf(type, "D");
+            ////this.StartPreprocessorIf(type, "D");
+
+            this.WriteTypeNamespaceStart(type);
 
             this.Output.Write("struct ");
-            type.ToClass().WriteTypeName(this.Output, false);
+            //type.ToClass().WriteTypeName(this.Output, false);
+
+            this.WriteClassName(type);
+        }
+
+        private void WriteClassName(IType type)
+        {
+            var currentType = type;
+            while (currentType != null && currentType.IsNested)
+            {
+                currentType = currentType.DeclaringType;
+                if (currentType != null)
+                {
+                    this.Output.Write(currentType.Name.CleanUpName());
+                    this.Output.Write("_");
+                }
+            }
+
+            this.Output.Write(type.Name.CleanUpName());
+        }
+
+        public void WriteTypeEnd(IType type)
+        {
+            this.Output.Indent--;
+            this.Output.WriteLine("};");
+
+            this.WriteTypeNamespaceEnd(type);
+
+            ////EndPreprocessorIf(this.ThisType);
         }
 
         /// <summary>
@@ -3715,7 +3759,7 @@ namespace Il2Native.Logic
                 this.GetArrayTypeHeader(this.System.System_Byte, bytes.Length),
                 this.GetArrayValuesHeader(this.System.System_Byte, bytes.Length, bytes.Length),
                 "{",
-                this.GetAssemblyPrefix());
+                this.GetAssemblyPrefix(ending: false));
 
             this.Output.Write("{ ");
 
@@ -4012,7 +4056,7 @@ namespace Il2Native.Logic
             // debug info
             this.WriteDebugInfoForMethod(method);
 
-            if (this.WriteMethodProlog(method))
+            if (this.WriteMethodProlog(method, true))
             {
                 return;
             }
@@ -4064,7 +4108,35 @@ namespace Il2Native.Logic
             }
         }
 
-        private bool WriteMethodProlog(IMethod method)
+        private void WriteTypeNamespaceStart(IType type)
+        {
+            if (!string.IsNullOrWhiteSpace(type.Namespace))
+            {
+                foreach (var part in type.Namespace.Split('.'))
+                {
+                    this.Output.Write("namespace ");
+                    this.Output.Write(part);
+                    this.Output.Indent++;
+                    this.Output.Write(" { ");
+                }
+            }
+
+            this.Output.WriteLine(string.Empty);
+        }
+
+        private void WriteTypeNamespaceEnd(IType type)
+        {
+            if (!string.IsNullOrWhiteSpace(type.Namespace))
+            {
+                foreach (var part in type.Namespace.Split('.'))
+                {
+                    this.Output.Indent--;
+                    this.Output.WriteLine("}");
+                }
+            }
+        }
+
+        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -4098,7 +4170,7 @@ namespace Il2Native.Logic
             }
 
             // name
-            this.WriteMethodDefinitionName(this.Output, method);
+            this.WriteMethodDefinitionName(this.Output, method, excludeNamespace: excludeNamespace);
 
             if (method.IsUnmanagedMethodReference)
             {
@@ -4219,7 +4291,7 @@ namespace Il2Native.Logic
             if (ctor != null)
             {
                 this.ReadMethodInfo(ctor, genericContext);
-                this.WriteMethodProlog(ctor);
+                this.WriteMethodProlog(ctor, true);
                 this.Output.WriteLine(";");
                 return;
             }
@@ -4228,7 +4300,7 @@ namespace Il2Native.Logic
             if (method != null)
             {
                 this.ReadMethodInfo(method, genericContext);
-                this.WriteMethodProlog(method);
+                this.WriteMethodProlog(method, true);
                 this.Output.WriteLine(";");
             }
         }

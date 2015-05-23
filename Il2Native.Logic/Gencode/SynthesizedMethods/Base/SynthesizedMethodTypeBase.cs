@@ -59,6 +59,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return string.Concat(this.Type.FullName, ".", this.MethodName); }
         }
 
+        public override string Namespace
+        {
+            get { return this.Type.Namespace; }
+        }
+
         /// <summary>
         /// </summary>
         public override string Name
