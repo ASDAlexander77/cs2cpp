@@ -378,11 +378,20 @@ namespace Il2Native.Logic
                     var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
                     if (methodDeclarationType.IsInterface)
                     {
-                        var address = opCode.AddressEnd != 0
-                                          ? opCode.AddressStart
-                                          : opCode.UsedBy != null
-                                                ? opCode.UsedBy.OpCode.AddressStart
-                                                : opCode.OpCodeOperands != null ? opCode.OpCodeOperands[0].AddressStart : 0;
+                        var address = opCode.AddressStart;
+                        if (address == 0)
+                        {
+                            address = opCode.GetHashCode();
+                            if (opCode.UsedBy != null)
+                            {
+                                address += opCode.UsedBy.OpCode.AddressStart;
+                            }
+
+                            if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
+                            {
+                                address += opCode.OpCodeOperands[0].AddressStart;
+                            }
+                        }
 
                         opCode.Result = new FullyDefinedReference(string.Concat("__expr", address), methodDeclarationType);
                     }
