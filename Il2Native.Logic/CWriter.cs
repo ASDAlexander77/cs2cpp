@@ -2496,15 +2496,14 @@ namespace Il2Native.Logic
 
         public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
-
             if (methodBase.DeclaringType == null)
             {
                 writer.Write(methodBase.Name);
             }
             else
             {
-                writer.Write(name.CleanUpName());
+                var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+                writer.Write(name);
             }
         }
 
