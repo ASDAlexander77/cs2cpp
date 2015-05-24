@@ -480,7 +480,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type, out bool globalNamespace, bool? isPointerOpt = null, bool enumAsName = false)
+        public static string TypeToCType(this IType type, out bool globalNamespace, bool? isPointerOpt = null, bool enumAsName = false, bool shortName = false)
         {
             globalNamespace = !type.UseAsClass && type.IsVoid();
 
@@ -488,7 +488,7 @@ namespace Il2Native.Logic.Gencode
             {
                 if (type.IsEnum && !enumAsName)
                 {
-                    return type.GetEnumUnderlyingType().Name;
+                    return TypeToCType(type.GetEnumUnderlyingType(), out globalNamespace, isPointerOpt);
                 }
 
                 if (type.IsValueType && type.IsPrimitive || type.IsVoid())
@@ -498,7 +498,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            return type.FullName;
+            return shortName ? type.Name : type.FullName;
         }
 
         /// <summary>
@@ -553,11 +553,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="isPointer">
         /// </param>
-        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false)
+        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false, bool shortName = false)
         {
             bool globalNamespace;
-            var typeBaseName = type.TypeToCType(out globalNamespace, isPointer, enumAsName);
-            if (globalNamespace)
+            var typeBaseName = type.TypeToCType(out globalNamespace, isPointer, enumAsName, shortName);
+            if (globalNamespace && !shortName)
             {
                 writer.Write("::");
             }
@@ -565,7 +565,8 @@ namespace Il2Native.Logic.Gencode
             var pos = typeBaseName.IndexOf('<');
             if (pos > 0)
             {
-                writer.Write(string.Concat(typeBaseName.Substring(0, pos - 1).Replace(".", "::"), typeBaseName.Substring(pos)).CleanUpName());
+                var name = string.Concat(typeBaseName.Substring(0, pos).Replace(".", "::"), typeBaseName.Substring(pos)).CleanUpName();
+                writer.Write(name);
             }
             else
             {

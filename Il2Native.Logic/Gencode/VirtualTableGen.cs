@@ -194,7 +194,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualInterfaceTableName(this IType type, IType @interface, CWriter cWriter, bool implementation = false)
         {
-            return string.Concat(cWriter.GetAssemblyPrefix(type), type.FullName, " vtable ", @interface.FullName, implementation ? " interface_impl"  : " interface").CleanUpName();
+            return string.Concat(type.FullName, " vtable ", @interface.FullName, implementation ? " interface_impl"  : " interface").CleanUpName();
         }
 
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
@@ -327,7 +327,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualTableName(this IType type, CWriter cWriter, bool implementation = false)
         {
-            return string.Concat(cWriter.GetAssemblyPrefix(type), type.FullName, implementation ? " vtable_impl" : " vtable").CleanUpName();
+            return string.Concat(type.FullName, implementation ? " vtable_impl" : " vtable").CleanUpName();
         }
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)

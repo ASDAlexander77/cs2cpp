@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiPointerInfoName(this IType type, CWriter cWriter)
         {
-            return string.Concat("_RTTI_", cWriter.GetAssemblyPrefix(type), type.FullName, " Pointer Info").CleanUpName();
+            return string.Concat("_RTTI_", type.FullName, " Pointer Info").CleanUpName();
         }
 
         /// <summary>

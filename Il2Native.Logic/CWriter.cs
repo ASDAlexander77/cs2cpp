@@ -92,6 +92,8 @@ namespace Il2Native.Logic
 
         public DebugInfoGenerator debugInfoGenerator;
 
+        private IList<IMethod> externDeclarations = new List<IMethod>();
+
         /// <summary>
         /// </summary>
         /// <param name="fileName">
@@ -547,7 +549,7 @@ namespace Il2Native.Logic
                     var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
                     var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
-                    this.Output.Write("({1}) &_s{0}{2}_", stringToken, strType, this.GetAssemblyPrefix());
+                    this.Output.Write("({1}) &_s{0}_", stringToken, strType);
                     break;
                 case Code.Ldnull:
                     this.Output.Write("0/*null*/");
@@ -588,7 +590,7 @@ namespace Il2Native.Logic
                         if (constBytes != null)
                         {
                             var typeString = this.WriteToString(() => System.System_Byte.ToArrayType(1).WriteTypePrefix(this));
-                            this.Output.Write("({1}) &{0}{2}", constBytes.Reference, typeString, this.GetAssemblyPrefix());
+                            this.Output.Write("({1}) &{0}", constBytes.Reference, typeString);
                             break;
                         }
 
@@ -717,7 +719,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var destinationName = string.Concat(this.GetAssemblyPrefix(opCodeFieldInfoPart.Operand.DeclaringType), opCodeFieldInfoPart.Operand.GetFullName().CleanUpName());
+                    var destinationName = string.Concat(opCodeFieldInfoPart.Operand.GetFullName().CleanUpName());
 
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
@@ -2469,11 +2471,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
         {
-            if (!excludeNamespace && IsGeneric(methodBase, ownerOfExplicitInterface, shortName))
-            {
-                writer.Write(this.GetAssemblyPrefix());
-            }
-
             this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace);
         }
 
@@ -2517,23 +2514,6 @@ namespace Il2Native.Logic
         public override bool GetGcSupport()
         {
             return this.Gc;
-        }
-
-        public string GetAssemblyPrefix(IType type = null, bool ending = true)
-        {
-            if (type != null && !(type.IsArray || type.IsGenericType || type.IsGenericTypeDefinition))
-            {
-                return string.Empty;
-            }
-
-            var length = this.AssemblyQualifiedName.Length >= 4 &&
-                         this.AssemblyQualifiedName[this.AssemblyQualifiedName.Length - 4] == '.'
-                ? this.AssemblyQualifiedName.Length - 4
-                : this.AssemblyQualifiedName.Length;
-            return string.Concat(
-                (length == 0 || Char.IsDigit(this.AssemblyQualifiedName[0])) ? "_" : string.Empty,
-                this.AssemblyQualifiedName.Substring(0, length).CleanUpName(),
-                ending ? "::" : string.Empty);
         }
 
         /// <summary>
@@ -3196,22 +3176,31 @@ namespace Il2Native.Logic
             //type.ToClass().WriteTypeName(this.Output, false);
 
             this.WriteClassName(type);
+
+            this.externDeclarations.Clear();
         }
 
         private void WriteClassName(IType type)
         {
-            var currentType = type;
-            while (currentType != null && currentType.IsNested)
+            var currentType = type.IsArray ? type.GetElementType() : type;
+            if (currentType.IsNested)
             {
-                currentType = currentType.DeclaringType;
-                if (currentType != null)
+                var sb = new StringBuilder();
+
+                while (currentType != null && currentType.IsNested)
                 {
-                    this.Output.Write(currentType.Name.CleanUpName());
-                    this.Output.Write("_");
+                    currentType = currentType.DeclaringType;
+                    if (currentType != null)
+                    {
+                        sb.Insert(0, string.Concat(currentType.Name.CleanUpName(), "_"));
+                    }
                 }
+
+                this.Output.Write(sb.ToString());
             }
 
-            this.Output.Write(type.Name.CleanUpName());
+            ////this.Output.Write(type.Name.CleanUpName());
+            type.WriteTypeName(this.Output, false, true, true);
         }
 
         public void WriteTypeEnd(IType type)
@@ -3222,6 +3211,14 @@ namespace Il2Native.Logic
             this.WriteTypeNamespaceEnd(type);
 
             ////EndPreprocessorIf(this.ThisType);
+            
+            // write all extern declarations
+            foreach (var externMethod in this.externDeclarations)
+            {
+                this.ReadMethodInfo(externMethod, null);
+                this.WriteMethodProlog(externMethod, externDecl: true);
+                this.Output.WriteLine(";");
+            }
         }
 
         /// <summary>
@@ -3754,12 +3751,11 @@ namespace Il2Native.Logic
 
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "const struct {1} {0}{4} = {3} {2}",
+                "const struct {1} {0} = {3} {2}",
                 constBytes.Reference,
                 this.GetArrayTypeHeader(this.System.System_Byte, bytes.Length),
                 this.GetArrayValuesHeader(this.System.System_Byte, bytes.Length, bytes.Length),
-                "{",
-                this.GetAssemblyPrefix(ending: false));
+                "{");
 
             this.Output.Write("{ ");
 
@@ -4136,7 +4132,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false)
+        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -4146,19 +4142,29 @@ namespace Il2Native.Logic
                     return true;
                 }
 
-                if (method.IsUnmanagedDllImport)
+                if (!externDecl)
                 {
-                    this.Output.Write("extern \"C\" __declspec( dllimport ) ");
+                    if (method.IsUnmanagedDllImport || method.IsUnmanaged || method.IsUnmanagedMethodReference)
+                    {
+                        this.externDeclarations.Add(method);
+                        return true;
+                    }
                 }
-                else if (method.IsUnmanaged || method.IsUnmanagedMethodReference)
+                else
                 {
-                    this.Output.Write("extern \"C\" ");
+                    excludeNamespace = true;
+                    WriteMethodExternPrefix(method);
                 }
+            }
 
-                if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
-                {
-                    this.Output.Write("__stdcall ");
-                }
+            if (!externDecl)
+            {
+                this.Output.Write("static ");
+            }
+
+            if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
+            {
+                this.Output.Write("__stdcall ");
             }
 
             // return type
@@ -4186,6 +4192,18 @@ namespace Il2Native.Logic
                 method.IsUnmanagedMethodReference);
 
             return false;
+        }
+
+        private void WriteMethodExternPrefix(IMethod method)
+        {
+            if (method.IsUnmanagedDllImport)
+            {
+                this.Output.Write("extern \"C\" __declspec( dllimport ) ");
+            }
+            else if (method.IsUnmanaged || method.IsUnmanagedMethodReference)
+            {
+                this.Output.Write("extern \"C\" ");
+            }
         }
 
         private void ReadDbgLine(OpCodePart opCode)
@@ -4300,8 +4318,10 @@ namespace Il2Native.Logic
             if (method != null)
             {
                 this.ReadMethodInfo(method, genericContext);
-                this.WriteMethodProlog(method, true);
-                this.Output.WriteLine(";");
+                if (!this.WriteMethodProlog(method, true))
+                {
+                    this.Output.WriteLine(";");
+                }
             }
         }
 
@@ -4476,7 +4496,7 @@ namespace Il2Native.Logic
 
         private void WriteStaticFieldName(IField field)
         {
-            this.Output.Write(this.GetAssemblyPrefix(field.DeclaringType));
+            ////this.Output.Write(this.GetAssemblyPrefix(field.DeclaringType));
             this.Output.Write(field.GetFullName().CleanUpName());
         }
 
@@ -4591,12 +4611,11 @@ namespace Il2Native.Logic
 
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "const struct {1} _s{0}{4}_ = {3} {2}",
+                "const struct {1} _s{0}_ = {3} {2}",
                 pair.Key,
                 this.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
                 this.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
-                "{",
-                this.GetAssemblyPrefix());
+                "{");
 
             this.Output.Write("{ ");
 
@@ -4683,8 +4702,10 @@ namespace Il2Native.Logic
 
             var writer = this.Output;
 
+            WriteTypeNamespaceStart(table);
+
             writer.Write("struct ");
-            table.WriteTypeName(writer, false);
+            WriteClassName(table);
             writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;
 
@@ -4694,7 +4715,7 @@ namespace Il2Native.Logic
 
                 foreach (var method in virtualTable.Select(v => v.Value))
                 {
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
                     writer.WriteLine(";");
                 }
             }
@@ -4709,7 +4730,7 @@ namespace Il2Native.Logic
                 foreach (var method in virtualTable)
                 {
                     var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true, suffix: suffix);
                     writer.WriteLine(";");
 
                     usedMethods.Add(method);
@@ -4722,7 +4743,7 @@ namespace Il2Native.Logic
                     foreach (var method in virtualTableOfSecondaryInterface)
                     {
                         var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
-                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false, suffix: suffix);
+                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true, suffix: suffix);
                         writer.WriteLine(";");
 
                         usedMethods.Add(method);
@@ -4733,6 +4754,8 @@ namespace Il2Native.Logic
 
             writer.Indent--;
             writer.WriteLine("};");
+
+            WriteTypeNamespaceEnd(table);
         }
 
         /// <summary>

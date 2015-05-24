@@ -26,7 +26,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiInfoName(this IType type, CWriter cWriter)
         {
-            return string.Concat("_RTTI_", cWriter.GetAssemblyPrefix(type), type.FullName, " Info").CleanUpName();
+            return string.Concat("_RTTI_", type.FullName, " Info").CleanUpName();
         }
 
         /// <summary>

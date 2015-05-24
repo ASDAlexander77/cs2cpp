@@ -96,7 +96,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.Write(")->");
-            cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo);
+            cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo, shortName: false, excludeNamespace: true);
 #endif
         }
 
