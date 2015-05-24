@@ -40,8 +40,8 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*) (((Byte**) &_ZTVN10__cxxabiv117__class_type_infoE) + 2),");
-            writer.Write("(Byte*)");
+                "(::Byte*) (((::Byte**) &_ZTVN10__cxxabiv117__class_type_infoE) + 2),");
+            writer.Write("(::Byte*)");
             type.WriteRttiClassNameString(writer);
             writer.Indent--;
             writer.Write("}");

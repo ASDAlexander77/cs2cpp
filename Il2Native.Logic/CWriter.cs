@@ -662,8 +662,9 @@ namespace Il2Native.Logic
                 case Code.Localloc:
 
                     var varName = string.Format("_alloc{0}", opCode.AddressStart);
-                    writer.WriteLine("Byte* {0};", varName);
-                    this.UnaryOper(writer, opCode, string.Format("{0} = (Byte*) alloca(", varName));
+                    System.System_Byte.ToPointerType().WriteTypePrefix(this);
+                    writer.WriteLine(" {0};", varName);
+                    this.UnaryOper(writer, opCode, string.Format("{0} = (::Byte*) alloca(", varName));
                     writer.WriteLine(");");
 
                     // do not remove, otherwise stackoverflow
@@ -1142,7 +1143,7 @@ namespace Il2Native.Logic
                         System.System_IntPtr,
                         System.System_IntPtr.GetFieldByFieldNumber(0, this),
                         null);
-                    this.Output.Write(" = (Byte*) &");
+                    this.Output.Write(" = (::Byte*) &");
                     this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPart.Operand);
                     this.Output.WriteLine(";");
 
@@ -1649,12 +1650,12 @@ namespace Il2Native.Logic
 
             if (isIndirectMethodCall)
             {
-                this.Output.Write("(Void*)");
+                this.Output.Write("(::Void*)");
                 this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
             }
             else
             {
-                this.Output.Write("(Byte*) &");
+                this.Output.Write("(::Byte*) &");
                 this.WriteMethodDefinitionName(writer, methodInfo);
             }
         }
@@ -1713,10 +1714,10 @@ namespace Il2Native.Logic
             {
                 if (estimatedResultOperand0.IsReference && estimatedResultOperand1.IsReference)
                 {
-                    writer.Write("((Byte*)");
+                    writer.Write("((::Byte*)");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
                     writer.Write(op);
-                    writer.Write("(Byte*)");
+                    writer.Write("(::Byte*)");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 1);
                     writer.Write(")");
                     return;
@@ -3211,7 +3212,7 @@ namespace Il2Native.Logic
             this.WriteTypeNamespaceEnd(type);
 
             ////EndPreprocessorIf(this.ThisType);
-            
+
             // write all extern declarations
             foreach (var externMethod in this.externDeclarations)
             {
@@ -4052,7 +4053,7 @@ namespace Il2Native.Logic
             // debug info
             this.WriteDebugInfoForMethod(method);
 
-            if (this.WriteMethodProlog(method, true))
+            if (this.WriteMethodProlog(method))
             {
                 return;
             }
@@ -4132,7 +4133,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false)
+        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = true)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -4157,9 +4158,13 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (!externDecl)
+            if (!externDecl && excludeNamespace)
             {
                 this.Output.Write("static ");
+            }
+            else if (!Stubs && NoBody && !externDecl)
+            {
+                return true;
             }
 
             if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
@@ -4176,7 +4181,7 @@ namespace Il2Native.Logic
             }
 
             // name
-            this.WriteMethodDefinitionName(this.Output, method, excludeNamespace: excludeNamespace);
+            this.WriteMethodDefinitionName(this.Output, method, shortName: shortName, excludeNamespace: excludeNamespace);
 
             if (method.IsUnmanagedMethodReference)
             {

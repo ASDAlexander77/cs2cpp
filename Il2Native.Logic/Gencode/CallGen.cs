@@ -268,7 +268,7 @@ namespace Il2Native.Logic.Gencode
             {
                 cWriter.WriteResult(methodAddressResultNumber);
             }
-            else if (methodInfo.DeclaringType == null)
+            else if (methodInfo.IsUnmanaged)
             {
                 // just name (for example calloc)
                 cWriter.Output.Write(methodInfo.Name);

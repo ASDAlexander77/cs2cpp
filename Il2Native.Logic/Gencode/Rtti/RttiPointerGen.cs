@@ -66,7 +66,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("{ Byte* f1; Byte* f2; Int32 f3; Byte* f4; }");
+            writer.Write("{ ::Byte* f1; ::Byte* f2; ::Int32 f3; ::Byte* f4; }");
         }
 
         /// <summary>
@@ -82,11 +82,11 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*) (((Byte**) &_ZTVN10__cxxabiv119__pointer_type_infoE) + 2),");
-            writer.Write("(Byte*)");
+                "(::Byte*) (((::Byte**) &_ZTVN10__cxxabiv119__pointer_type_infoE) + 2),");
+            writer.Write("(::Byte*)");
             type.WriteRttiPointerNameString(writer);
             writer.WriteLine(",0,");
-            writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName(cWriter));
+            writer.WriteLine("(::Byte*)&{0}", type.GetRttiInfoName(cWriter));
             writer.Indent--;
             writer.Write("}");
         }

@@ -25,17 +25,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDeclaration(IType type, IndentedTextWriter writer)
         {
-            writer.Write("{ Byte* f1; Byte* f2; Int32 f3; Int32 f4");
+            writer.Write("{ ::Byte* f1; ::Byte* f2; ::Int32 f3; ::Int32 f4");
 
             if (type.BaseType != null)
             {
-                writer.Write("; Byte* f5; Int32 f6");
+                writer.Write("; ::Byte* f5; ::Int32 f6");
             }
 
             var index = 7;
             foreach (var @interface in type.GetInterfaces())
             {
-                writer.Write("; Byte* f{0}; Int32 f{1}", index++, index++);
+                writer.Write("; ::Byte* f{0}; ::Int32 f{1}", index++, index++);
             }
 
             writer.Write("; }");
@@ -56,8 +56,8 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*) (((Byte**) &_ZTVN10__cxxabiv121__vmi_class_type_infoE) + 2),");
-            writer.Write("(Byte*)");
+                "(::Byte*) (((::Byte**) &_ZTVN10__cxxabiv121__vmi_class_type_infoE) + 2),");
+            writer.Write("(::Byte*)");
             type.WriteRttiClassNameString(writer);
             writer.WriteLine(",0,");
             writer.WriteLine("{0}", @interfaces.Count() + (type.BaseType != null ? 1 : 0));
@@ -67,7 +67,7 @@ namespace Il2Native.Logic.Gencode
             if (type.BaseType != null)
             {
                 writer.Write(",");
-                writer.WriteLine("(Byte*)&{0},", type.BaseType.GetRttiInfoName(cWriter));
+                writer.WriteLine("(::Byte*)&{0},", type.BaseType.GetRttiInfoName(cWriter));
 
                 // if class does not have any virtual method then next value should be 0, else 2 (and next class should be +1024)
                 writer.WriteLine("{0}", nextFlag);
@@ -80,7 +80,7 @@ namespace Il2Native.Logic.Gencode
             foreach (var @interface in type.GetInterfaces())
             {
                 writer.Write(",");
-                writer.WriteLine("(Byte*)&{0},", @interface.GetRttiInfoName(cWriter));
+                writer.WriteLine("(::Byte*)&{0},", @interface.GetRttiInfoName(cWriter));
                 writer.WriteLine("{0}", nextFlag);
                 nextFlag += 1024;
             }

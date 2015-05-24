@@ -137,7 +137,7 @@ namespace Il2Native.Logic.Gencode
             var sb = new StringBuilder();
             
             sb.AppendLine(string.Empty);
-            sb.Append("(Byte*) ");
+            sb.Append("(::Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
 
             foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
@@ -147,7 +147,7 @@ namespace Il2Native.Logic.Gencode
                     sb.AppendLine(", ");
                 }
 
-                sb.Append("(Byte*) ");
+                sb.Append("(::Byte*) ");
                 sb.Append(stringSystemType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
             }
 

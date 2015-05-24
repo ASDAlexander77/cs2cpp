@@ -199,7 +199,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
         {
-            return string.Concat("(Void**) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
+            return string.Concat("(::Void**) (((::Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
         }
 
         /// <summary>
@@ -332,7 +332,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)
         {
-            return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
+            return string.Concat("(::Void**) (((::Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
         }
 
         /// <summary>
@@ -433,10 +433,10 @@ namespace Il2Native.Logic.Gencode
 
             if (!methodsOnly)
             {
-                writer.WriteLine("Byte* thisOffset;");
+                writer.WriteLine("::Byte* thisOffset;");
 
                 // RTTI info class
-                writer.WriteLine("Byte* rttiInfo;");
+                writer.WriteLine("::Byte* rttiInfo;");
             }
 
             // define virtual table
@@ -461,13 +461,13 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*) {0},",
+                "(::Byte*) {0},",
                 interfaceIndex == 0
                     ? "0"
                     : string.Format("-{0}", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
-            writer.Write("(Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
+            writer.Write("(::Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

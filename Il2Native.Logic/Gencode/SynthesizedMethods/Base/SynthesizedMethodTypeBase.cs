@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public SynthesizedMethodTypeBase(IType type, string methodName)
         {
             this.Type = type.ToNormal();
-            this.MethodName = methodName;
+            this.MethodName = methodName;            
         }
 
         public override string AssemblyQualifiedName

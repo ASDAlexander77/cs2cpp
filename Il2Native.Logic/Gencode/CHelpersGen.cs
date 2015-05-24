@@ -633,7 +633,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((Byte*) (");
+            writer.Write("memset((::Byte*) (");
             cWriter.WriteResultOrActualWrite(writer, op1);
             writer.Write("), 0, sizeof(");
             type.WriteTypePrefix(cWriter);
@@ -644,7 +644,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((Byte*) (");
+            writer.Write("memset((::Byte*) (");
             cWriter.WriteResultOrActualWrite(writer, op1);
             writer.Write("), 0, (");
             cWriter.WriteResultOrActualWrite(writer, size);
@@ -658,7 +658,7 @@ namespace Il2Native.Logic.Gencode
             OpCodePart size)
         {
             var writer = cWriter.Output;
-            writer.Write("memset((Byte*) (");
+            writer.Write("memset((::Byte*) (");
             cWriter.WriteResultOrActualWrite(writer, reference);
             writer.Write("), ");
             cWriter.WriteResultOrActualWrite(writer, init);

@@ -161,7 +161,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            sb.Append("Byte* vtable");
+            sb.Append("::Byte* vtable");
 
             var index = 0;
             foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
@@ -171,13 +171,13 @@ namespace Il2Native.Logic.Gencode
                     sb.Append("; ");
                 }
 
-                sb.Append("Byte* ifce" + index++);
+                sb.Append("::Byte* ifce" + index++);
             }
 
-            sb.Append("; Int16 rank");
-            sb.Append("; Int16 typeCode");
-            sb.Append("; Int32 elementSize");
-            sb.Append("; Int32 length");
+            sb.Append("; ::Int16 rank");
+            sb.Append("; ::Int16 typeCode");
+            sb.Append("; ::Int32 elementSize");
+            sb.Append("; ::Int32 length");
 
             _singleDimArrayPrefixDataType = sb.ToString();
             return _singleDimArrayPrefixDataType;
@@ -197,7 +197,7 @@ namespace Il2Native.Logic.Gencode
             var sb = new StringBuilder();
 
             sb.AppendLine(string.Empty);
-            sb.Append("(Byte*) ");
+            sb.Append("(::Byte*) ");
             sb.Append(bytesArrayType.GetVirtualTableNameReference(cWriter));
 
             foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
@@ -207,7 +207,7 @@ namespace Il2Native.Logic.Gencode
                     sb.AppendLine(", ");
                 }
 
-                sb.Append("(Byte*) ");
+                sb.Append("(::Byte*) ");
                 sb.Append(bytesArrayType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
             }
 
