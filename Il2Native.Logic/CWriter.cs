@@ -2994,7 +2994,7 @@ namespace Il2Native.Logic
         public void WriteReturn(CIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
             writer.Write("return");
-            if (methodReturnType != null && !methodReturnType.IsVoid())
+            if (!methodReturnType.IsVoid())
             {
                 this.UnaryOper(writer, opCode, " ", methodReturnType);
             }

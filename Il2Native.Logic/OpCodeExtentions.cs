@@ -997,7 +997,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsVoid(this IType type)
         {
-            return type != null && type.Name == "Void" && type.Namespace == "System";
+            return type != null && !type.IsPointer && !type.IsByRef && !type.UseAsClass && type.Name == "Void" && type.Namespace == "System";
         }
 
         public static bool IsVoidPointer(this IType type)
