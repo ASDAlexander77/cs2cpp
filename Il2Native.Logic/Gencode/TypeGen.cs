@@ -482,7 +482,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string TypeToCType(this IType type, out bool globalNamespace, bool? isPointerOpt = null, bool enumAsName = false, bool shortName = false)
         {
-            globalNamespace = !type.UseAsClass && type.IsVoid();
+            globalNamespace = false;
 
             if (!type.UseAsClass)
             {

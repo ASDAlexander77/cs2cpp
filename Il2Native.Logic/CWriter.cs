@@ -720,7 +720,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var destinationName = string.Concat(opCodeFieldInfoPart.Operand.GetFullName().CleanUpName());
+                    var destinationName = WriteToString(() => WriteStaticFieldName(opCodeFieldInfoPart.Operand));
 
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
@@ -2376,8 +2376,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteField(IField field)
         {
-            if (field.IsStatic)
+            if (field.IsStatic || field.IsConst)
             {
+                this.WriteStaticField(field, false);
                 return;
             }
 
@@ -2922,8 +2923,6 @@ namespace Il2Native.Logic
 
                 ////EndPreprocessorIf(type);
             }
-
-            this.WriteStaticFieldDeclaration(type);
         }
 
         /// <summary>
@@ -4426,13 +4425,13 @@ namespace Il2Native.Logic
 
             if (!definition)
             {
-                this.Output.Write("extern ");
+                this.Output.Write("static ");
             }
 
             fieldType.WriteTypePrefix(this, false);
 
             this.Output.Write(" ");
-            this.WriteStaticFieldName(field);
+            this.WriteStaticFieldName(field, excludeNamespace: !definition);
             if (definition)
             {
                 this.WriteStaticFieldInitialization(field);
@@ -4499,10 +4498,24 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteStaticFieldName(IField field)
+        private void WriteStaticFieldName(IField field, bool excludeNamespace = false)
         {
-            ////this.Output.Write(this.GetAssemblyPrefix(field.DeclaringType));
-            this.Output.Write(field.GetFullName().CleanUpName());
+            var writer = this.Output;
+
+            var ns = field.DeclaringType.Namespace;
+            if (!excludeNamespace && ns != null)
+            {
+                if (!string.IsNullOrWhiteSpace(ns))
+                {
+                    writer.Write(ns.Replace(".", "::"));
+                    writer.Write("::");
+                }
+
+                this.WriteClassName(field.DeclaringType);
+                writer.Write("::");
+            }
+
+            this.Output.Write(field.Name.CleanUpName());
         }
 
         /// <summary>
@@ -4514,14 +4527,6 @@ namespace Il2Native.Logic
             foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
             {
                 this.WriteStaticField(field);
-            }
-        }
-
-        private void WriteStaticFieldDeclaration(IType type)
-        {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
-            {
-                this.WriteStaticField(field, false);
             }
         }
 
