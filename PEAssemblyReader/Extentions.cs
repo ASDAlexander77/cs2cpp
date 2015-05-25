@@ -171,10 +171,10 @@ namespace PEAssemblyReader
         {
             var namespaceSrc = symbol.ContainingNamespace;
 
-            var methodSymbol = symbol as MethodSymbol;
-            if (methodSymbol != null && methodSymbol.AssociatedSymbol != null)
+            var arrayConstructor = symbol as ArrayTypeSymbol.ArrayConstructor;
+            if (arrayConstructor != null)
             {
-                namespaceSrc = methodSymbol.AssociatedSymbol.ContainingNamespace;
+                namespaceSrc = arrayConstructor.ContainingNamespace;
             }
 
             if (symbol.ContainingType.IsNestedType())

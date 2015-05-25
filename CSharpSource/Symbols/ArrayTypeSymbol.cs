@@ -436,7 +436,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
-        private sealed class ArrayConstructor : SynthesizedInstanceMethodSymbol
+        public sealed class ArrayConstructor : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
             private readonly ArrayTypeSymbol arrayTypeSymbol;
@@ -489,6 +489,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     return this.arrayTypeSymbol.BaseType;
                 }
+            }
+
+            public override NamespaceSymbol ContainingNamespace
+            {
+                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
             }
 
             public sealed override string Name
@@ -686,7 +691,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             #endregion
         }
 
-        private sealed class ArraySetValueMethod : SynthesizedInstanceMethodSymbol
+        public sealed class ArraySetValueMethod : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
             private readonly ArrayTypeSymbol arrayTypeSymbol;
@@ -937,7 +942,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        private sealed class ArrayGetValueMethod : SynthesizedInstanceMethodSymbol
+        public sealed class ArrayGetValueMethod : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
             private readonly ArrayTypeSymbol arrayTypeSymbol;
@@ -1187,7 +1192,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        private sealed class ArrayAddressMethod : SynthesizedInstanceMethodSymbol
+        public sealed class ArrayAddressMethod : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
             private readonly ArrayTypeSymbol arrayTypeSymbol;

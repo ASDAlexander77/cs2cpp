@@ -195,6 +195,11 @@ namespace PEAssemblyReader
                                 }
                             }
 
+                            public override NamespaceSymbol ContainingNamespace
+                            {
+                                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+                            }
+
                             public sealed override string Name
                             {
                                 get { return WellKnownMemberNames.InstanceConstructorName; }
