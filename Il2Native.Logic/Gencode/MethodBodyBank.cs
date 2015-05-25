@@ -64,6 +64,16 @@
                         return typeResolver.GetMulticastDelegateInvoke(method).GetMethod(method);
                     }
                 }
+
+                if (method.Name == "BeginInvoke")
+                {
+                    return typeResolver.GetDelegateBeginInvokeMethod(method).GetMethod(method);
+                }
+
+                if (method.Name == "EndInvoke")
+                {
+                    return typeResolver.GetDelegateEndInvokeMethod(method).GetMethod(method);
+                }
             }
 
             return method;

@@ -265,6 +265,32 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
+        public static IlCodeBuilder GetDelegateBeginInvokeMethod(this ITypeResolver typeResolver, IMethod method)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
+            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
+
+            codeBuilder.LoadNull();
+            codeBuilder.Add(Code.Ret);
+
+            return codeBuilder;
+        }
+
+        public static IlCodeBuilder GetDelegateEndInvokeMethod(this ITypeResolver typeResolver, IMethod method)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
+            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
+
+            codeBuilder.LoadNull();
+            codeBuilder.Add(Code.Ret);
+
+            return codeBuilder;
+        }
+
         private static void AddDelegateInvokeBody(IlCodeBuilder codeBuilder, IMethod method, ITypeResolver typeResolver)
         {
             var delegateType = typeResolver.System.System_Delegate;

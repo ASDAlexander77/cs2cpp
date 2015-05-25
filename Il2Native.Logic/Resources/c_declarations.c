@@ -79,9 +79,6 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
 }
 
-struct System_InvalidCastException;
-extern "C" System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();
-extern "C" Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
 inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
 {
 	if (!src)
@@ -92,26 +89,17 @@ inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rtt
 	Void* casted = __dynamic_cast(src, rttiFrom, rttiTo, offset);
 	if (!casted)
 	{
-		System_InvalidCastException* _new0;
-		_new0 = System_InvalidCastException_System_InvalidCastException__newFN();
-		Void_System_InvalidCastException__ctorFN(_new0);
-		throw (Void*) _new0;
+		// finish throwing exceptions
 	}
 
 	return casted;
 }
 
-struct System_DivideByZeroException;
-extern "C" System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFN();
-extern "C" Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
 template < typename T > T __check_divide(T div)
 {
 	if (!div)
 	{
-		System_DivideByZeroException* _new0;
-		_new0 = System_DivideByZeroException_System_DivideByZeroException__newFN();
-		Void_System_DivideByZeroException__ctorFN(_new0);
-		throw (Void*) _new0;
+		// finish throwing exception
 	}
 
 	return div;

@@ -37,27 +37,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiDefinition(this IType type, CWriter cWriter)
         {
+            cWriter.StartPreprocessorIf(type, "RTTI");
+
             type.WriteRttiClassDefinition(cWriter);
             type.WriteRttiPointerClassDefinition(cWriter);
-        }
 
-        public static void WriteRttiDeclaration(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("const struct ");
-            type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write(" ");
-            writer.Write(type.GetRttiInfoName(cWriter));
-            writer.WriteLine(";");
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("const struct ");
-            type.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.Write(" ");
-            writer.Write(type.GetRttiPointerInfoName(cWriter));
-            writer.WriteLine(";");
+            cWriter.EndPreprocessorIf(type);
         }
 
         /// <summary>
@@ -85,9 +70,12 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteRawText("const struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
+            
             writer.Write(type.GetRttiInfoName(cWriter));
+
             writer.Write(" = ");
             type.WriteRttiClassInfoDefinition(cWriter);
+
             writer.WriteLine(";");
         }
 
