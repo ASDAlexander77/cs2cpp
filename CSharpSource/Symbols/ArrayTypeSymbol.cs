@@ -729,6 +729,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
+            public override NamespaceSymbol ContainingNamespace
+            {
+                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+            }
+
             public sealed override string Name
             {
                 get
@@ -979,6 +984,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
+            public override NamespaceSymbol ContainingNamespace
+            {
+                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+            }
+
             public sealed override string Name
             {
                 get
@@ -1227,6 +1237,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     return this.arrayTypeSymbol.BaseType;
                 }
+            }
+
+            public override NamespaceSymbol ContainingNamespace
+            {
+                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
             }
 
             public sealed override string Name

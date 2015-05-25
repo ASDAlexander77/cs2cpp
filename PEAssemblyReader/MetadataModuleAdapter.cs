@@ -432,7 +432,12 @@ namespace PEAssemblyReader
                                     return this.arrayTypeSymbol.BaseType;
                                 }
                             }
-
+                            
+                            public override NamespaceSymbol ContainingNamespace
+                            {
+                                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+                            }
+             
                             public sealed override string Name
                             {
                                 get
@@ -683,6 +688,11 @@ namespace PEAssemblyReader
                                 }
                             }
 
+                            public override NamespaceSymbol ContainingNamespace
+                            {
+                                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+                            }
+
                             public sealed override string Name
                             {
                                 get
@@ -931,6 +941,11 @@ namespace PEAssemblyReader
                                 {
                                     return this.arrayTypeSymbol.BaseType;
                                 }
+                            }
+
+                            public override NamespaceSymbol ContainingNamespace
+                            {
+                                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
                             }
 
                             public sealed override string Name
