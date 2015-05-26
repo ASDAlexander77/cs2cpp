@@ -2069,6 +2069,8 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteAfterFields()
         {
+            this.Output.Indent--;
+            this.Output.WriteLine("};");
         }
 
         /// <summary>
@@ -2478,12 +2480,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="ownerOfExplicitInterface">
         /// </param>
-        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
+        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
         {
-            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace, specialization);
+            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace);
         }
 
-        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
+        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
         {
             if (methodBase.DeclaringType == null)
             {
@@ -2504,20 +2506,8 @@ namespace Il2Native.Logic
                         writer.Write("::");
                     }
 
+                    writer.Write("Fn_");
                     this.WriteClassName(methodBase.DeclaringType);
-                    if (!excludeNamespace)
-                    {
-                        switch (specialization)
-                        {
-                            case ApplyGeneric.Specialization:
-                                WriteTemplateSpecializationDefinition(methodBase.DeclaringType);
-                                break;
-                            case ApplyGeneric.Declaration:
-                                WriteTemplateSpecializationDeclaration(methodBase.DeclaringType);
-                                break;
-                        }
-                    }
-
                     writer.Write("::");
                 }
 
@@ -2639,7 +2629,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = true, string suffix = null, bool excludeNamespace = false)
         {
-            var methodInfo = methodBase;
             this.WriteMethodReturnType(writer, methodBase);
             writer.Write("(*");
             if (withName)
@@ -2652,12 +2641,19 @@ namespace Il2Native.Logic
                 writer.Write(suffix);
             }
 
-            writer.Write(")(");
+            writer.Write(")");
 
-            var hasThis = !methodInfo.IsStatic && !asStatic;
+            this.WriteMethodParameters(writer, methodBase, thisType, asStatic);
+        }
+
+        public void WriteMethodParameters(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false)
+        {
+            writer.Write("(");
+
+            var hasThis = !methodBase.IsStatic && !asStatic;
             if (hasThis)
             {
-                (thisType ?? methodInfo.DeclaringType.ToClass()).WriteTypePrefix(this);
+                (thisType ?? methodBase.DeclaringType.ToClass()).WriteTypePrefix(this);
             }
 
             var isAnonymousDelegate = methodBase.IsAnonymousDelegate;
@@ -2683,7 +2679,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
+            if (methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
                 if (index > 0 || hasThis)
                 {
@@ -2710,10 +2706,16 @@ namespace Il2Native.Logic
 
         public void WriteBeforeMethods(IType type)
         {
+            this.Output.Write("namespace Fn_");
+            this.WriteClassName(type);
+            this.Output.Indent++;
+            this.Output.WriteLine(" { ");
         }
 
         public void WriteAfterMethods(IType type)
         {
+            this.Output.Indent--;
+            this.Output.WriteLine("}");
         }
 
         public void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericMethodContext)
@@ -3215,15 +3217,11 @@ namespace Il2Native.Logic
                 this.Output.Write(sb.ToString());
             }
 
-            ////this.Output.Write(type.Name.CleanUpName());
             type.WriteTypeName(this.Output, false, true, true, true);
         }
 
         public void WriteTypeEnd(IType type)
         {
-            this.Output.Indent--;
-            this.Output.WriteLine("};");
-
             this.WriteTypeNamespaceEnd(type);
 
             EndPreprocessorIf(this.ThisType);
@@ -4209,13 +4207,13 @@ namespace Il2Native.Logic
                 else
                 {
                     excludeNamespace = true;
-                    WriteMethodExternPrefix(method);
+                    this.WriteMethodExternPrefix(method);
                 }
             }
 
-            var definition = false;
             if (!externDecl && excludeNamespace)
             {
+                WriteTemplateDeclaration(method);
                 this.Output.Write("static ");
             }
             else if (!Stubs && NoBody && !externDecl)
@@ -4224,7 +4222,6 @@ namespace Il2Native.Logic
             }
             else
             {
-                definition = true;
                 WriteTemplateDeclaration(method);
             }
 
@@ -4246,8 +4243,7 @@ namespace Il2Native.Logic
                 this.Output,
                 method,
                 shortName: shortName,
-                excludeNamespace: excludeNamespace,
-                specialization: definition ? ApplyGeneric.Declaration : ApplyGeneric.NotApplied);
+                excludeNamespace: excludeNamespace);
 
             if (method.IsUnmanagedMethodReference)
             {

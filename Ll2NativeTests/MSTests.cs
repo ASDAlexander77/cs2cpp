@@ -230,7 +230,7 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
-                CompilerHelper.CompileAndRun(string.Format("test-{0}", index), ignoreBadFiles:true);
+                CompilerHelper.CompileAndRun(string.Format("test-{0}", index), ignoreBadFiles: true);
             }
         }
 
