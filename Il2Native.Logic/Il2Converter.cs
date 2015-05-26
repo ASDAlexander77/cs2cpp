@@ -110,28 +110,36 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         public static void WriteTypeFullDeclaration(
-            ICodeWriter codeWriter, 
-            IType type, 
-            IGenericContext genericContext, 
+            ICodeWriter codeWriter,
+            IType type,
+            IGenericContext genericContext,
             IEnumerable<IMethod> genericMethodSpecializatons,
-            bool processGenericMethodsOnly = false,
-            bool forwardDeclarations = false)
+            bool processGenericMethodsOnly = false)
         {
-            codeWriter.WriteTypeStart(type, genericContext);
-
-            var fields = IlReader.Fields(type, codeWriter);
-
-            Debug.Assert(!type.IsGenericTypeDefinition);
-
-            codeWriter.WriteBeforeFields();
-
-            // fields
-            foreach (var field in fields)
+            if (!processGenericMethodsOnly)
             {
-                codeWriter.WriteField(field);
+                codeWriter.WriteTypeStart(type, genericContext);
+
+                var fields = IlReader.Fields(type, codeWriter);
+
+                Debug.Assert(!type.IsGenericTypeDefinition);
+
+                codeWriter.WriteBeforeFields();
+
+                // fields
+                foreach (var field in fields)
+                {
+                    codeWriter.WriteField(field);
+                }
+
+                codeWriter.WriteAfterFields();
+            }
+            else
+            {
+                codeWriter.WriteTypeNamespaceStart(type);
             }
 
-            codeWriter.WriteAfterFields();
+            codeWriter.WriteBeforeMethods(type);
 
             ConvertTypeDefinition(
                 codeWriter,
@@ -140,7 +148,16 @@ namespace Il2Native.Logic
                 processGenericMethodsOnly,
                 true);
 
-            codeWriter.WriteTypeEnd(type);
+            codeWriter.WriteAfterMethods(type);
+
+            if (!processGenericMethodsOnly)
+            {
+                codeWriter.WriteTypeEnd(type);
+            }
+            else
+            {
+                codeWriter.WriteTypeNamespaceEnd(type);
+            }
         }
 
         /// <summary>
@@ -191,12 +208,12 @@ namespace Il2Native.Logic
                 else if (mode == ConvertingMode.Declaration)
                 {
                     ConvertTypeDeclaration(
-                        codeWriter, 
+                        codeWriter,
                         type,
                         genericMethodSpecializatonsForType,
                         processGenericMethodsOnly);
                 }
-                if (mode == ConvertingMode.PostDeclaration)
+                else if (mode == ConvertingMode.PostDeclaration)
                 {
                     codeWriter.WritePostDeclarations(type);
                 }
@@ -278,11 +295,10 @@ namespace Il2Native.Logic
         /// <param name="processGenericMethodsOnly">
         /// </param>
         private static void ConvertTypeDeclaration(
-            ICodeWriter codeWriter, 
-            IType type, 
+            ICodeWriter codeWriter,
+            IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
-            bool processGenericMethodsOnly = false,
-            bool forwardDeclarations = false)
+            bool processGenericMethodsOnly = false)
         {
             if (VerboseOutput)
             {
@@ -293,7 +309,7 @@ namespace Il2Native.Logic
             IType typeSpecialization;
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, processGenericMethodsOnly, forwardDeclarations);
+            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, processGenericMethodsOnly);
         }
 
         private static void ConvertTypeDefinition(
@@ -308,7 +324,7 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("Converting {0} (definition)"));
             }
 
-            codeWriter.WriteBeforeMethods(type);
+            ////codeWriter.WriteBeforeMethods(type);
 
             IType typeDefinition;
             IType typeSpecialization;
@@ -382,7 +398,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            codeWriter.WriteAfterMethods(type);
+            ////codeWriter.WriteAfterMethods(type);
         }
 
         private static IGenericContext GetGenericTypeContext(
@@ -1240,17 +1256,11 @@ namespace Il2Native.Logic
                 codeHeaderWriter,
                 runtimeTypes);
 
-            ConvertAllTypes(
+            WriteTypesWithGenericsStep(
                 codeHeaderWriter,
                 types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
-
-            ////WriteTypesWithGenericsStep(
-            ////    codeHeaderWriter,
-            ////    types,
-            ////    genericMethodSpecializationsSorted,
-            ////    ConvertingMode.ForwardMethodDeclaration);
 
             ConvertAllTypes(
                 codeHeaderWriter,
@@ -1302,18 +1312,36 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 step);
 
+            WriteLeftGenericMethodsStep(
+                codeWriter,
+                types,
+                genericMethodSpecializationsSorted,
+                step);
+        }
+
+        private static void WriteLeftGenericMethodsStep(
+            ICodeWriter codeWriter,
+            IEnumerable<IType> types,
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted,
+            ConvertingMode step)
+        {
             if (codeWriter.IsHeader || !codeWriter.IsSplit)
             {
                 // Append definition of Generic Methods of not used non-generic types
                 ConvertAllTypes(
-                    codeWriter, genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(), genericMethodSpecializationsSorted, step, true);
+                    codeWriter,
+                    genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
+                    genericMethodSpecializationsSorted,
+                    step,
+                    true);
             }
             else if (codeWriter.IsSplit)
             {
                 // Append definition of Generic Methods of not used non-generic types
                 ConvertAllTypes(
                     codeWriter,
-                    genericMethodSpecializationsSorted.Keys.Where(k => k.Namespace == codeWriter.SplitNamespace && !types.Contains(k)).ToList(),
+                    genericMethodSpecializationsSorted.Keys.Where(
+                        k => k.Namespace == codeWriter.SplitNamespace && !types.Contains(k)).ToList(),
                     genericMethodSpecializationsSorted,
                     step,
                     true);

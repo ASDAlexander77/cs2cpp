@@ -2071,6 +2071,8 @@ namespace Il2Native.Logic
         {
             this.Output.Indent--;
             this.Output.WriteLine("};");
+
+            EndPreprocessorIf(this.ThisType);
         }
 
         /// <summary>
@@ -2480,12 +2482,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="ownerOfExplicitInterface">
         /// </param>
-        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
+        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
         {
-            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace);
+            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace, specialization);
         }
 
-        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false)
+        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
         {
             if (methodBase.DeclaringType == null)
             {
@@ -2512,6 +2514,18 @@ namespace Il2Native.Logic
                 }
 
                 writer.Write(name);
+                if (!excludeNamespace)
+                {
+                    switch (specialization)
+                    {
+                        case ApplyGeneric.Declaration:
+                            this.WriteTemplateSpecializationDeclaration(methodBase.DeclaringType);
+                            break;
+                        case ApplyGeneric.Specialization:
+                            WriteTemplateSpecializationDefinition(methodBase);
+                            break;
+                    }
+                }
             }
         }
 
@@ -3184,9 +3198,9 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.StartPreprocessorIf(type, "D");
-
             this.WriteTypeNamespaceStart(type);
+
+            this.StartPreprocessorIf(type, "D");
 
             this.WriteTemplateDeclaration(type);
 
@@ -3223,8 +3237,6 @@ namespace Il2Native.Logic
         public void WriteTypeEnd(IType type)
         {
             this.WriteTypeNamespaceEnd(type);
-
-            EndPreprocessorIf(this.ThisType);
 
             // write all extern declarations
             foreach (var externMethod in this.externDeclarations)
@@ -4118,24 +4130,29 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTemplateDeclaration(IType type)
+        public bool WriteTemplateDeclaration(IType type)
         {
             if (type == null)
             {
-                return;
+                return false;
             }
 
             if (!type.IsGenericType && !type.IsGenericTypeDefinition && !type.IsArray)
             {
-                return;
+                return false;
             }
 
             this.Output.Write("template < typename _T_ > ");
+
+            return true;
         }
 
         public void WriteTemplateDeclaration(IMethod method)
         {
-            this.WriteTemplateDeclaration(method.DeclaringType);
+            if (!this.WriteTemplateDeclaration(method.DeclaringType) && (method.IsGenericMethod || method.IsGenericMethodDefinition))
+            {
+                this.Output.Write("template < typename _T_ > ");                
+            }
         }
 
         public void WriteTemplateSpecializationDeclaration(IType type)
@@ -4148,17 +4165,26 @@ namespace Il2Native.Logic
             this.Output.Write("<_T_>");
         }
 
-        private void WriteTemplateSpecializationDefinition(IType type)
+        private bool WriteTemplateSpecializationDefinition(IType type)
         {
             if (!type.IsGenericType && !type.IsGenericTypeDefinition && !type.IsArray)
             {
-                return;
+                return false;
             }
 
             this.Output.Write("<void>");
+            return true;
         }
 
-        private void WriteTypeNamespaceStart(IType type)
+        private void WriteTemplateSpecializationDefinition(IMethod method)
+        {
+            if (!WriteTemplateSpecializationDefinition(method.DeclaringType) && (method.IsGenericMethod || method.IsGenericMethodDefinition))
+            {
+                this.Output.Write("<void>");
+            }
+        }
+
+        public void WriteTypeNamespaceStart(IType type)
         {
             if (!string.IsNullOrWhiteSpace(type.Namespace))
             {
@@ -4174,7 +4200,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
         }
 
-        private void WriteTypeNamespaceEnd(IType type)
+        public void WriteTypeNamespaceEnd(IType type)
         {
             if (!string.IsNullOrWhiteSpace(type.Namespace))
             {
@@ -4214,7 +4240,7 @@ namespace Il2Native.Logic
             if (!externDecl && excludeNamespace)
             {
                 WriteTemplateDeclaration(method);
-                this.Output.Write("static ");
+                ////this.Output.Write("static ");
             }
             else if (!Stubs && NoBody && !externDecl)
             {
@@ -4243,7 +4269,8 @@ namespace Il2Native.Logic
                 this.Output,
                 method,
                 shortName: shortName,
-                excludeNamespace: excludeNamespace);
+                excludeNamespace: excludeNamespace,
+                specialization: ApplyGeneric.NotApplied);
 
             if (method.IsUnmanagedMethodReference)
             {
