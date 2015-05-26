@@ -2502,6 +2502,11 @@ namespace Il2Native.Logic
                 var ns = methodBase.Namespace;
                 if (!excludeNamespace && ns != null)
                 {
+                    if (specialization != ApplyGeneric.NotApplied)
+                    {
+                        writer.Write("::");
+                    }
+
                     if (!string.IsNullOrWhiteSpace(ns))
                     {
                         writer.Write(ns.Replace(".", "::"));

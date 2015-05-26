@@ -480,20 +480,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type, out bool globalNamespace, bool? isPointerOpt = null, bool enumAsName = false, bool shortName = false)
+        public static string TypeToCType(this IType type, bool? isPointerOpt = null, bool enumAsName = false, bool shortName = false)
         {
-            globalNamespace = string.IsNullOrWhiteSpace(type.Namespace);
-
             if (!type.UseAsClass)
             {
                 if (type.IsEnum && !enumAsName)
                 {
-                    return TypeToCType(type.GetEnumUnderlyingType(), out globalNamespace, isPointerOpt);
+                    return TypeToCType(type.GetEnumUnderlyingType(), isPointerOpt);
                 }
 
                 if (type.IsValueType && type.IsPrimitive || type.IsVoid())
                 {
-                    globalNamespace = true;
                     return type.Name;
                 }
             }
@@ -555,9 +552,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false, bool shortName = false, bool noGlobalnamespace = false)
         {
-            bool globalNamespace;
-            var typeBaseName = type.TypeToCType(out globalNamespace, isPointer, enumAsName, shortName);
-            if (globalNamespace && !shortName && !noGlobalnamespace)
+            var typeBaseName = type.TypeToCType(isPointer, enumAsName, shortName);
+            if (!shortName && !noGlobalnamespace)
             {
                 writer.Write("::");
             }
