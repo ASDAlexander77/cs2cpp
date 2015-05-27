@@ -559,7 +559,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             var pos = typeBaseName.IndexOf('<');
-            if (pos > 0)
+            if (pos >= 0)
             {
                 var name = string.Concat(typeBaseName.Substring(0, pos).Replace(".", "::"), typeBaseName.Substring(pos)).CleanUpName();
                 writer.Write(name);
