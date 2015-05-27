@@ -841,7 +841,15 @@ namespace PEAssemblyReader
             }
             else
             {
-                sb.Append(this.methodDef.Name);
+                var positionOfAlias = this.methodDef.Name.IndexOf("::");
+                if (positionOfAlias >= 0)
+                {
+                    sb.Append(this.methodDef.Name.Substring(positionOfAlias + "::".Length));                    
+                }
+                else
+                {
+                    sb.Append(this.methodDef.Name);
+                }
             }
 
             if (this.IsGenericMethod || this.IsGenericMethodDefinition)

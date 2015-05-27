@@ -23,6 +23,8 @@ namespace Ll2NativeTests
 
     using PdbReader;
 
+    using TestContext = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
+
     /// <summary>
     ///     Summary description for MSTests
     /// </summary>
@@ -36,7 +38,7 @@ namespace Ll2NativeTests
         public TestContext TestContext { get; set; }
 
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void GenerateTestFromMonoTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -139,7 +141,7 @@ namespace Ll2NativeTests
         }
 
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void GenerateTestFromSscliTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -221,7 +223,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void TestCompileWithMscorlib()
         {
             var skip = new List<int>(new[] { 100 });
@@ -756,7 +758,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void TestMscolibCSNative()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -792,7 +794,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void TestGenCompileWithMscorlib()
         {
             var skip = new List<int>();
@@ -1259,7 +1261,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -1279,7 +1281,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
         public void TestMscorlibCompile_TypeTest()
         {
             // Do not forget to set MSCORLIB variable
