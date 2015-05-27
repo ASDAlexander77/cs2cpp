@@ -1163,10 +1163,14 @@ namespace Ll2NativeTests
                 9
             });
 
+            CompilerHelper.AssertUiEnabled(false);
+
             foreach (var index in Enumerable.Range(1, 10).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-fixedbuffer-{0:00}", index));
             }
+
+            CompilerHelper.AssertUiEnabled(true);
         }
 
         /// <summary>

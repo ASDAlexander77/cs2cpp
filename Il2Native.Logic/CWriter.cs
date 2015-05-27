@@ -4602,9 +4602,14 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            var ns = field.DeclaringType.Namespace;
-            if (!excludeNamespace && ns != null)
+            if (!excludeNamespace)
             {
+                if (specialization == ApplyGeneric.Specialization)
+                {
+                    writer.Write("::");
+                }
+
+                var ns = field.DeclaringType.Namespace;
                 if (!string.IsNullOrWhiteSpace(ns))
                 {
                     writer.Write(ns.Replace(".", "::"));
