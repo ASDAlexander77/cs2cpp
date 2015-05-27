@@ -613,7 +613,8 @@ namespace Il2Native.Logic.Gencode
             // write base name
             effectiveType.WriteTypeName(writer, isPointer, enumAsName);
 
-            if (type.IsGenericTypeDefinition || type.IsGenericType || type.IsArray)
+            var excludeEnumAsInt = type.IsEnum && !enumAsName;
+            if (!excludeEnumAsInt && (type.IsGenericTypeDefinition || type.IsGenericType || type.IsArray))
             {
                 writer.Write("<void>");
             }
