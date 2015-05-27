@@ -90,12 +90,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        void WritePreDefinitions(IType type);
-
-        /// <summary>
-        /// </summary>
         /// <param name="moduleName">
         /// </param>
         /// <param name="assemblyName">
@@ -132,5 +126,7 @@ namespace Il2Native.Logic
         /// <param name="methodDecl"></param>
         /// <param name="ownerOfExplicitInterface"></param>
         void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext);
+
+        void WriteStaticField(IField field, bool definition = true);
     }
 }

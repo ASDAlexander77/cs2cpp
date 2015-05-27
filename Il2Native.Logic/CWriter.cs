@@ -2960,21 +2960,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void WritePreDefinitions(IType type)
-        {
-            // we allow IsGenericTypeDefinition to support Generic "typeof"
-            if (!(type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
-            {
-                return;
-            }
-
-            this.WriteStaticFieldDefinitions(type);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         public void WriteResult(OpCodePart opCode)
@@ -4514,7 +4499,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="externalRef">
         /// </param>
-        private void WriteStaticField(IField field, bool definition = true)
+        public void WriteStaticField(IField field, bool definition = true)
         {
             var fieldType = field.FieldType;
 
@@ -4634,18 +4619,6 @@ namespace Il2Native.Logic
             }
 
             this.Output.Write(field.Name.CleanUpName());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void WriteStaticFieldDefinitions(IType type)
-        {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
-            {
-                this.WriteStaticField(field);
-            }
         }
 
         /// <summary>

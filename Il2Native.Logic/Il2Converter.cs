@@ -54,10 +54,6 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            PreDefinition,
-
-            /// <summary>
-            /// </summary>
             Definition
         }
 
@@ -185,14 +181,8 @@ namespace Il2Native.Logic
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            foreach (var type in types)
+            foreach (var type in types.Where(t => t != null))
             {
-                Debug.Assert(type != null);
-                if (type == null)
-                {
-                    continue;
-                }
-
                 if (!processGenericMethodsOnly && type.IsGenericTypeDefinition)
                 {
                     continue;
@@ -216,10 +206,6 @@ namespace Il2Native.Logic
                 else if (mode == ConvertingMode.PostDeclaration)
                 {
                     codeWriter.WritePostDeclarations(type);
-                }
-                else if (mode == ConvertingMode.PreDefinition)
-                {
-                    codeWriter.WritePreDefinitions(type);
                 }
                 else if (mode == ConvertingMode.Definition)
                 {
@@ -416,7 +402,32 @@ namespace Il2Native.Logic
         private static void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
         {
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WriteMethodForwardDeclaration(method, null, null);
+
+            IType typeDefinition;
+            IType typeSpecialization;
+            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
+
+            codeWriter.WriteTypeStart(type, genericTypeContext);
+
+            var fields = IlReader.Fields(type, codeWriter);
+
+            codeWriter.WriteBeforeFields();
+
+            // fields
+            foreach (var field in fields.Where(f => f.Name == ".type"))
+            {
+                codeWriter.WriteStaticField(field, false);
+            }
+
+            codeWriter.WriteAfterFields();
+
+            codeWriter.WriteBeforeMethods(type);
+
+            codeWriter.WriteMethodForwardDeclaration(method, null, genericTypeContext);
+
+            codeWriter.WriteAfterMethods(type);
+
+            codeWriter.WriteTypeEnd(type);
         }
 
         /// <summary>
@@ -427,17 +438,19 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WritePreDefinitions(type);
-            ConvertMethod(codeWriter, type, method);
-        }
 
-        private static void ConvertMethod(ICodeWriter codeWriter, IType type, IMethod method, IMethod methodOpCodeHolder = null)
-        {
             IType typeDefinition;
             IType typeSpecialization;
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            codeWriter.WriteMethod(method, methodOpCodeHolder, genericTypeContext);
+            var fields = IlReader.Fields(type, codeWriter);
+
+            foreach (var field in fields.Where(f => f.Name == ".type"))
+            {
+                codeWriter.WriteStaticField(field);
+            }
+
+            codeWriter.WriteMethod(method, null, genericTypeContext);
         }
 
         private static void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
@@ -1281,8 +1294,6 @@ namespace Il2Native.Logic
         {
             // writing
             codeWriter.WriteStart();
-
-            WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
 
             WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
 
