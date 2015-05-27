@@ -90,6 +90,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        void WritePreDefinitions(IType type);
+
+        /// <summary>
+        /// </summary>
         /// <param name="moduleName">
         /// </param>
         /// <param name="assemblyName">

@@ -54,6 +54,10 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
+            PreDefinition,
+
+            /// <summary>
+            /// </summary>
             Definition
         }
 
@@ -206,6 +210,10 @@ namespace Il2Native.Logic
                 else if (mode == ConvertingMode.PostDeclaration)
                 {
                     codeWriter.WritePostDeclarations(type);
+                }
+                else if (mode == ConvertingMode.PreDefinition)
+                {
+                    codeWriter.WritePreDefinitions(type);
                 }
                 else if (mode == ConvertingMode.Definition)
                 {
@@ -1294,6 +1302,8 @@ namespace Il2Native.Logic
         {
             // writing
             codeWriter.WriteStart();
+
+            WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
 
             WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
 
