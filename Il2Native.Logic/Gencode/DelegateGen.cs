@@ -285,7 +285,22 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
             codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
 
-            codeBuilder.LoadNull();
+            if (!method.ReturnType.IsValueType)
+            {
+                codeBuilder.LoadNull();
+            }
+            else if (!method.ReturnType.IsVoid())
+            {
+                codeBuilder.Locals.Add(method.ReturnType);
+                if (method.ReturnType.IsStructureType())
+                {
+                    codeBuilder.LoadLocalAddress(0);
+                    codeBuilder.InitializeObject(method.ReturnType);
+                }
+
+                codeBuilder.LoadLocal(0);
+            }
+            
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
