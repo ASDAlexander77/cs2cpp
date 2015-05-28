@@ -2079,10 +2079,13 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteBeforeFields()
         {
-            var baseType = this.ThisType.BaseType;
-
             this.Output.WriteLine(" {");
             this.Output.Indent++;
+        }
+
+        public void WriteInheritance()
+        {
+            var baseType = this.ThisType.BaseType;
 
             if (baseType != null)
             {

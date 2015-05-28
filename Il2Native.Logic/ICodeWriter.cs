@@ -43,6 +43,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        void WriteInheritance();
+
+        /// <summary>
+        /// </summary>
         void WriteAfterFields();
 
         /// <summary>

@@ -126,6 +126,8 @@ namespace Il2Native.Logic
 
                 codeWriter.WriteBeforeFields();
 
+                codeWriter.WriteInheritance();
+
                 // fields
                 foreach (var field in fields)
                 {
