@@ -2496,6 +2496,12 @@ namespace Il2Native.Logic
             {
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
                 writer.Write(name);
+
+                if (IsAssemblyNamespaceRequired(methodBase.DeclaringType, methodBase, ownerOfExplicitInterface))
+                {
+                    writer.Write("_");
+                    writer.Write(this.AssemblyQualifiedName.CleanUpName());
+                }
             }
         }
 
@@ -4064,9 +4070,24 @@ namespace Il2Native.Logic
             }
         }
 
-        public static bool IsAssemblyNamespaceRequired(IType type)
+        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
         {
-            return type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray;
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            {
+                return true;
+            }
+
+            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
+            {
+                return true;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = false)
