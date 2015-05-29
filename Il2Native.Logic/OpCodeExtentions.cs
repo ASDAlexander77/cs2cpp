@@ -38,6 +38,9 @@ namespace Il2Native.Logic
                     case '.':
                         n = '_';
                         break;
+                    case ':':
+                        n = '_';
+                        break;
                     case '<':
                         n = 'G';
                         break;

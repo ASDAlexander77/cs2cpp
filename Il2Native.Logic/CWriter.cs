@@ -615,7 +615,7 @@ namespace Il2Native.Logic
 
                             if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
                             {
-                                this.Output.Write(" + sizeof(Void*)");
+                                this.Output.Write(" + sizeof(::Void*)");
                             }
 
                             this.Output.WriteLine(";");
@@ -705,14 +705,14 @@ namespace Il2Native.Logic
                 case Code.Ldsfld:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand, specialization: ApplyGeneric.Specialization);
+                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     this.Output.Write("&");
-                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand, specialization: ApplyGeneric.Specialization);
+                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Stfld:
@@ -724,7 +724,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var destinationName = WriteToString(() => WriteStaticFieldName(opCodeFieldInfoPart.Operand, specialization: ApplyGeneric.Specialization));
+                    var destinationName = WriteToString(() => WriteStaticFieldName(opCodeFieldInfoPart.Operand));
 
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
@@ -1583,7 +1583,7 @@ namespace Il2Native.Logic
 
                     var mkRefVar = this.WriteVariableDeclare(opCode, System.System_TypedReference, "_mkref");
                     opCode.Result = new FullyDefinedReference(mkRefVar, System.System_TypedReference);
-                    this.Output.Write("{0}.Value.m_value = (Void*)", mkRefVar);
+                    this.Output.Write("{0}.Value.m_value = (::Void*)", mkRefVar);
                     this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
 
                     break;
@@ -2148,8 +2148,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
-            writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName(this));
-            writer.Write(", (Void*) &{0}", toType.GetRttiInfoName(this));
+            writer.Write(", (::Void*) &{0}", fromType.Type.GetRttiInfoName(this));
+            writer.Write(", (::Void*) &{0}", toType.GetRttiInfoName(this));
             writer.Write(", {0}))", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             return true;
@@ -2389,7 +2389,6 @@ namespace Il2Native.Logic
         {
             if (field.IsStatic || field.IsConst)
             {
-                this.WriteStaticField(field, false);
                 return;
             }
 
@@ -2474,13 +2473,6 @@ namespace Il2Native.Logic
             writer.Indent++;
         }
 
-        public enum ApplyGeneric
-        {
-            NotApplied,
-            Declaration,
-            Specialization
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2489,12 +2481,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="ownerOfExplicitInterface">
         /// </param>
-        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
+        public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName, excludeNamespace, specialization);
+            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
         }
 
-        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = true, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Specialization)
+        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
             if (methodBase.DeclaringType == null)
             {
@@ -2502,42 +2494,8 @@ namespace Il2Native.Logic
             }
             else
             {
-                ////var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
-                ////writer.Write(name);
-
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
-                var ns = methodBase.Namespace;
-                if (!excludeNamespace && ns != null)
-                {
-                    if (specialization != ApplyGeneric.NotApplied)
-                    {
-                        writer.Write("::");
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(ns))
-                    {
-                        writer.Write(ns.Replace(".", "::"));
-                        writer.Write("::");
-                    }
-
-                    writer.Write("Fn_");
-                    this.WriteClassName(methodBase.DeclaringType);
-                    writer.Write("::");
-                }
-
                 writer.Write(name);
-                if (!excludeNamespace)
-                {
-                    switch (specialization)
-                    {
-                        case ApplyGeneric.Declaration:
-                            this.WriteTemplateSpecializationDeclaration(methodBase.DeclaringType);
-                            break;
-                        case ApplyGeneric.Specialization:
-                            WriteTemplateSpecializationDefinition(methodBase);
-                            break;
-                    }
-                }
             }
         }
 
@@ -2659,7 +2617,7 @@ namespace Il2Native.Logic
             writer.Write("(*");
             if (withName)
             {
-                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName, excludeNamespace: excludeNamespace);
+                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);
             }
 
             if (!string.IsNullOrEmpty(suffix))
@@ -2732,16 +2690,10 @@ namespace Il2Native.Logic
 
         public void WriteBeforeMethods(IType type)
         {
-            this.Output.Write("namespace Fn_");
-            this.WriteClassName(type);
-            this.Output.Indent++;
-            this.Output.WriteLine(" { ");
         }
 
         public void WriteAfterMethods(IType type)
         {
-            this.Output.Indent--;
-            this.Output.WriteLine("}");
         }
 
         public void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericMethodContext)
@@ -3181,17 +3133,11 @@ namespace Il2Native.Logic
 
         public void WriteForwardTypeDeclaration(IType type, IGenericContext genericContext)
         {
-            this.WriteTypeNamespaceStart(type);
-
-            this.WriteTemplateDeclaration(type);
-
             this.Output.Write("struct ");
 
             this.WriteClassName(type);
 
             this.Output.WriteLine(";");
-
-            this.WriteTypeNamespaceEnd(type);
         }
 
         /// <summary>
@@ -3210,14 +3156,9 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.WriteTypeNamespaceStart(type);
-
             this.StartPreprocessorIf(type, "D");
 
-            this.WriteTemplateDeclaration(type);
-
             this.Output.Write("struct ");
-            //type.ToClass().WriteTypeName(this.Output, false);
 
             this.WriteClassName(type);
 
@@ -3226,35 +3167,11 @@ namespace Il2Native.Logic
 
         private void WriteClassName(IType type)
         {
-            var currentType = type;
-            while (currentType != null && currentType.IsArray)
-            {
-                currentType = currentType.GetElementType();
-            }
-
-            if (currentType.IsNested)
-            {
-                var sb = new StringBuilder();
-
-                while (currentType != null && currentType.IsNested)
-                {
-                    currentType = currentType.DeclaringType;
-                    if (currentType != null)
-                    {
-                        sb.Insert(0, string.Concat(currentType.Name.CleanUpName(), "_"));
-                    }
-                }
-
-                this.Output.Write(sb.ToString());
-            }
-
-            type.WriteTypeName(this.Output, false, true, true, true);
+            type.ToClass().WriteTypeName(this.Output, false, true);
         }
 
         public void WriteTypeEnd(IType type)
         {
-            this.WriteTypeNamespaceEnd(type);
-
             // write all extern declarations
             foreach (var externMethod in this.externDeclarations)
             {
@@ -4147,89 +4064,12 @@ namespace Il2Native.Logic
             }
         }
 
-        public bool WriteTemplateDeclaration(IType type)
+        public static bool IsAssemblyNamespaceRequired(IType type)
         {
-            if (type == null)
-            {
-                return false;
-            }
-
-            if (!type.IsGenericType && !type.IsGenericTypeDefinition && !type.IsArray)
-            {
-                return false;
-            }
-
-            this.Output.Write("template < typename _T_ > ");
-
-            return true;
+            return type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray;
         }
 
-        public void WriteTemplateDeclaration(IMethod method)
-        {
-            if (!this.WriteTemplateDeclaration(method.DeclaringType) && (method.IsGenericMethod || method.IsGenericMethodDefinition))
-            {
-                this.Output.Write("template < typename _T_ > ");                
-            }
-        }
-
-        public void WriteTemplateSpecializationDeclaration(IType type)
-        {
-            if (!type.IsGenericType && !type.IsGenericTypeDefinition && !type.IsArray)
-            {
-                return;
-            }
-
-            this.Output.Write("<_T_>");
-        }
-
-        private bool WriteTemplateSpecializationDefinition(IType type)
-        {
-            if (!type.IsGenericType && !type.IsGenericTypeDefinition && !type.IsArray)
-            {
-                return false;
-            }
-
-            this.Output.Write("<void>");
-            return true;
-        }
-
-        private void WriteTemplateSpecializationDefinition(IMethod method)
-        {
-            if (!WriteTemplateSpecializationDefinition(method.DeclaringType) && (method.IsGenericMethod || method.IsGenericMethodDefinition))
-            {
-                this.Output.Write("<void>");
-            }
-        }
-
-        public void WriteTypeNamespaceStart(IType type)
-        {
-            if (!string.IsNullOrWhiteSpace(type.Namespace))
-            {
-                foreach (var part in type.Namespace.Split('.'))
-                {
-                    this.Output.Write("namespace ");
-                    this.Output.Write(part);
-                    this.Output.Indent++;
-                    this.Output.Write(" { ");
-                }
-            }
-
-            this.Output.WriteLine(string.Empty);
-        }
-
-        public void WriteTypeNamespaceEnd(IType type)
-        {
-            if (!string.IsNullOrWhiteSpace(type.Namespace))
-            {
-                foreach (var part in type.Namespace.Split('.'))
-                {
-                    this.Output.Indent--;
-                    this.Output.WriteLine("}");
-                }
-            }
-        }
-
-        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = true)
+        private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -4254,18 +4094,9 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (!externDecl && excludeNamespace)
-            {
-                WriteTemplateDeclaration(method);
-                ////this.Output.Write("static ");
-            }
-            else if (!Stubs && NoBody && !externDecl)
+            if ((externDecl || !excludeNamespace) && !Stubs && NoBody && !externDecl)
             {
                 return true;
-            }
-            else
-            {
-                WriteTemplateDeclaration(method);
             }
 
             if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
@@ -4285,9 +4116,7 @@ namespace Il2Native.Logic
             this.WriteMethodDefinitionName(
                 this.Output,
                 method,
-                shortName: shortName,
-                excludeNamespace: excludeNamespace,
-                specialization: ApplyGeneric.NotApplied);
+                shortName: shortName);
 
             if (method.IsUnmanagedMethodReference)
             {
@@ -4530,20 +4359,10 @@ namespace Il2Native.Logic
         {
             var fieldType = field.FieldType;
 
-            if (!definition)
-            {
-                this.Output.Write("static ");
-            }
-
-            if (definition)
-            {
-                WriteTemplateDeclaration(field.DeclaringType);
-            }
-
             fieldType.WriteTypePrefix(this);
 
             this.Output.Write(" ");
-            this.WriteStaticFieldName(field, excludeNamespace: !definition, specialization: definition ? ApplyGeneric.Declaration : ApplyGeneric.NotApplied);
+            this.WriteStaticFieldName(field);
             if (definition)
             {
                 this.WriteStaticFieldInitialization(field);
@@ -4610,42 +4429,9 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteStaticFieldName(IField field, bool excludeNamespace = false, ApplyGeneric specialization = ApplyGeneric.Declaration)
+        private void WriteStaticFieldName(IField field)
         {
-            var writer = this.Output;
-
-            if (!excludeNamespace)
-            {
-                if (specialization == ApplyGeneric.Specialization)
-                {
-                    writer.Write("::");
-                }
-
-                var ns = field.DeclaringType.Namespace;
-                if (!string.IsNullOrWhiteSpace(ns))
-                {
-                    writer.Write(ns.Replace(".", "::"));
-                    writer.Write("::");
-                }
-
-                this.WriteClassName(field.DeclaringType);
-                if (!excludeNamespace)
-                {
-                    switch (specialization)
-                    {
-                        case ApplyGeneric.Declaration:
-                            WriteTemplateSpecializationDeclaration(field.DeclaringType);
-                            break;
-                        case ApplyGeneric.Specialization:
-                            WriteTemplateSpecializationDefinition(field.DeclaringType);
-                            break;
-                    }
-                }
-
-                writer.Write("::");
-            }
-
-            this.Output.Write(field.Name.CleanUpName());
+            this.Output.Write(field.FullName.CleanUpName());
         }
 
         /// <summary>
@@ -4847,8 +4633,6 @@ namespace Il2Native.Logic
 
             StartPreprocessorIf(table, "VTBL");
 
-            WriteTypeNamespaceStart(table);
-
             writer.Write("struct ");
             WriteClassName(table);
             writer.WriteLine("{0} {1}", VTable, "{");
@@ -4899,8 +4683,6 @@ namespace Il2Native.Logic
 
             writer.Indent--;
             writer.WriteLine("};");
-
-            WriteTypeNamespaceEnd(table);
 
             this.EndPreprocessorIf(table);
         }

@@ -121,10 +121,6 @@ namespace Il2Native.Logic
 
         void WriteTypeEnd(IType type);
 
-        void WriteTypeNamespaceStart(IType type);
-
-        void WriteTypeNamespaceEnd(IType type);
-
         /// <summary>
         /// </summary>
         /// <param name="type"></param>

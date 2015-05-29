@@ -550,24 +550,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="isPointer">
         /// </param>
-        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false, bool shortName = false, bool noGlobalnamespace = false)
+        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false, bool shortName = false)
         {
             var typeBaseName = type.TypeToCType(isPointer, enumAsName, shortName);
-            if (!shortName && !noGlobalnamespace)
-            {
-                writer.Write("::");
-            }
-
-            var pos = typeBaseName.IndexOf('<');
-            if (pos >= 0)
-            {
-                var name = string.Concat(typeBaseName.Substring(0, pos).Replace(".", "::"), typeBaseName.Substring(pos)).CleanUpName();
-                writer.Write(name);
-            }
-            else
-            {
-                writer.Write(typeBaseName.Replace(".", "::").CleanUpName());
-            }
+            writer.Write(typeBaseName.CleanUpName());
         }
 
         /// <summary>
@@ -612,12 +598,6 @@ namespace Il2Native.Logic.Gencode
 
             // write base name
             effectiveType.WriteTypeName(writer, isPointer, enumAsName);
-
-            var excludeEnumAsInt = type.IsEnum && !enumAsName;
-            if (!excludeEnumAsInt && (type.IsGenericTypeDefinition || type.IsGenericType || type.IsArray))
-            {
-                writer.Write("<void>");
-            }
         }
     }
 }

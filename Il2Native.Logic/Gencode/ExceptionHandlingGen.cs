@@ -50,7 +50,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("int _finallyLeave{0};", finallyClause.Offset);
                 writer.WriteLine("_finallyLeave{0} = 0;", finallyClause.Offset);
                 writer.WriteLine("Void* _finallyEx{0};", finallyClause.Offset);
-                writer.WriteLine("_finallyEx{0} = (Void*) 0;", finallyClause.Offset);
+                writer.WriteLine("_finallyEx{0} = (::Void*) 0;", finallyClause.Offset);
             }
 
             writer.WriteLine("try");
@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Indent--;
                     writer.WriteLine("}");
 
-                    writer.WriteLine("if (_finallyEx{0} != (Void*) 0)", exceptionHandlingClause.Offset);
+                    writer.WriteLine("if (_finallyEx{0} != (::Void*) 0)", exceptionHandlingClause.Offset);
                     writer.WriteLine("{");
                     writer.Indent++;
                     writer.WriteLine("throw _finallyEx{0};", exceptionHandlingClause.Offset);
@@ -231,7 +231,7 @@ namespace Il2Native.Logic.Gencode
             CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            cWriter.UnaryOper(writer, opCode, "throw (Void*) ");
+            cWriter.UnaryOper(writer, opCode, "throw (::Void*) ");
         }
 
         /// <summary>

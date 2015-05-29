@@ -136,10 +136,6 @@ namespace Il2Native.Logic
 
                 codeWriter.WriteAfterFields();
             }
-            else
-            {
-                codeWriter.WriteTypeNamespaceStart(type);
-            }
 
             codeWriter.WriteBeforeMethods(type);
 
@@ -155,10 +151,6 @@ namespace Il2Native.Logic
             if (!processGenericMethodsOnly)
             {
                 codeWriter.WriteTypeEnd(type);
-            }
-            else
-            {
-                codeWriter.WriteTypeNamespaceEnd(type);
             }
         }
 
