@@ -4453,6 +4453,11 @@ namespace Il2Native.Logic
         private void WriteStaticFieldName(IField field)
         {
             this.Output.Write(field.FullName.CleanUpName());
+            if (IsAssemblyNamespaceRequired(field.DeclaringType))
+            {
+                this.Output.Write("_");
+                this.Output.Write(this.AssemblyQualifiedName.CleanUpName());
+            }
         }
 
         /// <summary>

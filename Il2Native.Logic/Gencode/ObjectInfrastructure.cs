@@ -34,7 +34,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
 
-        public const string TypeHolderFieldName = ".type..store.";
+        public const string TypeHolderFieldName = ".type";
 
         public static void WriteAllocateMemory(
             this CWriter cWriter,
