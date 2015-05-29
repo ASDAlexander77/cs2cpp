@@ -34,6 +34,8 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
 
+        public const string TypeHolderFieldName = ".type..store.";
+
         public static void WriteAllocateMemory(
             this CWriter cWriter,
             OpCodePart opCodePart,
@@ -552,7 +554,7 @@ namespace Il2Native.Logic.Gencode
 
             var codeBuilder = new IlCodeBuilder();
 
-            var typeStorageType = declaringType.GetFieldByName(".type", typeResolver);
+            var typeStorageType = declaringType.GetFieldByName(ObjectInfrastructure.TypeHolderFieldName, typeResolver);
             codeBuilder.LoadField(typeStorageType);
             var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 

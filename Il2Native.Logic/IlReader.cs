@@ -682,7 +682,7 @@ namespace Il2Native.Logic
             if (!type.IsPrivateImplementationDetails)
             {
                 // special static field to store created type
-                yield return typeResolver.System.System_Type.ToField(type, ".type", isStatic: true);
+                yield return typeResolver.System.System_Type.ToField(type, ObjectInfrastructure.TypeHolderFieldName, isStatic: true);
             }
 
             if (type.IsStaticArrayInit)

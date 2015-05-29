@@ -424,7 +424,7 @@ namespace Il2Native.Logic
             codeWriter.WriteBeforeFields();
 
             // fields
-            foreach (var field in fields.Where(f => f.Name == ".type"))
+            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.TypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field, false);
             }
@@ -455,7 +455,7 @@ namespace Il2Native.Logic
 
             var fields = IlReader.Fields(type, codeWriter);
 
-            foreach (var field in fields.Where(f => f.Name == ".type"))
+            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.TypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field);
             }

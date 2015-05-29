@@ -558,7 +558,8 @@ namespace Il2Native.Logic
                 case Code.Arglist:
 
                     // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
-                    this.Output.Write("System_RuntimeArgumentHandle()/*undef*/");
+                    System.System_RuntimeArgumentHandle.WriteTypePrefix(this);
+                    this.Output.Write("()/*undef*/");
                     break;
 
                 case Code.Ldtoken:
@@ -580,7 +581,8 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.Write("System_RuntimeTypeHandle()/*undef*/");
+                        System.System_RuntimeTypeHandle.WriteTypePrefix(this);
+                        this.Output.Write("()/*undef*/");
                     }
 
                     var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
@@ -640,7 +642,8 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.Write("System_RuntimeFieldHandle()/*undef*/");
+                        System.System_RuntimeFieldHandle.WriteTypePrefix(this);
+                        this.Output.Write("()/*undef*/");
                     }
 
                     // to support direct method address loading
@@ -655,7 +658,8 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.Write("System_RuntimeMethodHandle()/*undef*/");
+                        System.System_RuntimeMethodHandle.WriteTypePrefix(this);
+                        this.Output.Write("()/*undef*/");
                     }
 
                     break;
@@ -3222,7 +3226,12 @@ namespace Il2Native.Logic
 
         private void WriteClassName(IType type)
         {
-            var currentType = type.IsArray ? type.GetElementType() : type;
+            var currentType = type;
+            while (currentType != null && currentType.IsArray)
+            {
+                currentType = currentType.GetElementType();
+            }
+
             if (currentType.IsNested)
             {
                 var sb = new StringBuilder();
