@@ -80,7 +80,7 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 }
 
 struct System_InvalidCastException;
-Void Void_System_InvalidCastException__ctorFSystem_StringN(System_InvalidCastException* __this);
+Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
 System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();
 inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
 {
@@ -94,7 +94,7 @@ inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rtt
 	{
 		System_InvalidCastException* _new;
 		_new = System_InvalidCastException_System_InvalidCastException__newFN();
-		Void_System_InvalidCastException__ctorFSystem_StringN(_new);
+		Void_System_InvalidCastException__ctorFN(_new);
 		throw (::Void*) _new;
 	}
 
@@ -102,7 +102,7 @@ inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rtt
 }
 
 struct System_DivideByZeroException;
-Void Void_System_DivideByZeroException__ctorFSystem_StringN(System_DivideByZeroException* __this);
+Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
 System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFN();
 template < typename T > T __check_divide(T div)
 {
@@ -110,7 +110,7 @@ template < typename T > T __check_divide(T div)
 	{
 		System_DivideByZeroException* _new;
 		_new = System_DivideByZeroException_System_DivideByZeroException__newFN();
-		Void_System_DivideByZeroException__ctorFSystem_StringN(_new);
+		Void_System_DivideByZeroException__ctorFN(_new);
 		throw (::Void*) _new;
 	}
 
