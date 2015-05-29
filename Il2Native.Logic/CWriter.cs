@@ -2484,6 +2484,11 @@ namespace Il2Native.Logic
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
             this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
+            if (methodBase.DeclaringType != null && IsAssemblyNamespaceRequired(methodBase.DeclaringType, methodBase, ownerOfExplicitInterface))
+            {
+                writer.Write("_");
+                writer.Write(this.AssemblyQualifiedName.CleanUpName());
+            }
         }
 
         public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
@@ -2496,12 +2501,6 @@ namespace Il2Native.Logic
             {
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
                 writer.Write(name);
-
-                if (IsAssemblyNamespaceRequired(methodBase.DeclaringType, methodBase, ownerOfExplicitInterface))
-                {
-                    writer.Write("_");
-                    writer.Write(this.AssemblyQualifiedName.CleanUpName());
-                }
             }
         }
 
