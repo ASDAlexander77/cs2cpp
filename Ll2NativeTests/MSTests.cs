@@ -999,9 +999,6 @@ namespace Ll2NativeTests
                 583
             });
 
-            // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 382, 386 });
-
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
