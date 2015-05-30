@@ -796,7 +796,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void TestGenCompileWithMscorlib()
         {
             var skip = new List<int>();
@@ -1263,7 +1263,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        //[Ignore]
+        [Ignore]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -1283,7 +1283,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void TestMscorlibCompile_TypeTest()
         {
             // Do not forget to set MSCORLIB variable

@@ -2908,6 +2908,14 @@ namespace Il2Native.Logic
                 return;
             }
 
+            var fields = Logic.IlReader.Fields(type, this);
+
+            // static fields
+            foreach (var field in fields.Where(s => s.IsStatic))
+            {
+                this.WriteStaticField(field, false);
+            }
+
             if (!type.IsPrivateImplementationDetails)
             {
                 type.WriteRttiDefinition(this);
@@ -4377,7 +4385,14 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteStaticField(IField field, bool definition = true)
         {
+            Debug.Assert(field.IsStatic, "Static field is required");
+
             var fieldType = field.FieldType;
+
+            if (!definition)
+            {
+                this.Output.Write("extern ");
+            }
 
             fieldType.WriteTypePrefix(this);
 

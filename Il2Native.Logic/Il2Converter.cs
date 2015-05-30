@@ -26,10 +26,6 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredFullDeclarationTypes = new SortedDictionary<IType, IEnumerable<IType>>();
-
-        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredForwardDeclarationTypes = new SortedDictionary<IType, IEnumerable<IType>>();
-
         private static bool concurrent;
 
         private static ICodeWriter _codeWriter;
@@ -409,27 +405,14 @@ namespace Il2Native.Logic
             IType typeSpecialization;
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            codeWriter.WriteTypeStart(type, genericTypeContext);
-
             var fields = IlReader.Fields(type, codeWriter);
-
-            codeWriter.WriteBeforeFields();
-
             // fields
             foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.TypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field, false);
             }
 
-            codeWriter.WriteAfterFields();
-
-            codeWriter.WriteBeforeMethods(type);
-
             codeWriter.WriteMethodForwardDeclaration(method, null, genericTypeContext);
-
-            codeWriter.WriteAfterMethods(type);
-
-            codeWriter.WriteTypeEnd(type);
         }
 
         /// <summary>
@@ -791,110 +774,6 @@ namespace Il2Native.Logic
             WritingDefinitions(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
         }
 
-        public static IEnumerable<IType> GetRequiredForwardDeclarationTypes(IType typeSource)
-        {
-            Debug.Assert(typeSource != null, "Type is null");
-
-            lock (cachedRequiredForwardDeclarationTypes)
-            {
-                IEnumerable<IType> cachedQuery;
-                if (cachedRequiredForwardDeclarationTypes.TryGetValue(typeSource, out cachedQuery))
-                {
-                    return cachedQuery;
-                }
-            }
-
-            var query = IterateRequiredForwardDeclarationTypes(typeSource).ToList();
-
-            lock (cachedRequiredForwardDeclarationTypes)
-            {
-                if (!cachedRequiredForwardDeclarationTypes.ContainsKey(typeSource))
-                {
-                    cachedRequiredForwardDeclarationTypes.Add(typeSource, query);
-                }
-            }
-
-            return query;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="genericTypeSpecializations">
-        /// </param>
-        /// <param name="genericMethodSpecializations">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IType> GetRequiredFullDeclarationTypes(IType typeSource)
-        {
-            Debug.Assert(typeSource != null, "Type is null");
-
-            lock (cachedRequiredFullDeclarationTypes)
-            {
-                IEnumerable<IType> cachedQuery;
-                if (cachedRequiredFullDeclarationTypes.TryGetValue(typeSource, out cachedQuery))
-                {
-                    return cachedQuery;
-                }
-            }
-
-            var query = IterateRequiredFullDeclarationTypes(typeSource).ToList();
-
-            lock (cachedRequiredFullDeclarationTypes)
-            {
-                if (!cachedRequiredFullDeclarationTypes.ContainsKey(typeSource))
-                {
-                    cachedRequiredFullDeclarationTypes.Add(typeSource, query);
-                }
-            }
-
-            return query;
-        }
-
-        private static IEnumerable<IType> IterateRequiredFullDeclarationTypes(IType type)
-        {
-            Debug.Assert(type != null, "Type is null");
-
-            if (type.BaseType != null)
-            {
-                yield return type.BaseType;
-            }
-
-            if (type.HasElementType)
-            {
-                yield return type.GetElementType();
-            }
-
-            var interfaces = type.GetInterfaces();
-            if (interfaces != null)
-            {
-                foreach (var @interface in interfaces)
-                {
-                    yield return @interface;
-                }
-            }
-
-            var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var field in fields.Where(field => !field.IsStatic && field.FieldType.IsStructureType() && !field.FieldType.IsPointer))
-            {
-                yield return field.FieldType;
-            }
-        }
-
-        private static IEnumerable<IType> IterateRequiredForwardDeclarationTypes(IType type)
-        {
-            Debug.Assert(type != null, "Type is null");
-
-            var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var effectiveType in
-                fields.Select(field => field.FieldType).Where(fieldType => !fieldType.IsVoid() && !fieldType.IsValueType && type.TypeNotEquals(fieldType)))
-            {
-                yield return effectiveType.NormalizeType();
-            }
-        }
-
         private static void DiscoverGenericSpecializedTypesAndAdditionalTypes(
             IMethod method,
             ReadingTypesContext readingTypesContext)
@@ -1098,16 +977,6 @@ namespace Il2Native.Logic
             string[] filter,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
-            lock (cachedRequiredFullDeclarationTypes)
-            {
-                cachedRequiredFullDeclarationTypes.Clear();
-            }
-
-            lock (cachedRequiredForwardDeclarationTypes)
-            {
-                cachedRequiredForwardDeclarationTypes.Clear();
-            }
-
             // clean it as you are using IlReader
             IlReader.GenericMethodSpecializations = null;
 
