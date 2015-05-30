@@ -841,40 +841,34 @@ namespace Il2Native.Logic
                     this.BinaryOper(writer, opCode, " + ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Add_Ovf:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "sadd");
-                    this.BinaryOper(writer, opCode, " + ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__add_ovf");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Add_Ovf_Un:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "uadd");
-                    this.BinaryOper(writer, opCode, " + ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__add_ovf_un");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Mul:
                     this.BinaryOper(writer, opCode, " * ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Mul_Ovf:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "smul");
-                    this.BinaryOper(writer, opCode, " * ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__mul_ovf");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Mul_Ovf_Un:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "umul");
-                    this.BinaryOper(writer, opCode, " * ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__mul_ovf_un");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Sub:
                     this.BinaryOper(writer, opCode, " - ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Sub_Ovf:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "ssub");
-                    this.BinaryOper(writer, opCode, " - ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__sub_ovf");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Sub_Ovf_Un:
-                    // TODO: finish it
-                    //this.WriteOverflowWithThrow(writer, opCode, "usub");
-                    this.BinaryOper(writer, opCode, " - ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    writer.Write("__sub_ovf_un");
+                    this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Div:
                 case Code.Div_Un:

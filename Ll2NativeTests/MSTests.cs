@@ -385,6 +385,7 @@ namespace Ll2NativeTests
             // 477 - error CS0234: The type or namespace name 'Conditional' does not exist in the namespace 'System.Diagnostics'
             // 478 - error CS0234: The type or namespace name 'Design' does not exist in the namespace 'System.ComponentModel' (TODO: can be fixed)
             // 483 - using IL file for Library
+            // 485 - Overflow check, required -checked option
             // 489 - error CS0430: The extern alias 'FULL' was not specified in a /reference option
             // 492 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
             // 498 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
@@ -591,6 +592,7 @@ namespace Ll2NativeTests
                         477,
                         478,
                         483,
+                        485,
                         489,
                         492,
                         498,
@@ -691,7 +693,7 @@ namespace Ll2NativeTests
             }
 
             // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 141, 485, 643 });
+            skip.AddRange(new[] { 643 });
 
             foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
