@@ -728,6 +728,13 @@ namespace Il2Native.Logic
                 return ConversionType.CCast;
             }
 
+            // cast Int(S) to UInt(S) and vice versa
+            if ((sourceType.IsSignedType() && destinationType.IsUnsignedType() || sourceType.IsUnsignedType() && destinationType.IsSignedType())
+                && sourceType.IntTypeBitSize() == destinationType.IntTypeBitSize())
+            {
+                return ConversionType.CCast;
+            }
+
             return ConversionType.None;
         }
 
@@ -2011,6 +2018,32 @@ namespace Il2Native.Logic
                         }
 
                         return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+
+                    case Code.Add_Ovf_Un:
+                    case Code.Sub_Ovf_Un:
+                    case Code.Mul_Ovf_Un:
+                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[operandPosition]);
+                        if (result.Type.TypeEquals(System.System_SByte))
+                        {
+                            return System.System_Byte;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_Int16))
+                        {
+                            return System.System_UInt16;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_Int32))
+                        {
+                            return System.System_UInt32;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_Int64))
+                        {
+                            return System.System_UInt64;
+                        }
+
+                        break;
                 }
 
                 if (forArithmeticOperations)
@@ -2255,13 +2288,13 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
 
-                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_IntPtr);
+                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_IntPtr, true);
 
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
 
-                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_UIntPtr);
+                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_UIntPtr, false);
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
@@ -2390,7 +2423,7 @@ namespace Il2Native.Logic
 
                 case Code.Ldlen:
                 case Code.Sizeof:
-                    return this.System.System_Int32;
+                    return this.System.System_UInt32;
 
                 case Code.Localloc:
                     return this.System.System_Void.ToPointerType();
@@ -2467,7 +2500,7 @@ namespace Il2Native.Logic
             return retType;
         }
 
-        private IType RequiredOutgoingTypeOfConv_I_U(OpCodePart opCodePart, IType convType)
+        private IType RequiredOutgoingTypeOfConv_I_U(OpCodePart opCodePart, IType convType, bool sign)
         {
             IType retType;
             retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
@@ -2487,7 +2520,9 @@ namespace Il2Native.Logic
             }
 
             var intPtrOper = IntTypeRequired(opCodePart);
-            var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+            var nativeIntType = intPtrOper
+                ? (sign ? this.System.System_Int32 : this.System.System_UInt32)
+                : this.System.System_Void.ToPointerType();
             return nativeIntType;
         }
 

@@ -450,10 +450,9 @@ template < typename T > inline T __mul_ovf(T a, T b)
 	return a * b;
 }
 
-template < typename T > inline T __mul_ovf_un(T a, T b)
+inline Byte __mul_ovf_un(Byte a, Byte b)
 {
-	T res;
-	if (b > ((T)-1) / a)
+	if (b > ((Byte)-1) / a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -461,5 +460,96 @@ template < typename T > inline T __mul_ovf_un(T a, T b)
 		throw (::Void*) _new;
 	}
 
-	return res;
+	return a * b;
+}
+
+inline UInt16 __mul_ovf_un(UInt16 a, UInt16 b)
+{
+	if (b > ((UInt16)-1) / a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline UInt32 __mul_ovf_un(UInt32 a, UInt32 b)
+{
+	if (b > ((UInt32)-1) / a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline UInt64 __mul_ovf_un(UInt64 a, UInt64 b)
+{
+	if (b > ((UInt64)-1) / a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline SByte __mul_ovf_un(SByte a, SByte b)
+{
+	if ((Byte)b > ((Byte)-1) / (Byte)a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline Int16 __mul_ovf_un(Int16 a, UInt16 b)
+{
+	if ((UInt16)b > ((UInt16)-1) / (UInt16)a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline Int32 __mul_ovf_un(Int32 a, Int32 b)
+{
+	if ((UInt32)b > ((UInt32)-1) / (UInt32)a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
+}
+
+inline Int64 __mul_ovf_un(Int64 a, Int64 b)
+{
+	if ((UInt64)b > ((UInt64)-1) / (UInt64)a)
+	{
+		System_OverflowException* _new;
+		_new = System_OverflowException_System_OverflowException__newFN();
+		Void_System_OverflowException__ctorFN(_new);
+		throw (::Void*) _new;
+	}
+
+	return a * b;
 }

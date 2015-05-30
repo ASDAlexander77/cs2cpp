@@ -1368,7 +1368,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    this.WriteConvertToNativeInt(opCode);
+                    this.WriteConvertToNativeInt(opCode, true);
                     break;
 
                 case Code.Conv_I4:
@@ -1380,7 +1380,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    this.WriteConvertToNativeInt(opCode);
+                    this.WriteConvertToNativeInt(opCode, false);
                     break;
 
                 case Code.Conv_U4:
@@ -3835,10 +3835,12 @@ namespace Il2Native.Logic
                 : null;
         }
 
-        private void WriteConvertToNativeInt(OpCodePart opCode)
+        private void WriteConvertToNativeInt(OpCodePart opCode, bool sign)
         {
             var intPtrOper = IntTypeRequired(opCode);
-            var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+            var nativeIntType = intPtrOper
+                ? (sign ? this.System.System_Int32 : this.System.System_UInt32)
+                : this.System.System_Void.ToPointerType();
 
             var estimatedResultOfOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
             if (!estimatedResultOfOperand0.Type.IsPointer && !estimatedResultOfOperand0.Type.IsByRef)
