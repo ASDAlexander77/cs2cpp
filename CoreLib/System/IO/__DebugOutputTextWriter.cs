@@ -76,7 +76,7 @@ namespace System.IO
 
         public override void WriteLine(decimal value)
         {
-            throw new NotImplementedException();
+            WriteLine(value.ToString());
         }
 
         public override void WriteLine(double value)
@@ -278,7 +278,7 @@ namespace System.IO
 
         public override void Write(decimal value)
         {
-            throw new NotImplementedException();
+            this.Write(value.ToString());
         }
 
         public override void Write(float value)

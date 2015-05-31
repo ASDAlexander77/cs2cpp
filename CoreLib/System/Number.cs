@@ -299,7 +299,31 @@ namespace System
 
         public static String FormatDecimal(Decimal value, String format, NumberFormatInfo info)
         {
-            throw new NotImplementedException();
+            var number = new NUMBER();
+
+            char fmt;
+            int digits;
+
+            string refRetVal = null;
+
+            if (info == null)
+            {
+                throw new ArgumentNullException("NumberFormatInfo");
+            }
+
+            DecimalToNumber(ref value, ref number);
+
+            fmt = ParseFormatSpecifier(format, out digits);
+            if (fmt != 0)
+            {
+                refRetVal = NumberToString(ref number, fmt, digits, info, true);
+            }
+            else
+            {
+                refRetVal = NumberToStringFormat(ref number, format, info);
+            }
+
+            return refRetVal;
         }
 
         public static String FormatInt32(int value, String format, NumberFormatInfo info)
@@ -712,7 +736,8 @@ namespace System
         {
             double d = 0;
             NumberToDouble(ref number, &d);
-            if ((*(ulong*)(&d) & 0x7FFFFFFFFFFFFFFFL) >= 0x7FF0000000000000L) {
+            if ((*(ulong*)(&d) & 0x7FFFFFFFFFFFFFFFL) >= 0x7FF0000000000000L)
+            {
                 return false;
             }
 
@@ -2218,7 +2243,7 @@ namespace System
         private unsafe static uint DigitsToInt(char* p, int count)
         {
             char* end = p + count;
-            uint res = (uint) (*p - '0');
+            uint res = (uint)(*p - '0');
             for (p = p + 1; p < end; p++)
             {
                 res = 10 * res + *p - '0';
@@ -2271,7 +2296,7 @@ namespace System
         internal unsafe static Decimal ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
 
-            
+
             NUMBER number = new NUMBER();
             Decimal result = 0;
 
@@ -2292,7 +2317,7 @@ namespace System
                 throw new ArgumentNullException("value");
             }
 
-            
+
             NUMBER number = new NUMBER();
             Double d = 0;
 
@@ -2329,7 +2354,7 @@ namespace System
         internal unsafe static Int32 ParseInt32(String s, NumberStyles style, NumberFormatInfo info)
         {
 
-            
+
             NUMBER number = new NUMBER();
             Int32 i = 0;
 
@@ -2355,7 +2380,7 @@ namespace System
 
         internal unsafe static Int64 ParseInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
-            
+
             NUMBER number = new NUMBER();
             Int64 i = 0;
 
@@ -2640,7 +2665,7 @@ namespace System
                 throw new ArgumentNullException("value");
             }
 
-            
+
             NUMBER number = new NUMBER();
             Double d = 0;
 
@@ -2681,7 +2706,7 @@ namespace System
         internal unsafe static UInt32 ParseUInt32(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
 
-            
+
             NUMBER number = new NUMBER();
             UInt32 i = 0;
 
@@ -2708,7 +2733,7 @@ namespace System
 
         internal unsafe static UInt64 ParseUInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
-            
+
             NUMBER number = new NUMBER();
             UInt64 i = 0;
 
@@ -2765,7 +2790,7 @@ namespace System
 
 
         internal static Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
-        {          
+        {
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -2784,7 +2809,7 @@ namespace System
 
         internal unsafe static Boolean TryParseDouble(String value, NumberStyles options, NumberFormatInfo numfmt, out Double result)
         {
-            
+
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -2804,7 +2829,7 @@ namespace System
         internal unsafe static Boolean TryParseInt32(String s, NumberStyles style, NumberFormatInfo info, out Int32 result)
         {
 
-            
+
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -2834,7 +2859,7 @@ namespace System
         internal unsafe static Boolean TryParseInt64(String s, NumberStyles style, NumberFormatInfo info, out Int64 result)
         {
 
-            
+
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -2863,7 +2888,7 @@ namespace System
 
         internal unsafe static Boolean TryParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt, out Single result)
         {
-            
+
             NUMBER number = new NUMBER();
             result = 0;
             Double d = 0;
@@ -2890,7 +2915,7 @@ namespace System
         internal unsafe static Boolean TryParseUInt32(String s, NumberStyles style, NumberFormatInfo info, out UInt32 result)
         {
 
-            
+
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -2920,7 +2945,7 @@ namespace System
         internal unsafe static Boolean TryParseUInt64(String s, NumberStyles style, NumberFormatInfo info, out UInt64 result)
         {
 
-            
+
             NUMBER number = new NUMBER();
             result = 0;
 
@@ -3142,6 +3167,41 @@ namespace System
             }
         }
 
+        private unsafe static void DecimalToNumber(ref Decimal value, ref NUMBER number)
+        {
+            char* buffer = stackalloc char[DECIMAL_PRECISION + 1];
+
+            DECIMAL d = new DECIMAL();
+
+            var bits = Decimal.GetBits(value);
+            d.Lo32 = (uint) bits[0];
+            d.Mid32 = (uint) bits[1];
+            d.Hi32 = (uint) bits[2];
+            d.sign = (byte)(bits[3] >> 24);
+            d.scale = (byte)(bits[3] >> 16);
+
+            number.precision = DECIMAL_PRECISION;
+            number.sign = d.sign > 0;
+            char* p = buffer + DECIMAL_PRECISION;
+            while (d.Mid32 > 0 || d.Hi32 > 0)
+            {
+                p = Int32ToDecChars(p, DecDivMod1E9(ref d), 9);
+            }
+
+            p = Int32ToDecChars(p, d.Lo32, 0);
+            int i = (int)(buffer + DECIMAL_PRECISION - p);
+            number.scale = i - d.scale;
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+
+                while (--i >= 0)
+                    *dst++ = *p++;
+
+                *dst = '\0';
+            }
+        }
+
         private unsafe static int Int64DivMod1E9(long* value)
         {
             var rem = (int)(*value % 1000000000);
@@ -3154,6 +3214,21 @@ namespace System
             var rem = (uint)(*value % 1000000000);
             *value /= 1000000000;
             return rem;
+        }
+
+        private unsafe static uint D32DivMod1E9(uint hi32, uint* lo32)
+        {
+            var n = (ulong)hi32 << 32 | *lo32;
+            *lo32 = (uint)(n / 1000000000);
+            return (uint)(n % 1000000000);
+        }
+
+        private unsafe static uint DecDivMod1E9(ref DECIMAL value)
+        {
+            fixed (uint* hi32 = &value.Hi32)
+            fixed (uint* mid32 = &value.Mid32)
+            fixed (uint* lo32 = &value.Lo32)
+                return D32DivMod1E9(D32DivMod1E9(D32DivMod1E9(0, hi32), mid32), lo32);
         }
 
         private unsafe static char* Int32ToDecChars(char* p, uint value, int digits)
@@ -3519,7 +3594,7 @@ namespace System
 
                 *(ulong*)value = val;
 
-                done:
+            done:
                 if (number.sign) *(ulong*)value |= 0x8000000000000000;
             }
         }
@@ -3534,6 +3609,26 @@ namespace System
             public bool isNan;
             public bool isInf;
             public fixed char digits[NUMBER_MAXDIGITS + 2];
+        }
+
+        public struct CURRENCY
+        {
+            private Int32 Lo;
+            private UInt32 Hi;
+        }
+
+        public struct DECIMAL
+        {
+            // Decimal.cs treats the first two shorts as one long
+            // And they seriable the data so we need to little endian
+            // seriliazation
+            // The wReserved overlaps with Variant's vt member
+            public Int16 wReserved;
+            public Byte scale;
+            public Byte sign;
+            public UInt32 Hi32;
+            public UInt32 Lo32;
+            public UInt32 Mid32;
         }
 
         internal unsafe static class DoubleHelper
