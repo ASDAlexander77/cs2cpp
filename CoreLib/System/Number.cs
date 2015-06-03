@@ -727,9 +727,9 @@ namespace System
 
         }
 
-        public unsafe static Boolean NumberBufferToDecimal(ref NUMBER number, ref Decimal value)
+        public static Boolean NumberBufferToDecimal(ref NUMBER number, ref Decimal value)
         {
-            throw new NotImplementedException();
+            return Decimal.NumberToDecimal(ref number, ref value);
         }
 
         internal unsafe static Boolean NumberBufferToDouble(ref NUMBER number, ref Double value)

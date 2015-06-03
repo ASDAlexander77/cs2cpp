@@ -1072,6 +1072,7 @@ namespace Il2Native.Logic
                         var method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
+                        this.AddArrayType(method.DeclaringType);
 
                         this.AddGenericSpecializedType(method.ReturnType);
 
@@ -1226,7 +1227,7 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
+                        if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem || code == Code.Ldelema)
                         {
                             var arrayType = type.ToArrayType(1);
                             this.AddArrayType(arrayType);
@@ -1263,6 +1264,85 @@ namespace Il2Native.Logic
 
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
+
+                    case Code.Ldelem_I:
+                        this.AddArrayType(this.TypeResolver.System.System_IntPtr.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_I1:
+                        this.AddArrayType(this.TypeResolver.System.System_SByte.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_I2:
+                        this.AddArrayType(this.TypeResolver.System.System_Int16.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_I4:
+                        this.AddArrayType(this.TypeResolver.System.System_Int32.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_U1:
+                        this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_U2:
+                        this.AddArrayType(this.TypeResolver.System.System_UInt16.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_U4:
+                        this.AddArrayType(this.TypeResolver.System.System_UInt32.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_R4:
+                        this.AddArrayType(this.TypeResolver.System.System_Single.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Ldelem_R8:
+                        this.AddArrayType(this.TypeResolver.System.System_Double.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_I:
+                        this.AddArrayType(this.TypeResolver.System.System_IntPtr.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_I1:
+                        this.AddArrayType(this.TypeResolver.System.System_SByte.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_I2:
+                        this.AddArrayType(this.TypeResolver.System.System_Int16.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_I4:
+                    
+                        this.AddArrayType(this.TypeResolver.System.System_Int32.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_R4:
+                    
+                        this.AddArrayType(this.TypeResolver.System.System_Single.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
+                    case Code.Stelem_R8:
+                        
+                        this.AddArrayType(this.TypeResolver.System.System_Double.ToArrayType(1));
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
+                        continue;
+
                     default:
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;

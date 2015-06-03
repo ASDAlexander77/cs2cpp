@@ -522,6 +522,7 @@ namespace Il2Native.Logic
             if (IsCastConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
+                castOpCode.RequiredOutgoingType = destinationType;
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
@@ -539,6 +540,7 @@ namespace Il2Native.Logic
                 var ldobjOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, type);
                 this.InsertOperand(opCodeOperand, ldobjOpCode);
                 var boxOpCode = new OpCodeTypePart(OpCodesEmit.Box, 0, 0, type);
+                boxOpCode.RequiredOutgoingType = type.ToClass();
                 this.InsertOperand(ldobjOpCode, boxOpCode);
                 return boxOpCode;
             }
@@ -549,6 +551,7 @@ namespace Il2Native.Logic
                 var ldfldOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
                 this.InsertOperand(opCodeOperand, ldfldOpCode);
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
+                castOpCode.RequiredOutgoingType = destinationType;
                 this.InsertOperand(ldfldOpCode, castOpCode);
                 return castOpCode;
             }
@@ -556,7 +559,9 @@ namespace Il2Native.Logic
             if (conversionType == ConversionType.ValueToStructureType)
             {
                 // cast to type of first field
-                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType.GetFieldByFieldNumber(0, this).FieldType);
+                var fieldType = destinationType.GetFieldByFieldNumber(0, this).FieldType;
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, fieldType);
+                castOpCode.RequiredOutgoingType = fieldType;
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
@@ -1826,13 +1831,13 @@ namespace Il2Native.Logic
 
                     case Code.Stelem_I:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_IntPtr : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_IntPtr : operandPosition == 0 ? System.System_IntPtr.ToArrayType(1) : null;
 
                     case Code.Stelem:
                         return operandPosition == 1
                             ? this.System.System_Int32
-                            : operandPosition == 2 ? (opCodePart as OpCodeTypePart).Operand : null;
+                            : operandPosition == 2 ? (opCodePart as OpCodeTypePart).Operand : operandPosition == 0 ? (opCodePart as OpCodeTypePart).Operand.ToArrayType(1) : null;
 
                     case Code.Stelem_I1:
 
@@ -1849,45 +1854,133 @@ namespace Il2Native.Logic
                         }
                         else
                         {
-                            return operandPosition == 1 ? this.System.System_Int32 : null;
+                            return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 0 ? System.System_SByte.ToArrayType(1) : null;
                         }
 
                     case Code.Stelem_I2:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_Int16 : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_Int16 : operandPosition == 0 ? System.System_Int16.ToArrayType(1) : null;
 
                     case Code.Stelem_I4:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_Int32 : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_Int32 : operandPosition == 0 ? System.System_Int32.ToArrayType(1) : null;
 
                     case Code.Stelem_I8:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_Int64 : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_Int64 : operandPosition == 0 ? System.System_Int64.ToArrayType(1) : null;
 
                     case Code.Stelem_R4:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_Single : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_Single : operandPosition == 0 ? System.System_Single.ToArrayType(1) : null;
 
                     case Code.Stelem_R8:
                         return operandPosition == 1
-                            ? this.System.System_Int32
-                            : operandPosition == 2 ? this.System.System_Double : null;
+                                   ? this.System.System_Int32
+                                   : operandPosition == 2 ? this.System.System_Double : operandPosition == 0 ? System.System_Double.ToArrayType(1) : null;
+
+                    case Code.Ldelem_I:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_IntPtr.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_I1:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_SByte.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_I2:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_Int16.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_I4:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_Int32.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_U1:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_Byte.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_U2:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_UInt16.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_U4:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_UInt32.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_R4:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_Single.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelem_R8:
+
+                        if (operandPosition == 0)
+                        {
+                            return this.System.System_Double.ToArrayType(1);
+                        }
+
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
 
                     case Code.Ldelem_Ref:
-                    case Code.Ldelem_I:
-                    case Code.Ldelem_I1:
-                    case Code.Ldelem_I2:
-                    case Code.Ldelem_I4:
-                    case Code.Ldelem_U1:
-                    case Code.Ldelem_U2:
-                    case Code.Ldelem_U4:
-                    case Code.Ldelem_R4:
-                    case Code.Ldelem_R8:
+
                         return operandPosition == 1 ? this.System.System_Int32 : null;
+
+                    case Code.Ldelema:
+
+                        if (operandPosition == 0)
+                        {
+                            type = ((OpCodeTypePart)opCodePart).Operand;
+                            return type.ToArrayType(1);
+                        }
+
+                        if (operandPosition == 1)
+                        {
+                            return this.System.System_Int32;
+                        }
+
+                        return null;
 
                     case Code.Unbox:
                     case Code.Unbox_Any:
