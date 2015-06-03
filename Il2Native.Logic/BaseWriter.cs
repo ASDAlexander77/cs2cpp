@@ -2019,6 +2019,32 @@ namespace Il2Native.Logic
 
                         return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
 
+                    case Code.Add_Ovf:
+                    case Code.Sub_Ovf:
+                    case Code.Mul_Ovf:
+                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[operandPosition]);
+                        if (result.Type.TypeEquals(System.System_Byte))
+                        {
+                            return System.System_SByte;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_UInt16))
+                        {
+                            return System.System_Int16;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_UInt32))
+                        {
+                            return System.System_Int32;
+                        }
+
+                        if (result.Type.TypeEquals(System.System_UInt64))
+                        {
+                            return System.System_Int64;
+                        }
+
+                        break;
+
                     case Code.Add_Ovf_Un:
                     case Code.Sub_Ovf_Un:
                     case Code.Mul_Ovf_Un:
