@@ -1841,12 +1841,12 @@ namespace Il2Native.Logic
                         if (operandPosition == 0)
                         {
                             result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                            return System.System_IntPtr.ToArrayType(result.Type.ArrayRank);
+                            return result.Type;
                         }
 
                         return operandPosition == 1
                                    ? this.System.System_Int32
-                                   : operandPosition == 2 ? this.System.System_IntPtr : null;
+                                   : operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
 
                     case Code.Stelem:
 
@@ -1954,7 +1954,7 @@ namespace Il2Native.Logic
                         if (operandPosition == 0)
                         {
                             result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                            return System.System_IntPtr.ToArrayType(result.Type.ArrayRank);
+                            return result.Type;
                         }
 
                         return operandPosition == 1 ? this.System.System_Int32 : null;
