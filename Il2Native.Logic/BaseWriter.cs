@@ -2373,7 +2373,8 @@ namespace Il2Native.Logic
                     retType = opCodePart.RequiredIncomingTypes[0] ?? this.RequiredIncomingType(opCodePart, 0);
                     if (retType != null)
                     {
-                        return retType;
+                        Debug.Assert(retType.HasElementType);
+                        return retType.GetElementType();
                     }
 
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0], ignoreAlternativeValues);

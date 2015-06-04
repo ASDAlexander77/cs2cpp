@@ -62,24 +62,21 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to #ifdef _MSC_VER
-        ///typedef __int8 int8_t;
-        ///typedef __int16 int16_t;
-        ///typedef __int32 int32_t;
-        ///typedef __int64 int64_t;
-        ///typedef unsigned __int8 uint8_t;
-        ///typedef unsigned __int16 uint16_t;
-        ///typedef unsigned __int32 uint32_t;
-        ///typedef unsigned __int64 uint64_t;
-        ///
-        ///extern &quot;C&quot; void* alloca(uint32_t);
-        ///
-        ///extern &quot;C&quot; void* memcpy(void* dst, void* src, int32_t size);
-        ///extern &quot;C&quot; void* memset(void *,int32_t,uint32_t);
-        ///
-        ///template&lt;typename T&gt; T compare_and_swap(T* reg, T oldval, T newval)
-        ///{
-        ///	T old_reg_val = *reg;
-        /// [rest of string was truncated]&quot;;.
+        ///#error Not supported yet
+        ///#elif __GNUC__ &gt;= 3
+        ///typedef signed char int8_t;
+        ///typedef short int16_t;
+        ///typedef int int32_t;
+        ///typedef long long int64_t;
+        ///typedef unsigned char uint8_t;
+        ///typedef unsigned short uint16_t;
+        ///typedef unsigned int uint32_t;
+        ///typedef unsigned long long uint64_t;
+        ///extern void *__builtin_memset(void *,int32_t,uint32_t);
+        ///#define memset __builtin_memset
+        ///extern void *__builtin_memcpy(void *,const void *,uint32_t);
+        ///#define compare_and_swap __sync_val_compare_and_swap 
+        ///#d [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -88,14 +85,55 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to extern &quot;C&quot; void GC_init();
-        ///extern &quot;C&quot; void* GC_malloc(UInt32);
+        ///   Looks up a localized string similar to #include &quot;CoreLib.h&quot;
+        ///
+        ///#ifndef UInt32x32To64
+        ///#define UInt32x32To64(a, b) ((Int64)((Int32)(a)) * (Int64)((Int32)(b)))
+        ///#endif
+        ///
+        ///typedef union {
+        ///	Int64 int64;
+        ///	struct {
+        ///#if BIGENDIAN
+        ///		Int32 Hi;
+        ///		Int32 Lo;
+        ///#else            
+        ///		Int32 Lo;
+        ///		Int32 Hi;
+        ///#endif           
+        ///	} u;
+        ///} SPLIT64;
+        ///
+        ///#define OVFL_MAX_1_HI   429496729
+        ///#define DEC_SCALE_MAX   28
+        ///#define POWER10_MAX 9
+        ///
+        ///#define OVFL_MAX_9_HI   4u
+        ///#define OVFL_MAX_9_MID  1266874889u
+        ///#define OVFL_MAX_9_LO   3047500985u
+        ///
+        ///#define OVFL_MAX_5_HI [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string decimals {
+            get {
+                return ResourceManager.GetString("decimals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to extern &quot;C&quot; Void GC_init();
+        ///extern &quot;C&quot; Void* GC_malloc(UInt32);
+        ///extern &quot;C&quot; Void* GC_malloc_atomic(UInt32);
+        ///extern &quot;C&quot; Void* GC_malloc_ignore_off_page(UInt32);
+        ///extern &quot;C&quot; Void* GC_malloc_atomic_ignore_off_page(UInt32);
+        ///typedef void (* __finalization_proc__)(Void* /* obj */, Void* /* client_data */);
+        ///extern &quot;C&quot; Void GC_register_finalizer(Void*, __finalization_proc__, Void*, Void*, Void**);
         ///
         ///#undef GC_MALLOC
         ///#define GC_MALLOC GC_malloc
         ///
-        ///#undef GC_INIT
-        ///#define GC_INIT GC_init.
+        ///#undef GC_MALLOC_ATOMIC
+        ///#define GC_MALLOC_ATOMIC GC_malloc_atom [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string gc_declarations {
             get {
@@ -104,7 +142,12 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #define GC_DEBUG
+        ///   Looks up a localized string similar to #undef GC_MALLOC
+        ///#undef GC_MALLOC_ATOMIC
+        ///#undef GC_MALLOC_IGNORE_OFF_PAGE
+        ///#undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
+        ///#undef GC_REGISTER_FINALIZER
+        ///#define GC_DEBUG
         ///#include &quot;gc.h&quot;.
         /// </summary>
         internal static string gc_declarations_debug {

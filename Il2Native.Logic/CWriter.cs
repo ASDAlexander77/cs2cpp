@@ -2172,6 +2172,13 @@ namespace Il2Native.Logic
                 this.EndPreprocessorIf();
             }
 
+            if (!this.IsHeader && this.IsCoreLib)
+            {
+                // decimals implementation
+                this.Output.WriteLine(Resources.decimals);
+                this.Output.WriteLine(string.Empty);
+            }
+
             this.Output.Close();
         }
 
