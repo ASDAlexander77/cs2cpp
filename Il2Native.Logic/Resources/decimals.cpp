@@ -1,18 +1,14 @@
 // Decimals
 
-#ifndef UInt32x32To64
-#define UInt32x32To64(a, b) ((Int64)((Int32)(a)) * (Int64)((Int32)(b)))
-#endif
-
 typedef union {
-	Int64 int64;
+	UInt64 int64;
 	struct {
 #if BIGENDIAN
-		Int32 Hi;
-		Int32 Lo;
+		UInt32 Hi;
+		UInt32 Lo;
 #else            
-		Int32 Lo;
-		Int32 Hi;
+		UInt32 Lo;
+		UInt32 Hi;
 #endif           
 	} u;
 } SPLIT64;
@@ -72,6 +68,7 @@ const SPLIT64    sdlTenToEighteen = { UInt64(1000000000000000000) };
 
 #define NOERROR 0
 #define DISP_E_OVERFLOW 1
+#define DISP_E_DIVBYZERO 2
 
 typedef union tagCY {
 	struct {
@@ -83,7 +80,7 @@ typedef union tagCY {
 		Int32    Hi;
 #endif
 	} u;
-	Int64 Int3264;
+	Int64 int64;
 } CY, *LPCY;
 
 typedef CY CURRENCY;
@@ -124,7 +121,7 @@ typedef struct tagDEC {
 } DECIMAL;
 
 
-Int32 ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
+UInt32 ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
 10000000, 100000000, 1000000000 };
 
 const SPLIT64 sdlPower10[] = { { UInt64(10000000000) },          // 1E10
@@ -135,9 +132,9 @@ const SPLIT64 sdlPower10[] = { { UInt64(10000000000) },          // 1E10
 
 struct DECOVFL
 {
-	Int32 Hi;
-	Int32 Mid;
-	Int32 Lo;
+	UInt32 Hi;
+	UInt32 Mid;
+	UInt32 Lo;
 };
 
 DECOVFL PowerOvfl[] = {
@@ -182,6 +179,8 @@ const Double dblPower10[] = {
 static const UInt32 ulTenToTenDiv4 = 2500000000U;
 static const UInt32 ulTenToNine = 1000000000;
 #define COPYDEC(dest, src) {DECIMAL_SIGNSCALE(dest) = DECIMAL_SIGNSCALE(src); DECIMAL_HI32(dest) = DECIMAL_HI32(src); DECIMAL_LO64_SET(dest, DECIMAL_LO64_GET(src));}
+
+#define UInt32x32To64(a, b) ((UInt64)((UInt32)(a)) * (UInt64)((UInt32)(b)))
 
 #define Div64by32(num, den) ((UInt32)((UInt64)(num) / (UInt32)(den)))
 #define Mod64by32(num, den) ((UInt32)((UInt64)(num) % (UInt32)(den)))
@@ -764,9 +763,9 @@ RetDec:
 		return NOERROR;
 }
 
-#define VARCMP_EQ 0
-#define VARCMP_LT -1
-#define VARCMP_GT 1
+#define VARCMP_LT   -1
+#define VARCMP_EQ   0
+#define VARCMP_GT   1
 
 Int32 DecCmp(Int32* d1, Int32* d2)
 {
@@ -897,7 +896,7 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 			//
 			if (iPower > 18) {
 				sdlLo.int64 = UInt32x32To64(ulMant, (UInt32)ulPower10[iPower - 18]);
-				sdlLo.int64 = UInt64x64To128(sdlLo, sdlTenToEighteen, (UInt64*)&sdlHi.int64);
+				sdlLo.int64 = UInt64x64To128(sdlLo, sdlTenToEighteen, &sdlHi.int64);
 
 				if (sdlHi.u.Hi != 0)
 					return DISP_E_OVERFLOW;
@@ -1014,7 +1013,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		iPower++;
 	}
 
-	// Round to Int3264
+	// Round to int64
 	//
 	sdlMant.int64 = (Int64)dbl;
 	dbl -= (Double)(Int64)sdlMant.int64;  // dif between input & Int32eger
@@ -1041,7 +1040,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		else {
 			// Have a big power of 10.
 			//
-			sdlLo.int64 = UInt64x64To128(sdlMant, sdlPower10[iPower - 10], (UInt64*)&sdlMant.int64);
+			sdlLo.int64 = UInt64x64To128(sdlMant, sdlPower10[iPower - 10], &sdlMant.int64);
 
 			if (sdlMant.u.Hi != 0)
 				return DISP_E_OVERFLOW;
@@ -1147,7 +1146,7 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 				// 1E10 itself doesn't fit in 32 bits, so we'll divide by 2.5E9 now
 				// then multiply the next divisor by 4 (which will be a max of 4E9).
 				// 
-				ulRemLo = FullDiv64By32((UInt64*)&sdlTmp.int64, ulTenToTenDiv4);
+				ulRemLo = FullDiv64By32(&sdlTmp.int64, ulTenToTenDiv4);
 				ulPwr = ulPower10[iScale - 10] << 2;
 			}
 			else
@@ -1158,7 +1157,7 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 
 			// Power to divide by fits in 32 bits.
 			//
-			ulRemHi = FullDiv64By32((UInt64*)&sdlTmp.int64, ulPwr);
+			ulRemHi = FullDiv64By32(&sdlTmp.int64, ulPwr);
 
 			// Round result.  See if remainder >= 1/2 of divisor.
 			// Divisor is a power of 10, so it is always even.
@@ -1256,7 +1255,7 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 			iHiProd = 3;
 		}
 
-		// Check for leading zero ULONGs on the product
+		// Check for leading zero UInt32s on the product
 		//
 		while (rgulProd[iHiProd] == 0) {
 			iHiProd--;
@@ -1275,5 +1274,583 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 
 	pdecRes->u.u.sign = pdecR->u.u.sign ^ pdecL->u.u.sign;
 	pdecRes->u.u.scale = (Byte)iScale;
+	return NOERROR;
+}
+
+// Add a 32 bit unsigned long to an array of 3 unsigned longs representing a 96 integer
+// Returns 0 if there is an overflow
+Byte Add32To96(UInt32* rgulNum, UInt32 ulValue) {
+	rgulNum[0] += ulValue;
+	if (rgulNum[0] < ulValue) {
+		if (++rgulNum[1] == 0) {
+			if (++rgulNum[2] == 0) {
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+UInt32 IncreaseScale(UInt32 *rgulNum, UInt32 ulPwr)
+{
+	SPLIT64   sdlTmp;
+
+	sdlTmp.int64 = UInt32x32To64(rgulNum[0], ulPwr);
+	rgulNum[0] = sdlTmp.u.Lo;
+	sdlTmp.int64 = UInt32x32To64(rgulNum[1], ulPwr) + sdlTmp.u.Hi;
+	rgulNum[1] = sdlTmp.u.Lo;
+	sdlTmp.int64 = UInt32x32To64(rgulNum[2], ulPwr) + sdlTmp.u.Hi;
+	rgulNum[2] = sdlTmp.u.Lo;
+	return sdlTmp.u.Hi;
+}
+
+// Adjust the quotient to deal with an overflow. We need to divide by 10, 
+// feed in the high bit to undo the overflow and then round as required, 
+Void OverflowUnscale(UInt32* rgulQuo, Byte fRemainder) {
+	SPLIT64  sdlTmp;
+
+	// We have overflown, so load the high bit with a one.
+	sdlTmp.u.Hi = 1u;
+	sdlTmp.u.Lo = rgulQuo[2];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, 10u);
+	rgulQuo[2] = sdlTmp.u.Lo;
+	sdlTmp.u.Lo = rgulQuo[1];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, 10u);
+	rgulQuo[1] = sdlTmp.u.Lo;
+	sdlTmp.u.Lo = rgulQuo[0];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, 10u);
+	rgulQuo[0] = sdlTmp.u.Lo;
+	// The remainder is the last digit that does not fit, so we can use it to work out if we need to round up
+	if ((sdlTmp.u.Hi > 5) || ((sdlTmp.u.Hi == 5) && (fRemainder || (rgulQuo[0] & 1)))) {
+		Add32To96(rgulQuo, 1u);
+	}
+}
+
+UInt32 Div96By32(UInt32 *rgulNum, UInt32 ulDen)
+{
+	SPLIT64  sdlTmp;
+
+	sdlTmp.u.Hi = 0;
+
+	if (rgulNum[2] != 0)
+		goto Div3Word;
+
+	if (rgulNum[1] >= ulDen)
+		goto Div2Word;
+
+	sdlTmp.u.Hi = rgulNum[1];
+	rgulNum[1] = 0;
+	goto Div1Word;
+
+Div3Word:
+	sdlTmp.u.Lo = rgulNum[2];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, ulDen);
+	rgulNum[2] = sdlTmp.u.Lo;
+Div2Word:
+	sdlTmp.u.Lo = rgulNum[1];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, ulDen);
+	rgulNum[1] = sdlTmp.u.Lo;
+Div1Word:
+	sdlTmp.u.Lo = rgulNum[0];
+	sdlTmp.int64 = DivMod64by32(sdlTmp.int64, ulDen);
+	rgulNum[0] = sdlTmp.u.Lo;
+	return sdlTmp.u.Hi;
+}
+
+UInt32 Div96By64(UInt32* rgulNum, SPLIT64 sdlDen)
+{
+	SPLIT64 sdlQuo;
+	SPLIT64 sdlNum;
+	SPLIT64 sdlProd;
+
+	sdlNum.u.Lo = rgulNum[0];
+
+	if (rgulNum[2] >= sdlDen.u.Hi) {
+		// Divide would overflow.  Assume a quotient of 2^32, and set
+		// up remainder accordingly.  Then jump to loop which reduces
+		// the quotient.
+		//
+		sdlNum.u.Hi = rgulNum[1] - sdlDen.u.Lo;
+		sdlQuo.u.Lo = 0;
+		goto NegRem;
+	}
+
+	// Hardware divide won't overflow
+	//
+	if (rgulNum[2] == 0 && rgulNum[1] < sdlDen.u.Hi)
+		// Result is zero.  Entire dividend is remainder.
+		//
+		return 0;
+
+	// DivMod64by32 returns quotient in Lo, remainder in Hi.
+	//
+	sdlQuo.u.Lo = rgulNum[1];
+	sdlQuo.u.Hi = rgulNum[2];
+	sdlQuo.int64 = DivMod64by32(sdlQuo.int64, sdlDen.u.Hi);
+	sdlNum.u.Hi = sdlQuo.u.Hi; // remainder
+
+	// Compute full remainder, rem = dividend - (quo * divisor).
+	//
+	sdlProd.int64 = UInt32x32To64(sdlQuo.u.Lo, sdlDen.u.Lo); // quo * lo divisor
+	sdlNum.int64 -= sdlProd.int64;
+
+	if (sdlNum.int64 > ~sdlProd.int64) {
+	NegRem:
+		// Remainder went negative.  Add divisor back in until it's positive,
+		// a max of 2 times.
+		//
+		do {
+			sdlQuo.u.Lo--;
+			sdlNum.int64 += sdlDen.int64;
+		} while (sdlNum.int64 >= sdlDen.int64);
+	}
+
+	rgulNum[0] = sdlNum.u.Lo;
+	rgulNum[1] = sdlNum.u.Hi;
+	return sdlQuo.u.Lo;
+}
+
+UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
+{
+	SPLIT64 sdlQuo;
+	SPLIT64 sdlNum;
+	SPLIT64 sdlProd1;
+	SPLIT64 sdlProd2;
+
+	sdlNum.u.Lo = rgulNum[0];
+	sdlNum.u.Hi = rgulNum[1];
+
+	if (rgulNum[3] == 0 && rgulNum[2] < rgulDen[2])
+		// Result is zero.  Entire dividend is remainder.
+		//
+		return 0;
+
+	// DivMod64by32 returns quotient in Lo, remainder in Hi.
+	//
+	sdlQuo.u.Lo = rgulNum[2];
+	sdlQuo.u.Hi = rgulNum[3];
+	sdlQuo.int64 = DivMod64by32(sdlQuo.int64, rgulDen[2]);
+
+	// Compute full remainder, rem = dividend - (quo * divisor).
+	//
+	sdlProd1.int64 = UInt32x32To64(sdlQuo.u.Lo, rgulDen[0]); // quo * lo divisor
+	sdlProd2.int64 = UInt32x32To64(sdlQuo.u.Lo, rgulDen[1]); // quo * mid divisor
+	sdlProd2.int64 += sdlProd1.u.Hi;
+	sdlProd1.u.Hi = sdlProd2.u.Lo;
+
+	sdlNum.int64 -= sdlProd1.int64;
+	rgulNum[2] = sdlQuo.u.Hi - sdlProd2.u.Hi; // sdlQuo.Hi is remainder
+
+	// Propagate carries
+	//
+	if (sdlNum.int64 > ~sdlProd1.int64) {
+		rgulNum[2]--;
+		if (rgulNum[2] >= ~sdlProd2.u.Hi)
+			goto NegRem;
+	}
+	else if (rgulNum[2] > ~sdlProd2.u.Hi) {
+	NegRem:
+		// Remainder went negative.  Add divisor back in until it's positive,
+		// a max of 2 times.
+		//
+		sdlProd1.u.Lo = rgulDen[0];
+		sdlProd1.u.Hi = rgulDen[1];
+
+		for (;;) {
+			sdlQuo.u.Lo--;
+			sdlNum.int64 += sdlProd1.int64;
+			rgulNum[2] += rgulDen[2];
+
+			if (sdlNum.int64 < sdlProd1.int64) {
+				// Detected carry. Check for carry out of top
+				// before adding it in.
+				//
+				if (rgulNum[2]++ < rgulDen[2])
+					break;
+			}
+			if (rgulNum[2] < rgulDen[2])
+				break; // detected carry
+		}
+	}
+
+	rgulNum[0] = sdlNum.u.Lo;
+	rgulNum[1] = sdlNum.u.Hi;
+	return sdlQuo.u.Lo;
+}
+
+Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
+{
+	DECIMAL* pdecL = (DECIMAL*)d1;
+	DECIMAL* pdecR = (DECIMAL*)d2;
+	DECIMAL* pdecRes = (DECIMAL*)res;
+
+	UInt32   rgulQuo[3];
+	UInt32   rgulQuoSave[3];
+	UInt32   rgulRem[4];
+	UInt32   rgulDivisor[3];
+	UInt32   ulPwr;
+	UInt32   ulTmp;
+	UInt32   ulTmp1;
+	SPLIT64  sdlTmp;
+	SPLIT64  sdlDivisor;
+	Int32    iScale;
+	Int32    iCurScale;
+	Byte     fUnscale;
+
+	iScale = DECIMAL_SCALE(*pdecL) - DECIMAL_SCALE(*pdecR);
+	fUnscale = 0;
+	rgulDivisor[0] = DECIMAL_LO32(*pdecR);
+	rgulDivisor[1] = DECIMAL_MID32(*pdecR);
+	rgulDivisor[2] = DECIMAL_HI32(*pdecR);
+
+	if (rgulDivisor[1] == 0 && rgulDivisor[2] == 0) {
+		// Divisor is only 32 bits.  Easy divide.
+		//
+		if (rgulDivisor[0] == 0)
+			return DISP_E_DIVBYZERO;
+
+		rgulQuo[0] = DECIMAL_LO32(*pdecL);
+		rgulQuo[1] = DECIMAL_MID32(*pdecL);
+		rgulQuo[2] = DECIMAL_HI32(*pdecL);
+		rgulRem[0] = Div96By32(rgulQuo, rgulDivisor[0]);
+
+		for (;;) {
+			if (rgulRem[0] == 0) {
+				if (iScale < 0) {
+					iCurScale = min(9, -iScale);
+					goto HaveScale;
+				}
+				break;
+			}
+			// We need to unscale if and only if we have a non-zero remainder
+			fUnscale = 1;
+
+			// We have computed a quotient based on the natural scale 
+			// ( <dividend scale> - <divisor scale> ).  We have a non-zero 
+			// remainder, so now we should increase the scale if possible to 
+			// include more quotient bits.
+			// 
+			// If it doesn't cause overflow, we'll loop scaling by 10^9 and 
+			// computing more quotient bits as long as the remainder stays 
+			// non-zero.  If scaling by that much would cause overflow, we'll 
+			// drop out of the loop and scale by as much as we can.
+			// 
+			// Scaling by 10^9 will overflow if rgulQuo[2].rgulQuo[1] >= 2^32 / 10^9 
+			// = 4.294 967 296.  So the upper limit is rgulQuo[2] == 4 and 
+			// rgulQuo[1] == 0.294 967 296 * 2^32 = 1,266,874,889.7+.  Since 
+			// quotient bits in rgulQuo[0] could be all 1's, then 1,266,874,888 
+			// is the largest value in rgulQuo[1] (when rgulQuo[2] == 4) that is 
+			// assured not to overflow.
+			// 
+			iCurScale = SearchScale(rgulQuo[2], rgulQuo[1], rgulQuo[0], iScale);
+			if (iCurScale == 0) {
+				// No more scaling to be done, but remainder is non-zero.
+				// Round quotient.
+				//
+				ulTmp = rgulRem[0] << 1;
+				if (ulTmp < rgulRem[0] || (ulTmp >= rgulDivisor[0] &&
+					(ulTmp > rgulDivisor[0] || (rgulQuo[0] & 1)))) {
+				RoundUp:
+					if (!Add32To96(rgulQuo, 1)) {
+						if (iScale == 0) {
+							return DISP_E_OVERFLOW;
+						}
+						iScale--;
+						OverflowUnscale(rgulQuo, 1);
+						break;
+					}
+				}
+				break;
+			}
+
+			if (iCurScale < 0)
+				return DISP_E_OVERFLOW;
+
+		HaveScale:
+			ulPwr = ulPower10[iCurScale];
+			iScale += iCurScale;
+
+			if (IncreaseScale(rgulQuo, ulPwr) != 0)
+				return DISP_E_OVERFLOW;
+
+			sdlTmp.int64 = DivMod64by32(UInt32x32To64(rgulRem[0], ulPwr), rgulDivisor[0]);
+			rgulRem[0] = sdlTmp.u.Hi;
+
+			if (!Add32To96(rgulQuo, sdlTmp.u.Lo)) {
+				if (iScale == 0) {
+					return DISP_E_OVERFLOW;
+				}
+				iScale--;
+				OverflowUnscale(rgulQuo, (rgulRem[0] != 0));
+				break;
+			}
+		} // for (;;)
+	}
+	else {
+		// Divisor has bits set in the upper 64 bits.
+		//
+		// Divisor must be fully normalized (shifted so bit 31 of the most 
+		// significant UInt32 is 1).  Locate the MSB so we know how much to 
+		// normalize by.  The dividend will be shifted by the same amount so 
+		// the quotient is not changed.
+		//
+		if (rgulDivisor[2] == 0)
+			ulTmp = rgulDivisor[1];
+		else
+			ulTmp = rgulDivisor[2];
+
+		iCurScale = 0;
+		if (!(ulTmp & 0xFFFF0000)) {
+			iCurScale += 16;
+			ulTmp <<= 16;
+		}
+		if (!(ulTmp & 0xFF000000)) {
+			iCurScale += 8;
+			ulTmp <<= 8;
+		}
+		if (!(ulTmp & 0xF0000000)) {
+			iCurScale += 4;
+			ulTmp <<= 4;
+		}
+		if (!(ulTmp & 0xC0000000)) {
+			iCurScale += 2;
+			ulTmp <<= 2;
+		}
+		if (!(ulTmp & 0x80000000)) {
+			iCurScale++;
+			ulTmp <<= 1;
+		}
+
+		// Shift both dividend and divisor left by iCurScale.
+		// 
+		sdlTmp.int64 = DECIMAL_LO64_GET(*pdecL) << iCurScale;
+		rgulRem[0] = sdlTmp.u.Lo;
+		rgulRem[1] = sdlTmp.u.Hi;
+		sdlTmp.u.Lo = DECIMAL_MID32(*pdecL);
+		sdlTmp.u.Hi = DECIMAL_HI32(*pdecL);
+		sdlTmp.int64 <<= iCurScale;
+		rgulRem[2] = sdlTmp.u.Hi;
+		rgulRem[3] = (DECIMAL_HI32(*pdecL) >> (31 - iCurScale)) >> 1;
+
+		sdlDivisor.u.Lo = rgulDivisor[0];
+		sdlDivisor.u.Hi = rgulDivisor[1];
+		sdlDivisor.int64 <<= iCurScale;
+
+		if (rgulDivisor[2] == 0) {
+			// Have a 64-bit divisor in sdlDivisor.  The remainder 
+			// (currently 96 bits spread over 4 UInt32s) will be < divisor.
+			// 
+			sdlTmp.u.Lo = rgulRem[2];
+			sdlTmp.u.Hi = rgulRem[3];
+
+			rgulQuo[2] = 0;
+			rgulQuo[1] = Div96By64(&rgulRem[1], sdlDivisor);
+			rgulQuo[0] = Div96By64(rgulRem, sdlDivisor);
+
+			for (;;) {
+				if ((rgulRem[0] | rgulRem[1]) == 0) {
+					if (iScale < 0) {
+						iCurScale = min(9, -iScale);
+						goto HaveScale64;
+					}
+					break;
+				}
+
+				// We need to unscale if and only if we have a non-zero remainder
+				fUnscale = 1;
+
+				// Remainder is non-zero.  Scale up quotient and remainder by 
+				// powers of 10 so we can compute more significant bits.
+				// 
+				iCurScale = SearchScale(rgulQuo[2], rgulQuo[1], rgulQuo[0], iScale);
+				if (iCurScale == 0) {
+					// No more scaling to be done, but remainder is non-zero.
+					// Round quotient.
+					//
+					sdlTmp.u.Lo = rgulRem[0];
+					sdlTmp.u.Hi = rgulRem[1];
+					if (sdlTmp.u.Hi >= 0x80000000 || (sdlTmp.int64 <<= 1) > sdlDivisor.int64 ||
+						(sdlTmp.int64 == sdlDivisor.int64 && (rgulQuo[0] & 1)))
+						goto RoundUp;
+					break;
+				}
+
+				if (iCurScale < 0)
+					return DISP_E_OVERFLOW;
+
+			HaveScale64:
+				ulPwr = ulPower10[iCurScale];
+				iScale += iCurScale;
+
+				if (IncreaseScale(rgulQuo, ulPwr) != 0)
+					return DISP_E_OVERFLOW;
+
+				rgulRem[2] = 0;  // rem is 64 bits, IncreaseScale uses 96
+				IncreaseScale(rgulRem, ulPwr);
+				ulTmp = Div96By64(rgulRem, sdlDivisor);
+				if (!Add32To96(rgulQuo, ulTmp)) {
+					if (iScale == 0) {
+						return DISP_E_OVERFLOW;
+					}
+					iScale--;
+					OverflowUnscale(rgulQuo, (rgulRem[0] != 0 || rgulRem[1] != 0));
+					break;
+				}
+
+			} // for (;;)
+		}
+		else {
+			// Have a 96-bit divisor in rgulDivisor[].
+			//
+			// Start by finishing the shift left by iCurScale.
+			//
+			sdlTmp.u.Lo = rgulDivisor[1];
+			sdlTmp.u.Hi = rgulDivisor[2];
+			sdlTmp.int64 <<= iCurScale;
+			rgulDivisor[0] = sdlDivisor.u.Lo;
+			rgulDivisor[1] = sdlDivisor.u.Hi;
+			rgulDivisor[2] = sdlTmp.u.Hi;
+
+			// The remainder (currently 96 bits spread over 4 UInt32s) 
+			// will be < divisor.
+			// 
+			rgulQuo[2] = 0;
+			rgulQuo[1] = 0;
+			rgulQuo[0] = Div128By96(rgulRem, rgulDivisor);
+
+			for (;;) {
+				if ((rgulRem[0] | rgulRem[1] | rgulRem[2]) == 0) {
+					if (iScale < 0) {
+						iCurScale = min(9, -iScale);
+						goto HaveScale96;
+					}
+					break;
+				}
+
+				// We need to unscale if and only if we have a non-zero remainder
+				fUnscale = 1;
+
+				// Remainder is non-zero.  Scale up quotient and remainder by 
+				// powers of 10 so we can compute more significant bits.
+				// 
+				iCurScale = SearchScale(rgulQuo[2], rgulQuo[1], rgulQuo[0], iScale);
+				if (iCurScale == 0) {
+					// No more scaling to be done, but remainder is non-zero.
+					// Round quotient.
+					//
+					if (rgulRem[2] >= 0x80000000)
+						goto RoundUp;
+
+					ulTmp = rgulRem[0] > 0x80000000;
+					ulTmp1 = rgulRem[1] > 0x80000000;
+					rgulRem[0] <<= 1;
+					rgulRem[1] = (rgulRem[1] << 1) + ulTmp;
+					rgulRem[2] = (rgulRem[2] << 1) + ulTmp1;
+
+					if (rgulRem[2] > rgulDivisor[2] || rgulRem[2] == rgulDivisor[2] &&
+						(rgulRem[1] > rgulDivisor[1] || rgulRem[1] == rgulDivisor[1] &&
+						(rgulRem[0] > rgulDivisor[0] || rgulRem[0] == rgulDivisor[0] &&
+						(rgulQuo[0] & 1))))
+						goto RoundUp;
+					break;
+				}
+
+				if (iCurScale < 0)
+					return DISP_E_OVERFLOW;
+
+			HaveScale96:
+				ulPwr = ulPower10[iCurScale];
+				iScale += iCurScale;
+
+				if (IncreaseScale(rgulQuo, ulPwr) != 0)
+					return DISP_E_OVERFLOW;
+
+				rgulRem[3] = IncreaseScale(rgulRem, ulPwr);
+				ulTmp = Div128By96(rgulRem, rgulDivisor);
+				if (!Add32To96(rgulQuo, ulTmp)) {
+					if (iScale == 0) {
+						return DISP_E_OVERFLOW;
+					}
+					iScale--;
+					OverflowUnscale(rgulQuo, (rgulRem[0] != 0 || rgulRem[1] != 0 || rgulRem[2] != 0 || rgulRem[3] != 0));
+					break;
+				}
+
+			} // for (;;)
+		}
+	}
+
+	// We need to unscale if and only if we have a non-zero remainder
+	if (fUnscale) {
+		// Try extracting any extra powers of 10 we may have 
+		// added.  We do this by trying to divide out 10^8, 10^4, 10^2, and 10^1.
+		// If a division by one of these powers returns a zero remainder, then
+		// we keep the quotient.  If the remainder is not zero, then we restore
+		// the previous value.
+		// 
+		// Since 10 = 2 * 5, there must be a factor of 2 for every power of 10
+		// we can extract.  We use this as a quick test on whether to try a
+		// given power.
+		// 
+		while ((rgulQuo[0] & 0xFF) == 0 && iScale >= 8) {
+			rgulQuoSave[0] = rgulQuo[0];
+			rgulQuoSave[1] = rgulQuo[1];
+			rgulQuoSave[2] = rgulQuo[2];
+
+			if (Div96By32(rgulQuoSave, 100000000) == 0) {
+				rgulQuo[0] = rgulQuoSave[0];
+				rgulQuo[1] = rgulQuoSave[1];
+				rgulQuo[2] = rgulQuoSave[2];
+				iScale -= 8;
+			}
+			else
+				break;
+		}
+
+		if ((rgulQuo[0] & 0xF) == 0 && iScale >= 4) {
+			rgulQuoSave[0] = rgulQuo[0];
+			rgulQuoSave[1] = rgulQuo[1];
+			rgulQuoSave[2] = rgulQuo[2];
+
+			if (Div96By32(rgulQuoSave, 10000) == 0) {
+				rgulQuo[0] = rgulQuoSave[0];
+				rgulQuo[1] = rgulQuoSave[1];
+				rgulQuo[2] = rgulQuoSave[2];
+				iScale -= 4;
+			}
+		}
+
+		if ((rgulQuo[0] & 3) == 0 && iScale >= 2) {
+			rgulQuoSave[0] = rgulQuo[0];
+			rgulQuoSave[1] = rgulQuo[1];
+			rgulQuoSave[2] = rgulQuo[2];
+
+			if (Div96By32(rgulQuoSave, 100) == 0) {
+				rgulQuo[0] = rgulQuoSave[0];
+				rgulQuo[1] = rgulQuoSave[1];
+				rgulQuo[2] = rgulQuoSave[2];
+				iScale -= 2;
+			}
+		}
+
+		if ((rgulQuo[0] & 1) == 0 && iScale >= 1) {
+			rgulQuoSave[0] = rgulQuo[0];
+			rgulQuoSave[1] = rgulQuo[1];
+			rgulQuoSave[2] = rgulQuo[2];
+
+			if (Div96By32(rgulQuoSave, 10) == 0) {
+				rgulQuo[0] = rgulQuoSave[0];
+				rgulQuo[1] = rgulQuoSave[1];
+				rgulQuo[2] = rgulQuoSave[2];
+				iScale -= 1;
+			}
+		}
+	}
+
+	DECIMAL_HI32(*pdecRes) = rgulQuo[2];
+	DECIMAL_MID32(*pdecRes) = rgulQuo[1];
+	DECIMAL_LO32(*pdecRes) = rgulQuo[0];
+	DECIMAL_SCALE(*pdecRes) = (Byte)iScale;
+	DECIMAL_SIGN(*pdecRes) = DECIMAL_SIGN(*pdecL) ^ DECIMAL_SIGN(*pdecR);
 	return NOERROR;
 }

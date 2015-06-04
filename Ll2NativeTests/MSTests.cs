@@ -464,19 +464,15 @@ namespace Ll2NativeTests
             // 851 - lib with IL
             // 858 - lib with IL
             // 860 - error CS0117: 'System.Attribute' does not contain a definition for 'GetCustomAttribute'
-            // 863 - NotImplemented __refanytipe. TODO: Can be implemeneted
+            // 863 - NotImplemented __refanytype. TODO: Can be implemeneted
             // 868 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'Location'
             // -----------
             // 32, 55, 74 - missing class
 
-            // -----------------
-            // 9 - decimal
-            // 201 - but with names to fix
             var skip =
                 new List<int>(
                     new[]
                     {
-                        9,
                         10,
                         19,
                         32,
@@ -513,7 +509,6 @@ namespace Ll2NativeTests
                         181,
                         183,
                         187,
-                        201,
                         219,
                         220,
                         229,

@@ -474,10 +474,34 @@ namespace System
         // FCallDivide divides two decimal values.  On return, d1 contains the result
         // of the operation.
         //
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern unsafe int DecDiv(int* d1, int* d2, int* res);
+
         private static void FCallDivide(ref Decimal d1, ref Decimal d2)
         {
-            throw new NotImplementedException();
-        }
+            decimal res = 0m;
+
+            unsafe
+            {
+                int* pdecRes = &res.flags;
+                fixed (int* pdecL = &d1.flags) 
+                fixed (int* pdecR = &d2.flags)
+                {
+                    int code;
+                    if ((code = DecDiv(pdecL, pdecR, pdecRes)) != 0)
+                    {
+                        if (code == 2)
+                        {
+                            throw new DivideByZeroException();
+                        }
+
+                        throw new OverflowException();
+                    }
+                }
+            }
+
+            d1 = res;
+        } 
 
         private static void FCallDivideOverflowed(ref Decimal d1, ref Decimal d2, ref bool overflowed)
         {
