@@ -122,7 +122,7 @@ typedef struct tagDEC {
 
 
 UInt32 ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
-10000000, 100000000, 1000000000 };
+	10000000, 100000000, 1000000000 };
 
 const SPLIT64 sdlPower10[] = { { UInt64(10000000000) },          // 1E10
 { UInt64(100000000000) },     // 1E11
@@ -282,10 +282,10 @@ Int32 SearchScale(UInt32 ulResHi, UInt32 ulResMid, UInt32 ulResLo, Int32 iScale)
 			goto HaveScale;
 
 		if (ulResHi == PowerOvfl[iCurScale - 1].Hi) {
-		UpperEq:
+UpperEq:
 			if (ulResMid > PowerOvfl[iCurScale - 1].Mid ||
 				(ulResMid == PowerOvfl[iCurScale - 1].Mid && ulResLo > PowerOvfl[iCurScale - 1].Lo)) {
-				iCurScale--;
+					iCurScale--;
 			}
 			goto HaveScale;
 		}
@@ -470,20 +470,20 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 			ulPwr >>= 1;  // power of 10 always even
 			if (ulPwr <= sdlTmp.u.Hi && (ulPwr < sdlTmp.u.Hi ||
 				((rgulRes[0] & 1) | ulSticky))) {
-				iCur = -1;
-				while (++rgulRes[++iCur] == 0);
+					iCur = -1;
+					while (++rgulRes[++iCur] == 0);
 
-				if (iCur > 2) {
-					// The rounding caused us to carry beyond 96 bits. 
-					// Scale by 10 more.
-					//
-					iHiRes = iCur;
-					ulSticky = 0;  // no sticky bit
-					sdlTmp.u.Hi = 0; // or remainder
-					iNewScale = 1;
-					iScale--;
-					continue; // scale by 10
-				}
+					if (iCur > 2) {
+						// The rounding caused us to carry beyond 96 bits. 
+						// Scale by 10 more.
+						//
+						iHiRes = iCur;
+						ulSticky = 0;  // no sticky bit
+						sdlTmp.u.Hi = 0; // or remainder
+						iNewScale = 1;
+						iScale--;
+						continue; // scale by 10
+					}
 			}
 
 			// We may have scaled it more than we planned.  Make sure the scale 
@@ -521,7 +521,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 		//
 		DECIMAL_SIGNSCALE(decRes) = DECIMAL_SIGNSCALE(*pdecL);
 
-	AlignedAdd:
+AlignedAdd:
 		if (bSign) {
 			// Signs differ - subtract
 			//
@@ -538,7 +538,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 			else if (DECIMAL_HI32(decRes) > DECIMAL_HI32(*pdecL)) {
 				// Got negative result.  Flip its sign.
 				// 
-			SignFlip:
+SignFlip:
 				DECIMAL_LO64_SET(decRes, -(Int64)DECIMAL_LO64_GET(decRes));
 				DECIMAL_HI32(decRes) = ~DECIMAL_HI32(decRes);
 				if (DECIMAL_LO64_GET(decRes) == 0)
@@ -561,7 +561,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 					goto AlignedScale;
 			}
 			else if (DECIMAL_HI32(decRes) < DECIMAL_HI32(*pdecL)) {
-			AlignedScale:
+AlignedScale:
 				// The addition carried above 96 bits.  Divide the result by 10,
 				// dropping the scale factor.
 				// 
@@ -683,7 +683,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 
 				if (sdlTmp.u.Hi != 0)
 					// We're extending the result by another UInt32.
-					rgulNum[++iHiProd] = sdlTmp.u.Hi;
+						rgulNum[++iHiProd] = sdlTmp.u.Hi;
 			}
 		}
 
@@ -706,7 +706,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 					goto LongSub;
 			}
 			else if (DECIMAL_HI32(decRes) > rgulNum[2]) {
-			LongSub:
+LongSub:
 				if (iHiProd <= 2)
 					goto SignFlip;
 
@@ -730,7 +730,7 @@ Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 					goto LongAdd;
 			}
 			else if (DECIMAL_HI32(decRes) < rgulNum[2]) {
-			LongAdd:
+LongAdd:
 				// Had a carry above 96 bits.
 				//
 				iCur = 3;
@@ -778,13 +778,13 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 	// First check signs and whether either are zero.  If both are
 	// non-zero and of the same sign, just use subtraction to compare.
 	//
-	ulSgnL = DECIMAL_LO32(*pdecL) | DECIMAL_MID32(*pdecL) | DECIMAL_HI32(*pdecL);
-	ulSgnR = DECIMAL_LO32(*pdecR) | DECIMAL_MID32(*pdecR) | DECIMAL_HI32(*pdecR);
+	ulSgnL = pdecL->v.v.Lo32 | pdecL->v.v.Mid32 | pdecL->Hi32;
+	ulSgnR = pdecR->v.v.Lo32 | pdecR->v.v.Mid32 | pdecR->Hi32;
 	if (ulSgnL != 0)
-		ulSgnL = (DECIMAL_SIGN(*pdecL) & DECIMAL_NEG) | 1;
+		ulSgnL = (pdecL->u.u.sign & DECIMAL_NEG) | 1;
 
 	if (ulSgnR != 0)
-		ulSgnR = (DECIMAL_SIGN(*pdecR) & DECIMAL_NEG) | 1;
+		ulSgnR = (pdecR->u.u.sign & DECIMAL_NEG) | 1;
 
 	// ulSgnL & ulSgnR have values 1, 0, or 0x81 depending on if the left/right
 	// operand is +, 0, or -.
@@ -796,16 +796,16 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 		DECIMAL decRes;
 
 		DecAddSub((Int32*)pdecL, (Int32*)pdecR, (Int32*)&decRes, DECIMAL_NEG);
-		if (DECIMAL_LO64_GET(decRes) == 0 && DECIMAL_HI32(decRes) == 0)
+		if (DECIMAL_LO64_GET(decRes) == 0 && decRes.Hi32 == 0)
 			return VARCMP_EQ;
-		if (DECIMAL_SIGN(decRes) & DECIMAL_NEG)
+		if (decRes.u.u.sign & DECIMAL_NEG)
 			return VARCMP_LT;
 		return VARCMP_GT;
 	}
 
 	// Signs are different.  Used signed byte compares
 	//
-	if ((Byte)ulSgnL > (Byte)ulSgnR)
+	if ((SByte)ulSgnL > (SByte)ulSgnR)
 		return VARCMP_GT;
 	return VARCMP_LT;
 }
@@ -1136,7 +1136,7 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 			iScale -= DEC_SCALE_MAX;
 			if (iScale > 19)
 			{
-			ReturnZero:
+ReturnZero:
 				DECIMAL_SETZERO(*pdecRes);
 				return NOERROR;
 			}
@@ -1379,8 +1379,8 @@ UInt32 Div96By64(UInt32* rgulNum, SPLIT64 sdlDen)
 	//
 	if (rgulNum[2] == 0 && rgulNum[1] < sdlDen.u.Hi)
 		// Result is zero.  Entire dividend is remainder.
-		//
-		return 0;
+			//
+				return 0;
 
 	// DivMod64by32 returns quotient in Lo, remainder in Hi.
 	//
@@ -1395,7 +1395,7 @@ UInt32 Div96By64(UInt32* rgulNum, SPLIT64 sdlDen)
 	sdlNum.int64 -= sdlProd.int64;
 
 	if (sdlNum.int64 > ~sdlProd.int64) {
-	NegRem:
+NegRem:
 		// Remainder went negative.  Add divisor back in until it's positive,
 		// a max of 2 times.
 		//
@@ -1422,8 +1422,8 @@ UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
 
 	if (rgulNum[3] == 0 && rgulNum[2] < rgulDen[2])
 		// Result is zero.  Entire dividend is remainder.
-		//
-		return 0;
+			//
+				return 0;
 
 	// DivMod64by32 returns quotient in Lo, remainder in Hi.
 	//
@@ -1449,7 +1449,7 @@ UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
 			goto NegRem;
 	}
 	else if (rgulNum[2] > ~sdlProd2.u.Hi) {
-	NegRem:
+NegRem:
 		// Remainder went negative.  Add divisor back in until it's positive,
 		// a max of 2 times.
 		//
@@ -1550,15 +1550,15 @@ Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 				ulTmp = rgulRem[0] << 1;
 				if (ulTmp < rgulRem[0] || (ulTmp >= rgulDivisor[0] &&
 					(ulTmp > rgulDivisor[0] || (rgulQuo[0] & 1)))) {
-				RoundUp:
-					if (!Add32To96(rgulQuo, 1)) {
-						if (iScale == 0) {
-							return DISP_E_OVERFLOW;
+RoundUp:
+						if (!Add32To96(rgulQuo, 1)) {
+							if (iScale == 0) {
+								return DISP_E_OVERFLOW;
+							}
+							iScale--;
+							OverflowUnscale(rgulQuo, 1);
+							break;
 						}
-						iScale--;
-						OverflowUnscale(rgulQuo, 1);
-						break;
-					}
 				}
 				break;
 			}
@@ -1566,7 +1566,7 @@ Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 			if (iCurScale < 0)
 				return DISP_E_OVERFLOW;
 
-		HaveScale:
+HaveScale:
 			ulPwr = ulPower10[iCurScale];
 			iScale += iCurScale;
 
@@ -1678,7 +1678,7 @@ Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 				if (iCurScale < 0)
 					return DISP_E_OVERFLOW;
 
-			HaveScale64:
+HaveScale64:
 				ulPwr = ulPower10[iCurScale];
 				iScale += iCurScale;
 
@@ -1758,7 +1758,7 @@ Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 				if (iCurScale < 0)
 					return DISP_E_OVERFLOW;
 
-			HaveScale96:
+HaveScale96:
 				ulPwr = ulPower10[iCurScale];
 				iScale += iCurScale;
 
