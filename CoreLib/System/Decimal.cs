@@ -207,18 +207,42 @@ namespace System
 
         // Constructs a Decimal from a float value.
         //
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern unsafe int DecFromR4(float flt, int* res);
 
         public Decimal(float value)
         {
-            throw new NotImplementedException();
+            lo = 0;
+            mid = 0;
+            hi = 0;
+
+            unsafe
+            {
+                fixed (int* pdecRes = &this.flags)
+                {
+                    DecFromR4(value, pdecRes);
+                }
+            }
         }
 
         // Constructs a Decimal from a double value.
         //
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern unsafe int DecFromR8(double dbl, int* res);
 
         public Decimal(double value)
         {
-            throw new NotImplementedException();
+            lo = 0;
+            mid = 0;
+            hi = 0;
+
+            unsafe
+            {
+                fixed (int* pdecRes = &this.flags)
+                {
+                    DecFromR8(value, pdecRes);
+                }
+            }
         }
 
         // Constructs a Decimal from a Currency value.
@@ -775,10 +799,27 @@ namespace System
         // FCallMultiply multiples two decimal values.  On return, d1 contains the result
         // of the operation.
         //
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern unsafe int DecMul(int* d1, int* d2, int* res);
 
         private static void FCallMultiply(ref Decimal d1, ref Decimal d2)
         {
-            throw new NotImplementedException();
+            decimal res = 0m;
+
+            unsafe
+            {
+                int* pdecRes = &res.flags;
+                fixed (int* pdecL = &d1.flags) 
+                fixed (int* pdecR = &d2.flags)
+                {
+                    if (DecMul(pdecL, pdecR, pdecRes) != 0)
+                    {
+                        throw new OverflowException();
+                    }
+                }
+            }
+
+            d1 = res;
         }
 
         private static void FCallMultiplyOverflowed(ref Decimal d1, ref Decimal d2, ref bool overflowed)

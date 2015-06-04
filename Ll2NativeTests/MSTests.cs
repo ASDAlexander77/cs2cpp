@@ -347,7 +347,7 @@ namespace Ll2NativeTests
             // 311 - SecurityPermission
             // 313 - typeof(D).GetMethods - NotImplemented
             // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
-            // 319 - missing DecimalConstantAttribute
+            // 319 - missing DecimalConstantAttribute, error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 329 - GetCustromAttributes
             // 349 - TypeAttributes
             // 352 - MarshalAs
@@ -402,7 +402,6 @@ namespace Ll2NativeTests
             // 562 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'CallingConvention'
             // 564 - can't be compiled
             // 567 - error CS0246: The type or namespace name 'PreserveSig' could not be found
-            // 580 - Decimal not implemented
             // 594 - Type.Assembly NotImplemented
             // 604 - Type.GetMethods NotImplemented
             // 605 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
@@ -412,14 +411,10 @@ namespace Ll2NativeTests
             // 616 - test system classes without fields. TODO: Can be fixed later
             // 617 - GetMethod for Type class NotImplemented
             // 621 - error CS0246: The type or namespace name 'FieldOffset'. TODO: have a look, we need to implement FieldOffset
-            // 631 - Decimal not implemented
             // 636 - (6,14): error CS0161: 'Foo.test_while(int)': not all code paths return a value
             // 637 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
-            // 641 - Decimal not implemented
             // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
             // 647 - Enum.Parse NotImplemented
-            // 649 - Decimal not implemented
-            // 653 - stackalloc overflow. TODO: Need to be fixed.
             // 654 - ??? 
             // 657 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 660 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
@@ -610,7 +605,6 @@ namespace Ll2NativeTests
                         562,
                         564,
                         567,
-                        580,
                         594,
                         604,
                         605,
@@ -621,14 +615,10 @@ namespace Ll2NativeTests
                         617,
                         621,
                         625,
-                        631,
                         636,
                         637,
-                        641,
                         645,
                         647,
-                        649,
-                        653,
                         654,
                         657,
                         660,
