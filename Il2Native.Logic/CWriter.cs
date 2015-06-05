@@ -821,6 +821,8 @@ namespace Il2Native.Logic
 
                     if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
                     {
+                        Debug.Assert(false, "review");
+
                         // convert value to object
                         // TODO: Review next line, it seems not needed anymore
                         methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
