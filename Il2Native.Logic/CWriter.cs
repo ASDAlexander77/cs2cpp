@@ -819,15 +819,15 @@ namespace Il2Native.Logic
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
 
-                    if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
-                    {
-                        Debug.Assert(false, "review");
+                    ////if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
+                    ////{
+                    ////    Debug.Assert(false, "review");
 
-                        // convert value to object
-                        // TODO: Review next line, it seems not needed anymore
-                        methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
-                        this.Output.WriteLine(";");
-                    }
+                    ////    // convert value to object
+                    ////    // TODO: Review next line, it seems not needed anymore
+                    ////    methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
+                    ////    this.Output.WriteLine(";");
+                    ////}
 
                     this.WriteCall(
                         opCodeMethodInfoPart,

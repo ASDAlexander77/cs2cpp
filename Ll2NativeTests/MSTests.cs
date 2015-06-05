@@ -281,9 +281,7 @@ namespace Ll2NativeTests
                   fc = stack[sp++] = cc;
              */
 
-            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
-            // 36 - bug in execution (NotImplemented)
             // 39 - using Attributes
             // 74 - using StreamReader
             // 85 - using UnmanagedType
@@ -298,7 +296,6 @@ namespace Ll2NativeTests
             // 109 - DateTime.Now.ToString (NotImplemented)
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            // 126 - calling ToString on Interface, (CONSIDER FIXING IT)
             // 127 - IsDerived not implemented
             // 128 - using Attributes
             // 132 - Reflection
@@ -473,10 +470,8 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                     {
-                        10,
                         19,
                         32,
-                        36,
                         39,
                         53,
                         55,
@@ -494,7 +489,6 @@ namespace Ll2NativeTests
                         115,
                         118,
                         120,
-                        126,
                         127,
                         128,
                         132,
