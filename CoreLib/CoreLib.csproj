@@ -169,6 +169,7 @@
     <Compile Include="System\ParamArrayAttribute.cs" />
     <Compile Include="System\ParseNumbers.cs" />
     <Compile Include="System\Random.cs" />
+    <Compile Include="System\Reflection\MdImport.cs" />
     <Compile Include="System\RuntimeArgumentHandle.cs" />
     <Compile Include="System\RuntimeFieldHandle.cs" />
     <Compile Include="System\RuntimeMethodHandle.cs" />
@@ -177,6 +178,7 @@
     <Compile Include="System\Runtime\CompilerServices\DecimalConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\FixedBufferAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\IsVolatile.cs" />
+    <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />
     <Compile Include="System\Runtime\InteropServices\CallingConvention.cs" />
     <Compile Include="System\StringComparer.cs" />
     <Compile Include="System\StringComparison.cs" />

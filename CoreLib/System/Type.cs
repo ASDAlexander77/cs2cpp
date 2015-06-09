@@ -44,6 +44,15 @@ namespace System
             throw new NotImplementedException();
         }
 
+        internal Type GetRootElementType()
+        {
+            Type rootElementType = this;
+
+            while (rootElementType.HasElementType)
+                rootElementType = rootElementType.GetElementType();
+
+            return rootElementType;
+        }
         
         public Object InvokeMember(String name, BindingFlags invokeAttr, Binder binder, Object target, Object[] args)
         {
@@ -227,7 +236,58 @@ namespace System
 
         }
 
+        public virtual bool IsGenericTypeDefinition
+        {
+            get { return false; }
+        }
+
+        public virtual bool IsGenericType
+        {
+            get { return false; }
+        }
+
+        public virtual bool IsGenericParameter
+        {
+            get { return false; }
+        }
+
+        public bool HasElementType
+        {
+            get { return HasElementTypeImpl(); }
+        }
+
+        public virtual bool ContainsGenericParameters
+        {
+            get
+            {
+                if (HasElementType)
+                    return GetRootElementType().ContainsGenericParameters;
+
+                if (IsGenericParameter)
+                    return true;
+
+                if (!IsGenericType)
+                    return false;
+
+                Type[] genericArguments = GetGenericArguments();
+                for (int i = 0; i < genericArguments.Length; i++)
+                {
+                    if (genericArguments[i].ContainsGenericParameters)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
         abstract public Type GetElementType();
+
+        public virtual Type[] GetGenericArguments()
+        {
+            throw new NotSupportedException(Environment.GetResourceString("NotSupported_SubclassOverride"));
+        }
+
+        abstract protected bool HasElementTypeImpl();
 
         public virtual bool IsSubclassOf(Type c)
         {
