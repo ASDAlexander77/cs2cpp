@@ -16,6 +16,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedNewMethod : SynthesizedIlCodeBuilderStaticMethod
     {
+        public const string Name = ".new";
+
         private readonly ITypeResolver typeResolver;
 
         /// <summary>
@@ -25,7 +27,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedNewMethod(IType type, ITypeResolver typeResolver)
-            : base(null, ".new", type, type.ToClass())
+            : base(null, Name, type, type.ToClass())
         {
             Type = type.ToClass();
             this.typeResolver = typeResolver;

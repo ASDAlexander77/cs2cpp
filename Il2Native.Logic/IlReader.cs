@@ -1054,15 +1054,21 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var constructor = module.ResolveMember(token, genericContext) as IConstructor;
-                        this.AddGenericSpecializedType(constructor.DeclaringType);
-                        this.AddGenericSpecializedMethod(constructor, stackCall);
+                        var resolveMember = module.ResolveMember(token, genericContext);
+                        var constructor = resolveMember as IConstructor;
+                        Debug.Assert(constructor != null, "Not Supported Newobj");
+                        if (constructor != null)
+                        {
+                            this.AddGenericSpecializedType(constructor.DeclaringType);
+                            this.AddGenericSpecializedMethod(constructor, stackCall);
 
-                        this.AddArrayType(constructor.DeclaringType);
-                        this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
-                        this.AddCalledMethod(constructor);
+                            this.AddArrayType(constructor.DeclaringType);
+                            this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
+                            this.AddCalledMethod(constructor);
 
-                        yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
+                            yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
+                        }
+
                         continue;
                     case Code.Call:
                     case Code.Callvirt:

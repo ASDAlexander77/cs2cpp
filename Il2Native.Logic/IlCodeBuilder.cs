@@ -265,6 +265,13 @@
             this.Add(Code.Castclass, (int)TokenResolutions.Count);
         }
 
+        public void LoadString(string value)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(value), "@string is empty");
+            TokenResolutions.Add(value);
+            this.Add(Code.Ldstr, (int)TokenResolutions.Count);
+        }
+
         public void LoadField(IField field)
         {
             Debug.Assert(field != null, "@field is null");

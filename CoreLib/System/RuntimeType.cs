@@ -45,6 +45,7 @@ namespace System
 
         internal RuntimeType()
         {
+            throw new NotSupportedException();
         }
 
         public override MemberTypes MemberType

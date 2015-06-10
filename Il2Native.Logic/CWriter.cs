@@ -1437,6 +1437,7 @@ namespace Il2Native.Logic
                     }
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
+                    Debug.Assert(opCodeConstructorInfoPart != null, "Not supported");
                     if (opCodeConstructorInfoPart != null)
                     {
                         this.WriteNewObject(opCodeConstructorInfoPart);

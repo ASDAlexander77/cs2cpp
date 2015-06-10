@@ -557,7 +557,8 @@ namespace Il2Native.Logic.Gencode
             var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
             codeBuilder.LoadFieldAddress(typeStorageType);
-            codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver));
+            ////codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver));
+            codeBuilder.Call(typeResolver.System.System_RuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
             codeBuilder.LoadNull();
 
             codeBuilder.Call(
@@ -566,6 +567,23 @@ namespace Il2Native.Logic.Gencode
                             .First(m => m.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_Object.ToByRefType())));
 
             codeBuilder.Add(Code.Pop);
+
+            // start initializing RuntimeCache
+            var runtimeTypeCacheType = typeResolver.ResolveType("System.RuntimeType+RuntimeTypeCache");
+            codeBuilder.Locals.Add(runtimeTypeCacheType);
+
+            codeBuilder.LoadField(typeStorageType);
+            codeBuilder.Call(typeResolver.System.System_RuntimeType.GetFirstMethodByName("get_Cache", typeResolver));
+            codeBuilder.SaveLocal(0);
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadString(declaringType.Name);
+            codeBuilder.SaveField(runtimeTypeCacheType.GetFieldByName("m_name", typeResolver));
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadString(declaringType.FullName);
+            codeBuilder.SaveField(runtimeTypeCacheType.GetFieldByName("m_fullname", typeResolver));
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadString(declaringType.ToString());
+            codeBuilder.SaveField(runtimeTypeCacheType.GetFieldByName("m_toString", typeResolver));
 
             codeBuilder.Add(jumpIfNotNull);
 
