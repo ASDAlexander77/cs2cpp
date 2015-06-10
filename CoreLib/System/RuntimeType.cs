@@ -91,7 +91,7 @@ namespace System
             
             get
             {
-                throw new NotImplementedException();
+                return GetCachedName(TypeNameKind.FullName);
             }
         }
 
@@ -155,6 +155,11 @@ namespace System
             throw new NotImplementedException();
         }
 
+        public override String ToString()
+        {
+            return GetCachedName(TypeNameKind.ToString);
+        }
+
         protected override bool HasElementTypeImpl()
         {
             return RuntimeTypeHandle.HasElementType(this);
@@ -196,8 +201,8 @@ namespace System
                         // Theoretically generic types instantiated with generic type definitions can be roundtripped, e.g. List`1<Dictionary`2>.
                         // But these kind of types are useless, rare, and hard to identity. We would need to recursively examine all the 
                         // generic arguments with the same criteria. We will exclude them unless we see a real user scenario.
-                        if (!m_runtimeType.GetRootElementType().IsGenericTypeDefinition && m_runtimeType.ContainsGenericParameters)
-                            return null;
+                        ////if (!m_runtimeType.GetRootElementType().IsGenericTypeDefinition && m_runtimeType.ContainsGenericParameters)
+                        ////    return null;
 
                         // No assembly.
                         return ConstructName(ref m_fullname, TypeNameFormatFlags.FormatNamespace | TypeNameFormatFlags.FormatFullInst);

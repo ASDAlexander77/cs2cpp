@@ -72,7 +72,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly ISet<int> stringTokenDefinitionWritten = new HashSet<int>();
+        public readonly ISet<long> stringTokenDefinitionWritten = new HashSet<long>();
 
         /// <summary>
         /// </summary>
@@ -549,7 +549,7 @@ namespace Il2Native.Logic
                     var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
                     var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
-                    this.Output.Write("({1}) &_s{0}_", stringToken, strType);
+                    this.Output.Write("({1}) &_s{0}{2}_", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
                     break;
                 case Code.Ldnull:
                     this.Output.Write("0/*null*/");
@@ -4573,7 +4573,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
-            if (!this.stringTokenDefinitionWritten.Add(pair.Key))
+            if (!this.stringTokenDefinitionWritten.Add(pair.Key * pair.Value.GetHashCode()))
             {
                 return;
             }
@@ -4582,8 +4582,9 @@ namespace Il2Native.Logic
 
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "const struct {1} _s{0}_ = {3} {2}",
+                "const struct {2} _s{0}{1}_ = {4} {3}",
                 pair.Key,
+                (uint)pair.Value.GetHashCode(),
                 this.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
                 this.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
                 "{");

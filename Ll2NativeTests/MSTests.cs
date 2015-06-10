@@ -847,7 +847,6 @@ namespace Ll2NativeTests
             // 349 - error CS1061: 'System.Delegate' does not contain a definition for 'DynamicInvoke'
             // 350 - error CS0234: The type or namespace name 'IEquatable<T>' TODO: Can be fixed
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
-            // 358 - Decimals are not implemented
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
             // 385 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
             // 386 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
@@ -860,7 +859,6 @@ namespace Ll2NativeTests
             // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib#
             // 434 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
             // 437 - error: GetAttributes
-            // 435 - Decimals are not implemented
             // 444 - error CS1061: 'System.Reflection.AssemblyName' does not contain a definition for 'Flags'
             // 447 - error CS0246: The type or namespace name 'TypeForwardedTo' could not be found
             // 449 - error CS0103: The name 'PortableExecutableKinds' does not exist in the current context
@@ -942,7 +940,6 @@ namespace Ll2NativeTests
                 349,
                 350,
                 352,
-                358,
                 380,
                 385,
                 386,
@@ -954,7 +951,6 @@ namespace Ll2NativeTests
                 421,
                 431,
                 434,
-                435,
                 437,
                 444,
                 447,
