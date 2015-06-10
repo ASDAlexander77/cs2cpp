@@ -1,4 +1,6 @@
 // Decimals
+extern "C" Double pow(Double value, Double power);
+extern "C" Double fabs(Double value);
 
 typedef union {
 	UInt64 int64;
