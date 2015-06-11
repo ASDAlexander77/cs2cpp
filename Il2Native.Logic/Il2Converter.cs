@@ -1002,9 +1002,15 @@ namespace Il2Native.Logic
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
             // append custom NativeType to support reflection
-            if (ilReader.IsCoreLib && usedTypes.All(t => t.FullName != "System.NativeType"))
+            if (ilReader.IsCoreLib)
             {
-                usedTypes.Add(LoadNativeTypeFromSource(ilReader));
+                var nativeType = usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType");
+                if (nativeType == null)
+                {
+                    usedTypes.Add(LoadNativeTypeFromSource(ilReader));
+                }
+
+                // TODO: finish it                
             }
 
             return usedTypes;
