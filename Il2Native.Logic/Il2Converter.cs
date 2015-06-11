@@ -991,6 +991,25 @@ namespace Il2Native.Logic
 
             var allTypes = ilReader.AllTypes().ToList();
 
+            // append custom NativeType to support reflection
+            if (ilReader.IsCoreLib)
+            {
+                var nativeType = types.FirstOrDefault(t => t.FullName == "System.NativeType");
+                if (nativeType == null)
+                {
+                    // load type
+                    nativeType = LoadNativeTypeFromSource(ilReader);
+
+                    // append to list of all times
+                    var typesAsList = types.ToList();
+                    typesAsList.Add(nativeType);
+                    types = typesAsList;
+                    allTypes.Add(nativeType);
+                }
+
+                nativeType.BaseType = types.First(t => t.FullName == "System.RuntimeType");
+            }
+
             var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext, ilReader.TypeResolver);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
@@ -1000,18 +1019,6 @@ namespace Il2Native.Logic
             Debug.Assert(usedTypes.All(t => !t.IsGenericTypeDefinition), "Generic DefinitionType is used");
 
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
-
-            // append custom NativeType to support reflection
-            if (ilReader.IsCoreLib)
-            {
-                var nativeType = usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType");
-                if (nativeType == null)
-                {
-                    usedTypes.Add(LoadNativeTypeFromSource(ilReader));
-                }
-
-                // TODO: finish it                
-            }
 
             return usedTypes;
         }

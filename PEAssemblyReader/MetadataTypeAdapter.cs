@@ -93,6 +93,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private IType customBaseType;
+
+        /// <summary>
+        /// </summary>
         /// <param name="typeDef">
         /// </param>
         /// <param name="isByRef">
@@ -162,14 +166,17 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.lazyBaseType.Value;
+                return this.customBaseType ?? this.lazyBaseType.Value;
+            }
+
+            set
+            {
+                this.customBaseType = value;
             }
         }
 
         /// <summary>
         /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
         public bool ContainsGenericParameters
         {
             get
@@ -180,8 +187,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
         public IType DeclaringType
         {
             get

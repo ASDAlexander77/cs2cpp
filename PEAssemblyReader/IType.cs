@@ -21,7 +21,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        IType BaseType { get; }
+        IType BaseType { get; set; }
 
         /// <summary>
         /// </summary>
