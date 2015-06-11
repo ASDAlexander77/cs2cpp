@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MSCORLIB</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;MSCORLIB_</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -219,6 +219,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\decimals.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\CoreLib\System\NativeType.cs">
+      <Link>Resources\NativeType.cs</Link>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

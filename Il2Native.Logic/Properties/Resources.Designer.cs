@@ -85,34 +85,37 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #include &quot;CoreLib.h&quot;
-        ///
-        ///#ifndef UInt32x32To64
-        ///#define UInt32x32To64(a, b) ((Int64)((Int32)(a)) * (Int64)((Int32)(b)))
-        ///#endif
+        ///   Looks up a localized string similar to // Decimals
+        ///extern &quot;C&quot; Double pow(Double value, Double power);
+        ///extern &quot;C&quot; Double fabs(Double value);
         ///
         ///typedef union {
-        ///	Int64 int64;
+        ///	UInt64 int64;
         ///	struct {
         ///#if BIGENDIAN
-        ///		Int32 Hi;
-        ///		Int32 Lo;
+        ///		UInt32 Hi;
+        ///		UInt32 Lo;
         ///#else            
-        ///		Int32 Lo;
-        ///		Int32 Hi;
+        ///		UInt32 Lo;
+        ///		UInt32 Hi;
         ///#endif           
         ///	} u;
         ///} SPLIT64;
         ///
-        ///#define OVFL_MAX_1_HI   429496729
-        ///#define DEC_SCALE_MAX   28
-        ///#define POWER10_MAX 9
-        ///
-        ///#define OVFL_MAX_9_HI   4u
-        ///#define OVFL_MAX_9_MID  1266874889u
-        ///#define OVFL_MAX_9_LO   3047500985u
-        ///
-        ///#define OVFL_MAX_5_HI [rest of string was truncated]&quot;;.
+        ///typedef union{
+        ///	struct {
+        ///#if BIGENDIAN
+        ///		UInt32 sign : 1;
+        ///		UInt32 exp : 11;
+        ///		UInt32 mantHi : 20;
+        ///		UInt32 mantLo;
+        ///#else // BIGENDIAN
+        ///		UInt32 mantLo;
+        ///		UInt32 mantHi : 20;
+        ///		UInt32 exp : 11;
+        ///		UInt32 sign : 1;
+        ///#endif
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string decimals {
             get {
@@ -153,6 +156,43 @@ namespace Il2Native.Logic.Properties {
         internal static string gc_declarations_debug {
             get {
                 return ResourceManager.GetString("gc_declarations_debug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to namespace System
+        ///{
+        ///    [Serializable]
+        ///    internal class NativeType : RuntimeType
+        ///    {
+        ///        private string name;
+        ///        private string fullname;
+        ///
+        ///        internal NativeType()
+        ///        {
+        ///        }
+        ///
+        ///        public override string Name
+        ///        {
+        ///            get
+        ///            {
+        ///                return this.name;
+        ///            }
+        ///        }
+        ///
+        ///        public override string FullName
+        ///        {
+        ///            get
+        ///            {
+        ///                return this.fullname;
+        ///            }
+        ///        }
+        ///
+        ///     [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NativeType {
+            get {
+                return ResourceManager.GetString("NativeType", resourceCulture);
             }
         }
     }

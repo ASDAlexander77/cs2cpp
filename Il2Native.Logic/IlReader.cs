@@ -746,7 +746,7 @@ namespace Il2Native.Logic
             {
                 yield return new SynthesizedNewMethod(type, typeResolver);
                 yield return new SynthesizedInitMethod(type, typeResolver);
-                
+
                 if (IlReader.FindFinalizer(type, typeResolver) != null)
                 {
                     yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
@@ -855,7 +855,7 @@ namespace Il2Native.Logic
             var nameDll = "__unrestricted__.dll";
 
             var syntaxTrees =
-                source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
+                source.Select(s => CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Experimental)));
 
             var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
                                          ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
@@ -868,22 +868,23 @@ namespace Il2Native.Logic
 
             var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
 
-            using (var dllStream = new MemoryStream())
+            var dllStream = new MemoryStream();
+            var result = compilation.Emit(peStream: dllStream);
+            if (result.Diagnostics.Length > 0)
             {
-                var result = compilation.Emit(peStream: dllStream);
-                if (result.Diagnostics.Length > 0)
+                foreach (var diagnostic in result.Diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
                 {
-                    foreach (var diagnostic in result.Diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
-                    {
-                        throw new InvalidOperationException(diagnostic.GetMessage());
-                    }
+                    throw new InvalidOperationException(diagnostic.GetMessage());
                 }
-
-                // Successful Compile
-                var fromImageStream = AssemblyMetadata.CreateFromImageStream(dllStream);
-                var compileSourceWithRoslyn = this.LoadAssemblySymbol(fromImageStream);
-                return this.ReadTypes(compileSourceWithRoslyn);
             }
+
+            dllStream.Flush();
+            dllStream.Position = 0;
+
+            // Successful Compile
+            var fromImageStream = AssemblyMetadata.CreateFromImageStream(dllStream);
+            var compileSourceWithRoslyn = this.LoadAssemblySymbol(fromImageStream);
+            return this.ReadTypes(compileSourceWithRoslyn);
         }
 
         /// <summary>
@@ -1265,7 +1266,7 @@ namespace Il2Native.Logic
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
                     case Code.Ldlen:
-                        
+
                         this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
 
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
@@ -1332,19 +1333,19 @@ namespace Il2Native.Logic
                         continue;
 
                     case Code.Stelem_I4:
-                    
+
                         this.AddArrayType(this.TypeResolver.System.System_Int32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R4:
-                    
+
                         this.AddArrayType(this.TypeResolver.System.System_Single.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R8:
-                        
+
                         this.AddArrayType(this.TypeResolver.System.System_Double.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;

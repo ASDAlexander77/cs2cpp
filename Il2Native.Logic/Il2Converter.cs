@@ -19,6 +19,7 @@ namespace Il2Native.Logic
     using Gencode;
 
     using Il2Native.Logic.Gencode.SynthesizedMethods;
+    using Il2Native.Logic.Properties;
 
     using PEAssemblyReader;
 
@@ -1000,7 +1001,18 @@ namespace Il2Native.Logic
 
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
+            // append custom NativeType to support reflection
+            if (ilReader.IsCoreLib && usedTypes.All(t => t.FullName != "System.NativeType"))
+            {
+                usedTypes.Add(LoadNativeTypeFromSource(ilReader));
+            }
+
             return usedTypes;
+        }
+
+        private static IType LoadNativeTypeFromSource(IIlReader ilReader)
+        {
+            return ilReader.CompileSourceWithRoslyn(Resources.NativeType).First(t => t.Name != "<Module>");
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
