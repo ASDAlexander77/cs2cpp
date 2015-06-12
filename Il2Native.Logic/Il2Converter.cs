@@ -983,12 +983,13 @@ namespace Il2Native.Logic
 
             // types in current assembly
             var readingTypesContext = ReadingTypesContext.New();
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && t.Name != "<Module>");
+            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && t.Name != "<Module>");
             if (filter != null)
             {
-                types = types.Where(t => CheckFilter(filter, t));
+                typeToGet = typeToGet.Where(t => CheckFilter(filter, t));
             }
 
+            var types = typeToGet.ToList();
             var allTypes = ilReader.AllTypes().ToList();
 
             // append custom NativeType to support reflection
@@ -1001,16 +1002,14 @@ namespace Il2Native.Logic
                     nativeType = LoadNativeTypeFromSource(ilReader);
 
                     // append to list of all times
-                    var typesAsList = types.ToList();
-                    typesAsList.Add(nativeType);
-                    types = typesAsList;
+                    types.Add(nativeType);
                     allTypes.Add(nativeType);
                 }
 
                 nativeType.BaseType = types.First(t => t.FullName == "System.RuntimeType");
             }
 
-            var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext, ilReader.TypeResolver);
+            var usedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
