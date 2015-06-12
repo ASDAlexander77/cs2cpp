@@ -170,6 +170,16 @@
     <Compile Include="System\ParamArrayAttribute.cs" />
     <Compile Include="System\ParseNumbers.cs" />
     <Compile Include="System\Random.cs" />
+    <Compile Include="System\Reflection\CallingConventions.cs" />
+    <Compile Include="System\Reflection\CustomAttribute.cs" />
+    <Compile Include="System\Reflection\EventInfo.cs" />
+    <Compile Include="System\Reflection\GenericParameterAttributes.cs" />
+    <Compile Include="System\Reflection\InterfaceMapping.cs" />
+    <Compile Include="System\Reflection\MemberFilter.cs" />
+    <Compile Include="System\Reflection\Module.cs" />
+    <Compile Include="System\Reflection\ParameterModifier.cs" />
+    <Compile Include="System\Reflection\TypeAttributes.cs" />
+    <Compile Include="System\Reflection\TypeFilter.cs" />
     <Compile Include="System\RuntimeArgumentHandle.cs" />
     <Compile Include="System\RuntimeFieldHandle.cs" />
     <Compile Include="System\RuntimeMethodHandle.cs" />

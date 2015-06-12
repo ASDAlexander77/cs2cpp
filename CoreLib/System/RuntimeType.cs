@@ -2,6 +2,7 @@ namespace System
 {
 
     using System;
+    using System.Globalization;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Text;
@@ -23,6 +24,35 @@ namespace System
             }
         }
 
+        public override Guid GUID
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override object InvokeMember(
+            string name,
+            BindingFlags invokeAttr,
+            Binder binder,
+            object target,
+            object[] args,
+            ParameterModifier[] modifiers,
+            CultureInfo culture,
+            string[] namedParameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Module Module
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override Assembly Assembly
         {
             get
@@ -39,7 +69,30 @@ namespace System
             }
         }
 
+        public override object[] GetCustomAttributes(bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsDefined(Type attributeType, bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
         public override String FullName
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override string Namespace
         {
             get
             {
@@ -63,12 +116,33 @@ namespace System
             }
         }
 
-        
-        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, Type[] types, ParameterModifier[] modifiers)
         {
             throw new NotImplementedException();
         }
 
+        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Type UnderlyingSystemType
+        {
+            get
+            {
+                return this;
+            }
+        }
+
+        protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, Type[] types, ParameterModifier[] modifiers)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
         
         public override FieldInfo GetField(String name, BindingFlags bindingAttr)
         {
@@ -84,11 +158,52 @@ namespace System
         // GetInterfaces
         // This method will return all of the interfaces implemented by a
         //  class
-        
+
+        public override Type GetInterface(string name, bool ignoreCase)
+        {
+            throw new NotImplementedException();
+        }
+
         public override Type[] GetInterfaces()
         {
             throw new NotImplementedException();
         }
+
+        public override EventInfo GetEvent(string name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EventInfo[] GetEvents(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Type[] GetNestedTypes(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Type GetNestedType(string name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override MemberInfo[] GetMembers(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////
         //////
         ////// Attributes
@@ -100,7 +215,37 @@ namespace System
         //////  class inside the runtime.
         //////
         ////////////////////////////////////////////////////////////////////////////////////
-        
+
+        protected override TypeAttributes GetAttributeFlagsImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsArrayImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsByRefImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsPointerImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsPrimitiveImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsCOMObjectImpl()
+        {
+            throw new NotImplementedException();
+        }
+
         public override Type GetElementType()
         {
             throw new NotImplementedException();

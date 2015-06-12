@@ -1,24 +1,42 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System.Reflection {
-namespace System.Reflection {
-
+// Licensed under the MIT license.
+namespace System.Reflection 
+{  
     using System;
-    public struct ParameterModifier {
-        internal bool[] _byRef;
-        public ParameterModifier(int paramaterCount) {
-            if (paramaterCount <= 0)
+
+    [Serializable]
+[System.Runtime.InteropServices.ComVisible(true)]
+    public struct ParameterModifier 
+    {
+        #region Private Data Members
+        private bool[] _byRef;
+        #endregion
+
+        #region Constructor
+        public ParameterModifier(int parameterCount) 
+        {
+            if (parameterCount <= 0)
                 throw new ArgumentException(Environment.GetResourceString("Arg_ParmArraySize"));
 
-            _byRef = new bool[paramaterCount];
+            _byRef = new bool[parameterCount];
         }
+        #endregion
 
-        public bool this[int index] {
-            get {return _byRef[index]; }
-            set {_byRef[index] = value;}
+        #region Internal Members
+        internal bool[] IsByRefArray { get { return _byRef; } }
+        #endregion
+
+        #region Public Members
+        public bool this[int index] 
+        {
+            get 
+            {
+                return _byRef[index]; 
+            }
+            set 
+            {
+                _byRef[index] = value;
+            }
         }
-
+        #endregion
     }
 }
-
-
