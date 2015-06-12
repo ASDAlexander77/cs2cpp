@@ -259,6 +259,11 @@ namespace Il2Native.Logic
             return result;
         }
 
+        public void RegisterType(IType type)
+        {
+            this.ResolvedTypes[type.FullName] = type;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">

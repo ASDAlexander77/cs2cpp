@@ -1004,6 +1004,8 @@ namespace Il2Native.Logic
                     // append to list of all times
                     types.Add(nativeType);
                     allTypes.Add(nativeType);
+
+                    _codeWriter.RegisterType(nativeType);
                 }
 
                 nativeType.BaseType = types.First(t => t.FullName == "System.RuntimeType");

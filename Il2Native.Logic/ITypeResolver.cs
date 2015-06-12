@@ -11,5 +11,7 @@
         string GetAllocator(bool isAtomicAllocation, bool isBigObj);
 
         IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
+
+        void RegisterType(IType type);
     }
 }
