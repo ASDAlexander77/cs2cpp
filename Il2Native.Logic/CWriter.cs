@@ -4653,6 +4653,8 @@ namespace Il2Native.Logic
                     current = current.BaseType;
                 }
 
+                Debug.Assert(typeContainingInterface != null, "typeContainingInterface is null");
+
                 var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null ? typeContainingInterface.BaseType.GetTypeSize(this) : 0;
                 var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
 
