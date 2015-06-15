@@ -1028,7 +1028,7 @@ namespace Il2Native.Logic
 
         private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
         {
-            return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType, assemblyName).First(t => t.Name != "<Module>");
+            return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => t.Name != "<Module>");
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
