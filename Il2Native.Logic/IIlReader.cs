@@ -60,7 +60,7 @@
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        IEnumerable<IType> CompileSourceWithRoslyn(params string[] source);
+        IEnumerable<IType> CompileSourceWithRoslyn(string assemblyName, params string[] source);
 
         /// <summary>
         /// </summary>

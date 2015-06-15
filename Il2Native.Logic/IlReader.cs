@@ -850,9 +850,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        public IEnumerable<IType> CompileSourceWithRoslyn(params string[] source)
+        public IEnumerable<IType> CompileSourceWithRoslyn(string assemblyName, params string[] source)
         {
-            var nameDll = "__unrestricted__.dll";
+            var nameDll = assemblyName ?? "__unrestricted__.dll";
 
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Experimental)));

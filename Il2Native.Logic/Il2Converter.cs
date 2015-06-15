@@ -999,7 +999,7 @@ namespace Il2Native.Logic
                 if (nativeType == null)
                 {
                     // load type
-                    nativeType = LoadNativeTypeFromSource(ilReader);
+                    nativeType = LoadNativeTypeFromSource(ilReader, allTypes.First().AssemblyQualifiedName);
 
                     // append to list of all times
                     types.Add(nativeType);
@@ -1026,9 +1026,9 @@ namespace Il2Native.Logic
             return usedTypes;
         }
 
-        private static IType LoadNativeTypeFromSource(IIlReader ilReader)
+        private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
         {
-            return ilReader.CompileSourceWithRoslyn(Resources.NativeType).First(t => t.Name != "<Module>");
+            return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType, assemblyName).First(t => t.Name != "<Module>");
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
