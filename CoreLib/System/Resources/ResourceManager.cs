@@ -235,9 +235,18 @@ namespace System.Resources
 
             throw new ArgumentException();
         }
-
         
         internal static object GetObject(System.Resources.ResourceManager rm, Enum id)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object GetObject(string name, CultureInfo info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetString(string name, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

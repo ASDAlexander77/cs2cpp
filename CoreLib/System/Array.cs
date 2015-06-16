@@ -418,6 +418,26 @@ namespace System
             return -1;
         }
 
+        public static void Resize<T>(ref T[] array, int newSize)
+        {
+            if (newSize < 0)
+                throw new ArgumentOutOfRangeException("newSize", Environment.GetResourceString("ArgumentOutOfRange_NeedNonNegNum"));
+
+            T[] larray = array;
+            if (larray == null)
+            {
+                array = new T[newSize];
+                return;
+            }
+
+            if (larray.Length != newSize)
+            {
+                T[] newArray = new T[newSize];
+                Array.Copy(larray, 0, newArray, 0, larray.Length > newSize ? newSize : larray.Length);
+                array = newArray;
+            }
+        }
+
         public static int BinarySearch<T>(T[] array, T value) {
             if (array==null)
                 throw new ArgumentNullException("array");

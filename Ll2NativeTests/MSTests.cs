@@ -1149,16 +1149,12 @@ namespace Ll2NativeTests
         public void Test_Mono_GTests_Iter()
         {
             // 18 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
-            // 19 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 26 - error CS0246: The type or namespace name 'IteratorStateMachineAttribute' could not be found
-            // 29 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
 
             var skip = new List<int>(new[]
             {
                 18,
-                19,
-                26,
-                29
+                26
             });
 
             foreach (var index in Enumerable.Range(1, 29).Where(n => !skip.Contains(n)))
@@ -1184,11 +1180,7 @@ namespace Ll2NativeTests
             {
                 3,
                 4,
-                8,
-                22,
-                25,
-                30,
-                31
+                25
             });
 
             foreach (var index in Enumerable.Range(1, 31).Where(n => !skip.Contains(n)))

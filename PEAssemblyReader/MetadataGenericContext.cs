@@ -205,19 +205,6 @@ namespace PEAssemblyReader
             AppendMapping(customTypeSubstitution, methodSymbol.ContainingType, invert);
         }
 
-        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, MethodSymbol methodSymbolSpec, MethodSymbol methodSymbolDef)
-        {
-            for (var i = 0; i < methodSymbolSpec.TypeParameters.Length; i++)
-            {
-                var typeParameterSymbol = methodSymbolDef.TypeParameters[i];
-                var typeArgument = methodSymbolSpec.TypeArguments[i];
-                if (!ReferenceEquals(typeParameterSymbol, typeArgument))
-                {
-                    customTypeSubstitution.Add(typeParameterSymbol, typeArgument);
-                }
-            }
-        }
-
         private static void AppendMapping(MutableTypeMap customTypeSubstitution, NamedTypeSymbol namedTypeSymbol, bool invert = false)
         {
             if (namedTypeSymbol == null)
@@ -229,6 +216,47 @@ namespace PEAssemblyReader
             {
                 var typeParameterSymbol = namedTypeSymbol.TypeParameters[i];
                 var typeArgument = namedTypeSymbol.TypeArguments[i];
+                if (!ReferenceEquals(typeParameterSymbol, typeArgument))
+                {
+                    if (invert)
+                    {
+                        Debug.Assert(typeArgument is TypeParameterSymbol, "TypeParameterSymbol is required");
+                        customTypeSubstitution.Add(typeArgument as TypeParameterSymbol, customTypeSubstitution.SubstituteType(typeParameterSymbol));
+                    }
+                    else
+                    {
+                        customTypeSubstitution.Add(typeParameterSymbol, typeArgument);
+                    }
+                }
+            }
+        }
+
+        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, MethodSymbol methodSymbolSpec, MethodSymbol methodSymbolDef, bool invert = false)
+        {
+            for (var i = 0; i < methodSymbolSpec.TypeParameters.Length; i++)
+            {
+                var typeParameterSymbol = methodSymbolDef.TypeParameters[i];
+                var typeArgument = methodSymbolSpec.TypeArguments[i];
+                if (!ReferenceEquals(typeParameterSymbol, typeArgument))
+                {
+                    customTypeSubstitution.Add(typeParameterSymbol, typeArgument);
+                }
+            }
+
+            AppendMethodDirectMapping(customTypeSubstitution, methodSymbolSpec.ContainingType, methodSymbolDef.ContainingType, invert);
+        }
+
+        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, NamedTypeSymbol namedTypeSymbolSpec, NamedTypeSymbol namedTypeSymbolDef, bool invert = false)
+        {
+            if (namedTypeSymbolSpec == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < namedTypeSymbolSpec.TypeParameters.Length; i++)
+            {
+                var typeParameterSymbol = namedTypeSymbolDef.TypeParameters[i];
+                var typeArgument = namedTypeSymbolSpec.TypeArguments[i];
                 if (!ReferenceEquals(typeParameterSymbol, typeArgument))
                 {
                     if (invert)

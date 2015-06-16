@@ -150,6 +150,10 @@
     <Compile Include="System\IO\__ConsoleStream.cs" />
     <Compile Include="System\IO\__DebugOutputTextWriter.cs" />
     <Compile Include="System\IO\__Error.cs" />
+    <Compile Include="System\Linq\Enumerable.cs" />
+    <Compile Include="System\Linq\Error.cs" />
+    <Compile Include="System\Linq\SR.cs" />
+    <Compile Include="System\Linq\Strings.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />
     <Compile Include="System\MidpointRounding.cs" />
