@@ -302,7 +302,6 @@ namespace Ll2NativeTests
             // 135 - Reflection
             // 157 - reflection, attributes
             // 158 - reflection, attributes
-            // 167 - GetCustomAttributes
             // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
             // 177 - using Reflection
             // 178 - using Reflection
@@ -315,7 +314,6 @@ namespace Ll2NativeTests
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 230 - using Reflection
             // 231 - NEED TO BE FIXED (when "this" is null. it should throw an error (Null Reference)
-            // 232 - missing IConvertable
             // 233 - Reflection
             // 236 - Attributes
             // 238 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
@@ -324,13 +322,11 @@ namespace Ll2NativeTests
             // 250 - FieldsOffset attribute not implemented
             // 253 - System.Reflection
             // 254 - System.Reflection 
-            // 263 - string with sbyte*
             // 266 - IConvertible in Enum
             // 269 - ArgIterator
             // 273 - GetCustomAttributes
             // 276 - GetType.GetEvents(); (NotImplemented)
             // 279 - Enum ToString with Flags
-            // 282 - error:  error CS1502: The best overloaded method match for 'System.ConvertCCast.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
             // 286 - Xml (not implemented)
             // 287 - System.Type, GetConstructors, IsSealed
             // 295 - System.Reflection
@@ -351,7 +347,6 @@ namespace Ll2NativeTests
             // 353 - no Main()
             // 358 - missing implementation of ToString('R') for double
             // 361 - missing Attribute
-            // 362 - cycling Catch/Throw bug (NEED TO BE FIXED!!!)
             // 367 - GetFields not implemented
             // 377 - lib with .IL file
             // 382 - using GetField
@@ -401,7 +396,6 @@ namespace Ll2NativeTests
             // 567 - error CS0246: The type or namespace name 'PreserveSig' could not be found
             // 594 - Type.Assembly NotImplemented
             // 604 - Type.GetMethods NotImplemented
-            // 605 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 606 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 607 - error CS0246: The type or namespace name 'AssemblyAlgorithmId' could not be found
             // 608 - error CS0266: Cannot implicitly convert type 'System.Enum' to 'System.IConvertible'
@@ -411,7 +405,6 @@ namespace Ll2NativeTests
             // 636 - (6,14): error CS0161: 'Foo.test_while(int)': not all code paths return a value
             // 637 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
             // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
-            // 647 - Enum.Parse NotImplemented
             // 654 - ??? 
             // 657 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 660 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
@@ -486,7 +479,6 @@ namespace Ll2NativeTests
                         106,
                         107,
                         109,
-                        115,
                         118,
                         120,
                         127,
@@ -495,7 +487,6 @@ namespace Ll2NativeTests
                         135,
                         157,
                         158,
-                        167,
                         174,
                         177,
                         178,
@@ -508,7 +499,6 @@ namespace Ll2NativeTests
                         229,
                         230,
                         231,
-                        232,
                         233,
                         236,
                         238,
@@ -517,13 +507,11 @@ namespace Ll2NativeTests
                         250,
                         253,
                         254,
-                        263,
                         266,
                         269,
                         273,
                         276,
                         279,
-                        282,
                         286,
                         287,
                         295,
@@ -539,13 +527,11 @@ namespace Ll2NativeTests
                         318,
                         319,
                         329,
-                        338,
                         349,
                         352,
                         353,
                         358,
                         361,
-                        362,
                         367,
                         377,
                         382,
@@ -596,18 +582,15 @@ namespace Ll2NativeTests
                         567,
                         594,
                         604,
-                        605,
                         606,
                         607,
                         608,
                         616,
                         617,
                         621,
-                        625,
                         636,
                         637,
                         645,
-                        647,
                         654,
                         657,
                         660,
