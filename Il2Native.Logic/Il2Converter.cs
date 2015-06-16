@@ -992,24 +992,7 @@ namespace Il2Native.Logic
             var types = typeToGet.ToList();
             var allTypes = ilReader.AllTypes().ToList();
 
-            // append custom NativeType to support reflection
-            if (ilReader.IsCoreLib)
-            {
-                var nativeType = types.FirstOrDefault(t => t.FullName == "System.NativeType");
-                if (nativeType == null)
-                {
-                    // load type
-                    nativeType = LoadNativeTypeFromSource(ilReader, allTypes.First().AssemblyQualifiedName);
-
-                    // append to list of all times
-                    types.Add(nativeType);
-                    allTypes.Add(nativeType);
-
-                    _codeWriter.RegisterType(nativeType);
-                }
-
-                nativeType.BaseType = types.First(t => t.FullName == "System.RuntimeType");
-            }
+            EmbedNativeType(ilReader, types, allTypes);
 
             var usedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
 
@@ -1024,6 +1007,28 @@ namespace Il2Native.Logic
             Debug.Assert(!ilReader.IsCoreLib || usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType") != null, "Could not find native type");
 
             return usedTypes;
+        }
+
+        private static void EmbedNativeType(IlReader ilReader, List<IType> types, List<IType> allTypes)
+        {
+            var nativeType = types.FirstOrDefault(t => t.FullName == "System.NativeType");
+            if (nativeType == null)
+            {
+                // load type
+                nativeType = LoadNativeTypeFromSource(ilReader, allTypes.First().AssemblyQualifiedName);
+
+                // append custom NativeType to support reflection
+                if (ilReader.IsCoreLib)
+                {
+                    // append to list of all types
+                    types.Add(nativeType);
+                    allTypes.Add(nativeType);
+                }
+
+                _codeWriter.RegisterType(nativeType);
+            }
+
+            nativeType.BaseType = _codeWriter.ResolveType("System.RuntimeType");
         }
 
         private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)

@@ -883,7 +883,7 @@ namespace Il2Native.Logic
 
             // Successful Compile
             var fromImageStream = AssemblyMetadata.CreateFromImageStream(dllStream);
-            var compileSourceWithRoslyn = this.LoadAssemblySymbol(fromImageStream);
+            var compileSourceWithRoslyn = this.LoadAssemblySymbol(fromImageStream, true);
             return this.ReadTypes(compileSourceWithRoslyn);
         }
 
@@ -1834,10 +1834,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata)
+        private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata, bool noCache = false)
         {
             AssemblySymbol symbol;
-            if (this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
+            if (!noCache && this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
             {
                 return symbol;
             }

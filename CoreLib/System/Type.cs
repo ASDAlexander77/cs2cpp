@@ -1730,14 +1730,6 @@ namespace System
             return (Object.ReferenceEquals(this.UnderlyingSystemType, o.UnderlyingSystemType));
         }
 
-#if !FEATURE_CORECLR
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern bool operator ==(Type left, Type right);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern bool operator !=(Type left, Type right);
-#endif // !FEATURE_CORECLR
-
         public override int GetHashCode()
         {
             Type SystemType = UnderlyingSystemType;
