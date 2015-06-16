@@ -1021,7 +1021,7 @@ namespace Il2Native.Logic
 
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
-            Debug.Assert(usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType") != null, "Could not find native type");
+            Debug.Assert(!ilReader.IsCoreLib || usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType") != null, "Could not find native type");
 
             return usedTypes;
         }
