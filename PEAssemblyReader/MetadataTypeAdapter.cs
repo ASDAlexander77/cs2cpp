@@ -814,6 +814,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetAllInterfaces()
         {
+            if (this.customBaseType != null)
+            {
+                return this.typeDef.Interfaces.Select(i => i.ToAdapter()).Union(this.customBaseType.GetAllInterfaces()).ToList();
+            }
+
             return this.typeDef.AllInterfaces.Select(i => i.ToAdapter()).ToList();
         }
 
