@@ -794,27 +794,20 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests()
         {
-            // 47 - not compilable
-            // 51 - bug in execution (NotImplemented)
             // 56 - bug in execution (NotImplemented)
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 72 - not implemented (DateTime to string)
-            // 78 - not implemented
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
             // 117 - "xxx is int[]" treated as "xxx is int": NEED TO BE FIXED (when __Array__<T> is used)
-            // 119 - typeof(x).Name (NotImplemeneted)
             // 128 - Reflection
-            // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 162 - GetType. findMember
             // 165 - BUG in compiling (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
             // 167 - Attribute.GetCustomAttributes
-            // 177 - cast IEnumerable<T> from Array !!! BUG needs fix
             // 180 - Attributes
             // 184 - Array.FindAll not implemented
             // 186 - Serialization, FileStream etc not implemented
             // 188 - string does not have GetEnumerable on chars
-            // 189 - object casted to IFoo and IFoo using Object functions (IFoo is not inherited from Object)
             // 196 - (19,10): error CS1061: 'System.Type' does not contain a definition for 'IsGenericType' and no extension method 'IsGenericType' accepting a first argument of type 'System.Type' could be found
             // 197 - (11,106): error CS1061: 'System.Type' does not contain a definition for 'MakeGenericType' and no extension method 'MakeGenericType' accepting a first argument of type 'System.Type' could be found
             // 205 - GetType of Generics
@@ -840,12 +833,10 @@ namespace Ll2NativeTests
             // 297 - 'RuntimeCompatibility' could not be found
             // 305 - GetConstructors not implemented
             // 311 - extern is used with DllImport
-            // 329 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 340 - error CS1061: 'System.Type' does not contain a definition for 'GetMember'
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
             // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 349 - error CS1061: 'System.Delegate' does not contain a definition for 'DynamicInvoke'
-            // 350 - error CS0234: The type or namespace name 'IEquatable<T>' TODO: Can be fixed
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
             // 385 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
@@ -884,29 +875,21 @@ namespace Ll2NativeTests
 
             var skip = new List<int>(new[]
             {
-                51,
-                53,
                 56,
                 65,
                 72,
-                78,
                 102,
                 109,
                 117,
-                119,
                 128,
-                143,
-                156,
                 161,
                 162,
                 165,
                 167,
-                177,
                 180,
                 184,
                 186,
                 188,
-                189,
                 196,
                 197,
                 205,
@@ -921,7 +904,6 @@ namespace Ll2NativeTests
                 239,
                 243,
                 262,
-                274,
                 278,
                 282,
                 284,
@@ -933,12 +915,10 @@ namespace Ll2NativeTests
                 297,
                 305,
                 311,
-                329,
                 340,
                 341,
                 345,
                 349,
-                350,
                 352,
                 380,
                 385,
