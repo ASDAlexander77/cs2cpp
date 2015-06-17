@@ -9,7 +9,9 @@
 namespace PEAssemblyReader
 {
     using System;
+    using System.Collections.Immutable;
     using System.Diagnostics;
+    using System.Linq;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -154,11 +156,31 @@ namespace PEAssemblyReader
                 if (metadataMethodAdapter != null && methodSpecAdapter != null)
                 {
                     var additionalMethodSymbolDef = metadataMethodAdapter.MethodDef;
-                    AppendMethodDirectMapping(customTypeSubstitution, methodSpecAdapter.MethodDef, additionalMethodSymbolDef);
+                    AppendMethodDirectMapping(customTypeSubstitution, methodSpecAdapter.MethodDef, additionalMethodSymbolDef.OriginalDefinition);
+
+                    // additional map from base type or interface
+                    var baseType = FindBaseOrInterface(methodSpecAdapter.MethodDef.ContainingType, additionalMethodSymbolDef.ContainingType);
+                    AppendMappingSpecialCaseForBaseType(customTypeSubstitution, methodSpecAdapter.MethodDef.ContainingType, baseType);
                 }
             }
 
             return customTypeSubstitution;
+        }
+
+        private static NamedTypeSymbol FindBaseOrInterface(NamedTypeSymbol baseTypeOrInterface, NamedTypeSymbol type)
+        {
+            if (baseTypeOrInterface.IsInterface)
+            {
+                return type.AllInterfaces.FirstOrDefault(i => i.MetadataName == baseTypeOrInterface.MetadataName);
+            }
+
+            var currentBase = type.BaseType;
+            while (currentBase != null && currentBase.MetadataName != baseTypeOrInterface.MetadataName)
+            {
+                currentBase = currentBase.BaseType;
+            }
+
+            return currentBase;
         }
 
         private static MutableTypeMap CreateMap(IType typeDefinition, IType typeSpecialization, IMethod methodDefinition, IMethod methodSpecialization, IMethod additionalMethodDefinition = null)
@@ -220,8 +242,11 @@ namespace PEAssemblyReader
                 {
                     if (invert)
                     {
-                        Debug.Assert(typeArgument is TypeParameterSymbol, "TypeParameterSymbol is required");
-                        customTypeSubstitution.Add(typeArgument as TypeParameterSymbol, customTypeSubstitution.SubstituteType(typeParameterSymbol));
+                        var parameterSymbol = typeArgument as TypeParameterSymbol;
+                        if (parameterSymbol != null)
+                        {
+                            customTypeSubstitution.Add(parameterSymbol, customTypeSubstitution.SubstituteType(typeParameterSymbol));
+                        }
                     }
                     else
                     {
@@ -231,7 +256,7 @@ namespace PEAssemblyReader
             }
         }
 
-        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, MethodSymbol methodSymbolSpec, MethodSymbol methodSymbolDef, bool invert = false)
+        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, MethodSymbol methodSymbolSpec, MethodSymbol methodSymbolDef)
         {
             for (var i = 0; i < methodSymbolSpec.TypeParameters.Length; i++)
             {
@@ -242,29 +267,23 @@ namespace PEAssemblyReader
                     customTypeSubstitution.Add(typeParameterSymbol, typeArgument);
                 }
             }
-
-            AppendMethodDirectMapping(customTypeSubstitution, methodSymbolSpec.ContainingType, methodSymbolDef.ContainingType, invert);
         }
 
-        private static void AppendMethodDirectMapping(MutableTypeMap customTypeSubstitution, NamedTypeSymbol namedTypeSymbolSpec, NamedTypeSymbol namedTypeSymbolDef, bool invert = false)
+        private static void AppendMappingSpecialCaseForBaseType(
+            MutableTypeMap customTypeSubstitution, NamedTypeSymbol namedTypeSymbolSpec, NamedTypeSymbol namedTypeSymbolDef)
         {
-            if (namedTypeSymbolSpec == null)
+            if (namedTypeSymbolSpec == null || namedTypeSymbolDef == null)
             {
                 return;
             }
 
-            for (var i = 0; i < namedTypeSymbolSpec.TypeParameters.Length; i++)
+            for (var i = 0; i < namedTypeSymbolDef.TypeParameters.Length; i++)
             {
-                var typeParameterSymbol = namedTypeSymbolDef.TypeParameters[i];
+                var typeParameterSymbol = namedTypeSymbolDef.TypeArguments[i] as TypeParameterSymbol;
                 var typeArgument = namedTypeSymbolSpec.TypeArguments[i];
-                if (!ReferenceEquals(typeParameterSymbol, typeArgument))
+                if (!ReferenceEquals(typeParameterSymbol, typeArgument) && typeArgument != null && typeParameterSymbol != null)
                 {
-                    if (invert)
-                    {
-                        Debug.Assert(typeArgument is TypeParameterSymbol, "TypeParameterSymbol is required");
-                        customTypeSubstitution.Add(typeArgument as TypeParameterSymbol, customTypeSubstitution.SubstituteType(typeParameterSymbol));
-                    }
-                    else
+                    if (customTypeSubstitution.SubstituteType(typeParameterSymbol) == typeParameterSymbol)
                     {
                         customTypeSubstitution.Add(typeParameterSymbol, typeArgument);
                     }

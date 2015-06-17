@@ -617,7 +617,7 @@ namespace Il2Native.Logic
             var overrideSpecializedMethods = new List<IMethod>();
             foreach (
                 var overrideGenericMethod in
-                    allTypes.SelectMany(
+                    allTypes.Where(t => !t.IsGenericTypeDefinition).SelectMany(
                         t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
             {
                 var method = overrideGenericMethod;
@@ -1098,8 +1098,12 @@ namespace Il2Native.Logic
             ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
 
             DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
+            DiscoverAllGenericVirtualMethods(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
+            DiscoverAllGenericVirtualMethods(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
+            DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
+            DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
 
             var assemblyQualifiedName = types.First().AssemblyQualifiedName;
 

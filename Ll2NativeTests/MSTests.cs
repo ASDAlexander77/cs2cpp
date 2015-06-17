@@ -850,7 +850,6 @@ namespace Ll2NativeTests
             // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
             // 555 - Bug with Nullable in 'is' operator. TODO: Need to be fixed
             // 564 - error CS1061: 'System.Reflection.MethodInfo'
-            // 571 - Fail: Not implemented yet. TODO: Implement it!
             // 582 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
             // 583 - lib with IL
 
@@ -932,7 +931,6 @@ namespace Ll2NativeTests
                 554,
                 555,
                 564,
-                571,
                 582,
                 583
             });
