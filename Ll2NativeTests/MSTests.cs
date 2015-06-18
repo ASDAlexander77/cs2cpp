@@ -772,6 +772,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests()
         {
+            // 329 - DEBUG ASSERT - investigate
+
             // 56 - bug in execution (NotImplemented)
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 72 - not implemented (DateTime to string)
@@ -1158,6 +1160,72 @@ namespace Ll2NativeTests
                 CompilerHelper.CompileAndRun(string.Format("gtest-lambda-{0:00}", index));
             }
         }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Linq()
+        {
+            // 1 - called pure virtual (TODO: Investigate)
+            // 5 - called pure virtual or not implemneted (TODO: Investigate)
+            // 10 - error CS1930: The range variable 'a' has already been declared
+            // 13 - error CS0246: The type or namespace name 'CollectionBase' could not be found (are you missing a using directive or an assembly reference?)
+            // 14 - error CS0518: Predefined type 'System.Linq.Expressions.ParameterExpression' is not defined or imported
+            // 22 - error CS0117: 'System.DateTime' does not contain a definition for 'TryParse'
+            // 23 - called pure virtual or not implemented (TODO: Investigate)
+
+            var skip = new List<int>(new[]
+            {
+                1,
+                5,
+                10,
+                13,
+                14,
+                22,
+                23
+            });
+
+            foreach (var index in Enumerable.Range(27, 28).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Named()
+        {
+            //
+
+            var skip = new List<int>(new[]
+            {
+                0
+            });
+
+            foreach (var index in Enumerable.Range(1, 4).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-named-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void Test_Mono_GTests_Variance()
+        {
+            //
+
+            var skip = new List<int>(new[]
+            {
+                0
+            });
+
+            foreach (var index in Enumerable.Range(1, 21).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("gtest-variance-{0:00}", index));
+            }
+        }  
 
         /// <summary>
         /// </summary>

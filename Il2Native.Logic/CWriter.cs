@@ -549,7 +549,7 @@ namespace Il2Native.Logic
                     var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
                     var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
-                    this.Output.Write("({1}) &_s{0}{2}_", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
+                    this.Output.Write("(({1}) &_s{0}{2}_)", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
                     break;
                 case Code.Ldnull:
                     this.Output.Write("0/*null*/");

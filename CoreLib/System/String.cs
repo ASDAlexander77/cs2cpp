@@ -4,6 +4,7 @@
 namespace System
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Threading;
     using System.Collections;
@@ -11,7 +12,7 @@ namespace System
     using System.Text;
 
     [Serializable]
-    public sealed class String : IComparable
+    public sealed class String : IComparable, IEnumerable<char>, IEnumerable
     {
         public static readonly String Empty = "";
 
@@ -1564,6 +1565,17 @@ namespace System
             if (appendLeft)
                 return result + original;
             return original + result;
+        }
+
+        IEnumerator<char> IEnumerable<char>.GetEnumerator()
+        {
+            return new CharEnumerator(this);
+        }
+
+        /// <internalonly/>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new CharEnumerator(this);
         }
 
         unsafe public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
