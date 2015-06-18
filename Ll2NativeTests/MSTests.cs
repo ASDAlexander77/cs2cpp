@@ -407,7 +407,6 @@ namespace Ll2NativeTests
             // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
             // 654 - ??? 
             // 657 - error CS0246: The type or namespace name 'Conditional' could not be found
-            // 660 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 661 - error CS0246: The type or namespace name 'SummaryInfo' could not be found
             // 666 - unicode used in preprocessor
             // 671 - error CS0837: The first operand of an 'is' or 'as' operator may not be a lambda expression, anonymous method, or method group.
@@ -672,12 +671,10 @@ namespace Ll2NativeTests
             // 42 - compiling with -Ofast causing C app to crash
             // 73 - error CS0234: The type or namespace name 'ThreadPool' does not exist in the namespace 'System.Threading' (are you missing an assembly reference?)
             // 119 - error CS0234: The type or namespace name 'RegularExpressions' does not exist
-            // 122 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 122 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' ((33,15): error CS7043: Runtime library method 'System.Linq.Expressions.Expression.Constant(object, System.Type)' not found.)
             // 124 - error CS0315: The type 'ulong' cannot be used as type parameter 'T' in the generic type or method 'Test.NestedTypeMutate<T>()'. There is no boxing conversion from 'ulong' to 'System.IEquatable<ulong>'. (but it can be compiled with .NET)
             // 135 - GetFields - NotImplemeneted
-            // 138 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' 
-            // 141 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
-            // 160 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 138 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' ((12,12): error CS1061: 'System.Linq.Expressions.Expression<System.Func<bool>>' does not contain a definition for 'Compile' and no extension method 'Compile' accepting a first argument of type )
             // 169 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
 
             var skip = new List<int>(new[]
@@ -690,8 +687,6 @@ namespace Ll2NativeTests
                 124,
                 135,
                 138,
-                141,
-                160,
                 169
             });
 
@@ -823,7 +818,6 @@ namespace Ll2NativeTests
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
             // 385 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
-            // 386 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 391 - error CS0019: Operator '??' cannot be applied to operands of type '<null>' and '<null>'
             // 393 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 408 - error CS0246: The type or namespace name 'MarshalAs' could not be found
@@ -904,7 +898,6 @@ namespace Ll2NativeTests
                 352,
                 380,
                 385,
-                386,
                 391,
                 393,
                 408,
@@ -952,7 +945,6 @@ namespace Ll2NativeTests
             // 33 - StringBuilder enumerator is not impelemented. TODO: Investigate
             // 35 - GetFields - NotImplemeneted
             // 38 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
-            // 41 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
 
             var skip = new List<int>(new[]
             {
@@ -961,8 +953,7 @@ namespace Ll2NativeTests
                 22,
                 33,
                 35,
-                38,
-                41
+                38
             });
 
             foreach (var index in Enumerable.Range(1, 56).Where(n => !skip.Contains(n)))
@@ -976,7 +967,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_AnonType()
         {
-            // 13 - rror CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 13 - rror CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' (GetProprty not implemented)
 
             var skip = new List<int>(new[]
             {
@@ -1051,30 +1042,22 @@ namespace Ll2NativeTests
         public void Test_Mono_GTests_ExMethod()
         {
             // 1 - error CS1061: 'System.Type' does not contain a definition for 'IsDefined'
-            // 8 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 12 - error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections'
             // 15 - error CS0246: The type or namespace name 'ICustomAttributeProvider' could not be found
             // 19 - error CS1061: 'string' does not contain a definition for 'Test_2' and no extension method 'Test_2' accepting a first argument of type 'string' could be found (TODO: Review it)
             // 26 - error CS0121: The call is ambiguous between the following methods or properties: 'Test2.Extensions.IsNullable(System.Type)' and 'test.TypeExtensions.IsNullable(System.Type)' (TODO: Review it)
-            // 30 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
-            // 32 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 35 - Redeclaring attribute which used in Core lib
-            // 44 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 45 - lib with IL
             // 46 - error CS1061: 'string' does not contain a definition for 'All' and no extension method 'All' accepting a first argument of type 'string' could be found (TODO: Review it)
 
             var skip = new List<int>(new[]
             {
                 1,
-                8,
                 12,
                 15,
                 19,
                 26,
-                30,
-                32,
                 35,
-                44,
                 45,
                 46
             });
@@ -1117,14 +1100,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_ImplicitArray()
         {
-            // 3 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
-
-            var skip = new List<int>(new[]
-            {
-                3
-            });
-
-            foreach (var index in Enumerable.Range(1, 3).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 3))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-implicitarray-{0:00}", index));
             }
@@ -1168,11 +1144,7 @@ namespace Ll2NativeTests
         {
             // 3 - error CS0117: 'System.TimeSpan' does not contain a definition for 'Parse' (TODO: Review it)
             // 4 - error CS0117: 'System.TimeSpan' does not contain a definition for 'Parse' (TODO: Review it)
-            // 8 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' (are you missing an assembly reference?)
-            // 22 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 25 - (TODO: you can fix it if you have time), forcing conflict with generic params
-            // 30 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
-            // 31 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
 
             var skip = new List<int>(new[]
             {

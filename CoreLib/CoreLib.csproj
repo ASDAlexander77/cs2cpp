@@ -152,6 +152,7 @@
     <Compile Include="System\IO\__Error.cs" />
     <Compile Include="System\Linq\Enumerable.cs" />
     <Compile Include="System\Linq\Error.cs" />
+    <Compile Include="System\Linq\LambdaExpression.cs" />
     <Compile Include="System\Linq\SR.cs" />
     <Compile Include="System\Linq\Strings.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
