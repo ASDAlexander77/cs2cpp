@@ -557,7 +557,7 @@ namespace Il2Native.Logic
             IGrouping<IType, IMethod> specializedTypeMethods,
             ReadingTypesContext readingTypesContext)
         {
-            var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
+            var types = allTypes.Where(t => !t.IsGenericTypeDefinition && t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
             foreach (var interfaceMethodSpecialization in specializedTypeMethods)
             {
                 var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
@@ -565,7 +565,7 @@ namespace Il2Native.Logic
                     types.SelectMany(
                         t =>
                             t.GetMethods(flags)
-                                .Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(interfaceMethodSpecialization))))
+                                .Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverrideOrExplicitInterface(interfaceMethodSpecialization))))
                 {
                     // find interface 
                     var @interfaceDefinition =
@@ -590,7 +590,6 @@ namespace Il2Native.Logic
                         readingTypesContext.UsedTypeTokens,
                         new Queue<IMethod>(),
                         _codeWriter);
-
                 }
             }
         }

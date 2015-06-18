@@ -833,6 +833,22 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsMatchingOverrideOrExplicitInterface(this IMethod method, IMethod overridingMethod)
+        {
+            if (method.MetadataName == overridingMethod.MetadataName)
+            {
+                return method.IsMatchingParamsAndReturnType(overridingMethod);
+            }
+
+            if (method.IsExplicitInterfaceImplementation && method.MetadataName.EndsWith(string.Concat(".", overridingMethod.MetadataName)))
+            {
+                return method.IsMatchingParamsAndReturnType(overridingMethod);
+            }
+
+            return false;
+        }
+
+
         /// <summary>
         /// </summary>
         /// <param name="type">

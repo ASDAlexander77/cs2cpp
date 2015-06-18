@@ -776,7 +776,6 @@ namespace PEAssemblyReader
             }
 
             result.Append(this.Name);
-
             return result.ToString();
         }
 
@@ -789,7 +788,6 @@ namespace PEAssemblyReader
             var result = new StringBuilder();
             this.methodDef.AppendFullNamespace(result, this.Namespace, this.DeclaringType, false, '.');
             result.Append(this.Name);
-
             return result.ToString();
         }
 
@@ -835,9 +833,52 @@ namespace PEAssemblyReader
 
             if (this.methodDef.ContainingType.IsGenericType && this.methodDef.IsExplicitInterfaceImplementation)
             {
-                var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.First();
-                var resolveType = implMethodSymbol.ToAdapter();
-                sb.Append(resolveType.FullName);
+                var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.FirstOrDefault();
+                if (implMethodSymbol != null)
+                {
+                    var resolveType = implMethodSymbol.ToAdapter();
+                    sb.Append(resolveType.FullName);
+                }
+                else
+                {
+                    foreach (var @interface in this.methodDef.ReceiverType.AllInterfaces)
+                    {
+                        var namedTypeSymbol = @interface.ConstructedFrom;
+                        var containingNamespace = namedTypeSymbol.ContainingNamespace;
+                        var name = string.Concat(
+                            containingNamespace != null ? containingNamespace.ToString() : string.Empty,
+                            containingNamespace != null ? "." : string.Empty,
+                            namedTypeSymbol.Name);
+
+                        if (namedTypeSymbol.TypeArguments.Any())
+                        {
+                            var sb = new StringBuilder();
+                            sb.Append(name);
+
+                            sb.Append("<");
+                            var count = 0;
+                            foreach (var typeArg in namedTypeSymbol.TypeArguments)
+                            {
+                                if (count > 0)
+                                {
+                                    sb.Append(",");
+                                }
+
+                                sb.Append(typeArg.Name);
+                                count++;
+                            }
+
+                            sb.Append(">");
+
+                            name = sb.ToString();
+                        }
+
+                        if (this.methodDef.Name.StartsWith(name))
+                        {
+                            Debug.Assert(false, "finish it");
+                        }
+                    }
+                }
             }
             else
             {
@@ -869,6 +910,8 @@ namespace PEAssemblyReader
 
                 sb.Append('>');
             }
+
+            Debug.Assert(!sb.ToString().Contains("<TElement>"));
 
             return sb.ToString();
         }

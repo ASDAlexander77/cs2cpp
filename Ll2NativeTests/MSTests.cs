@@ -1166,26 +1166,20 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_Linq()
         {
-            // 1 - called pure virtual (TODO: Investigate)
-            // 5 - called pure virtual or not implemneted (TODO: Investigate)
             // 10 - error CS1930: The range variable 'a' has already been declared
             // 13 - error CS0246: The type or namespace name 'CollectionBase' could not be found (are you missing a using directive or an assembly reference?)
             // 14 - error CS0518: Predefined type 'System.Linq.Expressions.ParameterExpression' is not defined or imported
             // 22 - error CS0117: 'System.DateTime' does not contain a definition for 'TryParse'
-            // 23 - called pure virtual or not implemented (TODO: Investigate)
 
             var skip = new List<int>(new[]
             {
-                1,
-                5,
                 10,
                 13,
                 14,
-                22,
-                23
+                22
             });
 
-            foreach (var index in Enumerable.Range(27, 28).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 28).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
             }
