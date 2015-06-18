@@ -475,10 +475,6 @@ namespace Il2Native.Logic
             IType typeSource,
             ReadingTypesContext readingTypesContext)
         {
-            // TODO: you need to discover only actual usage of arrays and generics(?)
-            // for example function Main(string[] args) needs only forward declararion, so gather only arrays and generics in method bodies only
-            // I even belive that you need to take only array which used in Code.Newarr code. and the same is for Generics
-
             Debug.Assert(typeSource != null, "Type is null");
             if (typeSource == null)
             {
@@ -1095,8 +1091,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
-
             DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
             DiscoverAllGenericVirtualMethods(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
             DiscoverAllGenericVirtualMethods(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
@@ -1104,6 +1098,8 @@ namespace Il2Native.Logic
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
             DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
             DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
+
+            ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
 
             var assemblyQualifiedName = types.First().AssemblyQualifiedName;
 

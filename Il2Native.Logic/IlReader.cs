@@ -1077,6 +1077,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var method = module.ResolveMethod(token, genericContext);
+
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
                         this.AddArrayType(method.DeclaringType);
