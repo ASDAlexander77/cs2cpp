@@ -1090,13 +1090,27 @@ namespace Il2Native.Logic
                 }
             }
 
-            DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
-            DiscoverAllGenericVirtualMethods(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
-            DiscoverAllGenericVirtualMethods(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
+            var genericMethodSpecializations = 0;
+            var genericTypeSpecializations = 0;
+            var additionalTypesToProcess = 0;
 
-            DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
-            DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
-            DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
+            // repeat it until all types processed
+            while (genericMethodSpecializations != readingTypesContext.GenericMethodSpecializations.Count
+                   || genericTypeSpecializations != readingTypesContext.GenericTypeSpecializations.Count
+                   || additionalTypesToProcess != readingTypesContext.AdditionalTypesToProcess.Count)
+            {
+                genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations.Count;
+                genericTypeSpecializations = readingTypesContext.GenericTypeSpecializations.Count;
+                additionalTypesToProcess = readingTypesContext.AdditionalTypesToProcess.Count;
+
+                DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
+                DiscoverAllGenericVirtualMethods(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
+                DiscoverAllGenericVirtualMethods(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
+
+                DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
+                DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
+                DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
+            }
 
             ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
 
