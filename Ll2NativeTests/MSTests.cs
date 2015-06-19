@@ -309,6 +309,7 @@ namespace Ll2NativeTests
             // 181 - using Reflection
             // 183 - using BeginInvoke
             // 187 - using Specialized Collections
+            // 201 - field name using t
             // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
             // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
@@ -342,6 +343,7 @@ namespace Ll2NativeTests
             // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
             // 319 - missing DecimalConstantAttribute, error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 329 - GetCustromAttributes
+            // 338 - field name used as class name
             // 349 - TypeAttributes
             // 352 - MarshalAs
             // 353 - no Main()
@@ -413,7 +415,6 @@ namespace Ll2NativeTests
             // 678 - issue with comparing NaN to 0.0 in C code. TODO: Investigate
             // 679 - lib with DLLs
             // 684 - getElementType is not implemented (for Array clone)
-            // 686 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
             // 692 - TODO: Investigate, DateTime returns ArgumentOutOfRange 
             // 695 - error CS0246: The type or namespace name 'AssemblyDefinition' could not be found
             // 704 - DllImport is not implemented and ArgIterator
@@ -493,6 +494,7 @@ namespace Ll2NativeTests
                         181,
                         183,
                         187,
+                        201,
                         219,
                         220,
                         229,
@@ -526,6 +528,7 @@ namespace Ll2NativeTests
                         318,
                         319,
                         329,
+                        338,
                         349,
                         352,
                         353,
@@ -599,7 +602,6 @@ namespace Ll2NativeTests
                         678,
                         679,
                         684,
-                        686,
                         692,
                         695,
                         704,
@@ -675,7 +677,6 @@ namespace Ll2NativeTests
             // 124 - error CS0315: The type 'ulong' cannot be used as type parameter 'T' in the generic type or method 'Test.NestedTypeMutate<T>()'. There is no boxing conversion from 'ulong' to 'System.IEquatable<ulong>'. (but it can be compiled with .NET)
             // 135 - GetFields - NotImplemeneted
             // 138 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' ((12,12): error CS1061: 'System.Linq.Expressions.Expression<System.Func<bool>>' does not contain a definition for 'Compile' and no extension method 'Compile' accepting a first argument of type )
-            // 169 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
 
             var skip = new List<int>(new[]
             {
@@ -686,8 +687,7 @@ namespace Ll2NativeTests
                 122,
                 124,
                 135,
-                138,
-                169
+                138
             });
 
             foreach (var index in Enumerable.Range(1, 171).Where(n => !skip.Contains(n)))
@@ -1046,22 +1046,18 @@ namespace Ll2NativeTests
             // 1 - error CS1061: 'System.Type' does not contain a definition for 'IsDefined'
             // 12 - error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections'
             // 15 - error CS0246: The type or namespace name 'ICustomAttributeProvider' could not be found
-            // 19 - error CS1061: 'string' does not contain a definition for 'Test_2' and no extension method 'Test_2' accepting a first argument of type 'string' could be found (TODO: Review it)
             // 26 - error CS0121: The call is ambiguous between the following methods or properties: 'Test2.Extensions.IsNullable(System.Type)' and 'test.TypeExtensions.IsNullable(System.Type)' (TODO: Review it)
             // 35 - Redeclaring attribute which used in Core lib
             // 45 - lib with IL
-            // 46 - error CS1061: 'string' does not contain a definition for 'All' and no extension method 'All' accepting a first argument of type 'string' could be found (TODO: Review it)
 
             var skip = new List<int>(new[]
             {
                 1,
                 12,
                 15,
-                19,
                 26,
                 35,
-                45,
-                46
+                45
             });
 
             foreach (var index in Enumerable.Range(1, 46).Where(n => !skip.Contains(n)))
@@ -1124,12 +1120,10 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_Iter()
         {
-            // 18 - error CS1579: foreach statement cannot operate on variables of type 'string' because 'string' does not contain a public definition for 'GetEnumerator'
             // 26 - error CS0246: The type or namespace name 'IteratorStateMachineAttribute' could not be found
 
             var skip = new List<int>(new[]
             {
-                18,
                 26
             });
 
@@ -1166,7 +1160,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_Linq()
         {
-            // 5 - ICollection.CopyTo is not implemented (TODO: finish it)
             // 10 - error CS1930: The range variable 'a' has already been declared
             // 13 - error CS0246: The type or namespace name 'CollectionBase' could not be found (are you missing a using directive or an assembly reference?)
             // 14 - error CS0518: Predefined type 'System.Linq.Expressions.ParameterExpression' is not defined or imported
@@ -1174,7 +1167,6 @@ namespace Ll2NativeTests
 
             var skip = new List<int>(new[]
             {
-                5,
                 10,
                 13,
                 14,

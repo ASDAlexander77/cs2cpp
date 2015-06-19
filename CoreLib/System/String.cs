@@ -911,12 +911,27 @@ namespace System
 
         public int CompareTo(Object value)
         {
-            throw new NotImplementedException();
+            if (value == null)
+            {
+                return 1;
+            }
+
+            if (!(value is String))
+            {
+                throw new ArgumentException(Environment.GetResourceString("Arg_MustBeString"));
+            }
+
+            return String.Compare(this, (String)value);
         }
 
         public int CompareTo(String strB)
         {
-            throw new NotImplementedException();
+            if (strB == null)
+            {
+                return 1;
+            }
+
+            return Compare(this, strB);
         }
 
         public int IndexOf(char value)
