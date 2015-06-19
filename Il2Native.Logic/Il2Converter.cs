@@ -1110,9 +1110,9 @@ namespace Il2Native.Logic
                 DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
                 DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.GenericTypeSpecializations, readingTypesContext);
                 DiscoverAllGenericMethodsOfInterfaces(readingTypesContext.AdditionalTypesToProcess, readingTypesContext);
-            }
 
-            ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
+                ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
+            }
 
             var assemblyQualifiedName = types.First().AssemblyQualifiedName;
 
