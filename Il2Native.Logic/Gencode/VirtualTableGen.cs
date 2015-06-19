@@ -59,6 +59,8 @@ namespace Il2Native.Logic.Gencode
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
                 typeResolver).Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
 
+            Debug.Assert(!thisType.Name.Contains("Ordere"));
+
             // we need to use reverse to be able to select first possible method from direved class first
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allExplicit, allPublicAndInternal, typeResolver);
         }

@@ -843,39 +843,13 @@ namespace PEAssemblyReader
                 {
                     foreach (var @interface in this.methodDef.ReceiverType.AllInterfaces)
                     {
-                        var namedTypeSymbol = @interface.ConstructedFrom;
-                        var containingNamespace = namedTypeSymbol.ContainingNamespace;
-                        var name = string.Concat(
-                            containingNamespace != null ? containingNamespace.ToString() : string.Empty,
-                            containingNamespace != null ? "." : string.Empty,
-                            namedTypeSymbol.Name);
-
-                        if (namedTypeSymbol.TypeArguments.Any())
+                        var @interfaceAdapt = @interface.ConstructedFrom.ToAdapter();
+                        if (this.methodDef.Name.StartsWith(@interfaceAdapt.FullName))
                         {
-                            var sb = new StringBuilder();
-                            sb.Append(name);
-
-                            sb.Append("<");
-                            var count = 0;
-                            foreach (var typeArg in namedTypeSymbol.TypeArguments)
-                            {
-                                if (count > 0)
-                                {
-                                    sb.Append(",");
-                                }
-
-                                sb.Append(typeArg.Name);
-                                count++;
-                            }
-
-                            sb.Append(">");
-
-                            name = sb.ToString();
-                        }
-
-                        if (this.methodDef.Name.StartsWith(name))
-                        {
-                            Debug.Assert(false, "finish it");
+                            sb.Append(@interface.ToAdapter().FullName);
+                            sb.Append(".");
+                            sb.Append(this.methodDef.Name.Substring(@interfaceAdapt.FullName.Length + ".".Length));
+                            break;
                         }
                     }
                 }
@@ -910,8 +884,6 @@ namespace PEAssemblyReader
 
                 sb.Append('>');
             }
-
-            Debug.Assert(!sb.ToString().Contains("<TElement>"));
 
             return sb.ToString();
         }
