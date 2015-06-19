@@ -60,7 +60,7 @@ namespace Il2Native.Logic.Gencode
                 typeResolver).Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
 
             // we need to use reverse to be able to select first possible method from direved class first
-            virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allExplicit, allPublicAndInternal, typeResolver);
+            virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allExplicit, allPublicAndInternal, typeResolver, thisType.IsArray);
         }
 
         /// <summary>
@@ -314,6 +314,13 @@ namespace Il2Native.Logic.Gencode
             virtualTable = new List<CWriter.Pair<IMethod, IMethod>>();
             virtualTable.BuildVirtualTable(thisType, typeResolver);
 
+#if DEBUG
+            if (!thisType.IsAbstract)
+            {
+                var issueMethod = virtualTable.FirstOrDefault(vm => vm.Value == null || vm.Value.IsAbstract);
+                Debug.Assert(issueMethod == null, "Not all virtual methods are resolved");
+            }
+#endif
             VirtualTableByType[thisType.FullName] = virtualTable;
 
             return virtualTable;
@@ -513,14 +520,15 @@ namespace Il2Native.Logic.Gencode
             IType @interface,
             IEnumerable<IMethod> allExplicit,
             IEnumerable<IMethod> allPublicAndInternal,
-            ITypeResolver typeResolver)
+            ITypeResolver typeResolver,
+            bool ignoreAssert)
         {
             var baseInterfaces = @interface.GetInterfaces();
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allExplicit, allPublicAndInternal, typeResolver);
+                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
             }
 
             // get all virtual methods in current type and replace or append
@@ -530,10 +538,10 @@ namespace Il2Native.Logic.Gencode
             var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
 #endif
 
-            ResolveAndAppendInterfaceMethods(virtualTable, allExplicit, allPublicAndInternal, interfaceMethods);
+            ResolveAndAppendInterfaceMethods(virtualTable, allExplicit, allPublicAndInternal, interfaceMethods, ignoreAssert);
         }
 
-        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allExplicit, IEnumerable<IMethod> allPublicAndInternal, IEnumerable<IMethod> interfaceMethods)
+        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allExplicit, IEnumerable<IMethod> allPublicAndInternal, IEnumerable<IMethod> interfaceMethods, bool ignoreAssert)
         {
             var list =
                 interfaceMethods.Select(
@@ -550,7 +558,12 @@ namespace Il2Native.Logic.Gencode
                                          .FirstOrDefault()
                         }).ToList();
 
-            ////Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+#if DEBUG
+            if (!ignoreAssert)
+            {
+                Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+            }
+#endif 
 
             virtualTable.AddRange(list);
         }

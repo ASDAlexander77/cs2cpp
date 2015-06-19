@@ -429,6 +429,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsAbstract
+        {
+            get
+            {
+                return this.typeDef.IsAbstract;
+            }
+        } 
+
+        /// <summary>
+        /// </summary>
         public bool IsRtti
         {
             get

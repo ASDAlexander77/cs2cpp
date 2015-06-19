@@ -117,6 +117,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsAbstract { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsString { get; }
 
         /// <summary>
