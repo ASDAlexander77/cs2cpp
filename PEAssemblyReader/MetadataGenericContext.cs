@@ -159,7 +159,7 @@ namespace PEAssemblyReader
                     AppendMethodDirectMapping(customTypeSubstitution, methodSpecAdapter.MethodDef, additionalMethodSymbolDef.OriginalDefinition);
 
                     // to support explicit interfaces
-                    AppendMappingSpecialCaseForBaseType(customTypeSubstitution, methodSpecAdapter.MethodDef.ReceiverType as NamedTypeSymbol, additionalMethodSymbolDef.OriginalDefinition.ReceiverType as NamedTypeSymbol);
+                    ////AppendMappingSpecialCaseForBaseType(customTypeSubstitution, methodSpecAdapter.MethodDef.ReceiverType as NamedTypeSymbol, additionalMethodSymbolDef.OriginalDefinition.ReceiverType as NamedTypeSymbol);
 
                     // additional map from base type or interface
                     var baseType = FindBaseOrInterface(methodSpecAdapter.MethodDef.ContainingType, additionalMethodSymbolDef.ContainingType);

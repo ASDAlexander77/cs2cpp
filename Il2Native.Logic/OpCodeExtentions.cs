@@ -317,6 +317,28 @@ namespace Il2Native.Logic
             return null;
         }
 
+        public static IType FindInterfaceOwner(this IType type, IType @interface)
+        {
+            if (type.GetAllInterfaces().Contains(@interface))
+            {
+                while (!type.GetInterfacesExcludingBaseAllInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
+                {
+                    type = type.BaseType;
+                    if (type == null)
+                    {
+                        // throw new IndexOutOfRangeException("Could not find an type");
+                        break;
+                    }
+
+                    return type;
+                }
+
+                return type;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="baseWriter">

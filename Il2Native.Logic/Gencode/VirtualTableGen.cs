@@ -50,7 +50,7 @@ namespace Il2Native.Logic.Gencode
             ITypeResolver typeResolver)
         {
             var allExplicit = IlReader.Methods(
-                thisType,
+                thisType.FindInterfaceOwner(@interface),
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
                 typeResolver).Where(m => m.IsExplicitInterfaceImplementation).ToList();
 
@@ -58,8 +58,6 @@ namespace Il2Native.Logic.Gencode
                 thisType,
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
                 typeResolver).Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
-
-            Debug.Assert(!thisType.Name.Contains("Ordere"));
 
             // we need to use reverse to be able to select first possible method from direved class first
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allExplicit, allPublicAndInternal, typeResolver);
