@@ -319,7 +319,7 @@ namespace Il2Native.Logic
 
         public static IType FindInterfaceOwner(this IType type, IType @interface)
         {
-            while (!type.GetInterfacesExcludingBaseAllInterfaces().Contains(@interface) && !type.GetInterfaces().Contains(@interface))
+            while (!type.GetInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
             {
                 type = type.BaseType;
                 if (type == null)
