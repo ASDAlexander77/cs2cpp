@@ -95,6 +95,7 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedFinalizerWrapperMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayICollectionCopyToMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetCountMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetEnumeratorMethod.cs" />

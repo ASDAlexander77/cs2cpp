@@ -784,6 +784,7 @@ namespace Il2Native.Logic
                 yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
                 yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
                 yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
+                yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, typeResolver);
             }
             else if (type.IsString)
             {
