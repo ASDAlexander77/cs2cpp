@@ -19,7 +19,6 @@
             ilCodeBuilder.Parameters.Add(bytePointerType.ToPointerType().ToParameter("value_1"));
 
             // code to call gctors
-
             ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
             if (hasParameters)
             {
@@ -86,6 +85,7 @@
             }
 
             ilCodeBuilder.Add(Code.Ret);
+
             return ilCodeBuilder;
         }
     }

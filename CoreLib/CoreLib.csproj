@@ -77,12 +77,17 @@
     <Compile Include="System\Collections\Generic\IEnumerator.cs" />
     <Compile Include="System\Collections\Generic\IList.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlyCollection.cs" />
+    <Compile Include="System\Collections\Generic\IReadOnlyDictionary.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlyList.cs" />
     <Compile Include="System\Collections\Generic\KeyNotFoundException.cs" />
     <Compile Include="System\Collections\Generic\KeyValuePair.cs" />
     <Compile Include="System\Collections\Generic\List.cs" />
     <Compile Include="System\Collections\IDictionaryEnumerator.cs" />
     <Compile Include="System\Collections\KeyValuePairs.cs" />
+    <Compile Include="System\Collections\ObjectModel\Collection.cs" />
+    <Compile Include="System\Collections\ObjectModel\KeyedCollection.cs" />
+    <Compile Include="System\Collections\ObjectModel\ReadOnlyCollection.cs" />
+    <Compile Include="System\Collections\ObjectModel\ReadOnlyDictionary.cs" />
     <Compile Include="System\ComponentModel\EditorBrowsableAttribute.cs" />
     <Compile Include="System\Console.cs" />
     <Compile Include="System\Convert.cs" />
@@ -93,7 +98,11 @@
     <Compile Include="System\DBNull.cs" />
     <Compile Include="System\Decimal.cs" />
     <Compile Include="System\Delegate.cs" />
+    <Compile Include="System\Diagnostics\CodeAnalysis\SuppressMessageAttribute.cs" />
+    <Compile Include="System\Diagnostics\ConditionalAttribute.cs" />
+    <Compile Include="System\Diagnostics\Contracts\Contracts.cs" />
     <Compile Include="System\Diagnostics\Debugger.cs" />
+    <Compile Include="System\Diagnostics\DebuggerAttributes.cs" />
     <Compile Include="System\Diagnostics\Stopwatch.cs" />
     <Compile Include="System\DivideByZeroException.cs" />
     <Compile Include="System\Double.cs" />
@@ -192,9 +201,16 @@
     <Compile Include="System\RuntimeType.cs" />
     <Compile Include="System\RuntimeTypeHandle.cs" />
     <Compile Include="System\Runtime\CompilerServices\DecimalConstantAttribute.cs" />
+    <Compile Include="System\Runtime\CompilerServices\DynamicAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\FixedBufferAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\IsVolatile.cs" />
     <Compile Include="System\Runtime\InteropServices\CallingConvention.cs" />
+    <Compile Include="System\Runtime\Reliability\CriticalFinalizerObject.cs" />
+    <Compile Include="System\Runtime\Reliability\PrePrepareMethodAttribute.cs" />
+    <Compile Include="System\Runtime\Reliability\ReliabilityContractAttribute.cs" />
+    <Compile Include="System\Security\Permissions\PermissionAttributes.cs" />
+    <Compile Include="System\Security\Permissions\PermissionState.cs" />
+    <Compile Include="System\Security\Permissions\SecurityPermission.cs" />
     <Compile Include="System\StringComparer.cs" />
     <Compile Include="System\StringComparison.cs" />
     <Compile Include="System\TargetFrameworkAttribute.cs" />
@@ -225,6 +241,8 @@
     <Compile Include="System\ThreadAttributes.cs" />
     <Compile Include="System\Threading\LazyInitializer.cs" />
     <Compile Include="System\Threading\Volatile.cs" />
+    <Compile Include="System\ThreadStaticAttribute.cs" />
+    <Compile Include="System\ThrowHelper.cs" />
     <Compile Include="System\TimeSpan.cs" />
     <Compile Include="System\TimeZone.cs" />
     <Compile Include="System\Type.cs" />
@@ -318,6 +336,9 @@
     <Compile Include="System\Threading\Timer.cs" />
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="System\Threading\Tasks\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -41,6 +41,18 @@
             }
         }
 
+        public static int ProcessorCount
+        {
+            get
+            {
+                return 2;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public static string GetResourceString(string name)
         {
             return name;
@@ -54,6 +66,11 @@
         public static string GetResourceString(string name, int value)
         {
             return name + Space + value;
+        }
+
+        public static string GetResourceString(string name, object value, object value2)
+        {
+            return name + Space + value + Space + value2;
         }
 
         public static string GetResourceString(string name, string value, string value2)

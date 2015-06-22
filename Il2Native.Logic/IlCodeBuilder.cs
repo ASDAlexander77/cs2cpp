@@ -145,6 +145,16 @@
             this.parts.Add(label);
         }
 
+        public void Add(TryMark @try)
+        {
+            this.parts.Add(@try);
+        }
+
+        public void Add(CatchMark @catch)
+        {
+            this.parts.Add(@catch);
+        }
+
         public Label Branch(Code code, Code codeShort)
         {
             var branch = new BranchNode(code, codeShort);
@@ -170,6 +180,20 @@
             var label = new Label();
             this.Add(label);
             return label;
+        }
+
+        public TryMark Try()
+        {
+            var @try = new TryMark();
+            this.Add(@try);
+            return @try;
+        }
+
+        public CatchMark Catch(IType exception, TryMark @try)
+        {
+            var @catch = new CatchMark(exception, @try);
+            this.Add(@catch);
+            return @catch;
         }
 
         public byte[] GetCode()
@@ -589,7 +613,7 @@
                     continue;
                 }
 
-                var label = codeItem as Label;
+                var label = codeItem as INoOpCodeLabel;
                 if (label != null)
                 {
                     continue;
@@ -646,7 +670,7 @@
                     continue;
                 }
 
-                var label = codeItem as Label;
+                var label = codeItem as IAddressLabel;
                 if (label != null)
                 {
                     label.Address = address;
@@ -798,12 +822,97 @@
             }
         }
 
-        public class Label
+        public interface IAddressLabel
+        {
+            int Address
+            {
+                get;
+                set;
+            }
+
+            bool IsChanged { get; }
+        }
+
+        public interface INoOpCodeLabel : IAddressLabel
+        {
+        }
+
+        public class Label : INoOpCodeLabel
         {
             private int _address;
 
             public Label()
             {
+            }
+
+            public int Address
+            {
+                get
+                {
+                    return this._address;
+                }
+
+                set
+                {
+                    this.IsChanged = _address != value;
+                    this._address = value;
+                    this.AddressSet = true;
+                }
+            }
+
+            public bool AddressSet { get; private set; }
+
+            public bool IsChanged { get; private set; }
+        }
+
+        public class TryMark : INoOpCodeLabel
+        {
+            private int _address;
+
+            public TryMark()
+            {
+            }
+
+            public int Address
+            {
+                get
+                {
+                    return this._address;
+                }
+
+                set
+                {
+                    this.IsChanged = _address != value;
+                    this._address = value;
+                    this.AddressSet = true;
+                }
+            }
+
+            public bool AddressSet { get; private set; }
+
+            public bool IsChanged { get; private set; }
+        }
+
+        public class CatchMark : INoOpCodeLabel
+        {
+            private int _address;
+
+            public CatchMark(IType exception, TryMark @try)
+            {
+                this.Exception = exception;
+                this.Try = @try;
+            }
+
+            protected IType Exception
+            {
+                get;
+                private set;
+            }
+
+            protected TryMark Try
+            {
+                get;
+                private set;
             }
 
             public int Address

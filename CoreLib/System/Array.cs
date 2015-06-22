@@ -5,11 +5,23 @@ namespace System
 {
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Runtime.CompilerServices;
 
     [Serializable]
     public abstract class Array : ICloneable, IList
-    {       
+    {
+        public static ReadOnlyCollection<T> AsReadOnly<T>(T[] array)
+        {
+            if (array == null)
+            {
+                throw new ArgumentNullException("array");
+            }
+
+            // T[] implements IList<T>.
+            return new ReadOnlyCollection<T>(array);
+        }
+
         public static Array CreateInstance(Type elementType, int length)
         {
             throw new NotImplementedException();
