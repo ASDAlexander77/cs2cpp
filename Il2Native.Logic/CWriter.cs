@@ -378,6 +378,7 @@ namespace Il2Native.Logic
                 if (isVirtualCall)
                 {
                     var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
+                    Debug.Assert(methodDeclarationType != null);
                     if (methodDeclarationType.IsInterface)
                     {
                         var address = opCode.AddressStart;
@@ -2131,7 +2132,6 @@ namespace Il2Native.Logic
             }
 
             Debug.Assert(!fromTypeOriginal.Type.IsVoid());
-            Debug.Assert(!fromType.Type.IsVoid());
             Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
             Debug.Assert(!fromTypeOriginal.Type.IsEnum);

@@ -811,7 +811,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
         {
-            if (interfaceMember.Name == publicMethod.Name)
+            if (interfaceMember.FullName == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }
@@ -821,7 +821,7 @@ namespace Il2Native.Logic
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }
 
-            if (interfaceMember.FullName == publicMethod.Name)
+            if (interfaceMember.Name == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }

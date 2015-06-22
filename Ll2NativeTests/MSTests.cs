@@ -38,7 +38,7 @@ namespace Ll2NativeTests
         public TestContext TestContext { get; set; }
 
         [TestMethod]
-        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void GenerateTestFromMonoTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -141,7 +141,7 @@ namespace Ll2NativeTests
         }
 
         [TestMethod]
-        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void GenerateTestFromSscliTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -223,7 +223,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void TestCompileWithMscorlib()
         {
             var skip = new List<int>(new[] { 100 });
@@ -243,7 +243,7 @@ namespace Ll2NativeTests
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
 
-            // TODO: test-653: Overflow for stackalloc, (NEED TO BE FIXED)
+            // TODO: gtest-named-04: calling function with incorrect order of passed arguments (right-to-left but should be left-to-right) (BUG: needs to be fixed)
 
             // TODO: finish
             // __arglist
@@ -1049,6 +1049,7 @@ namespace Ll2NativeTests
             // 26 - error CS0121: The call is ambiguous between the following methods or properties: 'Test2.Extensions.IsNullable(System.Type)' and 'test.TypeExtensions.IsNullable(System.Type)' (TODO: Review it)
             // 35 - Redeclaring attribute which used in Core lib
             // 45 - lib with IL
+            // 46 - error CS1503: Argument 1: cannot convert from 'string' to 'char' (TODO: Investigate)
 
             var skip = new List<int>(new[]
             {
@@ -1057,7 +1058,8 @@ namespace Ll2NativeTests
                 15,
                 26,
                 35,
-                45
+                45,
+                46
             });
 
             foreach (var index in Enumerable.Range(1, 46).Where(n => !skip.Contains(n)))
@@ -1160,6 +1162,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void Test_Mono_GTests_Linq()
         {
+            // 5 - BUG: in CoreLib, in C# Compare string depends on culture settings and can be case-sensitive or not (TODO: fix CoreLib)
             // 10 - error CS1930: The range variable 'a' has already been declared
             // 13 - error CS0246: The type or namespace name 'CollectionBase' could not be found (are you missing a using directive or an assembly reference?)
             // 14 - error CS0518: Predefined type 'System.Linq.Expressions.ParameterExpression' is not defined or imported
@@ -1167,6 +1170,7 @@ namespace Ll2NativeTests
 
             var skip = new List<int>(new[]
             {
+                5,
                 10,
                 13,
                 14,

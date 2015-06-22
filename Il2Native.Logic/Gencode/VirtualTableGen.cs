@@ -102,8 +102,8 @@ namespace Il2Native.Logic.Gencode
 
                 // find method in virtual table
                 var baseMethod = virtualOrAbstractMethod.IsOverride
-                    ? virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
-                    : virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+                    ? virtualTable.Last(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
+                    : virtualTable.LastOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
 
                 if (baseMethod == null)
                 {
