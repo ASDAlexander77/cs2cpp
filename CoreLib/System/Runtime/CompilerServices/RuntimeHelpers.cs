@@ -45,7 +45,6 @@ namespace System.Runtime.CompilerServices
          * This call will generate an exception if the specified class constructor threw an
          * exception when it ran.
          */
-
         
         public static extern void RunClassConstructor(RuntimeTypeHandle type);
 
@@ -55,6 +54,10 @@ namespace System.Runtime.CompilerServices
             {
                 throw new NotImplementedException();
             }
+        }
+
+        public static void PrepareConstrainedRegions()
+        {
         }
     }
 }

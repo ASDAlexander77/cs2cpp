@@ -82,5 +82,10 @@
         {
             exit(exitCode);
         }
+
+        public static void FailFast(string getResourceString, Exception exception)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

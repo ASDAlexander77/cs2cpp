@@ -34,6 +34,8 @@ namespace System.Reflection
 
         Synchronized = 0x0020,   // Method is single threaded through the body.
         NoInlining = 0x0008,   // Method may not be inlined.
+        AggressiveInlining = 0x0100,   // Method should be inlined if possible.
+        NoOptimization = 0x0040,   // Method may not be optimized.
 
         MaxMethodImplVal = 0xFFFF,   // Range check value
     }

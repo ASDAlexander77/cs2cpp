@@ -19,6 +19,8 @@ namespace System.Runtime.CompilerServices
         InternalCall = System.Reflection.MethodImplAttributes.InternalCall,
         Synchronized = System.Reflection.MethodImplAttributes.Synchronized,
         NoInlining = System.Reflection.MethodImplAttributes.NoInlining,
+        AggressiveInlining = System.Reflection.MethodImplAttributes.AggressiveInlining,
+        NoOptimization = System.Reflection.MethodImplAttributes.NoOptimization
     }
 
     [Serializable]

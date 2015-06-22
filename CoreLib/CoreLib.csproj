@@ -180,6 +180,7 @@
     <Compile Include="System\Object.cs" />
     <Compile Include="System\ObjectDisposedException.cs" />
     <Compile Include="System\ObsoleteAttribute.cs" />
+    <Compile Include="System\OperationCanceledException.cs" />
     <Compile Include="System\OutOfMemoryException.cs" />
     <Compile Include="System\OverflowException.cs" />
     <Compile Include="System\ParamArrayAttribute.cs" />
@@ -200,14 +201,19 @@
     <Compile Include="System\RuntimeMethodHandle.cs" />
     <Compile Include="System\RuntimeType.cs" />
     <Compile Include="System\RuntimeTypeHandle.cs" />
+    <Compile Include="System\Runtime\CompilerServices\AsyncMethodBuilder.cs" />
     <Compile Include="System\Runtime\CompilerServices\DecimalConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\DynamicAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\FixedBufferAttribute.cs" />
+    <Compile Include="System\Runtime\CompilerServices\IAsyncStateMachine.cs" />
+    <Compile Include="System\Runtime\CompilerServices\INotifyCompletion.cs" />
     <Compile Include="System\Runtime\CompilerServices\IsVolatile.cs" />
+    <Compile Include="System\Runtime\CompilerServices\TaskAwaiter.cs" />
     <Compile Include="System\Runtime\InteropServices\CallingConvention.cs" />
     <Compile Include="System\Runtime\Reliability\CriticalFinalizerObject.cs" />
     <Compile Include="System\Runtime\Reliability\PrePrepareMethodAttribute.cs" />
     <Compile Include="System\Runtime\Reliability\ReliabilityContractAttribute.cs" />
+    <Compile Include="System\Security\Attributes.cs" />
     <Compile Include="System\Security\Permissions\PermissionAttributes.cs" />
     <Compile Include="System\Security\Permissions\PermissionState.cs" />
     <Compile Include="System\Security\Permissions\SecurityPermission.cs" />
@@ -239,7 +245,14 @@
     <Compile Include="System\Text\UnicodeEncoding.cs" />
     <Compile Include="System\Text\UTF8Encoding.cs" />
     <Compile Include="System\ThreadAttributes.cs" />
+    <Compile Include="System\Threading\AsyncLocal.cs" />
+    <Compile Include="System\Threading\CancellationToken.cs" />
+    <Compile Include="System\Threading\ExecutionContext.cs" />
     <Compile Include="System\Threading\LazyInitializer.cs" />
+    <Compile Include="System\Threading\SendOrPostCallback.cs" />
+    <Compile Include="System\Threading\SynchronizationContext.cs" />
+    <Compile Include="System\Threading\Tasks\Task.cs" />
+    <Compile Include="System\Threading\Tasks\TaskCanceledException.cs" />
     <Compile Include="System\Threading\Volatile.cs" />
     <Compile Include="System\ThreadStaticAttribute.cs" />
     <Compile Include="System\ThrowHelper.cs" />
@@ -317,7 +330,10 @@
     <Compile Include="System\Runtime\CompilerServices\ExtensionAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\MethodImplAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\IndexerNameAttribute.cs" />
-    <Compile Include="System\Runtime\CompilerServices\InternalsVisibleToAttribute.cs" />
+    <Compile Include="System\Runtime\CompilerServices\InternalsVisibleToAttribute.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Runtime\CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="System\Runtime\InteropServices\Attributes.cs" />
     <Compile Include="System\Runtime\InteropServices\CharSet.cs" />
@@ -337,9 +353,7 @@
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="System\Threading\Tasks\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
