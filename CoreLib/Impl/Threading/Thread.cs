@@ -17,15 +17,6 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        private static Thread GetCurrentThreadNative()
-        {
-            return currentThread;
-        }
-
-        /// <summary>
-        /// </summary>
         public int ManagedThreadId
         {
             get
@@ -35,30 +26,45 @@ namespace System.Threading
         }
 
         /// <summary>
+        /// Helper function to set the AbortReason for a thread abort.
+        /// Checks that they're not already set, and then atomically updates
+        /// the reason info (object + ADID).
         /// </summary>
-        private void InternalFinalize()
+        /// <param name="o">
+        /// </param>
+        internal void SetAbortReason(object o)
         {
+            this.abortReason = o;
         }
 
         /// <summary>
+        /// Helper function to retrieve the AbortReason from a thread
+        /// abort.  Will perform cross-AppDomain marshalling if the object
+        /// lives in a different AppDomain from the requester.
         /// </summary>
-        /// <param name="principal">
-        /// </param>
-        /// <param name="stackMark">
-        /// </param>
-        private void StartInternal(IPrincipal principal, ref StackCrawlMark stackMark)
-        {
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="millisecondsTimeout">
-        /// </param>
         /// <returns>
         /// </returns>
-        private bool JoinInternal(int millisecondsTimeout)
+        internal object GetAbortReason()
         {
-            return false;
+            return this.abortReason;
+        }
+
+        /// <summary>
+        /// Helper function to clear the AbortReason.  Takes care of
+        /// AppDomain related cleanup if required.
+        /// </summary>
+        internal void ClearAbortReason()
+        {
+            this.abortReason = null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private static Thread GetCurrentThreadNative()
+        {
+            return currentThread;
         }
 
         /// <summary>
@@ -79,39 +85,6 @@ namespace System.Threading
             return AppDomain.CurrentDomain;
         }
 
-        // Helper function to set the AbortReason for a thread abort.
-        // Checks that they're not alredy set, and then atomically updates
-        // the reason info (object + ADID).
-        /// <summary>
-        /// </summary>
-        /// <param name="o">
-        /// </param>
-        internal void SetAbortReason(object o)
-        {
-            this.abortReason = o;
-        }
-
-        // Helper function to retrieve the AbortReason from a thread
-        // abort.  Will perform cross-AppDomain marshalling if the object
-        // lives in a different AppDomain from the requester.
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        internal object GetAbortReason()
-        {
-            return this.abortReason;
-        }
-
-        // Helper function to clear the AbortReason.  Takes care of
-        // AppDomain related cleanup if required.
-        /// <summary>
-        /// </summary>
-        internal void ClearAbortReason()
-        {
-            this.abortReason = null;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="millisecondsTimeout">
@@ -120,10 +93,10 @@ namespace System.Threading
         {
         }
 
-        // Helper method to get a logical thread ID for StringBuilder (for
-        // correctness) and for FileStream's async code path (for perf, to
-        // avoid creating a Thread instance).
         /// <summary>
+        /// Helper method to get a logical thread ID for StringBuilder (for
+        /// correctness) and for FileStream's async code path (for perf, to
+        /// avoid creating a Thread instance).
         /// </summary>
         /// <returns>
         /// </returns>
@@ -154,11 +127,10 @@ namespace System.Threading
 
 #endif
 
-        /* wait for a length of time proportial to 'iterations'.  Each iteration is should
-           only take a few machine instructions.  Calling this API is preferable to coding
-           a explict busy loop because the hardware can be informed that it is busy waiting. */
-
         /// <summary>
+        /// wait for a length of time proportial to 'iterations'.  Each iteration is should
+        /// only take a few machine instructions.  Calling this API is preferable to coding
+        /// a explict busy loop because the hardware can be informed that it is busy waiting.
         /// </summary>
         /// <param name="iterations">
         /// </param>
@@ -180,6 +152,34 @@ namespace System.Threading
         /// <returns>
         /// </returns>
         private static bool YieldInternal()
+        {
+            return false;
+        }
+
+
+        /// <summary>
+        /// </summary>
+        private void InternalFinalize()
+        {
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="principal">
+        /// </param>
+        /// <param name="stackMark">
+        /// </param>
+        private void StartInternal(IPrincipal principal, ref StackCrawlMark stackMark)
+        {
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="millisecondsTimeout">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private bool JoinInternal(int millisecondsTimeout)
         {
             return false;
         }
