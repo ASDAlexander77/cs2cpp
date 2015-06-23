@@ -23,6 +23,11 @@ namespace System.Threading
         {
             throw new NotImplementedException();
         }
+
+        public void WaitOneWithoutFAS()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

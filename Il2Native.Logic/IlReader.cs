@@ -332,6 +332,8 @@ namespace Il2Native.Logic
         /// </summary>
         public IlReader()
         {
+            this.CompileInMemory = true;
+
             this.StaticConstructors = new List<IMethod>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
@@ -553,6 +555,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected bool UsingRoslyn { get; set; }
+
+        /// <summary>
+        /// </summary>
+        protected bool CompileInMemory { get; set; }
 
         /// <summary>
         /// </summary>
@@ -893,7 +899,11 @@ namespace Il2Native.Logic
         public void Load()
         {
             this.Assembly = !this.isDll
-                                ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Sources) : this.Compile(this.Sources)
+                                ? this.UsingRoslyn 
+                                    ? this.CompileInMemory 
+                                        ? this.CompileWithRoslynInMemory(this.Sources)
+                                        : this.CompileWithRoslyn(this.Sources) 
+                                    : this.Compile(this.Sources)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
 
             if (this.isDll)
@@ -1733,6 +1743,53 @@ namespace Il2Native.Logic
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(outDll, FileMode.Open, FileAccess.Read));
+        }
+
+        private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
+        {
+            var srcFileName = Path.GetFileNameWithoutExtension(this.FirstSource);
+            var baseName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            var nameDll = srcFileName + "_" + baseName + ".dll";
+            var namePdb = srcFileName + "_" + baseName + ".pdb";
+            var outDll = Path.Combine(Path.GetTempPath(), nameDll);
+            var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
+
+            var syntaxTrees =
+                source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
+
+            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+            var options =
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
+                                                                                 .WithOptimizations(!this.DebugInfo)
+                                                                                 .WithRuntimeMetadataVersion("4.5");
+
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
+
+            var dllStream = new MemoryStream();
+            var pdbStream = new MemoryStream();
+
+            var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
+
+            if (result.Diagnostics.Length > 0)
+            {
+                Console.WriteLine(@"Errors/Warnings:");
+                foreach (var diagnostic in result.Diagnostics)
+                {
+                    Console.WriteLine(diagnostic);
+                }
+            }
+
+            dllStream.Flush();
+            dllStream.Position = 0;
+
+            pdbStream.Flush();
+            pdbStream.Position = 0;
+
+            // Successful Compile
+            return AssemblyMetadata.CreateFromImageStream(dllStream);
         }
 
         /// <summary>

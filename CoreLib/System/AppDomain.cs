@@ -8,6 +8,16 @@ using System.Runtime.CompilerServices;
 
 namespace System
 {
+    public sealed class AppDomainSetup
+    {
+        public string TargetFrameworkName
+        {
+            get
+            {
+                return ".NETFramework,Version=v4.0";
+            }
+        }
+    }
 
     public sealed class AppDomain : MarshalByRefObject
     {
@@ -20,6 +30,13 @@ namespace System
             throw new Exception();
         }
 
+        public AppDomainSetup SetupInformation
+        {
+            get
+            {
+                return new AppDomainSetup();
+            }
+        }
         
         public extern static AppDomain CreateDomain(String friendlyName);
 
@@ -44,6 +61,18 @@ namespace System
             get
             {
                 return m_friendlyName;
+            }
+        }
+
+        public string BaseDirectory
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -72,6 +101,11 @@ namespace System
 
         
         public static extern void Unload(AppDomain domain);
+
+        public int GetId()
+        {
+            return 1;
+        }
     }
 }
 

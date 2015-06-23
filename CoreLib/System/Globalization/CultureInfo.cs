@@ -20,6 +20,7 @@ namespace System.Globalization
         private CultureInfo m_parent;
         [NonSerialized]
         internal bool m_isInherited;
+
         const string c_ResourceBase = "System.Globalization.Resources.CultureInfo";
         internal string EnsureStringResource(ref string str, System.Globalization.Resources.CultureInfo.StringResources id)
         {
@@ -57,6 +58,98 @@ namespace System.Globalization
         {
             m_rm = resourceManager;
             m_name = resourceManager.m_cultureName;
+        }
+
+        public static CultureInfo UserDefaultCulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = UserDefaultCultureInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    UserDefaultCultureInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo UserDefaultCultureInternal
+        {
+            get;
+
+            set;
+        }
+
+        public static CultureInfo UserDefaultUICulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = UserDefaultUICultureInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    UserDefaultUICultureInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo UserDefaultUICultureInternal
+        {
+            get;
+
+            set;
+        }
+
+        public static CultureInfo DefaultThreadCurrentUICulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = DefaultThreadCurrentUICultureInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    DefaultThreadCurrentUICultureInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo DefaultThreadCurrentUICultureInternal
+        {
+            get;
+
+            set;
+        }
+
+        public static CultureInfo DefaultThreadCurrentCulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = DefaultThreadCurrentCultureInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    DefaultThreadCurrentCultureInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo DefaultThreadCurrentCultureInternal
+        {
+            get;
+
+            set;
         }
 
         public static CultureInfo CurrentUICulture
@@ -204,6 +297,10 @@ namespace System.Globalization
 
                 return dateTimeInfo;
             }
+        }
+
+        public static void VerifyCultureName(CultureInfo value, bool b)
+        {
         }
     }
 }

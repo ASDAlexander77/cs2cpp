@@ -11,6 +11,11 @@ namespace System.Threading
         {
             
         }
+
+        public static void Enter(Object obj, ref bool took)
+        {
+
+        }
         
         public static void Exit(Object obj)
         {

@@ -29,6 +29,16 @@ namespace System.Threading
         {
             throw new NotImplementedException();
         }
+
+        public static void Pause()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void Resume()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

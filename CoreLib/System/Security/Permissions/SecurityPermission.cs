@@ -42,6 +42,8 @@ namespace System.Security.Permissions
     {
 #pragma warning disable 618
         private SecurityPermissionFlag m_flags;
+
+        private bool m_controlThread;
 #pragma warning restore 618
 
         //
@@ -119,6 +121,19 @@ namespace System.Security.Permissions
             get
             {
                 return m_flags;
+            }
+        }
+
+        public bool ControlThread
+        {
+            set
+            {
+                m_controlThread = value;
+            }
+
+            get
+            {
+                return m_controlThread;
             }
         }
     }

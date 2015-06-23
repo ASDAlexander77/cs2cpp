@@ -1,5 +1,15 @@
-// Licensed under the MIT license.
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+/*=============================================================================
+**
+**
+**
+** Purpose: Class that manages stores of local data. This class is used in 
+**          cooperation with the LocalDataStore class.
+**
+**
+=============================================================================*/
 namespace System {
     
     using System;
