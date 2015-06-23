@@ -260,6 +260,18 @@ namespace System
         {
             throw new NotImplementedException();
         }
+
+        public override bool IsAssignableFrom(Type c)
+        {
+            if ((object)c == null)
+                return false;
+
+            if (Object.ReferenceEquals(c, this))
+                return true;
+
+            // For anything else we return false.
+            return false;
+        }
     }
 }
 
