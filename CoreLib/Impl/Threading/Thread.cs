@@ -270,7 +270,15 @@ namespace System.Threading
                 }
             }
 
-            ((ThreadStart)arg)();
+            var parameterizedStart = arg as ParameterizedStart;
+            if (parameterizedStart != null)
+            {
+                ((ParameterizedThreadStart)parameterizedStart.@delegate)(parameterizedStart.obj);
+            }
+            else
+            {
+                ((ThreadStart)arg)();
+            }
         }
 
         /// <summary>
@@ -300,7 +308,11 @@ namespace System.Threading
                     }
                 }
 
-                returnCode = pthread_create(ref pthread, ref pthreadAttr, new pthread_tart_routine_delegate(pthread_tart_routine).ToPointer(), this.start);
+                returnCode = pthread_create(
+                    ref pthread,
+                    ref pthreadAttr,
+                    new pthread_tart_routine_delegate(pthread_tart_routine).ToPointer(),
+                    (this.start is ThreadStart) ? (object)this.start : (object)new ParameterizedStart { @delegate = this.start, obj = m_ThreadStartArg });
                 switch ((ReturnCode)returnCode)
                 {
                     case ReturnCode.EPERM:
@@ -415,6 +427,12 @@ namespace System.Threading
 
             this.start = start;
             this.maxStackSize = maxStackSize;
+        }
+
+        private class ParameterizedStart
+        {
+            public Delegate @delegate;
+            public object obj;
         }
 
         private unsafe struct PthreadAttr

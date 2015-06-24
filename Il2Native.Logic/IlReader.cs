@@ -354,7 +354,7 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
-            this.UsingRoslyn = args != null && args.Any(a => a == "roslyn");
+            this.UsingRoslyn = args == null || !args.Any(a => a == "roslyn-");
             this.isDll = this.FirstSource.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
             this.DefaultDllLocations = this.isDll ? Path.GetDirectoryName(Path.GetFullPath(this.FirstSource)) : null;
             this.DebugInfo = args != null && args.Contains("debug");

@@ -57,6 +57,10 @@
 
         /// <summary>
         /// </summary>
+        public const bool GcMultiThreadEnabled = true;
+
+        /// <summary>
+        /// </summary>
         public const bool GcDebugEnabled = false;
 
         /// <summary>
@@ -100,6 +104,7 @@
             bool includeCoreLib,
             bool roslyn = UsingRoslyn,
             bool gc = GcEnabled,
+            bool gcmt = GcMultiThreadEnabled,
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
             bool stubs = false,
@@ -126,6 +131,11 @@
             if (!gc)
             {
                 args.Add("gc-");
+            }
+
+            if (!gcmt)
+            {
+                args.Add("gcmt-");
             }
 
             if (!gctors)
@@ -228,9 +238,19 @@
 
             if (!justCompile)
             {
-                if (!File.Exists(Path.Combine(OutputPath, "libgc-lib.a")))
+                if (GcMultiThreadEnabled)
                 {
-                    throw new FileNotFoundException("libgc-lib.a could not be found");
+                    if (!File.Exists(Path.Combine(OutputPath, "libgcmt-lib.a")))
+                    {
+                        throw new FileNotFoundException("libgcmt-lib.a could not be found");
+                    }
+                }
+                else
+                {
+                    if (!File.Exists(Path.Combine(OutputPath, "libgc-lib.a")))
+                    {
+                        throw new FileNotFoundException("libgc-lib.a could not be found");
+                    }
                 }
 
                 if (CompilerHelper.Mscorlib)
@@ -244,10 +264,11 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -lgc-lib -march=i686 -L .{2}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2}",
                             fileName,
                             opt ? "-O3 " : string.Empty,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
+                            GcMultiThreadEnabled ? "gcmt-lib" : "gc-lib"));
 
                     Assert.IsTrue(
                         File.Exists(
@@ -259,11 +280,12 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .{3}",
+                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -l{4} -march=i686 -L .{3}",
                             fileName,
                             OutputObjectFileExt,
                             opt ? "-O3 " : string.Empty,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
+                            GcMultiThreadEnabled ? "gcmt-lib" : "gc-lib"));
 
                     // test execution
                     ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
