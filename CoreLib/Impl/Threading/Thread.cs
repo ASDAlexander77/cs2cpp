@@ -92,6 +92,13 @@ namespace System.Threading
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int pthread_join(int pthread, object retVal);
 
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
+        
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_setcanceltype(int type, int* oldtype);
+
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int nanosleep(int* tv_sec, int* tv_nsec);
 
@@ -249,6 +256,23 @@ namespace System.Threading
         {
         }
 
+        private delegate void pthread_tart_routine_delegate(object arg);
+
+        private static void pthread_tart_routine(object arg)
+        {
+            unsafe
+            {
+                var returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
+                switch ((ReturnCode)returnCode)
+                {
+                    case ReturnCode.EINVAL:
+                        throw new InvalidOperationException("Invalid value for state");
+                }
+            }
+
+            ((ThreadStart)arg)();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="principal">
@@ -266,14 +290,17 @@ namespace System.Threading
                         throw new InvalidOperationException("Insufficient memory exists to initialise the thread attributes object.");
                 }
 
-                returnCode = pthread_attr_setstacksize(ref pthreadAttr, this.maxStackSize);
-                switch ((ReturnCode)returnCode)
+                if (this.maxStackSize > 0)
                 {
-                    case ReturnCode.EINVAL:
-                        throw new InvalidOperationException("The stack size is less than PTHREAD_STACK_MIN (16384) bytes.");
+                    returnCode = pthread_attr_setstacksize(ref pthreadAttr, this.maxStackSize);
+                    switch ((ReturnCode)returnCode)
+                    {
+                        case ReturnCode.EINVAL:
+                            throw new InvalidOperationException("The stack size is less than PTHREAD_STACK_MIN (16384) bytes.");
+                    }
                 }
 
-                returnCode = pthread_create(ref pthread, ref pthreadAttr, this.start == null ? null : this.start.ToPointer(), this.start == null ? null : this.start.Target);
+                returnCode = pthread_create(ref pthread, ref pthreadAttr, new pthread_tart_routine_delegate(pthread_tart_routine).ToPointer(), this.start);
                 switch ((ReturnCode)returnCode)
                 {
                     case ReturnCode.EPERM:
@@ -401,6 +428,12 @@ namespace System.Threading
         private struct SchedParam
         {
             private int schedPriority;
+        }
+
+        private enum PThreadCancel
+        {
+            Disable = 0,
+            Enable = 1
         }
 
         private enum ReturnCode
