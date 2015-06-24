@@ -657,26 +657,6 @@ namespace System.Threading
         }
 
         /*=========================================================================
-        ** Returns true if the thread has been started and is not dead.
-        =========================================================================*/
-        public extern bool IsAlive
-        {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
-
-        /*=========================================================================
-        ** Returns true if the thread is a threadpool thread.
-        =========================================================================*/
-        public extern bool IsThreadPoolThread
-        {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
-
-        /*=========================================================================
         ** Waits for the thread to die or for timeout milliseconds to elapse.
         ** Returns true if the thread died, or false if the wait timed out. If
         ** Timeout.Infinite is given as the parameter, no timeout will occur.

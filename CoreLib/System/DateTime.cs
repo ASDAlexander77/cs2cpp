@@ -57,7 +57,7 @@ namespace System
     public struct DateTime : IFormattable, IConvertible
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int gettimeofday(int* time, int* timezome);
+        public static extern unsafe int gettimeofday(int* time, int* timezone);
 
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
@@ -108,8 +108,6 @@ namespace System
             0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
         private static readonly int[] DaysToMonth366 = {
             0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
-
-        private static readonly int[] timeBuffer = new int[4];
 
         private ulong m_ticks;
 
@@ -348,13 +346,10 @@ namespace System
             {
                 unsafe
                 {
-                    fixed (int* p = &timeBuffer[0])
-                    fixed (int* p2 = &timeBuffer[2])
+                    var timeBuffer = stackalloc int[4];
+                    if (gettimeofday(&timeBuffer[0], &timeBuffer[2]) == 0)
                     {
-                        if (gettimeofday(p, p2) == 0)
-                        {
-                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10 + p2[0] * TicksPerMinute);
-                        }
+                        return new DateTime(timeBuffer[0] * TicksPerSecond + timeBuffer[1] * 10 + timeBuffer[2] * TicksPerMinute);
                     }
 
                     throw new Exception();
@@ -369,12 +364,10 @@ namespace System
             {
                 unsafe
                 {
-                    fixed (int* p = &timeBuffer[0])
+                    var timeBuffer = stackalloc int[4];
+                    if (gettimeofday(&timeBuffer[0], null) == 0)
                     {
-                        if (gettimeofday(p, null) == 0)
-                        {
-                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10, DateTimeKind.Utc);
-                        }
+                        return new DateTime(timeBuffer[0] * TicksPerSecond + timeBuffer[1] * 10, DateTimeKind.Utc);
                     }
 
                     throw new Exception();
