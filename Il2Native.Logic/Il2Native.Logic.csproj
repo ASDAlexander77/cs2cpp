@@ -222,7 +222,7 @@
     <None Include="Resources\decimals.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\CoreLib\System\NativeType.cs">
+    <None Include="..\CoreLib\Impl\NativeType.cs">
       <Link>Resources\NativeType.cs</Link>
     </None>
   </ItemGroup>

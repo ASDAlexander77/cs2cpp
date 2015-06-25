@@ -84,14 +84,13 @@ namespace System.Threading
         private static extern int pthread_attr_setstacksize(ref PthreadAttr attr, int stacksize);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private static extern unsafe int pthread_create(ref int pthread, ref PthreadAttr attr, void* startRoutine, object arg);
+        private static extern unsafe int GC_PTHREAD_CREATE(ref int pthread, ref PthreadAttr attr, void* startRoutine, object arg);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private static extern int pthread_cancel(int pthread);
+        private static extern int GC_PTHREAD_CANCEL(int pthread);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private static extern int pthread_join(int pthread, object retVal);
-
+        private static extern int GC_PTHREAD_JOIN(int pthread, object retVal);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
@@ -308,7 +307,7 @@ namespace System.Threading
                     }
                 }
 
-                returnCode = pthread_create(
+                returnCode = GC_PTHREAD_CREATE(
                     ref pthread,
                     ref pthreadAttr,
                     new pthread_tart_routine_delegate(pthread_tart_routine).ToPointer(),
@@ -337,7 +336,7 @@ namespace System.Threading
         {
             this.state = ThreadState.WaitSleepJoin;
 
-            var returnCode = pthread_join(this.pthread, null);
+            var returnCode = GC_PTHREAD_JOIN(this.pthread, null);
             switch ((ReturnCode)returnCode)
             {
                 case ReturnCode.EDEADLK:
@@ -359,7 +358,7 @@ namespace System.Threading
         {
             this.state = ThreadState.AbortRequested;
 
-            var returnCode = pthread_cancel(this.pthread);
+            var returnCode = GC_PTHREAD_CANCEL(this.pthread);
             switch ((ReturnCode)returnCode)
             {
                 case ReturnCode.ESRCH:

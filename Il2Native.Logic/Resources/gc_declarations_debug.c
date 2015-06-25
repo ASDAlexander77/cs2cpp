@@ -4,4 +4,5 @@
 #undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
 #undef GC_REGISTER_FINALIZER
 #define GC_DEBUG
+#define GC_THREADS
 #include "gc.h"
