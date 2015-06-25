@@ -9,9 +9,7 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
-extern void *__builtin_memset(void *,int32_t,uint32_t);
-#define memset __builtin_memset
-extern void *__builtin_memcpy(void *,const void *,uint32_t);
+
 #define compare_and_swap __sync_val_compare_and_swap 
 #define sync_synchronize __sync_synchronize
 #define fetch_and_add __sync_fetch_and_add
@@ -19,7 +17,11 @@ extern void *__builtin_memcpy(void *,const void *,uint32_t);
 #define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
-inline void* memcpy(void* dst, void* src, int32_t size)
+extern void *__builtin_memset(void *,int32_t,uint32_t);
+#define MemSet __builtin_memset
+
+extern void *__builtin_memcpy(void *,const void *,uint32_t);
+Void* MemCpy(Byte* dst, Byte* src, UInt32 size)
 {
 	return __builtin_memcpy(dst, src, size);
 }
@@ -40,12 +42,18 @@ typedef uint64_t UInt64;
 typedef float Single;
 typedef double Double;
 
-#define GC_MALLOC calloc
-#define GC_MALLOC_ATOMIC calloc
-#define GC_MALLOC_IGNORE_OFF_PAGE calloc
-#define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE calloc
+#define GC_MALLOC __alloc
+#define GC_MALLOC_ATOMIC __alloc
+#define GC_MALLOC_IGNORE_OFF_PAGE __alloc
+#define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE __alloc
+#define GC_PTHREAD_CREATE pthread_create
+#define GC_PTHREAD_SIGMASK pthread_sigmask
+#define GC_PTHREAD_JOIN pthread_join
+#define GC_PTHREAD_DETACH pthread_detach
+#define GC_PTHREAD_CANCEL pthread_cancel
+#define GC_PTHREAD_EXIT pthread_exit
 
-extern "C" Byte* calloc(UInt32);
+extern "C" Void* calloc(UInt32, UInt32);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();
 
@@ -58,6 +66,11 @@ extern "C" void* _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
 
 // Float
 extern "C" Double fmod (Double, Double);
+
+inline Void* __alloc(UInt32 size)
+{
+	return (Void*) calloc(1, size);
+}
 
 inline Void* __interface_to_object(Void* _interface)
 {

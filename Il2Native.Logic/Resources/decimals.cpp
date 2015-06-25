@@ -13,7 +13,7 @@ typedef union {
 		UInt32 Hi;
 #endif           
 	} u;
-} SPLIT64;
+} SPLIT64__;
 
 typedef union{
 	struct {
@@ -30,7 +30,7 @@ typedef union{
 #endif
 	} u;
 	double dbl;
-} DBLSTRUCT;
+} DBLSTRUCT__;
 
 typedef struct {
 #if BIGENDIAN
@@ -66,13 +66,13 @@ typedef struct {
 #define DECIMAL_LO64_SET(dec,value)   {UInt64 _Value = value; DECIMAL_MID32(dec) = (UInt32)(_Value >> 32); DECIMAL_LO32(dec) = (UInt32)_Value; }
 #define DECIMAL_SETZERO(dec) {DECIMAL_LO32(dec) = 0; DECIMAL_MID32(dec) = 0; DECIMAL_HI32(dec) = 0; DECIMAL_SIGNSCALE(dec) = 0;}
 
-const SPLIT64    sdlTenToEighteen = { UInt64(1000000000000000000) };
+const SPLIT64__    sdlTenToEighteen = { UInt64(1000000000000000000) };
 
 #define NOERROR 0
 #define DISP_E_OVERFLOW 1
 #define DISP_E_DIVBYZERO 2
 
-typedef union tagCY {
+typedef union tagCY__ {
 	struct {
 #if BIGENDIAN
 		Int32    Hi;
@@ -83,11 +83,11 @@ typedef union tagCY {
 #endif
 	} u;
 	Int64 int64;
-} CY, *LPCY;
+} CY__;
 
-typedef CY CURRENCY;
+typedef CY__ CURRENCY__;
 
-typedef struct tagDEC {
+typedef struct tagDEC__ {
 
 	// Decimal.cs treats the first two shorts as one long
 	// And they seriable the data so we need to little endian
@@ -120,13 +120,12 @@ typedef struct tagDEC {
 		} v;
 		// Don't use Lo64 in the PAL: UInt64 Lo64;
 	} v;
-} DECIMAL;
-
+} DECIMAL__;
 
 UInt32 ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
 	10000000, 100000000, 1000000000 };
 
-const SPLIT64 sdlPower10[] = { { UInt64(10000000000) },          // 1E10
+const SPLIT64__ sdlPower10[] = { { UInt64(10000000000) },          // 1E10
 { UInt64(100000000000) },     // 1E11
 { UInt64(1000000000000) },    // 1E12
 { UInt64(10000000000000) },   // 1E13
@@ -202,7 +201,7 @@ Double fnDblPower10(Int32 ix)
 
 inline UInt64 DivMod64by32(UInt64 num, UInt32 den)
 {
-	SPLIT64  sdl;
+	SPLIT64__  sdl;
 
 	sdl.u.Lo = Div64by32(num, den);
 	sdl.u.Hi = Mod64by32(num, den);
@@ -211,18 +210,18 @@ inline UInt64 DivMod64by32(UInt64 num, UInt32 den)
 
 inline UInt64 DivMod32by32(UInt32 num, UInt32 den)
 {
-	SPLIT64  sdl;
+	SPLIT64__  sdl;
 
 	sdl.u.Lo = num / den;
 	sdl.u.Hi = num % den;
 	return sdl.int64;
 }
 
-UInt64 UInt64x64To128(SPLIT64 sdlOp1, SPLIT64 sdlOp2, UInt64 *pdlHi)
+UInt64 UInt64x64To128(SPLIT64__ sdlOp1, SPLIT64__ sdlOp2, UInt64 *pdlHi)
 {
-	SPLIT64  sdlTmp1;
-	SPLIT64  sdlTmp2;
-	SPLIT64  sdlTmp3;
+	SPLIT64__  sdlTmp1;
+	SPLIT64__  sdlTmp2;
+	SPLIT64__  sdlTmp3;
 
 	sdlTmp1.int64 = UInt32x32To64(sdlOp1.u.Lo, sdlOp2.u.Lo); // lo partial prod
 	sdlTmp2.int64 = UInt32x32To64(sdlOp1.u.Lo, sdlOp2.u.Hi); // mid 1 partial prod
@@ -242,8 +241,8 @@ UInt64 UInt64x64To128(SPLIT64 sdlOp1, SPLIT64 sdlOp2, UInt64 *pdlHi)
 
 UInt32 FullDiv64By32(UInt64 *pdlNum, UInt32 ulDen)
 {
-	SPLIT64  sdlTmp;
-	SPLIT64  sdlRes;
+	SPLIT64__  sdlTmp;
+	SPLIT64__  sdlRes;
 
 	sdlTmp.int64 = *pdlNum;
 	sdlRes.u.Hi = 0;
@@ -347,7 +346,7 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 	UInt32   ulPwr;
 	UInt32   ulTmp;
 	UInt32   ulSticky;
-	SPLIT64 sdlTmp;
+	SPLIT64__ sdlTmp;
 
 	// See if we need to scale the result.  The combined scale must
 	// be <= DEC_SCALE_MAX and the upper 96 bits must be zero.
@@ -502,19 +501,19 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 
 Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
 {
-	DECIMAL* pdecL = (DECIMAL*)d1;
-	DECIMAL* pdecR = (DECIMAL*)d2;
-	DECIMAL* pdecRes = (DECIMAL*)res;
+	DECIMAL__* pdecL = (DECIMAL__*)d1;
+	DECIMAL__* pdecR = (DECIMAL__*)d2;
+	DECIMAL__* pdecRes = (DECIMAL__*)res;
 
 	UInt32     rgulNum[6];
 	UInt32     ulPwr;
 	Int32       iScale;
 	Int32       iHiProd;
 	Int32       iCur;
-	SPLIT64   sdlTmp;
-	DECIMAL   decRes;
-	DECIMAL   decTmp;
-	DECIMAL* pdecTmp;
+	SPLIT64__   sdlTmp;
+	DECIMAL__   decRes;
+	DECIMAL__   decTmp;
+	DECIMAL__* pdecTmp;
 
 	bSign ^= (DECIMAL_SIGN(*pdecR) ^ DECIMAL_SIGN(*pdecL)) & DECIMAL_NEG;
 
@@ -771,8 +770,8 @@ RetDec:
 
 Int32 DecCmp(Int32* d1, Int32* d2)
 {
-	DECIMAL* pdecL = (DECIMAL*)d1;
-	DECIMAL* pdecR = (DECIMAL*)d2;
+	DECIMAL__* pdecL = (DECIMAL__*)d1;
+	DECIMAL__* pdecR = (DECIMAL__*)d2;
 
 	UInt32   ulSgnL;
 	UInt32   ulSgnR;
@@ -795,7 +794,7 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 		if (ulSgnL == 0)    // both are zero
 			return VARCMP_EQ; // return equal
 
-		DECIMAL decRes;
+		DECIMAL__ decRes;
 
 		DecAddSub((Int32*)pdecL, (Int32*)pdecR, (Int32*)&decRes, DECIMAL_NEG);
 		if (DECIMAL_LO64_GET(decRes) == 0 && decRes.Hi32 == 0)
@@ -814,14 +813,14 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 
 Int32 DecFromR4(Single fltIn, Int32* pdec)
 {
-	DECIMAL* pdecOut = (DECIMAL*)pdec;
+	DECIMAL__* pdecOut = (DECIMAL__*)pdec;
 
 	Int32         iExp;    // number of bits to left of binary poInt32
 	Int32         iPower;
 	UInt32		  ulMant;
 	Double        dbl;
-	SPLIT64       sdlLo;
-	SPLIT64       sdlHi;
+	SPLIT64__       sdlLo;
+	SPLIT64__       sdlHi;
 	Int32         lmax, cur;  // temps used during scale reduction
 
 	// The most we can scale by is 10^28, which is just slightly more
@@ -958,12 +957,12 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 
 Int32 DecFromR8(Double dblIn, Int32* pdec)
 {
-	DECIMAL* pdecOut = (DECIMAL*)pdec;
+	DECIMAL__* pdecOut = (DECIMAL__*)pdec;
 
 	Int32         iExp;    // number of bits to left of binary poInt32
 	Int32         iPower;  // power-of-10 scale factor
-	SPLIT64       sdlMant;
-	SPLIT64       sdlLo;
+	SPLIT64__       sdlMant;
+	SPLIT64__       sdlLo;
 	Double        dbl;
 	Int32         lmax, cur;  // temps used during scale reduction
 	UInt32         ulPwrCur;
@@ -974,7 +973,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 	// than 2^93.  So a Single with an exponent of -94 could just
 	// barely reach 0.5, but smaller exponents will always round to zero.
 	//
-	if ((iExp = ((DBLSTRUCT *)&dblIn)->u.exp - DBLBIAS) < -94)
+	if ((iExp = ((DBLSTRUCT__ *)&dblIn)->u.exp - DBLBIAS) < -94)
 	{
 		DECIMAL_SETZERO(*pdecOut);
 		return NOERROR;
@@ -1102,19 +1101,19 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		DECIMAL_MID32(*pdecOut) = sdlMant.u.Hi;
 	}
 
-	DECIMAL_SIGN(*pdecOut) = (Byte)((DBLSTRUCT *)&dblIn)->u.sign << 7;
+	DECIMAL_SIGN(*pdecOut) = (Byte)((DBLSTRUCT__ *)&dblIn)->u.sign << 7;
 	return NOERROR;
 }
 
 Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 {
-	DECIMAL* pdecL = (DECIMAL*)d1;
-	DECIMAL* pdecR = (DECIMAL*)d2;
-	DECIMAL* pdecRes = (DECIMAL*)res;
+	DECIMAL__* pdecL = (DECIMAL__*)d1;
+	DECIMAL__* pdecR = (DECIMAL__*)d2;
+	DECIMAL__* pdecRes = (DECIMAL__*)res;
 
-	SPLIT64 sdlTmp;
-	SPLIT64 sdlTmp2;
-	SPLIT64 sdlTmp3;
+	SPLIT64__ sdlTmp;
+	SPLIT64__ sdlTmp2;
+	SPLIT64__ sdlTmp3;
 	Int32   iScale;
 	Int32   iHiProd;
 	UInt32  ulPwr;
@@ -1295,7 +1294,7 @@ Byte Add32To96(UInt32* rgulNum, UInt32 ulValue) {
 
 UInt32 IncreaseScale(UInt32 *rgulNum, UInt32 ulPwr)
 {
-	SPLIT64   sdlTmp;
+	SPLIT64__   sdlTmp;
 
 	sdlTmp.int64 = UInt32x32To64(rgulNum[0], ulPwr);
 	rgulNum[0] = sdlTmp.u.Lo;
@@ -1309,7 +1308,7 @@ UInt32 IncreaseScale(UInt32 *rgulNum, UInt32 ulPwr)
 // Adjust the quotient to deal with an overflow. We need to divide by 10, 
 // feed in the high bit to undo the overflow and then round as required, 
 Void OverflowUnscale(UInt32* rgulQuo, Byte fRemainder) {
-	SPLIT64  sdlTmp;
+	SPLIT64__  sdlTmp;
 
 	// We have overflown, so load the high bit with a one.
 	sdlTmp.u.Hi = 1u;
@@ -1330,7 +1329,7 @@ Void OverflowUnscale(UInt32* rgulQuo, Byte fRemainder) {
 
 UInt32 Div96By32(UInt32 *rgulNum, UInt32 ulDen)
 {
-	SPLIT64  sdlTmp;
+	SPLIT64__  sdlTmp;
 
 	sdlTmp.u.Hi = 0;
 
@@ -1359,11 +1358,11 @@ Div1Word:
 	return sdlTmp.u.Hi;
 }
 
-UInt32 Div96By64(UInt32* rgulNum, SPLIT64 sdlDen)
+UInt32 Div96By64(UInt32* rgulNum, SPLIT64__ sdlDen)
 {
-	SPLIT64 sdlQuo;
-	SPLIT64 sdlNum;
-	SPLIT64 sdlProd;
+	SPLIT64__ sdlQuo;
+	SPLIT64__ sdlNum;
+	SPLIT64__ sdlProd;
 
 	sdlNum.u.Lo = rgulNum[0];
 
@@ -1414,10 +1413,10 @@ NegRem:
 
 UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
 {
-	SPLIT64 sdlQuo;
-	SPLIT64 sdlNum;
-	SPLIT64 sdlProd1;
-	SPLIT64 sdlProd2;
+	SPLIT64__ sdlQuo;
+	SPLIT64__ sdlNum;
+	SPLIT64__ sdlProd1;
+	SPLIT64__ sdlProd2;
 
 	sdlNum.u.Lo = rgulNum[0];
 	sdlNum.u.Hi = rgulNum[1];
@@ -1482,9 +1481,9 @@ NegRem:
 
 Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 {
-	DECIMAL* pdecL = (DECIMAL*)d1;
-	DECIMAL* pdecR = (DECIMAL*)d2;
-	DECIMAL* pdecRes = (DECIMAL*)res;
+	DECIMAL__* pdecL = (DECIMAL__*)d1;
+	DECIMAL__* pdecR = (DECIMAL__*)d2;
+	DECIMAL__* pdecRes = (DECIMAL__*)res;
 
 	UInt32   rgulQuo[3];
 	UInt32   rgulQuoSave[3];
@@ -1493,8 +1492,8 @@ Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
 	UInt32   ulPwr;
 	UInt32   ulTmp;
 	UInt32   ulTmp1;
-	SPLIT64  sdlTmp;
-	SPLIT64  sdlDivisor;
+	SPLIT64__  sdlTmp;
+	SPLIT64__  sdlDivisor;
 	Int32    iScale;
 	Int32    iCurScale;
 	Byte     fUnscale;

@@ -61,7 +61,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool GcDebugEnabled = false;
+        public const bool GcDebugEnabled = true;
 
         /// <summary>
         /// </summary>

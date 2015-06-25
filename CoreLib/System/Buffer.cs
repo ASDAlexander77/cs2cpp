@@ -203,11 +203,6 @@
         }
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        internal extern unsafe static void* memcpy(void* dst, void* src, uint len);
-
-        internal unsafe static void Memcpy(byte* dest, byte* src, int len)
-        {
-            memcpy(dest, src, (uint)len);
-        }
+        internal extern unsafe static void* Memcpy(byte* dst, byte* src, int len);
     }
 }
