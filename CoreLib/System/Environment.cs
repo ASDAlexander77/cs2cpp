@@ -78,10 +78,8 @@
             return name + Space + value + Space + value2;
         }
 
-        public static void Exit(int exitCode)
-        {
-            __exit(exitCode);
-        }
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static extern void Exit(int exitCode);
 
         public static void FailFast(string getResourceString, Exception exception)
         {

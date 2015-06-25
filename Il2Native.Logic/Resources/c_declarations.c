@@ -18,13 +18,9 @@ typedef unsigned long long uint64_t;
 #define alloca __builtin_alloca
 
 extern void *__builtin_memset(void *,int32_t,uint32_t);
-#define MemSet __builtin_memset
+#define Memset __builtin_memset
 
 extern void *__builtin_memcpy(void *,const void *,uint32_t);
-extern "C" void* MemCpy(uint8_t* dst, uint8_t* src, uint32_t size)
-{
-	return __builtin_memcpy(dst, src, size);
-}
 
 #endif
 
@@ -71,11 +67,6 @@ extern "C" Double fmod (Double, Double);
 inline Void* __alloc(UInt32 size)
 {
 	return (Void*) calloc(1, size);
-}
-
-extern "C" Void __exit(Int32 status)
-{
-	return exit(status);
 }
 
 inline Void* __interface_to_object(Void* _interface)

@@ -3061,6 +3061,13 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(string.Empty);
 
+            if (!this.IsHeader && this.IsCoreLib)
+            {
+                // definitions
+                this.Output.WriteLine(Resources.c_definitions);
+                this.Output.WriteLine(string.Empty);                
+            }
+
             VirtualTableGen.Clear();
             TypeGen.Clear();
         }

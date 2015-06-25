@@ -72,15 +72,39 @@ namespace Il2Native.Logic.Properties {
         ///typedef unsigned short uint16_t;
         ///typedef unsigned int uint32_t;
         ///typedef unsigned long long uint64_t;
-        ///extern void *__builtin_memset(void *,int32_t,uint32_t);
-        ///#define memset __builtin_memset
-        ///extern void *__builtin_memcpy(void *,const void *,uint32_t);
+        ///
         ///#define compare_and_swap __sync_val_compare_and_swap 
-        ///#d [rest of string was truncated]&quot;;.
+        ///#define sync_synchronize __sync_synchronize
+        ///#define fetch_and_add __sync_fetch_and_add
+        ///#define fetch_and_sub __sync_fetch_and_sub
+        ///#define swap __sync [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
                 return ResourceManager.GetString("c_declarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to extern &quot;C&quot; Void* Memcpy(Byte* dst, Byte* src, Int32 size)
+        ///{
+        ///	return __builtin_memcpy(dst, src, size);
+        ///}
+        ///
+        ///extern &quot;C&quot; Void* __alloc(UInt32 size)
+        ///{
+        ///	return (Void*) calloc(1, size);
+        ///}
+        ///
+        ///extern &quot;C&quot; Void Exit(Int32 status)
+        ///{
+        ///	return exit(status);
+        ///}
+        ///.
+        /// </summary>
+        internal static string c_definitions {
+            get {
+                return ResourceManager.GetString("c_definitions", resourceCulture);
             }
         }
         
@@ -100,7 +124,7 @@ namespace Il2Native.Logic.Properties {
         ///		UInt32 Hi;
         ///#endif           
         ///	} u;
-        ///} SPLIT64;
+        ///} SPLIT64__;
         ///
         ///typedef union{
         ///	struct {
@@ -114,8 +138,7 @@ namespace Il2Native.Logic.Properties {
         ///		UInt32 mantHi : 20;
         ///		UInt32 exp : 11;
         ///		UInt32 sign : 1;
-        ///#endif
-        /// [rest of string was truncated]&quot;;.
+        ///#endif [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string decimals {
             get {
@@ -150,7 +173,21 @@ namespace Il2Native.Logic.Properties {
         ///#undef GC_MALLOC_IGNORE_OFF_PAGE
         ///#undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
         ///#undef GC_REGISTER_FINALIZER
-        ///#define GC_DEBUG
+        ///
+        ///#ifdef HAVE_CONFIG_H
+        ///# include &quot;config.h&quot;
+        ///#endif
+        ///
+        ///#ifndef GC_DEBUG
+        ///# define GC_DEBUG
+        ///#endif
+        ///
+        ///#ifndef GC_THREADS
+        ///# define GC_THREADS
+        ///#endif
+        ///
+        ///#define GC_NO_THREAD_REDIRECTS 1
+        ///
         ///#include &quot;gc.h&quot;.
         /// </summary>
         internal static string gc_declarations_debug {
