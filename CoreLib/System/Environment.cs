@@ -8,7 +8,7 @@
         public static extern unsafe int clock_gettime(int type, long* time);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        public static extern int exit(int exitCode);
+        public static extern void __exit(int exitCode);
 
         public static string NewLine = "\r\n";
 
@@ -80,7 +80,7 @@
 
         public static void Exit(int exitCode)
         {
-            exit(exitCode);
+            __exit(exitCode);
         }
 
         public static void FailFast(string getResourceString, Exception exception)

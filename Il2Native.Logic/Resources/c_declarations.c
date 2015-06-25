@@ -21,7 +21,7 @@ extern void *__builtin_memset(void *,int32_t,uint32_t);
 #define MemSet __builtin_memset
 
 extern void *__builtin_memcpy(void *,const void *,uint32_t);
-Void* MemCpy(Byte* dst, Byte* src, UInt32 size)
+extern "C" void* MemCpy(uint8_t* dst, uint8_t* src, uint32_t size)
 {
 	return __builtin_memcpy(dst, src, size);
 }
@@ -54,6 +54,7 @@ typedef double Double;
 #define GC_PTHREAD_EXIT pthread_exit
 
 extern "C" Void* calloc(UInt32, UInt32);
+extern "C" Void exit(Int32 status);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();
 
@@ -70,6 +71,11 @@ extern "C" Double fmod (Double, Double);
 inline Void* __alloc(UInt32 size)
 {
 	return (Void*) calloc(1, size);
+}
+
+extern "C" Void __exit(Int32 status)
+{
+	return exit(status);
 }
 
 inline Void* __interface_to_object(Void* _interface)
