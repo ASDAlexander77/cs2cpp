@@ -23,6 +23,10 @@
             ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
             ilCodeBuilder.Locals.Add(typeResolver.System.System_Exception);
 
+            const int localReturnCode = 0;
+            const int localException = 1;
+            const int localStringArray = 2;
+
             var tryMain = ilCodeBuilder.Try();
 
             // call global ctors
@@ -42,16 +46,16 @@
                 // code
                 ilCodeBuilder.LoadArgument(0);
                 ilCodeBuilder.NewArray(stringType);
-                ilCodeBuilder.SaveLocal(2);
+                ilCodeBuilder.SaveLocal(localStringArray);
                 ilCodeBuilder.LoadConstant(0);
-                ilCodeBuilder.SaveLocal(0);
+                ilCodeBuilder.SaveLocal(localReturnCode);
 
                 var jump = ilCodeBuilder.Branch(Code.Br, Code.Br_S);
 
                 var loop = ilCodeBuilder.CreateLabel();
 
-                ilCodeBuilder.LoadLocal(2);
-                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.LoadLocal(localStringArray);
+                ilCodeBuilder.LoadLocal(localReturnCode);
                 ilCodeBuilder.LoadArgument(1);
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.SizeOf(bytePointerType);
@@ -62,14 +66,14 @@
                     IlReader.Constructors(stringType, typeResolver)
                             .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(bytePointerType)));
                 ilCodeBuilder.Add(Code.Stelem_Ref);
-                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.LoadLocal(localReturnCode);
                 ilCodeBuilder.LoadConstant(1);
                 ilCodeBuilder.Add(Code.Add);
-                ilCodeBuilder.SaveLocal(0);
+                ilCodeBuilder.SaveLocal(localReturnCode);
 
                 ilCodeBuilder.Add(jump);
 
-                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.LoadLocal(localReturnCode);
                 ilCodeBuilder.LoadArgument(0);
 
                 ilCodeBuilder.Branch(Code.Blt, Code.Blt_S, loop);
@@ -88,7 +92,7 @@
 
             if (hasParameters)
             {
-                ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(localStringArray);
             }
 
             ilCodeBuilder.Call(main);
@@ -108,12 +112,12 @@
             ilCodeBuilder.Call(setExitCode);
 
             // print message
-            ilCodeBuilder.SaveLocal(1);
+            ilCodeBuilder.SaveLocal(localException);
             ilCodeBuilder.LoadString("Unhandled exception: {0}: {1}");
-            ilCodeBuilder.LoadLocal(1);
+            ilCodeBuilder.LoadLocal(localException);
             ilCodeBuilder.Call(typeResolver.System.System_Object.GetFirstMethodByName("GetType", typeResolver));
             ilCodeBuilder.Call(typeResolver.System.System_Type.GetFirstMethodByName("get_FullName", typeResolver));
-            ilCodeBuilder.LoadLocal(1);
+            ilCodeBuilder.LoadLocal(localException);
             ilCodeBuilder.Call(typeResolver.System.System_Exception.GetFirstMethodByName("get_Message", typeResolver));
             ilCodeBuilder.Add(Code.Dup);
             var jumpCond = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
