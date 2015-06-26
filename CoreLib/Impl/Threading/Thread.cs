@@ -18,6 +18,10 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
+        private static Thread mainThread;
+
+        /// <summary>
+        /// </summary>
         private static AppDomain currentDomain;
 
         /// <summary>
@@ -173,7 +177,14 @@ namespace System.Threading
         /// </returns>
         private static Thread GetCurrentThreadNative()
         {
-            return (Thread)pthread_getspecific(currentThreadKey);
+            var thread = (Thread)pthread_getspecific(currentThreadKey);
+            while (thread == null)
+            {
+                RegisterThread(new Thread());
+                thread = (Thread)pthread_getspecific(currentThreadKey);
+            }
+
+            return thread;
         }
 
         /// <summary>
@@ -318,25 +329,10 @@ namespace System.Threading
             {
                 unsafe
                 {
-                    var returnCode = pthread_once(ref key_once, new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
-                    switch ((ReturnCode)returnCode)
-                    {
-                        case ReturnCode.EINVAL:
-                            throw new InvalidOperationException("If either once_control or init_routine is invalid.");
-                    }
-
-                    var currentThread = pthread_getspecific(currentThreadKey);
-                    if (currentThread == null)
-                    {
-                        pthread_setspecific(currentThreadKey, thread);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Current Thread already initialized");
-                    }
+                    RegisterThread(thread);
 
                     // set cancelable
-                    returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
+                    var returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
                     switch ((ReturnCode)returnCode)
                     {
                         case ReturnCode.EINVAL:
@@ -356,6 +352,28 @@ namespace System.Threading
             catch (Exception exception)
             {
                 Console.WriteLine("Unhandled exception: {0}: {1}", exception.GetType().FullName, exception.Message ?? "<none>");
+            }
+        }
+
+        private static unsafe void RegisterThread(Thread thread)
+        {
+            var returnCode = pthread_once(
+                ref key_once,
+                new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
+            switch ((ReturnCode)returnCode)
+            {
+                case ReturnCode.EINVAL:
+                    throw new InvalidOperationException("If either once_control or init_routine is invalid.");
+            }
+
+            var currentThread = pthread_getspecific(currentThreadKey);
+            if (currentThread == null)
+            {
+                pthread_setspecific(currentThreadKey, thread);
+            }
+            else
+            {
+                throw new InvalidOperationException("Current Thread already initialized");
             }
         }
 
