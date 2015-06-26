@@ -296,7 +296,7 @@ namespace Ll2NativeTests
             // 109 - DateTime.Now.ToString (NotImplemented)
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            // 127 - IsDerived not implemented
+            // 127 - IsDefined not implemented
             // 128 - using Attributes
             // 132 - Reflection
             // 135 - Reflection
