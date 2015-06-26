@@ -311,7 +311,7 @@
         {
             Debug.Assert(method != null, "@method is null");
             TokenResolutions.Add(method);
-            this.Add(method.IsVirtual ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
+            this.Add(method.IsVirtual || method.IsAbstract || method.IsOverride ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
         }
 
         public void InitializeObject(IType type)

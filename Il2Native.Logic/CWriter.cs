@@ -4014,16 +4014,16 @@ namespace Il2Native.Logic
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
-            if (!this.Gctors)
-            {
-                // call all gtors manually
-                foreach (var reference in this.AllReferences.Distinct().Reverse())
-                {
-                    ilCodeBuilder.Call(new SynthesizedMethodStringAdapter(this.GetGlobalConstructorsFunctionName(reference), string.Empty, System.System_Void));
-                }
-            }
+            var gtors = !this.Gctors
+                            ? this.AllReferences.Distinct().Reverse().Select(
+                                      reference =>
+                                      new SynthesizedMethodStringAdapter(
+                                          this.GetGlobalConstructorsFunctionName(reference), 
+                                          string.Empty, 
+                                          System.System_Void))
+                            : null;
 
-            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, this.MainMethod, this);
+            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, this.MainMethod, gtors, this);
 
             this.WriteMethod(new SynthesizedMainMethod(mainSynthMethod, this.MainMethod, this), null, null);
         }

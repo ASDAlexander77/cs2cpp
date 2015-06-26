@@ -1,12 +1,13 @@
 ﻿namespace Il2Native.Logic.Gencode.InlineMethods
 {
+    using System.Collections.Generic;
     using System.Linq;
 
     using PEAssemblyReader;
 
     public class MainGen
     {
-        public static IlCodeBuilder GetMainMethodBody(IlCodeBuilder ilCodeBuilder, IMethod main, ITypeResolver typeResolver)
+        public static IlCodeBuilder GetMainMethodBody(IlCodeBuilder ilCodeBuilder, IMethod main, IEnumerable<IMethod> gctors, ITypeResolver typeResolver)
         {
             var isVoid = main.ReturnType.IsVoid();
             var hasParameters = main.GetParameters().Any();
@@ -23,6 +24,15 @@
             ilCodeBuilder.Locals.Add(typeResolver.System.System_Exception);
 
             var tryMain = ilCodeBuilder.Try();
+
+            // call global ctors
+            if (gctors != null)
+            {
+                foreach (var method in gctors)
+                {
+                    ilCodeBuilder.Call(method);
+                }
+            }
 
             if (hasParameters)
             {
