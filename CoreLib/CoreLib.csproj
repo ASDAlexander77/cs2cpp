@@ -47,9 +47,20 @@
     <Compile Include="System\AppContext\AppContextDefaultValues.Defaults.Central.cs" />
     <Compile Include="System\AppContext\AppContextDefaultValues.Defaults.cs" />
     <Compile Include="System\AppContext\AppContextSwitches.cs" />
+    <Compile Include="System\Collections\Concurrent\ConcurrentDictionary.cs" />
+    <Compile Include="System\Collections\Concurrent\ConcurrentQueue.cs" />
+    <Compile Include="System\Collections\Concurrent\ConcurrentStack.cs" />
+    <Compile Include="System\Collections\Concurrent\IProducerConsumerCollection.cs" />
+    <Compile Include="System\Collections\Concurrent\OrderablePartitioner.cs" />
+    <Compile Include="System\Collections\Concurrent\Partitioner.cs" />
+    <Compile Include="System\Collections\Concurrent\PartitionerStatic.cs" />
+    <Compile Include="System\Collections\IStructuralComparable.cs" />
+    <Compile Include="System\Collections\IStructuralEquatable.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
     <Compile Include="System\Security\Principal\IIdentity.cs" />
     <Compile Include="System\Security\Principal\IPrincipal.cs" />
+    <Compile Include="System\Threading\SpinWait.cs" />
+    <Compile Include="System\Tuple.cs" />
     <Compile Include="System\_LocalDataStore.cs" />
     <Compile Include="System\_LocalDataStoreMgr.cs" />
   </ItemGroup>

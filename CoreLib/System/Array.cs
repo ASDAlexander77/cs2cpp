@@ -11,6 +11,8 @@ namespace System
     [Serializable]
     public abstract class Array : ICloneable, IList
     {
+        public const int MaxArrayLength = Int32.MaxValue;
+
         public static ReadOnlyCollection<T> AsReadOnly<T>(T[] array)
         {
             if (array == null)

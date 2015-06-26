@@ -42,6 +42,29 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="opCodeMethodInfo">
+        /// </param>
+        /// <param name="oper">
+        /// </param>
+        /// <param name="attribs">
+        /// </param>
+        /// <param name="cWriter">
+        /// </param>
+        public static void AddInterlockBase(
+            this OpCodePart opCodeMethodInfo,
+            CWriter cWriter,
+            string op)
+        {
+            var writer = cWriter.Output;
+            var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("fetch_and_{0}(", op), estimatedResult.Type);
+            writer.Write(", ");
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 1, string.Empty, estimatedResult.Type);
+            writer.Write(")");
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="method">
         /// </param>
         /// <returns>
@@ -62,6 +85,7 @@ namespace Il2Native.Logic.Gencode
             {
                 case "Increment":
                 case "Decrement":
+                case "ExchangeAdd":
                     return true;
             }
 
@@ -85,6 +109,10 @@ namespace Il2Native.Logic.Gencode
             {
                 case "Increment":
                     opCodeMethodInfo.IncDecInterlockBase(cWriter, "add");
+                    break;
+
+                case "ExchangeAdd":
+                    opCodeMethodInfo.AddInterlockBase(cWriter, "add");
                     break;
 
                 case "Decrement":

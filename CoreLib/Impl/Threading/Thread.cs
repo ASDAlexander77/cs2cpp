@@ -8,15 +8,17 @@ namespace System.Threading
     /// </summary>
     public partial class Thread
     {
+        /// <summary>
+        /// </summary>
+        private static int key_once;
+
+        /// <summary>
+        /// </summary>
+        private static int currentThreadKey;
+
+        /// <summary>
+        /// </summary>
         private static AppDomain currentDomain;
-
-        /// <summary>
-        /// </summary>
-        private static Thread currentThread;
-
-        /// <summary>
-        /// </summary>
-        private static int threadId;
 
         /// <summary>
         /// </summary>
@@ -59,8 +61,14 @@ namespace System.Threading
         {
             get
             {
-                // if send SIG 0, no actions
-                return GC_PTHREAD_KILL(this.pthread, 0) != 0;
+                var returnCode = GC_PTHREAD_KILL(this.pthread, (int)Signals.Terminate);
+                switch ((ReturnCode)returnCode)
+                {
+                    case ReturnCode.EINVAL:
+                        throw new InvalidOperationException("An invalid signal was specified.");
+                }
+
+                return returnCode == 0;
             }
         }
 
@@ -74,6 +82,9 @@ namespace System.Threading
                 return false;
             }
         }
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern int pthread_self();
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int pthread_attr_init(ref PthreadAttr attr);
@@ -98,12 +109,27 @@ namespace System.Threading
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
-        
+
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_setcanceltype(int type, int* oldtype);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int nanosleep(int* tv_sec, int* tv_nsec);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_key_create(ref int key, void* destructor);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern int pthread_key_delete(int key);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern object pthread_getspecific(int key);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern int pthread_setspecific(int key, object value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_once(ref int once_control, void* init_routine);
 
         /// <summary>
         /// Helper function to set the AbortReason for a thread abort.
@@ -144,7 +170,7 @@ namespace System.Threading
         /// </returns>
         private static Thread GetCurrentThreadNative()
         {
-            return currentThread;
+            return (Thread)pthread_getspecific(currentThreadKey);
         }
 
         /// <summary>
@@ -198,7 +224,7 @@ namespace System.Threading
         /// </returns>
         internal static IntPtr InternalGetCurrentThread()
         {
-            return new IntPtr(0);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -257,15 +283,53 @@ namespace System.Threading
         /// </summary>
         private void InternalFinalize()
         {
+            pthread_attr_destroy(ref this.pthreadAttr);
+            pthread_key_delete(currentThreadKey);
         }
 
-        private delegate void pthread_tart_routine_delegate(object arg);
+        private delegate void pthread_make_shared_keys_delegate();
 
-        private static void pthread_tart_routine(object arg)
+        private static void pthread_make_shared_keys()
         {
             unsafe
             {
-                var returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
+                // create thread-specific value CurrentThread
+                var returnCode = pthread_key_create(ref currentThreadKey, null);
+                switch ((ReturnCode)returnCode)
+                {
+                    case ReturnCode.EAGAIN:
+                        throw new InvalidOperationException("The system lacked the necessary resources to create another thread-specific data key, or the system-imposed limit on the total number of keys per process {PTHREAD_KEYS_MAX} has been exceeded.");
+                    case ReturnCode.ENOMEM:
+                        throw new InvalidOperationException("Insufficient memory exists to create the key.");
+                }
+            }
+        }
+
+        private delegate void pthread_start_routine_delegate(Thread thread);
+
+        private static void pthread_start_routine(Thread thread)
+        {
+            unsafe
+            {
+                var returnCode = pthread_once(ref key_once, new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
+                switch ((ReturnCode)returnCode)
+                {
+                    case ReturnCode.EINVAL:
+                        throw new InvalidOperationException("If either once_control or init_routine is invalid.");
+                }
+
+                var currentThread = pthread_getspecific(currentThreadKey);
+                if (currentThread == null)
+                {
+                    pthread_setspecific(currentThreadKey, thread);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Current Thread already initialized");
+                }
+
+                // set cancelable
+                returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
                 switch ((ReturnCode)returnCode)
                 {
                     case ReturnCode.EINVAL:
@@ -273,14 +337,13 @@ namespace System.Threading
                 }
             }
 
-            var parameterizedStart = arg as ParameterizedStart;
-            if (parameterizedStart != null)
+            if (thread.start is ThreadStart)
             {
-                ((ParameterizedThreadStart)parameterizedStart.@delegate)(parameterizedStart.obj);
+                ((ThreadStart)thread.start)();
             }
             else
             {
-                ((ThreadStart)arg)();
+                ((ParameterizedThreadStart)thread.start)(thread.m_ThreadStartArg);
             }
         }
 
@@ -314,8 +377,8 @@ namespace System.Threading
                 returnCode = GC_PTHREAD_CREATE(
                     ref pthread,
                     ref pthreadAttr,
-                    new pthread_tart_routine_delegate(pthread_tart_routine).ToPointer(),
-                    (this.start is ThreadStart) ? (object)this.start : (object)new ParameterizedStart { @delegate = this.start, obj = m_ThreadStartArg });
+                    new pthread_start_routine_delegate(pthread_start_routine).ToPointer(),
+                    this);
                 switch ((ReturnCode)returnCode)
                 {
                     case ReturnCode.EPERM:
@@ -441,11 +504,6 @@ namespace System.Threading
         /// </param>
         private void SetStart(Delegate start, int maxStackSize)
         {
-            if (this.m_ManagedThreadId == 0)
-            {
-                m_ManagedThreadId = ++threadId;
-            }
-
             this.start = start;
             this.maxStackSize = maxStackSize;
         }

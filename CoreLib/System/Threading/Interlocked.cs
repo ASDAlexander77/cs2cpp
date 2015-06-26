@@ -83,6 +83,28 @@ namespace System.Threading
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern T CompareExchange<T>(ref T location1, T value, T comparand) where T : class;
+
+        /******************************
+         * Add
+         *    Implemented: int
+         *                         long
+         *****************************/
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern int ExchangeAdd(ref int location1, int value);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern long ExchangeAdd(ref long location1, long value);
+
+        public static int Add(ref int location1, int value)
+        {
+            return ExchangeAdd(ref location1, value) + value;
+        }
+
+        public static long Add(ref long location1, long value)
+        {
+            return ExchangeAdd(ref location1, value) + value;
+        }
     }
 }
 
