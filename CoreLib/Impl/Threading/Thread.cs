@@ -131,6 +131,9 @@ namespace System.Threading
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_once(ref int once_control, void* init_routine);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern int pthread_yield();
+
         /// <summary>
         /// Helper function to set the AbortReason for a thread abort.
         /// Checks that they're not already set, and then atomically updates
@@ -258,6 +261,8 @@ namespace System.Threading
         /// </param>
         private static void SpinWaitInternal(int iterations)
         {
+            for (int i = 0; i < iterations; i++)
+                YieldInternal();
         }
 
         /// <summary>
@@ -275,7 +280,7 @@ namespace System.Threading
         /// </returns>
         private static bool YieldInternal()
         {
-            return false;
+            return pthread_yield() == 0;
         }
 
 
