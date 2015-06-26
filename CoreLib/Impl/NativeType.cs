@@ -7,12 +7,10 @@
     internal class NativeType : Type
     {
         private string name;
-        private string fullname;
-        private Type baseType;
 
-        internal NativeType()
-        {
-        }
+        private string fullname;
+
+        private Type baseType;
 
         public override string Name
         {
@@ -89,7 +87,10 @@
 
         public override Type BaseType
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return this.baseType;
+            }
         }
 
         public override Reflection.MemberTypes MemberType

@@ -579,6 +579,14 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.LoadLocal(0);
             codeBuilder.LoadString(declaringType.FullName);
             codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("fullname", typeResolver));
+            if (declaringType.BaseType != null)
+            {
+                codeBuilder.LoadLocal(0);
+                codeBuilder.LoadToken(declaringType.BaseType);
+                codeBuilder.Call(
+                    typeResolver.System.System_Type.GetMethodsByName("GetTypeFromHandle", typeResolver).First(m => m.IsStatic && m.GetParameters().Count() == 1));
+                codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("baseType", typeResolver));
+            }
 
             codeBuilder.Add(jumpIfNotNull);
 
