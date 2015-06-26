@@ -132,7 +132,7 @@ namespace System.Threading
         private static extern unsafe int pthread_once(ref int once_control, void* init_routine);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private static extern int pthread_yield();
+        private static extern int sched_yield();
 
         /// <summary>
         /// Helper function to set the AbortReason for a thread abort.
@@ -280,7 +280,7 @@ namespace System.Threading
         /// </returns>
         private static bool YieldInternal()
         {
-            return pthread_yield() == 0;
+            return sched_yield() == 0;
         }
 
 
