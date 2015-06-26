@@ -17,7 +17,7 @@
 #define GC_PTHREAD_DETACH GC_pthread_detach
 
 #undef GC_PTHREAD_CANCEL
-#define GC_PTHREAD_CANCEL GC_pthread_cancel
+#define GC_PTHREAD_CANCEL pthread_cancel
 
 #undef GC_PTHREAD_EXIT
 #define GC_PTHREAD_EXIT GC_pthread_exit
@@ -30,8 +30,12 @@
 # define GC_DEBUG
 #endif
 
-#ifndef GC_THREADS
-# define GC_THREADS
+#ifndef DEBUG_THREADS
+# define DEBUG_THREADS
+#endif
+
+#ifndef GC_PTHREADS
+# define GC_PTHREADS
 #endif
 
 #define GC_NO_THREAD_REDIRECTS 1

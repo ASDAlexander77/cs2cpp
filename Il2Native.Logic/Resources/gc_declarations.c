@@ -36,7 +36,7 @@ extern "C" Void GC_register_finalizer(Void*, __finalization_proc__, Void*, Void*
 #define GC_PTHREAD_DETACH GC_pthread_detach
 
 #undef GC_PTHREAD_CANCEL
-#define GC_PTHREAD_CANCEL GC_pthread_cancel
+#define GC_PTHREAD_CANCEL pthread_cancel
 
 #undef GC_PTHREAD_EXIT
 #define GC_PTHREAD_EXIT GC_pthread_exit
