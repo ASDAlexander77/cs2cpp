@@ -89,7 +89,7 @@
         {
             return new SynthesizedMethodDecorator(
                 m,
-                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, Transform(code).ToArray()),
+                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, null, Transform(code).ToArray()),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }
@@ -103,7 +103,7 @@
         {
             return new SynthesizedMethodDecorator(
                 m,
-                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, code),
+                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, null, code),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }

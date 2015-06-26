@@ -33,6 +33,7 @@
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,
                 locals,
+                null,
                 code);
 
             this._parameters = parameters;

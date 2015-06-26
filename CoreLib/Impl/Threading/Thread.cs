@@ -309,41 +309,48 @@ namespace System.Threading
 
         private static void pthread_start_routine(Thread thread)
         {
-            unsafe
+            try
             {
-                var returnCode = pthread_once(ref key_once, new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
-                switch ((ReturnCode)returnCode)
+                unsafe
                 {
-                    case ReturnCode.EINVAL:
-                        throw new InvalidOperationException("If either once_control or init_routine is invalid.");
+                    var returnCode = pthread_once(ref key_once, new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
+                    switch ((ReturnCode)returnCode)
+                    {
+                        case ReturnCode.EINVAL:
+                            throw new InvalidOperationException("If either once_control or init_routine is invalid.");
+                    }
+
+                    var currentThread = pthread_getspecific(currentThreadKey);
+                    if (currentThread == null)
+                    {
+                        pthread_setspecific(currentThreadKey, thread);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Current Thread already initialized");
+                    }
+
+                    // set cancelable
+                    returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
+                    switch ((ReturnCode)returnCode)
+                    {
+                        case ReturnCode.EINVAL:
+                            throw new InvalidOperationException("Invalid value for state");
+                    }
                 }
 
-                var currentThread = pthread_getspecific(currentThreadKey);
-                if (currentThread == null)
+                if (thread.start is ThreadStart)
                 {
-                    pthread_setspecific(currentThreadKey, thread);
+                    ((ThreadStart)thread.start)();
                 }
                 else
                 {
-                    throw new InvalidOperationException("Current Thread already initialized");
-                }
-
-                // set cancelable
-                returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
-                switch ((ReturnCode)returnCode)
-                {
-                    case ReturnCode.EINVAL:
-                        throw new InvalidOperationException("Invalid value for state");
+                    ((ParameterizedThreadStart)thread.start)(thread.m_ThreadStartArg);
                 }
             }
-
-            if (thread.start is ThreadStart)
+            catch (Exception exception)
             {
-                ((ThreadStart)thread.start)();
-            }
-            else
-            {
-                ((ParameterizedThreadStart)thread.start)(thread.m_ThreadStartArg);
+                Console.WriteLine("Unhandled exception: {0}: {1}", exception.GetType().FullName, exception.Message ?? "<none>");
             }
         }
 

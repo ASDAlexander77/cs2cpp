@@ -1226,8 +1226,7 @@ namespace System
             // customer implementations of IsSubclassOf should never return true between a non-runtime
             // type and a runtime type. There is no benefits in making that breaking change though.
 
-            ////return IsSubclassOf(RuntimeType.ValueType);
-            throw new NotImplementedException();
+            return IsSubclassOf(typeof(System.ValueType));
         }
 
         // Protected routine to get the attributes.

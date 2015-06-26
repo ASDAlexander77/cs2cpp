@@ -37,6 +37,7 @@
                 new SynthesizedMethodBodyDecorator(
                     null,
                     locals,
+                    codeList.GetExceptions(),
                     codeList.GetCode());
 
             this._parameters = new List<IParameter>();

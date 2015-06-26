@@ -18,7 +18,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     public class SynthesizedMethodBodyDecorator : IMethodBody
     {
         private readonly byte[] customBody;
+
         private readonly IEnumerable<ILocalVariable> locals;
+
+        private readonly IEnumerable<IExceptionHandlingClause> exceptionHandlingClauses;
+
         private readonly IMethodBody methodBody;
 
         public SynthesizedMethodBodyDecorator(IMethodBody methodBody)
@@ -26,7 +30,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.methodBody = methodBody;
         }
 
-        public SynthesizedMethodBodyDecorator(IMethodBody methodBody, IList<IType> locals, byte[] customBody)
+        public SynthesizedMethodBodyDecorator(IMethodBody methodBody, IList<IType> locals, IEnumerable<IExceptionHandlingClause> exceptionHandlingClauses, byte[] customBody)
             : this(methodBody)
         {
             this.customBody = customBody;
@@ -39,6 +43,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             {
                 this.locals = new ILocalVariable[0];
             }
+
+            this.exceptionHandlingClauses = exceptionHandlingClauses;
         }
 
         /// <summary>
@@ -47,6 +53,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             get
             {
+                if (this.exceptionHandlingClauses != null)
+                {
+                    return exceptionHandlingClauses;
+                }
+
                 if (this.methodBody == null)
                 {
                     return new IExceptionHandlingClause[0];

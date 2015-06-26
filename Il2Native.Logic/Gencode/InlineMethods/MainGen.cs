@@ -20,6 +20,10 @@
 
             // code to call gctors
             ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
+            ilCodeBuilder.Locals.Add(typeResolver.System.System_Exception);
+
+            var tryMain = ilCodeBuilder.Try();
+
             if (hasParameters)
             {
                 // locals
@@ -28,7 +32,7 @@
                 // code
                 ilCodeBuilder.LoadArgument(0);
                 ilCodeBuilder.NewArray(stringType);
-                ilCodeBuilder.SaveLocal(1);
+                ilCodeBuilder.SaveLocal(2);
                 ilCodeBuilder.LoadConstant(0);
                 ilCodeBuilder.SaveLocal(0);
 
@@ -36,7 +40,7 @@
 
                 var loop = ilCodeBuilder.CreateLabel();
 
-                ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(2);
                 ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.LoadArgument(1);
                 ilCodeBuilder.Add(Code.Dup);
@@ -78,12 +82,48 @@
             }
 
             ilCodeBuilder.Call(main);
-
-            if (isVoid)
+            if (!isVoid)
             {
-                ilCodeBuilder.Call(getExitCode);
+                ilCodeBuilder.Call(setExitCode);
             }
 
+            var leaveBlock = ilCodeBuilder.Branch(Code.Leave, Code.Leave_S);
+
+            ilCodeBuilder.TryEnd(tryMain);
+
+            var catchMain = ilCodeBuilder.Catch(typeResolver.System.System_Exception, tryMain);
+
+            // catch handler
+            ilCodeBuilder.LoadConstant(-1);
+            ilCodeBuilder.Call(setExitCode);
+
+            // print message
+            ilCodeBuilder.SaveLocal(1);
+            ilCodeBuilder.LoadString("Unhandled exception: {0}: {1}");
+            ilCodeBuilder.LoadLocal(1);
+            ilCodeBuilder.Call(typeResolver.System.System_Object.GetFirstMethodByName("GetType", typeResolver));
+            ilCodeBuilder.Call(typeResolver.System.System_Type.GetFirstMethodByName("get_FullName", typeResolver));
+            ilCodeBuilder.LoadLocal(1);
+            ilCodeBuilder.Call(typeResolver.System.System_Exception.GetFirstMethodByName("get_Message", typeResolver));
+            ilCodeBuilder.Add(Code.Dup);
+            var jumpCond = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+            ilCodeBuilder.Add(Code.Pop);
+            ilCodeBuilder.LoadString("<none>");
+            ilCodeBuilder.Add(jumpCond);
+
+            ilCodeBuilder.Call(
+                typeResolver.ResolveType("System.Console")
+                            .GetMethodsByName("WriteLine", typeResolver)
+                            .First(m => m.GetParameters().Count() == 3 && m.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_String)));
+            
+            ilCodeBuilder.Branch(Code.Leave, Code.Leave_S, leaveBlock);
+
+            ilCodeBuilder.CatchEnd(catchMain);
+
+            // leave block
+            ilCodeBuilder.Add(leaveBlock);
+
+            ilCodeBuilder.Call(getExitCode);
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;

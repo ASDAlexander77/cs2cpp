@@ -8,6 +8,7 @@
     {
         private string name;
         private string fullname;
+        private Type baseType;
 
         internal NativeType()
         {

@@ -33,6 +33,7 @@
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,
                 locals,
+                null,
                 MethodBodyBank.Transform(code).ToArray());
 
             this._parameters = parameters;

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
 
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -71,7 +72,7 @@
 
         public IMethodBody GetMethodBody(IMethodBody originalOpt = null)
         {
-            return new SynthesizedMethodBodyDecorator(originalOpt, _locals, this.GetCode());
+            return new SynthesizedMethodBodyDecorator(originalOpt, _locals, this.GetExceptions(), this.GetCode());
         }
 
         public IList<IParameter> GetParameters()
@@ -189,6 +190,13 @@
             return @try;
         }
 
+        public void TryEnd(TryMark tryMark)
+        {
+            var tryEnd = new TryEndMark();
+            this.Add(tryEnd);
+            tryMark.TryEnd = tryEnd;
+        }
+        
         public CatchMark Catch(IType exception, TryMark @try)
         {
             var @catch = new CatchMark(exception, @try);
@@ -196,14 +204,45 @@
             return @catch;
         }
 
+        public void CatchEnd(CatchMark catchMark)
+        {
+            var catchEnd = new CatchEndMark();
+            this.Add(catchEnd);
+            catchMark.CatchEnd = catchEnd;
+        }
+
+        public IExceptionHandlingClause[] GetExceptions()
+        {
+            this.EnsureLabels();
+
+            var exceptionHandlingClauses =
+                this.parts.OfType<CatchMark>()
+                    .Select(
+                        catchMark =>
+                        new ExceptionHandlingClauseAdapter(
+                            catchMark.Try.Address,
+                            catchMark.Try.TryEnd.Address - catchMark.Try.Address,
+                            catchMark.Address,
+                            catchMark.CatchEnd.Address - catchMark.Address,
+                            catchMark.Exception))
+                    .Cast<IExceptionHandlingClause>()
+                    .ToArray();
+
+            return exceptionHandlingClauses;
+        }
+
         public byte[] GetCode()
+        {
+            this.EnsureLabels();
+            return this.IterateBytes().ToArray();
+        }
+
+        private void EnsureLabels()
         {
             var maxCount = 10;
             while (this.SetLabelAddresses() && maxCount-- >= 0)
             {
             }
-
-            return this.IterateBytes().ToArray();
         }
 
         public void LoadArgument(int argIndex)
@@ -841,10 +880,6 @@
         {
             private int _address;
 
-            public Label()
-            {
-            }
-
             public int Address
             {
                 get
@@ -865,79 +900,153 @@
             public bool IsChanged { get; private set; }
         }
 
-        public class TryMark : INoOpCodeLabel
+        public class TryMark : Label
         {
-            private int _address;
-
-            public TryMark()
+            public TryEndMark TryEnd
             {
-            }
-
-            public int Address
-            {
-                get
-                {
-                    return this._address;
-                }
-
-                set
-                {
-                    this.IsChanged = _address != value;
-                    this._address = value;
-                    this.AddressSet = true;
-                }
-            }
-
-            public bool AddressSet { get; private set; }
-
-            public bool IsChanged { get; private set; }
+                get;
+                set;
+            }        
         }
 
-        public class CatchMark : INoOpCodeLabel
+        public class TryEndMark : Label
         {
-            private int _address;
+        }
 
+        public class CatchMark : Label
+        {
             public CatchMark(IType exception, TryMark @try)
             {
                 this.Exception = exception;
                 this.Try = @try;
             }
 
-            protected IType Exception
+            public IType Exception
             {
                 get;
                 private set;
             }
 
-            protected TryMark Try
+            public TryMark Try
             {
                 get;
                 private set;
             }
 
-            public int Address
+            public CatchEndMark CatchEnd
             {
-                get
-                {
-                    return this._address;
-                }
-
-                set
-                {
-                    this.IsChanged = _address != value;
-                    this._address = value;
-                    this.AddressSet = true;
-                }
+                get;
+                set;
             }
+        }
 
-            public bool AddressSet { get; private set; }
-
-            public bool IsChanged { get; private set; }
+        public class CatchEndMark : Label
+        {
         }
 
         public void EmptyParameters()
         {
             this._parameters = new List<IParameter>();
+        }
+
+        internal class ExceptionHandlingClauseAdapter : IExceptionHandlingClause
+        {
+            /// <summary>
+            /// </summary>
+            private readonly int tryLength;
+
+            /// <summary>
+            /// </summary>
+            private readonly int tryOffset;
+
+            /// <summary>
+            /// </summary>
+            private readonly int handlerLength;
+
+            /// <summary>
+            /// </summary>
+            private readonly int handlerOffset;
+
+            /// <summary>
+            /// </summary>
+            private readonly IType catchType;
+
+            /// <summary>
+            /// </summary>
+            /// <param name="exceptionRegion">
+            /// </param>
+            /// <param name="catchType">
+            /// </param>
+            internal ExceptionHandlingClauseAdapter(int tryOffset, int tryLength, int handlerOffset, int handlerLength, IType catchType)
+            {
+                this.tryOffset = tryOffset;
+                this.tryLength = tryLength;
+                this.handlerOffset = handlerOffset;
+                this.handlerLength = handlerLength;
+                this.catchType = catchType;
+            }
+
+            /// <summary>
+            /// </summary>
+            public IType CatchType
+            {
+                get
+                {
+                    return this.catchType;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public ExceptionHandlingClauseOptions Flags
+            {
+                get
+                {
+                    return ExceptionHandlingClauseOptions.Clause;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public int HandlerLength
+            {
+                get
+                {
+                    return this.handlerLength;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public int HandlerOffset
+            {
+                get
+                {
+                    return this.handlerOffset;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public int TryLength
+            {
+                get
+                {
+                    return this.tryLength;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public int TryOffset
+            {
+                get
+                {
+                    return this.tryOffset;
+                }
+            }
         }
     }
 }
