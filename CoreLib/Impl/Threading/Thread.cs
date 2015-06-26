@@ -59,7 +59,8 @@ namespace System.Threading
         {
             get
             {
-                return true;
+                // if send SIG 0, no actions
+                return GC_PTHREAD_KILL(this.pthread, 0) != 0;
             }
         }
 
@@ -88,6 +89,9 @@ namespace System.Threading
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int GC_PTHREAD_CANCEL(int pthread);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern int GC_PTHREAD_KILL(int pthread, int signal);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int GC_PTHREAD_JOIN(int pthread, object retVal);
@@ -358,6 +362,24 @@ namespace System.Threading
         {
             this.state = ThreadState.AbortRequested;
 
+            var returnCode = GC_PTHREAD_KILL(this.pthread, (int)Signals.Terminate);
+            switch ((ReturnCode)returnCode)
+            {
+                case ReturnCode.EINVAL:
+                    throw new InvalidOperationException("An invalid signal was specified.");
+                case ReturnCode.ESRCH:
+                    throw new InvalidOperationException("No thread with the ID thread could be found.");
+            }
+
+            this.state = ThreadState.Aborted;
+        }
+
+        /// <summary>
+        /// </summary>
+        private void CancelInternal()
+        {
+            this.state = ThreadState.AbortRequested;
+
             var returnCode = GC_PTHREAD_CANCEL(this.pthread);
             switch ((ReturnCode)returnCode)
             {
@@ -451,6 +473,11 @@ namespace System.Threading
         {
             Disable = 0,
             Enable = 1
+        }
+
+        private enum Signals
+        {
+            Terminate = 15
         }
 
         private enum ReturnCode

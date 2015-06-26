@@ -38,5 +38,8 @@ extern "C" Void GC_register_finalizer(Void*, __finalization_proc__, Void*, Void*
 #undef GC_PTHREAD_CANCEL
 #define GC_PTHREAD_CANCEL pthread_cancel
 
+#undef GC_PTHREAD_KILL
+#define GC_PTHREAD_KILL pthread_kill
+
 #undef GC_PTHREAD_EXIT
 #define GC_PTHREAD_EXIT GC_pthread_exit

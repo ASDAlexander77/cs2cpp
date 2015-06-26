@@ -47,6 +47,7 @@ typedef double Double;
 #define GC_PTHREAD_JOIN pthread_join
 #define GC_PTHREAD_DETACH pthread_detach
 #define GC_PTHREAD_CANCEL pthread_cancel
+#define GC_PTHREAD_KILL pthread_kill
 #define GC_PTHREAD_EXIT pthread_exit
 
 extern "C" Void* calloc(UInt32, UInt32);
