@@ -102,8 +102,10 @@ namespace System.Threading
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int GC_PTHREAD_CREATE(ref int pthread, ref PthreadAttr attr, void* startRoutine, object arg);
 
+#if SUPPORT_THREAD_CANCEL
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int GC_PTHREAD_CANCEL(int pthread);
+#endif
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int GC_PTHREAD_KILL(int pthread, int signal);
@@ -111,8 +113,10 @@ namespace System.Threading
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern int GC_PTHREAD_JOIN(int pthread, object retVal);
 
+#if SUPPORT_THREAD_CANCEL
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
+#endif
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_setcanceltype(int type, int* oldtype);
@@ -330,7 +334,7 @@ namespace System.Threading
                 unsafe
                 {
                     RegisterThread(thread);
-
+#if SUPPORT_THREAD_CANCEL
                     // set cancelable
                     var returnCode = pthread_setcancelstate((int)PThreadCancel.Enable, null);
                     switch ((ReturnCode)returnCode)
@@ -338,6 +342,7 @@ namespace System.Threading
                         case ReturnCode.EINVAL:
                             throw new InvalidOperationException("Invalid value for state");
                     }
+#endif
                 }
 
                 if (thread.start is ThreadStart)
@@ -467,6 +472,7 @@ namespace System.Threading
             this.state = ThreadState.Aborted;
         }
 
+#if SUPPORT_THREAD_CANCEL
         /// <summary>
         /// </summary>
         private void CancelInternal()
@@ -482,6 +488,7 @@ namespace System.Threading
 
             this.state = ThreadState.Aborted;
         }
+#endif
 
         /// <summary>
         /// </summary>
