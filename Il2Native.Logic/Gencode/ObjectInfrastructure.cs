@@ -780,6 +780,7 @@ namespace Il2Native.Logic.Gencode
                 // to adjust pointer to point VTable
                 ilCodeBuilder.SizeOf(type.ToPointerType());
                 ilCodeBuilder.Add(Code.Add);
+                ilCodeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
             }
 
             // TODO: can be removed when InsertMissingTypes is finished
