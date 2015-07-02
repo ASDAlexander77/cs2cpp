@@ -146,6 +146,31 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.Add(Code.Initblk);
             }
 
+            if (typeResolver.GetGcSupport())
+            {
+                var finalizer = IlReader.FindFinalizer(declaringClassType, typeResolver);
+                if (finalizer != null)
+                {
+                    // obj
+                    newAlloc.Add(Code.Dup);
+                    // finalizer function address
+                    newAlloc.LoadToken(declaringClassType.GetMethodsByName(SynthesizedFinalizerWrapperMethod.Name, typeResolver).First());
+                    // Dummy nulls
+                    newAlloc.LoadNull();
+                    newAlloc.LoadNull();
+                    newAlloc.LoadNull();
+
+                    var voidPointer = typeResolver.System.System_Void.ToPointerType();
+                    var parameters = new[]
+                                         {
+                                             voidPointer.ToParameter("obj"), voidPointer.ToParameter("fn"), voidPointer.ToParameter("cd"),
+                                             voidPointer.ToParameter("ofn"), voidPointer.ToPointerType().ToParameter("ocd")
+                                         };
+                    newAlloc.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, typeResolver.System.System_Void, parameters));
+
+                }
+            }
+
             if (typeResolver.GetMultiThreadingSupport())
             {
                 // init lock area with -1 value and shift address
@@ -723,31 +748,6 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
             }
 
-            if (typeResolver.GetGcSupport())
-            {
-                var finalizer = IlReader.FindFinalizer(declaringClassType, typeResolver);
-                if (finalizer != null)
-                {
-                    // obj
-                    ilCodeBuilder.Add(Code.Dup);
-                    // finalizer function address
-                    ilCodeBuilder.LoadToken(type.GetMethodsByName(SynthesizedFinalizerWrapperMethod.Name, typeResolver).First());
-                    // Dummy nulls
-                    ilCodeBuilder.LoadNull();
-                    ilCodeBuilder.LoadNull();
-                    ilCodeBuilder.LoadNull();
-
-                    var voidPointer = typeResolver.System.System_Void.ToPointerType();
-                    var parameters = new[]
-                                         {
-                                             voidPointer.ToParameter("obj"), voidPointer.ToParameter("fn"), voidPointer.ToParameter("cd"),
-                                             voidPointer.ToParameter("ofn"), voidPointer.ToPointerType().ToParameter("ocd")
-                                         };
-                    ilCodeBuilder.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, typeResolver.System.System_Void, parameters));
-
-                }
-            }
-
             if (!enableStringFastAllocation)
             {
                 ilCodeBuilder.Add(Code.Ret);
@@ -774,6 +774,14 @@ namespace Il2Native.Logic.Gencode
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("cd"));
 
             ilCodeBuilder.LoadArgument(0);
+
+            if (typeResolver.GetMultiThreadingSupport())
+            {
+                // to adjust pointer to point VTable
+                ilCodeBuilder.SizeOf(type.ToPointerType());
+                ilCodeBuilder.Add(Code.Add);
+            }
+
             // TODO: can be removed when InsertMissingTypes is finished
             ilCodeBuilder.Castclass(type);
             ilCodeBuilder.Call(IlReader.FindFinalizer(type, typeResolver));
