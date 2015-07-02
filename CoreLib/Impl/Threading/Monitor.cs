@@ -18,8 +18,10 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_mutex_unlock(void* mutex);
 
+#if SUPPORT_PTHREAD_MUTEX_TIMEDLOCK
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_mutex_timedlock(void* mutex, int* timespec_timeout);
+#endif
 
         /*=========================================================================
         ** Obtain the monitor lock of obj. Will block if another thread holds the lock
@@ -121,6 +123,7 @@
 
         private static void ReliableEnterTimeout(Object obj, int timeout, ref bool lockTaken)
         {
+#if SUPPORT_PTHREAD_MUTEX_TIMEDLOCK
             unsafe
             {
                 var timestruct = stackalloc int[2];
@@ -142,6 +145,9 @@
 
                 lockTaken = returnCode == 0;
             }
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         private static bool IsEnteredNative(Object obj)
