@@ -14,7 +14,7 @@ namespace Il2Native.Logic.Gencode
 
     /// <summary>
     /// </summary>
-    public static class ThreadGen
+    public static class MonitorGen
     {
         /// <summary>
         /// </summary>
@@ -22,21 +22,21 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsThreadFunction(this IMethod method)
+        public static bool IsMonitorFunction(this IMethod method)
         {
             if (!method.IsStatic)
             {
                 return false;
             }
 
-            if (method.DeclaringType == null || method.DeclaringType.FullName != "System.Threading.Thread")
+            if (method.DeclaringType == null || method.DeclaringType.FullName != "System.Threading.Monitor")
             {
                 return false;
             }
 
             switch (method.MetadataName)
             {
-                case "MemoryBarrier":
+                case "GetLockAddress":
                     return true;
             }
 
@@ -51,7 +51,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static void WriteThreadFunction(
+        public static void WriteMonitorFunction(
             this IMethod method,
             OpCodePart opCodeMethodInfo,
             CWriter cWriter)
@@ -60,8 +60,19 @@ namespace Il2Native.Logic.Gencode
 
             switch (method.MetadataName)
             {
-                case "MemoryBarrier":
-                    writer.Write("sync_synchronize()");
+                case "GetLockAddress":
+
+                    if (cWriter.GetMultiThreadingSupport())
+                    {
+                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_lock_address((Void*)", estimatedResult.Type);
+                        writer.Write(")");
+                    }
+                    else
+                    {
+                        writer.Write("__throw_not_supported");
+                    }
+
                     break;
             }
         }

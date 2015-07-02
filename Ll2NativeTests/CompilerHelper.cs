@@ -57,7 +57,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool GcMultiThreadEnabled = true;
+        public const bool MultiThreadingEnabled = true;
 
         /// <summary>
         /// </summary>
@@ -104,7 +104,7 @@
             bool includeCoreLib,
             bool roslyn = UsingRoslyn,
             bool gc = GcEnabled,
-            bool gcmt = GcMultiThreadEnabled,
+            bool mt = MultiThreadingEnabled,
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
             bool stubs = false,
@@ -133,9 +133,9 @@
                 args.Add("gc-");
             }
 
-            if (!gcmt)
+            if (!mt)
             {
-                args.Add("gcmt-");
+                args.Add("mt-");
             }
 
             if (!gctors)
@@ -238,7 +238,7 @@
 
             if (!justCompile)
             {
-                if (GcMultiThreadEnabled)
+                if (MultiThreadingEnabled)
                 {
                     if (!File.Exists(Path.Combine(OutputPath, "libgcmt-lib.a")))
                     {
@@ -268,7 +268,7 @@
                             fileName,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            GcMultiThreadEnabled ? "gcmt-lib" : "gc-lib"));
+                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
 
                     Assert.IsTrue(
                         File.Exists(
@@ -285,7 +285,7 @@
                             OutputObjectFileExt,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            GcMultiThreadEnabled ? "gcmt-lib" : "gc-lib"));
+                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
 
                     // test execution
                     ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);

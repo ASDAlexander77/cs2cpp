@@ -40,6 +40,7 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Impl\Threading\Monitor.cs" />
     <Compile Include="Impl\Threading\Thread.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="System\AppContext\AppContext.cs" />
@@ -377,7 +378,6 @@
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

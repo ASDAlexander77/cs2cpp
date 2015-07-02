@@ -18,10 +18,6 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
-        private static Thread mainThread;
-
-        /// <summary>
-        /// </summary>
         private static AppDomain currentDomain;
 
         /// <summary>
@@ -575,7 +571,7 @@ namespace System.Threading
             Terminate = 15
         }
 
-        private enum ReturnCode
+        public enum ReturnCode
         {
             EPERM = 1,      /* Operation not permitted */
             ENOENT = 2,      /* No such file or directory */

@@ -168,6 +168,11 @@ namespace Il2Native.Logic
             return true;
         }
 
+        public virtual bool GetMultiThreadingSupport()
+        {
+            return true;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">

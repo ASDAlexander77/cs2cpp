@@ -90,6 +90,11 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
 }
 
+inline Void* __get_lock_address(Void* _object)
+{
+	return (Void*) ((Void**)_object - 1);
+}
+
 struct System_InvalidCastException;
 Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
 System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();
@@ -126,6 +131,17 @@ template < typename T > T __check_divide(T div)
 	}
 
 	return div;
+}
+
+struct System_NotSupportedException;
+Void Void_System_NotSupportedException__ctorFN(System_NotSupportedException* __this);
+System_NotSupportedException* System_NotSupportedException_System_NotSupportedException__newFN();
+inline Void* __throw_not_supported()
+{
+	System_NotSupportedException* _new;
+	_new = System_NotSupportedException_System_NotSupportedException__newFN();
+	Void_System_NotSupportedException__ctorFN(_new);
+	throw (::Void*) _new;
 }
 
 struct System_OverflowException;

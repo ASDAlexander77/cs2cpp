@@ -289,9 +289,15 @@ namespace Il2Native.Logic.Gencode
                 return true;
             }
 
-            if (methodInfo.IsThreadingFunction())
+            if (methodInfo.IsThreadFunction())
             {
-                methodInfo.WriteThreadingFunction(opCodeMethodInfo, cWriter);
+                methodInfo.WriteThreadFunction(opCodeMethodInfo, cWriter);
+                return true;
+            }
+
+            if (methodInfo.IsMonitorFunction())
+            {
+                methodInfo.WriteMonitorFunction(opCodeMethodInfo, cWriter);
                 return true;
             }
 

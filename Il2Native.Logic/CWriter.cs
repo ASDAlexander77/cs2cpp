@@ -145,7 +145,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool GcMultiThreadingSupport { get; private set; }
+        public bool MultiThreadingSupport { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -1985,7 +1985,7 @@ namespace Il2Native.Logic
         {
             // custom settings
             this.Gc = args == null || !args.Contains("gc-");
-            this.GcMultiThreadingSupport = args == null || !args.Contains("gcmt-");
+            this.MultiThreadingSupport = args == null || !args.Contains("mt-");
             this.Gctors = false;
 
             this.Unsafe = args != null && args.Contains("safe-");
@@ -2516,6 +2516,11 @@ namespace Il2Native.Logic
         public override bool GetGcSupport()
         {
             return this.Gc;
+        }
+
+        public override bool GetMultiThreadingSupport()
+        {
+            return this.MultiThreadingSupport;
         }
 
         /// <summary>

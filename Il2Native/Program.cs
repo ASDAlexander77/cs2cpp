@@ -42,7 +42,7 @@ namespace Il2Native
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn-                Compile C# source file with .NET Framework (default: Roslyn Compiler)");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
-                Console.WriteLine("  /gcmt-                  Disable Multithreading support for Boehm garbage collector");
+                Console.WriteLine("  /mt-                    Disable Multithreading support");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
                 Console.WriteLine("  /safe-                  Disable throwing exceptions: 'NullPointer' for 'this' pointers, 'ArgumentOutOfRange' for array indexes");
                 Console.WriteLine("  /debug                  Generate debug information");
@@ -162,8 +162,8 @@ namespace Il2Native
 
             Console.Write("Compiling target exe. file...");
             // finally generate EXE output
-            var multiThread = !processedArgs.Contains("gcmt-");
-            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -l{3} -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt, multiThread ? "gcmt-lib" : "gc-lib"));
+            var multiThreading = !processedArgs.Contains("mt-");
+            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -l{3} -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt, multiThreading ? "gcmt-lib" : "gc-lib"));
             Console.WriteLine("Done.");
         }
     }
