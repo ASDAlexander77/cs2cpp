@@ -18,6 +18,9 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_mutex_unlock(void* mutex);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_mutex_timedlock(void* mutex, int* timespec_timeout);
+
         /*=========================================================================
         ** Obtain the monitor lock of obj. Will block if another thread holds the lock
         ** Will not block if the current thread holds the lock,
@@ -118,7 +121,27 @@
 
         private static void ReliableEnterTimeout(Object obj, int timeout, ref bool lockTaken)
         {
-            throw new NotImplementedException();
+            unsafe
+            {
+                var timestruct = stackalloc int[2];
+                timestruct[0] = timeout / 1000;
+                timestruct[1] = (timeout % 1000) * 1000000;
+
+                var returnCode = pthread_mutex_timedlock(GetLockAddress(obj), &timestruct[0]);
+                switch ((Thread.ReturnCode)returnCode)
+                {
+                    case Thread.ReturnCode.EINVAL:
+                        throw new InvalidOperationException("The value specified by mutex is invalid.");
+                    case Thread.ReturnCode.EAGAIN:
+                        throw new InvalidOperationException("The system lacked the necessary resources (other than memory) to initialize another mutex.");
+                    case Thread.ReturnCode.EDEADLK:
+                        throw new InvalidOperationException("The current thread already owns the mutex.");
+                    case Thread.ReturnCode.EPERM:
+                        throw new InvalidOperationException("The current thread does not own the mutex.");
+                }
+
+                lockTaken = returnCode == 0;
+            }
         }
 
         private static bool IsEnteredNative(Object obj)
