@@ -70,7 +70,7 @@ namespace Il2Native.Logic.Gencode
                     }
                     else
                     {
-                        writer.Write("__throw_not_supported");
+                        writer.Write("(__throw_not_supported(), (Void*)0)");
                     }
 
                     break;
