@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System.Collections.Generic;
     using CodeParts;
     using PEAssemblyReader;
 
@@ -22,7 +23,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsMonitorFunction(this IMethod method)
+        public static bool IsMonitorFunction(this IMethod method, CWriter cWriter)
         {
             if (!method.IsStatic)
             {
@@ -38,6 +39,16 @@ namespace Il2Native.Logic.Gencode
             {
                 case "GetLockAddress":
                     return true;
+            }
+
+            if (!cWriter.MultiThreadingSupport)
+            {
+                switch (method.MetadataName)
+                {
+                    case "Enter":
+                    case "Exit":
+                        return true;
+                }                
             }
 
             return false;
@@ -61,19 +72,21 @@ namespace Il2Native.Logic.Gencode
             switch (method.MetadataName)
             {
                 case "GetLockAddress":
-
-                    if (cWriter.GetMultiThreadingSupport())
-                    {
-                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_lock_address((Void*)", estimatedResult.Type);
-                        writer.Write(")");
-                    }
-                    else
-                    {
-                        writer.Write("(__throw_not_supported(), (Void*)0)");
-                    }
+                    var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_lock_address((Void*)", estimatedResult.Type);
+                    writer.Write(")");
 
                     break;
+            }
+
+            if (!cWriter.MultiThreadingSupport)
+            {
+                switch (method.MetadataName)
+                {
+                    case "Enter":
+                    case "Exit":
+                        break;
+                }
             }
         }
     }

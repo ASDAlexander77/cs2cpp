@@ -295,7 +295,7 @@ namespace Il2Native.Logic.Gencode
                 return true;
             }
 
-            if (methodInfo.IsMonitorFunction())
+            if (methodInfo.IsMonitorFunction(cWriter))
             {
                 methodInfo.WriteMonitorFunction(opCodeMethodInfo, cWriter);
                 return true;
