@@ -2006,6 +2006,7 @@ namespace Il2Native.Logic
             if (args != null && args.Contains("android"))
             {
                 this.Gctors = false;
+                this.MultiThreadingSupport = false;
             }
             else if (args != null && args.Contains("emscripten"))
             {
