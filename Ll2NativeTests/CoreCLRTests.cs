@@ -8,7 +8,8 @@
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using PdbReader;
-    namespace @Common.@tests_Coreclr_TestWrapper
+
+    namespace @Common.@Coreclr_TestWrapper
     {
         [TestClass]
         public class @testclass_Coreclr_TestWrapper
@@ -26,7 +27,7 @@
             }
 
             [TestMethod]
-            public void @test_CoreclrTestWrapperLib()
+            public void @CoreclrTestWrapperLib()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\Coreclr.TestWrapper", "CoreclrTestWrapperLib.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -36,7 +37,7 @@
 
     }
 
-    namespace @Common.@tests_CoreCLRTestLibrary
+    namespace @Common.@CoreCLRTestLibrary
     {
         [TestClass]
         public class @testclass_CoreCLRTestLibrary
@@ -54,56 +55,56 @@
             }
 
             [TestMethod]
-            public void @test_CalendarHelpers()
+            public void @CalendarHelpers()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "CalendarHelpers.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_EndianessChecker()
+            public void @EndianessChecker()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "EndianessChecker.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Env()
+            public void @Env()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "Env.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generator()
+            public void @Generator()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "Generator.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GlobLocHelper()
+            public void @GlobLocHelper()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "GlobLocHelper.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Logging()
+            public void @Logging()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "Logging.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_TestFramework()
+            public void @TestFramework()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "TestFramework.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Utilities()
+            public void @Utilities()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Common\CoreCLRTestLibrary", "Utilities.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -113,7 +114,7 @@
 
     }
 
-    namespace @Exceptions.@tests_Finalization
+    namespace @Exceptions.@Finalization
     {
         [TestClass]
         public class @testclass_Finalization
@@ -131,7 +132,7 @@
             }
 
             [TestMethod]
-            public void @test_Finalizer()
+            public void @Finalizer()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Exceptions\Finalization", "Finalizer.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -141,7 +142,7 @@
 
     }
 
-    namespace @GC.@tests_Stress.@tests_Framework
+    namespace @GC.@Stress.@Framework
     {
         [TestClass]
         public class @testclass_Framework
@@ -159,56 +160,56 @@
             }
 
             [TestMethod]
-            public void @test_DetourHelpers()
+            public void @DetourHelpers()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "DetourHelpers.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_key_v1()
+            public void @key_v1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "key_v1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LoaderClass()
+            public void @LoaderClass()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "LoaderClass.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ReliabilityConfiguration()
+            public void @ReliabilityConfiguration()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "ReliabilityConfiguration.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ReliabilityFramework()
+            public void @ReliabilityFramework()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "ReliabilityFramework.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ReliabilityTest()
+            public void @ReliabilityTest()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "ReliabilityTest.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ReliabilityTestSet()
+            public void @ReliabilityTestSet()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "ReliabilityTestSet.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_RFLogging()
+            public void @RFLogging()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Framework", "RFLogging.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -218,7 +219,7 @@
 
     }
 
-    namespace @GC.@tests_Stress.@tests_Tests
+    namespace @GC.@Stress.@Tests
     {
         [TestClass]
         public class @testclass_Tests
@@ -236,126 +237,126 @@
             }
 
             [TestMethod]
-            public void @test_573277()
+            public void @_573277()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "573277.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_allocationwithpins()
+            public void @allocationwithpins()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "allocationwithpins.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b115557()
+            public void @b115557()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "b115557.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_bestfit_finalize()
+            public void @bestfit_finalize()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "bestfit-finalize.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_concurrentspin2()
+            public void @concurrentspin2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "concurrentspin2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_doubLinkStay()
+            public void @doubLinkStay()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "doubLinkStay.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ExpandHeap()
+            public void @ExpandHeap()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "ExpandHeap.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GCQueue()
+            public void @GCQueue()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "GCQueue.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GCSimulator()
+            public void @GCSimulator()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "GCSimulator.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GCVariant()
+            public void @GCVariant()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "GCVariant.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LeakGenThrd()
+            public void @LeakGenThrd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "LeakGenThrd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_MulDimJagAry()
+            public void @MulDimJagAry()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "MulDimJagAry.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pinstress()
+            public void @pinstress()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "pinstress.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_plug()
+            public void @plug()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "plug.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_PlugGaps()
+            public void @PlugGaps()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "PlugGaps.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SingLinkStay()
+            public void @SingLinkStay()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "SingLinkStay.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StressAllocator()
+            public void @StressAllocator()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "StressAllocator.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThdTreeGrowingObj()
+            public void @ThdTreeGrowingObj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"GC\Stress\Tests", "ThdTreeGrowingObj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -365,7 +366,7 @@
 
     }
 
-    namespace @Interop.@tests_ICastable
+    namespace @Interop.@ICastable
     {
         [TestClass]
         public class @testclass_ICastable
@@ -393,7 +394,7 @@
 
     }
 
-    namespace @Interop.@tests_ReversePInvoke.@tests_Marshalling
+    namespace @Interop.@ReversePInvoke.@Marshalling
     {
         [TestClass]
         public class @testclass_Marshalling
@@ -411,7 +412,7 @@
             }
 
             [TestMethod]
-            public void @test_MarshalBoolArray()
+            public void @MarshalBoolArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Interop\ReversePInvoke\Marshalling", "MarshalBoolArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -421,7 +422,7 @@
 
     }
 
-    namespace @JIT.@tests_CodeGenBringUpTests
+    namespace @JIT.@CodeGenBringUpTests
     {
         [TestClass]
         public class @testclass_CodeGenBringUpTests
@@ -439,917 +440,917 @@
             }
 
             [TestMethod]
-            public void @test_Add1()
+            public void @Add1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Add1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_addref()
+            public void @addref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "addref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_And1()
+            public void @And1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "And1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AndRef()
+            public void @AndRef()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AndRef.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Args4()
+            public void @Args4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Args4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Args5()
+            public void @Args5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Args5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AsgAdd1()
+            public void @AsgAdd1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AsgAdd1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AsgAnd1()
+            public void @AsgAnd1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AsgAnd1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AsgOr1()
+            public void @AsgOr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AsgOr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AsgSub1()
+            public void @AsgSub1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AsgSub1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_AsgXor1()
+            public void @AsgXor1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "AsgXor1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_BinaryRMW()
+            public void @BinaryRMW()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "BinaryRMW.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Call1()
+            public void @Call1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Call1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CnsBool()
+            public void @CnsBool()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "CnsBool.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CnsLng1()
+            public void @CnsLng1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "CnsLng1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblAdd()
+            public void @DblAdd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblAdd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblAddConst()
+            public void @DblAddConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblAddConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblArea()
+            public void @DblArea()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblArea.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblArray()
+            public void @DblArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblAvg2()
+            public void @DblAvg2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblAvg2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblAvg6()
+            public void @DblAvg6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblAvg6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblCall1()
+            public void @DblCall1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblCall1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblCall2()
+            public void @DblCall2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblCall2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblDist()
+            public void @DblDist()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblDist.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblDiv()
+            public void @DblDiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblDiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblDivConst()
+            public void @DblDivConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblDivConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblFillArray()
+            public void @DblFillArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblFillArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblMul()
+            public void @DblMul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblMul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblMulConst()
+            public void @DblMulConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblMulConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblNeg()
+            public void @DblNeg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblNeg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblRem()
+            public void @DblRem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblRem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblRoots()
+            public void @DblRoots()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblRoots.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblSub()
+            public void @DblSub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblSub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblSubConst()
+            public void @DblSubConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblSubConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DblVar()
+            public void @DblVar()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "DblVar.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_div1()
+            public void @div1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "div1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_div2()
+            public void @div2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "div2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_divref()
+            public void @divref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "divref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Eq1()
+            public void @Eq1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Eq1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FactorialRec()
+            public void @FactorialRec()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FactorialRec.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FibLoop()
+            public void @FibLoop()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FibLoop.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FiboRec()
+            public void @FiboRec()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FiboRec.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPAdd()
+            public void @FPAdd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPAdd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPAddConst()
+            public void @FPAddConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPAddConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPArea()
+            public void @FPArea()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPArea.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPArray()
+            public void @FPArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPAvg2()
+            public void @FPAvg2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPAvg2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPAvg6()
+            public void @FPAvg6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPAvg6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPCall1()
+            public void @FPCall1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPCall1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPCall2()
+            public void @FPCall2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPCall2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPConvDbl2Lng()
+            public void @FPConvDbl2Lng()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPConvDbl2Lng.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPConvF2F()
+            public void @FPConvF2F()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPConvF2F.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPConvF2I()
+            public void @FPConvF2I()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPConvF2I.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPConvF2Lng()
+            public void @FPConvF2Lng()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPConvF2Lng.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPConvI2F()
+            public void @FPConvI2F()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPConvI2F.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPDist()
+            public void @FPDist()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPDist.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPDiv()
+            public void @FPDiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPDiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPDivConst()
+            public void @FPDivConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPDivConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPError()
+            public void @FPError()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPError.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPFillArray()
+            public void @FPFillArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPFillArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPMath()
+            public void @FPMath()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPMath.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPMul()
+            public void @FPMul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPMul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPMulConst()
+            public void @FPMulConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPMulConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPNeg()
+            public void @FPNeg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPNeg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPRem()
+            public void @FPRem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPRem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPRoots()
+            public void @FPRoots()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPRoots.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPSmall()
+            public void @FPSmall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPSmall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPSub()
+            public void @FPSub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPSub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPSubConst()
+            public void @FPSubConst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPSubConst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FPVar()
+            public void @FPVar()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "FPVar.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Gcd()
+            public void @Gcd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Gcd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Ge1()
+            public void @Ge1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Ge1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Gt1()
+            public void @Gt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Gt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Ind1()
+            public void @Ind1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Ind1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_InitObj()
+            public void @InitObj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "InitObj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_InstanceCalls()
+            public void @InstanceCalls()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "InstanceCalls.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_IntArraySum()
+            public void @IntArraySum()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "IntArraySum.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_IntConv()
+            public void @IntConv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "IntConv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Jmp1()
+            public void @Jmp1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Jmp1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrue1()
+            public void @JTrue1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrue1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueEqDbl()
+            public void @JTrueEqDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueEqDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueEqFP()
+            public void @JTrueEqFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueEqFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueEqInt1()
+            public void @JTrueEqInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueEqInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGeDbl()
+            public void @JTrueGeDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGeDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGeFP()
+            public void @JTrueGeFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGeFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGeInt1()
+            public void @JTrueGeInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGeInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGtDbl()
+            public void @JTrueGtDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGtDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGtFP()
+            public void @JTrueGtFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGtFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueGtInt1()
+            public void @JTrueGtInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueGtInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLeDbl()
+            public void @JTrueLeDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLeDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLeFP()
+            public void @JTrueLeFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLeFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLeInt1()
+            public void @JTrueLeInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLeInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLtDbl()
+            public void @JTrueLtDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLtDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLtFP()
+            public void @JTrueLtFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLtFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueLtInt1()
+            public void @JTrueLtInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueLtInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueNeDbl()
+            public void @JTrueNeDbl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueNeDbl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueNeFP()
+            public void @JTrueNeFP()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueNeFP.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JTrueNeInt1()
+            public void @JTrueNeInt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "JTrueNeInt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Le1()
+            public void @Le1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Le1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LeftShift()
+            public void @LeftShift()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "LeftShift.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LngConv()
+            public void @LngConv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "LngConv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Localloc()
+            public void @Localloc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Localloc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LocallocLarge()
+            public void @LocallocLarge()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "LocallocLarge.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_LongArgsAndReturn()
+            public void @LongArgsAndReturn()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "LongArgsAndReturn.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Lt1()
+            public void @Lt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Lt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mul1()
+            public void @mul1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "mul1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mul2()
+            public void @mul2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "mul2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mul3()
+            public void @mul3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "mul3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mul4()
+            public void @mul4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "mul4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Ne1()
+            public void @Ne1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Ne1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NegRMW()
+            public void @NegRMW()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "NegRMW.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NestedCall()
+            public void @NestedCall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "NestedCall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NotAndNeg()
+            public void @NotAndNeg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "NotAndNeg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NotRMW()
+            public void @NotRMW()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "NotRMW.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ObjAlloc()
+            public void @ObjAlloc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "ObjAlloc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_OpMembersOfStructLocal()
+            public void @OpMembersOfStructLocal()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "OpMembersOfStructLocal.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Or1()
+            public void @Or1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Or1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_OrRef()
+            public void @OrRef()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "OrRef.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_rem1()
+            public void @rem1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "rem1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_RightShiftRef()
+            public void @RightShiftRef()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "RightShiftRef.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StaticCalls()
+            public void @StaticCalls()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "StaticCalls.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StaticValueField()
+            public void @StaticValueField()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "StaticValueField.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StructFldAddr()
+            public void @StructFldAddr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "StructFldAddr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StructInstMethod()
+            public void @StructInstMethod()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "StructInstMethod.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Sub1()
+            public void @Sub1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Sub1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SubRef()
+            public void @SubRef()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "SubRef.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Swap()
+            public void @Swap()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Swap.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Switch()
+            public void @Switch()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Switch.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Unbox()
+            public void @Unbox()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Unbox.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Xor1()
+            public void @Xor1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "Xor1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_XorRef()
+            public void @XorRef()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\CodeGenBringUpTests", "XorRef.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1359,7 +1360,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_Arrays
+    namespace @JIT.@Directed.@Arrays
     {
         [TestClass]
         public class @testclass_Arrays
@@ -1377,28 +1378,28 @@
             }
 
             [TestMethod]
-            public void @test_complex1()
+            public void @complex1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\Arrays", "complex1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_complex2()
+            public void @complex2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\Arrays", "complex2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simple1()
+            public void @simple1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\Arrays", "simple1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simple2()
+            public void @simple2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\Arrays", "simple2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1408,7 +1409,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_CheckedCtor
+    namespace @JIT.@Directed.@CheckedCtor
     {
         [TestClass]
         public class @testclass_CheckedCtor
@@ -1426,126 +1427,126 @@
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Base_1()
+            public void @Generic_Test_CSharp_Base_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Base_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Base_2()
+            public void @Generic_Test_CSharp_Base_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Base_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Base_3()
+            public void @Generic_Test_CSharp_Base_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Base_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Base_4()
+            public void @Generic_Test_CSharp_Base_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Base_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Base_6()
+            public void @Generic_Test_CSharp_Base_6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Base_6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Peer_1()
+            public void @Generic_Test_CSharp_Peer_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Peer_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Peer_2()
+            public void @Generic_Test_CSharp_Peer_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Peer_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Peer_3()
+            public void @Generic_Test_CSharp_Peer_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Peer_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Peer_4()
+            public void @Generic_Test_CSharp_Peer_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Peer_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Generic_Test_CSharp_Peer_6()
+            public void @Generic_Test_CSharp_Peer_6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Generic_Test_CSharp_Peer_6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Base_1()
+            public void @Test_CSharp_Base_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Base_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Base_2()
+            public void @Test_CSharp_Base_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Base_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Base_3()
+            public void @Test_CSharp_Base_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Base_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Base_4()
+            public void @Test_CSharp_Base_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Base_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Peer_1()
+            public void @Test_CSharp_Peer_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Peer_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Peer_2()
+            public void @Test_CSharp_Peer_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Peer_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Peer_3()
+            public void @Test_CSharp_Peer_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Peer_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Test_CSharp_Peer_4()
+            public void @Test_CSharp_Peer_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\CheckedCtor", "Test_CSharp_Peer_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1555,7 +1556,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_cmov
+    namespace @JIT.@Directed.@cmov
     {
         [TestClass]
         public class @testclass_cmov
@@ -1573,112 +1574,112 @@
             }
 
             [TestMethod]
-            public void @test_Bool_And_Op()
+            public void @Bool_And_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Bool_And_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Bool_No_Op()
+            public void @Bool_No_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Bool_No_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Bool_Or_Op()
+            public void @Bool_Or_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Bool_Or_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Bool_Xor_Op()
+            public void @Bool_Xor_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Bool_Xor_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Double_And_Op()
+            public void @Double_And_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Double_And_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Double_No_Op()
+            public void @Double_No_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Double_No_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Double_Or_Op()
+            public void @Double_Or_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Double_Or_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Double_Xor_Op()
+            public void @Double_Xor_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Double_Xor_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Float_And_Op()
+            public void @Float_And_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Float_And_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Float_No_Op()
+            public void @Float_No_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Float_No_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Float_Or_Op()
+            public void @Float_Or_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Float_Or_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Float_Xor_Op()
+            public void @Float_Xor_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Float_Xor_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Int_And_Op()
+            public void @Int_And_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Int_And_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Int_No_Op()
+            public void @Int_No_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Int_No_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Int_Or_Op()
+            public void @Int_Or_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Int_Or_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Int_Xor_Op()
+            public void @Int_Xor_Op()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\cmov", "Int_Xor_Op.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1688,7 +1689,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_coverage.@tests_flowgraph
+    namespace @JIT.@Directed.@coverage.@flowgraph
     {
         [TestClass]
         public class @testclass_flowgraph
@@ -1706,7 +1707,7 @@
             }
 
             [TestMethod]
-            public void @test_xaddmuly()
+            public void @xaddmuly()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\flowgraph", "xaddmuly.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1716,7 +1717,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_coverage.@tests_oldtests
+    namespace @JIT.@Directed.@coverage.@oldtests
     {
         [TestClass]
         public class @testclass_oldtests
@@ -1734,56 +1735,56 @@
             }
 
             [TestMethod]
-            public void @test_33objref()
+            public void @_33objref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "33objref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_cse1()
+            public void @cse1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "cse1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_cse2()
+            public void @cse2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "cse2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lclfldadd()
+            public void @lclfldadd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "lclfldadd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lclflddiv()
+            public void @lclflddiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "lclflddiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lclfldmul()
+            public void @lclfldmul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "lclfldmul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lclfldrem()
+            public void @lclfldrem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "lclfldrem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lclfldsub()
+            public void @lclfldsub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\coverage\oldtests", "lclfldsub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1793,7 +1794,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_intrinsic.@tests_interlocked
+    namespace @JIT.@Directed.@intrinsic.@interlocked
     {
         [TestClass]
         public class @testclass_interlocked
@@ -1811,42 +1812,42 @@
             }
 
             [TestMethod]
-            public void @test_cmpxchg()
+            public void @cmpxchg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "cmpxchg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_cse_cmpxchg()
+            public void @cse_cmpxchg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "cse_cmpxchg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_IntrinsicTest_Overflow()
+            public void @IntrinsicTest_Overflow()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "IntrinsicTest_Overflow.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_nullchecksuppress()
+            public void @nullchecksuppress()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "nullchecksuppress.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_regalloc1()
+            public void @regalloc1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "regalloc1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_regalloc2()
+            public void @regalloc2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\interlocked", "regalloc2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1856,7 +1857,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_intrinsic.@tests_pow
+    namespace @JIT.@Directed.@intrinsic.@pow
     {
         [TestClass]
         public class @testclass_pow
@@ -1874,28 +1875,28 @@
             }
 
             [TestMethod]
-            public void @test_pow0()
+            public void @pow0()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\pow", "pow0.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pow1()
+            public void @pow1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\pow", "pow1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pow2()
+            public void @pow2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\pow", "pow2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pow3()
+            public void @pow3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\intrinsic\pow", "pow3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1905,7 +1906,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_lifetime
+    namespace @JIT.@Directed.@lifetime
     {
         [TestClass]
         public class @testclass_lifetime
@@ -1923,14 +1924,14 @@
             }
 
             [TestMethod]
-            public void @test_lifetime1()
+            public void @lifetime1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\lifetime", "lifetime1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lifetime2()
+            public void @lifetime2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\lifetime", "lifetime2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1940,7 +1941,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_localloc
+    namespace @JIT.@Directed.@localloc
     {
         [TestClass]
         public class @testclass_localloc
@@ -1958,7 +1959,7 @@
             }
 
             [TestMethod]
-            public void @test_localloc3()
+            public void @localloc3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\localloc", "localloc3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -1968,7 +1969,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_newarr
+    namespace @JIT.@Directed.@newarr
     {
         [TestClass]
         public class @testclass_newarr
@@ -1996,7 +1997,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_shift
+    namespace @JIT.@Directed.@shift
     {
         [TestClass]
         public class @testclass_shift
@@ -2014,49 +2015,49 @@
             }
 
             [TestMethod]
-            public void @test_int16()
+            public void @int16()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "int16.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_int32()
+            public void @int32()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "int32.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_int64()
+            public void @int64()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "int64.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_uint16()
+            public void @uint16()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "uint16.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_uint32()
+            public void @uint32()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "uint32.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_uint64()
+            public void @uint64()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "uint64.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_uint8()
+            public void @uint8()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\shift", "uint8.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2066,7 +2067,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_StrAccess
+    namespace @JIT.@Directed.@StrAccess
     {
         [TestClass]
         public class @testclass_StrAccess
@@ -2084,28 +2085,28 @@
             }
 
             [TestMethod]
-            public void @test_straccess1()
+            public void @straccess1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StrAccess", "straccess1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_straccess2()
+            public void @straccess2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StrAccess", "straccess2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_straccess3()
+            public void @straccess3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StrAccess", "straccess3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_straccess4()
+            public void @straccess4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StrAccess", "straccess4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2115,7 +2116,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_StructPromote
+    namespace @JIT.@Directed.@StructPromote
     {
         [TestClass]
         public class @testclass_StructPromote
@@ -2133,84 +2134,84 @@
             }
 
             [TestMethod]
-            public void @test_SP1()
+            public void @SP1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP1a()
+            public void @SP1a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP1a2()
+            public void @SP1a2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1a2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP1b()
+            public void @SP1b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP1c()
+            public void @SP1c()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1c.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP1d()
+            public void @SP1d()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP1d.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP2()
+            public void @SP2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP2a()
+            public void @SP2a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP2a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP2b()
+            public void @SP2b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP2b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SP2c()
+            public void @SP2c()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SP2c.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SpAddr()
+            public void @SpAddr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SpAddr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SpAddrAT()
+            public void @SpAddrAT()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\StructPromote", "SpAddrAT.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2220,7 +2221,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_TypedReference
+    namespace @JIT.@Directed.@TypedReference
     {
         [TestClass]
         public class @testclass_TypedReference
@@ -2248,7 +2249,7 @@
 
     }
 
-    namespace @JIT.@tests_Directed.@tests_UnrollLoop
+    namespace @JIT.@Directed.@UnrollLoop
     {
         [TestClass]
         public class @testclass_UnrollLoop
@@ -2266,21 +2267,21 @@
             }
 
             [TestMethod]
-            public void @test_Dev10_846218()
+            public void @Dev10_846218()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\UnrollLoop", "Dev10_846218.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_loop1()
+            public void @loop1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\UnrollLoop", "loop1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_loop4()
+            public void @loop4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Directed\UnrollLoop", "loop4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2290,7 +2291,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Arrays.@tests_ConstructedTypes.@tests_Jagged
+    namespace @JIT.@Generics.@Arrays.@ConstructedTypes.@Jagged
     {
         [TestClass]
         public class @testclass_Jagged
@@ -2308,133 +2309,133 @@
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class01_instance()
+            public void @class01_instance()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class01_instance.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class01_static()
+            public void @class01_static()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class01_static.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class02()
+            public void @class02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class03()
+            public void @class03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class04()
+            public void @class04()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class04.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class05()
+            public void @class05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class06()
+            public void @class06()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class06.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class07()
+            public void @class07()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "class07.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struc01()
+            public void @struc01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struc01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct01()
+            public void @Struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "Struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct01_instance()
+            public void @Struct01_instance()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "Struct01_instance.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01_static()
+            public void @struct01_static()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct01_static.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct02()
+            public void @struct02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct03()
+            public void @struct03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct04()
+            public void @struct04()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct04.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct05()
+            public void @struct05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct06()
+            public void @struct06()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct06.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct07()
+            public void @struct07()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\Jagged", "struct07.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2444,7 +2445,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Arrays.@tests_ConstructedTypes.@tests_MultiDim
+    namespace @JIT.@Generics.@Arrays.@ConstructedTypes.@MultiDim
     {
         [TestClass]
         public class @testclass_MultiDim
@@ -2462,42 +2463,42 @@
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class01_Instance()
+            public void @class01_Instance()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "class01_Instance.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class01_static()
+            public void @class01_static()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "class01_static.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01()
+            public void @struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01_Instance()
+            public void @struct01_Instance()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "struct01_Instance.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01_static()
+            public void @struct01_static()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\ConstructedTypes\MultiDim", "struct01_static.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2507,7 +2508,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Arrays.@tests_TypeParameters.@tests_Jagged
+    namespace @JIT.@Generics.@Arrays.@TypeParameters.@Jagged
     {
         [TestClass]
         public class @testclass_Jagged
@@ -2525,14 +2526,14 @@
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\TypeParameters\Jagged", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01()
+            public void @struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\TypeParameters\Jagged", "struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2542,7 +2543,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Arrays.@tests_TypeParameters.@tests_MultiDim
+    namespace @JIT.@Generics.@Arrays.@TypeParameters.@MultiDim
     {
         [TestClass]
         public class @testclass_MultiDim
@@ -2560,14 +2561,14 @@
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\TypeParameters\MultiDim", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01()
+            public void @struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Arrays\TypeParameters\MultiDim", "struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2577,7 +2578,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_ConstrainedCall
+    namespace @JIT.@Generics.@ConstrainedCall
     {
         [TestClass]
         public class @testclass_ConstrainedCall
@@ -2595,42 +2596,42 @@
             }
 
             [TestMethod]
-            public void @test_class1()
+            public void @class1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "class1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class2()
+            public void @class2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "class2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vt1()
+            public void @vt1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "vt1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vt2()
+            public void @vt2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "vt2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vt3()
+            public void @vt3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "vt3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vt4()
+            public void @vt4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\ConstrainedCall", "vt4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2640,7 +2641,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Constraints
+    namespace @JIT.@Generics.@Constraints
     {
         [TestClass]
         public class @testclass_Constraints
@@ -2658,42 +2659,42 @@
             }
 
             [TestMethod]
-            public void @test_Call_instance01()
+            public void @Call_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Call_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Call_static01()
+            public void @Call_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Call_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Convert_instance01()
+            public void @Convert_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Convert_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Convert_static01()
+            public void @Convert_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Convert_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Transitive_instance01()
+            public void @Transitive_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Transitive_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Transitive_static01()
+            public void @Transitive_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Constraints", "Transitive_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2703,7 +2704,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Conversions.@tests_Boxing
+    namespace @JIT.@Generics.@Conversions.@Boxing
     {
         [TestClass]
         public class @testclass_Boxing
@@ -2721,7 +2722,7 @@
             }
 
             [TestMethod]
-            public void @test_box_unbox01()
+            public void @box_unbox01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Boxing", "box_unbox01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2731,7 +2732,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Conversions.@tests_Reference
+    namespace @JIT.@Generics.@Conversions.@Reference
     {
         [TestClass]
         public class @testclass_Reference
@@ -2749,63 +2750,63 @@
             }
 
             [TestMethod]
-            public void @test_GenToGen01()
+            public void @GenToGen01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToGen01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenToGen02()
+            public void @GenToGen02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToGen02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenToGen03()
+            public void @GenToGen03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToGen03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenToNonGen01()
+            public void @GenToNonGen01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToNonGen01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenToNonGen02()
+            public void @GenToNonGen02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToNonGen02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenToNonGen03()
+            public void @GenToNonGen03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "GenToNonGen03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NonGenToGen01()
+            public void @NonGenToGen01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "NonGenToGen01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NonGenToGen02()
+            public void @NonGenToGen02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "NonGenToGen02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_NonGenToGen03()
+            public void @NonGenToGen03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Conversions\Reference", "NonGenToGen03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2815,7 +2816,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Coverage
+    namespace @JIT.@Generics.@Coverage
     {
         [TestClass]
         public class @testclass_Coverage
@@ -2833,21 +2834,21 @@
             }
 
             [TestMethod]
-            public void @test_chaos55915408cs()
+            public void @chaos55915408cs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Coverage", "chaos55915408cs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_chaos56200037cs()
+            public void @chaos56200037cs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Coverage", "chaos56200037cs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_chaos65204782cs()
+            public void @chaos65204782cs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Coverage", "chaos65204782cs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2857,7 +2858,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Exceptions
+    namespace @JIT.@Generics.@Exceptions
     {
         [TestClass]
         public class @testclass_Exceptions
@@ -2875,84 +2876,84 @@
             }
 
             [TestMethod]
-            public void @test_general_class_instance01()
+            public void @general_class_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "general_class_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_general_class_static01()
+            public void @general_class_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "general_class_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_general_struct_instance01()
+            public void @general_struct_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "general_struct_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_general_struct_static01()
+            public void @general_struct_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "general_struct_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_class_instance01()
+            public void @specific_class_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_class_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_class_instance02()
+            public void @specific_class_instance02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_class_instance02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_class_static01()
+            public void @specific_class_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_class_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_class_static02()
+            public void @specific_class_static02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_class_static02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_struct_instance01()
+            public void @specific_struct_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_struct_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_struct_instance02()
+            public void @specific_struct_instance02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_struct_instance02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_struct_static01()
+            public void @specific_struct_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_struct_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_specific_struct_static02()
+            public void @specific_struct_static02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Exceptions", "specific_struct_static02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -2962,7 +2963,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Fields
+    namespace @JIT.@Generics.@Fields
     {
         [TestClass]
         public class @testclass_Fields
@@ -2980,84 +2981,84 @@
             }
 
             [TestMethod]
-            public void @test_instance_assignment_class01()
+            public void @instance_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_assignment_struct01()
+            public void @instance_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_class01()
+            public void @instance_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_struct01()
+            public void @instance_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_class01()
+            public void @instance_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_struct01()
+            public void @instance_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "instance_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_class01()
+            public void @static_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_struct01()
+            public void @static_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_class01()
+            public void @static_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_struct01()
+            public void @static_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_class01()
+            public void @static_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_struct01()
+            public void @static_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Fields", "static_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3067,7 +3068,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Instantiation.@tests_Classes
+    namespace @JIT.@Generics.@Instantiation.@Classes
     {
         [TestClass]
         public class @testclass_Classes
@@ -3085,56 +3086,56 @@
             }
 
             [TestMethod]
-            public void @test_BaseClass01()
+            public void @BaseClass01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "BaseClass01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_BaseClass02()
+            public void @BaseClass02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "BaseClass02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_BaseClass03()
+            public void @BaseClass03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "BaseClass03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Baseclass04()
+            public void @Baseclass04()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "Baseclass04.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Baseclass05()
+            public void @Baseclass05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "Baseclass05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class02()
+            public void @class02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "class02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class03()
+            public void @class03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Classes", "class03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3144,7 +3145,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Instantiation.@tests_Interfaces
+    namespace @JIT.@Generics.@Instantiation.@Interfaces
     {
         [TestClass]
         public class @testclass_Interfaces
@@ -3162,70 +3163,70 @@
             }
 
             [TestMethod]
-            public void @test_Class01()
+            public void @Class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Class02()
+            public void @Class02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Class02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Class03()
+            public void @Class03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Class03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Class04()
+            public void @Class04()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Class04.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Class05()
+            public void @Class05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Class05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct01()
+            public void @Struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct02()
+            public void @Struct02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Struct02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct03()
+            public void @Struct03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Struct03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct04()
+            public void @Struct04()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Struct04.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct05()
+            public void @Struct05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Interfaces", "Struct05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3235,7 +3236,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Instantiation.@tests_Structs
+    namespace @JIT.@Generics.@Instantiation.@Structs
     {
         [TestClass]
         public class @testclass_Structs
@@ -3253,21 +3254,21 @@
             }
 
             [TestMethod]
-            public void @test_struct01()
+            public void @struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Structs", "struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct02()
+            public void @struct02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Structs", "struct02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct03()
+            public void @struct03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Instantiation\Structs", "struct03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3277,7 +3278,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Locals
+    namespace @JIT.@Generics.@Locals
     {
         [TestClass]
         public class @testclass_Locals
@@ -3295,84 +3296,84 @@
             }
 
             [TestMethod]
-            public void @test_instance_assignment_class01()
+            public void @instance_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_assignment_struct01()
+            public void @instance_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_class01()
+            public void @instance_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_struct01()
+            public void @instance_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_class01()
+            public void @instance_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_struct01()
+            public void @instance_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "instance_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_class01()
+            public void @static_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_struct01()
+            public void @static_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_class01()
+            public void @static_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_struct01()
+            public void @static_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_class01()
+            public void @static_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_struct01()
+            public void @static_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Locals", "static_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3382,7 +3383,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_MemberAccess
+    namespace @JIT.@Generics.@MemberAccess
     {
         [TestClass]
         public class @testclass_MemberAccess
@@ -3400,56 +3401,56 @@
             }
 
             [TestMethod]
-            public void @test_class_instance01()
+            public void @class_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "class_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class_static01()
+            public void @class_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "class_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interface_class01()
+            public void @interface_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "interface_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interface_class02()
+            public void @interface_class02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "interface_class02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interface_struct01()
+            public void @interface_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "interface_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interface_struct02()
+            public void @interface_struct02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "interface_struct02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct_instance01()
+            public void @struct_instance01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "struct_instance01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct_static01()
+            public void @struct_static01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\MemberAccess", "struct_static01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3459,7 +3460,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Parameters
+    namespace @JIT.@Generics.@Parameters
     {
         [TestClass]
         public class @testclass_Parameters
@@ -3477,84 +3478,84 @@
             }
 
             [TestMethod]
-            public void @test_instance_assignment_class01()
+            public void @instance_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_assignment_struct01()
+            public void @instance_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_class01()
+            public void @instance_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_equalnull_struct01()
+            public void @instance_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_class01()
+            public void @instance_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_instance_passing_struct01()
+            public void @instance_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "instance_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_class01()
+            public void @static_assignment_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_assignment_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_assignment_struct01()
+            public void @static_assignment_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_assignment_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_class01()
+            public void @static_equalnull_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_equalnull_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_equalnull_struct01()
+            public void @static_equalnull_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_equalnull_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_class01()
+            public void @static_passing_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_passing_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_static_passing_struct01()
+            public void @static_passing_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Parameters", "static_passing_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3564,7 +3565,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_Typeof
+    namespace @JIT.@Generics.@Typeof
     {
         [TestClass]
         public class @testclass_Typeof
@@ -3582,70 +3583,70 @@
             }
 
             [TestMethod]
-            public void @test_class01()
+            public void @class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class02()
+            public void @class02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "class02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_class03()
+            public void @class03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "class03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_dynamicTypes()
+            public void @dynamicTypes()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "dynamicTypes.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_objectBoxing()
+            public void @objectBoxing()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "objectBoxing.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refTypesdynamic()
+            public void @refTypesdynamic()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "refTypesdynamic.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct01()
+            public void @struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct02()
+            public void @Struct02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "Struct02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct03()
+            public void @struct03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "struct03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_valueTypeBoxing()
+            public void @valueTypeBoxing()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\Typeof", "valueTypeBoxing.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3655,7 +3656,7 @@
 
     }
 
-    namespace @JIT.@tests_Generics.@tests_TypeParameters
+    namespace @JIT.@Generics.@TypeParameters
     {
         [TestClass]
         public class @testclass_TypeParameters
@@ -3673,14 +3674,14 @@
             }
 
             [TestMethod]
-            public void @test_default_class01()
+            public void @default_class01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\TypeParameters", "default_class01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_default_struct01()
+            public void @default_struct01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Generics\TypeParameters", "default_struct01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -3690,7 +3691,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_gc.@tests_misc
+    namespace @JIT.@jit64.@gc.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -3708,567 +3709,567 @@
             }
 
             [TestMethod]
-            public void @test_148343()
+            public void @_148343()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "148343.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_9param()
+            public void @_9param()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "9param.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_9_and_alloca2()
+            public void @_9_and_alloca2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "9_and_alloca2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_eh1()
+            public void @eh1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "eh1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fgtest1()
+            public void @fgtest1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "fgtest1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fgtest2()
+            public void @fgtest2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "fgtest2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_funclet()
+            public void @funclet()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "funclet.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_gcparaminreg()
+            public void @gcparaminreg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "gcparaminreg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ret_struct_test1()
+            public void @ret_struct_test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "ret_struct_test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ret_struct_test4()
+            public void @ret_struct_test4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "ret_struct_test4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simple1()
+            public void @simple1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "simple1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct1()
+            public void @struct1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct1_2()
+            public void @struct1_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct1_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct1_4()
+            public void @struct1_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct1_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct1_5()
+            public void @struct1_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct1_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct2()
+            public void @struct2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct2_2()
+            public void @struct2_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct2_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct2_4()
+            public void @struct2_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct2_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct2_5()
+            public void @struct2_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct2_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct2_5_2()
+            public void @struct2_5_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct2_5_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct3()
+            public void @struct3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct3_2()
+            public void @struct3_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct3_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct3_4()
+            public void @struct3_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct3_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct3_5()
+            public void @struct3_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct3_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct4()
+            public void @struct4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct4_2()
+            public void @struct4_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct4_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct4_4()
+            public void @struct4_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct4_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct4_5()
+            public void @struct4_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct4_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct5()
+            public void @struct5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct5_2()
+            public void @struct5_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct5_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct5_4()
+            public void @struct5_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct5_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct5_5()
+            public void @struct5_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct5_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct6()
+            public void @struct6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct6_2()
+            public void @struct6_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct6_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct6_4()
+            public void @struct6_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct6_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct6_5()
+            public void @struct6_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct6_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct7_1()
+            public void @struct7_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct7_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct8()
+            public void @struct8()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct8.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct9()
+            public void @struct9()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct9.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_struct9_2()
+            public void @struct9_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "struct9_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_1()
+            public void @structfp1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_2()
+            public void @structfp1_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_3()
+            public void @structfp1_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_4()
+            public void @structfp1_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_5()
+            public void @structfp1_5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp1_6()
+            public void @structfp1_6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp1_6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp2_1()
+            public void @structfp2_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp2_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp2_2()
+            public void @structfp2_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp2_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp2_3()
+            public void @structfp2_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp2_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp2_4()
+            public void @structfp2_4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp2_4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp3_1()
+            public void @structfp3_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp3_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp4_1()
+            public void @structfp4_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp4_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp5_1()
+            public void @structfp5_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp5_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfp6_1()
+            public void @structfp6_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfp6_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfpseh5_1()
+            public void @structfpseh5_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfpseh5_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structfpseh6_1()
+            public void @structfpseh6_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structfpseh6_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structref1_1()
+            public void @structref1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structref1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret1_1()
+            public void @structret1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret1_2()
+            public void @structret1_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret1_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret1_3()
+            public void @structret1_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret1_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret2_1()
+            public void @structret2_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret2_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret2_2()
+            public void @structret2_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret2_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret2_3()
+            public void @structret2_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret2_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret3_1()
+            public void @structret3_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret3_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret3_2()
+            public void @structret3_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret3_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret3_3()
+            public void @structret3_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret3_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret4_1()
+            public void @structret4_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret4_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret4_2()
+            public void @structret4_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret4_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret4_3()
+            public void @structret4_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret4_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret5_1()
+            public void @structret5_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret5_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret5_2()
+            public void @structret5_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret5_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret5_3()
+            public void @structret5_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret5_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret6_1()
+            public void @structret6_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret6_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret6_2()
+            public void @structret6_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret6_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structret6_3()
+            public void @structret6_3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structret6_3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structva1_1()
+            public void @structva1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "structva1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test2()
+            public void @test2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "test2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test3()
+            public void @test3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "test3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test_noalloca()
+            public void @test_noalloca()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "test_noalloca.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vbil()
+            public void @vbil()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\misc", "vbil.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4278,7 +4279,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_gc.@tests_regress.@tests_vswhidbey
+    namespace @JIT.@jit64.@gc.@regress.@vswhidbey
     {
         [TestClass]
         public class @testclass_vswhidbey
@@ -4296,14 +4297,14 @@
             }
 
             [TestMethod]
-            public void @test_143837()
+            public void @_143837()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\regress\vswhidbey", "143837.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_339415()
+            public void @_339415()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\gc\regress\vswhidbey", "339415.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4313,7 +4314,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_cg.@tests_CGRecurse
+    namespace @JIT.@jit64.@opt.@cg.@CGRecurse
     {
         [TestClass]
         public class @testclass_CGRecurse
@@ -4331,28 +4332,28 @@
             }
 
             [TestMethod]
-            public void @test_CGRecurseAAA()
+            public void @CGRecurseAAA()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\CGRecurse", "CGRecurseAAA.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CGRecurseAAC()
+            public void @CGRecurseAAC()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\CGRecurse", "CGRecurseAAC.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CGRecurseACA()
+            public void @CGRecurseACA()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\CGRecurse", "CGRecurseACA.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CGRecurseACC()
+            public void @CGRecurseACC()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\CGRecurse", "CGRecurseACC.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4362,7 +4363,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_cg.@tests_cgstress
+    namespace @JIT.@jit64.@opt.@cg.@cgstress
     {
         [TestClass]
         public class @testclass_cgstress
@@ -4380,21 +4381,21 @@
             }
 
             [TestMethod]
-            public void @test_CgStress1()
+            public void @CgStress1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\cgstress", "CgStress1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CgStress2()
+            public void @CgStress2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\cgstress", "CgStress2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CgStress3()
+            public void @CgStress3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cg\cgstress", "CgStress3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4404,7 +4405,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_cse
+    namespace @JIT.@jit64.@opt.@cse
     {
         [TestClass]
         public class @testclass_cse
@@ -4422,175 +4423,175 @@
             }
 
             [TestMethod]
-            public void @test_arrayexpr1()
+            public void @arrayexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "arrayexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_arrayexpr2()
+            public void @arrayexpr2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "arrayexpr2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fieldexpr1()
+            public void @fieldexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "fieldexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fieldexpr1_1()
+            public void @fieldexpr1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "fieldexpr1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fieldexpr2()
+            public void @fieldexpr2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "fieldexpr2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_fieldExprUnchecked1()
+            public void @fieldExprUnchecked1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "fieldExprUnchecked1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_HugeArray()
+            public void @HugeArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "HugeArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_HugeArray1()
+            public void @HugeArray1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "HugeArray1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_hugeexpr1()
+            public void @hugeexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "hugeexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_HugeField1()
+            public void @HugeField1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "HugeField1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_HugeField2()
+            public void @HugeField2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "HugeField2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_hugeSimpleExpr1()
+            public void @hugeSimpleExpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "hugeSimpleExpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mixedexpr1()
+            public void @mixedexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "mixedexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pointerexpr1()
+            public void @pointerexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "pointerexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pointerexpr1_1()
+            public void @pointerexpr1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "pointerexpr1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simpleexpr1()
+            public void @simpleexpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "simpleexpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simpleexpr1_1()
+            public void @simpleexpr1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "simpleexpr1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simpleexpr2()
+            public void @simpleexpr2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "simpleexpr2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simpleexpr3()
+            public void @simpleexpr3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "simpleexpr3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_simpleexpr4()
+            public void @simpleexpr4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "simpleexpr4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_staticFieldExpr1()
+            public void @staticFieldExpr1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "staticFieldExpr1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_staticFieldExpr1_1()
+            public void @staticFieldExpr1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "staticFieldExpr1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_staticFieldExprUnchecked1()
+            public void @staticFieldExprUnchecked1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "staticFieldExprUnchecked1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_volatilefield()
+            public void @volatilefield()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "volatilefield.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_volatilestaticfield()
+            public void @volatilestaticfield()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\cse", "volatilestaticfield.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4600,7 +4601,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_inl
+    namespace @JIT.@jit64.@opt.@inl
     {
         [TestClass]
         public class @testclass_inl
@@ -4618,7 +4619,7 @@
             }
 
             [TestMethod]
-            public void @test_caninline()
+            public void @caninline()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\inl", "caninline.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4628,7 +4629,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_lim
+    namespace @JIT.@jit64.@opt.@lim
     {
         [TestClass]
         public class @testclass_lim
@@ -4646,7 +4647,7 @@
             }
 
             [TestMethod]
-            public void @test_lim_002()
+            public void @lim_002()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\lim", "lim_002.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4656,7 +4657,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_lur
+    namespace @JIT.@jit64.@opt.@lur
     {
         [TestClass]
         public class @testclass_lur
@@ -4674,7 +4675,7 @@
             }
 
             [TestMethod]
-            public void @test_lur_02()
+            public void @lur_02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\lur", "lur_02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4684,7 +4685,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_osr
+    namespace @JIT.@jit64.@opt.@osr
     {
         [TestClass]
         public class @testclass_osr
@@ -4702,7 +4703,7 @@
             }
 
             [TestMethod]
-            public void @test_osr001()
+            public void @osr001()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\osr", "osr001.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4712,7 +4713,7 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_opt.@tests_rngchk
+    namespace @JIT.@jit64.@opt.@rngchk
     {
         [TestClass]
         public class @testclass_rngchk
@@ -4730,70 +4731,70 @@
             }
 
             [TestMethod]
-            public void @test_ArrayBound()
+            public void @ArrayBound()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "ArrayBound.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ArrayWith2Loops()
+            public void @ArrayWith2Loops()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "ArrayWith2Loops.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ArrayWithFunc()
+            public void @ArrayWithFunc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "ArrayWithFunc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_BadMatrixMul()
+            public void @BadMatrixMul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "BadMatrixMul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_JaggedArray()
+            public void @JaggedArray()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "JaggedArray.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_MatrixMul()
+            public void @MatrixMul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "MatrixMul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_RngchkStress1()
+            public void @RngchkStress1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "RngchkStress1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_RngchkStress2()
+            public void @RngchkStress2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "RngchkStress2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_RngchkStress3()
+            public void @RngchkStress3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "RngchkStress3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_SimpleArray_01()
+            public void @SimpleArray_01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\opt\rngchk", "SimpleArray_01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4803,10 +4804,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_asurt.@tests_143616
+    namespace @JIT.@jit64.@regress.@asurt.@_143616
     {
         [TestClass]
-        public class @testclass_143616
+        public class @testclass__143616
         {
             [TestInitialize]
             public void Initialize()
@@ -4821,7 +4822,7 @@
             }
 
             [TestMethod]
-            public void @test_foo()
+            public void @foo()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\asurt\143616", "foo.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4831,10 +4832,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_ddb.@tests_103087
+    namespace @JIT.@jit64.@regress.@ddb.@_103087
     {
         [TestClass]
-        public class @testclass_103087
+        public class @testclass__103087
         {
             [TestInitialize]
             public void Initialize()
@@ -4849,7 +4850,7 @@
             }
 
             [TestMethod]
-            public void @test_103087()
+            public void @test__103087()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\ddb\103087", "103087.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4859,10 +4860,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_ddb.@tests_113574
+    namespace @JIT.@jit64.@regress.@ddb.@_113574
     {
         [TestClass]
-        public class @testclass_113574
+        public class @testclass__113574
         {
             [TestInitialize]
             public void Initialize()
@@ -4877,7 +4878,7 @@
             }
 
             [TestMethod]
-            public void @test_113574()
+            public void @test__113574()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\ddb\113574", "113574.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4887,10 +4888,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_ddb.@tests_132977
+    namespace @JIT.@jit64.@regress.@ddb.@_132977
     {
         [TestClass]
-        public class @testclass_132977
+        public class @testclass__132977
         {
             [TestInitialize]
             public void Initialize()
@@ -4905,7 +4906,7 @@
             }
 
             [TestMethod]
-            public void @test_132977()
+            public void @test__132977()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\ddb\132977", "132977.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4915,10 +4916,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_ndpw.@tests_160545
+    namespace @JIT.@jit64.@regress.@ndpw.@_160545
     {
         [TestClass]
-        public class @testclass_160545
+        public class @testclass__160545
         {
             [TestInitialize]
             public void Initialize()
@@ -4933,7 +4934,7 @@
             }
 
             [TestMethod]
-            public void @test_simple()
+            public void @simple()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\ndpw\160545", "simple.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4943,10 +4944,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_ndpw.@tests_21015
+    namespace @JIT.@jit64.@regress.@ndpw.@_21015
     {
         [TestClass]
-        public class @testclass_21015
+        public class @testclass__21015
         {
             [TestInitialize]
             public void Initialize()
@@ -4961,7 +4962,7 @@
             }
 
             [TestMethod]
-            public void @test_interior_pointer()
+            public void @interior_pointer()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\ndpw\21015", "interior_pointer.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4971,10 +4972,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_102964
+    namespace @JIT.@jit64.@regress.@vsw.@_102964
     {
         [TestClass]
-        public class @testclass_102964
+        public class @testclass__102964
         {
             [TestInitialize]
             public void Initialize()
@@ -4989,7 +4990,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\102964", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -4999,10 +5000,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_329169
+    namespace @JIT.@jit64.@regress.@vsw.@_329169
     {
         [TestClass]
-        public class @testclass_329169
+        public class @testclass__329169
         {
             [TestInitialize]
             public void Initialize()
@@ -5017,7 +5018,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\329169", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5027,10 +5028,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_373472
+    namespace @JIT.@jit64.@regress.@vsw.@_373472
     {
         [TestClass]
-        public class @testclass_373472
+        public class @testclass__373472
         {
             [TestInitialize]
             public void Initialize()
@@ -5045,7 +5046,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\373472", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5055,10 +5056,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_471729
+    namespace @JIT.@jit64.@regress.@vsw.@_471729
     {
         [TestClass]
-        public class @testclass_471729
+        public class @testclass__471729
         {
             [TestInitialize]
             public void Initialize()
@@ -5073,7 +5074,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\471729", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5083,10 +5084,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_517867
+    namespace @JIT.@jit64.@regress.@vsw.@_517867
     {
         [TestClass]
-        public class @testclass_517867
+        public class @testclass__517867
         {
             [TestInitialize]
             public void Initialize()
@@ -5101,7 +5102,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\517867", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5111,10 +5112,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_524070
+    namespace @JIT.@jit64.@regress.@vsw.@_524070
     {
         [TestClass]
-        public class @testclass_524070
+        public class @testclass__524070
         {
             [TestInitialize]
             public void Initialize()
@@ -5129,14 +5130,14 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\524070", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test2()
+            public void @test2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\524070", "test2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5146,10 +5147,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_528315
+    namespace @JIT.@jit64.@regress.@vsw.@_528315
     {
         [TestClass]
-        public class @testclass_528315
+        public class @testclass__528315
         {
             [TestInitialize]
             public void Initialize()
@@ -5164,7 +5165,7 @@
             }
 
             [TestMethod]
-            public void @test_simple_repro()
+            public void @simple_repro()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\528315", "simple-repro.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5174,10 +5175,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_538615
+    namespace @JIT.@jit64.@regress.@vsw.@_538615
     {
         [TestClass]
-        public class @testclass_538615
+        public class @testclass__538615
         {
             [TestInitialize]
             public void Initialize()
@@ -5192,7 +5193,7 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\538615", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5202,10 +5203,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_539509
+    namespace @JIT.@jit64.@regress.@vsw.@_539509
     {
         [TestClass]
-        public class @testclass_539509
+        public class @testclass__539509
         {
             [TestInitialize]
             public void Initialize()
@@ -5220,7 +5221,7 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\539509", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5230,10 +5231,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_541067
+    namespace @JIT.@jit64.@regress.@vsw.@_541067
     {
         [TestClass]
-        public class @testclass_541067
+        public class @testclass__541067
         {
             [TestInitialize]
             public void Initialize()
@@ -5248,7 +5249,7 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\541067", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5258,10 +5259,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_543229
+    namespace @JIT.@jit64.@regress.@vsw.@_543229
     {
         [TestClass]
-        public class @testclass_543229
+        public class @testclass__543229
         {
             [TestInitialize]
             public void Initialize()
@@ -5276,7 +5277,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\543229", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5286,10 +5287,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_549880
+    namespace @JIT.@jit64.@regress.@vsw.@_549880
     {
         [TestClass]
-        public class @testclass_549880
+        public class @testclass__549880
         {
             [TestInitialize]
             public void Initialize()
@@ -5304,7 +5305,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\549880", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5314,10 +5315,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_601425
+    namespace @JIT.@jit64.@regress.@vsw.@_601425
     {
         [TestClass]
-        public class @testclass_601425
+        public class @testclass__601425
         {
             [TestInitialize]
             public void Initialize()
@@ -5332,7 +5333,7 @@
             }
 
             [TestMethod]
-            public void @test_stret()
+            public void @stret()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\601425", "stret.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5342,10 +5343,10 @@
 
     }
 
-    namespace @JIT.@tests_jit64.@tests_regress.@tests_vsw.@tests_610378
+    namespace @JIT.@jit64.@regress.@vsw.@_610378
     {
         [TestClass]
-        public class @testclass_610378
+        public class @testclass__610378
         {
             [TestInitialize]
             public void Initialize()
@@ -5360,7 +5361,7 @@
             }
 
             [TestMethod]
-            public void @test_BigFrame()
+            public void @BigFrame()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\jit64\regress\vsw\610378", "BigFrame.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5370,7 +5371,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Arrays.@tests_lcs
+    namespace @JIT.@Methodical.@Arrays.@lcs
     {
         [TestClass]
         public class @testclass_lcs
@@ -5395,49 +5396,49 @@
             }
 
             [TestMethod]
-            public void @test_lcs2()
+            public void @lcs2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcs2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsbas()
+            public void @lcsbas()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsbas.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsbox()
+            public void @lcsbox()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsbox.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsmax()
+            public void @lcsmax()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsmax.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsmixed()
+            public void @lcsmixed()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsmixed.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsval()
+            public void @lcsval()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsval.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcsvalbox()
+            public void @lcsvalbox()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\lcs", "lcsvalbox.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5447,7 +5448,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Arrays.@tests_misc
+    namespace @JIT.@Methodical.@Arrays.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -5465,21 +5466,21 @@
             }
 
             [TestMethod]
-            public void @test_arrres()
+            public void @arrres()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\misc", "arrres.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_gcarr()
+            public void @gcarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\misc", "gcarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_selfref()
+            public void @selfref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Arrays\misc", "selfref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5489,7 +5490,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_AsgOp.@tests_i4
+    namespace @JIT.@Methodical.@AsgOp.@i4
     {
         [TestClass]
         public class @testclass_i4
@@ -5514,7 +5515,7 @@
             }
 
             [TestMethod]
-            public void @test_i4flat()
+            public void @i4flat()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\AsgOp\i4", "i4flat.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5524,7 +5525,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_AsgOp.@tests_i8
+    namespace @JIT.@Methodical.@AsgOp.@i8
     {
         [TestClass]
         public class @testclass_i8
@@ -5549,7 +5550,7 @@
             }
 
             [TestMethod]
-            public void @test_i8flat()
+            public void @i8flat()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\AsgOp\i8", "i8flat.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5559,7 +5560,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_AsgOp.@tests_r4
+    namespace @JIT.@Methodical.@AsgOp.@r4
     {
         [TestClass]
         public class @testclass_r4
@@ -5584,7 +5585,7 @@
             }
 
             [TestMethod]
-            public void @test_r4flat()
+            public void @r4flat()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\AsgOp\r4", "r4flat.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5594,7 +5595,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_AsgOp.@tests_r8
+    namespace @JIT.@Methodical.@AsgOp.@r8
     {
         [TestClass]
         public class @testclass_r8
@@ -5619,7 +5620,7 @@
             }
 
             [TestMethod]
-            public void @test_r8flat()
+            public void @r8flat()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\AsgOp\r8", "r8flat.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5629,7 +5630,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Boxing.@tests_misc
+    namespace @JIT.@Methodical.@Boxing.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -5647,21 +5648,21 @@
             }
 
             [TestMethod]
-            public void @test_enum()
+            public void @enum()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Boxing\misc", "enum.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_nestval()
+            public void @nestval()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Boxing\misc", "nestval.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_tailjump()
+            public void @tailjump()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Boxing\misc", "tailjump.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5671,7 +5672,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_casts.@tests_coverage
+    namespace @JIT.@Methodical.@casts.@coverage
     {
         [TestClass]
         public class @testclass_coverage
@@ -5689,56 +5690,56 @@
             }
 
             [TestMethod]
-            public void @test_castclass_call()
+            public void @castclass_call()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "castclass_call.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_castclass_ldarg()
+            public void @castclass_ldarg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "castclass_ldarg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_castclass_ldloc()
+            public void @castclass_ldloc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "castclass_ldloc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_castclass_newobj()
+            public void @castclass_newobj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "castclass_newobj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_isinst_call()
+            public void @isinst_call()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "isinst_call.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_isinst_ldarg()
+            public void @isinst_ldarg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "isinst_ldarg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_isinst_ldloc()
+            public void @isinst_ldloc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "isinst_ldloc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_isinst_newobj()
+            public void @isinst_newobj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\coverage", "isinst_newobj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5748,7 +5749,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_casts.@tests_iface
+    namespace @JIT.@Methodical.@casts.@iface
     {
         [TestClass]
         public class @testclass_iface
@@ -5766,7 +5767,7 @@
             }
 
             [TestMethod]
-            public void @test_iface1()
+            public void @iface1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\iface", "iface1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5776,7 +5777,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_casts.@tests_ilseq
+    namespace @JIT.@Methodical.@casts.@ilseq
     {
         [TestClass]
         public class @testclass_ilseq
@@ -5794,7 +5795,7 @@
             }
 
             [TestMethod]
-            public void @test_commonBase()
+            public void @commonBase()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\ilseq", "commonBase.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5804,7 +5805,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_casts.@tests_SEH
+    namespace @JIT.@Methodical.@casts.@SEH
     {
         [TestClass]
         public class @testclass_SEH
@@ -5822,14 +5823,14 @@
             }
 
             [TestMethod]
-            public void @test_cast_throw()
+            public void @cast_throw()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\SEH", "cast_throw.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_throw()
+            public void @throw()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\casts\SEH", "throw.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5839,7 +5840,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_cctor.@tests_simple
+    namespace @JIT.@Methodical.@cctor.@simple
     {
         [TestClass]
         public class @testclass_simple
@@ -5857,28 +5858,28 @@
             }
 
             [TestMethod]
-            public void @test_precise1()
+            public void @precise1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\cctor\simple", "precise1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_precise1b()
+            public void @precise1b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\cctor\simple", "precise1b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_precise2()
+            public void @precise2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\cctor\simple", "precise2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_precise4()
+            public void @precise4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\cctor\simple", "precise4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5888,7 +5889,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Coverage
+    namespace @JIT.@Methodical.@Coverage
     {
         [TestClass]
         public class @testclass_Coverage
@@ -5906,7 +5907,7 @@
             }
 
             [TestMethod]
-            public void @test_b433189()
+            public void @b433189()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Coverage", "b433189.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -5916,7 +5917,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_divrem.@tests_div
+    namespace @JIT.@Methodical.@divrem.@div
     {
         [TestClass]
         public class @testclass_div
@@ -5934,63 +5935,63 @@
             }
 
             [TestMethod]
-            public void @test_decimaldiv()
+            public void @decimaldiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "decimaldiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_i4div()
+            public void @i4div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "i4div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_i8div()
+            public void @i8div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "i8div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_negSignedMod()
+            public void @negSignedMod()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "negSignedMod.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_overlddiv()
+            public void @overlddiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "overlddiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4div()
+            public void @r4div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "r4div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8div()
+            public void @r8div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "r8div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_u4div()
+            public void @u4div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "u4div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_u8div()
+            public void @u8div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\div", "u8div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6000,7 +6001,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_divrem.@tests_rem
+    namespace @JIT.@Methodical.@divrem.@rem
     {
         [TestClass]
         public class @testclass_rem
@@ -6018,56 +6019,56 @@
             }
 
             [TestMethod]
-            public void @test_decimalrem()
+            public void @decimalrem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "decimalrem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_i4rem()
+            public void @i4rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "i4rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_i8rem()
+            public void @i8rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "i8rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_overldrem()
+            public void @overldrem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "overldrem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4rem()
+            public void @r4rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "r4rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8rem()
+            public void @r8rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "r8rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_u4rem()
+            public void @u4rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "u4rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_u8rem()
+            public void @u8rem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\divrem\rem", "u8rem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6077,7 +6078,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_eh.@tests_interactions
+    namespace @JIT.@Methodical.@eh.@interactions
     {
         [TestClass]
         public class @testclass_interactions
@@ -6095,14 +6096,14 @@
             }
 
             [TestMethod]
-            public void @test_ehSO()
+            public void @ehSO()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\eh\interactions", "ehSO.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_volatileFromFinally()
+            public void @volatileFromFinally()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\eh\interactions", "volatileFromFinally.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6112,7 +6113,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_explicit.@tests_basic
+    namespace @JIT.@Methodical.@explicit.@basic
     {
         [TestClass]
         public class @testclass_basic
@@ -6130,56 +6131,56 @@
             }
 
             [TestMethod]
-            public void @test_refarg_c()
+            public void @refarg_c()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_c.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_f4()
+            public void @refarg_f4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_f4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_f8()
+            public void @refarg_f8()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_f8.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_i1()
+            public void @refarg_i1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_i1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_i2()
+            public void @refarg_i2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_i2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_i4()
+            public void @refarg_i4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_i4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_o()
+            public void @refarg_o()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_o.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_refarg_s()
+            public void @refarg_s()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\basic", "refarg_s.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6189,7 +6190,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_explicit.@tests_misc
+    namespace @JIT.@Methodical.@explicit.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -6207,56 +6208,56 @@
             }
 
             [TestMethod]
-            public void @test_explicit1()
+            public void @explicit1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit2()
+            public void @explicit2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit3()
+            public void @explicit3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit4()
+            public void @explicit4()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit4.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit5()
+            public void @explicit5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit6()
+            public void @explicit6()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit6.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit7()
+            public void @explicit7()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit7.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_explicit8()
+            public void @explicit8()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\misc", "explicit8.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6266,7 +6267,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_explicit.@tests_rotate
+    namespace @JIT.@Methodical.@explicit.@rotate
     {
         [TestClass]
         public class @testclass_rotate
@@ -6284,28 +6285,28 @@
             }
 
             [TestMethod]
-            public void @test_rotarg_double()
+            public void @rotarg_double()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\rotate", "rotarg_double.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_rotarg_float()
+            public void @rotarg_float()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\rotate", "rotarg_float.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_rotarg_objref()
+            public void @rotarg_objref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\rotate", "rotarg_objref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_rotarg_valref()
+            public void @rotarg_valref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\explicit\rotate", "rotarg_valref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6315,7 +6316,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_bug614098
+    namespace @JIT.@Methodical.@flowgraph.@bug614098
     {
         [TestClass]
         public class @testclass_bug614098
@@ -6333,7 +6334,7 @@
             }
 
             [TestMethod]
-            public void @test_intToByte()
+            public void @intToByte()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug614098", "intToByte.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6343,7 +6344,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_bug619534
+    namespace @JIT.@Methodical.@flowgraph.@bug619534
     {
         [TestClass]
         public class @testclass_bug619534
@@ -6361,21 +6362,21 @@
             }
 
             [TestMethod]
-            public void @test_ehCodeMotion()
+            public void @ehCodeMotion()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug619534", "ehCodeMotion.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_finallyclone()
+            public void @finallyclone()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug619534", "finallyclone.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_twoEndFinallys()
+            public void @twoEndFinallys()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug619534", "twoEndFinallys.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6385,7 +6386,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_bug621705
+    namespace @JIT.@Methodical.@flowgraph.@bug621705
     {
         [TestClass]
         public class @testclass_bug621705
@@ -6403,7 +6404,7 @@
             }
 
             [TestMethod]
-            public void @test_ptuple_lost()
+            public void @ptuple_lost()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug621705", "ptuple_lost.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6413,7 +6414,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_bug647189
+    namespace @JIT.@Methodical.@flowgraph.@bug647189
     {
         [TestClass]
         public class @testclass_bug647189
@@ -6431,7 +6432,7 @@
             }
 
             [TestMethod]
-            public void @test_ssa_tuIsAddr()
+            public void @ssa_tuIsAddr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\bug647189", "ssa_tuIsAddr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6441,7 +6442,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_dev10_bug675304
+    namespace @JIT.@Methodical.@flowgraph.@dev10_bug675304
     {
         [TestClass]
         public class @testclass_dev10_bug675304
@@ -6459,14 +6460,14 @@
             }
 
             [TestMethod]
-            public void @test_arrayDim()
+            public void @arrayDim()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug675304", "arrayDim.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_osrAddovershot()
+            public void @osrAddovershot()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug675304", "osrAddovershot.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6476,7 +6477,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_dev10_bug679008
+    namespace @JIT.@Methodical.@flowgraph.@dev10_bug679008
     {
         [TestClass]
         public class @testclass_dev10_bug679008
@@ -6494,35 +6495,35 @@
             }
 
             [TestMethod]
-            public void @test_castClassEH()
+            public void @castClassEH()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug679008", "castClassEH.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GCOverReporting()
+            public void @GCOverReporting()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug679008", "GCOverReporting.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_sealedCastVariance()
+            public void @sealedCastVariance()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug679008", "sealedCastVariance.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_singleRefField()
+            public void @singleRefField()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug679008", "singleRefField.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_zeroInitStackSlot()
+            public void @zeroInitStackSlot()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug679008", "zeroInitStackSlot.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6532,7 +6533,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_flowgraph.@tests_dev10_bug723489
+    namespace @JIT.@Methodical.@flowgraph.@dev10_bug723489
     {
         [TestClass]
         public class @testclass_dev10_bug723489
@@ -6550,7 +6551,7 @@
             }
 
             [TestMethod]
-            public void @test_qMarkColon()
+            public void @qMarkColon()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\flowgraph\dev10_bug723489", "qMarkColon.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6560,7 +6561,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_FPtrunc
+    namespace @JIT.@Methodical.@FPtrunc
     {
         [TestClass]
         public class @testclass_FPtrunc
@@ -6578,14 +6579,14 @@
             }
 
             [TestMethod]
-            public void @test_convr4a()
+            public void @convr4a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\FPtrunc", "convr4a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_convr8a()
+            public void @convr8a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\FPtrunc", "convr8a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6595,7 +6596,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_inlining.@tests_bug505642
+    namespace @JIT.@Methodical.@inlining.@bug505642
     {
         [TestClass]
         public class @testclass_bug505642
@@ -6613,7 +6614,7 @@
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\inlining\bug505642", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6623,7 +6624,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_int64.@tests_arrays
+    namespace @JIT.@Methodical.@int64.@arrays
     {
         [TestClass]
         public class @testclass_arrays
@@ -6641,14 +6642,14 @@
             }
 
             [TestMethod]
-            public void @test_lcs_long()
+            public void @lcs_long()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\arrays", "lcs_long.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcs_ulong()
+            public void @lcs_ulong()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\arrays", "lcs_ulong.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6658,7 +6659,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_int64.@tests_misc
+    namespace @JIT.@Methodical.@int64.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -6676,14 +6677,14 @@
             }
 
             [TestMethod]
-            public void @test_binop()
+            public void @binop()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\misc", "binop.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_box()
+            public void @box()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\misc", "box.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6693,7 +6694,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_int64.@tests_signed
+    namespace @JIT.@Methodical.@int64.@signed
     {
         [TestClass]
         public class @testclass_signed
@@ -6711,63 +6712,63 @@
             }
 
             [TestMethod]
-            public void @test_s_addsub()
+            public void @s_addsub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_addsub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldc_div()
+            public void @s_ldc_div()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldc_div.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldc_mul()
+            public void @s_ldc_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldc_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldc_mulovf()
+            public void @s_ldc_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldc_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldfld_mul()
+            public void @s_ldfld_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldfld_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldfld_mulovf()
+            public void @s_ldfld_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldfld_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldsfld_mul()
+            public void @s_ldsfld_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldsfld_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_ldsfld_mulovf()
+            public void @s_ldsfld_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_ldsfld_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_s_muldiv()
+            public void @s_muldiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\signed", "s_muldiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6777,7 +6778,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_int64.@tests_superlong
+    namespace @JIT.@Methodical.@int64.@superlong
     {
         [TestClass]
         public class @testclass_superlong
@@ -6805,7 +6806,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_int64.@tests_unsigned
+    namespace @JIT.@Methodical.@int64.@unsigned
     {
         [TestClass]
         public class @testclass_unsigned
@@ -6823,56 +6824,56 @@
             }
 
             [TestMethod]
-            public void @test_addsub()
+            public void @addsub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "addsub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldc_mul()
+            public void @ldc_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldc_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldc_mulovf()
+            public void @ldc_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldc_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldfld_mul()
+            public void @ldfld_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldfld_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldfld_mulovf()
+            public void @ldfld_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldfld_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldsfld_mul()
+            public void @ldsfld_mul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldsfld_mul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ldsfld_mulovf()
+            public void @ldsfld_mulovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "ldsfld_mulovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_muldiv()
+            public void @muldiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\int64\unsigned", "muldiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6882,10 +6883,10 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_25params
+    namespace @JIT.@Methodical.@Invoke.@_25params
     {
         [TestClass]
-        public class @testclass_25params
+        public class @testclass__25params
         {
             [TestInitialize]
             public void Initialize()
@@ -6900,21 +6901,21 @@
             }
 
             [TestMethod]
-            public void @test_25param1a()
+            public void @_25param1a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\25params", "25param1a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_25param2a()
+            public void @_25param2a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\25params", "25param2a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_25param3a()
+            public void @_25param3a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\25params", "25param3a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6924,7 +6925,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_callvirt
+    namespace @JIT.@Methodical.@Invoke.@callvirt
     {
         [TestClass]
         public class @testclass_callvirt
@@ -6942,7 +6943,7 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\callvirt", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6952,7 +6953,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_ctor
+    namespace @JIT.@Methodical.@Invoke.@ctor
     {
         [TestClass]
         public class @testclass_ctor
@@ -6970,7 +6971,7 @@
             }
 
             [TestMethod]
-            public void @test_val_ctor()
+            public void @val_ctor()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\ctor", "val_ctor.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -6980,7 +6981,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_deep
+    namespace @JIT.@Methodical.@Invoke.@deep
     {
         [TestClass]
         public class @testclass_deep
@@ -7008,7 +7009,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_fptr
+    namespace @JIT.@Methodical.@Invoke.@fptr
     {
         [TestClass]
         public class @testclass_fptr
@@ -7026,7 +7027,7 @@
             }
 
             [TestMethod]
-            public void @test_recurse()
+            public void @recurse()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\fptr", "recurse.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7036,7 +7037,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_implicit
+    namespace @JIT.@Methodical.@Invoke.@implicit
     {
         [TestClass]
         public class @testclass_implicit
@@ -7054,7 +7055,7 @@
             }
 
             [TestMethod]
-            public void @test_obj()
+            public void @obj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\implicit", "obj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7064,7 +7065,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Invoke.@tests_SEH
+    namespace @JIT.@Methodical.@Invoke.@SEH
     {
         [TestClass]
         public class @testclass_SEH
@@ -7082,14 +7083,14 @@
             }
 
             [TestMethod]
-            public void @test_catchfinally()
+            public void @catchfinally()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\SEH", "catchfinally.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_catchfinally_tail()
+            public void @catchfinally_tail()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Invoke\SEH", "catchfinally_tail.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7099,7 +7100,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_MDArray.@tests_basics
+    namespace @JIT.@Methodical.@MDArray.@basics
     {
         [TestClass]
         public class @testclass_basics
@@ -7117,35 +7118,35 @@
             }
 
             [TestMethod]
-            public void @test_classarr()
+            public void @classarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\basics", "classarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_doublearr()
+            public void @doublearr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\basics", "doublearr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_jaggedarr()
+            public void @jaggedarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\basics", "jaggedarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_stringarr()
+            public void @stringarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\basics", "stringarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structarr()
+            public void @structarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\basics", "structarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7155,7 +7156,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_MDArray.@tests_DataTypes
+    namespace @JIT.@Methodical.@MDArray.@DataTypes
     {
         [TestClass]
         public class @testclass_DataTypes
@@ -7173,91 +7174,91 @@
             }
 
             [TestMethod]
-            public void @test_bool()
+            public void @bool()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "bool.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_byte()
+            public void @byte()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "byte.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_char()
+            public void @char()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "char.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_decimal()
+            public void @decimal()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "decimal.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_double()
+            public void @double()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "double.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_float()
+            public void @float()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "float.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_int()
+            public void @int()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "int.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_long()
+            public void @long()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "long.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_sbyte()
+            public void @sbyte()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "sbyte.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_short()
+            public void @short()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "short.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_uint()
+            public void @uint()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "uint.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ulong()
+            public void @ulong()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "ulong.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ushort()
+            public void @ushort()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\DataTypes", "ushort.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7267,7 +7268,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_MDArray.@tests_GaussJordan
+    namespace @JIT.@Methodical.@MDArray.@GaussJordan
     {
         [TestClass]
         public class @testclass_GaussJordan
@@ -7285,28 +7286,28 @@
             }
 
             [TestMethod]
-            public void @test_classarr()
+            public void @classarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\GaussJordan", "classarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_jaggedarr()
+            public void @jaggedarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\GaussJordan", "jaggedarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_plainarr()
+            public void @plainarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\GaussJordan", "plainarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structarr()
+            public void @structarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\GaussJordan", "structarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7316,7 +7317,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_MDArray.@tests_InnerProd
+    namespace @JIT.@Methodical.@MDArray.@InnerProd
     {
         [TestClass]
         public class @testclass_InnerProd
@@ -7334,42 +7335,42 @@
             }
 
             [TestMethod]
-            public void @test_classarr()
+            public void @classarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "classarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_doublearr()
+            public void @doublearr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "doublearr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_intarr()
+            public void @intarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "intarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_jaggedarr()
+            public void @jaggedarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "jaggedarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_stringarr()
+            public void @stringarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "stringarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_structarr()
+            public void @structarr()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\MDArray\InnerProd", "structarr.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7379,7 +7380,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_NaN
+    namespace @JIT.@Methodical.@NaN
     {
         [TestClass]
         public class @testclass_NaN
@@ -7397,84 +7398,84 @@
             }
 
             [TestMethod]
-            public void @test_arithm32()
+            public void @arithm32()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "arithm32.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_arithm64()
+            public void @arithm64()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "arithm64.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4NaNadd()
+            public void @r4NaNadd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r4NaNadd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4NaNdiv()
+            public void @r4NaNdiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r4NaNdiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4NaNmul()
+            public void @r4NaNmul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r4NaNmul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4NaNrem()
+            public void @r4NaNrem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r4NaNrem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r4NaNsub()
+            public void @r4NaNsub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r4NaNsub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8NaNadd()
+            public void @r8NaNadd()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r8NaNadd.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8NaNdiv()
+            public void @r8NaNdiv()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r8NaNdiv.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8NaNmul()
+            public void @r8NaNmul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r8NaNmul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8NaNrem()
+            public void @r8NaNrem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r8NaNrem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_r8NaNsub()
+            public void @r8NaNsub()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\NaN", "r8NaNsub.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7484,7 +7485,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_nonvirtualcall
+    namespace @JIT.@Methodical.@nonvirtualcall
     {
         [TestClass]
         public class @testclass_nonvirtualcall
@@ -7502,42 +7503,42 @@
             }
 
             [TestMethod]
-            public void @test_classic()
+            public void @classic()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "classic.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_delegate()
+            public void @delegate()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "delegate.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_generics()
+            public void @generics()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "generics.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_generics2()
+            public void @generics2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "generics2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_tailcall()
+            public void @tailcall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "tailcall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_valuetype()
+            public void @valuetype()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\nonvirtualcall", "valuetype.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7547,7 +7548,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_Overflow
+    namespace @JIT.@Methodical.@Overflow
     {
         [TestClass]
         public class @testclass_Overflow
@@ -7565,14 +7566,14 @@
             }
 
             [TestMethod]
-            public void @test_FloatInfinitiesToInt()
+            public void @FloatInfinitiesToInt()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Overflow", "FloatInfinitiesToInt.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_FloatOvfToInt2()
+            public void @FloatOvfToInt2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\Overflow", "FloatOvfToInt2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7582,7 +7583,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_refany
+    namespace @JIT.@Methodical.@refany
     {
         [TestClass]
         public class @testclass_refany
@@ -7600,49 +7601,49 @@
             }
 
             [TestMethod]
-            public void @test_array1()
+            public void @array1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "array1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_array2()
+            public void @array2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "array2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_format()
+            public void @format()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "format.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_gcreport()
+            public void @gcreport()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "gcreport.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcs()
+            public void @lcs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "lcs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_native()
+            public void @native()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "native.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_virtcall()
+            public void @virtcall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\refany", "virtcall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7652,7 +7653,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_tailcall_v4
+    namespace @JIT.@Methodical.@tailcall_v4
     {
         [TestClass]
         public class @testclass_tailcall_v4
@@ -7670,7 +7671,7 @@
             }
 
             [TestMethod]
-            public void @test_delegateParamCallTarget()
+            public void @delegateParamCallTarget()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\tailcall_v4", "delegateParamCallTarget.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7680,7 +7681,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_VT.@tests_callconv
+    namespace @JIT.@Methodical.@VT.@callconv
     {
         [TestClass]
         public class @testclass_callconv
@@ -7698,28 +7699,28 @@
             }
 
             [TestMethod]
-            public void @test_call()
+            public void @call()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\callconv", "call.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_jumper()
+            public void @jumper()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\callconv", "jumper.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_jumps()
+            public void @jumps()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\callconv", "jumps.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vtret()
+            public void @vtret()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\callconv", "vtret.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7729,7 +7730,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_VT.@tests_etc
+    namespace @JIT.@Methodical.@VT.@etc
     {
         [TestClass]
         public class @testclass_etc
@@ -7747,63 +7748,63 @@
             }
 
             [TestMethod]
-            public void @test_ctor_recurse()
+            public void @ctor_recurse()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "ctor_recurse.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_gc_nested()
+            public void @gc_nested()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "gc_nested.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_han2()
+            public void @han2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "han2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_han3()
+            public void @han3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "han3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_han3_ctor()
+            public void @han3_ctor()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "han3_ctor.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_han3_ref()
+            public void @han3_ref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "han3_ref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_hanoi()
+            public void @hanoi()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "hanoi.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_knight()
+            public void @knight()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "knight.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_nested()
+            public void @nested()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\etc", "nested.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7813,7 +7814,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_VT.@tests_identity
+    namespace @JIT.@Methodical.@VT.@identity
     {
         [TestClass]
         public class @testclass_identity
@@ -7831,14 +7832,14 @@
             }
 
             [TestMethod]
-            public void @test_accum()
+            public void @accum()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\identity", "accum.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vcall()
+            public void @vcall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\identity", "vcall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7848,7 +7849,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_VT.@tests_port
+    namespace @JIT.@Methodical.@VT.@port
     {
         [TestClass]
         public class @testclass_port
@@ -7866,14 +7867,14 @@
             }
 
             [TestMethod]
-            public void @test_lcs()
+            public void @lcs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\port", "lcs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_lcs_gcref()
+            public void @lcs_gcref()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\VT\port", "lcs_gcref.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7883,7 +7884,7 @@
 
     }
 
-    namespace @JIT.@tests_Methodical.@tests_xxobj.@tests_operand
+    namespace @JIT.@Methodical.@xxobj.@operand
     {
         [TestClass]
         public class @testclass_operand
@@ -7901,14 +7902,14 @@
             }
 
             [TestMethod]
-            public void @test_refanyval()
+            public void @refanyval()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\xxobj\operand", "refanyval.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_unbox()
+            public void @unbox()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Methodical\xxobj\operand", "unbox.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -7918,7 +7919,7 @@
 
     }
 
-    namespace @JIT.@tests_opt.@tests_Inline
+    namespace @JIT.@opt.@Inline
     {
         [TestClass]
         public class @testclass_Inline
@@ -7936,273 +7937,273 @@
             }
 
             [TestMethod]
-            public void @test_args1()
+            public void @args1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "args1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_args2()
+            public void @args2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "args2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_args3()
+            public void @args3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "args3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_array()
+            public void @array()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "array.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ArrayOfStructs()
+            public void @ArrayOfStructs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "ArrayOfStructs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_debug()
+            public void @debug()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "debug.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_deepcall()
+            public void @deepcall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "deepcall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DelegInstanceFtn()
+            public void @DelegInstanceFtn()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "DelegInstanceFtn.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DelegStaticFtn()
+            public void @DelegStaticFtn()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "DelegStaticFtn.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_GenericStructs()
+            public void @GenericStructs()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "GenericStructs.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ifelse()
+            public void @ifelse()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "ifelse.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_indexer()
+            public void @indexer()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "indexer.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_inline()
+            public void @inline()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "inline.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_InlineThrow()
+            public void @InlineThrow()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "InlineThrow.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_DelegateStruct()
+            public void @Inline_DelegateStruct()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_DelegateStruct.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_GenericMethods()
+            public void @Inline_GenericMethods()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_GenericMethods.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_Handler()
+            public void @Inline_Handler()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_Handler.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_inline_Many()
+            public void @inline_Many()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "inline_Many.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_MultipleReturn()
+            public void @Inline_MultipleReturn()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_MultipleReturn.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_NewObj()
+            public void @Inline_NewObj()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_NewObj.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_NormalizeStack()
+            public void @Inline_NormalizeStack()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_NormalizeStack.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_inline_Recursion()
+            public void @inline_Recursion()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "inline_Recursion.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_RecursiveMethod()
+            public void @Inline_RecursiveMethod()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_RecursiveMethod.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_RecursiveMethod21()
+            public void @Inline_RecursiveMethod21()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_RecursiveMethod21.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_SideAffects()
+            public void @Inline_SideAffects()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_SideAffects.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_STARG()
+            public void @Inline_STARG()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_STARG.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Inline_Vars()
+            public void @Inline_Vars()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Inline_Vars.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interfaceCall()
+            public void @interfaceCall()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "interfaceCall.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interfaceProperty()
+            public void @interfaceProperty()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "interfaceProperty.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mathfunc()
+            public void @mathfunc()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "mathfunc.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_mthdimpl()
+            public void @mthdimpl()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "mthdimpl.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_property()
+            public void @property()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "property.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ReturnStruct_Method()
+            public void @ReturnStruct_Method()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "ReturnStruct_Method.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_size()
+            public void @size()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "size.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StructAsParam_Method()
+            public void @StructAsParam_Method()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "StructAsParam_Method.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StructInClass()
+            public void @StructInClass()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "StructInClass.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Struct_Opcodes()
+            public void @Struct_Opcodes()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "Struct_Opcodes.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_throwTest()
+            public void @throwTest()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "throwTest.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_trycatch()
+            public void @trycatch()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\opt\Inline", "trycatch.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -8212,7 +8213,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_clr_x64_JIT.@tests_v4_0.@tests_DevDiv34372
+    namespace @JIT.@Regression.@clr_x64_JIT.@v4_0
     {
         [TestClass]
         public class @testclass_DevDiv34372
@@ -8230,7 +8231,7 @@
             }
 
             [TestMethod]
-            public void @test_overRepLocalOpt()
+            public void @overRepLocalOpt()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\clr-x64-JIT\v4.0\DevDiv34372", "overRepLocalOpt.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -8240,7 +8241,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_EJIT.@tests_V1_M09_5_PDC.@tests_b12008
+    namespace @JIT.@Regression.@CLR_x86_EJIT.@V1_M09_5_PDC
     {
         [TestClass]
         public class @testclass_b12008
@@ -8268,7 +8269,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_EJIT.@tests_V1_M11_Beta1.@tests_b40089
+    namespace @JIT.@Regression.@CLR_x86_EJIT.@V1_M11_Beta1
     {
         [TestClass]
         public class @testclass_b40089
@@ -8292,53 +8293,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_EJIT.@tests_V1_M11_Beta1.@tests_b40138
-    {
-        [TestClass]
-        public class @testclass_b40138
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b40138()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-EJIT\V1-M11-Beta1\b40138", "b40138.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_EJIT.@tests_V1_M11_Beta1.@tests_b45679
-    {
-        [TestClass]
-        public class @testclass_b45679
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8352,7 +8311,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_EJIT.@tests_V1_M12_Beta2.@tests_b46847
+    namespace @JIT.@Regression.@CLR_x86_EJIT.@V1_M12_Beta2
     {
         [TestClass]
         public class @testclass_b46847
@@ -8380,7 +8339,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_dev10.@tests_b392262
+    namespace @JIT.@Regression.@CLR_x86_JIT.@dev10
     {
         [TestClass]
         public class @testclass_b392262
@@ -8404,53 +8363,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_dev10.@tests_b400791
-    {
-        [TestClass]
-        public class @testclass_b400791
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_b400971()
+            public void @b400971()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\dev10\b400791", "b400971.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_dev10.@tests_b402658
-    {
-        [TestClass]
-        public class @testclass_b402658
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8464,7 +8381,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_dev11.@tests_DevDiv_376412
+    namespace @JIT.@Regression.@CLR_x86_JIT.@dev11
     {
         [TestClass]
         public class @testclass_DevDiv_376412
@@ -8492,7 +8409,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b13170
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M09
     {
         [TestClass]
         public class @testclass_b13170
@@ -8516,53 +8433,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b13178
-    {
-        [TestClass]
-        public class @testclass_b13178
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b13178()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b13178", "b13178.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b13647
-    {
-        [TestClass]
-        public class @testclass_b13647
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8572,53 +8447,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14057
-    {
-        [TestClass]
-        public class @testclass_b14057
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14057()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14057", "b14057.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14059
-    {
-        [TestClass]
-        public class @testclass_b14059
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8628,53 +8461,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14277
-    {
-        [TestClass]
-        public class @testclass_b14277
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14277()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14277", "b14277.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14314
-    {
-        [TestClass]
-        public class @testclass_b14314
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8684,53 +8475,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14367
-    {
-        [TestClass]
-        public class @testclass_b14367
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14367()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14367", "b14367.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14396
-    {
-        [TestClass]
-        public class @testclass_b14396
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8740,53 +8489,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14422
-    {
-        [TestClass]
-        public class @testclass_b14422
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14422()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14422", "b14422.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14428
-    {
-        [TestClass]
-        public class @testclass_b14428
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8796,53 +8503,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14443
-    {
-        [TestClass]
-        public class @testclass_b14443
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14443()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14443", "b14443.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14616
-    {
-        [TestClass]
-        public class @testclass_b14616
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8852,53 +8517,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14624
-    {
-        [TestClass]
-        public class @testclass_b14624
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14624()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14624", "b14624.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14640
-    {
-        [TestClass]
-        public class @testclass_b14640
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8908,53 +8531,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b14673
-    {
-        [TestClass]
-        public class @testclass_b14673
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b14673()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b14673", "b14673.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15155
-    {
-        [TestClass]
-        public class @testclass_b15155
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -8964,53 +8545,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15468
-    {
-        [TestClass]
-        public class @testclass_b15468
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b15468()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b15468", "b15468.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15526
-    {
-        [TestClass]
-        public class @testclass_b15526
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9020,53 +8559,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15783
-    {
-        [TestClass]
-        public class @testclass_b15783
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b15783()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b15783", "b15783.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15786
-    {
-        [TestClass]
-        public class @testclass_b15786
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9076,27 +8573,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15797
-    {
-        [TestClass]
-        public class @testclass_b15797
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b15797()
             {
@@ -9104,53 +8580,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b15864
-    {
-        [TestClass]
-        public class @testclass_b15864
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b15864()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09\b15864", "b15864.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09.@tests_b16294
-    {
-        [TestClass]
-        public class @testclass_b16294
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9164,7 +8598,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b11490
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M09_5_PDC
     {
         [TestClass]
         public class @testclass_b11490
@@ -9188,53 +8622,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b12399
-    {
-        [TestClass]
-        public class @testclass_b12399
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b12399()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b12399", "b12399.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b12624
-    {
-        [TestClass]
-        public class @testclass_b12624
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9244,53 +8636,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b13569
-    {
-        [TestClass]
-        public class @testclass_b13569
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b13569()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b13569", "b13569.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b14716
-    {
-        [TestClass]
-        public class @testclass_b14716
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9300,53 +8650,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b15728
-    {
-        [TestClass]
-        public class @testclass_b15728
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b15728()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b15728", "b15728.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b16238
-    {
-        [TestClass]
-        public class @testclass_b16238
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9356,53 +8664,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b16328
-    {
-        [TestClass]
-        public class @testclass_b16328
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b16328()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b16328", "b16328.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b16335
-    {
-        [TestClass]
-        public class @testclass_b16335
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9412,53 +8678,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b16423
-    {
-        [TestClass]
-        public class @testclass_b16423
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b16423()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b16423", "b16423.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b20913
-    {
-        [TestClass]
-        public class @testclass_b20913
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9468,53 +8692,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b22290
-    {
-        [TestClass]
-        public class @testclass_b22290
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b22290()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b22290", "b22290.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b24727
-    {
-        [TestClass]
-        public class @testclass_b24727
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9524,53 +8706,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b24728
-    {
-        [TestClass]
-        public class @testclass_b24728
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b24728()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b24728", "b24728.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b25647
-    {
-        [TestClass]
-        public class @testclass_b25647
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9580,53 +8720,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b26558
-    {
-        [TestClass]
-        public class @testclass_b26558
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b26558()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b26558", "b26558.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b26560
-    {
-        [TestClass]
-        public class @testclass_b26560
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9636,53 +8734,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b26732
-    {
-        [TestClass]
-        public class @testclass_b26732
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b26732()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b26732", "b26732.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b26863
-    {
-        [TestClass]
-        public class @testclass_b26863
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9692,53 +8748,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b27811
-    {
-        [TestClass]
-        public class @testclass_b27811
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b27811()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b27811", "b27811.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b27819
-    {
-        [TestClass]
-        public class @testclass_b27819
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9748,53 +8762,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b27824
-    {
-        [TestClass]
-        public class @testclass_b27824
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b27824()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b27824", "b27824.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b28037
-    {
-        [TestClass]
-        public class @testclass_b28037
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9804,53 +8776,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b28042
-    {
-        [TestClass]
-        public class @testclass_b28042
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b28042()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b28042", "b28042.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b28776
-    {
-        [TestClass]
-        public class @testclass_b28776
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9860,53 +8790,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b28787
-    {
-        [TestClass]
-        public class @testclass_b28787
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b28787()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b28787", "b28787.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b28790
-    {
-        [TestClass]
-        public class @testclass_b28790
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9916,53 +8804,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b30126
-    {
-        [TestClass]
-        public class @testclass_b30126
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b30126()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b30126", "b30126.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b30128
-    {
-        [TestClass]
-        public class @testclass_b30128
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -9972,53 +8818,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b30630
-    {
-        [TestClass]
-        public class @testclass_b30630
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b30630()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b30630", "b30630.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b31732
-    {
-        [TestClass]
-        public class @testclass_b31732
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10028,53 +8832,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b31748
-    {
-        [TestClass]
-        public class @testclass_b31748
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31748()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b31748", "b31748.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b31749
-    {
-        [TestClass]
-        public class @testclass_b31749
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10084,53 +8846,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b31763
-    {
-        [TestClass]
-        public class @testclass_b31763
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31763()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b31763", "b31763.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b31912
-    {
-        [TestClass]
-        public class @testclass_b31912
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10140,53 +8860,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b32303
-    {
-        [TestClass]
-        public class @testclass_b32303
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b32303()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b32303", "b32303.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b32345
-    {
-        [TestClass]
-        public class @testclass_b32345
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10196,53 +8874,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b32560
-    {
-        [TestClass]
-        public class @testclass_b32560
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b32560()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M09.5-PDC\b32560", "b32560.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M09_5_PDC.@tests_b32801
-    {
-        [TestClass]
-        public class @testclass_b32801
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10256,7 +8892,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b02051
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M10
     {
         [TestClass]
         public class @testclass_b02051
@@ -10280,53 +8916,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b02076
-    {
-        [TestClass]
-        public class @testclass_b02076
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b02076()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b02076", "b02076.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b05477
-    {
-        [TestClass]
-        public class @testclass_b05477
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10336,53 +8930,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b06464
-    {
-        [TestClass]
-        public class @testclass_b06464
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b06464()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b06464", "b06464.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b06680
-    {
-        [TestClass]
-        public class @testclass_b06680
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10392,53 +8944,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b06859
-    {
-        [TestClass]
-        public class @testclass_b06859
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b06859()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b06859", "b06859.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b06924
-    {
-        [TestClass]
-        public class @testclass_b06924
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10448,60 +8958,18 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b08944
-    {
-        [TestClass]
-        public class @testclass_b08944
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_b08944a()
+            public void @b08944a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b08944", "b08944a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b08944b()
+            public void @b08944b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b08944", "b08944b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b09287
-    {
-        [TestClass]
-        public class @testclass_b09287
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10511,27 +8979,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b09452
-    {
-        [TestClass]
-        public class @testclass_b09452
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b09452()
             {
@@ -10539,53 +8986,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b13330
-    {
-        [TestClass]
-        public class @testclass_b13330
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b13330()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M10\b13330", "b13330.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M10.@tests_b13466
-    {
-        [TestClass]
-        public class @testclass_b13466
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10599,7 +9004,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b30586
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M11_Beta1
     {
         [TestClass]
         public class @testclass_b30586
@@ -10623,53 +9028,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b31878
-    {
-        [TestClass]
-        public class @testclass_b31878
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31878()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b31878", "b31878.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b34945
-    {
-        [TestClass]
-        public class @testclass_b34945
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10679,53 +9042,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b36274
-    {
-        [TestClass]
-        public class @testclass_b36274
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b36274()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b36274", "b36274.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b36332
-    {
-        [TestClass]
-        public class @testclass_b36332
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10735,53 +9056,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b36470
-    {
-        [TestClass]
-        public class @testclass_b36470
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b36470()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b36470", "b36470.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b36471
-    {
-        [TestClass]
-        public class @testclass_b36471
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10791,53 +9070,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b36472
-    {
-        [TestClass]
-        public class @testclass_b36472
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b36472()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b36472", "b36472.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b37131
-    {
-        [TestClass]
-        public class @testclass_b37131
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10847,53 +9084,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b37598
-    {
-        [TestClass]
-        public class @testclass_b37598
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b37598()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b37598", "b37598.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b37608
-    {
-        [TestClass]
-        public class @testclass_b37608
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10903,53 +9098,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b37636
-    {
-        [TestClass]
-        public class @testclass_b37636
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b37636()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b37636", "b37636.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b38403
-    {
-        [TestClass]
-        public class @testclass_b38403
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -10959,53 +9112,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b38556
-    {
-        [TestClass]
-        public class @testclass_b38556
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b38556()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b38556", "b38556.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b39217
-    {
-        [TestClass]
-        public class @testclass_b39217
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11015,53 +9126,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b39224
-    {
-        [TestClass]
-        public class @testclass_b39224
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b39224()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b39224", "b39224.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b39951
-    {
-        [TestClass]
-        public class @testclass_b39951
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11071,53 +9140,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b40141
-    {
-        [TestClass]
-        public class @testclass_b40141
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b40141()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b40141", "b40141.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b40216
-    {
-        [TestClass]
-        public class @testclass_b40216
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11127,53 +9154,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b40221
-    {
-        [TestClass]
-        public class @testclass_b40221
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b40221()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b40221", "b40221.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b40496
-    {
-        [TestClass]
-        public class @testclass_b40496
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11183,53 +9168,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b40521
-    {
-        [TestClass]
-        public class @testclass_b40521
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b40521()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b40521", "b40521.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41063
-    {
-        [TestClass]
-        public class @testclass_b41063
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11239,53 +9182,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41234
-    {
-        [TestClass]
-        public class @testclass_b41234
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b41234()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b41234", "b41234.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41391
-    {
-        [TestClass]
-        public class @testclass_b41391
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11295,53 +9196,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41470
-    {
-        [TestClass]
-        public class @testclass_b41470
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b41470()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b41470", "b41470.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41488
-    {
-        [TestClass]
-        public class @testclass_b41488
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11351,53 +9210,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41495
-    {
-        [TestClass]
-        public class @testclass_b41495
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b41495()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b41495", "b41495.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41621
-    {
-        [TestClass]
-        public class @testclass_b41621
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11407,53 +9224,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b41918
-    {
-        [TestClass]
-        public class @testclass_b41918
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b41918()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b41918", "b41918.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b42009
-    {
-        [TestClass]
-        public class @testclass_b42009
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11463,53 +9238,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b42013
-    {
-        [TestClass]
-        public class @testclass_b42013
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b42013()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b42013", "b42013.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b42918
-    {
-        [TestClass]
-        public class @testclass_b42918
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11519,53 +9252,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b42929
-    {
-        [TestClass]
-        public class @testclass_b42929
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b42929()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b42929", "b42929.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b43010
-    {
-        [TestClass]
-        public class @testclass_b43010
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11575,53 +9266,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b43313
-    {
-        [TestClass]
-        public class @testclass_b43313
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b43313()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b43313", "b43313.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b43719
-    {
-        [TestClass]
-        public class @testclass_b43719
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11631,53 +9280,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b43958
-    {
-        [TestClass]
-        public class @testclass_b43958
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b43958()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b43958", "b43958.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b44193
-    {
-        [TestClass]
-        public class @testclass_b44193
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11687,53 +9294,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b44297
-    {
-        [TestClass]
-        public class @testclass_b44297
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b44297()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b44297", "b44297.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b44410
-    {
-        [TestClass]
-        public class @testclass_b44410
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11743,53 +9308,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b45015
-    {
-        [TestClass]
-        public class @testclass_b45015
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b45015()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b45015", "b45015.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b45259
-    {
-        [TestClass]
-        public class @testclass_b45259
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11799,53 +9322,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b45270
-    {
-        [TestClass]
-        public class @testclass_b45270
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b45270()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b45270", "b45270.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b45458
-    {
-        [TestClass]
-        public class @testclass_b45458
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11855,53 +9336,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b45535
-    {
-        [TestClass]
-        public class @testclass_b45535
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b45535()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b45535", "b45535.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b46170
-    {
-        [TestClass]
-        public class @testclass_b46170
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11911,53 +9350,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b46629
-    {
-        [TestClass]
-        public class @testclass_b46629
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b46629()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b46629", "b46629.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b46641
-    {
-        [TestClass]
-        public class @testclass_b46641
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -11967,53 +9364,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b46649
-    {
-        [TestClass]
-        public class @testclass_b46649
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b46649()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b46649", "b46649.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b46867
-    {
-        [TestClass]
-        public class @testclass_b46867
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12023,53 +9378,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b47047
-    {
-        [TestClass]
-        public class @testclass_b47047
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b47047()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b47047", "b47047.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48248
-    {
-        [TestClass]
-        public class @testclass_b48248
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12079,53 +9392,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48797
-    {
-        [TestClass]
-        public class @testclass_b48797
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b48797()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b48797", "b48797.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48805
-    {
-        [TestClass]
-        public class @testclass_b48805
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12135,53 +9406,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48864
-    {
-        [TestClass]
-        public class @testclass_b48864
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b48864()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b48864", "b48864.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48872
-    {
-        [TestClass]
-        public class @testclass_b48872
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12191,60 +9420,18 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b48990
-    {
-        [TestClass]
-        public class @testclass_b48990
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_b48990a()
+            public void @b48990a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b48990", "b48990a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b48990b()
+            public void @b48990b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b48990", "b48990b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b49318
-    {
-        [TestClass]
-        public class @testclass_b49318
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12254,53 +9441,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b49322
-    {
-        [TestClass]
-        public class @testclass_b49322
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b49322()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M11-Beta1\b49322", "b49322.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M11_Beta1.@tests_b49717
-    {
-        [TestClass]
-        public class @testclass_b49717
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12314,7 +9459,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31182
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M12_Beta2
     {
         [TestClass]
         public class @testclass_b31182
@@ -12338,53 +9483,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31745
-    {
-        [TestClass]
-        public class @testclass_b31745
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31745()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b31745", "b31745.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31746
-    {
-        [TestClass]
-        public class @testclass_b31746
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12394,53 +9497,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31762
-    {
-        [TestClass]
-        public class @testclass_b31762
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31762()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b31762", "b31762.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31903
-    {
-        [TestClass]
-        public class @testclass_b31903
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12450,53 +9511,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b31917
-    {
-        [TestClass]
-        public class @testclass_b31917
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b31917()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b31917", "b31917.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b37646
-    {
-        [TestClass]
-        public class @testclass_b37646
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12506,53 +9525,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b38269
-    {
-        [TestClass]
-        public class @testclass_b38269
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b38269()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b38269", "b38269.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b41852
-    {
-        [TestClass]
-        public class @testclass_b41852
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12562,53 +9539,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b47975
-    {
-        [TestClass]
-        public class @testclass_b47975
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b47975()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b47975", "b47975.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b48929
-    {
-        [TestClass]
-        public class @testclass_b48929
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12618,27 +9553,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b49809
-    {
-        [TestClass]
-        public class @testclass_b49809
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b49809()
             {
@@ -12646,53 +9560,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b50042
-    {
-        [TestClass]
-        public class @testclass_b50042
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b50042()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b50042", "b50042.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b50145
-    {
-        [TestClass]
-        public class @testclass_b50145
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12703,45 +9575,24 @@
             }
 
             [TestMethod]
-            public void @test_b50145a()
+            public void @b50145a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b50145", "b50145a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b50145b()
+            public void @b50145b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b50145", "b50145b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b50145c()
+            public void @b50145c()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b50145", "b50145c.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b50535
-    {
-        [TestClass]
-        public class @testclass_b50535
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12751,53 +9602,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b51463
-    {
-        [TestClass]
-        public class @testclass_b51463
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b51463()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b51463", "b51463.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b51469
-    {
-        [TestClass]
-        public class @testclass_b51469
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12807,53 +9616,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b51565
-    {
-        [TestClass]
-        public class @testclass_b51565
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b51565()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b51565", "b51565.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b51870
-    {
-        [TestClass]
-        public class @testclass_b51870
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12863,53 +9630,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52572
-    {
-        [TestClass]
-        public class @testclass_b52572
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b52572()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b52572", "b52572.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52578
-    {
-        [TestClass]
-        public class @testclass_b52578
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12919,53 +9644,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52746
-    {
-        [TestClass]
-        public class @testclass_b52746
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b52746()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b52746", "b52746.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52760
-    {
-        [TestClass]
-        public class @testclass_b52760
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -12975,53 +9658,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52838
-    {
-        [TestClass]
-        public class @testclass_b52838
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b52838()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b52838", "b52838.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b52839
-    {
-        [TestClass]
-        public class @testclass_b52839
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13031,53 +9672,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b54667
-    {
-        [TestClass]
-        public class @testclass_b54667
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b54667()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b54667", "b54667.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b55197
-    {
-        [TestClass]
-        public class @testclass_b55197
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13087,53 +9686,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b56149
-    {
-        [TestClass]
-        public class @testclass_b56149
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b56149()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b56149", "b56149.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b56154
-    {
-        [TestClass]
-        public class @testclass_b56154
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13143,53 +9700,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b56159
-    {
-        [TestClass]
-        public class @testclass_b56159
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b56159()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b56159", "b56159.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b59297
-    {
-        [TestClass]
-        public class @testclass_b59297
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13199,53 +9714,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b60723
-    {
-        [TestClass]
-        public class @testclass_b60723
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b60723()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b60723", "b60723.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b61028
-    {
-        [TestClass]
-        public class @testclass_b61028
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13255,53 +9728,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b61515
-    {
-        [TestClass]
-        public class @testclass_b61515
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b61515()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b61515", "b61515.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b61640
-    {
-        [TestClass]
-        public class @testclass_b61640
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13311,53 +9742,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b62498
-    {
-        [TestClass]
-        public class @testclass_b62498
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b62498()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b62498", "b62498.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b62555
-    {
-        [TestClass]
-        public class @testclass_b62555
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13367,53 +9756,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b62892
-    {
-        [TestClass]
-        public class @testclass_b62892
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b62892()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b62892", "b62892.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b63183
-    {
-        [TestClass]
-        public class @testclass_b63183
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13423,53 +9770,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b68361
-    {
-        [TestClass]
-        public class @testclass_b68361
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b68361()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b68361", "b68361.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b68634
-    {
-        [TestClass]
-        public class @testclass_b68634
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13479,53 +9784,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b71099
-    {
-        [TestClass]
-        public class @testclass_b71099
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b71099()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b71099", "b71099.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b71120
-    {
-        [TestClass]
-        public class @testclass_b71120
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13535,53 +9798,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b71135
-    {
-        [TestClass]
-        public class @testclass_b71135
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b71135()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b71135", "b71135.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b71155
-    {
-        [TestClass]
-        public class @testclass_b71155
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13591,53 +9812,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b71231
-    {
-        [TestClass]
-        public class @testclass_b71231
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b71231()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b71231", "b71231.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b72136
-    {
-        [TestClass]
-        public class @testclass_b72136
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13647,53 +9826,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b72996
-    {
-        [TestClass]
-        public class @testclass_b72996
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b72996()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b72996", "b72996.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b73921
-    {
-        [TestClass]
-        public class @testclass_b73921
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13703,53 +9840,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b74182
-    {
-        [TestClass]
-        public class @testclass_b74182
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b74182()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b74182", "b74182.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b75250
-    {
-        [TestClass]
-        public class @testclass_b75250
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13759,53 +9854,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b75509
-    {
-        [TestClass]
-        public class @testclass_b75509
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b75509()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b75509", "b75509.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b76590
-    {
-        [TestClass]
-        public class @testclass_b76590
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13815,53 +9868,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b77707
-    {
-        [TestClass]
-        public class @testclass_b77707
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b77707()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b77707", "b77707.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b77713
-    {
-        [TestClass]
-        public class @testclass_b77713
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13871,53 +9882,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b78392
-    {
-        [TestClass]
-        public class @testclass_b78392
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b78392()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b78392", "b78392.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b79418
-    {
-        [TestClass]
-        public class @testclass_b79418
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13927,53 +9896,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b80045
-    {
-        [TestClass]
-        public class @testclass_b80045
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b80045()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b80045", "b80045.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b82866
-    {
-        [TestClass]
-        public class @testclass_b82866
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -13983,27 +9910,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b83690
-    {
-        [TestClass]
-        public class @testclass_b83690
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b83690()
             {
@@ -14011,53 +9917,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b84836
-    {
-        [TestClass]
-        public class @testclass_b84836
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b84836()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M12-Beta2\b84836", "b84836.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M12_Beta2.@tests_b91377
-    {
-        [TestClass]
-        public class @testclass_b91377
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14071,7 +9935,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b87284
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M13_RTM
     {
         [TestClass]
         public class @testclass_b87284
@@ -14095,53 +9959,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b88712
-    {
-        [TestClass]
-        public class @testclass_b88712
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b88712()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b88712", "b88712.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b88793
-    {
-        [TestClass]
-        public class @testclass_b88793
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14151,53 +9973,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b88797
-    {
-        [TestClass]
-        public class @testclass_b88797
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b88797()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b88797", "b88797.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b89277
-    {
-        [TestClass]
-        public class @testclass_b89277
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14207,53 +9987,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b89279
-    {
-        [TestClass]
-        public class @testclass_b89279
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b89279()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b89279", "b89279.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b89506
-    {
-        [TestClass]
-        public class @testclass_b89506
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14263,53 +10001,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b89600
-    {
-        [TestClass]
-        public class @testclass_b89600
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b89600()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b89600", "b89600.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b89946
-    {
-        [TestClass]
-        public class @testclass_b89946
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14319,53 +10015,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91189
-    {
-        [TestClass]
-        public class @testclass_b91189
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b91189()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b91189", "b91189.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91230
-    {
-        [TestClass]
-        public class @testclass_b91230
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14375,53 +10029,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91248
-    {
-        [TestClass]
-        public class @testclass_b91248
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b91248()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b91248", "b91248.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91855
-    {
-        [TestClass]
-        public class @testclass_b91855
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14431,53 +10043,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91859
-    {
-        [TestClass]
-        public class @testclass_b91859
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b91859()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b91859", "b91859.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91867
-    {
-        [TestClass]
-        public class @testclass_b91867
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14487,53 +10057,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b91917
-    {
-        [TestClass]
-        public class @testclass_b91917
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b91917()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b91917", "b91917.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b92568
-    {
-        [TestClass]
-        public class @testclass_b92568
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14543,27 +10071,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b92614
-    {
-        [TestClass]
-        public class @testclass_b92614
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b92614()
             {
@@ -14571,53 +10078,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b92693
-    {
-        [TestClass]
-        public class @testclass_b92693
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b92693()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M13-RTM\b92693", "b92693.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M13_RTM.@tests_b93027
-    {
-        [TestClass]
-        public class @testclass_b93027
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14631,7 +10096,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_M14_SP1.@tests_b119538
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_M14_SP1
     {
         [TestClass]
         public class @testclass_b119538
@@ -14649,14 +10114,14 @@
             }
 
             [TestMethod]
-            public void @test_b119538a()
+            public void @b119538a()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M14-SP1\b119538", "b119538a.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_b119538b()
+            public void @b119538b()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-M14-SP1\b119538", "b119538b.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -14666,7 +10131,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_QFE.@tests_b148815
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_QFE
     {
         [TestClass]
         public class @testclass_b148815
@@ -14684,7 +10149,7 @@
             }
 
             [TestMethod]
-            public void @test_testclass()
+            public void @testclass()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1-QFE\b148815", "testclass.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -14694,7 +10159,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_1_M1_Beta1.@tests_b119294
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_1_M1_Beta1
     {
         [TestClass]
         public class @testclass_b119294
@@ -14718,53 +10183,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_1_M1_Beta1.@tests_b130333
-    {
-        [TestClass]
-        public class @testclass_b130333
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_byteshift()
+            public void @byteshift()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.1-M1-Beta1\b130333", "byteshift.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_1_M1_Beta1.@tests_b140711
-    {
-        [TestClass]
-        public class @testclass_b140711
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14778,7 +10201,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b102879
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_2_Beta1
     {
         [TestClass]
         public class @testclass_b102879
@@ -14796,59 +10219,17 @@
             }
 
             [TestMethod]
-            public void @test_dblinf()
+            public void @dblinf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b102879", "dblinf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b124232
-    {
-        [TestClass]
-        public class @testclass_b124232
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_genisinst()
+            public void @genisinst()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b124232", "genisinst.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b169333
-    {
-        [TestClass]
-        public class @testclass_b169333
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -14858,141 +10239,36 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b178119
-    {
-        [TestClass]
-        public class @testclass_b178119
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_hugemthfrm()
+            public void @hugemthfrm()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b178119", "hugemthfrm.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b178128
-    {
-        [TestClass]
-        public class @testclass_b178128
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_hugestruct()
+            public void @hugestruct()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b178128", "hugestruct.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b180381
-    {
-        [TestClass]
-        public class @testclass_b180381
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_constrained1()
+            public void @constrained1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b180381", "constrained1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b191926
-    {
-        [TestClass]
-        public class @testclass_b191926
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_ParamLimit()
+            public void @ParamLimit()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b191926", "ParamLimit.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_Beta1.@tests_b219940
-    {
-        [TestClass]
-        public class @testclass_b219940
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_struct01_gen()
+            public void @struct01_gen()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-Beta1\b219940", "struct01_gen.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -15002,7 +10278,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b00735
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_2_M01
     {
         [TestClass]
         public class @testclass_b00735
@@ -15026,27 +10302,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b02345
-    {
-        [TestClass]
-        public class @testclass_b02345
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b02345()
             {
@@ -15054,109 +10309,25 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b07211
-    {
-        [TestClass]
-        public class @testclass_b07211
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_byteshift()
+            public void @byteshift()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M01\b07211", "byteshift.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b07900
-    {
-        [TestClass]
-        public class @testclass_b07900
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_rpPasses()
+            public void @rpPasses()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M01\b07900", "rpPasses.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b08020
-    {
-        [TestClass]
-        public class @testclass_b08020
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_bbHndIndex()
+            public void @bbHndIndex()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M01\b08020", "bbHndIndex.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b11762
-    {
-        [TestClass]
-        public class @testclass_b11762
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15166,57 +10337,15 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b16386
-    {
-        [TestClass]
-        public class @testclass_b16386
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_gtnop()
+            public void @gtnop()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M01\b16386", "gtnop.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M01.@tests_b16399
-    {
-        [TestClass]
-        public class @testclass_b16399
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_gtIsValid64RsltMul()
+            public void @gtIsValid64RsltMul()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M01\b16399", "gtIsValid64RsltMul.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -15226,7 +10355,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M02.@tests_b19171
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V1_2_M02
     {
         [TestClass]
         public class @testclass_b19171
@@ -15244,35 +10373,14 @@
             }
 
             [TestMethod]
-            public void @test_jmp2blk()
+            public void @jmp2blk()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M02\b19171", "jmp2blk.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V1_2_M02.@tests_b30251
-    {
-        [TestClass]
-        public class @testclass_b30251
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_b578931()
+            public void @b578931()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V1.2-M02\b30251", "b578931.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -15282,7 +10390,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b102533
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V2_0_Beta2
     {
         [TestClass]
         public class @testclass_b102533
@@ -15300,143 +10408,38 @@
             }
 
             [TestMethod]
-            public void @test_DeadBlock()
+            public void @DeadBlock()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b102533", "DeadBlock.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b268908
-    {
-        [TestClass]
-        public class @testclass_b268908
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_vars2()
+            public void @vars2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b268908", "vars2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b320147
-    {
-        [TestClass]
-        public class @testclass_b320147
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_1086745236()
+            public void @_1086745236()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b320147", "1086745236.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b321799
-    {
-        [TestClass]
-        public class @testclass_b321799
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_repro()
+            public void @repro()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b321799", "repro.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b338014
-    {
-        [TestClass]
-        public class @testclass_b338014
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_vsw338014()
+            public void @vsw338014()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b338014", "vsw338014.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b405223
-    {
-        [TestClass]
-        public class @testclass_b405223
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15444,27 +10447,6 @@
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\V2.0-Beta2\b405223", "b405223.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_Beta2.@tests_b416667
-    {
-        [TestClass]
-        public class @testclass_b416667
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15478,7 +10460,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_V2_0_RTM.@tests_b369916
+    namespace @JIT.@Regression.@CLR_x86_JIT.@V2_0_RTM
     {
         [TestClass]
         public class @testclass_b369916
@@ -15506,7 +10488,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b106272
+    namespace @JIT.@Regression.@CLR_x86_JIT.@v2_1
     {
         [TestClass]
         public class @testclass_b106272
@@ -15530,53 +10512,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b152292
-    {
-        [TestClass]
-        public class @testclass_b152292
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b152292()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b152292", "b152292.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b565808
-    {
-        [TestClass]
-        public class @testclass_b565808
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15586,53 +10526,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b589202
-    {
-        [TestClass]
-        public class @testclass_b589202
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b589202()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b589202", "b589202.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b598034
-    {
-        [TestClass]
-        public class @testclass_b598034
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15642,27 +10540,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b598649
-    {
-        [TestClass]
-        public class @testclass_b598649
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b598649()
             {
@@ -15670,53 +10547,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b602004
-    {
-        [TestClass]
-        public class @testclass_b602004
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_Inline_Vars2()
+            public void @Inline_Vars2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b602004", "Inline_Vars2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b608066
-    {
-        [TestClass]
-        public class @testclass_b608066
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15726,53 +10561,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b608198
-    {
-        [TestClass]
-        public class @testclass_b608198
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b608198()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b608198", "b608198.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b609280
-    {
-        [TestClass]
-        public class @testclass_b609280
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15782,27 +10575,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b610562
-    {
-        [TestClass]
-        public class @testclass_b610562
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b610562()
             {
@@ -15810,29 +10582,8 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b610750
-    {
-        [TestClass]
-        public class @testclass_b610750
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_32vs64()
+            public void @_32vs64()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b610750", "32vs64.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -15845,53 +10596,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b611219
-    {
-        [TestClass]
-        public class @testclass_b611219
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b611219()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\b611219", "b611219.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_b72218
-    {
-        [TestClass]
-        public class @testclass_b72218
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15905,7 +10614,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b121938
+    namespace @JIT.@Regression.@CLR_x86_JIT.@v2_1.@DDB
     {
         [TestClass]
         public class @testclass_b121938
@@ -15923,59 +10632,17 @@
             }
 
             [TestMethod]
-            public void @test_ConstToString()
+            public void @ConstToString()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\DDB\b121938", "ConstToString.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b151497
-    {
-        [TestClass]
-        public class @testclass_b151497
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_NullCheckBoxedValuetypeReturn()
+            public void @NullCheckBoxedValuetypeReturn()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\DDB\b151497", "NullCheckBoxedValuetypeReturn.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b158861
-    {
-        [TestClass]
-        public class @testclass_b158861
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -15985,53 +10652,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b163200
-    {
-        [TestClass]
-        public class @testclass_b163200
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b163200()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\DDB\b163200", "b163200.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b170362
-    {
-        [TestClass]
-        public class @testclass_b170362
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16041,53 +10666,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b33183
-    {
-        [TestClass]
-        public class @testclass_b33183
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_b33183()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\CLR-x86-JIT\v2.1\DDB\b33183", "b33183.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_CLR_x86_JIT.@tests_v2_1.@tests_DDB.@tests_b49778
-    {
-        [TestClass]
-        public class @testclass_b49778
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16101,7 +10684,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_dev10_94677
+    namespace @JIT.@Regression.@Dev11.@dev10_94677
     {
         [TestClass]
         public class @testclass_dev10_94677
@@ -16119,7 +10702,7 @@
             }
 
             [TestMethod]
-            public void @test_loopvt()
+            public void @loopvt()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\Dev11\dev10_94677", "loopvt.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -16129,7 +10712,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_dev11_13912
+    namespace @JIT.@Regression.@Dev11.@dev11_13912
     {
         [TestClass]
         public class @testclass_dev11_13912
@@ -16157,7 +10740,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_dev11_165544
+    namespace @JIT.@Regression.@Dev11.@dev11_165544
     {
         [TestClass]
         public class @testclass_dev11_165544
@@ -16175,7 +10758,7 @@
             }
 
             [TestMethod]
-            public void @test_seqpts()
+            public void @seqpts()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\Dev11\dev11_165544", "seqpts.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -16185,7 +10768,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_Dev11_457559
+    namespace @JIT.@Regression.@Dev11
     {
         [TestClass]
         public class @testclass_Dev11_457559
@@ -16209,53 +10792,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_Dev11_5437
-    {
-        [TestClass]
-        public class @testclass_Dev11_5437
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_Dev11_5437()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\Dev11\Dev11_5437", "Dev11_5437.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_Dev11_617302
-    {
-        [TestClass]
-        public class @testclass_Dev11_617302
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16265,27 +10806,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_Dev11_646049
-    {
-        [TestClass]
-        public class @testclass_Dev11_646049
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_Dev11_646049()
             {
@@ -16293,53 +10813,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_DevDiv2_10623
-    {
-        [TestClass]
-        public class @testclass_DevDiv2_10623
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_DevDiv2_10623()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\Dev11\DevDiv2_10623", "DevDiv2_10623.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_Dev11.@tests_DevDiv2_8863
-    {
-        [TestClass]
-        public class @testclass_DevDiv2_8863
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16353,7 +10831,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_Dev14.@tests_DevDiv_876169
+    namespace @JIT.@Regression.@Dev14
     {
         [TestClass]
         public class @testclass_DevDiv_876169
@@ -16381,7 +10859,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_JitBlue.@tests_DevDiv_794115
+    namespace @JIT.@Regression.@JitBlue
     {
         [TestClass]
         public class @testclass_DevDiv_794115
@@ -16405,27 +10883,6 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_JitBlue.@tests_DevDiv_794631
-    {
-        [TestClass]
-        public class @testclass_DevDiv_794631
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_DevDiv_794631()
             {
@@ -16433,53 +10890,11 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_JitBlue.@tests_DevDiv_815940
-    {
-        [TestClass]
-        public class @testclass_DevDiv_815940
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
             public void @test_DevDiv_815940()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\JitBlue\DevDiv_815940", "DevDiv_815940.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_JitBlue.@tests_DevDiv_816617
-    {
-        [TestClass]
-        public class @testclass_DevDiv_816617
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16493,7 +10908,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b100336
+    namespace @JIT.@Regression.@VS_ia64_JIT.@M00
     {
         [TestClass]
         public class @testclass_b100336
@@ -16511,206 +10926,59 @@
             }
 
             [TestMethod]
-            public void @test_emptytryfinally()
+            public void @emptytryfinally()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b100336", "emptytryfinally.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b103846
-    {
-        [TestClass]
-        public class @testclass_b103846
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_d()
+            public void @d()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b103846", "d.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b111130
-    {
-        [TestClass]
-        public class @testclass_b111130
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_makework()
+            public void @makework()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b111130", "makework.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b115253
-    {
-        [TestClass]
-        public class @testclass_b115253
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_hello2()
+            public void @hello2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b115253", "hello2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b119026
-    {
-        [TestClass]
-        public class @testclass_b119026
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_bug()
+            public void @bug()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b119026", "bug.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_charbug()
+            public void @charbug()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b119026", "charbug.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b140298
-    {
-        [TestClass]
-        public class @testclass_b140298
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b140298", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b141358
-    {
-        [TestClass]
-        public class @testclass_b141358
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_test()
+            public void @test_()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\M00\b141358", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_M00.@tests_b99219
-    {
-        [TestClass]
-        public class @testclass_b99219
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -16724,7 +10992,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_Beta1.@tests_b102615
+    namespace @JIT.@Regression.@VS_ia64_JIT.@V1_2_Beta1
     {
         [TestClass]
         public class @testclass_b102615
@@ -16742,119 +11010,35 @@
             }
 
             [TestMethod]
-            public void @test_test1()
+            public void @test1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-Beta1\b102615", "test1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_Beta1.@tests_b102860
-    {
-        [TestClass]
-        public class @testclass_b102860
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_structret1_1()
+            public void @structret1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-Beta1\b102860", "structret1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_Beta1.@tests_b102887
-    {
-        [TestClass]
-        public class @testclass_b102887
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_struct5_2()
+            public void @struct5_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-Beta1\b102887", "struct5_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_Beta1.@tests_b124409
-    {
-        [TestClass]
-        public class @testclass_b124409
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_ericcprop3()
+            public void @ericcprop3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-Beta1\b124409", "ericcprop3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_Beta1.@tests_b91074
-    {
-        [TestClass]
-        public class @testclass_b91074
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_pack8()
+            public void @pack8()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-Beta1\b91074", "pack8.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -16864,7 +11048,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M01.@tests_b10789
+    namespace @JIT.@Regression.@VS_ia64_JIT.@V1_2_M01
     {
         [TestClass]
         public class @testclass_b10789
@@ -16882,98 +11066,35 @@
             }
 
             [TestMethod]
-            public void @test_switch()
+            public void @switch()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M01\b10789", "switch.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M01.@tests_b10790
-    {
-        [TestClass]
-        public class @testclass_b10790
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_locals10K()
+            public void @locals10K()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M01\b10790", "locals10K.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M01.@tests_b10827
-    {
-        [TestClass]
-        public class @testclass_b10827
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_MT_DEATH()
+            public void @MT_DEATH()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M01\b10827", "MT_DEATH.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M01.@tests_b19112
-    {
-        [TestClass]
-        public class @testclass_b19112
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_divbyte()
+            public void @divbyte()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M01\b19112", "divbyte.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_divshort()
+            public void @divshort()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M01\b19112", "divshort.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -16983,7 +11104,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b102729
+    namespace @JIT.@Regression.@VS_ia64_JIT.@V1_2_M02
     {
         [TestClass]
         public class @testclass_b102729
@@ -17007,309 +11128,78 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b102763
-    {
-        [TestClass]
-        public class @testclass_b102763
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_gcparamonstack()
+            public void @gcparamonstack()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b102763", "gcparamonstack.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b102886
-    {
-        [TestClass]
-        public class @testclass_b102886
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_ovf()
+            public void @ovf()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b102886", "ovf.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b10828
-    {
-        [TestClass]
-        public class @testclass_b10828
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_redundant()
+            public void @redundant()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b10828", "redundant.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b19394
-    {
-        [TestClass]
-        public class @testclass_b19394
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_stringArray114()
+            public void @stringArray114()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b19394", "stringArray114.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b21015
-    {
-        [TestClass]
-        public class @testclass_b21015
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b21015", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b26496
-    {
-        [TestClass]
-        public class @testclass_b26496
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test__1d6bgof()
+            public void @_1d6bgof()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b26496", "_1d6bgof.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b27978
-    {
-        [TestClass]
-        public class @testclass_b27978
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_gcparaminreg()
+            public void @gcparaminreg()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b27978", "gcparaminreg.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b27980
-    {
-        [TestClass]
-        public class @testclass_b27980
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_struct1()
+            public void @struct1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b27980", "struct1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b28077
-    {
-        [TestClass]
-        public class @testclass_b28077
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_struct5_2()
+            public void @struct5_2()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b28077", "struct5_2.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b28141
-    {
-        [TestClass]
-        public class @testclass_b28141
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_structret1_1()
+            public void @structret1_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b28141", "structret1_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V1_2_M02.@tests_b29343
-    {
-        [TestClass]
-        public class @testclass_b29343
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_test_hfa12()
+            public void @test_hfa12()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V1.2-M02\b29343", "test.hfa12.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17319,7 +11209,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b184799
+    namespace @JIT.@Regression.@VS_ia64_JIT.@V2_0_Beta2
     {
         [TestClass]
         public class @testclass_b184799
@@ -17343,109 +11233,25 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b302558
-    {
-        [TestClass]
-        public class @testclass_b302558
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test__aopst1l()
+            public void @_aopst1l()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V2.0-Beta2\b302558", "_aopst1l.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b309539
-    {
-        [TestClass]
-        public class @testclass_b309539
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test__ba6c0ou()
+            public void @_ba6c0ou()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V2.0-Beta2\b309539", "_ba6c0ou.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b309548
-    {
-        [TestClass]
-        public class @testclass_b309548
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test__hngh669()
+            public void @_hngh669()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V2.0-Beta2\b309548", "_hngh669.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
-            }
-
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b311420
-    {
-        [TestClass]
-        public class @testclass_b311420
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
             }
 
             [TestMethod]
@@ -17455,29 +11261,8 @@
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
-        }
-
-    }
-
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_Beta2.@tests_b360587
-    {
-        [TestClass]
-        public class @testclass_b360587
-        {
-            [TestInitialize]
-            public void Initialize()
-            {
-                CompilerHelper.AssertUiEnabled(false);
-            }
-
-            [TestCleanup]
-            public void Cleanup()
-            {
-                CompilerHelper.AssertUiEnabled(true);
-            }
-
             [TestMethod]
-            public void @test_repro()
+            public void @repro()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"JIT\Regression\VS-ia64-JIT\V2.0-Beta2\b360587", "repro.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17487,7 +11272,7 @@
 
     }
 
-    namespace @JIT.@tests_Regression.@tests_VS_ia64_JIT.@tests_V2_0_RTM.@tests_b539509
+    namespace @JIT.@Regression.@VS_ia64_JIT.@V2_0_RTM
     {
         [TestClass]
         public class @testclass_b539509
@@ -17515,7 +11300,7 @@
 
     }
 
-    namespace @Loader.@tests_regressions.@tests_classloader
+    namespace @Loader.@regressions.@classloader
     {
         [TestClass]
         public class @testclass_classloader
@@ -17533,14 +11318,14 @@
             }
 
             [TestMethod]
-            public void @test_main()
+            public void @main()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\regressions\classloader", "main.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vsw307137()
+            public void @vsw307137()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\regressions\classloader", "vsw307137.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17550,7 +11335,7 @@
 
     }
 
-    namespace @Loader.@tests_regressions.@tests_classloader_generics
+    namespace @Loader.@regressions.@classloader_generics
     {
         [TestClass]
         public class @testclass_classloader_generics
@@ -17568,21 +11353,21 @@
             }
 
             [TestMethod]
-            public void @test_repro237932()
+            public void @repro237932()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\regressions\classloader-generics", "repro237932.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_StaticsProblem5()
+            public void @StaticsProblem5()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\regressions\classloader-generics", "StaticsProblem5.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_vsw514968()
+            public void @vsw514968()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\regressions\classloader-generics", "vsw514968.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17592,7 +11377,7 @@
 
     }
 
-    namespace @Loader.@tests_regressions.@tests_polyrec
+    namespace @Loader.@regressions.@polyrec
     {
         [TestClass]
         public class @testclass_polyrec
@@ -17620,7 +11405,7 @@
 
     }
 
-    namespace @Loader.@tests_typeinitialization
+    namespace @Loader.@typeinitialization
     {
         [TestClass]
         public class @testclass_typeinitialization
@@ -17638,7 +11423,7 @@
             }
 
             [TestMethod]
-            public void @test_circularcctorthreethreads03()
+            public void @circularcctorthreethreads03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Loader\typeinitialization", "circularcctorthreethreads03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17648,7 +11433,7 @@
 
     }
 
-    namespace @managed.@tests_Compilation
+    namespace @managed.@Compilation
     {
         [TestClass]
         public class @testclass_Compilation
@@ -17673,7 +11458,7 @@
             }
 
             [TestMethod]
-            public void @test_HelloWorld()
+            public void @HelloWorld()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"managed\Compilation", "HelloWorld.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17683,7 +11468,7 @@
 
     }
 
-    namespace @Regressions.@tests_assemblyref
+    namespace @Regressions.@assemblyref
     {
         [TestClass]
         public class @testclass_assemblyref
@@ -17701,14 +11486,14 @@
             }
 
             [TestMethod]
-            public void @test_assem()
+            public void @assem()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\assemblyref", "assem.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test()
+            public void @test()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\assemblyref", "test.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17718,7 +11503,7 @@
 
     }
 
-    namespace @Regressions.@tests_common
+    namespace @Regressions.@common
     {
         [TestClass]
         public class @testclass_common
@@ -17736,112 +11521,112 @@
             }
 
             [TestMethod]
-            public void @test_AboveStackLimit()
+            public void @AboveStackLimit()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "AboveStackLimit.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ArrayCopy()
+            public void @ArrayCopy()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "ArrayCopy.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_avtest()
+            public void @avtest()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "avtest.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_CompEx()
+            public void @CompEx()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "CompEx.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_date()
+            public void @date()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "date.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_DisableTransparencyEnforcement()
+            public void @DisableTransparencyEnforcement()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "DisableTransparencyEnforcement.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_interlock()
+            public void @interlock()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "interlock.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Marshal()
+            public void @Marshal()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "Marshal.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_pow3()
+            public void @pow3()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "pow3.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_test1307()
+            public void @test1307()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "test1307.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_testClass()
+            public void @testClass()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "testClass.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_testInterface()
+            public void @testInterface()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "testInterface.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThreadCulture()
+            public void @ThreadCulture()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "ThreadCulture.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_Timer()
+            public void @Timer()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "Timer.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ToLower()
+            public void @ToLower()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "ToLower.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_unsafe()
+            public void @unsafe()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\common", "unsafe.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17851,7 +11636,7 @@
 
     }
 
-    namespace @Regressions.@tests_expl_double
+    namespace @Regressions.@expl_double
     {
         [TestClass]
         public class @testclass_expl_double
@@ -17869,14 +11654,14 @@
             }
 
             [TestMethod]
-            public void @test_body_double()
+            public void @body_double()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\expl_double", "body_double.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_expl_double_1()
+            public void @expl_double_1()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Regressions\expl_double", "expl_double_1.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
@@ -17886,7 +11671,7 @@
 
     }
 
-    namespace @Threading.@tests_ThreadStatics
+    namespace @Threading.@ThreadStatics
     {
         [TestClass]
         public class @testclass_ThreadStatics
@@ -17904,35 +11689,35 @@
             }
 
             [TestMethod]
-            public void @test_ThreadStatic01()
+            public void @ThreadStatic01()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Threading\ThreadStatics", "ThreadStatic01.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThreadStatic02()
+            public void @ThreadStatic02()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Threading\ThreadStatics", "ThreadStatic02.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThreadStatic03()
+            public void @ThreadStatic03()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Threading\ThreadStatics", "ThreadStatic03.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThreadStatic05()
+            public void @ThreadStatic05()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Threading\ThreadStatics", "ThreadStatic05.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);
             }
 
             [TestMethod]
-            public void @test_ThreadStatic06()
+            public void @ThreadStatic06()
             {
                 var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @"Threading\ThreadStatics", "ThreadStatic06.cs");
                 CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false, returnCode: 100);

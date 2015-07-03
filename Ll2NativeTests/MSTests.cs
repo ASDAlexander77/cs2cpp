@@ -221,7 +221,7 @@ namespace Ll2NativeTests
         }
 
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void GenerateTestFromCorCLRTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -244,9 +244,18 @@ namespace Ll2NativeTests
                 var directoryName = Path.GetDirectoryName(file);
                 var folderName = Path.GetFileName(directoryName);
                 var subfolders = directoryName.Substring(CompilerHelper.CoreCLRSourcePath.Length);
-                while (subfolders.StartsWith("\\"))
+
+                var lastDir = directoryName.LastIndexOf("\\");
+                var lastPar = directoryName.LastIndexOf("\\b");
+                if (lastPar != -1 && lastDir <= lastPar && Char.IsDigit(directoryName[lastPar + 3]))
                 {
-                    subfolders = subfolders.Substring(1);
+                    directoryName = directoryName.Substring(0, lastPar);
+                }
+
+                lastPar = directoryName.LastIndexOf("\\Dev");
+                if (lastPar != -1 && lastDir <= lastPar)
+                {
+                    directoryName = directoryName.Substring(0, lastPar);
                 }
 
                 if (currentDir != directoryName)
@@ -265,12 +274,50 @@ namespace Ll2NativeTests
                             Debug.WriteLine(@"");
                         }
 
-                        Debug.WriteLine(@"namespace @" + subfolders.Replace(".", "_").Replace("\\", ".@tests_").Replace("-", "_") + " {");
                         currentNamespace = subfolders;
+
+                        lastDir = subfolders.LastIndexOf("\\");
+                        lastPar = subfolders.LastIndexOf("\\b");
+                        if (lastPar != -1 && lastDir <= lastPar && Char.IsDigit(subfolders[lastPar + 3]))
+                        {
+                            currentNamespace = subfolders.Substring(0, lastPar);
+                        }
+
+                        lastPar = subfolders.LastIndexOf("\\Dev");
+                        if (lastPar != -1 && lastDir <= lastPar)
+                        {
+                            currentNamespace = subfolders.Substring(0, lastPar);
+                        }
+
+                        var testNamespaceName = currentNamespace;
+
+                        testNamespaceName = testNamespaceName.Replace("\\0", "\\_0");
+                        testNamespaceName = testNamespaceName.Replace("\\1", "\\_1");
+                        testNamespaceName = testNamespaceName.Replace("\\2", "\\_2");
+                        testNamespaceName = testNamespaceName.Replace("\\3", "\\_3");
+                        testNamespaceName = testNamespaceName.Replace("\\4", "\\_4");
+                        testNamespaceName = testNamespaceName.Replace("\\5", "\\_5");
+                        testNamespaceName = testNamespaceName.Replace("\\6", "\\_6");
+                        testNamespaceName = testNamespaceName.Replace("\\7", "\\_7");
+                        testNamespaceName = testNamespaceName.Replace("\\8", "\\_8");
+                        testNamespaceName = testNamespaceName.Replace("\\9", "\\_9");
+
+                        Debug.WriteLine(@"namespace @" + testNamespaceName.Replace(".", "_").Replace("\\", ".@").Replace("-", "_") + " {");
+                    }
+
+                    var testClassName = folderName;
+                    if (Char.IsDigit(testClassName[0]))
+                    {
+                        testClassName = "_" + folderName;
+                    }
+
+                    if (subfolders.EndsWith(folderName))
+                    {
+                        testClassName = "testclass_" + testClassName;
                     }
 
                     Debug.WriteLine(@"[TestClass]");
-                    Debug.WriteLine(@"public class @testclass_" + folderName.Replace(".", "_").Replace("-", "_") + " {");
+                    Debug.WriteLine(@"public class @" + testClassName.Replace(".", "_").Replace("-", "_") + " {");
                     Debug.WriteLine(@"[TestInitialize]");
                     Debug.WriteLine(@"public void Initialize() { ");
                     Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
@@ -287,7 +334,17 @@ namespace Ll2NativeTests
 
                 Debug.WriteLine(@"[TestMethod]");
                 var testMethodName = fileNameWithoutExtension;
-                Debug.WriteLine(@"public void @test_" + testMethodName.Replace(".", "_").Replace("-", "_") + "() {");
+                if (Char.IsDigit(testMethodName[0]))
+                {
+                    testMethodName = "_" + fileNameWithoutExtension;
+                }
+
+                if (subfolders.EndsWith(fileNameWithoutExtension))
+                {
+                    testMethodName = "test_" + testMethodName;
+                }
+
+                Debug.WriteLine(@"public void @" + testMethodName.Replace(".", "_").Replace("-", "_") + "() {");
                 Debug.WriteLine(
                     @"var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""" + subfolders + @""", """ +
                     Path.GetFileName(file) + @""");");
