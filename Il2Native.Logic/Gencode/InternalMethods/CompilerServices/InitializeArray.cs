@@ -48,6 +48,7 @@
             ilCodeBuilder.LoadLocal(1);
             ilCodeBuilder.Add(Code.Conv_I);
 
+#if ADD_ARRAY_ALIGMENT
             // align pointer
             // Load ElementSize
             ilCodeBuilder.LoadArgument(0);
@@ -77,6 +78,7 @@
             ilCodeBuilder.Add(Code.Xor);
             ilCodeBuilder.Add(Code.And);
             ilCodeBuilder.Add(Code.Conv_I);
+#endif 
 
             // load field pointer and size
             ilCodeBuilder.LoadArgument(1);

@@ -100,6 +100,11 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
+            if (typeResolver.GetMultiThreadingSupport())
+            {
+                sb.Append("Byte* lock; ");
+            }
+
             sb.Append("Byte* vtable");
 
             var index = 0;
@@ -135,7 +140,12 @@ namespace Il2Native.Logic.Gencode
             var stringSystemType = typeResolver.System.System_String;
 
             var sb = new StringBuilder();
-            
+
+            if (typeResolver.GetMultiThreadingSupport())
+            {
+                sb.Append("(Byte*) -1, ");
+            }
+
             sb.AppendLine(string.Empty);
             sb.Append("(::Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
