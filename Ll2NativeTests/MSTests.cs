@@ -221,7 +221,7 @@ namespace Ll2NativeTests
         }
 
         [TestMethod]
-        //[Ignore]
+        [Ignore]
         public void GenerateTestFromCorCLRTests()
         {
             Debug.WriteLine(@"namespace Ll2NativeTests {");
@@ -244,6 +244,7 @@ namespace Ll2NativeTests
                 var directoryName = Path.GetDirectoryName(file);
                 var folderName = Path.GetFileName(directoryName);
                 var subfolders = directoryName.Substring(CompilerHelper.CoreCLRSourcePath.Length);
+                var subfoldersEffective = subfolders;
 
                 var lastDir = directoryName.LastIndexOf("\\");
                 var lastPar = directoryName.LastIndexOf("\\b");
@@ -346,7 +347,7 @@ namespace Ll2NativeTests
 
                 Debug.WriteLine(@"public void @" + testMethodName.Replace(".", "_").Replace("-", "_") + "() {");
                 Debug.WriteLine(
-                    @"var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""" + subfolders + @""", """ +
+                    @"var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""" + subfoldersEffective + @""", """ +
                     Path.GetFileName(file) + @""");");
                 Debug.WriteLine(
                     @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, false, returnCode: 100);");
