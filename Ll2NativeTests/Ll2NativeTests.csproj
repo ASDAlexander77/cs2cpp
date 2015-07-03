@@ -57,6 +57,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CompilerHelper.cs" />
+    <Compile Include="CoreCLRTests.cs" />
     <Compile Include="DummySymbolWriter\DummyCompileUnitEntry.cs" />
     <Compile Include="DummySymbolWriter\DummySourceFile.cs" />
     <Compile Include="DummySymbolWriter\DummySourceFileEntry.cs" />

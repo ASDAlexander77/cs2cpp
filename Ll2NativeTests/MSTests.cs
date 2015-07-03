@@ -220,6 +220,88 @@ namespace Ll2NativeTests
             Debug.WriteLine(@"}"); // global namespace
         }
 
+        [TestMethod]
+        [Ignore]
+        public void GenerateTestFromCorCLRTests()
+        {
+            Debug.WriteLine(@"namespace Ll2NativeTests {");
+            Debug.WriteLine(@"using System;");
+            Debug.WriteLine(@"using System.Collections.Generic;");
+            Debug.WriteLine(@"using System.Diagnostics;");
+            Debug.WriteLine(@"using System.IO;");
+            Debug.WriteLine(@"using System.Linq;");
+            Debug.WriteLine(@"using Il2Native.Logic;");
+            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            Debug.WriteLine(@"using PdbReader;");
+
+            var currentDir = "";
+            var currentNamespace = "";
+            foreach (
+                var file in
+                    Directory.EnumerateFiles(CompilerHelper.CoreCLRSourcePath, "*.cs", SearchOption.AllDirectories))
+            {
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+                var directoryName = Path.GetDirectoryName(file);
+                var folderName = Path.GetFileName(directoryName);
+                var subfolders = directoryName.Substring(CompilerHelper.CoreCLRSourcePath.Length);
+                while (subfolders.StartsWith("\\"))
+                {
+                    subfolders = subfolders.Substring(1);
+                }
+
+                if (currentDir != directoryName)
+                {
+                    if (!string.IsNullOrEmpty(currentDir))
+                    {
+                        Debug.WriteLine(@"}");
+                        Debug.WriteLine(@"");
+                    }
+
+                    if (currentNamespace != subfolders)
+                    {
+                        if (!string.IsNullOrEmpty(currentNamespace))
+                        {
+                            Debug.WriteLine(@"}");
+                            Debug.WriteLine(@"");
+                        }
+
+                        Debug.WriteLine(@"namespace @" + subfolders.Replace(".", "_").Replace("\\", ".@tests_").Replace("-", "_") + " {");
+                        currentNamespace = subfolders;
+                    }
+
+                    Debug.WriteLine(@"[TestClass]");
+                    Debug.WriteLine(@"public class @testclass_" + folderName.Replace(".", "_").Replace("-", "_") + " {");
+                    Debug.WriteLine(@"[TestInitialize]");
+                    Debug.WriteLine(@"public void Initialize() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+                    Debug.WriteLine(@"[TestCleanup]");
+                    Debug.WriteLine(@"public void Cleanup() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+
+                    currentDir = directoryName;
+                }
+
+                Debug.WriteLine(@"[TestMethod]");
+                var testMethodName = fileNameWithoutExtension;
+                Debug.WriteLine(@"public void @test_" + testMethodName.Replace(".", "_").Replace("-", "_") + "() {");
+                Debug.WriteLine(
+                    @"var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""" + subfolders + @""", """ +
+                    Path.GetFileName(file) + @""");");
+                Debug.WriteLine(
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, false, returnCode: 100);");
+                Debug.WriteLine(@"}");
+                Debug.WriteLine(@"");
+            }
+
+            Debug.WriteLine(@"}"); // class
+            Debug.WriteLine(@"}"); // namespaces
+            Debug.WriteLine(@"}"); // global namespace
+        }
+
         /// <summary>
         /// </summary>
         [TestMethod]

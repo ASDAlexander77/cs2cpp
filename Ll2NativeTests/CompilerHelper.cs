@@ -19,6 +19,7 @@
         public static string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
+        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
 
         public const string OutputObjectFileExt = "obj";
 
@@ -33,6 +34,7 @@
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
+        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\ ";
         
         public const string OutputObjectFileExt = "obj";
         
@@ -201,7 +203,7 @@
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        public static void ExecCompile(string fileName, bool justCompile = false, bool opt = false)
+        public static void ExecCompile(string fileName, bool justCompile = false, bool opt = false, int returnCode = 0)
         {
             Trace.WriteLine("==========================================================================");
             if (justCompile)
@@ -288,7 +290,7 @@
                             MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
 
                     // test execution
-                    ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
+                    ExecCmd(string.Format("{0}.exe", fileName), readOutput: true, returnCode: returnCode);
                 }
             }
             else
@@ -303,7 +305,8 @@
             string fileName,
             string arguments = "",
             string workingDir = OutputPath,
-            bool readOutput = false)
+            bool readOutput = false,
+            int returnCode = 0)
         {
             var processStartInfo = new ProcessStartInfo();
             processStartInfo.WorkingDirectory = workingDir;
@@ -328,7 +331,7 @@
                 Trace.WriteLine(output);
             }
 
-            Assert.AreEqual(0, process.ExitCode);
+            Assert.AreEqual(returnCode, process.ExitCode);
         }
 
         /// <summary>
@@ -371,7 +374,7 @@
         /// </summary>
         /// <param name="index">
         /// </param>
-        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true)
+        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true, int returnCode = 0)
         {
             try
             {
@@ -410,7 +413,7 @@
                 return;
             }
 
-            ExecCompile(fileName, opt: CompileWithOptimization);
+            ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
         }
 
         /// <summary>
