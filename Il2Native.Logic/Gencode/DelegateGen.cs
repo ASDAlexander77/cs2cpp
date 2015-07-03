@@ -292,12 +292,8 @@ namespace Il2Native.Logic.Gencode
             else if (!method.ReturnType.IsVoid())
             {
                 codeBuilder.Locals.Add(method.ReturnType);
-                if (method.ReturnType.IsStructureType())
-                {
-                    codeBuilder.LoadLocalAddress(0);
-                    codeBuilder.InitializeObject(method.ReturnType);
-                }
-
+                codeBuilder.LoadLocalAddress(0);
+                codeBuilder.InitializeObject(method.ReturnType);
                 codeBuilder.LoadLocal(0);
             }
             
