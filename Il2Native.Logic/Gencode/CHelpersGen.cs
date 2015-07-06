@@ -564,6 +564,23 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
+        public static void WriteSaveVolatile(
+            this CWriter cWriter,
+            OpCodePart opCode,
+            IType typeToSave,
+            int operandIndex,
+            FullyDefinedReference destination,
+            bool destinationIsIndirect = false)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write("swap(&");
+            cWriter.WriteResult(destination);
+            writer.Write(", ");
+            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            writer.Write(")");
+        }
+
         public static void WriteSavePrimitiveIntoStructure(
             this CWriter cWriter,
             OpCodePart opCode,

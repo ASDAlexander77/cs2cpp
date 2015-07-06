@@ -756,7 +756,14 @@ namespace Il2Native.Logic
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
 
-                    this.WriteSave(opCode, operandType, 0, reference);
+                    if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+                    {
+                        this.WriteSaveVolatile(opCode, operandType, 0, reference);
+                    }
+                    else
+                    {
+                        this.WriteSave(opCode, operandType, 0, reference);
+                    }
 
                     break;
 
