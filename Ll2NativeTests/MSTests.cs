@@ -240,24 +240,16 @@ namespace Ll2NativeTests
                 var file in
                     Directory.EnumerateFiles(CompilerHelper.CoreCLRSourcePath, "*.cs", SearchOption.AllDirectories))
             {
+                if (file.ToLowerInvariant().Contains("regress") || file.ToLowerInvariant().Contains("stress"))
+                {
+                    continue;
+                }
+
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
                 var directoryName = Path.GetDirectoryName(file);
                 var folderName = Path.GetFileName(directoryName);
                 var subfolders = directoryName.Substring(CompilerHelper.CoreCLRSourcePath.Length);
                 var subfoldersEffective = subfolders;
-
-                var lastDir = directoryName.LastIndexOf("\\");
-                var lastPar = directoryName.LastIndexOf("\\b");
-                if (lastPar != -1 && lastDir <= lastPar && Char.IsDigit(directoryName[lastPar + 3]))
-                {
-                    directoryName = directoryName.Substring(0, lastPar);
-                }
-
-                lastPar = directoryName.LastIndexOf("\\Dev");
-                if (lastPar != -1 && lastDir <= lastPar)
-                {
-                    directoryName = directoryName.Substring(0, lastPar);
-                }
 
                 if (currentDir != directoryName)
                 {
@@ -276,20 +268,6 @@ namespace Ll2NativeTests
                         }
 
                         currentNamespace = subfolders;
-
-                        lastDir = subfolders.LastIndexOf("\\");
-                        lastPar = subfolders.LastIndexOf("\\b");
-                        if (lastPar != -1 && lastDir <= lastPar && Char.IsDigit(subfolders[lastPar + 3]))
-                        {
-                            currentNamespace = subfolders.Substring(0, lastPar);
-                        }
-
-                        lastPar = subfolders.LastIndexOf("\\Dev");
-                        if (lastPar != -1 && lastDir <= lastPar)
-                        {
-                            currentNamespace = subfolders.Substring(0, lastPar);
-                        }
-
                         var testNamespaceName = currentNamespace;
 
                         testNamespaceName = testNamespaceName.Replace("\\0", "\\_0");

@@ -618,10 +618,7 @@ namespace Il2Native.Logic
                             this.Output.WriteLine(" {0};", tokenVar);
                             this.Output.Write("{0}.", tokenVar);
                             this.WriteFieldAccessLeftExpression(
-                                this.Output,
-                                System.System_RuntimeFieldHandle,
-                                System.System_RuntimeFieldHandle.GetFieldByName("fieldAddress", this, true),
-                                null);
+                                this.Output, System.System_RuntimeFieldHandle, System.System_RuntimeFieldHandle.GetFieldByName("fieldAddress", this, true), null);
                             this.Output.Write(" = (");
                             System.System_Byte.ToPointerType().WriteTypePrefix(this);
                             this.Output.Write(") &");
@@ -636,10 +633,7 @@ namespace Il2Native.Logic
 
                             this.Output.Write("{0}.", tokenVar);
                             this.WriteFieldAccessLeftExpression(
-                                this.Output,
-                                System.System_RuntimeFieldHandle,
-                                System.System_RuntimeFieldHandle.GetFieldByName("fieldSize", this, true),
-                                null);
+                                this.Output, System.System_RuntimeFieldHandle, System.System_RuntimeFieldHandle.GetFieldByName("fieldSize", this, true), null);
                             this.Output.Write(" = ");
                             if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
                             {
@@ -695,8 +689,17 @@ namespace Il2Native.Logic
 
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    // we wait when opCode.DestinationName is set;
-                    this.WriteFieldAccess(opCodeFieldInfoPart);
+                    if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+                    {
+                        this.Output.Write("compare_and_swap(&");
+                        this.WriteFieldAccess(opCodeFieldInfoPart);
+                        this.Output.Write(", 0, 0)");
+                    }
+                    else
+                    {
+                        // we wait when opCode.DestinationName is set;
+                        this.WriteFieldAccess(opCodeFieldInfoPart);
+                    }
 
                     break;
                 case Code.Ldflda:
@@ -719,7 +722,17 @@ namespace Il2Native.Logic
                 case Code.Ldsfld:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+
+                    if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+                    {
+                        this.Output.Write("compare_and_swap(&");
+                        this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                        this.Output.Write(", 0, 0)");
+                    }
+                    else
+                    {
+                        this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                    }
 
                     break;
                 case Code.Ldsflda:
@@ -2031,7 +2044,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="valueOperand">
         /// </param>
-        public void SaveToField(OpCodePart opCodePart, IType fieldType, int valueOperand = 1)
+        public void SaveToField(OpCodePart opCodePart, IType fieldType, int valueOperand = 1, string prefix = " = ")
         {
             if (opCodePart.OpCodeOperands == null)
             {
@@ -2039,7 +2052,7 @@ namespace Il2Native.Logic
             }
 
             var writer = this.Output;
-            this.UnaryOper(writer, opCodePart, valueOperand, " = ", fieldType);
+            this.UnaryOper(writer, opCodePart, valueOperand, prefix, fieldType);
         }
 
         /// <summary>
@@ -3080,7 +3093,7 @@ namespace Il2Native.Logic
             {
                 // definitions
                 this.Output.WriteLine(Resources.c_definitions);
-                this.Output.WriteLine(string.Empty);                
+                this.Output.WriteLine(string.Empty);
             }
 
             VirtualTableGen.Clear();
@@ -3413,11 +3426,23 @@ namespace Il2Native.Logic
         /// </param>
         private void FieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
-            this.WriteFieldAccess(opCodeFieldInfoPart);
+            if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+            {
+                this.Output.Write("swap(&");
+                this.WriteFieldAccess(opCodeFieldInfoPart);
 
-            var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                this.SaveToField(opCodeFieldInfoPart, fieldType, prefix: ", ");
 
-            this.SaveToField(opCodeFieldInfoPart, fieldType);
+                this.Output.Write(")");
+            }
+            else
+            {
+                this.WriteFieldAccess(opCodeFieldInfoPart);
+
+                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                this.SaveToField(opCodeFieldInfoPart, fieldType);
+            }
         }
 
         /// <summary>
@@ -4033,8 +4058,8 @@ namespace Il2Native.Logic
                             ? this.AllReferences.Distinct().Reverse().Select(
                                       reference =>
                                       new SynthesizedMethodStringAdapter(
-                                          this.GetGlobalConstructorsFunctionName(reference), 
-                                          string.Empty, 
+                                          this.GetGlobalConstructorsFunctionName(reference),
+                                          string.Empty,
                                           System.System_Void))
                             : null;
 

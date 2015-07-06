@@ -479,7 +479,7 @@ template < typename T > inline T __mul_ovf(T a, T b)
 
 inline Byte __mul_ovf_un(Byte a, Byte b)
 {
-	if (b > ((Byte)-1) / a)
+	if (a != 0 && b > ((Byte)-1) / a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -492,7 +492,7 @@ inline Byte __mul_ovf_un(Byte a, Byte b)
 
 inline UInt16 __mul_ovf_un(UInt16 a, UInt16 b)
 {
-	if (b > ((UInt16)-1) / a)
+	if (a != 0 && b > ((UInt16)-1) / a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -505,7 +505,7 @@ inline UInt16 __mul_ovf_un(UInt16 a, UInt16 b)
 
 inline UInt32 __mul_ovf_un(UInt32 a, UInt32 b)
 {
-	if (b > ((UInt32)-1) / a)
+	if (a != 0 && b > ((UInt32)-1) / a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -518,7 +518,7 @@ inline UInt32 __mul_ovf_un(UInt32 a, UInt32 b)
 
 inline UInt64 __mul_ovf_un(UInt64 a, UInt64 b)
 {
-	if (b > ((UInt64)-1) / a)
+	if (a != 0 && b > ((UInt64)-1) / a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -531,7 +531,7 @@ inline UInt64 __mul_ovf_un(UInt64 a, UInt64 b)
 
 inline SByte __mul_ovf_un(SByte a, SByte b)
 {
-	if ((Byte)b > ((Byte)-1) / (Byte)a)
+	if ((Byte)a != 0 && (Byte)b > ((Byte)-1) / (Byte)a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -544,7 +544,7 @@ inline SByte __mul_ovf_un(SByte a, SByte b)
 
 inline Int16 __mul_ovf_un(Int16 a, UInt16 b)
 {
-	if ((UInt16)b > ((UInt16)-1) / (UInt16)a)
+	if ((UInt16)a != 0 && (UInt16)b > ((UInt16)-1) / (UInt16)a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -557,7 +557,7 @@ inline Int16 __mul_ovf_un(Int16 a, UInt16 b)
 
 inline Int32 __mul_ovf_un(Int32 a, Int32 b)
 {
-	if ((UInt32)b > ((UInt32)-1) / (UInt32)a)
+	if ((UInt32)a != 0 && (UInt32)b > ((UInt32)-1) / (UInt32)a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
@@ -570,7 +570,7 @@ inline Int32 __mul_ovf_un(Int32 a, Int32 b)
 
 inline Int64 __mul_ovf_un(Int64 a, Int64 b)
 {
-	if ((UInt64)b > ((UInt64)-1) / (UInt64)a)
+	if ((UInt64)a != 0 && (UInt64)b > ((UInt64)-1) / (UInt64)a)
 	{
 		System_OverflowException* _new;
 		_new = System_OverflowException_System_OverflowException__newFN();
