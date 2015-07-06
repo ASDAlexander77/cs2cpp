@@ -543,24 +543,12 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCode,
             IType typeToSave,
             int operandIndex,
-            FullyDefinedReference destination,
-            bool destinationIsIndirect = false)
+            FullyDefinedReference destination)
         {
             var writer = cWriter.Output;
 
-            if (destinationIsIndirect)
-            {
-                writer.Write("*(");
-            }
-
             cWriter.WriteResult(destination);
-            if (destinationIsIndirect)
-            {
-                writer.Write(")");
-            }
-
             writer.Write(" = ");
-
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
@@ -569,8 +557,7 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCode,
             IType typeToSave,
             int operandIndex,
-            FullyDefinedReference destination,
-            bool destinationIsIndirect = false)
+            FullyDefinedReference destination)
         {
             var writer = cWriter.Output;
 
