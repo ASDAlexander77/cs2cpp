@@ -298,9 +298,10 @@ namespace Il2Native.Logic
                 processed = this.WriteStartOfPhiValues(writer, opCode, firstLevel);
             }
 
+            var done = false;
             if (!processed)
             {
-                this.ActualWriteOpCode(writer, opCode);
+                done = this.ActualWriteOpCode(writer, opCode);
             }
 
             if (firstLevel && opCode.UsedByAlternativeValues != null)
@@ -308,7 +309,7 @@ namespace Il2Native.Logic
                 this.WriteEndOfPhiValues(writer, opCode);
             }
 
-            if (firstLevel)
+            if (firstLevel && done)
             {
                 this.Output.Write(";");
             }
@@ -318,7 +319,7 @@ namespace Il2Native.Logic
             this.WriteTryEnds(opCode);
             this.WriteExceptionHandlersProlog(opCode);
 
-            if (firstLevel)
+            if (firstLevel && done)
             {
                 this.Output.WriteLine(string.Empty);
             }
@@ -455,7 +456,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public void ActualWriteOpCode(CIndentedTextWriter writer, OpCodePart opCode)
+        public bool ActualWriteOpCode(CIndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
             var firstOpCodeOperand = opCode != null && opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? opCode.OpCodeOperands[0] : null;
@@ -723,7 +724,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    if (opCodeFieldInfoPart.Operand.IsThreadStatic)
+                    if (this.MultiThreadingSupport && opCodeFieldInfoPart.Operand.IsThreadStatic)
                     {
                         this.Output.Write("__get_thread_static((Int32)&");
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
@@ -762,7 +763,7 @@ namespace Il2Native.Logic
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
 
-                    if (opCodeFieldInfoPart.Operand.IsThreadStatic)
+                    if (this.MultiThreadingSupport && opCodeFieldInfoPart.Operand.IsThreadStatic)
                     {
                         this.WriteSaveThreadStatic(opCode, operandType, 0, reference);
                     }
@@ -1668,7 +1669,12 @@ namespace Il2Native.Logic
 
                 case Code.Ckfinite:
                     throw new NotImplementedException();
+
+                case Code.Volatile:
+                    return false;
             }
+
+            return true;
         }
 
         private void WriteFunctionAddressForVirtualMethod(CIndentedTextWriter writer, IMethod methodInfo, OpCodeMethodInfoPart opCodeMethodInfoPart)
@@ -3963,6 +3969,17 @@ namespace Il2Native.Logic
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
+            if (this.MultiThreadingSupport)
+            {
+                // initialize of Thread Statics
+                foreach (var threadStaticField in this.IlReader.ThreadStaticFields)
+                {
+                    this.Output.Write("__create_thread_static((Int32*)&");
+                    this.WriteStaticFieldName(threadStaticField);
+                    this.Output.WriteLine(", (Void*)0);");
+                }
+            }
+
             this.SortStaticConstructorsByUsage();
 
             if (this.Gc && this.IsCoreLib)
@@ -4476,6 +4493,11 @@ namespace Il2Native.Logic
             if (definition)
             {
                 this.WriteStaticFieldInitialization(field);
+
+                if (field.IsThreadStatic)
+                {
+                    this.IlReader.ThreadStaticFields.Add(field);
+                }
             }
 
             this.Output.WriteLine(";");

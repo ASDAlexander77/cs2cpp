@@ -46,6 +46,10 @@
 
         /// <summary>
         /// </summary>
+        IList<IField> ThreadStaticFields { get; set; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         IEnumerable<string> References();

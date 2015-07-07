@@ -335,6 +335,7 @@ namespace Il2Native.Logic
             this.CompileInMemory = true;
 
             this.StaticConstructors = new List<IMethod>();
+            this.ThreadStaticFields = new List<IField>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
             this.lazyAllReferencedTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true, true));
@@ -551,6 +552,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public IList<IMethod> StaticConstructors { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public IList<IField> ThreadStaticFields { get; set; }
 
         /// <summary>
         /// </summary>

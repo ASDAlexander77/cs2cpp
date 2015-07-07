@@ -474,10 +474,7 @@ namespace Il2Native.Logic
             ArrayOfInterfaceToArrayOfObject,
             ArrayOfObjectToArrayOfInterface,
             ValueToStructureType,
-            CCast,
-            BoxWithObjectCast,
-            Unbox,
-            ObjectCast
+            CCast
         }
 
         protected void InsertMissingTypeCasts(IEnumerable<OpCodePart> opCodes)
@@ -588,38 +585,6 @@ namespace Il2Native.Logic
                 return castOpCode;
             }
 
-            if (conversionType == ConversionType.ObjectCast)
-            {
-                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
-                castOpCode.RequiredOutgoingType = destinationType;
-                this.InsertOperand(opCodeOperand, castOpCode);
-                return castOpCode;
-            }
-
-            if (conversionType == ConversionType.BoxWithObjectCast)
-            {
-                var type = destinationType.ToNormal();
-                var boxOpCode = new OpCodeTypePart(OpCodesEmit.Box, 0, 0, type);
-                boxOpCode.RequiredOutgoingType = type.ToClass();
-                this.InsertOperand(opCodeOperand, boxOpCode);
-                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
-                castOpCode.RequiredOutgoingType = destinationType;
-                this.InsertOperand(boxOpCode, castOpCode);
-                return castOpCode;
-            }
-
-            if (conversionType == ConversionType.Unbox)
-            {
-                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType.ToClass());
-                castOpCode.RequiredOutgoingType = destinationType;
-                this.InsertOperand(opCodeOperand, castOpCode);
-                var type = destinationType.ToNormal();
-                var unboxOpCode = new OpCodeTypePart(OpCodesEmit.Unbox, 0, 0, type);
-                unboxOpCode.RequiredOutgoingType = type.ToClass();
-                this.InsertOperand(castOpCode, unboxOpCode);
-                return unboxOpCode;
-            }
-
             return opCodeOperand;
         }
 
@@ -684,27 +649,6 @@ namespace Il2Native.Logic
             {
                 var requiredIncomingTypes = usedByInfo.OpCode.RequiredIncomingTypes;
                 destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[usedByInfo.OperandPosition] : null;
-            }
-
-            // To support ThreadStatic - load
-            if (opCodeOperand.Any(Code.Ldsfld))
-            {
-                var opCodeFieldInfoPart = opCodeOperand as OpCodeFieldInfoPart;
-                if (opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.IsThreadStatic)
-                {
-                    destinationType = sourceType;
-                    return opCodeFieldInfoPart.Operand.FieldType.IsValueType ? ConversionType.Unbox : ConversionType.CCast;
-                }
-            }
-
-            // To support ThreadStatic - write
-            if (usedByInfo != null && usedByInfo.OpCode.Any(Code.Stsfld))
-            {
-                var opCodeFieldInfoPart = usedByInfo.OpCode as OpCodeFieldInfoPart;
-                if (opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.IsThreadStatic)
-                {                    
-                    return opCodeFieldInfoPart.Operand.FieldType.IsValueType ? ConversionType.BoxWithObjectCast : ConversionType.ObjectCast;
-                }
             }
 
             if (sourceType == null || destinationType == null)
@@ -1835,8 +1779,7 @@ namespace Il2Native.Logic
 
                     case Code.Stsfld:
                         var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                        retType = operand.FieldType;
-                        return retType;
+                        return operand.IsThreadStatic ? System.System_Object : operand.FieldType;
                     case Code.Stfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
                         retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
@@ -2393,8 +2336,7 @@ namespace Il2Native.Logic
                 case Code.Ldfld:
                 case Code.Ldsfld:
                     var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    retType = operand.FieldType;
-                    return retType;
+                    return operand.IsThreadStatic ? System.System_Object : operand.FieldType;
 
                 case Code.Ldflda:
                 case Code.Ldsflda:

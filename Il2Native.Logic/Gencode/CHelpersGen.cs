@@ -526,6 +526,10 @@ namespace Il2Native.Logic.Gencode
                     // forcebly apply cast for virtual cast
                     WriteCCast(cWriter, opCodeOperand, toType);
                 }
+                else
+                {
+                    return done;
+                }
             }
 
             return true;

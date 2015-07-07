@@ -96,9 +96,20 @@ inline Void* __get_lock_address(Void* _object)
 }
 
 class System_Object;
+extern "C" Int32 pthread_key_create(Int32* key, Void* destructor);
+extern "C" Int32 pthread_key_delete(Int32 key);
 extern "C" System_Object* pthread_getspecific(Int32 key);
 extern "C" Int32 pthread_setspecific(Int32 key, System_Object* value);
-extern "C" Int32 pthread_once(Int32* once_control, Void* init_routine);
+
+inline Int32 __create_thread_static(Int32* key, Void* destructor)
+{
+	return pthread_key_create(key, destructor);
+}
+
+inline Int32 __delete_thread_static(Int32 key)
+{
+	return pthread_key_delete(key);
+}
 
 inline System_Object* __get_thread_static(Int32 key)
 {
