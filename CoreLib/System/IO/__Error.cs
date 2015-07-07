@@ -68,5 +68,10 @@
         {
             throw new IOException(msg);
         }
+
+        internal static void WinIOError()
+        {
+            throw new IOException();
+        }
     }
 }

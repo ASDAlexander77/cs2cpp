@@ -61,17 +61,24 @@
     <Compile Include="System\Collections\IStructuralComparable.cs" />
     <Compile Include="System\Collections\IStructuralEquatable.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
+    <Compile Include="System\IO\Path.cs" />
+    <Compile Include="System\IO\PathHelper.cs" />
+    <Compile Include="System\IO\PathTooLongException.cs" />
     <Compile Include="System\Runtime\InteropServices\CriticalHandle.cs" />
+    <Compile Include="System\Runtime\InteropServices\Marshal.cs" />
     <Compile Include="System\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="System\Security\Principal\IIdentity.cs" />
     <Compile Include="System\Security\Principal\IPrincipal.cs" />
+    <Compile Include="System\Text\StringBuilderCache.cs" />
     <Compile Include="System\Threading\AbandonedMutexException.cs" />
     <Compile Include="System\Threading\EventResetMode.cs">
       <SubType>
       </SubType>
     </Compile>
+    <Compile Include="System\Threading\EventWaitHandle.cs" />
     <Compile Include="System\Threading\Mutex.cs" />
     <Compile Include="System\Threading\SpinWait.cs" />
+    <Compile Include="System\Threading\WaitHandleCannotBeOpenedException.cs" />
     <Compile Include="System\Tuple.cs" />
     <Compile Include="System\_LocalDataStore.cs" />
     <Compile Include="System\_LocalDataStoreMgr.cs" />

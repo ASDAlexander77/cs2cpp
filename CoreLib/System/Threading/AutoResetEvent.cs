@@ -13,9 +13,9 @@ namespace System.Threading
 #endif
 #endif
     [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class AutoResetEvent : WaitHandle
+    public sealed class AutoResetEvent : EventWaitHandle
     {
-        public AutoResetEvent(bool initialState) : base(/*initialState, EventResetMode.AutoReset*/) { }
+        public AutoResetEvent(bool initialState) : base(initialState, EventResetMode.AutoReset) { }
     }
 }
 

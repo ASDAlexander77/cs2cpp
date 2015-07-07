@@ -5,6 +5,8 @@ namespace System.Text
     /// </summary>
     public sealed class StringBuilder
     {
+        internal const int DefaultCapacity = 16;
+
         #region Fields
 
         int m_MaxCapacity;

@@ -839,12 +839,12 @@ namespace System
             }
         }
 
-        public bool Equals(String value, StringComparison comparisonType)
+        public static bool Equals(String @this, String value, StringComparison comparisonType)
         {
             if (comparisonType < StringComparison.CurrentCulture || comparisonType > StringComparison.OrdinalIgnoreCase)
                 throw new ArgumentException(Environment.GetResourceString("NotSupported_StringComparison"), "comparisonType");
 
-            if ((Object)this == (Object)value)
+            if ((Object)@this == (Object)value)
             {
                 return true;
             }
@@ -863,19 +863,24 @@ namespace System
                     throw new NotImplementedException();
 
                 case StringComparison.Ordinal:
-                    if (this.Length != value.Length)
+                    if (@this.Length != value.Length)
                         return false;
-                    return EqualsHelper(this, value);
+                    return EqualsHelper(@this, value);
 
                 case StringComparison.OrdinalIgnoreCase:
-                    if (this.Length != value.Length)
+                    if (@this.Length != value.Length)
                         return false;
 
-                    return (CompareOrdinalIgnoreCaseHelper(this, value) == 0);
+                    return (CompareOrdinalIgnoreCaseHelper(@this, value) == 0);
 
                 default:
                     throw new ArgumentException(Environment.GetResourceString("NotSupported_StringComparison"), "comparisonType");
             }
+        }
+
+        public bool Equals(String value, StringComparison comparisonType)
+        {
+            return string.Equals(this, value, comparisonType);
         }
 
         private unsafe static int CompareOrdinalIgnoreCaseHelper(String strA, String strB)
@@ -975,6 +980,11 @@ namespace System
             }
 
             return -1;
+        }
+
+        public int IndexOf(string value, StringComparison comparison)
+        {
+            throw new NotImplementedException();
         }
 
         public int IndexOf(char value, int startIndex, int count)
@@ -1652,6 +1662,21 @@ namespace System
             int count = (int)(end - ptr);
 
             return count;
+        }
+
+        public bool StartsWith(string longPathPrefix, StringComparison ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Remove(int i, int i1)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Insert(int i, string uncLongPathPrefixToInsert)
+        {
+            throw new NotImplementedException();
         }
     }
 
