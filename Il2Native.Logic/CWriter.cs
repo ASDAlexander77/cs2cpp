@@ -723,7 +723,13 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+                    if (opCodeFieldInfoPart.Operand.IsThreadStatic)
+                    {
+                        this.Output.Write("__get_thread_static((Int32)&");
+                        this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                        this.Output.Write(")");                        
+                    }
+                    else if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
                     {
                         this.Output.Write("compare_and_swap(&");
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
@@ -756,7 +762,11 @@ namespace Il2Native.Logic
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
 
-                    if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
+                    if (opCodeFieldInfoPart.Operand.IsThreadStatic)
+                    {
+                        this.WriteSaveThreadStatic(opCode, operandType, 0, reference);
+                    }
+                    else if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
                     {
                         this.WriteSaveVolatile(opCode, operandType, 0, reference);
                     }

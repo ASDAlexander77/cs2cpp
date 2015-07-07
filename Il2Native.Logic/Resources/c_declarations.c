@@ -95,6 +95,21 @@ inline Void* __get_lock_address(Void* _object)
 	return (Void*) ((Void**)_object - 1);
 }
 
+class System_Object;
+extern "C" System_Object* pthread_getspecific(Int32 key);
+extern "C" Int32 pthread_setspecific(Int32 key, System_Object* value);
+extern "C" Int32 pthread_once(Int32* once_control, Void* init_routine);
+
+inline System_Object* __get_thread_static(Int32 key)
+{
+	return pthread_getspecific(key);
+}
+
+inline Void __set_thread_static(Int32 key, System_Object* _object)
+{
+	pthread_setspecific(key, _object);
+}
+
 struct System_InvalidCastException;
 Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
 System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();

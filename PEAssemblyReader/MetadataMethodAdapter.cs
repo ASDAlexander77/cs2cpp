@@ -67,6 +67,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private bool? _inline;
+
+        /// <summary>
+        /// </summary>
         /// <param name="methodDef">
         /// </param>
         internal MetadataMethodAdapter(MethodSymbol methodDef)
@@ -467,8 +471,15 @@ namespace PEAssemblyReader
         /// </summary>
         public bool IsInline
         {
-            get;
-            protected set;
+            get
+            {
+                return this._inline.HasValue ? this._inline.Value : this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.AggressiveInlining);
+            }
+
+            protected set
+            {
+                this._inline = value;
+            }
         }
 
         /// <summary>

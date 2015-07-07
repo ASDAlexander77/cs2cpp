@@ -10,6 +10,7 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Reflection.Metadata;
     using System.Reflection.PortableExecutable;
     using System.Text;
@@ -35,6 +36,8 @@ namespace PEAssemblyReader
 
         private readonly IType _fieldType;
 
+        private readonly Lazy<bool> lazyThreadStatic;
+
         /// <summary>
         /// </summary>
         internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false, int fixedSize = 0)
@@ -42,6 +45,8 @@ namespace PEAssemblyReader
             Debug.Assert(!isFixed || fieldDef.Type.IsPointerType());
 
             this.fieldDef = fieldDef;
+
+            this.lazyThreadStatic = new Lazy<bool>(this.CalculateThreadStatic);
 
             if (isFixed)
             {
@@ -183,6 +188,26 @@ namespace PEAssemblyReader
             get
             {
                 return this.fieldDef.IsVirtual;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsVolatile
+        {
+            get
+            {
+                return this.fieldDef.IsVolatile;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsThreadStatic
+        {
+            get
+            {
+                return this.lazyThreadStatic.Value;
             }
         }
 
@@ -349,6 +374,15 @@ namespace PEAssemblyReader
 
                 return this.fieldDef.ContainingNamespace.Name;
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool CalculateThreadStatic()
+        {
+            return this.fieldDef.GetAttributes().Any(a => new MetadataTypeAdapter(a.AttributeClass).FullName == "System.ThreadStaticAttribute");
         }
 
         /// <summary>

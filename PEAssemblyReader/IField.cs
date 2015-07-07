@@ -28,6 +28,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsVolatile { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsThreadStatic { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsFixed { get; }
 
         /// <summary>

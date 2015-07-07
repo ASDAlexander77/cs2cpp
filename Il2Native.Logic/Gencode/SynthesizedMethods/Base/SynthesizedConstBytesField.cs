@@ -38,6 +38,10 @@
 
         public bool IsVirtual { get; private set; }
 
+        public bool IsVolatile { get; private set; }
+
+        public bool IsThreadStatic { get; private set; }
+
         public bool IsVirtualTable { get; private set; }
 
         public IModule Module { get; private set; }

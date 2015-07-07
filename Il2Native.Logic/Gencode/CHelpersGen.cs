@@ -520,7 +520,12 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 Debug.Assert(estimatedOperandResultOf.IsReference || estimatedOperandResultOf.Type.IntTypeBitSize() == 0);
-                return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
+                var done = cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
+                if (!done && opCode.IsVirtual())
+                {
+                    // forcebly apply cast for virtual cast
+                    WriteCCast(cWriter, opCodeOperand, toType);
+                }
             }
 
             return true;
@@ -562,6 +567,22 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("swap(&");
+            cWriter.WriteResult(destination);
+            writer.Write(", ");
+            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            writer.Write(")");
+        }
+
+        public static void WriteSaveThreadStatic(
+            this CWriter cWriter,
+            OpCodePart opCode,
+            IType typeToSave,
+            int operandIndex,
+            FullyDefinedReference destination)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write("__set_thread_static((Int32)&");
             cWriter.WriteResult(destination);
             writer.Write(", ");
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
