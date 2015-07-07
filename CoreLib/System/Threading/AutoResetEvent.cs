@@ -1,22 +1,21 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Licensed under the MIT license.
+
 namespace System.Threading
 {
 
     using System;
-    using System.Runtime.CompilerServices;
+    using System.Security.Permissions;
+    using System.Runtime.InteropServices;
+
+#if PROTECTION
+#if PROTECTION
+[HostProtection(Synchronization=true, ExternalThreading=true)]
+#endif
+#endif
+    [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class AutoResetEvent : WaitHandle
     {
-
-        
-        extern public AutoResetEvent(bool initialState);
-
-        
-        extern public bool Reset();
-        
-        extern public bool Set();
+        public AutoResetEvent(bool initialState) : base(/*initialState, EventResetMode.AutoReset*/) { }
     }
 }
-
 

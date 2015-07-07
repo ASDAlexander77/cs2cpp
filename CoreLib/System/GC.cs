@@ -7,6 +7,7 @@ namespace System
 
     using System;
     using System.Runtime.CompilerServices;
+    using System.Threading;
 
     public static class GC
     {
@@ -19,11 +20,14 @@ namespace System
         {
             while (AnyPendingFinalizers()) System.Threading.Thread.Sleep(10);
         }
-
         
         public static void SuppressFinalize(Object obj)
         {
             ////throw new NotImplementedException();
+        }
+
+        public static void KeepAlive(WaitHandle[] internalWaitHandles)
+        {
         }
 
         public static extern void ReRegisterForFinalize(Object obj);

@@ -504,7 +504,6 @@ namespace Ll2NativeTests
             // 500 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition 
             // 507 - error CS0103: The name 'MethodAttributes' does not exist in the current context
             // 513 - CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames'
-            // 524 - using lock with null (TODO: can be fixed)
             // 527 - bug for Dup values in Roslyn (TODO: investigate)
             // 530 - special chars used
             // 531 - library IL
@@ -689,7 +688,6 @@ namespace Ll2NativeTests
                         500,
                         507,
                         513,
-                        524,
                         527,
                         530,
                         531,
