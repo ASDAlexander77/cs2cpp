@@ -64,6 +64,7 @@
     <Compile Include="System\IO\Path.cs" />
     <Compile Include="System\IO\PathHelper.cs" />
     <Compile Include="System\IO\PathTooLongException.cs" />
+    <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />
     <Compile Include="System\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="System\Runtime\InteropServices\Marshal.cs" />
     <Compile Include="System\Runtime\InteropServices\SafeHandle.cs" />

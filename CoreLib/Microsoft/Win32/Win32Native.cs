@@ -3,8 +3,10 @@
 namespace Microsoft.Win32
 {
     using System;
+    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Threading;
 
     using Microsoft.Win32.SafeHandles;
 
@@ -116,7 +118,10 @@ namespace Microsoft.Win32
 
         internal static SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name)
         {
-            throw new NotImplementedException();
+            var handler = new object();
+            JitHelpers.UnsafeCastToStackPointer(ref handler);
+            var safeHandler = new SafeWaitHandle(JitHelpers.UnsafeCastToStackPointer(ref handler), true);
+            return safeHandler;
         }
 
         internal static SafeWaitHandle OpenEvent( /* DWORD */ int desiredAccess, bool inheritHandle, String name)
