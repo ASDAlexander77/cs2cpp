@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic.DebugInfo
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
 
     using PdbReader;
@@ -54,7 +55,7 @@
             var currentName = name;
             if (Keywords.IsKeyword(currentName))
             {
-                currentName = string.Concat("_", name);
+                currentName = string.Concat("_", currentName);
             }
 
             for (var i = 0; i < slot; i++)
@@ -63,11 +64,11 @@
                 if (this.nameBySlot.TryGetValue(i, out existingName) && existingName == currentName)
                 {
                     index++;
-                    currentName = string.Concat(name, "_", index);
+                    currentName = string.Concat(currentName, "_", index);
                 }
             }
 
-            this.nameBySlot[slot] = (index > 0 ? currentName : name).CleanUpName();
+            this.nameBySlot[slot] = currentName.CleanUpName();
         }
 
         public void GenerateFunction(int token)
