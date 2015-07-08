@@ -9,6 +9,11 @@
     /// </summary>
     public partial class Monitor
     {
+        private const int CLOCK_REALTIME = 0;
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int clock_gettime(int clk_id, int* timespec);
+
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private static extern unsafe int pthread_mutex_lock(void* mutex);
 
@@ -126,28 +131,34 @@
                 throw new ArgumentNullException("obj");
             }
 
+            var spinner = new SpinWait();
+            var returnCode = (int)Thread.ReturnCode.EBUSY;
             unsafe
             {
-                var returnCode = pthread_mutex_trylock(GetMutexAddress(obj));
-                switch ((Thread.ReturnCode)returnCode)
+                while (returnCode == (int)Thread.ReturnCode.EBUSY)
                 {
-                    case Thread.ReturnCode.EINVAL:
-                        throw new InvalidOperationException("The value specified by mutex is invalid.");
-                    case Thread.ReturnCode.EAGAIN:
-                        throw new InvalidOperationException("The system lacked the necessary resources (other than memory) to initialize another mutex.");
-                    case Thread.ReturnCode.EDEADLK:
-                        throw new InvalidOperationException("The current thread already owns the mutex.");
-                    case Thread.ReturnCode.EPERM:
-                        throw new InvalidOperationException("The current thread does not own the mutex.");
-                    case Thread.ReturnCode.EBUSY:
-                        throw new InvalidOperationException("The mutex could not be acquired because it was already locked.");
-                    default:
-                        if (returnCode != 0)
-                        {
-                            throw new InvalidOperationException();
-                        }
+                    returnCode = pthread_mutex_trylock(GetMutexAddress(obj));
+                    switch ((Thread.ReturnCode)returnCode)
+                    {
+                        case Thread.ReturnCode.EINVAL:
+                            throw new InvalidOperationException("The value specified by mutex is invalid.");
+                        case Thread.ReturnCode.EAGAIN:
+                            throw new InvalidOperationException("The system lacked the necessary resources (other than memory) to initialize another mutex.");
+                        case Thread.ReturnCode.EDEADLK:
+                            throw new InvalidOperationException("The current thread already owns the mutex.");
+                        case Thread.ReturnCode.EPERM:
+                            throw new InvalidOperationException("The current thread does not own the mutex.");
+                        case Thread.ReturnCode.EBUSY:
+                            spinner.SpinOnce();
+                            break;
+                        default:
+                            if (returnCode != 0)
+                            {
+                                throw new InvalidOperationException();
+                            }
 
-                        break;
+                            break;
+                    }
                 }
 
                 lockTaken = returnCode == 0;
@@ -164,10 +175,13 @@
             unsafe
             {
                 var timestruct = stackalloc int[2];
-                timestruct[0] = timeout / 1000;
-                timestruct[1] = (timeout % 1000) * 1000000;
+            
+                clock_gettime(CLOCK_REALTIME, timestruct);
 
-                var returnCode = pthread_mutex_timedlock(GetMutexAddress(obj), &timestruct[0]);
+                timestruct[0] += timeout / 1000;
+                timestruct[1] += (timeout % 1000) * 1000000;
+
+                var returnCode = pthread_mutex_timedlock(GetMutexAddress(obj), timestruct);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:
@@ -219,48 +233,41 @@
 
             unsafe
             {
-                var returnCode = (int)Thread.ReturnCode.ETIMEDOUT;
-                var notTimeout = false;
-                lock (obj)
+                var returnCode = -1;
+                if (millisecondsTimeout == Timeout.Infinite)
                 {
-                    if (millisecondsTimeout == Timeout.Infinite)
-                    {
-                        lock (obj)
-                        {
-                            returnCode = pthread_cond_wait(GetCondAddress(obj), GetMutexAddress(obj));
-                            notTimeout = (Thread.ReturnCode)returnCode != Thread.ReturnCode.ETIMEDOUT;
-                        }
-                    }
-                    else
-                    {
-                        var timestruct = stackalloc int[2];
-                        timestruct[0] = millisecondsTimeout / 1000;
-                        timestruct[1] = (millisecondsTimeout % 1000) * 1000000;
+                    returnCode = pthread_cond_wait(GetCondAddress(obj), GetMutexAddress(obj));
+                }
+                else
+                {
+                    var timestruct = stackalloc int[2];
 
-                        lock (obj)
-                        {
-                            returnCode = pthread_cond_timedwait(GetCondAddress(obj), GetMutexAddress(obj), &timestruct[0]);
-                            notTimeout = (Thread.ReturnCode)returnCode != Thread.ReturnCode.ETIMEDOUT;
-                        }
-                    }
+                    clock_gettime(CLOCK_REALTIME, timestruct);
 
-                    switch ((Thread.ReturnCode)returnCode)
-                    {
-                        case Thread.ReturnCode.EINVAL:
-                            throw new InvalidOperationException("The value specified by cond, mutex, or abstime is invalid.");
-                        case Thread.ReturnCode.EPERM:
-                            throw new InvalidOperationException("The current thread does not own the mutex.");
-                        default:
-                            if (returnCode != 0)
-                            {
-                                throw new InvalidOperationException();
-                            }
+                    timestruct[0] += millisecondsTimeout / 1000;
+                    timestruct[1] += (millisecondsTimeout % 1000) * 1000000;
 
-                        break;
-                    }
+                    returnCode = pthread_cond_timedwait(GetCondAddress(obj), GetMutexAddress(obj), timestruct);
                 }
 
-                return notTimeout;
+                switch ((Thread.ReturnCode)returnCode)
+                {
+                    case Thread.ReturnCode.ETIMEDOUT:
+                        return false;
+                    case Thread.ReturnCode.EINVAL:
+                        throw new InvalidOperationException("The value specified by cond, mutex, or abstime is invalid.");
+                    case Thread.ReturnCode.EPERM:
+                        throw new InvalidOperationException("The current thread does not own the mutex.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
+                }
+
+                return true;
             }
         }
 

@@ -5,7 +5,7 @@
     public static class Environment
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int clock_gettime(int type, long* time);
+        public static extern unsafe int clock_gettime(int type, int* time);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public static extern void __exit(int exitCode);
@@ -31,7 +31,7 @@
                 unsafe
                 {
                     long time;
-                    if (clock_gettime(CLOCK_MONOTONIC, &time) == 0)
+                    if (clock_gettime(CLOCK_MONOTONIC, (int*)&time) == 0)
                     {
                         return (int) time >> 32;
                     }

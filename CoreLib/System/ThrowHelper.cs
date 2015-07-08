@@ -496,7 +496,9 @@ namespace System {
         ObjectDisposed_RegKeyClosed,
         NotSupported_InComparableType,
         Argument_InvalidRegistryOptionsCheck,
-        Argument_InvalidRegistryViewCheck
+        Argument_InvalidRegistryViewCheck,
+
+        ArgumentOutOfRange_NeedNonNegNumRequired
     }
 }
 
