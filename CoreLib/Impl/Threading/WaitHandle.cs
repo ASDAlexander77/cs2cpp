@@ -8,14 +8,60 @@
     {
         private static int WaitOneNative(SafeHandle waitableSafeHandle, uint millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
         {
-            return Monitor.Wait(waitableSafeHandle, (int)millisecondsTimeout, exitContext) ? 0 : WaitTimeout;
+            var acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(waitableSafeHandle, ref acquiredLock);
+
+                // Code that accesses resources that are protected by the lock.
+                return Monitor.Wait(waitableSafeHandle, (int)millisecondsTimeout, exitContext) ? 0 : WaitTimeout;
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(waitableSafeHandle);
+                }
+            }
         }
 
         private static int SignalAndWaitOne(
             SafeWaitHandle waitHandleToSignal, SafeWaitHandle waitHandleToWaitOn, int millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
         {
-            Monitor.Pulse(waitHandleToSignal);
-            return Monitor.Wait(waitHandleToWaitOn, (int)millisecondsTimeout, exitContext) ? 0 : WaitTimeout;
+            var acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(waitHandleToSignal, ref acquiredLock);
+
+                // Code that accesses resources that are protected by the lock.
+                Monitor.Pulse(waitHandleToSignal);
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(waitHandleToSignal);
+                }
+            }
+
+            acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(waitHandleToWaitOn, ref acquiredLock);
+
+                // Code that accesses resources that are protected by the lock.
+                return Monitor.Wait(waitHandleToWaitOn, (int)millisecondsTimeout, exitContext) ? 0 : WaitTimeout;
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(waitHandleToWaitOn);
+                }
+            }
         }
 
         /*========================================================================

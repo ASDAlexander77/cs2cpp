@@ -108,7 +108,23 @@ namespace Microsoft.Win32
 
         internal static bool SetEvent(SafeWaitHandle handle)
         {
-            Monitor.Pulse(handle);
+            var acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(handle, ref acquiredLock);
+
+                // Code that accesses resources that are protected by the lock.
+                Monitor.Pulse(handle);
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(handle);
+                }
+            }
+
             return true;
         }
 
