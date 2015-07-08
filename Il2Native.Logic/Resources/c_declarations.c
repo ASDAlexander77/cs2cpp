@@ -90,9 +90,14 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
 }
 
-inline Void* __get_lock_address(Void* _object)
+inline Void* __get_mutex_address(Void* _object)
 {
 	return (Void*) ((Void**)_object - 1);
+}
+
+inline Void* __get_cond_address(Void* _object)
+{
+	return (Void*) ((Void**)_object - 2);
 }
 
 class System_Object;

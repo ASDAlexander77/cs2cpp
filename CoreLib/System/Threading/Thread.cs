@@ -1643,68 +1643,6 @@ namespace System.Threading
             set { SetAbortReason(value); }
         }
 
-        /*
-         *  This marks the beginning of a critical code region.
-         */
-        [System.Security.SecuritySafeCritical]  // auto-generated
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-[HostProtection(Synchronization=true, ExternalThreading=true)]
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void BeginCriticalRegion();
-
-        /*
-         *  This marks the end of a critical code region.
-         */
-        [System.Security.SecuritySafeCritical]  // auto-generated
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-[HostProtection(Synchronization=true, ExternalThreading=true)]
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        public static extern void EndCriticalRegion();
-
-        /*
-         *  This marks the beginning of a code region that requires thread affinity.
-         */
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void BeginThreadAffinity();
-
-        /*
-         *  This marks the end of a code region that requires thread affinity.
-         */
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void EndThreadAffinity();
-
         /*=========================================================================
         ** Volatile Read & Write and MemoryBarrier methods.
         ** Provides the ability to read and write values ensuring that the values

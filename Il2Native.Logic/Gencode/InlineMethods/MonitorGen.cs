@@ -37,7 +37,8 @@ namespace Il2Native.Logic.Gencode
 
             switch (method.MetadataName)
             {
-                case "GetLockAddress":
+                case "GetMutexAddress":
+                case "GetCondAddress":
                     return true;
             }
 
@@ -71,9 +72,16 @@ namespace Il2Native.Logic.Gencode
 
             switch (method.MetadataName)
             {
-                case "GetLockAddress":
+                case "GetMutexAddress":
                     var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_lock_address((Void*)", estimatedResult.Type);
+                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_mutex_address((Void*)", estimatedResult.Type);
+                    writer.Write(")");
+
+                    break;
+
+                case "GetCondAddress":
+                    estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_cond_address((Void*)", estimatedResult.Type);
                     writer.Write(")");
 
                     break;

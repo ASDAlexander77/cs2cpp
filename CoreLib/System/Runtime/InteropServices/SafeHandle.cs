@@ -137,7 +137,7 @@ using System.Runtime.Versioning;
 #if !FEATURE_CORECLR
 [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode=true)]
 #endif
-public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
+public abstract partial class SafeHandle : CriticalFinalizerObject, IDisposable
 {
     // ! Do not add or rearrange fields as the EE depends on this layout.
     //------------------------------------------------------------------
@@ -196,10 +196,6 @@ public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
     }
 
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    extern void InternalFinalize();
-
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     protected void SetHandle(IntPtr handle) {
         this.handle = handle;
     }
@@ -255,19 +251,6 @@ public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
         else
             InternalFinalize();
     }
-
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    private extern void InternalDispose();
-
-    // This should only be called for cases when you know for a fact that
-    // your handle is invalid and you want to record that information.
-    // An example is calling a syscall and getting back ERROR_INVALID_HANDLE.
-    // This method will normally leak handles!
-    [System.Security.SecurityCritical]  // auto-generated
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    public extern void SetHandleAsInvalid();
 
     // Implement this abstract method in your derived class to specify how to
     // free the handle. Be careful not write any code that's subject to faults

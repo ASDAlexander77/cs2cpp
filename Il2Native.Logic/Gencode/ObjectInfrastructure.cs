@@ -73,7 +73,11 @@ namespace Il2Native.Logic.Gencode
             // TODO: to reduce usage of locks you can limit it to object types only
             if (typeResolver.GetMultiThreadingSupport())
             {
-                // Add area to save locks
+                // Add area to save 'cond'
+                newAlloc.SizeOf(typeResolver.System.System_Object.ToPointerType());
+                newAlloc.Add(Code.Add);
+
+                // Add area to save 'mutex'
                 newAlloc.SizeOf(typeResolver.System.System_Object.ToPointerType());
                 newAlloc.Add(Code.Add);
             }
@@ -173,9 +177,20 @@ namespace Il2Native.Logic.Gencode
 
             if (typeResolver.GetMultiThreadingSupport())
             {
-                // init lock area with -1 value and shift address
+                // init cond area with -1 value and shift address
                 newAlloc.Add(Code.Dup);
                 newAlloc.Castclass(typeResolver.System.System_Int32.ToPointerType());
+
+                newAlloc.LoadConstant(-1);
+                newAlloc.SaveObject(typeResolver.System.System_Int32);
+
+                newAlloc.SizeOf(declaringClassType.ToPointerType());
+                newAlloc.Add(Code.Add);
+
+                // init mutex area with -1 value and shift address
+                newAlloc.Add(Code.Dup);
+                newAlloc.Castclass(typeResolver.System.System_Int32.ToPointerType());
+
                 newAlloc.LoadConstant(-1);
                 newAlloc.SaveObject(typeResolver.System.System_Int32);
 

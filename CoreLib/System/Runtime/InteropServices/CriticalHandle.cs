@@ -142,7 +142,7 @@ namespace System.Runtime.InteropServices
 #if !FEATURE_CORECLR
 [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode=true)]
 #endif
-public abstract class CriticalHandle : CriticalFinalizerObject, IDisposable
+public abstract partial class CriticalHandle : CriticalFinalizerObject, IDisposable
 {
     // ! Do not add or rearrange fields as the EE depends on this layout.
     //------------------------------------------------------------------
@@ -193,19 +193,15 @@ public abstract class CriticalHandle : CriticalFinalizerObject, IDisposable
         // Save last error from P/Invoke in case the implementation of
         // ReleaseHandle trashes it (important because this ReleaseHandle could
         // occur implicitly as part of unmarshaling another P/Invoke).
-        ////int lastError = Marshal.GetLastWin32Error();
+        int lastError = Marshal.GetLastWin32Error();
 
         if (!ReleaseHandle())
             FireCustomerDebugProbe();
 
-        ////Marshal.SetLastWin32Error(lastError);
+        Marshal.SetLastWin32Error(lastError);
 
         GC.SuppressFinalize(this);
     }
-
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    private extern void FireCustomerDebugProbe();
 
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     protected void SetHandle(IntPtr handle) {

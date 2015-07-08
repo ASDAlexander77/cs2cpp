@@ -40,8 +40,11 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
+    <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="Impl\Threading\Monitor.cs" />
     <Compile Include="Impl\Threading\Thread.cs" />
+    <Compile Include="Impl\Threading\WaitHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeWaitHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\Win32SafeHandles.cs" />
     <Compile Include="Microsoft\Win32\Win32Native.cs" />
@@ -397,7 +400,6 @@
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

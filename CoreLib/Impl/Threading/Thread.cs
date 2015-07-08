@@ -541,6 +541,28 @@ namespace System.Threading
             this.maxStackSize = maxStackSize;
         }
 
+        public static void BeginCriticalRegion()
+        {
+        }
+
+        public static void EndCriticalRegion()
+        {
+        }
+
+        /*
+         *  This marks the beginning of a code region that requires thread affinity.
+         */
+        public static void BeginThreadAffinity()
+        {
+        }
+
+        /*
+         *  This marks the end of a code region that requires thread affinity.
+         */
+        public static void EndThreadAffinity()
+        {
+        }
+
         private class ParameterizedStart
         {
             public Delegate @delegate;

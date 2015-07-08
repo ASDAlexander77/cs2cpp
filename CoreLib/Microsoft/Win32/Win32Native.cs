@@ -108,7 +108,8 @@ namespace Microsoft.Win32
 
         internal static bool SetEvent(SafeWaitHandle handle)
         {
-            throw new NotImplementedException();
+            Monitor.Pulse(handle);
+            return true;
         }
 
         internal static bool ResetEvent(SafeWaitHandle handle)
@@ -120,6 +121,7 @@ namespace Microsoft.Win32
         {
             var handler = new object();
             JitHelpers.UnsafeCastToStackPointer(ref handler);
+            // we use this SafeWaitHandle as SyncBlock object
             var safeHandler = new SafeWaitHandle(JitHelpers.UnsafeCastToStackPointer(ref handler), true);
             return safeHandler;
         }

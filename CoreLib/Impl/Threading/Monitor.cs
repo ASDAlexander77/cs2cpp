@@ -23,6 +23,18 @@
         private static extern unsafe int pthread_mutex_timedlock(void* mutex, int* timespec_timeout);
 #endif
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_cond_wait(void* cond, void* mutex);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_cond_timedwait(void* cond, void* mutex, int* timespec_timeout);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_cond_signal(void* cond);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private static extern unsafe int pthread_cond_broadcast(void* cond);
+
         /*=========================================================================
         ** Obtain the monitor lock of obj. Will block if another thread holds the lock
         ** Will not block if the current thread holds the lock,
@@ -40,11 +52,11 @@
 
             unsafe
             {
-                var returnCode = pthread_mutex_lock(GetLockAddress(obj));
+                var returnCode = pthread_mutex_lock(GetMutexAddress(obj));
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EBUSY:
-                        throw new InvalidOperationException("The implementation has detected an attempt to destroy the object referenced by mutex while it is locked or referenced (for example, while being used in a pthread_cond_timedwait() or pthread_cond_wait()) by another thread.");
+                        throw new InvalidOperationException("The mutex could not be acquired because it was already locked.");
                     case Thread.ReturnCode.EINVAL:
                         throw new InvalidOperationException("The value specified by mutex is invalid.");
                     case Thread.ReturnCode.EAGAIN:
@@ -53,6 +65,13 @@
                         throw new InvalidOperationException("The current thread already owns the mutex.");
                     case Thread.ReturnCode.EPERM:
                         throw new InvalidOperationException("The current thread does not own the mutex.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
                 }
             }
         }
@@ -75,7 +94,7 @@
 
             unsafe
             {
-                var returnCode = pthread_mutex_unlock(GetLockAddress(obj));
+                var returnCode = pthread_mutex_unlock(GetMutexAddress(obj));
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EBUSY:
@@ -89,6 +108,13 @@
                         throw new InvalidOperationException("The current thread already owns the mutex.");
                     case Thread.ReturnCode.EPERM:
                         throw new InvalidOperationException("The current thread does not own the mutex.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
                 }
             }
         }
@@ -102,7 +128,7 @@
 
             unsafe
             {
-                var returnCode = pthread_mutex_trylock(GetLockAddress(obj));
+                var returnCode = pthread_mutex_trylock(GetMutexAddress(obj));
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:
@@ -113,13 +139,24 @@
                         throw new InvalidOperationException("The current thread already owns the mutex.");
                     case Thread.ReturnCode.EPERM:
                         throw new InvalidOperationException("The current thread does not own the mutex.");
+                    case Thread.ReturnCode.EBUSY:
+                        throw new InvalidOperationException("The mutex could not be acquired because it was already locked.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
                 }
 
                 lockTaken = returnCode == 0;
             }
         }
 
-        private static extern unsafe void* GetLockAddress(object o);
+        private static extern unsafe void* GetMutexAddress(object o);
+
+        private static extern unsafe void* GetCondAddress(object o);
 
         private static void ReliableEnterTimeout(Object obj, int timeout, ref bool lockTaken)
         {
@@ -130,7 +167,7 @@
                 timestruct[0] = timeout / 1000;
                 timestruct[1] = (timeout % 1000) * 1000000;
 
-                var returnCode = pthread_mutex_timedlock(GetLockAddress(obj), &timestruct[0]);
+                var returnCode = pthread_mutex_timedlock(GetMutexAddress(obj), &timestruct[0]);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:
@@ -141,6 +178,13 @@
                         throw new InvalidOperationException("The current thread already owns the mutex.");
                     case Thread.ReturnCode.EPERM:
                         throw new InvalidOperationException("The current thread does not own the mutex.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
                 }
 
                 lockTaken = returnCode == 0;
@@ -168,7 +212,56 @@
         ========================================================================*/
         private static bool ObjWait(bool exitContext, int millisecondsTimeout, Object obj)
         {
-            throw new NotImplementedException();
+            if (obj == null)
+            {
+                throw new ArgumentNullException("obj");
+            }
+
+            unsafe
+            {
+                var returnCode = (int)Thread.ReturnCode.ETIMEDOUT;
+                var notTimeout = false;
+                lock (obj)
+                {
+                    if (millisecondsTimeout == Timeout.Infinite)
+                    {
+                        lock (obj)
+                        {
+                            returnCode = pthread_cond_wait(GetCondAddress(obj), GetMutexAddress(obj));
+                            notTimeout = (Thread.ReturnCode)returnCode != Thread.ReturnCode.ETIMEDOUT;
+                        }
+                    }
+                    else
+                    {
+                        var timestruct = stackalloc int[2];
+                        timestruct[0] = millisecondsTimeout / 1000;
+                        timestruct[1] = (millisecondsTimeout % 1000) * 1000000;
+
+                        lock (obj)
+                        {
+                            returnCode = pthread_cond_timedwait(GetCondAddress(obj), GetMutexAddress(obj), &timestruct[0]);
+                            notTimeout = (Thread.ReturnCode)returnCode != Thread.ReturnCode.ETIMEDOUT;
+                        }
+                    }
+
+                    switch ((Thread.ReturnCode)returnCode)
+                    {
+                        case Thread.ReturnCode.EINVAL:
+                            throw new InvalidOperationException("The value specified by cond, mutex, or abstime is invalid.");
+                        case Thread.ReturnCode.EPERM:
+                            throw new InvalidOperationException("The current thread does not own the mutex.");
+                        default:
+                            if (returnCode != 0)
+                            {
+                                throw new InvalidOperationException();
+                            }
+
+                        break;
+                    }
+                }
+
+                return notTimeout;
+            }
         }
 
         /*========================================================================
@@ -178,7 +271,27 @@
         ========================================================================*/
         private static void ObjPulse(Object obj)
         {
-            throw new NotImplementedException();
+            if (obj == null)
+            {
+                throw new ArgumentNullException("obj");
+            }
+
+            unsafe
+            {
+                var returnCode = pthread_cond_signal(GetCondAddress(obj));
+                switch ((Thread.ReturnCode)returnCode)
+                {
+                    case Thread.ReturnCode.EINVAL:
+                        throw new InvalidOperationException("The value specified by cond is invalid.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
+                }
+            }
         }
 
         /*========================================================================
@@ -186,7 +299,27 @@
         ========================================================================*/
         private static void ObjPulseAll(Object obj)
         {
-            throw new NotImplementedException();
+            if (obj == null)
+            {
+                throw new ArgumentNullException("obj");
+            }
+
+            unsafe
+            {
+                var returnCode = pthread_cond_broadcast(GetCondAddress(obj));
+                switch ((Thread.ReturnCode)returnCode)
+                {
+                    case Thread.ReturnCode.EINVAL:
+                        throw new InvalidOperationException("The value specified by cond is invalid.");
+                    default:
+                        if (returnCode != 0)
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
+                }
+            }
         }
     }
 }

@@ -1009,13 +1009,20 @@ namespace System
             return -1;
         }
 
-        public extern int IndexOfAny(char[] anyOf);
+        public int IndexOfAny(char[] anyOf)
+        {
+            throw new NotImplementedException();
+        }
 
+        public int IndexOfAny(char[] anyOf, int startIndex)
+        {
+            throw new NotImplementedException();
+        }
 
-        public extern int IndexOfAny(char[] anyOf, int startIndex);
-
-
-        public extern int IndexOfAny(char[] anyOf, int startIndex, int count);
+        public int IndexOfAny(char[] anyOf, int startIndex, int count)
+        {
+            throw new NotImplementedException();
+        }
 
         public bool Contains(string value)
         {
