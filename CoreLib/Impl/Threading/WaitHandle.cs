@@ -12,10 +12,39 @@
 
             try
             {
-                Monitor.Enter(waitableSafeHandle, ref acquiredLock);
+                if ((int)millisecondsTimeout != Timeout.Infinite)
+                {
+                    Monitor.TryEnter(waitableSafeHandle, (int)millisecondsTimeout, ref acquiredLock);
+                }
+                else
+                {
+                    Monitor.Enter(waitableSafeHandle, ref acquiredLock);
+                }
 
-                // Code that accesses resources that are protected by the lock.
-                return Monitor.Wait(waitableSafeHandle, (int)millisecondsTimeout, exitContext) ? 0 : WaitTimeout;
+                unsafe
+                {
+                    var waitHandleData = (int*)waitableSafeHandle.DangerousGetHandle().ToPointer();
+                    if (waitHandleData == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    var @continue = waitHandleData[0] == 1; 
+                    // state = true
+                    while (waitHandleData[0] == 0 && (@continue = Monitor.Wait(waitableSafeHandle, (int)millisecondsTimeout, exitContext)))
+                    {
+                        // empty
+                    }
+
+                    // if AutoReset
+                    if (@continue && waitHandleData[1] > 0)
+                    {
+                        waitHandleData[0] = 0;
+                    }
+
+                    return @continue && acquiredLock ? 0 : WaitTimeout;
+                }
+
             }
             finally
             {

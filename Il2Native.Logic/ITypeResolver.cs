@@ -7,10 +7,13 @@
         SystemTypes System { get; }
 
         // TODO: should be in ICodeWriter
-        bool GetGcSupport();
+        bool GcSupport { get; }
 
         // TODO: should be in ICodeWriter
-        bool GetMultiThreadingSupport();
+        bool MultiThreadingSupport { get; }
+
+        // TODO: should be in ICodeWriter
+        bool Unsafe { get; }
 
         // TODO: should be in ICodeWriter
         string GetAllocator(bool isAtomicAllocation, bool isBigObj);

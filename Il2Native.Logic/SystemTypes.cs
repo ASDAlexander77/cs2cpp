@@ -51,6 +51,7 @@
             this.System_ArraySegment_T1 = module.ResolveType("System.ArraySegment`1", null);
             this.System_Exception = module.ResolveType("System.Exception", null);
             this.System_NotSupportedException = module.ResolveType("System.NotSupportedException", null);
+            this.System_NullReferenceException = module.ResolveType("System.NullReferenceException", null);
             this.System_Type = module.ResolveType("System.Type", null);
             this.System_RuntimeType = module.ResolveType("System.RuntimeType", null);
         }
@@ -144,6 +145,8 @@
         public IType System_Exception { get; private set; }
 
         public IType System_NotSupportedException { get; private set; }
+
+        public IType System_NullReferenceException { get; private set; }
 
         public IType System_Type { get; private set; }
 

@@ -7,8 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-#define CHECK_NULL_IN_UNBOX_AND_RETURN_DEFAULT
-
 namespace Il2Native.Logic.Gencode
 {
     using System;
@@ -71,7 +69,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // TODO: to reduce usage of locks you can limit it to object types only
-            if (typeResolver.GetMultiThreadingSupport())
+            if (typeResolver.MultiThreadingSupport)
             {
                 // Add area to save 'cond'
                 newAlloc.SizeOf(typeResolver.System.System_Object.ToPointerType());
@@ -150,7 +148,7 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.Add(Code.Initblk);
             }
 
-            if (typeResolver.GetGcSupport())
+            if (typeResolver.GcSupport)
             {
                 var finalizer = IlReader.FindFinalizer(declaringClassType, typeResolver);
                 if (finalizer != null)
@@ -175,7 +173,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            if (typeResolver.GetMultiThreadingSupport())
+            if (typeResolver.MultiThreadingSupport)
             {
                 // init cond area with -1 value and shift address
                 newAlloc.Add(Code.Dup);
@@ -313,18 +311,23 @@ namespace Il2Native.Logic.Gencode
 
             var ilCodeBuilder = new IlCodeBuilder();
 
-#if CHECK_NULL_IN_UNBOX_AND_RETURN_DEFAULT
             ilCodeBuilder.LoadArgument(0);
             var jumpIfNotNull = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
-            ilCodeBuilder.Locals.Add(type);
-            ilCodeBuilder.LoadLocalAddress(0);
-            ilCodeBuilder.InitializeObject(type);
-            ilCodeBuilder.LoadLocal(0);
-            ilCodeBuilder.Return();
+            if (typeResolver.Unsafe)
+            {
+                ilCodeBuilder.Locals.Add(type);
+                ilCodeBuilder.LoadLocalAddress(0);
+                ilCodeBuilder.InitializeObject(type);
+                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.Return();
+            }
+            else
+            {
+                ilCodeBuilder.Throw(IlReader.FindConstructor(typeResolver.System.System_NullReferenceException, typeResolver));
+            }
 
             ilCodeBuilder.Add(jumpIfNotNull);
-#endif
 
             if (!type.IsStructureType())
             {
@@ -790,7 +793,7 @@ namespace Il2Native.Logic.Gencode
 
             ilCodeBuilder.LoadArgument(0);
 
-            if (typeResolver.GetMultiThreadingSupport())
+            if (typeResolver.MultiThreadingSupport)
             {
                 // to adjust pointer to point VTable
                 ilCodeBuilder.SizeOf(type.ToPointerType());

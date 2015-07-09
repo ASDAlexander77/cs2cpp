@@ -63,6 +63,26 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool GcSupport { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public bool MultiThreadingSupport { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public bool Unsafe { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public bool GcDebug { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public bool Gctors { get; protected set; }
+
+        /// <summary>
+        /// </summary>
         public bool HasMethodThis { get; set; }
 
         /// <summary>
@@ -161,16 +181,6 @@ namespace Il2Native.Logic
             }
 
             return isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
-        }
-
-        public virtual bool GetGcSupport()
-        {
-            return true;
-        }
-
-        public virtual bool GetMultiThreadingSupport()
-        {
-            return true;
         }
 
         /// <summary>

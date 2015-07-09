@@ -159,6 +159,8 @@
             // TypedReference
             TypedReferenceInternalToObjectGen.Register(typeResolver);
 
+            // Jit Helpers
+            UnsafeCastGen.Register(typeResolver);
             UnsafeCastToStackPointerGen.Register(typeResolver);
 
             // Runtime helpers

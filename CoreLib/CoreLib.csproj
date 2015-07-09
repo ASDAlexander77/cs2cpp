@@ -391,7 +391,10 @@
     <Compile Include="System\Runtime\Remoting\RemotingServices.cs" />
     <Compile Include="System\Threading\AutoResetEvent.cs" />
     <Compile Include="System\Threading\Interlocked.cs" />
-    <Compile Include="System\Threading\ManualResetEvent.cs" />
+    <Compile Include="System\Threading\ManualResetEvent.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Threading\Monitor.cs" />
     <Compile Include="System\Threading\Thread.cs" />
     <Compile Include="System\Threading\ThreadAbortException.cs" />

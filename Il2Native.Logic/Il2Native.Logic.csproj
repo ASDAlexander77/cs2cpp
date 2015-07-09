@@ -76,6 +76,7 @@
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetUpperBoundGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayInternalGetReferenceGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayInternalSetValueGen.cs" />
+    <Compile Include="Gencode\InternalMethods\CompilerServices\UnsafeCastGen.cs" />
     <Compile Include="Gencode\InternalMethods\CompilerServices\InitializeArray.cs" />
     <Compile Include="Gencode\InternalMethods\CompilerServices\OffsetToStringDataGen.cs" />
     <Compile Include="Gencode\InternalMethods\Interlocked\CompareExchangeGen.cs" />

@@ -141,26 +141,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool Gc { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool MultiThreadingSupport { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool Unsafe { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool GcDebug { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool Gctors { get; private set; }
-
-        /// <summary>
-        /// </summary>
         public bool IsCoreLib
         {
             get
@@ -2029,7 +2009,7 @@ namespace Il2Native.Logic
         public void ReadParameters(string sourceFilePath, string pdbFilePath, string[] args)
         {
             // custom settings
-            this.Gc = args == null || !args.Contains("gc-");
+            this.GcSupport = args == null || !args.Contains("gc-");
             this.MultiThreadingSupport = args == null || !args.Contains("mt-");
             this.Gctors = false;
 
@@ -2055,7 +2035,7 @@ namespace Il2Native.Logic
             }
             else if (args != null && args.Contains("emscripten"))
             {
-                this.Gc = false;
+                this.GcSupport = false;
             }
         }
 
@@ -2557,16 +2537,6 @@ namespace Il2Native.Logic
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
                 writer.Write(name);
             }
-        }
-
-        public override bool GetGcSupport()
-        {
-            return this.Gc;
-        }
-
-        public override bool GetMultiThreadingSupport()
-        {
-            return this.MultiThreadingSupport;
         }
 
         /// <summary>
@@ -3091,7 +3061,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(Resources.c_declarations);
                 this.Output.WriteLine(string.Empty);
 
-                if (this.Gc)
+                if (this.GcSupport)
                 {
                     this.Output.WriteLine(this.GcDebug ? Resources.gc_declarations_debug : Resources.gc_declarations);
                     this.Output.WriteLine(string.Empty);
@@ -3982,7 +3952,7 @@ namespace Il2Native.Logic
 
             this.SortStaticConstructorsByUsage();
 
-            if (this.Gc && this.IsCoreLib)
+            if (this.GcSupport && this.IsCoreLib)
             {
                 this.Output.WriteLine("GC_INIT();");
             }

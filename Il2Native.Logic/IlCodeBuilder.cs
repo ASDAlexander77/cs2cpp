@@ -418,6 +418,14 @@
             this.Add(Code.Stobj, (int)TokenResolutions.Count);
         }
 
+        public void Throw(IConstructor constructor)
+        {
+            Debug.Assert(constructor != null, "@constructor is null");
+            TokenResolutions.Add(constructor);
+            this.Add(Code.Newobj, (int)TokenResolutions.Count);
+            this.Add(Code.Throw);
+        }
+
         public void Throw()
         {
             this.Add(Code.Throw);

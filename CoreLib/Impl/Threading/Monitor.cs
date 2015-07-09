@@ -192,6 +192,8 @@
                         throw new InvalidOperationException("The current thread already owns the mutex.");
                     case Thread.ReturnCode.EPERM:
                         throw new InvalidOperationException("The current thread does not own the mutex.");
+                    case Thread.ReturnCode.ETIMEDOUT:
+                        break;
                     default:
                         if (returnCode != 0)
                         {

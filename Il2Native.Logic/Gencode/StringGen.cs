@@ -100,7 +100,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            if (typeResolver.GetMultiThreadingSupport())
+            if (typeResolver.MultiThreadingSupport)
             {
                 sb.Append("Byte* lock; ");
             }
@@ -141,7 +141,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            if (typeResolver.GetMultiThreadingSupport())
+            if (typeResolver.MultiThreadingSupport)
             {
                 sb.Append("(Byte*) -1, ");
             }
