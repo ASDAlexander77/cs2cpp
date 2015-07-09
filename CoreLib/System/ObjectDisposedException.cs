@@ -13,6 +13,11 @@ namespace System
         {
         }
 
+        public ObjectDisposedException(string objectName, String message)
+            : base(message)
+        {
+        }
+
         public ObjectDisposedException(String message, Exception innerException)
             : base(message, innerException)
         {

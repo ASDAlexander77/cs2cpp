@@ -31,6 +31,18 @@ namespace System
         }
 
         public static extern void ReRegisterForFinalize(Object obj);
+        
+        public static int MaxGeneration { get; set; }
+
+        public static int GetGeneration(object p0)
+        {
+            return 0;
+        }
+
+        public static int CollectionCount(int p0)
+        {
+            return 0;
+        }
     }
 }
 

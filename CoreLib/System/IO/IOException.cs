@@ -39,6 +39,11 @@ namespace System.IO
             m_HResult = hresult;
         }
 
+        public IOException(String message, int hresult, string maybeFullPath)
+            : this(message, hresult)
+        {
+        }
+
         public IOException(String message, Exception innerException)
             : base(message, innerException)
         {

@@ -93,7 +93,7 @@ namespace System {
         }
 
         internal static void ThrowObjectDisposedException(string objectName, ExceptionResource resource) {
-            throw new ObjectDisposedException(objectName, null);
+            throw new ObjectDisposedException(objectName, Environment.GetResourceString(GetResourceName(resource)));
         }
 
         // Allow nulls for reference types and Nullable<U>, but not for value types.

@@ -53,6 +53,9 @@
             }
         }
 
+        public static OperatingSystem OSVersion { get; set; }
+        public static bool HasShutdownStarted { get; set; }
+
         public static string GetResourceString(string name)
         {
             return name;
@@ -82,6 +85,11 @@
         public static extern void Exit(int exitCode);
 
         public static void FailFast(string getResourceString, Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string GetEnvironmentVariable(string envVarName)
         {
             throw new NotImplementedException();
         }

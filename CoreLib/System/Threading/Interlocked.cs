@@ -78,11 +78,15 @@ namespace System.Threading
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern object CompareExchange(ref object location1, object value, object comparand);
 
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern T CompareExchange<T>(ref T location1, T value, T comparand) where T : class;
+
+        // BCL-internal overload that returns success via a ref bool param, useful for reliable spin locks.
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern int CompareExchange(ref int location1, int value, int comparand, ref bool succeeded);
 
         /******************************
          * Add

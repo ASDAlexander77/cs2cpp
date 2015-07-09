@@ -1,7 +1,9 @@
 // Licensed under the MIT license.
 
 namespace System.Runtime.InteropServices
-{    
+{
+    using Microsoft.Win32;
+
     public static partial class Marshal
     {
         //====================================================================
@@ -17,6 +19,11 @@ namespace System.Runtime.InteropServices
         //====================================================================
         internal static void SetLastWin32Error(int error)
         {
+        }
+
+        public static int SizeOf<T>(T _type)
+        {
+            throw new NotImplementedException();
         }
     }
 }

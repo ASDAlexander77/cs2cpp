@@ -10,10 +10,10 @@ namespace System
     [Serializable()]
     public class Exception
     {
-        private string _message;
         private Exception m_innerException;
         private object m_stackTrace;
         protected int m_HResult;
+        protected string _message;
 
         public Exception()
         {
@@ -48,6 +48,20 @@ namespace System
         public Exception InnerException
         {
             get { return m_innerException; }
+        }
+
+        public virtual Exception GetBaseException()
+        {
+            Exception inner = InnerException;
+            Exception back = this;
+
+            while (inner != null)
+            {
+                back = inner;
+                inner = inner.InnerException;
+            }
+
+            return back;
         }
 
         public virtual String StackTrace

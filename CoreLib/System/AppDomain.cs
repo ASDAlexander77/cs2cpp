@@ -76,6 +76,8 @@ namespace System
             }
         }
 
+        public int Id { get; set; }
+
         public Assembly Load(String assemblyString)
         {
             bool fVersion = false;
@@ -105,6 +107,11 @@ namespace System
         public int GetId()
         {
             return 1;
+        }
+
+        public bool IsFinalizingForUnload()
+        {
+            throw new NotImplementedException();
         }
     }
 }

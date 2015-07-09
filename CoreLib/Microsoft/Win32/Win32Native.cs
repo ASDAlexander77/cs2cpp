@@ -3,6 +3,7 @@
 namespace Microsoft.Win32
 {
     using System;
+    using System.IO;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Text;
@@ -24,6 +25,35 @@ namespace Microsoft.Win32
 
         // SEMAPHORE and Event both use 0x0002
         // MUTEX uses 0x001 (MUTANT_QUERY_STATE)
+
+        // From WinBase.h
+        internal const int FILE_TYPE_DISK = 0x0001;
+        internal const int FILE_TYPE_CHAR = 0x0002;
+        internal const int FILE_TYPE_PIPE = 0x0003;
+
+        internal const int REPLACEFILE_WRITE_THROUGH = 0x1;
+        internal const int REPLACEFILE_IGNORE_MERGE_ERRORS = 0x2;
+
+        private const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
+        private const int FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+        private const int FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000;
+
+        internal const uint FILE_MAP_WRITE = 0x0002;
+        internal const uint FILE_MAP_READ = 0x0004;
+
+        // Constants from WinNT.h
+        internal const int FILE_ATTRIBUTE_READONLY = 0x00000001;
+        internal const int FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
+        internal const int FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400;
+
+        internal const int IO_REPARSE_TAG_MOUNT_POINT = unchecked((int)0xA0000003);
+
+        internal const int PAGE_READWRITE = 0x04;
+
+        internal const int MEM_COMMIT = 0x1000;
+        internal const int MEM_RESERVE = 0x2000;
+        internal const int MEM_RELEASE = 0x8000;
+        internal const int MEM_FREE = 0x10000;
 
         // Note that you may need to specify the SYNCHRONIZE bit as well
         // to be able to open a synchronization primitive.
@@ -56,13 +86,13 @@ namespace Microsoft.Win32
         internal const int ERROR_BAD_PATHNAME = 0xA1;
         internal const int ERROR_ALREADY_EXISTS = 0xB7;
         internal const int ERROR_ENVVAR_NOT_FOUND = 0xCB;
-        internal const int ERROR_FILENAME_EXCED_RANGE = 0xCE;  // filename too long.
+        internal const int ERROR_FILENAME_EXCED_RANGE = 0xCE; // filename too long.
         internal const int ERROR_NO_DATA = 0xE8;
         internal const int ERROR_PIPE_NOT_CONNECTED = 0xE9;
         internal const int ERROR_MORE_DATA = 0xEA;
         internal const int ERROR_DIRECTORY = 0x10B;
-        internal const int ERROR_OPERATION_ABORTED = 0x3E3;  // 995; For IO Cancellation
-        internal const int ERROR_NOT_FOUND = 0x490;          // 1168; For IO Cancellation
+        internal const int ERROR_OPERATION_ABORTED = 0x3E3; // 995; For IO Cancellation
+        internal const int ERROR_NOT_FOUND = 0x490; // 1168; For IO Cancellation
         internal const int ERROR_NO_TOKEN = 0x3f0;
         internal const int ERROR_DLL_INIT_FAILED = 0x45A;
         internal const int ERROR_NON_ACCOUNT_SID = 0x4E9;
@@ -104,7 +134,7 @@ namespace Microsoft.Win32
             internal int bInheritHandle = 0;
         }
 
-        internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);  // WinBase.h
+        internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1); // WinBase.h
 
         internal static bool SetEvent(SafeWaitHandle handle)
         {
@@ -178,7 +208,11 @@ namespace Microsoft.Win32
             return true;
         }
 
-        internal static SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name)
+        internal static SafeWaitHandle CreateEvent(
+            SECURITY_ATTRIBUTES lpSecurityAttributes,
+            bool isManualReset,
+            bool initialState,
+            String name)
         {
             // state, type
             var waitHandleData = new int[2];
@@ -201,32 +235,45 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        internal static int GetFullPathName(String path, int numBufferChars, [Out]StringBuilder buffer, IntPtr mustBeZero)
+        internal static int GetFullPathName(
+            String path,
+            int numBufferChars,
+            [Out] StringBuilder buffer,
+            IntPtr mustBeZero)
         {
             throw new NotImplementedException();
         }
 
-        internal unsafe static int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero)
+        internal static unsafe int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero)
         {
             throw new NotImplementedException();
         }
 
-        internal static uint GetTempPath(int bufferLen, [Out]StringBuilder buffer)
+        internal static uint GetTempPath(int bufferLen, [Out] StringBuilder buffer)
         {
             throw new NotImplementedException();
         }
 
-        internal static uint GetTempFileName(String tmpPath, String prefix, uint uniqueIdOrZero, [Out]StringBuilder tmpFileName)
+        internal static uint GetTempFileName(
+            String tmpPath,
+            String prefix,
+            uint uniqueIdOrZero,
+            [Out] StringBuilder tmpFileName)
         {
             throw new NotImplementedException();
         }
 
-        internal unsafe static int GetLongPathName(char* path, char* longPathBuffer, int bufferLength)
+        internal static unsafe int GetLongPathName(char* path, char* longPathBuffer, int bufferLength)
         {
             throw new NotImplementedException();
         }
 
-        internal static int GetLongPathName(String path, [Out]StringBuilder longPathBuffer, int bufferLength)
+        internal static int GetLongPathName(String path, [Out] StringBuilder longPathBuffer, int bufferLength)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static int GetFileSize(SafeFileHandle hFile, out int highSize)
         {
             throw new NotImplementedException();
         }
@@ -236,5 +283,71 @@ namespace Microsoft.Win32
             // we do not to do anything.
             return true;
         }
+
+        public static int SetErrorMode(int oldMode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static unsafe int WriteFile(SafeFileHandle handle, byte* p1, int count, out int numBytesWritten, IntPtr zero)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static unsafe int ReadFile(SafeFileHandle handle, byte* p1, int count, out int numBytesRead, IntPtr zero)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static int GetFileType(SafeFileHandle handle)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool LockFile(SafeFileHandle handle, int positionLow, int positionHigh, int lengthLow, int lengthHigh)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static SafeFileHandle SafeCreateFile(string tempPath, int fAccess, FileShare share, SECURITY_ATTRIBUTES secAttrs, FileMode mode, int flagsAndAttributes, IntPtr zero)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static unsafe bool CancelIoEx(SafeFileHandle handle, NativeOverlapped* overlapped)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool UnlockFile(SafeFileHandle handle, int positionLow, int positionHigh, int lengthLow, int lengthHigh)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool FlushFileBuffers(SafeFileHandle handle)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static long SetFilePointer(SafeFileHandle handle, long offset, SeekOrigin origin, out int hr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool SetEndOfFile(SafeFileHandle handle)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static int MakeHRFromErrorCode(int errorCode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string GetMessage(int errorCode)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
+

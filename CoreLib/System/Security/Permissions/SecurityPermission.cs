@@ -136,5 +136,9 @@ namespace System.Security.Permissions
                 return m_controlThread;
             }
         }
+
+        public void Assert()
+        {
+        }
     }
 }

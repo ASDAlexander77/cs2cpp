@@ -40,6 +40,7 @@
     <NoStdLib>true</NoStdLib>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="Impl\Threading\Monitor.cs" />
@@ -49,12 +50,14 @@
     <Compile Include="Microsoft\Win32\SafeHandles\Win32SafeHandles.cs" />
     <Compile Include="Microsoft\Win32\Win32Native.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\AggregateException.cs" />
     <Compile Include="System\AppContext\AppContext.cs" />
     <Compile Include="System\AppContext\AppContextDefaultValues.cs" />
     <Compile Include="System\AppContext\AppContextDefaultValues.Defaults.Central.cs" />
     <Compile Include="System\AppContext\AppContextDefaultValues.Defaults.cs" />
     <Compile Include="System\AppContext\AppContextSwitches.cs" />
     <Compile Include="System\ArrayTypeMismatchException.cs" />
+    <Compile Include="System\BCLDebug.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentDictionary.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentQueue.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentStack.cs" />
@@ -66,24 +69,43 @@
     <Compile Include="System\Collections\IStructuralComparable.cs" />
     <Compile Include="System\Collections\IStructuralEquatable.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
+    <Compile Include="System\IO\DirectoryNotFoundException.cs" />
+    <Compile Include="System\IO\DriveNotFoundException.cs" />
+    <Compile Include="System\IO\FileNotFoundException.cs" />
+    <Compile Include="System\IO\FileSecurityState.cs" />
+    <Compile Include="System\IO\FileSecurityStateAccess.cs" />
     <Compile Include="System\IO\Path.cs" />
     <Compile Include="System\IO\PathHelper.cs" />
     <Compile Include="System\IO\PathTooLongException.cs" />
+    <Compile Include="System\OperatingSystem.cs" />
+    <Compile Include="System\PlatformID.cs" />
+    <Compile Include="System\Reflection\ParameterInfo.cs" />
     <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />
     <Compile Include="System\Runtime\InteropServices\CriticalHandle.cs" />
+    <Compile Include="System\Runtime\InteropServices\GcHandle.cs" />
     <Compile Include="System\Runtime\InteropServices\Marshal.cs" />
     <Compile Include="System\Runtime\InteropServices\SafeHandle.cs" />
+    <Compile Include="System\Security\Permissions\FileIOPermission.cs" />
     <Compile Include="System\Security\Principal\IIdentity.cs" />
     <Compile Include="System\Security\Principal\IPrincipal.cs" />
+    <Compile Include="System\Security\SecurityException.cs" />
+    <Compile Include="System\Security\SecurityState.cs" />
     <Compile Include="System\Text\StringBuilderCache.cs" />
     <Compile Include="System\Threading\AbandonedMutexException.cs" />
+    <Compile Include="System\Threading\CancellationTokenRegistration.cs" />
+    <Compile Include="System\Threading\CancellationTokenSource.cs" />
     <Compile Include="System\Threading\EventResetMode.cs">
       <SubType>
       </SubType>
     </Compile>
     <Compile Include="System\Threading\EventWaitHandle.cs" />
+    <Compile Include="System\Threading\LockRecursionException.cs" />
     <Compile Include="System\Threading\Mutex.cs" />
+    <Compile Include="System\Threading\Overlapped.cs" />
+    <Compile Include="System\Threading\SpinLock.cs" />
     <Compile Include="System\Threading\SpinWait.cs" />
+    <Compile Include="System\Threading\SynchronizationLockException.cs" />
+    <Compile Include="System\Threading\ThreadPool.cs" />
     <Compile Include="System\Threading\WaitHandleCannotBeOpenedException.cs" />
     <Compile Include="System\Tuple.cs" />
     <Compile Include="System\_LocalDataStore.cs" />
@@ -333,7 +355,10 @@
     <Compile Include="System\Collections\Stack.cs" />
     <Compile Include="System\IO\IOException.cs" />
     <Compile Include="System\IO\SeekOrigin.cs" />
-    <Compile Include="System\IO\Stream.cs" />
+    <Compile Include="System\IO\Stream.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Globalization\CultureInfo.cs" />
     <EmbeddedResource Include="System\Globalization\Resources\CultureInfo.resx">
       <Generator>ResXFileCodeGenerator(Mscorlib=true)</Generator>
@@ -405,6 +430,7 @@
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

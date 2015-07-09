@@ -13,6 +13,7 @@ namespace System.Threading
     using System;
     using System.Security;
     using System.Runtime.Remoting;
+    using System.Security.Principal;
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
@@ -330,7 +331,61 @@ namespace System.Threading
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         internal void Undo()
         {
-            throw new NotImplementedException();
+            //
+            // Don't use an uninitialized switcher, or one that's already been used.
+            //
+            if (thread == null)
+                return; // Don't do anything
+
+            Contract.Assert(Thread.CurrentThread == this.thread);
+            Thread currentThread = this.thread;
+
+            // 
+            // Restore the HostExecutionContext before restoring the ExecutionContext.
+            //
+#if FEATURE_CAS_POLICY                
+            if (hecsw != null)
+                HostExecutionContextSwitcher.Undo(hecsw);
+#endif // FEATURE_CAS_POLICY
+
+            //
+            // restore the saved Execution Context.  Note that this will also restore the 
+            // SynchronizationContext, Logical/IllogicalCallContext, etc.
+            //
+            ExecutionContext.Reader innerEC = currentThread.GetExecutionContextReader();
+            currentThread.SetExecutionContext(outerEC, outerECBelongsToScope);
+
+#if DEBUG
+            try
+            {
+                currentThread.ForbidExecutionContextMutation = true;
+#endif
+
+                //
+                // Tell the SecurityContext to do the side-effects of restoration.
+                //
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK
+                if (scsw.currSC != null)
+                {
+                    // Any critical failure inside scsw will cause FailFast
+                    scsw.Undo();
+                }
+#endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK
+
+#if FEATURE_IMPERSONATION
+                if (wiIsValid)
+                    SecurityContext.RestoreCurrentWI(outerEC, innerEC, wi, cachedAlwaysFlowImpersonationPolicy);
+#endif
+
+                thread = null; // this will prevent the switcher object being used again
+#if DEBUG
+            }
+            finally
+            {
+                currentThread.ForbidExecutionContextMutation = false;
+            }
+#endif
+            ExecutionContext.OnAsyncLocalContextChanged(innerEC.DangerousGetRawExecutionContext(), outerEC.DangerousGetRawExecutionContext());
         }
     }
 
@@ -357,7 +412,11 @@ namespace System.Threading
         [SecurityCritical]
         internal void Setup()
         {
-            throw new NotImplementedException();
+            useEC = true;
+            Thread currentThread = Thread.CurrentThread;
+            _ec = currentThread.GetMutableExecutionContext();
+            _ec.isFlowSuppressed = true;
+            _thread = currentThread;
         }
         
         public void Dispose()
@@ -368,7 +427,33 @@ namespace System.Threading
         [SecuritySafeCritical]
         public void Undo()
         {
-            throw new NotImplementedException();
+            if (_thread == null)
+            {
+                throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_CannotUseAFCMultiple"));
+            }  
+            if (_thread != Thread.CurrentThread)
+            {
+                throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_CannotUseAFCOtherThread"));
+            }
+            if (useEC) 
+            {
+                if (Thread.CurrentThread.GetMutableExecutionContext() != _ec)
+                {
+                    throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_AsyncFlowCtrlCtxMismatch"));
+                }      
+                ExecutionContext.RestoreFlow();
+            }
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK            
+            else
+            {
+                if (!Thread.CurrentThread.GetExecutionContextReader().SecurityContext.IsSame(_sc))
+                {
+                    throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_AsyncFlowCtrlCtxMismatch"));
+                }      
+                SecurityContext.RestoreFlow();
+            }
+#endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK            
+            _thread = null;
         }
         
         public override int GetHashCode()
@@ -407,7 +492,7 @@ namespace System.Threading
     
 
     [Serializable] 
-    public sealed class ExecutionContext : IDisposable
+    public sealed class ExecutionContext : IDisposable, ISerializable
     {
         /*=========================================================================
         ** Data accessed from managed code that needs to be defined in 
@@ -588,16 +673,50 @@ namespace System.Threading
         [SecurityCritical]
         internal static object GetLocalValue(IAsyncLocal local)
         {
-            throw new NotImplementedException();
+            return Thread.CurrentThread.GetExecutionContextReader().GetLocalValue(local);
         }
 
         [SecurityCritical]
         internal static void SetLocalValue(IAsyncLocal local, object newValue, bool needChangeNotifications)
         {
-            throw new NotImplementedException();
+            ExecutionContext current = Thread.CurrentThread.GetMutableExecutionContext();
+
+            object previousValue = null;
+            bool hadPreviousValue = current._localValues != null && current._localValues.TryGetValue(local, out previousValue);
+
+            if (previousValue == newValue)
+                return;
+
+            if (current._localValues == null)
+                current._localValues = new Dictionary<IAsyncLocal, object>();
+            else
+                current._localValues = new Dictionary<IAsyncLocal, object>(current._localValues);
+
+            current._localValues[local] = newValue;
+
+            if (needChangeNotifications)
+            {
+                if (hadPreviousValue)
+                {
+                    Contract.Assert(current._localChangeNotifications != null);
+                    Contract.Assert(current._localChangeNotifications.Contains(local));
+                }
+                else
+                {
+                    if (current._localChangeNotifications == null)
+                        current._localChangeNotifications = new List<IAsyncLocal>();
+                    else
+                        current._localChangeNotifications = new List<IAsyncLocal>(current._localChangeNotifications);
+
+                    current._localChangeNotifications.Add(local);
+                }
+
+                local.OnValueChanged(previousValue, newValue, false);
+            }
         }
 
         [SecurityCritical]
+        [HandleProcessCorruptedStateExceptions]
         internal static void OnAsyncLocalContextChanged(ExecutionContext previous, ExecutionContext current)
         {
             List<IAsyncLocal> previousLocalChangeNotifications = (previous == null) ? null : previous._localChangeNotifications;
@@ -796,9 +915,58 @@ namespace System.Threading
         // a DynamicSecurityMethod.
         [SecurityCritical]
         [SuppressMessage("Microsoft.Concurrency", "CA8001", Justification = "Reviewed for thread safety")]
+        [HandleProcessCorruptedStateExceptions]
         internal static void RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, bool preserveSyncCtx)
         {
-            throw new NotImplementedException();
+            Contract.Assert(executionContext != null);
+            if (executionContext.IsPreAllocatedDefault)
+            {
+                Contract.Assert(executionContext.IsDefaultFTContext(preserveSyncCtx));
+            }
+            else
+            {
+                Contract.Assert(executionContext.isNewCapture);
+                executionContext.isNewCapture = false;
+            }
+
+            Thread currentThread = Thread.CurrentThread;
+            ExecutionContextSwitcher ecsw = default(ExecutionContextSwitcher);
+
+            RuntimeHelpers.PrepareConstrainedRegions();
+            try
+            {
+                ExecutionContext.Reader ec = currentThread.GetExecutionContextReader();
+                if ( (ec.IsNull || ec.IsDefaultFTContext(preserveSyncCtx)) && 
+    #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK                
+                    SecurityContext.CurrentlyInDefaultFTSecurityContext(ec) && 
+    #endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK                
+                    executionContext.IsDefaultFTContext(preserveSyncCtx) &&
+                    ec.HasSameLocalValues(executionContext)
+                    )
+                {
+                    // Neither context is interesting, so we don't need to set the context.
+                    // We do need to reset any changes made by the user's callback,
+                    // so here we establish a "copy-on-write scope".  Any changes will
+                    // result in a copy of the context being made, preserving the original
+                    // context.
+                    EstablishCopyOnWriteScope(currentThread, true, ref ecsw);
+                }
+                else
+                {
+                    if (executionContext.IsPreAllocatedDefault)
+                        executionContext = new ExecutionContext();
+                    ecsw = SetExecutionContext(executionContext, preserveSyncCtx);
+                }
+
+                //
+                // Call the user's callback
+                //
+                callback(state);
+            }
+            finally
+            {
+                ecsw.Undo();
+            }
         }
 
         [SecurityCritical]
@@ -810,7 +978,21 @@ namespace System.Threading
         [SecurityCritical]
         static private void EstablishCopyOnWriteScope(Thread currentThread, bool knownNullWindowsIdentity, ref ExecutionContextSwitcher ecsw)
         {
-            throw new NotImplementedException();
+            Contract.Assert(currentThread == Thread.CurrentThread);
+
+            ecsw.outerEC = currentThread.GetExecutionContextReader();
+            ecsw.outerECBelongsToScope = currentThread.ExecutionContextBelongsToCurrentScope;
+
+#if FEATURE_IMPERSONATION
+            ecsw.cachedAlwaysFlowImpersonationPolicy = SecurityContext.AlwaysFlowImpersonationPolicy;
+            if (knownNullWindowsIdentity)
+                Contract.Assert(SecurityContext.GetCurrentWI(ecsw.outerEC, ecsw.cachedAlwaysFlowImpersonationPolicy) == null);
+            else
+                ecsw.wi = SecurityContext.GetCurrentWI(ecsw.outerEC, ecsw.cachedAlwaysFlowImpersonationPolicy);
+            ecsw.wiIsValid = true;
+#endif
+            currentThread.ExecutionContextBelongsToCurrentScope = false;
+            ecsw.thread = currentThread;
         }
 
             
@@ -828,8 +1010,60 @@ namespace System.Threading
             StackCrawlMark stackMark = StackCrawlMark.LookForMyCaller;
 #endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK
 
+            Contract.Assert(executionContext != null);
+            Contract.Assert(executionContext != s_dummyDefaultEC);
+
             // Set up the switcher object to return;
             ExecutionContextSwitcher ecsw = new ExecutionContextSwitcher();
+            
+            Thread currentThread = Thread.CurrentThread;
+            ExecutionContext.Reader outerEC = currentThread.GetExecutionContextReader();
+
+            ecsw.thread = currentThread;
+            ecsw.outerEC = outerEC;
+            ecsw.outerECBelongsToScope = currentThread.ExecutionContextBelongsToCurrentScope;
+
+            if (preserveSyncCtx)
+                executionContext.SynchronizationContext = outerEC.SynchronizationContext;
+            executionContext.SynchronizationContextNoFlow = outerEC.SynchronizationContextNoFlow;
+
+            currentThread.SetExecutionContext(executionContext, belongsToCurrentScope: true);
+
+            RuntimeHelpers.PrepareConstrainedRegions();
+            try
+            {
+                OnAsyncLocalContextChanged(outerEC.DangerousGetRawExecutionContext(), executionContext);
+
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK                    
+                //set the security context
+                SecurityContext sc = executionContext.SecurityContext;
+                if (sc != null)
+                {
+                    // non-null SC: needs to be set
+                    SecurityContext.Reader prevSeC = outerEC.SecurityContext;
+                    ecsw.scsw = SecurityContext.SetSecurityContext(sc, prevSeC, false, ref stackMark);
+                }
+                else if (!SecurityContext.CurrentlyInDefaultFTSecurityContext(ecsw.outerEC))
+                {
+                    // null incoming SC, but we're currently not in FT: use static FTSC to set
+                    SecurityContext.Reader prevSeC = outerEC.SecurityContext;
+                    ecsw.scsw = SecurityContext.SetSecurityContext(SecurityContext.FullTrustSecurityContext, prevSeC, false, ref stackMark);
+                }
+#endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK
+#if FEATURE_CAS_POLICY                
+                // set the Host Context
+                HostExecutionContext hostContext = executionContext.HostExecutionContext;
+                if (hostContext != null)
+                {
+                    ecsw.hecsw = HostExecutionContextManager.SetHostExecutionContextInternal(hostContext);
+                } 
+#endif // FEATURE_CAS_POLICY
+            }
+            catch
+            {
+                ecsw.UndoNoThrow();
+                throw;
+            }
             return ecsw;    
         }
 
@@ -927,13 +1161,18 @@ namespace System.Threading
         [SecuritySafeCritical]
         public static void RestoreFlow()
         {
-            throw new NotImplementedException();
+            ExecutionContext ec = Thread.CurrentThread.GetMutableExecutionContext();
+            if (!ec.isFlowSuppressed)
+            {
+                throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_CannotRestoreUnsupressedFlow"));
+            }
+            ec.isFlowSuppressed = false;
         }
 
         [Pure]
         public static bool IsFlowSuppressed()
         {
-            throw new NotImplementedException();
+            return Thread.CurrentThread.GetExecutionContextReader().IsFlowSuppressed;
         }
 
         [System.Security.SecuritySafeCritical]  // auto-generated
@@ -976,8 +1215,131 @@ namespace System.Threading
         [System.Security.SecurityCritical]  // auto-generated
         static internal ExecutionContext Capture(ref StackCrawlMark stackMark, CaptureOptions options)
         {
-            throw new NotImplementedException();
+            ExecutionContext.Reader ecCurrent = Thread.CurrentThread.GetExecutionContextReader();
+
+            // check to see if Flow is suppressed
+            if (ecCurrent.IsFlowSuppressed) 
+                return null;
+
+            //
+            // Attempt to capture context.  There may be nothing to capture...
+            //
+
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK            
+            // capture the security context
+            SecurityContext secCtxNew = SecurityContext.Capture(ecCurrent, ref stackMark);
+#endif // #if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK
+#if FEATURE_CAS_POLICY
+             // capture the host execution context
+            HostExecutionContext hostCtxNew = HostExecutionContextManager.CaptureHostExecutionContext();    		 
+#endif // FEATURE_CAS_POLICY
+
+            SynchronizationContext syncCtxNew = null;
+
+#if FEATURE_REMOTING
+            LogicalCallContext logCtxNew = null;
+#endif
+
+            if (!ecCurrent.IsNull)
+            {
+                // capture the sync context
+                if (0 == (options & CaptureOptions.IgnoreSyncCtx))
+                    syncCtxNew = (ecCurrent.SynchronizationContext == null) ? null : ecCurrent.SynchronizationContext.CreateCopy();
+
+#if FEATURE_REMOTING
+                // copy over the Logical Call Context
+                if (ecCurrent.LogicalCallContext.HasInfo)
+                    logCtxNew = ecCurrent.LogicalCallContext.Clone();
+#endif // #if FEATURE_REMOTING
+            }
+
+            Dictionary<IAsyncLocal, object> localValues = null;
+            List<IAsyncLocal> localChangeNotifications = null;
+            if (!ecCurrent.IsNull)
+            {
+                localValues = ecCurrent.DangerousGetRawExecutionContext()._localValues;
+                localChangeNotifications = ecCurrent.DangerousGetRawExecutionContext()._localChangeNotifications;
+            }
+
+            //
+            // If we didn't get anything but defaults, and we're allowed to return the 
+            // dummy default EC, don't bother allocating a new context.
+            //
+            if (0 != (options & CaptureOptions.OptimizeDefaultCase) &&
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK            
+                secCtxNew == null &&
+#endif
+#if FEATURE_CAS_POLICY
+                hostCtxNew == null &&
+#endif // FEATURE_CAS_POLICY
+                syncCtxNew == null &&
+#if FEATURE_REMOTING
+                (logCtxNew == null || !logCtxNew.HasInfo) &&
+#endif // #if FEATURE_REMOTING
+                localValues == null &&
+                localChangeNotifications == null
+                )
+            {
+                return s_dummyDefaultEC;
+            }
+
+            //
+            // Allocate the new context, and fill it in.
+            //
+            ExecutionContext ecNew = new ExecutionContext();
+#if FEATURE_IMPERSONATION || FEATURE_COMPRESSEDSTACK            
+            ecNew.SecurityContext = secCtxNew;
+            if (ecNew.SecurityContext != null)
+                ecNew.SecurityContext.ExecutionContext = ecNew;
+#endif
+#if FEATURE_CAS_POLICY
+            ecNew._hostExecutionContext = hostCtxNew;
+#endif // FEATURE_CAS_POLICY
+            ecNew._syncContext = syncCtxNew;
+#if FEATURE_REMOTING
+            ecNew.LogicalCallContext = logCtxNew;
+#endif // #if FEATURE_REMOTING
+            ecNew._localValues = localValues;
+            ecNew._localChangeNotifications = localChangeNotifications;
+            ecNew.isNewCapture = true;
+
+            return ecNew;
         }
+
+        //
+        // Implementation of ISerializable
+        //
+
+        [System.Security.SecurityCritical]  // auto-generated_required
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (info==null) 
+                throw new ArgumentNullException("info");
+            Contract.EndContractBlock();
+
+#if FEATURE_REMOTING
+            if (_logicalCallContext != null)
+            {
+                info.AddValue("LogicalCallContext", _logicalCallContext, typeof(LogicalCallContext));
+            }
+#endif // #if FEATURE_REMOTING
+        }
+
+        [System.Security.SecurityCritical]  // auto-generated
+        private ExecutionContext(SerializationInfo info, StreamingContext context) 
+        {
+            SerializationInfoEnumerator e = info.GetEnumerator();
+            while (e.MoveNext())
+            {
+#if FEATURE_REMOTING
+                if (e.Name.Equals("LogicalCallContext"))
+                {
+                    _logicalCallContext = (LogicalCallContext) e.Value;
+                }
+#endif // #if FEATURE_REMOTING
+            }
+        } // ObjRef .ctor
+     
 
         [System.Security.SecurityCritical]  // auto-generated
         internal bool IsDefaultFTContext(bool ignoreSyncCtx)
