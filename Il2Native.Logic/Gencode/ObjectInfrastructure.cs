@@ -796,6 +796,10 @@ namespace Il2Native.Logic.Gencode
             if (typeResolver.MultiThreadingSupport)
             {
                 // to adjust pointer to point VTable
+                // for mutex area
+                ilCodeBuilder.SizeOf(type.ToPointerType());
+                ilCodeBuilder.Add(Code.Add);
+                // for 'cond' area
                 ilCodeBuilder.SizeOf(type.ToPointerType());
                 ilCodeBuilder.Add(Code.Add);
                 ilCodeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
