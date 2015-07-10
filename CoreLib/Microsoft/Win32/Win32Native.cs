@@ -958,19 +958,94 @@ namespace Microsoft.Win32
 
         internal static bool SetEvent(SafeWaitHandle handle)
         {
-            throw new NotImplementedException();
+            var acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(handle, ref acquiredLock);
+
+                unsafe
+                {
+                    var waitHandleData = (int*)handle.DangerousGetHandle().ToPointer();
+                    if (waitHandleData == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    // state = true
+                    waitHandleData[0] = 1;
+
+                    // type = AutoReset
+                    if (waitHandleData[1] > 0)
+                    {
+                        Monitor.Pulse(handle);
+                    }
+                    else
+                    {
+                        Monitor.PulseAll(handle);
+                    }
+                }
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(handle);
+                }
+            }
+
+            return true;
         }
 
 
         internal static bool ResetEvent(SafeWaitHandle handle)
         {
-            throw new NotImplementedException();
+            var acquiredLock = false;
+
+            try
+            {
+                Monitor.Enter(handle, ref acquiredLock);
+
+                unsafe
+                {
+                    var waitHandleData = (int*)handle.DangerousGetHandle().ToPointer();
+                    if (waitHandleData == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    // state = false
+                    waitHandleData[0] = 0;
+                }
+            }
+            finally
+            {
+                if (acquiredLock)
+                {
+                    Monitor.Exit(handle);
+                }
+            }
+
+            return true;
         }
 
 
         internal static SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name)
         {
-            throw new NotImplementedException();
+            // state, type
+            var waitHandleData = new int[2];
+
+            waitHandleData[0] = initialState ? 1 : 0;
+            waitHandleData[1] = isManualReset ? 0 : 1;
+
+            // we use this SafeWaitHandle as SyncBlock object
+            unsafe
+            {
+                fixed (int* ptr = waitHandleData)
+                {
+                    return new SafeWaitHandle(new IntPtr(ptr), true);
+                }
+            }
         }
 
 

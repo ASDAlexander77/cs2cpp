@@ -23,17 +23,17 @@ namespace System.Runtime.InteropServices
 
         public static int SizeOf<T>(T obj)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public static uint AlignedSizeOf<T>()
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public static uint SizeOfType(Type type)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public static Exception GetExceptionForHR(int getLastWin32Error)

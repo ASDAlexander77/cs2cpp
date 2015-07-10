@@ -49,7 +49,7 @@ namespace System.Threading
 
         internal static bool IsThreadPoolHosted()
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         private static void InitializeVMTp(ref bool enableWorkerTracking)

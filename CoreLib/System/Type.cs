@@ -13,7 +13,7 @@ namespace System
     using CultureInfo = System.Globalization.CultureInfo;
 
     [Serializable]
-    public abstract class Type : MemberInfo, IReflect
+    public abstract partial class Type : MemberInfo, IReflect
     {
         public static readonly char Delimiter = '.';
 
@@ -227,14 +227,6 @@ namespace System
                 throw new ArgumentNullException(null, Environment.GetResourceString("Arg_InvalidHandle"));
             return new RuntimeTypeHandle((RuntimeType)o.GetType());
         }
-
-        // Given a class handle, this will return the class for that handle.
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern RuntimeType GetTypeFromHandleUnsafe(IntPtr handle);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern Type GetTypeFromHandle(RuntimeTypeHandle handle);
-
 
         // Return the fully qualified name.  The name does contain the namespace.
         public abstract String FullName

@@ -23,7 +23,10 @@ namespace System
     {
         [System.Reflection.FieldNoReflection]
         private object m_appDomain;
+
         private string m_friendlyName;
+
+        private AppDomainSetup appDomainSetup;
 
         private AppDomain()
         {
@@ -34,7 +37,12 @@ namespace System
         {
             get
             {
-                return new AppDomainSetup();
+                if (appDomainSetup == null)
+                {
+                    appDomainSetup = new AppDomainSetup();
+                }
+
+                return appDomainSetup;
             }
         }
         
@@ -129,7 +137,7 @@ namespace System
 
         public string GetTargetFrameworkName()
         {
-            return string.Empty;
+            return this.SetupInformation.TargetFrameworkName;
         }
 
         public bool? IsCompatibilitySwitchSet(string compatibilitySwitch)
