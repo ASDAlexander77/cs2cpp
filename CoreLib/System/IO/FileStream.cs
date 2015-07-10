@@ -875,7 +875,9 @@ namespace System.IO
                 }
                 finally
                 {
+#if FEATURE_SECURITY
                     CodeAccessPermission.RevertAssert();
+#endif
                     if (!b)
                     {
                         // We should close the handle so that the handle is not open until SafeFileHandle GC

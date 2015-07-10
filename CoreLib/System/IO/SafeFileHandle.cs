@@ -3,7 +3,7 @@
     using Runtime.CompilerServices;
     using Text;
 
-    public class SafeFileHandle
+    public class __SafeFileHandle
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private extern unsafe static void* fopen(byte* fileName, byte* mode);

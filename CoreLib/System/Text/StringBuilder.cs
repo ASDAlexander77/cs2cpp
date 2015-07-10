@@ -769,6 +769,18 @@ namespace System.Text
             return this;
         }
 
+        public StringBuilder Insert(int index, char value)
+        {
+            int length = this.Length;
+            if (index > length)
+            {
+                throw new ArgumentOutOfRangeException("index");
+            }
+
+            this.Insert(index, new string(value, 1), 1);
+            return this;
+        }
+
         /// <summary>
         /// Inserts the string representation of a specified subarray of Unicode characters into this instance at the specified character position. 
         /// </summary>

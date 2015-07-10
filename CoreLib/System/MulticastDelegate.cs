@@ -3,12 +3,40 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
+    using System.Diagnostics.Contracts;
+
     [Serializable()]
     public abstract class MulticastDelegate : Delegate
     {
         private MulticastDelegate[] _invocationList;
         private int _invocationCount;
-        
+
+        // This method returns the Invocation list of this multicast delegate.
+        [System.Security.SecuritySafeCritical]
+        public Delegate[] GetInvocationList()
+        {
+            Contract.Ensures(Contract.Result<Delegate[]>() != null);
+
+            Delegate[] del;
+            Object[] invocationList = _invocationList as Object[];
+            if (invocationList == null)
+            {
+                del = new Delegate[1];
+                del[0] = this;
+            }
+            else
+            {
+                // Create an array of delegate copies and each
+                //    element into the array
+                int invocationCount = (int)_invocationCount;
+                del = new Delegate[invocationCount];
+
+                for (int i = 0; i < invocationCount; i++)
+                    del[i] = (Delegate)invocationList[i];
+            }
+            return del;
+        }
+
         public static bool operator ==(MulticastDelegate d1, MulticastDelegate d2)
         {
             if ((Object)d1 == null)

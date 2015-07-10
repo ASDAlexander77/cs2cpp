@@ -25,6 +25,11 @@ namespace System
         {
             m_type = type;
         }
+
+        internal RuntimeType GetRuntimeType()
+        {
+            return m_type;
+        }
     }
 }
 

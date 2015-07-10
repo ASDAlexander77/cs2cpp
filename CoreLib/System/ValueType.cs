@@ -10,6 +10,10 @@ namespace System
     [Serializable]
     public abstract class ValueType
     {
+        protected static int GetHashCodeOfPtr(IntPtr argCookie)
+        {
+            return argCookie.ToInt32();
+        }
     }
 }
 

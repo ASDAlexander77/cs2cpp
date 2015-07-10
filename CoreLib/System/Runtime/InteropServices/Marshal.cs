@@ -21,7 +21,17 @@ namespace System.Runtime.InteropServices
         {
         }
 
-        public static int SizeOf<T>(T _type)
+        public static int SizeOf<T>(T obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static uint AlignedSizeOf<T>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static uint SizeOfType(Type type)
         {
             throw new NotImplementedException();
         }

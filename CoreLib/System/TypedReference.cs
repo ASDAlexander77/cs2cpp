@@ -12,6 +12,11 @@ namespace System
 
         private IntPtr Value;
 
+        public unsafe static Object ToObject(TypedReference value)
+        {
+            return InternalToObject(&value);
+        }
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal unsafe extern static Object InternalToObject(void* value);
     }

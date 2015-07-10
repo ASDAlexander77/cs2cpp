@@ -30,6 +30,10 @@ namespace System {
         public static void Correctness(bool isClosed, string s)
         {
         }
+
+        public static void Assert(bool cond, string msg)
+        {
+        }
     }
 }
 

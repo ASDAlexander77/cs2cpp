@@ -30,6 +30,11 @@ namespace System
         {
         }
 
+        public ArgumentOutOfRangeException(String paramName,int value, String message)
+            : base(message, paramName)
+        {
+        }
+
         // We will not use this in the classlibs, but we'll provide it for
         // anyone that's really interested so they don't have to stick a bunch
         // of printf's in their code.

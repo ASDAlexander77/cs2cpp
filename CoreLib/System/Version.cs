@@ -1,63 +1,90 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+/*============================================================
+**
+**
+**
+** Purpose: 
+**
+**
+===========================================================*/
 namespace System
 {
+
     using System.Diagnostics.Contracts;
-    using System.Globalization;
+    using System.Text;
+    using CultureInfo = System.Globalization.CultureInfo;
+    using NumberStyles = System.Globalization.NumberStyles;
 
     // A Version object contains four hierarchical numeric components: major, minor,
-    // revision and build.  Revision and build may be unspecified, which is represented
-    // internally as a -1.  By definition, an unspecified component matches anything
+    // build and revision.  Build and revision may be unspecified, which is represented 
+    // internally as a -1.  By definition, an unspecified component matches anything 
     // (both unspecified and specified), and an unspecified component is "less than" any
     // specified component.
 
-    public sealed class Version // : ICloneable, IComparable, IComparable<Version>, IEquatable<Version>
+    [Serializable]
+    [System.Runtime.InteropServices.ComVisible(true)]
+    public sealed class Version : ICloneable, IComparable
+        , IComparable<Version>, IEquatable<Version>
     {
         // AssemblyName depends on the order staying the same
         private int _Major;
         private int _Minor;
-        private int _Build;// = -1;
-        private int _Revision;// = -1;
+        private int _Build = -1;
+        private int _Revision = -1;
         private static readonly char[] SeparatorsArray = new char[] { '.' };
-
 
         public Version(int major, int minor, int build, int revision)
         {
-            if (major < 0 || minor < 0 || revision < 0 || build < 0)
-                throw new ArgumentOutOfRangeException();
+            if (major < 0)
+                throw new ArgumentOutOfRangeException("major", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            if (minor < 0)
+                throw new ArgumentOutOfRangeException("minor", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            if (build < 0)
+                throw new ArgumentOutOfRangeException("build", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            if (revision < 0)
+                throw new ArgumentOutOfRangeException("revision", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+            Contract.EndContractBlock();
 
             _Major = major;
             _Minor = minor;
-            _Revision = revision;
             _Build = build;
+            _Revision = revision;
         }
 
         public Version(int major, int minor, int build)
         {
-            if (major < 0 || minor < 0 || build < 0)
-                throw new ArgumentOutOfRangeException();
+            if (major < 0)
+                throw new ArgumentOutOfRangeException("major", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            if (minor < 0)
+                throw new ArgumentOutOfRangeException("minor", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            if (build < 0)
+                throw new ArgumentOutOfRangeException("build", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+
+            Contract.EndContractBlock();
 
             _Major = major;
             _Minor = minor;
-            _Revision = -1;
             _Build = build;
         }
 
         public Version(int major, int minor)
         {
             if (major < 0)
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("major", Environment.GetResourceString("ArgumentOutOfRange_Version"));
 
             if (minor < 0)
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("minor", Environment.GetResourceString("ArgumentOutOfRange_Version"));
+            Contract.EndContractBlock();
 
             _Major = major;
             _Minor = minor;
-
-            // Other 2 initialize to -1 as it done on desktop and CE
-            _Build = -1;
-            _Revision = -1;
         }
 
         public Version(String version)
@@ -67,6 +94,16 @@ namespace System
             _Minor = v.Minor;
             _Build = v.Build;
             _Revision = v.Revision;
+        }
+
+#if FEATURE_LEGACYNETCF
+        //required for Mango AppCompat
+        [System.Runtime.CompilerServices.FriendAccessAllowed]
+#endif
+        public Version()
+        {
+            _Major = 0;
+            _Minor = 0;
         }
 
         // Properties for setting and getting version numbers
@@ -80,23 +117,130 @@ namespace System
             get { return _Minor; }
         }
 
-        public int Revision
-        {
-            get { return _Revision; }
-        }
-
         public int Build
         {
             get { return _Build; }
         }
 
+        public int Revision
+        {
+            get { return _Revision; }
+        }
+
+        public short MajorRevision
+        {
+            get { return (short)(_Revision >> 16); }
+        }
+
+        public short MinorRevision
+        {
+            get { return (short)(_Revision & 0xFFFF); }
+        }
+
+        public Object Clone()
+        {
+            Version v = new Version();
+            v._Major = _Major;
+            v._Minor = _Minor;
+            v._Build = _Build;
+            v._Revision = _Revision;
+            return (v);
+        }
+
+        public int CompareTo(Object version)
+        {
+            if (version == null)
+            {
+#if FEATURE_LEGACYNETCF
+                if (CompatibilitySwitches.IsAppEarlierThanWindowsPhone8) {
+                    throw new ArgumentOutOfRangeException();
+                } else {
+#endif
+                return 1;
+#if FEATURE_LEGACYNETCF
+                }
+#endif
+            }
+
+            Version v = version as Version;
+            if (v == null)
+            {
+#if FEATURE_LEGACYNETCF
+                if (CompatibilitySwitches.IsAppEarlierThanWindowsPhone8) {
+                    throw new InvalidCastException(Environment.GetResourceString("Arg_MustBeVersion"));
+                } else {
+#endif
+                throw new ArgumentException(Environment.GetResourceString("Arg_MustBeVersion"));
+#if FEATURE_LEGACYNETCF
+                }
+#endif
+            }
+
+            if (this._Major != v._Major)
+                if (this._Major > v._Major)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Minor != v._Minor)
+                if (this._Minor > v._Minor)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Build != v._Build)
+                if (this._Build > v._Build)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Revision != v._Revision)
+                if (this._Revision > v._Revision)
+                    return 1;
+                else
+                    return -1;
+
+            return 0;
+        }
+
+        public int CompareTo(Version value)
+        {
+            if (value == null)
+                return 1;
+
+            if (this._Major != value._Major)
+                if (this._Major > value._Major)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Minor != value._Minor)
+                if (this._Minor > value._Minor)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Build != value._Build)
+                if (this._Build > value._Build)
+                    return 1;
+                else
+                    return -1;
+
+            if (this._Revision != value._Revision)
+                if (this._Revision > value._Revision)
+                    return 1;
+                else
+                    return -1;
+
+            return 0;
+        }
+
         public override bool Equals(Object obj)
         {
-            if (((Object)obj == null) ||
-                (!(obj is Version)))
+            Version v = obj as Version;
+            if (v == null)
                 return false;
 
-            Version v = (Version)obj;
             // check that major, minor, build & revision numbers match
             if ((this._Major != v._Major) ||
                 (this._Minor != v._Minor) ||
@@ -107,21 +251,113 @@ namespace System
             return true;
         }
 
+        public bool Equals(Version obj)
+        {
+            if (obj == null)
+                return false;
+
+            // check that major, minor, build & revision numbers match
+            if ((this._Major != obj._Major) ||
+                (this._Minor != obj._Minor) ||
+                (this._Build != obj._Build) ||
+                (this._Revision != obj._Revision))
+                return false;
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            // Let's assume that most version numbers will be pretty small and just
+            // OR some lower order bits together.
+
+            int accumulator = 0;
+
+            accumulator |= (this._Major & 0x0000000F) << 28;
+            accumulator |= (this._Minor & 0x000000FF) << 20;
+            accumulator |= (this._Build & 0x000000FF) << 12;
+            accumulator |= (this._Revision & 0x00000FFF);
+
+            return accumulator;
+        }
+
         public override String ToString()
         {
-            string retStr = _Major + "." + _Minor;
+            if (_Build == -1) return (ToString(2));
+            if (_Revision == -1) return (ToString(3));
+            return (ToString(4));
+        }
 
-            // Adds _Build and then _Revision if they are positive. They could be -1 in this case not added.
-            if (_Build >= 0)
+        public String ToString(int fieldCount)
+        {
+            StringBuilder sb;
+            switch (fieldCount)
             {
-                retStr += "." + _Build;
-                if (_Revision >= 0)
-                {
-                    retStr += "." + _Revision;
-                }
-            }
+                case 0:
+                    return (String.Empty);
+                case 1:
+                    return (_Major.ToString());
+                case 2:
+                    sb = StringBuilderCache.Acquire();
+                    AppendPositiveNumber(_Major, sb);
+                    sb.Append('.');
+                    AppendPositiveNumber(_Minor, sb);
+                    return StringBuilderCache.GetStringAndRelease(sb);
+                default:
+                    if (_Build == -1)
+                        throw new ArgumentException(Environment.GetResourceString("ArgumentOutOfRange_Bounds_Lower_Upper", "0", "2"), "fieldCount");
 
-            return retStr;
+                    if (fieldCount == 3)
+                    {
+                        sb = StringBuilderCache.Acquire();
+                        AppendPositiveNumber(_Major, sb);
+                        sb.Append('.');
+                        AppendPositiveNumber(_Minor, sb);
+                        sb.Append('.');
+                        AppendPositiveNumber(_Build, sb);
+                        return StringBuilderCache.GetStringAndRelease(sb);
+                    }
+
+                    if (_Revision == -1)
+                        throw new ArgumentException(Environment.GetResourceString("ArgumentOutOfRange_Bounds_Lower_Upper", "0", "3"), "fieldCount");
+
+                    if (fieldCount == 4)
+                    {
+                        sb = StringBuilderCache.Acquire();
+                        AppendPositiveNumber(_Major, sb);
+                        sb.Append('.');
+                        AppendPositiveNumber(_Minor, sb);
+                        sb.Append('.');
+                        AppendPositiveNumber(_Build, sb);
+                        sb.Append('.');
+                        AppendPositiveNumber(_Revision, sb);
+                        return StringBuilderCache.GetStringAndRelease(sb);
+                    }
+
+                    throw new ArgumentException(Environment.GetResourceString("ArgumentOutOfRange_Bounds_Lower_Upper", "0", "4"), "fieldCount");
+            }
+        }
+
+        //
+        // AppendPositiveNumber is an optimization to append a number to a StringBuilder object without
+        // doing any boxing and not even creating intermediate string.
+        // Note: as we always have positive numbers then it is safe to convert the number to string 
+        // regardless of the current culture as we’ll not have any punctuation marks in the number
+        //
+        private const int ZERO_CHAR_VALUE = (int)'0';
+        private static void AppendPositiveNumber(int num, StringBuilder sb)
+        {
+            Contract.Assert(num >= 0, "AppendPositiveNumber expect positive numbers");
+
+            int index = sb.Length;
+            int reminder;
+
+            do
+            {
+                reminder = num % 10;
+                num = num / 10;
+                sb.Insert(index, (char)(ZERO_CHAR_VALUE + reminder));
+            } while (num > 0);
         }
 
         public static Version Parse(string input)
@@ -230,6 +466,46 @@ namespace System
             return true;
         }
 
+        public static bool operator ==(Version v1, Version v2)
+        {
+            if (Object.ReferenceEquals(v1, null))
+            {
+                return Object.ReferenceEquals(v2, null);
+            }
+
+            return v1.Equals(v2);
+        }
+
+        public static bool operator !=(Version v1, Version v2)
+        {
+            return !(v1 == v2);
+        }
+
+        public static bool operator <(Version v1, Version v2)
+        {
+            if ((Object)v1 == null)
+                throw new ArgumentNullException("v1");
+            Contract.EndContractBlock();
+            return (v1.CompareTo(v2) < 0);
+        }
+
+        public static bool operator <=(Version v1, Version v2)
+        {
+            if ((Object)v1 == null)
+                throw new ArgumentNullException("v1");
+            Contract.EndContractBlock();
+            return (v1.CompareTo(v2) <= 0);
+        }
+
+        public static bool operator >(Version v1, Version v2)
+        {
+            return (v2 < v1);
+        }
+
+        public static bool operator >=(Version v1, Version v2)
+        {
+            return (v2 <= v1);
+        }
 
         internal enum ParseFailureKind
         {
@@ -303,5 +579,3 @@ namespace System
         }
     }
 }
-
-

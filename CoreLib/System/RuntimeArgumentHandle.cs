@@ -17,8 +17,10 @@ namespace System
     // Cannot be serialized
     public struct RuntimeArgumentHandle
     {
-    }
+        private IntPtr m_ptr;
 
+        internal IntPtr Value { get { return m_ptr; } }
+    }
 }
 
 
