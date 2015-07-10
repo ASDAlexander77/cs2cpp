@@ -1,124 +1,90 @@
-﻿namespace System.IO
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
-    using System.Runtime.CompilerServices;
-    using System.Text;
-    using Microsoft.Win32.SafeHandles;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+/*============================================================
+**
+** 
+** 
+**
+**
+** Purpose: A collection of methods for manipulating Files.
+**
+**        April 09,2000 (some design refactorization)
+**
+===========================================================*/
+
+using System;
+using System.Security.Permissions;
+#if FEATURE_SECURITY
+using PermissionSet = System.Security.PermissionSet;
+#endif
+using Win32Native = Microsoft.Win32.Win32Native;
+using System.Runtime.InteropServices;
+using System.Security;
+#if FEATURE_MACL
+using System.Security.AccessControl;
+#endif
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.Versioning;
+using System.Diagnostics.Contracts;
+
+namespace System.IO
+{
     // Class for creating FileStream objects, and some basic file management
     // routines such as Delete, etc.
-    /// <summary>
-    /// </summary>
     [ComVisible(true)]
     public static class File
     {
-        private const short F_OK = 0;
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static void* remove(byte* fileName);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static short access(byte* fileName, short mode);
-
-        /// <summary>
-        /// </summary>
         private const int GetFileExInfoStandard = 0;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static StreamReader OpenText(string path)
+        public static StreamReader OpenText(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
+            Contract.EndContractBlock();
             return new StreamReader(path);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static StreamWriter CreateText(string path)
+        public static StreamWriter CreateText(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
+            Contract.EndContractBlock();
             return new StreamWriter(path, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static StreamWriter AppendText(string path)
+        public static StreamWriter AppendText(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
+            Contract.EndContractBlock();
             return new StreamWriter(path, true);
         }
+
 
         // Copies an existing file to a new file. An exception is raised if the
         // destination file already exists. Use the 
         // Copy(String, String, boolean) method to allow 
         // overwriting an existing file.
+        //
         // The caller must have certain FileIOPermissions.  The caller must have
         // Read permission to sourceFileName and Create
         // and Write permissions to destFileName.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void Copy(string sourceFileName, string destFileName)
+        // 
+        public static void Copy(String sourceFileName, String destFileName)
         {
             if (sourceFileName == null)
-            {
                 throw new ArgumentNullException("sourceFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (destFileName == null)
-            {
                 throw new ArgumentNullException("destFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (sourceFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "sourceFileName");
-            }
-
             if (destFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "destFileName");
-            }
+            Contract.EndContractBlock();
 
             InternalCopy(sourceFileName, destFileName, false, true);
         }
@@ -127,118 +93,110 @@
         // false, then an IOException is thrown if the destination file 
         // already exists.  If overwrite is true, the file is 
         // overwritten.
+        //
         // The caller must have certain FileIOPermissions.  The caller must have
         // Read permission to sourceFileName 
         // and Write permissions to destFileName.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        /// <param name="overwrite">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void Copy(string sourceFileName, string destFileName, bool overwrite)
+        // 
+        public static void Copy(String sourceFileName, String destFileName, bool overwrite)
         {
             if (sourceFileName == null)
-            {
                 throw new ArgumentNullException("sourceFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (destFileName == null)
-            {
                 throw new ArgumentNullException("destFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (sourceFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "sourceFileName");
-            }
-
             if (destFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "destFileName");
-            }
+            Contract.EndContractBlock();
 
             InternalCopy(sourceFileName, destFileName, overwrite, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        /// <param name="overwrite">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        internal static void UnsafeCopy(string sourceFileName, string destFileName, bool overwrite)
+        [System.Security.SecurityCritical]
+        internal static void UnsafeCopy(String sourceFileName, String destFileName, bool overwrite)
         {
             if (sourceFileName == null)
-            {
                 throw new ArgumentNullException("sourceFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (destFileName == null)
-            {
                 throw new ArgumentNullException("destFileName", Environment.GetResourceString("ArgumentNull_FileName"));
-            }
-
             if (sourceFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "sourceFileName");
-            }
-
             if (destFileName.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "destFileName");
-            }
+            Contract.EndContractBlock();
 
             InternalCopy(sourceFileName, destFileName, overwrite, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        /// <param name="overwrite">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
         /// <devdoc>
         ///    Note: This returns the fully qualified name of the destination file.
         /// </devdoc>
-        /// <returns>
-        /// </returns>
-        internal static string InternalCopy(string sourceFileName, string destFileName, bool overwrite, bool checkHost)
+        [System.Security.SecuritySafeCritical]
+        internal static String InternalCopy(String sourceFileName, String destFileName, bool overwrite, bool checkHost)
         {
-            throw new NotImplementedException();
+            Contract.Requires(sourceFileName != null);
+            Contract.Requires(destFileName != null);
+            Contract.Requires(sourceFileName.Length > 0);
+            Contract.Requires(destFileName.Length > 0);
+
+            String fullSourceFileName = Path.GetFullPathInternal(sourceFileName);
+            String fullDestFileName = Path.GetFullPathInternal(destFileName);
+
+#if FEATURE_CORECLR
+            if (checkHost)
+            {
+                FileSecurityState sourceState = new FileSecurityState(FileSecurityStateAccess.Read, sourceFileName, fullSourceFileName);
+                FileSecurityState destState = new FileSecurityState(FileSecurityStateAccess.Write, destFileName, fullDestFileName);
+                sourceState.EnsureState();
+                destState.EnsureState();
+            }
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, fullSourceFileName, false, false);
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Write, fullDestFileName, false, false);
+#endif
+
+            bool r = Win32Native.CopyFile(fullSourceFileName, fullDestFileName, !overwrite);
+            if (!r)
+            {
+                // Save Win32 error because subsequent checks will overwrite this HRESULT.
+                int errorCode = Marshal.GetLastWin32Error();
+                String fileName = destFileName;
+
+                if (errorCode != Win32Native.ERROR_FILE_EXISTS)
+                {
+                    // For a number of error codes (sharing violation, path 
+                    // not found, etc) we don't know if the problem was with
+                    // the source or dest file.  Try reading the source file.
+                    using (SafeFileHandle handle = Win32Native.UnsafeCreateFile(fullSourceFileName, FileStream.GENERIC_READ, FileShare.Read, null, FileMode.Open, 0, IntPtr.Zero))
+                    {
+                        if (handle.IsInvalid)
+                            fileName = sourceFileName;
+                    }
+
+                    if (errorCode == Win32Native.ERROR_ACCESS_DENIED)
+                    {
+                        if (Directory.InternalExists(fullDestFileName))
+                            throw new IOException(Environment.GetResourceString("Arg_FileIsDirectory_Name", destFileName), Win32Native.ERROR_ACCESS_DENIED, fullDestFileName);
+                    }
+                }
+
+                __Error.WinIOError(errorCode, fileName);
+            }
+
+            return fullDestFileName;
         }
+
 
         // Creates a file in a particular path.  If the file exists, it is replaced.
         // The file is opened with ReadWrite accessand cannot be opened by another 
         // application until it has been closed.  An IOException is thrown if the 
         // directory specified doesn't exist.
+        //
         // Your application must have Create, Read, and Write permissions to
         // the file.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Create(string path)
+        // 
+        public static FileStream Create(String path)
         {
             return Create(path, FileStream.DefaultBufferSize);
         }
@@ -247,1349 +205,1152 @@
         // The file is opened with ReadWrite access and cannot be opened by another 
         // application until it has been closed.  An IOException is thrown if the 
         // directory specified doesn't exist.
+        //
         // Your application must have Create, Read, and Write permissions to
         // the file.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="bufferSize">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Create(string path, int bufferSize)
+        // 
+        public static FileStream Create(String path, int bufferSize)
         {
             return new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="bufferSize">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Create(string path, int bufferSize, FileOptions options)
+        public static FileStream Create(String path, int bufferSize, FileOptions options)
         {
-            return new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize, options);
+            return new FileStream(path, FileMode.Create, FileAccess.ReadWrite,
+                                  FileShare.None, bufferSize, options);
         }
+
+#if FEATURE_MACL
+        public static FileStream Create(String path, int bufferSize, FileOptions options, FileSecurity fileSecurity) {
+            return new FileStream(path, FileMode.Create, FileSystemRights.Read | FileSystemRights.Write,
+                                  FileShare.None, bufferSize, options, fileSecurity);
+        }
+#endif
 
         // Deletes a file. The file specified by the designated path is deleted.
         // If the file does not exist, Delete succeeds without throwing
         // an exception.
+        // 
         // On NT, Delete will fail for a file that is open for normal I/O
         // or a file that is memory mapped.  
+        // 
         // Your application must have Delete permission to the target file.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static void Delete(string path)
+        // 
+        [System.Security.SecuritySafeCritical]
+        public static void Delete(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
+            Contract.EndContractBlock();
+
+#if FEATURE_LEGACYNETCF
+            if(CompatibilitySwitches.IsAppEarlierThanWindowsPhone8) {
+                System.Reflection.Assembly callingAssembly = System.Reflection.Assembly.GetCallingAssembly();
+                if(callingAssembly != null && !callingAssembly.IsProfileAssembly) {
+                    string caller = new System.Diagnostics.StackFrame(1).GetMethod().FullName;
+                    string callee = System.Reflection.MethodBase.GetCurrentMethod().FullName;
+                    throw new MethodAccessException(String.Format(
+                        CultureInfo.CurrentCulture,
+                        Environment.GetResourceString("Arg_MethodAccessException_WithCaller"),
+                        caller,
+                        callee));
+                }
             }
+#endif // FEATURE_LEGACYNETCF
 
             InternalDelete(path, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        internal static void UnsafeDelete(string path)
+        [System.Security.SecurityCritical]
+        internal static void UnsafeDelete(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
+            Contract.EndContractBlock();
 
             InternalDelete(path, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        internal static void InternalDelete(string path, bool checkHost)
+        [System.Security.SecurityCritical]
+        internal static void InternalDelete(String path, bool checkHost)
         {
-            unsafe
+            String fullPath = Path.GetFullPathInternal(path);
+
+#if FEATURE_CORECLR
+            if (checkHost)
             {
-                fixed (byte* p = Encoding.UTF8.GetBytes(path))
-                {
-                    remove(p);
-                }
+                FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Write, path, fullPath);
+                state.EnsureState();
+            }
+#else
+            // For security check, path should be resolved to an absolute path.
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Write, fullPath, false, false);
+
+#endif
+            bool r = Win32Native.DeleteFile(fullPath);
+            if (!r)
+            {
+                int hr = Marshal.GetLastWin32Error();
+                if (hr == Win32Native.ERROR_FILE_NOT_FOUND)
+                    return;
+                else
+                    __Error.WinIOError(hr, fullPath);
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static void Decrypt(string path)
+
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void Decrypt(String path)
         {
-            throw new NotImplementedException();
+            if (path == null)
+                throw new ArgumentNullException("path");
+            Contract.EndContractBlock();
+
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_SECURITY
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read | FileIOPermissionAccess.Write, fullPath, false, false);
+#endif
+
+            bool r = Win32Native.DecryptFile(fullPath, 0);
+            if (!r)
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                if (errorCode == Win32Native.ERROR_ACCESS_DENIED)
+                {
+                    // Check to see if the file system is not NTFS.  If so,
+                    // throw a different exception.
+                    DriveInfo di = new DriveInfo(Path.GetPathRoot(fullPath));
+                    if (!String.Equals("NTFS", di.DriveFormat))
+                        throw new NotSupportedException(Environment.GetResourceString("NotSupported_EncryptionNeedsNTFS"));
+                }
+                __Error.WinIOError(errorCode, fullPath);
+            }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static void Encrypt(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void Encrypt(String path)
         {
-            throw new NotImplementedException();
+            if (path == null)
+                throw new ArgumentNullException("path");
+            Contract.EndContractBlock();
+
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_SECURITY
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read | FileIOPermissionAccess.Write, fullPath, false, false);
+#endif
+
+            bool r = Win32Native.EncryptFile(fullPath);
+            if (!r)
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                if (errorCode == Win32Native.ERROR_ACCESS_DENIED)
+                {
+                    // Check to see if the file system is not NTFS.  If so,
+                    // throw a different exception.
+                    DriveInfo di = new DriveInfo(Path.GetPathRoot(fullPath));
+                    if (!String.Equals("NTFS", di.DriveFormat))
+                        throw new NotSupportedException(Environment.GetResourceString("NotSupported_EncryptionNeedsNTFS"));
+                }
+                __Error.WinIOError(errorCode, fullPath);
+            }
         }
 
         // Tests if a file exists. The result is true if the file
         // given by the specified path exists; otherwise, the result is
         // false.  Note that if path describes a directory,
         // Exists will return true.
+        //
         // Your application must have Read permission for the target directory.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool Exists(string path)
+        // 
+        [System.Security.SecuritySafeCritical]
+        public static bool Exists(String path)
         {
+#if FEATURE_LEGACYNETCF
+            if(CompatibilitySwitches.IsAppEarlierThanWindowsPhone8) {
+                System.Reflection.Assembly callingAssembly = System.Reflection.Assembly.GetCallingAssembly();
+                if(callingAssembly != null && !callingAssembly.IsProfileAssembly) {
+                    string caller = new System.Diagnostics.StackFrame(1).GetMethod().FullName;
+                    string callee = System.Reflection.MethodBase.GetCurrentMethod().FullName;
+                    throw new MethodAccessException(String.Format(
+                        CultureInfo.CurrentCulture,
+                        Environment.GetResourceString("Arg_MethodAccessException_WithCaller"),
+                        caller,
+                        callee));
+                }
+            }
+#endif // FEATURE_LEGACYNETCF
             return InternalExistsHelper(path, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        internal static bool UnsafeExists(string path)
+        [System.Security.SecurityCritical]
+        internal static bool UnsafeExists(String path)
         {
             return InternalExistsHelper(path, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static bool InternalExistsHelper(string path, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static bool InternalExistsHelper(String path, bool checkHost)
         {
             try
             {
                 if (path == null)
+                    return false;
+                if (path.Length == 0)
+                    return false;
+
+                path = Path.GetFullPathInternal(path);
+                // After normalizing, check whether path ends in directory separator.
+                // Otherwise, FillAttributeInfo removes it and we may return a false positive.
+                // GetFullPathInternal should never return null
+                Contract.Assert(path != null, "File.Exists: GetFullPathInternal returned null");
+                if (path.Length > 0 && Path.IsDirectorySeparator(path[path.Length - 1]))
                 {
                     return false;
                 }
 
-                if (path.Length == 0)
+#if FEATURE_CORECLR
+                if (checkHost)
                 {
-                    return false;
+                    FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Read, String.Empty, path);
+                    state.EnsureState();
                 }
+#else
+                FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, path, false, false);
+#endif
 
                 return InternalExists(path);
             }
-            catch (ArgumentException)
-            {
-            }
-            catch (NotSupportedException)
-            {
-            }
- // Security can throw this on ":"
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
+            catch (ArgumentException) { }
+            catch (NotSupportedException) { } // Security can throw this on ":"
+            catch (SecurityException) { }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
 
             return false;
         }
 
-        // auto-generated
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        internal static bool InternalExists(string path)
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static bool InternalExists(String path)
         {
-            unsafe
-            {
-                fixed (byte* p = Encoding.UTF8.GetBytes(path))
-                {
-                    return access(p, F_OK) == 0;
-                }
-            }
+            Win32Native.WIN32_FILE_ATTRIBUTE_DATA data = new Win32Native.WIN32_FILE_ATTRIBUTE_DATA();
+            int dataInitialised = FillAttributeInfo(path, ref data, false, true);
+
+            return (dataInitialised == 0) && (data.fileAttributes != -1)
+                    && ((data.fileAttributes & Win32Native.FILE_ATTRIBUTE_DIRECTORY) == 0);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="mode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Open(string path, FileMode mode)
+        public static FileStream Open(String path, FileMode mode)
         {
-            return Open(path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None);
+            return Open(path, mode, (mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite), FileShare.None);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="mode">
-        /// </param>
-        /// <param name="access">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Open(string path, FileMode mode, FileAccess access)
+        public static FileStream Open(String path, FileMode mode, FileAccess access)
         {
             return Open(path, mode, access, FileShare.None);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="mode">
-        /// </param>
-        /// <param name="access">
-        /// </param>
-        /// <param name="share">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream Open(string path, FileMode mode, FileAccess access, FileShare share)
+        public static FileStream Open(String path, FileMode mode, FileAccess access, FileShare share)
         {
             return new FileStream(path, mode, access, share);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="creationTime">
-        /// </param>
-        public static void SetCreationTime(string path, DateTime creationTime)
+        public static void SetCreationTime(String path, DateTime creationTime)
         {
             SetCreationTimeUtc(path, creationTime.ToUniversalTime());
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="creationTimeUtc">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static unsafe void SetCreationTimeUtc(string path, DateTime creationTimeUtc)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public unsafe static void SetCreationTimeUtc(String path, DateTime creationTimeUtc)
         {
-            throw new NotImplementedException();
+            SafeFileHandle handle;
+            using (OpenFile(path, FileAccess.Write, out handle))
+            {
+                Win32Native.FILE_TIME fileTime = new Win32Native.FILE_TIME(creationTimeUtc.ToFileTimeUtc());
+                bool r = Win32Native.SetFileTime(handle, &fileTime, null, null);
+                if (!r)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    __Error.WinIOError(errorCode, path);
+                }
+            }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetCreationTime(string path)
+        [System.Security.SecuritySafeCritical]
+        public static DateTime GetCreationTime(String path)
         {
             return InternalGetCreationTimeUtc(path, true).ToLocalTime();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetCreationTimeUtc(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static DateTime GetCreationTimeUtc(String path)
         {
             return InternalGetCreationTimeUtc(path, false); // this API isn't exposed in Silverlight
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        private static DateTime InternalGetCreationTimeUtc(string path, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static DateTime InternalGetCreationTimeUtc(String path, bool checkHost)
         {
-            throw new NotImplementedException();
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_CORECLR
+            if (checkHost)
+            {
+                FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Read, path, fullPath);
+                state.EnsureState();
+            }
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, fullPath, false, false);
+#endif
+
+            Win32Native.WIN32_FILE_ATTRIBUTE_DATA data = new Win32Native.WIN32_FILE_ATTRIBUTE_DATA();
+            int dataInitialised = FillAttributeInfo(fullPath, ref data, false, false);
+            if (dataInitialised != 0)
+                __Error.WinIOError(dataInitialised, fullPath);
+
+            long dt = ((long)(data.ftCreationTimeHigh) << 32) | ((long)data.ftCreationTimeLow);
+            return DateTime.FromFileTimeUtc(dt);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="lastAccessTime">
-        /// </param>
-        public static void SetLastAccessTime(string path, DateTime lastAccessTime)
+        public static void SetLastAccessTime(String path, DateTime lastAccessTime)
         {
             SetLastAccessTimeUtc(path, lastAccessTime.ToUniversalTime());
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="lastAccessTimeUtc">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static unsafe void SetLastAccessTimeUtc(string path, DateTime lastAccessTimeUtc)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public unsafe static void SetLastAccessTimeUtc(String path, DateTime lastAccessTimeUtc)
         {
-            throw new NotImplementedException();
+            SafeFileHandle handle;
+            using (OpenFile(path, FileAccess.Write, out handle))
+            {
+                Win32Native.FILE_TIME fileTime = new Win32Native.FILE_TIME(lastAccessTimeUtc.ToFileTimeUtc());
+                bool r = Win32Native.SetFileTime(handle, null, &fileTime, null);
+                if (!r)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    __Error.WinIOError(errorCode, path);
+                }
+            }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetLastAccessTime(string path)
+        [System.Security.SecuritySafeCritical]
+        public static DateTime GetLastAccessTime(String path)
         {
             return InternalGetLastAccessTimeUtc(path, true).ToLocalTime();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetLastAccessTimeUtc(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static DateTime GetLastAccessTimeUtc(String path)
         {
             return InternalGetLastAccessTimeUtc(path, false); // this API isn't exposed in Silverlight
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        private static DateTime InternalGetLastAccessTimeUtc(string path, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static DateTime InternalGetLastAccessTimeUtc(String path, bool checkHost)
         {
-            throw new NotImplementedException();
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_CORECLR
+            if (checkHost)
+            {
+                FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Read, path, fullPath);
+                state.EnsureState();
+            }
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, fullPath, false, false);
+#endif
+
+            Win32Native.WIN32_FILE_ATTRIBUTE_DATA data = new Win32Native.WIN32_FILE_ATTRIBUTE_DATA();
+            int dataInitialised = FillAttributeInfo(fullPath, ref data, false, false);
+            if (dataInitialised != 0)
+                __Error.WinIOError(dataInitialised, fullPath);
+
+            long dt = ((long)(data.ftLastAccessTimeHigh) << 32) | ((long)data.ftLastAccessTimeLow);
+            return DateTime.FromFileTimeUtc(dt);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="lastWriteTime">
-        /// </param>
-        public static void SetLastWriteTime(string path, DateTime lastWriteTime)
+        public static void SetLastWriteTime(String path, DateTime lastWriteTime)
         {
             SetLastWriteTimeUtc(path, lastWriteTime.ToUniversalTime());
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="lastWriteTimeUtc">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static unsafe void SetLastWriteTimeUtc(string path, DateTime lastWriteTimeUtc)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public unsafe static void SetLastWriteTimeUtc(String path, DateTime lastWriteTimeUtc)
         {
-            throw new NotImplementedException();
+            SafeFileHandle handle;
+            using (OpenFile(path, FileAccess.Write, out handle))
+            {
+                Win32Native.FILE_TIME fileTime = new Win32Native.FILE_TIME(lastWriteTimeUtc.ToFileTimeUtc());
+                bool r = Win32Native.SetFileTime(handle, null, null, &fileTime);
+                if (!r)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    __Error.WinIOError(errorCode, path);
+                }
+            }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetLastWriteTime(string path)
+        [System.Security.SecuritySafeCritical]
+        public static DateTime GetLastWriteTime(String path)
         {
             return InternalGetLastWriteTimeUtc(path, true).ToLocalTime();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static DateTime GetLastWriteTimeUtc(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static DateTime GetLastWriteTimeUtc(String path)
         {
             return InternalGetLastWriteTimeUtc(path, false); // this API isn't exposed in Silverlight
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        private static DateTime InternalGetLastWriteTimeUtc(string path, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static DateTime InternalGetLastWriteTimeUtc(String path, bool checkHost)
         {
-            throw new NotImplementedException();
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_CORECLR
+            if (checkHost)
+            {
+                FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Read, path, fullPath);
+                state.EnsureState();
+            }
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, fullPath, false, false);
+#endif
+
+            Win32Native.WIN32_FILE_ATTRIBUTE_DATA data = new Win32Native.WIN32_FILE_ATTRIBUTE_DATA();
+            int dataInitialised = FillAttributeInfo(fullPath, ref data, false, false);
+            if (dataInitialised != 0)
+                __Error.WinIOError(dataInitialised, fullPath);
+
+            long dt = ((long)data.ftLastWriteTimeHigh << 32) | ((long)data.ftLastWriteTimeLow);
+            return DateTime.FromFileTimeUtc(dt);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream OpenRead(string path)
+        [System.Security.SecuritySafeCritical]
+        public static FileAttributes GetAttributes(String path)
         {
+            String fullPath = Path.GetFullPathInternal(path);
+#if FEATURE_CORECLR
+            FileSecurityState state = new FileSecurityState(FileSecurityStateAccess.Read, path, fullPath);
+            state.EnsureState();
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Read, fullPath, false, false);
+#endif
+
+            Win32Native.WIN32_FILE_ATTRIBUTE_DATA data = new Win32Native.WIN32_FILE_ATTRIBUTE_DATA();
+            int dataInitialised = FillAttributeInfo(fullPath, ref data, false, true);
+            if (dataInitialised != 0)
+                __Error.WinIOError(dataInitialised, fullPath);
+
+            return (FileAttributes)data.fileAttributes;
+        }
+
+#if FEATURE_CORECLR
+        [System.Security.SecurityCritical]
+#else
+        [System.Security.SecuritySafeCritical]
+#endif
+        public static void SetAttributes(String path, FileAttributes fileAttributes)
+        {
+            String fullPath = Path.GetFullPathInternal(path);
+#if !FEATURE_CORECLR
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Write, fullPath, false, false);
+#endif
+            bool r = Win32Native.SetFileAttributes(fullPath, (int)fileAttributes);
+            if (!r)
+            {
+                int hr = Marshal.GetLastWin32Error();
+                if (hr == ERROR_INVALID_PARAMETER)
+                    throw new ArgumentException(Environment.GetResourceString("Arg_InvalidFileAttrs"));
+                __Error.WinIOError(hr, fullPath);
+            }
+        }
+
+#if FEATURE_MACL
+        public static FileSecurity GetAccessControl(String path)
+        {
+            return GetAccessControl(path, AccessControlSections.Access | AccessControlSections.Owner | AccessControlSections.Group);
+        }
+
+        public static FileSecurity GetAccessControl(String path, AccessControlSections includeSections)
+        {
+            // Appropriate security check should be done for us by FileSecurity.
+            return new FileSecurity(path, includeSections);
+        }
+
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void SetAccessControl(String path, FileSecurity fileSecurity)
+        {
+            if (fileSecurity == null)
+                throw new ArgumentNullException("fileSecurity");
+            Contract.EndContractBlock();
+
+            String fullPath = Path.GetFullPathInternal(path);
+            // Appropriate security check should be done for us by FileSecurity.
+            fileSecurity.Persist(fullPath);
+        }
+#endif
+
+#if FEATURE_LEGACYNETCF
+        [System.Security.SecuritySafeCritical]
+#endif // FEATURE_LEGACYNETCF
+        public static FileStream OpenRead(String path)
+        {
+#if FEATURE_LEGACYNETCF
+            if(CompatibilitySwitches.IsAppEarlierThanWindowsPhone8) {
+                System.Reflection.Assembly callingAssembly = System.Reflection.Assembly.GetCallingAssembly();
+                if(callingAssembly != null && !callingAssembly.IsProfileAssembly) {
+                    string caller = new System.Diagnostics.StackFrame(1).GetMethod().FullName;
+                    string callee = System.Reflection.MethodBase.GetCurrentMethod().FullName;
+                    throw new MethodAccessException(String.Format(
+                        CultureInfo.CurrentCulture,
+                        Environment.GetResourceString("Arg_MethodAccessException_WithCaller"),
+                        caller,
+                        callee));
+                }
+            }
+#endif // FEATURE_LEGACYNETCF
             return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FileStream OpenWrite(string path)
+
+        public static FileStream OpenWrite(String path)
         {
-            return new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            return new FileStream(path, FileMode.OpenOrCreate,
+                                  FileAccess.Write, FileShare.None);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static string ReadAllText(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static String ReadAllText(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             return InternalReadAllText(path, Encoding.UTF8, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static string ReadAllText(string path, Encoding encoding)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static String ReadAllText(String path, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             return InternalReadAllText(path, encoding, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        internal static string UnsafeReadAllText(string path)
+        [System.Security.SecurityCritical]
+        internal static String UnsafeReadAllText(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             return InternalReadAllText(path, Encoding.UTF8, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static string InternalReadAllText(string path, Encoding encoding, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static String InternalReadAllText(String path, Encoding encoding, bool checkHost)
         {
-            using (StreamReader sr = new StreamReader(path, encoding, true, StreamReader.DefaultBufferSize, checkHost)) return sr.ReadToEnd();
+            Contract.Requires(path != null);
+            Contract.Requires(encoding != null);
+            Contract.Requires(path.Length > 0);
+
+            using (StreamReader sr = new StreamReader(path, encoding, true, StreamReader.DefaultBufferSize, checkHost))
+                return sr.ReadToEnd();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllText(string path, string contents)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void WriteAllText(String path, String contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllText(path, contents, StreamWriter.UTF8NoBOM, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllText(string path, string contents, Encoding encoding)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void WriteAllText(String path, String contents, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllText(path, contents, encoding, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        internal static void UnsafeWriteAllText(string path, string contents)
+        [System.Security.SecurityCritical]
+        internal static void UnsafeWriteAllText(String path, String contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllText(path, contents, StreamWriter.UTF8NoBOM, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        private static void InternalWriteAllText(string path, string contents, Encoding encoding, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static void InternalWriteAllText(String path, String contents, Encoding encoding, bool checkHost)
         {
-            using (StreamWriter sw = new StreamWriter(path, false, encoding, StreamWriter.DefaultBufferSize, checkHost)) sw.Write(contents);
+            Contract.Requires(path != null);
+            Contract.Requires(encoding != null);
+            Contract.Requires(path.Length > 0);
+
+            using (StreamWriter sw = new StreamWriter(path, false, encoding, StreamWriter.DefaultBufferSize, checkHost))
+                sw.Write(contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static byte[] ReadAllBytes(string path)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static byte[] ReadAllBytes(String path)
         {
             return InternalReadAllBytes(path, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        internal static byte[] UnsafeReadAllBytes(string path)
+        [System.Security.SecurityCritical]
+        internal static byte[] UnsafeReadAllBytes(String path)
         {
             return InternalReadAllBytes(path, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="IOException">
-        /// </exception>
-        private static byte[] InternalReadAllBytes(string path, bool checkHost)
+
+        [System.Security.SecurityCritical]
+        private static byte[] InternalReadAllBytes(String path, bool checkHost)
         {
             byte[] bytes;
-            using (
-                FileStream fs = new FileStream(
-                    path, FileMode.Open, FileAccess.Read, FileShare.Read, FileStream.DefaultBufferSize, FileOptions.None, path, false, false, checkHost))
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                FileStream.DefaultBufferSize, FileOptions.None, Path.GetFileName(path), false, false, checkHost))
             {
                 // Do a blocking read
                 int index = 0;
                 long fileLength = fs.Length;
-                if (fileLength > int.MaxValue)
-                {
+                if (fileLength > Int32.MaxValue)
                     throw new IOException(Environment.GetResourceString("IO.IO_FileTooLong2GB"));
-                }
-
                 int count = (int)fileLength;
                 bytes = new byte[count];
                 while (count > 0)
                 {
                     int n = fs.Read(bytes, index, count);
                     if (n == 0)
-                    {
                         __Error.EndOfFile();
-                    }
-
                     index += n;
                     count -= n;
                 }
             }
-
             return bytes;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="bytes">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllBytes(string path, byte[] bytes)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        public static void WriteAllBytes(String path, byte[] bytes)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path", Environment.GetResourceString("ArgumentNull_Path"));
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
-
             if (bytes == null)
-            {
                 throw new ArgumentNullException("bytes");
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllBytes(path, bytes, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="bytes">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        internal static void UnsafeWriteAllBytes(string path, byte[] bytes)
+        [System.Security.SecurityCritical]
+        internal static void UnsafeWriteAllBytes(String path, byte[] bytes)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path", Environment.GetResourceString("ArgumentNull_Path"));
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
-
             if (bytes == null)
-            {
                 throw new ArgumentNullException("bytes");
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllBytes(path, bytes, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="bytes">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        private static void InternalWriteAllBytes(string path, byte[] bytes, bool checkHost)
+        [System.Security.SecurityCritical]
+        private static void InternalWriteAllBytes(String path, byte[] bytes, bool checkHost)
         {
-            using (
-                FileStream fs = new FileStream(
-                    path, FileMode.Create, FileAccess.Write, FileShare.Read, FileStream.DefaultBufferSize, FileOptions.None, path, false, false, checkHost))
+            Contract.Requires(path != null);
+            Contract.Requires(path.Length != 0);
+            Contract.Requires(bytes != null);
+
+            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read,
+                    FileStream.DefaultBufferSize, FileOptions.None, Path.GetFileName(path), false, false, checkHost))
             {
                 fs.Write(bytes, 0, bytes.Length);
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static string[] ReadAllLines(string path)
+        public static String[] ReadAllLines(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             return InternalReadAllLines(path, Encoding.UTF8);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static string[] ReadAllLines(string path, Encoding encoding)
+        public static String[] ReadAllLines(String path, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             return InternalReadAllLines(path, encoding);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static string[] InternalReadAllLines(string path, Encoding encoding)
+        private static String[] InternalReadAllLines(String path, Encoding encoding)
         {
-            string line;
-            List<string> lines = new List<string>();
+            Contract.Requires(path != null);
+            Contract.Requires(encoding != null);
+            Contract.Requires(path.Length != 0);
+
+            String line;
+            List<String> lines = new List<String>();
 
             using (StreamReader sr = new StreamReader(path, encoding))
                 while ((line = sr.ReadLine()) != null)
-                {
                     lines.Add(line);
-                }
 
             return lines.ToArray();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static IEnumerable<string> ReadLines(string path)
+        public static IEnumerable<String> ReadLines(String path)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"), "path");
-            }
+            Contract.EndContractBlock();
 
             return ReadLinesIterator.CreateIterator(path, Encoding.UTF8);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static IEnumerable<string> ReadLines(string path, Encoding encoding)
+        public static IEnumerable<String> ReadLines(String path, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"), "path");
-            }
+            Contract.EndContractBlock();
 
             return ReadLinesIterator.CreateIterator(path, encoding);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllLines(string path, string[] contents)
+        public static void WriteAllLines(String path, String[] contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, false, StreamWriter.UTF8NoBOM), contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllLines(string path, string[] contents, Encoding encoding)
+        public static void WriteAllLines(String path, String[] contents, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, false, encoding), contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllLines(string path, IEnumerable<string> contents)
+        public static void WriteAllLines(String path, IEnumerable<String> contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, false, StreamWriter.UTF8NoBOM), contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void WriteAllLines(string path, IEnumerable<string> contents, Encoding encoding)
+        public static void WriteAllLines(String path, IEnumerable<String> contents, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, false, encoding), contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        private static void InternalWriteAllLines(TextWriter writer, IEnumerable<string> contents)
+        private static void InternalWriteAllLines(TextWriter writer, IEnumerable<String> contents)
         {
+            Contract.Requires(writer != null);
+            Contract.Requires(contents != null);
+
             using (writer)
             {
-                foreach (string line in contents)
+                foreach (String line in contents)
                 {
                     writer.WriteLine(line);
                 }
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void AppendAllText(string path, string contents)
+        public static void AppendAllText(String path, String contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalAppendAllText(path, contents, StreamWriter.UTF8NoBOM);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void AppendAllText(string path, string contents, Encoding encoding)
+        public static void AppendAllText(String path, String contents, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalAppendAllText(path, contents, encoding);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        private static void InternalAppendAllText(string path, string contents, Encoding encoding)
+        private static void InternalAppendAllText(String path, String contents, Encoding encoding)
         {
-            using (StreamWriter sw = new StreamWriter(path, true, encoding)) sw.Write(contents);
+            Contract.Requires(path != null);
+            Contract.Requires(encoding != null);
+            Contract.Requires(path.Length > 0);
+
+            using (StreamWriter sw = new StreamWriter(path, true, encoding))
+                sw.Write(contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void AppendAllLines(string path, IEnumerable<string> contents)
+        public static void AppendAllLines(String path, IEnumerable<String> contents)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, true, StreamWriter.UTF8NoBOM), contents);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="contents">
-        /// </param>
-        /// <param name="encoding">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// </exception>
-        public static void AppendAllLines(string path, IEnumerable<string> contents, Encoding encoding)
+        public static void AppendAllLines(String path, IEnumerable<String> contents, Encoding encoding)
         {
             if (path == null)
-            {
                 throw new ArgumentNullException("path");
-            }
-
             if (contents == null)
-            {
                 throw new ArgumentNullException("contents");
-            }
-
             if (encoding == null)
-            {
                 throw new ArgumentNullException("encoding");
-            }
-
             if (path.Length == 0)
-            {
                 throw new ArgumentException(Environment.GetResourceString("Argument_EmptyPath"));
-            }
+            Contract.EndContractBlock();
 
             InternalWriteAllLines(new StreamWriter(path, true, encoding), contents);
         }
 
         // Moves a specified file to a new location and potentially a new file name.
         // This method does work across volumes.
+        //
         // The caller must have certain FileIOPermissions.  The caller must
         // have Read and Write permission to 
         // sourceFileName and Write 
         // permissions to destFileName.
-
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        public static void Move(string sourceFileName, string destFileName)
+        // 
+        [System.Security.SecuritySafeCritical]
+        public static void Move(String sourceFileName, String destFileName)
         {
             InternalMove(sourceFileName, destFileName, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        internal static void UnsafeMove(string sourceFileName, string destFileName)
+        [System.Security.SecurityCritical]
+        internal static void UnsafeMove(String sourceFileName, String destFileName)
         {
             InternalMove(sourceFileName, destFileName, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destFileName">
-        /// </param>
-        /// <param name="checkHost">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        private static void InternalMove(string sourceFileName, string destFileName, bool checkHost)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destinationFileName">
-        /// </param>
-        /// <param name="destinationBackupFileName">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static void Replace(string sourceFileName, string destinationFileName, string destinationBackupFileName)
+        [System.Security.SecurityCritical]
+        private static void InternalMove(String sourceFileName, String destFileName, bool checkHost)
         {
             if (sourceFileName == null)
-            {
-                throw new ArgumentNullException("sourceFileName");
-            }
+                throw new ArgumentNullException("sourceFileName", Environment.GetResourceString("ArgumentNull_FileName"));
+            if (destFileName == null)
+                throw new ArgumentNullException("destFileName", Environment.GetResourceString("ArgumentNull_FileName"));
+            if (sourceFileName.Length == 0)
+                throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "sourceFileName");
+            if (destFileName.Length == 0)
+                throw new ArgumentException(Environment.GetResourceString("Argument_EmptyFileName"), "destFileName");
+            Contract.EndContractBlock();
 
-            if (destinationFileName == null)
+            String fullSourceFileName = Path.GetFullPathInternal(sourceFileName);
+            String fullDestFileName = Path.GetFullPathInternal(destFileName);
+
+#if FEATURE_CORECLR
+            if (checkHost)
             {
-                throw new ArgumentNullException("destinationFileName");
+                FileSecurityState sourceState = new FileSecurityState(FileSecurityStateAccess.Write | FileSecurityStateAccess.Read, sourceFileName, fullSourceFileName);
+                FileSecurityState destState = new FileSecurityState(FileSecurityStateAccess.Write, destFileName, fullDestFileName);
+                sourceState.EnsureState();
+                destState.EnsureState();
             }
+#else
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Write | FileIOPermissionAccess.Read, fullSourceFileName, false, false);
+            FileIOPermission.QuickDemand(FileIOPermissionAccess.Write, fullDestFileName, false, false);
+#endif
+
+            if (!InternalExists(fullSourceFileName))
+                __Error.WinIOError(Win32Native.ERROR_FILE_NOT_FOUND, fullSourceFileName);
+
+            if (!Win32Native.MoveFile(fullSourceFileName, fullDestFileName))
+            {
+                __Error.WinIOError();
+            }
+        }
+
+
+        public static void Replace(String sourceFileName, String destinationFileName, String destinationBackupFileName)
+        {
+            if (sourceFileName == null)
+                throw new ArgumentNullException("sourceFileName");
+            if (destinationFileName == null)
+                throw new ArgumentNullException("destinationFileName");
+            Contract.EndContractBlock();
 
             InternalReplace(sourceFileName, destinationFileName, destinationBackupFileName, false);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destinationFileName">
-        /// </param>
-        /// <param name="destinationBackupFileName">
-        /// </param>
-        /// <param name="ignoreMetadataErrors">
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// </exception>
-        public static void Replace(string sourceFileName, string destinationFileName, string destinationBackupFileName, bool ignoreMetadataErrors)
+        public static void Replace(String sourceFileName, String destinationFileName, String destinationBackupFileName, bool ignoreMetadataErrors)
         {
             if (sourceFileName == null)
-            {
                 throw new ArgumentNullException("sourceFileName");
-            }
-
             if (destinationFileName == null)
-            {
                 throw new ArgumentNullException("destinationFileName");
-            }
+            Contract.EndContractBlock();
 
             InternalReplace(sourceFileName, destinationFileName, destinationBackupFileName, ignoreMetadataErrors);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="sourceFileName">
-        /// </param>
-        /// <param name="destinationFileName">
-        /// </param>
-        /// <param name="destinationBackupFileName">
-        /// </param>
-        /// <param name="ignoreMetadataErrors">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        private static void InternalReplace(string sourceFileName, string destinationFileName, string destinationBackupFileName, bool ignoreMetadataErrors)
+        [System.Security.SecuritySafeCritical]
+        private static void InternalReplace(String sourceFileName, String destinationFileName, String destinationBackupFileName, bool ignoreMetadataErrors)
         {
-            throw new NotImplementedException();
+            Contract.Requires(sourceFileName != null);
+            Contract.Requires(destinationFileName != null);
+
+            // Write permission to all three files, read permission to source 
+            // and dest.
+            String fullSrcPath = Path.GetFullPathInternal(sourceFileName);
+            String fullDestPath = Path.GetFullPathInternal(destinationFileName);
+            String fullBackupPath = null;
+            if (destinationBackupFileName != null)
+                fullBackupPath = Path.GetFullPathInternal(destinationBackupFileName);
+
+#if FEATURE_CORECLR
+            FileSecurityState sourceState = new FileSecurityState(FileSecurityStateAccess.Read | FileSecurityStateAccess.Write, sourceFileName, fullSrcPath);
+            FileSecurityState destState = new FileSecurityState(FileSecurityStateAccess.Read | FileSecurityStateAccess.Write, destinationFileName, fullDestPath);
+            FileSecurityState backupState = new FileSecurityState(FileSecurityStateAccess.Read | FileSecurityStateAccess.Write, destinationBackupFileName, fullBackupPath);
+            sourceState.EnsureState();
+            destState.EnsureState();
+            backupState.EnsureState();
+#else
+            FileIOPermission perm = new FileIOPermission(FileIOPermissionAccess.Read | FileIOPermissionAccess.Write, new String[] { fullSrcPath, fullDestPath});
+            if (destinationBackupFileName != null)
+                perm.AddPathList(FileIOPermissionAccess.Write, fullBackupPath);
+            perm.Demand();
+#endif
+
+            int flags = Win32Native.REPLACEFILE_WRITE_THROUGH;
+            if (ignoreMetadataErrors)
+                flags |= Win32Native.REPLACEFILE_IGNORE_MERGE_ERRORS;
+
+            bool r = Win32Native.ReplaceFile(fullDestPath, fullSrcPath, fullBackupPath, flags, IntPtr.Zero, IntPtr.Zero);
+            if (!r)
+                __Error.WinIOError();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="path">
-        /// </param>
-        /// <param name="access">
-        /// </param>
-        /// <param name="handle">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static FileStream OpenFile(string path, FileAccess access, out SafeFileHandle handle)
+
+        // Returns 0 on success, otherwise a Win32 error code.  Note that
+        // classes should use -1 as the uninitialized state for dataInitialized.
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static int FillAttributeInfo(String path, ref Win32Native.WIN32_FILE_ATTRIBUTE_DATA data, bool tryagain, bool returnErrorOnNotFound)
+        {
+            int dataInitialised = 0;
+            if (tryagain) // someone has a handle to the file open, or other error
+            {
+                Win32Native.WIN32_FIND_DATA findData;
+                findData = new Win32Native.WIN32_FIND_DATA();
+
+                // Remove trialing slash since this can cause grief to FindFirstFile. You will get an invalid argument error
+                String tempPath = path.TrimEnd(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+
+                // For floppy drives, normally the OS will pop up a dialog saying
+                // there is no disk in drive A:, please insert one.  We don't want that.
+                // SetErrorMode will let us disable this, but we should set the error
+                // mode back, since this may have wide-ranging effects.
+                int oldMode = Win32Native.SetErrorMode(Win32Native.SEM_FAILCRITICALERRORS);
+                try
+                {
+                    bool error = false;
+                    SafeFindHandle handle = Win32Native.FindFirstFile(tempPath, findData);
+                    try
+                    {
+                        if (handle.IsInvalid)
+                        {
+                            error = true;
+                            dataInitialised = Marshal.GetLastWin32Error();
+
+                            if (dataInitialised == Win32Native.ERROR_FILE_NOT_FOUND ||
+                                dataInitialised == Win32Native.ERROR_PATH_NOT_FOUND ||
+                                dataInitialised == Win32Native.ERROR_NOT_READY)  // floppy device not ready
+                            {
+                                if (!returnErrorOnNotFound)
+                                {
+                                    // Return default value for backward compatibility
+                                    dataInitialised = 0;
+                                    data.fileAttributes = -1;
+                                }
+                            }
+                            return dataInitialised;
+                        }
+                    }
+                    finally
+                    {
+                        // Close the Win32 handle
+                        try
+                        {
+                            handle.Close();
+                        }
+                        catch
+                        {
+                            // if we're already returning an error, don't throw another one. 
+                            if (!error)
+                            {
+                                Contract.Assert(false, "File::FillAttributeInfo - FindClose failed!");
+                                __Error.WinIOError();
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    Win32Native.SetErrorMode(oldMode);
+                }
+
+                // Copy the information to data
+                data.PopulateFrom(findData);
+            }
+            else
+            {
+
+                // For floppy drives, normally the OS will pop up a dialog saying
+                // there is no disk in drive A:, please insert one.  We don't want that.
+                // SetErrorMode will let us disable this, but we should set the error
+                // mode back, since this may have wide-ranging effects.
+                bool success = false;
+                int oldMode = Win32Native.SetErrorMode(Win32Native.SEM_FAILCRITICALERRORS);
+                try
+                {
+                    success = Win32Native.GetFileAttributesEx(path, GetFileExInfoStandard, ref data);
+                }
+                finally
+                {
+                    Win32Native.SetErrorMode(oldMode);
+                }
+
+                if (!success)
+                {
+                    dataInitialised = Marshal.GetLastWin32Error();
+                    if (dataInitialised != Win32Native.ERROR_FILE_NOT_FOUND &&
+                        dataInitialised != Win32Native.ERROR_PATH_NOT_FOUND &&
+                        dataInitialised != Win32Native.ERROR_NOT_READY)  // floppy device not ready
+                    {
+                        // In case someone latched onto the file. Take the perf hit only for failure
+                        return FillAttributeInfo(path, ref data, true, returnErrorOnNotFound);
+                    }
+                    else
+                    {
+                        if (!returnErrorOnNotFound)
+                        {
+                            // Return default value for backward compbatibility
+                            dataInitialised = 0;
+                            data.fileAttributes = -1;
+                        }
+                    }
+                }
+            }
+
+            return dataInitialised;
+        }
+
+        [System.Security.SecurityCritical]  // auto-generated
+        private static FileStream OpenFile(String path, FileAccess access, out SafeFileHandle handle)
         {
             FileStream fs = new FileStream(path, FileMode.Open, access, FileShare.ReadWrite, 1);
             handle = fs.SafeFileHandle;
 
             if (handle.IsInvalid)
             {
-                __Error.WinIOError(0, path);
-            }
+                // Return a meaningful error, using the RELATIVE path to
+                // the file to avoid returning extra information to the caller.
 
+                // NT5 oddity - when trying to open "C:\" as a FileStream,
+                // we usually get ERROR_PATH_NOT_FOUND from the OS.  We should
+                // probably be consistent w/ every other directory.
+                int hr = Marshal.GetLastWin32Error();
+                String FullPath = Path.GetFullPathInternal(path);
+                if (hr == __Error.ERROR_PATH_NOT_FOUND && FullPath.Equals(Directory.GetDirectoryRoot(FullPath)))
+                    hr = __Error.ERROR_ACCESS_DENIED;
+
+
+                __Error.WinIOError(hr, path);
+            }
             return fs;
         }
+
+
+        // Defined in WinError.h
+        private const int ERROR_INVALID_PARAMETER = 87;
+        private const int ERROR_ACCESS_DENIED = 0x5;
     }
 }

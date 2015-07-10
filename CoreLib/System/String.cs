@@ -589,7 +589,7 @@ namespace System
             throw new NotImplementedException();
         }
 
-        public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length)
+        public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length, StringComparison stringComparison = StringComparison.Ordinal)
         {
             fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
             {
@@ -718,7 +718,7 @@ namespace System
             return countA - countB;
         }
 
-        public unsafe static int Compare(String strA, String strB)
+        public unsafe static int Compare(String strA, String strB, StringComparison stringComparison = StringComparison.Ordinal)
         {
             if ((Object)strA == (Object)strB)
             {
@@ -1682,6 +1682,11 @@ namespace System
         }
 
         public string Insert(int i, string uncLongPathPrefixToInsert)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool EndsWith(char endChar)
         {
             throw new NotImplementedException();
         }

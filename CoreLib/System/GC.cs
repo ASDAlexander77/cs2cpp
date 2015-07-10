@@ -23,10 +23,9 @@ namespace System
         
         public static void SuppressFinalize(Object obj)
         {
-            ////throw new NotImplementedException();
         }
 
-        public static void KeepAlive(WaitHandle[] internalWaitHandles)
+        public static void KeepAlive(object internalWaitHandles)
         {
         }
 

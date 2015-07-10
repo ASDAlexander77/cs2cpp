@@ -6,6 +6,7 @@ namespace System
     using System;
     using System.Runtime.CompilerServices;
     using System.Reflection;
+    using System.Runtime.ExceptionServices;
 
     [Serializable()]
     public class Exception
@@ -14,6 +15,8 @@ namespace System
         private object m_stackTrace;
         protected int m_HResult;
         protected string _message;
+
+        public UIntPtr IPForWatsonBuckets;
 
         public Exception()
         {
@@ -68,7 +71,31 @@ namespace System
         {
             get
             {
-                throw new Exception();
+                throw new NotImplementedException();
+            }
+        }
+
+        public string RemoteStackTrace
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object WatsonBuckets
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -85,6 +112,16 @@ namespace System
             return s;
         }
 
+        public void GetStackTracesDeepCopy(out object stackTrace, out object dynamicMethods)
+        {
+            stackTrace = null;
+            dynamicMethods = null;
+        }
+
+        public void RestoreExceptionDispatchInfo(ExceptionDispatchInfo exceptionDispatchInfo)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

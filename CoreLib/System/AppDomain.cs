@@ -78,6 +78,19 @@ namespace System
 
         public int Id { get; set; }
 
+        public EventHandler DomainUnload
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public Assembly Load(String assemblyString)
         {
             bool fVersion = false;
@@ -112,6 +125,16 @@ namespace System
         public bool IsFinalizingForUnload()
         {
             throw new NotImplementedException();
+        }
+
+        public string GetTargetFrameworkName()
+        {
+            return string.Empty;
+        }
+
+        public bool? IsCompatibilitySwitchSet(string compatibilitySwitch)
+        {
+            return true;
         }
     }
 }

@@ -12,6 +12,10 @@ namespace System.Diagnostics
 
         
         public static extern void Break();
+
+        public static void NotifyOfCrossThreadDependency()
+        {
+        }
     }
 }
 

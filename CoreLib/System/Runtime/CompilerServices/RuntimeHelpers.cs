@@ -6,6 +6,8 @@ namespace System.Runtime.CompilerServices
 
     using System;
     using System.Runtime.CompilerServices;
+    using System.Threading.Tasks;
+
     [Serializable]
     public static class RuntimeHelpers
     {
@@ -58,6 +60,21 @@ namespace System.Runtime.CompilerServices
 
         public static void PrepareConstrainedRegions()
         {
+        }
+
+        public static int GetHashCode(Object o)
+        {
+            return o.GetHashCode();
+        }
+
+        public static bool TryEnsureSufficientExecutionStack()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void PrepareContractedDelegate(EventHandler<UnobservedTaskExceptionEventArgs> value)
+        {
+            throw new NotImplementedException();
         }
     }
 }

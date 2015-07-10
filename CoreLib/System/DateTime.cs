@@ -700,6 +700,16 @@ namespace System
         {
             return Convert.DefaultToType((IConvertible)this, type, provider);
         }
+
+        public static DateTime FromFileTimeUtc(long fileTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long ToFileTimeUtc()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

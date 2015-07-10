@@ -39,6 +39,11 @@ namespace System.Threading
         {
             throw new NotImplementedException();
         }
+
+        public void KeepRootedWhileScheduled()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

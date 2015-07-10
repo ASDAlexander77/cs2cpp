@@ -109,6 +109,19 @@ namespace System.Threading
         {
             return ExchangeAdd(ref location1, value) + value;
         }
+
+        /******************************
+         * Read
+         *****************************/
+        public static long Read(ref long location)
+        {
+            return Interlocked.CompareExchange(ref location, 0, 0);
+        }
+
+        public static void MemoryBarrier()
+        {
+            Thread.MemoryBarrier();
+        }
     }
 }
 
