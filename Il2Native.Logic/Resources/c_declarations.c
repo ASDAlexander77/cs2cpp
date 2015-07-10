@@ -176,6 +176,22 @@ inline Void* __throw_not_supported()
 	throw (::Void*) _new;
 }
 
+struct System_NullReferenceException;
+Void Void_System_NullReferenceException__ctorFN(System_NullReferenceException* __this);
+System_NullReferenceException* System_NullReferenceException_System_NullReferenceException__newFN();
+inline Void __check_this(Void* __this)
+{
+	if (__this)
+	{
+		return;
+	}
+
+	System_NullReferenceException* _new;
+	_new = System_NullReferenceException_System_NullReferenceException__newFN();
+	Void_System_NullReferenceException__ctorFN(_new);
+	throw (::Void*) _new;
+}
+
 struct System_OverflowException;
 Void Void_System_OverflowException__ctorFN(System_OverflowException* __this);
 System_OverflowException* System_OverflowException_System_OverflowException__newFN();

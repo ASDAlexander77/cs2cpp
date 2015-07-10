@@ -193,6 +193,11 @@ namespace System.Threading
         /// </returns>
         private static AppDomain GetDomainInternal()
         {
+            if (currentDomain == null)
+            {
+                currentDomain = AppDomain.CreateDomain(string.Empty);
+            }
+
             return currentDomain;
         }
 

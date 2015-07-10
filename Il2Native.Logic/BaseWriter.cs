@@ -208,9 +208,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> PrepareWritingMethodBody()
+        public IEnumerable<OpCodePart> PrepareWritingMethodBody(IMethod method)
         {
-            var ops = this.PreProcessOpCodes(this.Ops).ToList();
+            var ops = this.PreProcessOpCodes(this.Ops, method).ToList();
             this.BuildAddressIndexes(ops);
             this.AssignJumpBlocks(ops);
             this.ProcessAll(ops);
@@ -1397,7 +1397,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes)
+        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes, IMethod method)
         {
             OpCodePart last = null;
             foreach (var opCodePart in opCodes)

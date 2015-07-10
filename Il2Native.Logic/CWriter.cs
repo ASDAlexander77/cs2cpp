@@ -2590,9 +2590,9 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
-            var rest = this.PrepareWritingMethodBody();
+            var rest = this.PrepareWritingMethodBody(method);
             this.WriteMethodBeginning(method, genericContext);
-            this.WriteMethodBody(rest);
+            this.WriteMethodBody(rest, method);
             this.WritePostMethodEnd(method);
         }
 
@@ -4293,12 +4293,17 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="endPart">
         /// </param>
-        private void WriteMethodBody(IEnumerable<OpCodePart> rest)
+        private void WriteMethodBody(IEnumerable<OpCodePart> rest, IMethod method)
         {
             // Temp hack to delcare all temp variables;
             foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
             {
                 this.WriteVariableDeclare(opCodePart, opCodePart.RequiredOutgoingType, "_dup");
+            }
+
+            if (!this.Unsafe && method.CallingConvention.HasFlag(CallingConventions.HasThis) && rest.Any())
+            {
+                this.Output.WriteLine("__check_this((Void*)__this);");
             }
 
             this.IterateMethodBodyOpCodes(rest);
