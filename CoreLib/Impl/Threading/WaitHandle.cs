@@ -4,7 +4,7 @@
 
     using Microsoft.Win32.SafeHandles;
 
-    public partial class WaitHandle
+    partial class WaitHandle
     {
         private static int WaitOneNative(SafeHandle waitableSafeHandle, uint millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
         {

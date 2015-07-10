@@ -6,7 +6,7 @@ namespace System.Threading
     /// <summary>
     /// Partial implementation of Thread
     /// </summary>
-    public partial class Thread
+    partial class Thread
     {
         /// <summary>
         /// </summary>

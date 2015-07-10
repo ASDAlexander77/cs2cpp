@@ -572,8 +572,20 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write("swap(&");
             cWriter.WriteResult(destination);
+
+            if (destination.Type.IsIntPtrOrUIntPtr())
+            {
+                cWriter.WriteFieldAccess(destination.Type, destination.Type.GetFieldByFieldNumber(0, cWriter));
+            }
+
             writer.Write(", ");
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+
+            if (destination.Type.IsIntPtrOrUIntPtr())
+            {
+                cWriter.WriteFieldAccess(destination.Type, destination.Type.GetFieldByFieldNumber(0, cWriter));
+            }
+
             writer.Write(")");
         }
 

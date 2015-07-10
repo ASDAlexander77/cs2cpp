@@ -54,8 +54,8 @@ namespace System.Threading
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern object Exchange(ref object location1, object value);
 
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //public static extern int Exchange(ref IntPtr location1, IntPtr value);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern int Exchange(ref IntPtr location1, IntPtr value);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern T Exchange<T>(ref T location1, T value) where T : class;

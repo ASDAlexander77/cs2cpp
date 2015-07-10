@@ -35,6 +35,11 @@ namespace System.Runtime.InteropServices
         {
             throw new NotImplementedException();
         }
+
+        public static Exception GetExceptionForHR(int getLastWin32Error)
+        {
+            return new Exception();
+        }
     }
 }
 

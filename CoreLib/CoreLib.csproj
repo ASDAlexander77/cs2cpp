@@ -41,10 +41,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common\PinnableBufferCache.cs" />
+    <Compile Include="Impl\ArgIterator.cs" />
+    <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
+    <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
+    <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="Impl\Threading\Monitor.cs" />
+    <Compile Include="Impl\Threading\Overlapped.cs" />
     <Compile Include="Impl\Threading\Thread.cs" />
+    <Compile Include="Impl\Threading\ThreadPool.cs" />
+    <Compile Include="Impl\Threading\Timer.cs" />
     <Compile Include="Impl\Threading\WaitHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileMappingHandle.cs" />
@@ -475,7 +482,6 @@
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

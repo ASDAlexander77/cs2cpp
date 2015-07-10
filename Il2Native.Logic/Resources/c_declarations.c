@@ -11,6 +11,7 @@ typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 
 #define compare_and_swap __sync_val_compare_and_swap 
+#define compare_and_swap_bool __sync_bool_compare_and_swap 
 #define sync_synchronize __sync_synchronize
 #define fetch_and_add __sync_fetch_and_add
 #define fetch_and_sub __sync_fetch_and_sub

@@ -31,10 +31,12 @@ namespace Microsoft.Win32.SafeHandles {
             return (RegCloseKey(handle) == Win32Native.ERROR_SUCCESS);
         }
 
-        [DllImport(Win32Native.ADVAPI32)]
         [SuppressUnmanagedCodeSecurity]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern int RegCloseKey(IntPtr hKey);
+        internal static int RegCloseKey(IntPtr hKey)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

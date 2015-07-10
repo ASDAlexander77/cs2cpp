@@ -54,7 +54,10 @@
         }
 
         public static OperatingSystem OSVersion { get; set; }
+        
         public static bool HasShutdownStarted { get; set; }
+
+        public static bool IsWindows8OrAbove { get; set; }
 
         public static string GetResourceString(string name)
         {

@@ -672,9 +672,26 @@ namespace Il2Native.Logic
 
                     if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
                     {
+                        var intPtrType = opCodeFieldInfoPart.Operand.FieldType;
+                        var isIntPtr = intPtrType.IsIntPtrOrUIntPtr();
+                        if (isIntPtr)
+                        {
+                            this.Output.Write(string.Format("System_{0}_System_{0}_op_ExplicitFVoidPN(", intPtrType.Name));
+                        }
+
                         this.Output.Write("compare_and_swap(&");
                         this.WriteFieldAccess(opCodeFieldInfoPart);
+                        if (isIntPtr)
+                        {
+                            WriteFieldAccess(intPtrType, intPtrType.GetFieldByFieldNumber(0, this));
+                        }
+
                         this.Output.Write(", 0, 0)");
+
+                        if (isIntPtr)
+                        {
+                            this.Output.Write(")");
+                        }
                     }
                     else
                     {
@@ -712,9 +729,26 @@ namespace Il2Native.Logic
                     }
                     else if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
                     {
+                        var intPtrType = opCodeFieldInfoPart.Operand.FieldType;
+                        var isIntPtr = intPtrType.IsIntPtrOrUIntPtr();
+                        if (isIntPtr)
+                        {
+                            this.Output.Write(string.Format("System_{0}_System_{0}_op_ExplicitFVoidPN(", intPtrType.Name));
+                        }
+
                         this.Output.Write("compare_and_swap(&");
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                        if (isIntPtr)
+                        {
+                            WriteFieldAccess(opCodeFieldInfoPart.Operand.FieldType, opCodeFieldInfoPart.Operand.FieldType.GetFieldByFieldNumber(0, this));
+                        }
+
                         this.Output.Write(", 0, 0)");
+
+                        if (isIntPtr)
+                        {
+                            this.Output.Write(")");
+                        }
                     }
                     else
                     {
@@ -2285,16 +2319,25 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
 
             writer.Write(")");
-            writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
-            effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            if (opCodeFieldInfoPart.Operand.DeclaringType.IsInterface)
+            this.WriteFieldAccess(effectiveType, opCodeFieldInfoPart.Operand, operandEstimatedResultOf.Type);
+        }
+
+        public void WriteFieldAccess(IType type, IField fieldInfo, IType originalType = null)
+        {
+            var writer = this.Output;
+
+            writer.Write(!(originalType ?? type).IsStructureType() ? "->" : ".");
+
+            type = type.IsByRef ? type.GetElementType() : type;
+
+            if (fieldInfo.DeclaringType.IsInterface)
             {
-                this.WriteInterfacePath(effectiveType, opCodeFieldInfoPart.Operand.DeclaringType, opCodeFieldInfoPart.Operand);
+                this.WriteInterfacePath(type, fieldInfo.DeclaringType, fieldInfo);
             }
             else
             {
-                this.WriteFieldPath(effectiveType, opCodeFieldInfoPart.Operand);
+                this.WriteFieldPath(type, fieldInfo);
             }
         }
 

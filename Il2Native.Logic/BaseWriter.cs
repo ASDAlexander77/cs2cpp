@@ -1787,8 +1787,13 @@ namespace Il2Native.Logic
                         retType = this.GetArgType(index);
                         return retType;
 
-                    case Code.Stsfld:
+                    case Code.Ldfld:
                         var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                        retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : null;
+                        return retType;
+
+                    case Code.Stsfld:
+                        operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
                         return operand.IsThreadStatic ? System.System_Object : operand.FieldType;
                     case Code.Stfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;

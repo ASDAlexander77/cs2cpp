@@ -245,6 +245,11 @@
             }
         }
 
+        public void Duplicate()
+        {
+            this.Add(Code.Dup);
+        }
+
         public void LoadArgument(int argIndex)
         {
             switch (argIndex)
@@ -596,6 +601,53 @@
             }
 
             this.Add(Code.Ldind_Ref);
+        }
+
+        public void SaveIndirect(IType type, ITypeResolver typeResolver)
+        {
+            if (type.TypeEquals(typeResolver.System.System_IntPtr))
+            {
+                this.Add(Code.Stind_I);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_SByte))
+            {
+                this.Add(Code.Stind_I1);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int16))
+            {
+                this.Add(Code.Stind_I2);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int32))
+            {
+                this.Add(Code.Stind_I4);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int64))
+            {
+                this.Add(Code.Stind_I8);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Single))
+            {
+                this.Add(Code.Stind_R4);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Double))
+            {
+                this.Add(Code.Stind_R8);
+                return;
+            }
+
+            this.Add(Code.Stind_Ref);
         }
 
         public void SaveArgument(int argIndex)

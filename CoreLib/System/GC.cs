@@ -11,9 +11,11 @@ namespace System
 
     public static class GC
     {
+        public static int MaxGeneration { get; set; }
+
         private static bool AnyPendingFinalizers()
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public static void WaitForPendingFinalizers()
@@ -29,10 +31,10 @@ namespace System
         {
         }
 
-        public static extern void ReRegisterForFinalize(Object obj);
+        public static void ReRegisterForFinalize(Object obj)
+        {            
+        }
         
-        public static int MaxGeneration { get; set; }
-
         public static int GetGeneration(object p0)
         {
             return 0;

@@ -16,14 +16,14 @@
  * For handles, you should use a SafeHandle subclass specific to your handle
  * type.  For files, we have the following set of interesting definitions:
  *
- *  [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
- *  private static extern SafeFileHandle CreateFile(...);
+ *  
+ *  private static SafeFileHandle CreateFile(...);
  *
- *  [DllImport(KERNEL32, SetLastError=true)]
- *  unsafe internal static extern int ReadFile(SafeFileHandle handle, ...);
+ *  
+ *  unsafe internal static int ReadFile(SafeFileHandle handle, ...);
  *
- *  [DllImport(KERNEL32, SetLastError=true)]
- *  internal static extern bool CloseHandle(IntPtr handle);
+ *  
+ *  internal static bool CloseHandle(IntPtr handle);
  * 
  * P/Invoke will create the SafeFileHandle instance for you and assign the 
  * return value from CreateFile into the handle atomically.  When we call 
@@ -57,16 +57,16 @@
  *    [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Auto)]
  *    internal struct OSVERSIONINFO {  ...  }
  *
- *    [DllImport(KERNEL32, CharSet=CharSet.Auto)]
- *    internal static extern bool GetVersionEx(ref OSVERSIONINFO lposvi);
+ *    
+ *    internal static bool GetVersionEx(ref OSVERSIONINFO lposvi);
  *
  * OR:
  *
  *    [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Auto)]
  *    internal class OSVERSIONINFO {  ...  }
  *
- *    [DllImport(KERNEL32, CharSet=CharSet.Auto)]
- *    internal static extern bool GetVersionEx([In, Out] OSVERSIONINFO lposvi);
+ *    
+ *    internal static bool GetVersionEx([In, Out] OSVERSIONINFO lposvi);
  *
  * Note that classes require being marked as [In, Out] while value types must
  * be passed as ref parameters.
@@ -759,13 +759,19 @@ namespace Microsoft.Win32
         // From WinBase.h
         internal const int SEM_FAILCRITICALERRORS = 1;
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern void GetSystemInfo(ref SYSTEM_INFO lpSystemInfo);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, BestFitMapping = true)]
-        internal static extern int FormatMessage(int dwFlags, IntPtr lpSource,
+        internal static void GetSystemInfo(ref SYSTEM_INFO lpSystemInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static int FormatMessage(int dwFlags, IntPtr lpSource,
                     int dwMessageId, int dwLanguageId, [Out]StringBuilder lpBuffer,
-                    int nSize, IntPtr va_list_arguments);
+                    int nSize, IntPtr va_list_arguments)
+        {
+            throw new NotImplementedException();
+        }
 
         // Gets an error message for a Win32 error code.
         internal static String GetMessage(int errorCode)
@@ -786,24 +792,36 @@ namespace Microsoft.Win32
             }
         }
 
-        [DllImport(KERNEL32, EntryPoint = "LocalAlloc")]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        internal static extern IntPtr LocalAlloc_NoSafeHandle(int uFlags, UIntPtr sizetdwBytes);
+        internal static IntPtr LocalAlloc_NoSafeHandle(int uFlags, UIntPtr sizetdwBytes)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         SafeLocalAllocHandle LocalAlloc(
             [In] int uFlags,
-            [In] UIntPtr sizetdwBytes);
+            [In] UIntPtr sizetdwBytes)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern IntPtr LocalFree(IntPtr handle);
+        internal static IntPtr LocalFree(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
         // MSDN says the length is a SIZE_T.
-        [DllImport(KERNEL32, EntryPoint = "RtlZeroMemory")]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern void ZeroMemory(IntPtr address, UIntPtr length);
+        internal static void ZeroMemory(IntPtr address, UIntPtr length)
+        {
+            throw new NotImplementedException();
+        }
 
         internal static bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX buffer)
         {
@@ -811,22 +829,34 @@ namespace Microsoft.Win32
             return GlobalMemoryStatusExNative(ref buffer);
         }
 
-        [DllImport(KERNEL32, SetLastError = true, EntryPoint = "GlobalMemoryStatusEx")]
-        private static extern bool GlobalMemoryStatusExNative([In, Out] ref MEMORYSTATUSEX buffer);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        unsafe internal static extern UIntPtr VirtualQuery(void* address, ref MEMORY_BASIC_INFORMATION buffer, UIntPtr sizeOfBuffer);
+        private static bool GlobalMemoryStatusExNative([In, Out] ref MEMORYSTATUSEX buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        unsafe internal static UIntPtr VirtualQuery(void* address, ref MEMORY_BASIC_INFORMATION buffer, UIntPtr sizeOfBuffer)
+        {
+            throw new NotImplementedException();
+        }
 
         // VirtualAlloc should generally be avoided, but is needed in 
         // the MemoryFailPoint implementation (within a CER) to increase the 
         // size of the page file, ignoring any host memory allocators.
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        unsafe internal static extern void* VirtualAlloc(void* address, UIntPtr numBytes, int commitOrReserve, int pageProtectionMode);
+        unsafe internal static void* VirtualAlloc(void* address, UIntPtr numBytes, int commitOrReserve, int pageProtectionMode)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        unsafe internal static extern bool VirtualFree(void* address, UIntPtr numBytes, int pageFreeMode);
+        unsafe internal static bool VirtualFree(void* address, UIntPtr numBytes, int pageFreeMode)
+        {
+            throw new NotImplementedException();
+        }
 
 
 
@@ -835,12 +865,18 @@ namespace Microsoft.Win32
         // stuff, better interactions with thread aborts, etc.  This is used
         // solely by DoesWin32MethodExist for avoiding try/catch EntryPointNotFoundException
         // in scenarios where an OS Version check is insufficient
-        [DllImport(KERNEL32, CharSet = CharSet.Ansi, BestFitMapping = false, SetLastError = true, ExactSpelling = true)]
-        private static extern IntPtr GetProcAddress(IntPtr hModule, String methodName);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
+        private static IntPtr GetProcAddress(IntPtr hModule, String methodName)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        private static extern IntPtr GetModuleHandle(String moduleName);
+        private static IntPtr GetModuleHandle(String moduleName)
+        {
+            throw new NotImplementedException();
+        }
 
         [System.Security.SecurityCritical]  // auto-generated
         internal static bool DoesWin32MethodExist(String moduleName, String methodName)
@@ -858,86 +894,134 @@ namespace Microsoft.Win32
 
         // There is no need to call CloseProcess or to use a SafeHandle if you get the handle
         // using GetCurrentProcess as it returns a pseudohandle
-        [DllImport(KERNEL32, SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool IsWow64Process(
+        internal static bool IsWow64Process(
                    [In]
                    IntPtr hSourceProcessHandle,
                    [Out, MarshalAs(UnmanagedType.Bool)]
-                   out bool isWow64);
+                   out bool isWow64)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern uint GetTempPath(int bufferLen, [Out]StringBuilder buffer);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Ansi, ExactSpelling = true, EntryPoint = "lstrlenA")]
-        internal static extern int lstrlenA(IntPtr ptr);
+        internal static uint GetTempPath(int bufferLen, [Out]StringBuilder buffer)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode, ExactSpelling = true, EntryPoint = "lstrlenW")]
-        internal static extern int lstrlenW(IntPtr ptr);
+
+        internal static int lstrlenA(IntPtr ptr)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static int lstrlenW(IntPtr ptr)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_COMINTEROP
-        [DllImport(Win32Native.OLEAUT32, CharSet=CharSet.Unicode)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]            
-        internal static extern IntPtr SysAllocStringLen(String src, int len);  // BSTR
+        internal static IntPtr SysAllocStringLen(String src, int len);  // BSTR
 
-        [DllImport(Win32Native.OLEAUT32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]            
-        internal static extern IntPtr SysAllocStringByteLen(byte[] str, uint len);  // BSTR
+        internal static IntPtr SysAllocStringByteLen(byte[] str, uint len);  // BSTR
 
-        [DllImport(Win32Native.OLEAUT32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern uint SysStringByteLen(IntPtr bstr);
+        internal static uint SysStringByteLen(IntPtr bstr);
 
-        [DllImport(Win32Native.OLEAUT32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern uint SysStringLen(IntPtr bstr);
+        internal static uint SysStringLen(IntPtr bstr);
 
-        [DllImport(Win32Native.OLEAUT32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern uint SysStringLen(SafeBSTRHandle bstr);
+        internal static uint SysStringLen(SafeBSTRHandle bstr);
 
-        [DllImport(Win32Native.OLEAUT32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern void SysFreeString(IntPtr bstr);
+        internal static void SysFreeString(IntPtr bstr);
 #endif
 
-        [DllImport(KERNEL32)]
-        internal static extern int GetACP();
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetEvent(SafeWaitHandle handle);
+        internal static int GetACP()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool ResetEvent(SafeWaitHandle handle);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name);
+        internal static bool SetEvent(SafeWaitHandle handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeWaitHandle OpenEvent(/* DWORD */ int desiredAccess, bool inheritHandle, String name);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
+        internal static bool ResetEvent(SafeWaitHandle handle)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static SafeWaitHandle OpenEvent(/* DWORD */ int desiredAccess, bool inheritHandle, String name)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        internal static extern SafeWaitHandle CreateMutex(SECURITY_ATTRIBUTES lpSecurityAttributes, bool initialOwner, String name);
+        internal static SafeWaitHandle CreateMutex(SECURITY_ATTRIBUTES lpSecurityAttributes, bool initialOwner, String name)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeWaitHandle OpenMutex(/* DWORD */ int desiredAccess, bool inheritHandle, String name);
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        internal static SafeWaitHandle OpenMutex(/* DWORD */ int desiredAccess, bool inheritHandle, String name)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        internal static extern bool ReleaseMutex(SafeWaitHandle handle);
+        internal static bool ReleaseMutex(SafeWaitHandle handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal unsafe static extern int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal unsafe static extern int GetFullPathName(String path, int numBufferChars, [Out]StringBuilder buffer, IntPtr mustBeZero);
+        internal unsafe static int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal unsafe static extern int GetLongPathName(char* path, char* longPathBuffer, int bufferLength);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern int GetLongPathName(String path, [Out]StringBuilder longPathBuffer, int bufferLength);
+        internal unsafe static int GetFullPathName(String path, int numBufferChars, [Out]StringBuilder buffer, IntPtr mustBeZero)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal unsafe static int GetLongPathName(char* path, char* longPathBuffer, int bufferLength)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static int GetLongPathName(String path, [Out]StringBuilder longPathBuffer, int bufferLength)
+        {
+            throw new NotImplementedException();
+        }
 
         // Disallow access to all non-file devices from methods that take
         // a String.  This disallows DOS devices like "con:", "com1:", 
@@ -984,39 +1068,66 @@ namespace Microsoft.Win32
         // The safe version does not support devices (aka if will only open
         // files on disk), while the unsafe version give you the full semantic
         // of the native version.
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        private static extern SafeFileHandle CreateFile(String lpFileName,
+        
+        private static SafeFileHandle CreateFile(String lpFileName,
                     int dwDesiredAccess, System.IO.FileShare dwShareMode,
                     SECURITY_ATTRIBUTES securityAttrs, System.IO.FileMode dwCreationDisposition,
-                    int dwFlagsAndAttributes, IntPtr hTemplateFile);
+                    int dwFlagsAndAttributes, IntPtr hTemplateFile)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeFileMappingHandle CreateFileMapping(SafeFileHandle hFile, IntPtr lpAttributes, uint fProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, String lpName);
 
-        [DllImport(KERNEL32, SetLastError = true, ExactSpelling = true)]
-        internal static extern IntPtr MapViewOfFile(
-            SafeFileMappingHandle handle, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumerOfBytesToMap);
+        internal static SafeFileMappingHandle CreateFileMapping(SafeFileHandle hFile, IntPtr lpAttributes, uint fProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, String lpName)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, ExactSpelling = true)]
+        
+        internal static IntPtr MapViewOfFile(
+            SafeFileMappingHandle handle, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumerOfBytesToMap)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+        internal static bool UnmapViewOfFile(IntPtr lpBaseAddress)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern bool CloseHandle(IntPtr handle);
+        internal static bool CloseHandle(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32)]
-        internal static extern int GetFileType(SafeFileHandle handle);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetEndOfFile(SafeFileHandle hFile);
+        internal static int GetFileType(SafeFileHandle handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
+
+        internal static bool SetEndOfFile(SafeFileHandle hFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool FlushFileBuffers(SafeFileHandle hFile);
+        internal static bool FlushFileBuffers(SafeFileHandle hFile)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, EntryPoint = "SetFilePointer")]
-        private unsafe static extern int SetFilePointerWin32(SafeFileHandle handle, int lo, int* hi, int origin);
+
+        private unsafe static int SetFilePointerWin32(SafeFileHandle handle, int lo, int* hi, int origin)
+        {
+            throw new NotImplementedException();
+        }
 
         [System.Security.SecurityCritical]  // auto-generated
         internal unsafe static long SetFilePointer(SafeFileHandle handle, long offset, System.IO.SeekOrigin origin, out int hr)
@@ -1038,11 +1149,17 @@ namespace Microsoft.Win32
         // struct in a callback (or an EndRead method called by that callback), 
         // and pass in an address for the numBytesRead parameter.  
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        unsafe internal static extern int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, IntPtr numBytesRead_mustBeZero, NativeOverlapped* overlapped);
+        
+        unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, IntPtr numBytesRead_mustBeZero, NativeOverlapped* overlapped)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        unsafe internal static extern int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero);
+
+        unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
+        {
+            throw new NotImplementedException();
+        }
 
         // Note there are two different WriteFile prototypes - this is to use 
         // the type system to force you to not trip across a "feature" in 
@@ -1051,46 +1168,78 @@ namespace Microsoft.Win32
         // struct in a callback (or an EndWrite method called by that callback),
         // and pass in an address for the numBytesRead parameter.  
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, IntPtr numBytesWritten_mustBeZero, NativeOverlapped* lpOverlapped);
-
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero);
+        
+        internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, IntPtr numBytesWritten_mustBeZero, NativeOverlapped* lpOverlapped)
+        {
+            throw new NotImplementedException();
+        }
+        
+        internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero)
+        {
+            throw new NotImplementedException();
+        }
 
         // This is only available on Vista or higher
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern bool CancelIoEx(SafeFileHandle handle, NativeOverlapped* lpOverlapped);
+
+        internal static unsafe bool CancelIoEx(SafeFileHandle handle, NativeOverlapped* lpOverlapped)
+        {
+            throw new NotImplementedException();
+        }
 
         // NOTE: The out parameters are PULARGE_INTEGERs and may require
         // some byte munging magic.
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern bool GetDiskFreeSpaceEx(String drive, out long freeBytesForUser, out long totalBytes, out long freeBytes);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern int GetDriveType(String drive);
+        internal static bool GetDiskFreeSpaceEx(String drive, out long freeBytesForUser, out long totalBytes, out long freeBytes)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern bool GetVolumeInformation(String drive, [Out]StringBuilder volumeName, int volumeNameBufLen, out int volSerialNumber, out int maxFileNameLen, out int fileSystemFlags, [Out]StringBuilder fileSystemName, int fileSystemNameBufLen);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern bool SetVolumeLabel(String driveLetter, String volumeName);
+        internal static int GetDriveType(String drive)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool GetVolumeInformation(String drive, [Out]StringBuilder volumeName, int volumeNameBufLen, out int volSerialNumber, out int maxFileNameLen, out int fileSystemFlags, [Out]StringBuilder fileSystemName, int fileSystemNameBufLen)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool SetVolumeLabel(String driveLetter, String volumeName)
+        {
+            throw new NotImplementedException();
+        }
 
         // The following 4 methods are used by Microsoft.WlcProfile
-        [DllImport(KERNEL32)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool QueryPerformanceCounter(out long value);
+        internal static bool QueryPerformanceCounter(out long value)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool QueryPerformanceFrequency(out long value);
+        internal static bool QueryPerformanceFrequency(out long value)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeWaitHandle CreateSemaphore(SECURITY_ATTRIBUTES lpSecurityAttributes, int initialCount, int maximumCount, String name);
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        internal static SafeWaitHandle CreateSemaphore(SECURITY_ATTRIBUTES lpSecurityAttributes, int initialCount, int maximumCount, String name)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool ReleaseSemaphore(SafeWaitHandle handle, int releaseCount, out int previousCount);
+        internal static bool ReleaseSemaphore(SafeWaitHandle handle, int releaseCount, out int previousCount)
+        {
+            throw new NotImplementedException();
+        }
 
         // Will be in winnls.h
         internal const int FIND_STARTSWITH = 0x00100000; // see if value is at the beginning of source
@@ -1110,24 +1259,37 @@ namespace Microsoft.Win32
         }
 #endif
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern int GetWindowsDirectory([Out]StringBuilder sb, int length);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern int GetSystemDirectory([Out]StringBuilder sb, int length);
+        internal static int GetWindowsDirectory([Out]StringBuilder sb, int length)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal unsafe static extern bool SetFileTime(SafeFileHandle hFile, FILE_TIME* creationTime,
-                    FILE_TIME* lastAccessTime, FILE_TIME* lastWriteTime);
+        internal static int GetSystemDirectory([Out]StringBuilder sb, int length)
+        {
+            throw new NotImplementedException();
+        }
+        
+        internal unsafe static bool SetFileTime(SafeFileHandle hFile, FILE_TIME* creationTime,
+                    FILE_TIME* lastAccessTime, FILE_TIME* lastWriteTime)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern int GetFileSize(SafeFileHandle hFile, out int highSize);
+        internal static int GetFileSize(SafeFileHandle hFile, out int highSize)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
+        internal static bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
+        internal static bool UnlockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh)
+        {
+            throw new NotImplementedException();
+        }
 
         internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);  // WinBase.h
 
@@ -1136,8 +1298,11 @@ namespace Microsoft.Win32
         internal const int STD_OUTPUT_HANDLE = -11;
         internal const int STD_ERROR_HANDLE = -12;
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern IntPtr GetStdHandle(int nStdHandle);  // param is NOT a handle, but it returns one!
+        
+        internal static IntPtr GetStdHandle(int nStdHandle)  // param is NOT a handle, but it returns one!
+        {
+            throw new NotImplementedException();
+        }
 
         // From wincon.h
         internal const int CTRL_C_EVENT = 0;
@@ -1278,8 +1443,8 @@ namespace Microsoft.Win32
         }
 
 #if FEATURE_CORESYSTEM
-        [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
-        private static extern bool CopyFileEx(String src,
+        
+        private static bool CopyFileEx(String src,
                                               String dst,
                                               IntPtr progressRoutine,
                                               IntPtr progressData,
@@ -1292,84 +1457,144 @@ namespace Microsoft.Win32
             return CopyFileEx(src, dst, IntPtr.Zero, IntPtr.Zero, ref cancel, failIfExists ? 1U : 0U);
         }
 #else // FEATURE_CORESYSTEM
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool CopyFile(
-                    String src, String dst, bool failIfExists);
+        
+        internal static bool CopyFile(
+                    String src, String dst, bool failIfExists)
+        {
+            throw new NotImplementedException();
+        }
 #endif // FEATURE_CORESYSTEM
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool CreateDirectory(
-                    String path, SECURITY_ATTRIBUTES lpSecurityAttributes);
+        
+        internal static bool CreateDirectory(
+                    String path, SECURITY_ATTRIBUTES lpSecurityAttributes)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool DeleteFile(String path);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool ReplaceFile(String replacedFileName, String replacementFileName, String backupFileName, int dwReplaceFlags, IntPtr lpExclude, IntPtr lpReserved);
+        internal static bool DeleteFile(String path)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool DecryptFile(String path, int reservedMustBeZero);
 
-        [DllImport(ADVAPI32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool EncryptFile(String path);
+        internal static bool ReplaceFile(String replacedFileName, String replacementFileName, String backupFileName, int dwReplaceFlags, IntPtr lpExclude, IntPtr lpReserved)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern SafeFindHandle FindFirstFile(String fileName, [In, Out] Win32Native.WIN32_FIND_DATA data);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool FindNextFile(
+        internal static bool DecryptFile(String path, int reservedMustBeZero)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool EncryptFile(String path)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static SafeFindHandle FindFirstFile(String fileName, [In, Out] Win32Native.WIN32_FIND_DATA data)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static bool FindNextFile(
                     SafeFindHandle hndFindFile,
                     [In, Out, MarshalAs(UnmanagedType.LPStruct)]
-                    WIN32_FIND_DATA lpFindFileData);
+                    WIN32_FIND_DATA lpFindFileData)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern bool FindClose(IntPtr handle);
+        internal static bool FindClose(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern int GetCurrentDirectory(
+        
+        internal static int GetCurrentDirectory(
                   int nBufferLength,
-                  [Out]StringBuilder lpBuffer);
+                  [Out]StringBuilder lpBuffer)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool SetFileAttributes(String name, int attr);
+        internal static bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern int GetLogicalDrives();
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern uint GetTempFileName(String tmpPath, String prefix, uint uniqueIdOrZero, [Out]StringBuilder tmpFileName);
+        internal static bool SetFileAttributes(String name, int attr)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static int GetLogicalDrives()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static uint GetTempFileName(String tmpPath, String prefix, uint uniqueIdOrZero, [Out]StringBuilder tmpFileName)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_CORESYSTEM
-        [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
-        private static extern bool MoveFileEx(String src, String dst, uint flags);
+        
+        private static bool MoveFileEx(String src, String dst, uint flags);
 
         internal static bool MoveFile(String src, String dst)
         {
             return MoveFileEx(src, dst, 2 /* MOVEFILE_COPY_ALLOWED */);
         }
 #else // FEATURE_CORESYSTEM
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool MoveFile(String src, String dst);
+
+        internal static bool MoveFile(String src, String dst)
+        {
+            throw new NotImplementedException();
+        }
 #endif // FEATURE_CORESYSTEM
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool DeleteVolumeMountPoint(String mountPoint);
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool RemoveDirectory(String path);
+        internal static bool DeleteVolumeMountPoint(String mountPoint)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern bool SetCurrentDirectory(String path);
 
-        [DllImport(KERNEL32, SetLastError = false, EntryPoint = "SetErrorMode", ExactSpelling = true)]
-        private static extern int SetErrorMode_VistaAndOlder(int newMode);
+        internal static bool RemoveDirectory(String path)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true, EntryPoint = "SetThreadErrorMode")]
-        private static extern bool SetErrorMode_Win7AndNewer(int newMode, out int oldMode);
+
+        internal static bool SetCurrentDirectory(String path)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        private static int SetErrorMode_VistaAndOlder(int newMode)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        private static bool SetErrorMode_Win7AndNewer(int newMode, out int oldMode)
+        {
+            throw new NotImplementedException();
+        }
 
         // RTM versions of Win7 and Windows Server 2008 R2
         private static readonly Version ThreadErrorModeMinOsVersion = new Version(6, 1, 7600);
@@ -1390,48 +1615,87 @@ namespace Microsoft.Win32
 
         internal const int LCID_SUPPORTED = 0x00000002;  // supported locale ids
 
-        [DllImport(KERNEL32)]
-        internal static extern unsafe int WideCharToMultiByte(uint cp, uint flags, char* pwzSource, int cchSource, byte* pbDestBuffer, int cbDestBuffer, IntPtr null1, IntPtr null2);
+
+        internal static unsafe int WideCharToMultiByte(uint cp, uint flags, char* pwzSource, int cchSource, byte* pbDestBuffer, int cbDestBuffer, IntPtr null1, IntPtr null2)
+        {
+            throw new NotImplementedException();
+        }
 
         // A Win32 HandlerRoutine
         internal delegate bool ConsoleCtrlHandlerRoutine(int controlType);
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern bool SetConsoleCtrlHandler(ConsoleCtrlHandlerRoutine handler, bool addOrRemove);
+        internal static bool SetConsoleCtrlHandler(ConsoleCtrlHandlerRoutine handler, bool addOrRemove)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern bool SetEnvironmentVariable(string lpName, string lpValue);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern int GetEnvironmentVariable(string lpName, [Out]StringBuilder lpValue, int size);
+        internal static bool SetEnvironmentVariable(string lpName, string lpValue)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode)]
-        internal static unsafe extern char* GetEnvironmentStrings();
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode)]
-        internal static unsafe extern bool FreeEnvironmentStrings(char* pStrings);
+        internal static int GetEnvironmentVariable(string lpName, [Out]StringBuilder lpValue, int size)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern uint GetCurrentProcessId();
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Auto)]
-        internal static extern bool GetUserName([Out]StringBuilder lpBuffer, ref int nSize);
+        internal static unsafe char* GetEnvironmentStrings()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal extern static int GetComputerName([Out]StringBuilder nameBuffer, ref int bufferSize);
 
-        [DllImport(OLE32)]
-        internal extern static int CoCreateGuid(out Guid guid);
+        internal static unsafe bool FreeEnvironmentStrings(char* pStrings)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(Win32Native.OLE32)]
-        internal static extern IntPtr CoTaskMemAlloc(UIntPtr cb);
 
-        [DllImport(Win32Native.OLE32)]
-        internal static extern IntPtr CoTaskMemRealloc(IntPtr pv, UIntPtr cb);
+        internal static uint GetCurrentProcessId()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(Win32Native.OLE32)]
-        internal static extern void CoTaskMemFree(IntPtr ptr);
+
+        internal static bool GetUserName([Out]StringBuilder lpBuffer, ref int nSize)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static int GetComputerName([Out]StringBuilder nameBuffer, ref int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static int CoCreateGuid(out Guid guid)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static IntPtr CoTaskMemAlloc(UIntPtr cb)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static IntPtr CoTaskMemRealloc(IntPtr pv, UIntPtr cb)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static void CoTaskMemFree(IntPtr ptr)
+        {
+            throw new NotImplementedException();
+        }
 
         [StructLayoutAttribute(LayoutKind.Sequential)]
         internal struct COORD
@@ -1519,192 +1783,273 @@ namespace Microsoft.Win32
         internal const int ENABLE_LINE_INPUT = 0x0002;
         internal const int ENABLE_ECHO_INPUT = 0x0004;
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int mode);
+        internal static bool SetConsoleMode(IntPtr hConsoleHandle, int mode)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool Beep(int frequency, int duration);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
-            out CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
+        internal static bool GetConsoleMode(IntPtr hConsoleHandle, out int mode)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleScreenBufferSize(IntPtr hConsoleOutput, COORD size);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern COORD GetLargestConsoleWindowSize(IntPtr hConsoleOutput);
+        internal static bool Beep(int frequency, int duration)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool FillConsoleOutputCharacter(IntPtr hConsoleOutput,
-            char character, int nLength, COORD dwWriteCoord, out int pNumCharsWritten);
+        
+        internal static bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
+            out CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool FillConsoleOutputAttribute(IntPtr hConsoleOutput,
-            short wColorAttribute, int numCells, COORD startCoord, out int pNumBytesWritten);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern bool SetConsoleWindowInfo(IntPtr hConsoleOutput,
-            bool absolute, SMALL_RECT* consoleWindow);
+        internal static bool SetConsoleScreenBufferSize(IntPtr hConsoleOutput, COORD size)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleTextAttribute(IntPtr hConsoleOutput, short attributes);
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleCursorPosition(IntPtr hConsoleOutput,
-            COORD cursorPosition);
+        internal static COORD GetLargestConsoleWindowSize(IntPtr hConsoleOutput)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool GetConsoleCursorInfo(IntPtr hConsoleOutput,
-            out CONSOLE_CURSOR_INFO cci);
+        
+        internal static bool FillConsoleOutputCharacter(IntPtr hConsoleOutput,
+            char character, int nLength, COORD dwWriteCoord, out int pNumCharsWritten)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleCursorInfo(IntPtr hConsoleOutput,
-            ref CONSOLE_CURSOR_INFO cci);
+        
+        internal static bool FillConsoleOutputAttribute(IntPtr hConsoleOutput,
+            short wColorAttribute, int numCells, COORD startCoord, out int pNumBytesWritten)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = true)]
-        internal static extern bool SetConsoleTitle(String title);
+        
+        internal static unsafe bool SetConsoleWindowInfo(IntPtr hConsoleOutput,
+            bool absolute, SMALL_RECT* consoleWindow)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool ReadConsoleInput(IntPtr hConsoleInput, out InputRecord buffer, int numInputRecords_UseOne, out int numEventsRead);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern bool PeekConsoleInput(IntPtr hConsoleInput, out InputRecord buffer, int numInputRecords_UseOne, out int numEventsRead);
+        internal static bool SetConsoleTextAttribute(IntPtr hConsoleOutput, short attributes)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern bool ReadConsoleOutput(IntPtr hConsoleOutput, CHAR_INFO* pBuffer, COORD bufferSize, COORD bufferCoord, ref SMALL_RECT readRegion);
+        
+        internal static bool SetConsoleCursorPosition(IntPtr hConsoleOutput,
+            COORD cursorPosition)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode, SetLastError = true)]
+        
+        internal static bool GetConsoleCursorInfo(IntPtr hConsoleOutput,
+            out CONSOLE_CURSOR_INFO cci)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static bool SetConsoleCursorInfo(IntPtr hConsoleOutput,
+            ref CONSOLE_CURSOR_INFO cci)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool SetConsoleTitle(String title)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool ReadConsoleInput(IntPtr hConsoleInput, out InputRecord buffer, int numInputRecords_UseOne, out int numEventsRead)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool PeekConsoleInput(IntPtr hConsoleInput, out InputRecord buffer, int numInputRecords_UseOne, out int numEventsRead)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static unsafe bool ReadConsoleOutput(IntPtr hConsoleOutput, CHAR_INFO* pBuffer, COORD bufferSize, COORD bufferCoord, ref SMALL_RECT readRegion)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static unsafe extern bool ReadConsoleW(SafeFileHandle hConsoleInput, Byte* lpBuffer, Int32 nNumberOfCharsToRead, out Int32 lpNumberOfCharsRead, IntPtr pInputControl);
+        internal static unsafe bool ReadConsoleW(SafeFileHandle hConsoleInput, Byte* lpBuffer, Int32 nNumberOfCharsToRead, out Int32 lpNumberOfCharsRead, IntPtr pInputControl)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static unsafe extern bool WriteConsoleOutput(IntPtr hConsoleOutput, CHAR_INFO* buffer, COORD bufferSize, COORD bufferCoord, ref SMALL_RECT writeRegion);
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static unsafe bool WriteConsoleOutput(IntPtr hConsoleOutput, CHAR_INFO* buffer, COORD bufferSize, COORD bufferCoord, ref SMALL_RECT writeRegion)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static unsafe extern bool WriteConsoleW(SafeFileHandle hConsoleOutput, Byte* lpBuffer, Int32 nNumberOfCharsToWrite, out Int32 lpNumberOfCharsWritten, IntPtr lpReservedMustBeNull);
+        internal static unsafe bool WriteConsoleW(SafeFileHandle hConsoleOutput, Byte* lpBuffer, Int32 nNumberOfCharsToWrite, out Int32 lpNumberOfCharsWritten, IntPtr lpReservedMustBeNull)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(USER32)]  // Appears to always succeed
-        internal static extern short GetKeyState(int virtualKeyCode);
+          // Appears to always succeed
+        internal static short GetKeyState(int virtualKeyCode)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = false)]
-        internal static extern uint GetConsoleCP();
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleCP(uint codePage);
+        internal static uint GetConsoleCP()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, SetLastError = false)]
-        internal static extern uint GetConsoleOutputCP();
 
-        [DllImport(KERNEL32, SetLastError = true)]
-        internal static extern bool SetConsoleOutputCP(uint codePage);
+        internal static bool SetConsoleCP(uint codePage)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static uint GetConsoleOutputCP()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static bool SetConsoleOutputCP(uint codePage)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_WIN32_REGISTRY
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegConnectRegistry(String machineName,
+        
+        internal static int RegConnectRegistry(String machineName,
                     SafeRegistryHandle key, out SafeRegistryHandle result);
     
         // Note: RegCreateKeyEx won't set the last error on failure - it returns
         // an error code if it fails.
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegCreateKeyEx(SafeRegistryHandle hKey, String lpSubKey,
+        
+        internal static int RegCreateKeyEx(SafeRegistryHandle hKey, String lpSubKey,
                     int Reserved, String lpClass, int dwOptions,
                     int samDesired, SECURITY_ATTRIBUTES lpSecurityAttributes,
                     out SafeRegistryHandle hkResult, out int lpdwDisposition);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegDeleteKey(SafeRegistryHandle hKey, String lpSubKey);
+        
+        internal static int RegDeleteKey(SafeRegistryHandle hKey, String lpSubKey);
 
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegDeleteKeyEx(SafeRegistryHandle hKey, String lpSubKey,
+        
+        internal static int RegDeleteKeyEx(SafeRegistryHandle hKey, String lpSubKey,
                     int samDesired, int Reserved);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegDeleteValue(SafeRegistryHandle hKey, String lpValueName);
+        
+        internal static int RegDeleteValue(SafeRegistryHandle hKey, String lpValueName);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal unsafe static extern int RegEnumKeyEx(SafeRegistryHandle hKey, int dwIndex,
+        
+        internal unsafe static int RegEnumKeyEx(SafeRegistryHandle hKey, int dwIndex,
                     char *lpName, ref int lpcbName, int[] lpReserved,
                     [Out]StringBuilder lpClass, int[] lpcbClass,
                     long[] lpftLastWriteTime);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal unsafe static extern int RegEnumValue(SafeRegistryHandle hKey, int dwIndex,
+        
+        internal unsafe static int RegEnumValue(SafeRegistryHandle hKey, int dwIndex,
                     char *lpValueName, ref int lpcbValueName,
                     IntPtr lpReserved_MustBeZero, int[] lpType, byte[] lpData,
                     int[] lpcbData);
     
 
-        [DllImport(ADVAPI32)]
-        internal static extern int RegFlushKey(SafeRegistryHandle hKey);
+        
+        internal static int RegFlushKey(SafeRegistryHandle hKey);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegOpenKeyEx(SafeRegistryHandle hKey, String lpSubKey,
+        
+        internal static int RegOpenKeyEx(SafeRegistryHandle hKey, String lpSubKey,
                     int ulOptions, int samDesired, out SafeRegistryHandle hkResult);
 
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegOpenKeyEx(IntPtr hKey, String lpSubKey,
+        
+        internal static int RegOpenKeyEx(IntPtr hKey, String lpSubKey,
                     int ulOptions, int samDesired, out SafeRegistryHandle hkResult);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegQueryInfoKey(SafeRegistryHandle hKey, [Out]StringBuilder lpClass,
+        
+        internal static int RegQueryInfoKey(SafeRegistryHandle hKey, [Out]StringBuilder lpClass,
                     int[] lpcbClass, IntPtr lpReserved_MustBeZero, ref int lpcSubKeys,
                     int[] lpcbMaxSubKeyLen, int[] lpcbMaxClassLen,
                     ref int lpcValues, int[] lpcbMaxValueNameLen,
                     int[] lpcbMaxValueLen, int[] lpcbSecurityDescriptor,
                     int[] lpftLastWriteTime);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)] 
-        internal static extern int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
+         
+        internal static int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int[] lpReserved, ref int lpType, [Out] byte[] lpData,
                     ref int lpcbData);
 
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int[] lpReserved, ref int lpType, ref int lpData,
                     ref int lpcbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int[] lpReserved, ref int lpType, ref long lpData,
                     ref int lpcbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
                      int[] lpReserved, ref int lpType, [Out] char[] lpData, 
                      ref int lpcbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegQueryValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int[] lpReserved, ref int lpType, [Out]StringBuilder lpData,
                     ref int lpcbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int Reserved, RegistryValueKind dwType, byte[] lpData, int cbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int Reserved, RegistryValueKind dwType, ref int lpData, int cbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int Reserved, RegistryValueKind dwType, ref long lpData, int cbData);
     
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
+        
+        internal static int RegSetValueEx(SafeRegistryHandle hKey, String lpValueName,
                     int Reserved, RegistryValueKind dwType, String lpData, int cbData);
 #endif // FEATURE_WIN32_REGISTRY
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern int ExpandEnvironmentStrings(String lpSrc, [Out]StringBuilder lpDst, int nSize);
 
-        [DllImport(KERNEL32)]
-        internal static extern IntPtr LocalReAlloc(IntPtr handle, IntPtr sizetcbBytes, int uFlags);
+        internal static int ExpandEnvironmentStrings(String lpSrc, [Out]StringBuilder lpDst, int nSize)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static IntPtr LocalReAlloc(IntPtr handle, IntPtr sizetcbBytes, int uFlags)
+        {
+            throw new NotImplementedException();
+        }
 
         internal const int SHGFP_TYPE_CURRENT = 0;      // the current (user) folder path setting
         internal const int UOI_FLAGS = 1;
@@ -1762,31 +2107,49 @@ namespace Microsoft.Win32
         internal const int CSIDL_MYMUSIC = 0x000d;
         internal const int CSIDL_MYPICTURES = 0x0027;
 
-        [DllImport(SHELL32, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal static extern int SHGetFolderPath(IntPtr hwndOwner, int nFolder, IntPtr hToken, int dwFlags, [Out]StringBuilder lpszPath);
+
+        internal static int SHGetFolderPath(IntPtr hwndOwner, int nFolder, IntPtr hToken, int dwFlags, [Out]StringBuilder lpszPath)
+        {
+            throw new NotImplementedException();
+        }
 
         internal const int NameSamCompatible = 2;
 
-        [DllImport(SECUR32, CharSet = CharSet.Unicode, SetLastError = true)]
+        
         // Win32 return type is BOOLEAN (which is 1 byte and not BOOL which is 4bytes)
-        internal static extern byte GetUserNameEx(int format, [Out]StringBuilder domainName, ref uint domainNameLen);
+        internal static byte GetUserNameEx(int format, [Out]StringBuilder domainName, ref uint domainNameLen)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false)]
-        internal static extern bool LookupAccountName(string machineName, string accountName, byte[] sid,
-                                 ref int sidLen, [Out]StringBuilder domainName, ref uint domainNameLen, out int peUse);
+        
+        internal static bool LookupAccountName(string machineName, string accountName, byte[] sid,
+                                 ref int sidLen, [Out]StringBuilder domainName, ref uint domainNameLen, out int peUse)
+        {
+            throw new NotImplementedException();
+        }
 
         // Note: This returns a handle, but it shouldn't be closed.  The Avalon
         // team says CloseWindowStation would ignore this handle.  So there
         // isn't a lot of value to switching to SafeHandle here.
-        [DllImport(USER32, ExactSpelling = true)]
-        internal static extern IntPtr GetProcessWindowStation();
 
-        [DllImport(USER32, SetLastError = true)]
-        internal static extern bool GetUserObjectInformation(IntPtr hObj, int nIndex,
-            [MarshalAs(UnmanagedType.LPStruct)] USEROBJECTFLAGS pvBuffer, int nLength, ref int lpnLengthNeeded);
+        internal static IntPtr GetProcessWindowStation()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(USER32, SetLastError = true, BestFitMapping = false)]
-        internal static extern IntPtr SendMessageTimeout(IntPtr hWnd, int Msg, IntPtr wParam, String lParam, uint fuFlags, uint uTimeout, IntPtr lpdwResult);
+        
+        internal static bool GetUserObjectInformation(IntPtr hObj, int nIndex,
+            [MarshalAs(UnmanagedType.LPStruct)] USEROBJECTFLAGS pvBuffer, int nLength, ref int lpnLengthNeeded)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static IntPtr SendMessageTimeout(IntPtr hWnd, int Msg, IntPtr wParam, String lParam, uint fuFlags, uint uTimeout, IntPtr lpdwResult)
+        {
+            throw new NotImplementedException();
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         internal class USEROBJECTFLAGS
@@ -1808,7 +2171,7 @@ namespace Microsoft.Win32
         // they are available in both WinXP and in Windows Server 2003.
         //
 
-        [DllImport(Win32Native.ADVAPI32, CharSet=CharSet.Unicode, SetLastError=true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static extern
         int SystemFunction040 (
@@ -1816,7 +2179,7 @@ namespace Microsoft.Win32
             [In]     uint       cbDataIn,   // multiple of RTL_ENCRYPT_MEMORY_SIZE
             [In]     uint       dwFlags);
 
-        [DllImport(Win32Native.ADVAPI32, CharSet=CharSet.Unicode, SetLastError=true)]
+        
         internal static extern
         int SystemFunction041 (
             [In,Out] SafeBSTRHandle     pDataIn,
@@ -1825,117 +2188,115 @@ namespace Microsoft.Win32
 #endif // FEATURE_COMINTEROP
 
 #if FEATURE_CORECLR
-        [DllImport(NTDLL, CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern
-        int RtlNtStatusToDosError(
-            [In]    int status);
+        
+        internal static int RtlNtStatusToDosError(
+            [In]    int status)
+        {
+            throw new NotImplementedException();
+        }
 #else
         // identical to RtlNtStatusToDosError, but we are in ask mode for desktop CLR
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
+        
         internal static extern
         int LsaNtStatusToWinError (
             [In]    int         status);
 #endif
         // Get the current FIPS policy setting on Vista and above
-        [DllImport("bcrypt.dll")]
-        internal static extern uint BCryptGetFipsAlgorithmMode(
-                [MarshalAs(UnmanagedType.U1), Out]out bool pfEnabled);
+        
+        internal static uint BCryptGetFipsAlgorithmMode(
+                [MarshalAs(UnmanagedType.U1), Out]out bool pfEnabled)
+        {
+            throw new NotImplementedException();
+        }
 
         //
         // Managed ACLs
         //
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]        
+        internal static
         bool AdjustTokenPrivileges(
             [In]     SafeAccessTokenHandle TokenHandle,
             [In]     bool DisableAllPrivileges,
             [In]     ref TOKEN_PRIVILEGE NewState,
             [In]     uint BufferLength,
             [In, Out] ref TOKEN_PRIVILEGE PreviousState,
-            [In, Out] ref uint ReturnLength);
+            [In, Out] ref uint ReturnLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool AllocateLocallyUniqueId(
-            [In, Out] ref LUID Luid);
+            [In, Out] ref LUID Luid)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool CheckTokenMembership(
             [In]     SafeAccessTokenHandle TokenHandle,
             [In]     byte[] SidToCheck,
-            [In, Out] ref bool IsMember);
+            [In, Out] ref bool IsMember)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "ConvertSecurityDescriptorToStringSecurityDescriptorW",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL ConvertSdToStringSd(
+        
+        internal static BOOL ConvertSdToStringSd(
             byte[] securityDescriptor,
             /* DWORD */ uint requestedRevision,
             ULONG securityInformation,
             out IntPtr resultString,
-            ref ULONG resultStringLength);
+            ref ULONG resultStringLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL ConvertStringSdToSd(
+        
+        internal static BOOL ConvertStringSdToSd(
             string stringSd,
             /* DWORD */ uint stringSdRevision,
             out IntPtr resultSd,
-            ref ULONG resultSdLength);
+            ref ULONG resultSdLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "ConvertStringSidToSidW",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL ConvertStringSidToSid(
+        
+        internal static BOOL ConvertStringSidToSid(
             string stringSid,
             out IntPtr ByteArray
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-           ADVAPI32,
-           EntryPoint = "ConvertSidToStringSidW",
-           CallingConvention = CallingConvention.Winapi,
-           SetLastError = true,
-           ExactSpelling = true,
-           CharSet = CharSet.Unicode)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool ConvertSidToStringSid(
+        internal static bool ConvertSidToStringSid(
             IntPtr Sid,
             ref IntPtr StringSid
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "CreateWellKnownSid",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL CreateWellKnownSid(
+        
+        internal static BOOL CreateWellKnownSid(
             int sidType,
             byte[] domainSid,
             [Out] byte[] resultSid,
-            ref /*DWORD*/ uint resultSidLength);
+            ref /*DWORD*/ uint resultSidLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool DuplicateHandle(
             [In]     IntPtr hSourceProcessHandle,
             [In]     IntPtr hSourceHandle,
@@ -1943,11 +2304,14 @@ namespace Microsoft.Win32
             [In, Out] ref SafeAccessTokenHandle lpTargetHandle,
             [In]     uint dwDesiredAccess,
             [In]     bool bInheritHandle,
-            [In]     uint dwOptions);
+            [In]     uint dwOptions)
+        {
+            throw new NotImplementedException();
+        }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool DuplicateHandle(
             [In]     IntPtr hSourceProcessHandle,
             [In]     SafeAccessTokenHandle hSourceHandle,
@@ -1955,12 +2319,15 @@ namespace Microsoft.Win32
             [In, Out] ref SafeAccessTokenHandle lpTargetHandle,
             [In]     uint dwDesiredAccess,
             [In]     bool bInheritHandle,
-            [In]     uint dwOptions);
+            [In]     uint dwOptions)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_IMPERSONATION
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, SetLastError=true)]
-        internal static extern 
+        
+        internal static 
         bool DuplicateTokenEx (
             [In]     SafeAccessTokenHandle       ExistingTokenHandle,
             [In]     TokenAccessLevels           DesiredAccess,
@@ -1969,8 +2336,8 @@ namespace Microsoft.Win32
             [In]     System.Security.Principal.TokenType TokenType,
             [In,Out] ref SafeAccessTokenHandle   DuplicateTokenHandle );
 
-        [DllImport(ADVAPI32, CharSet=CharSet.Auto, SetLastError=true)]
-        internal static extern 
+        
+        internal static 
         bool DuplicateTokenEx (
             [In]     SafeAccessTokenHandle      hExistingToken,
             [In]     uint                       dwDesiredAccess,
@@ -1979,42 +2346,36 @@ namespace Microsoft.Win32
             [In]     uint                       TokenType,
             [In,Out] ref SafeAccessTokenHandle  phNewToken);
 #endif
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "EqualDomainSid",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL IsEqualDomainSid(
+        
+        internal static BOOL IsEqualDomainSid(
             byte[] sid1,
             byte[] sid2,
-            out bool result);
+            out bool result)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern IntPtr GetCurrentProcess();
 
-        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern IntPtr GetCurrentThread();
+        internal static IntPtr GetCurrentProcess()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "GetSecurityDescriptorLength",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint GetSecurityDescriptorLength(
-            IntPtr byteArray);
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "GetSecurityInfo",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint GetSecurityInfoByHandle(
+        internal static IntPtr GetCurrentThread()
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static /*DWORD*/ uint GetSecurityDescriptorLength(
+            IntPtr byteArray)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+        internal static /*DWORD*/ uint GetSecurityInfoByHandle(
             SafeHandle handle,
             /*DWORD*/ uint objectType,
             /*DWORD*/ uint securityInformation,
@@ -2022,16 +2383,13 @@ namespace Microsoft.Win32
             out IntPtr sidGroup,
             out IntPtr dacl,
             out IntPtr sacl,
-            out IntPtr securityDescriptor);
+            out IntPtr securityDescriptor)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "GetNamedSecurityInfoW",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint GetSecurityInfoByName(
+        
+        internal static /*DWORD*/ uint GetSecurityInfoByName(
             string name,
             /*DWORD*/ uint objectType,
             /*DWORD*/ uint securityInformation,
@@ -2039,37 +2397,43 @@ namespace Microsoft.Win32
             out IntPtr sidGroup,
             out IntPtr dacl,
             out IntPtr sacl,
-            out IntPtr securityDescriptor);
+            out IntPtr securityDescriptor)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool GetTokenInformation(
             [In]  IntPtr TokenHandle,
             [In]  uint TokenInformationClass,
             [In]  SafeLocalAllocHandle TokenInformation,
             [In]  uint TokenInformationLength,
-            [Out] out uint ReturnLength);
+            [Out] out uint ReturnLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool GetTokenInformation(
             [In]  SafeAccessTokenHandle TokenHandle,
             [In]  uint TokenInformationClass,
             [In]  SafeLocalAllocHandle TokenInformation,
             [In]  uint TokenInformationLength,
-            [Out] out uint ReturnLength);
+            [Out] out uint ReturnLength)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "GetWindowsAccountDomainSid",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL GetWindowsAccountDomainSid(
+        
+        internal static BOOL GetWindowsAccountDomainSid(
             byte[] sid,
             [Out] byte[] resultSid,
-            ref /*DWORD*/ uint resultSidLength);
+            ref /*DWORD*/ uint resultSidLength)
+        {
+            throw new NotImplementedException();
+        }
 
         internal enum SECURITY_IMPERSONATION_LEVEL
         {
@@ -2228,108 +2592,99 @@ namespace Microsoft.Win32
             public CLAIM_VALUES_ATTRIBUTE_V1 Values;
         }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "IsWellKnownSid",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern BOOL IsWellKnownSid(
+        
+        internal static BOOL IsWellKnownSid(
             byte[] sid,
-            int type);
+            int type)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-            ADVAPI32,
-            EntryPoint = "LsaOpenPolicy",
-            CallingConvention = CallingConvention.Winapi,
-            SetLastError = true,
-            ExactSpelling = true,
-            CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint LsaOpenPolicy(
+        
+        internal static /*DWORD*/ uint LsaOpenPolicy(
             string systemName,
             ref LSA_OBJECT_ATTRIBUTES attributes,
             int accessMask,
             out SafeLsaPolicyHandle handle
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        [DllImport(
-            ADVAPI32,
-            EntryPoint = "LookupPrivilegeValueW",
-            CharSet = CharSet.Auto,
-            SetLastError = true,
-            ExactSpelling = true,
-            BestFitMapping = false)]
-        internal static extern
+        
+        internal static
         bool LookupPrivilegeValue(
             [In]     string lpSystemName,
             [In]     string lpName,
-            [In, Out] ref LUID Luid);
+            [In, Out] ref LUID Luid)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-            ADVAPI32,
-            EntryPoint = "LsaLookupSids",
-            CallingConvention = CallingConvention.Winapi,
-            SetLastError = true,
-            ExactSpelling = true,
-            CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint LsaLookupSids(
+        
+        internal static /*DWORD*/ uint LsaLookupSids(
             SafeLsaPolicyHandle handle,
             int count,
             IntPtr[] sids,
             ref SafeLsaMemoryHandle referencedDomains,
             ref SafeLsaMemoryHandle names
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern int LsaFreeMemory(IntPtr handle);
+        internal static int LsaFreeMemory(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-            ADVAPI32,
-            EntryPoint = "LsaLookupNames",
-            CallingConvention = CallingConvention.Winapi,
-            SetLastError = true,
-            ExactSpelling = true,
-            CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint LsaLookupNames(
+        
+        internal static /*DWORD*/ uint LsaLookupNames(
             SafeLsaPolicyHandle handle,
             int count,
             UNICODE_STRING[] names,
             ref SafeLsaMemoryHandle referencedDomains,
             ref SafeLsaMemoryHandle sids
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-            ADVAPI32,
-            EntryPoint = "LsaLookupNames2",
-            CallingConvention = CallingConvention.Winapi,
-            SetLastError = true,
-            ExactSpelling = true,
-            CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint LsaLookupNames2(
+        
+        internal static /*DWORD*/ uint LsaLookupNames2(
             SafeLsaPolicyHandle handle,
             int flags,
             int count,
             UNICODE_STRING[] names,
             ref SafeLsaMemoryHandle referencedDomains,
             ref SafeLsaMemoryHandle sids
-            );
+            )
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         int LsaConnectUntrusted(
-            [In, Out] ref SafeLsaLogonProcessHandle LsaHandle);
+            [In, Out] ref SafeLsaLogonProcessHandle LsaHandle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         int LsaGetLogonSessionData(
             [In]     ref LUID LogonId,
-            [In, Out] ref SafeLsaReturnBufferHandle ppLogonSessionData);
+            [In, Out] ref SafeLsaReturnBufferHandle ppLogonSessionData)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         int LsaLogonUser(
             [In]     SafeLsaLogonProcessHandle LsaHandle,
             [In]     ref UNICODE_INTPTR_STRING OriginName,
@@ -2344,99 +2699,117 @@ namespace Microsoft.Win32
             [In, Out] ref LUID LogonId,
             [In, Out] ref SafeAccessTokenHandle Token,
             [In, Out] ref QUOTA_LIMITS Quotas,
-            [In, Out] ref int SubStatus);
+            [In, Out] ref int SubStatus)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         int LsaLookupAuthenticationPackage(
             [In]     SafeLsaLogonProcessHandle LsaHandle,
             [In]     ref UNICODE_INTPTR_STRING PackageName,
-            [In, Out] ref uint AuthenticationPackage);
+            [In, Out] ref uint AuthenticationPackage)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern
+        
+        internal static
         int LsaRegisterLogonProcess(
             [In]     ref UNICODE_INTPTR_STRING LogonProcessName,
             [In, Out] ref SafeLsaLogonProcessHandle LsaHandle,
-            [In, Out] ref IntPtr SecurityMode);
+            [In, Out] ref IntPtr SecurityMode)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern int LsaDeregisterLogonProcess(IntPtr handle);
+        internal static int LsaDeregisterLogonProcess(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(ADVAPI32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern int LsaClose(IntPtr handle);
+        internal static int LsaClose(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(SECUR32, SetLastError = true)]
+        
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern int LsaFreeReturnBuffer(IntPtr handle);
+        internal static int LsaFreeReturnBuffer(IntPtr handle)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_IMPERSONATION || FEATURE_CORECLR
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern
+        
+        internal static
         bool OpenProcessToken(
             [In]     IntPtr ProcessToken,
             [In]     TokenAccessLevels DesiredAccess,
-            [Out]    out SafeAccessTokenHandle TokenHandle);
+            [Out]    out SafeAccessTokenHandle TokenHandle)
+        {
+            throw new NotImplementedException();
+        }
 #endif
 
 #if FEATURE_CORECLR
-        [DllImport(ADVAPI32, CharSet = CharSet.Unicode, SetLastError = true)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern
+        internal static
         bool OpenThreadToken(
             [In]     IntPtr ThreadHandle,
             [In]     TokenAccessLevels DesiredAccess,
             [In, MarshalAs(UnmanagedType.Bool)]     bool OpenAsSelf,
-            [Out]    out SafeAccessTokenHandle TokenHandle);
+            [Out]    out SafeAccessTokenHandle TokenHandle)
+        {
+            throw new NotImplementedException();
+        }
 #endif
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "SetNamedSecurityInfoW",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint SetSecurityInfoByName(
+        
+        internal static /*DWORD*/ uint SetSecurityInfoByName(
             string name,
             /*DWORD*/ uint objectType,
             /*DWORD*/ uint securityInformation,
             byte[] owner,
             byte[] group,
             byte[] dacl,
-            byte[] sacl);
+            byte[] sacl)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(
-             ADVAPI32,
-             EntryPoint = "SetSecurityInfo",
-             CallingConvention = CallingConvention.Winapi,
-             SetLastError = true,
-             ExactSpelling = true,
-             CharSet = CharSet.Unicode)]
-        internal static extern /*DWORD*/ uint SetSecurityInfoByHandle(
+        
+        internal static /*DWORD*/ uint SetSecurityInfoByHandle(
             SafeHandle handle,
             /*DWORD*/ uint objectType,
             /*DWORD*/ uint securityInformation,
             byte[] owner,
             byte[] group,
             byte[] dacl,
-            byte[] sacl);
+            byte[] sacl)
+        {
+            throw new NotImplementedException();
+        }
 
         // Fusion APIs
 #if FEATURE_FUSION
-        [DllImport(MSCORWKS, CharSet=CharSet.Unicode)]
-        internal static extern int CreateAssemblyNameObject(out IAssemblyName ppEnum, String szAssemblyName, uint dwFlags, IntPtr pvReserved);
+        
+        internal static int CreateAssemblyNameObject(out IAssemblyName ppEnum, String szAssemblyName, uint dwFlags, IntPtr pvReserved);
     
-        [DllImport(MSCORWKS, CharSet=CharSet.Auto)]
-        internal static extern int CreateAssemblyEnum(out IAssemblyEnum ppEnum, IApplicationContext pAppCtx, IAssemblyName pName, uint dwFlags, IntPtr pvReserved);
+        
+        internal static int CreateAssemblyEnum(out IAssemblyEnum ppEnum, IApplicationContext pAppCtx, IAssemblyName pName, uint dwFlags, IntPtr pvReserved);
 #endif // FEATURE_FUSION
 
 #if FEATURE_CORECLR
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode)]
+        
         [SuppressUnmanagedCodeSecurityAttribute()]
-        internal unsafe static extern int WideCharToMultiByte(
+        internal unsafe static int WideCharToMultiByte(
             int CodePage,
             UInt32 dwFlags,
             char* lpWideCharStr,
@@ -2444,27 +2817,36 @@ namespace Microsoft.Win32
             byte* lpMultiByteStr,
             int cchMultiByte,
             char* lpDefaultChar,
-            bool* lpUsedDefaultChar);
+            bool* lpUsedDefaultChar)
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport(KERNEL32, CharSet = CharSet.Unicode)]
+        
         [SuppressUnmanagedCodeSecurityAttribute()]
-        internal unsafe static extern int MultiByteToWideChar(
+        internal unsafe static int MultiByteToWideChar(
             int CodePage,
             UInt32 dwFlags,
             byte* lpMultiByteStr,
             int cchMultiByte,
             char* lpWideCharStr,
-            int cchWideChar);
+            int cchWideChar)
+        {
+            throw new NotImplementedException();
+        }
 #endif  // FEATURE_CORECLR
 
-        [DllImport(KERNEL32, SetLastError = true)]
+        
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal extern static bool QueryUnbiasedInterruptTime(out ulong UnbiasedTime);
+        internal static bool QueryUnbiasedInterruptTime(out ulong UnbiasedTime)
+        {
+            throw new NotImplementedException();
+        }
 
 #if FEATURE_PAL
-        [DllImport(KERNEL32, EntryPoint = "PAL_Random")]
+        
         [ResourceExposure(ResourceScope.None)]
-        internal extern static bool Random(bool bStrong,
+        internal static bool Random(bool bStrong,
                            [Out, MarshalAs(UnmanagedType.LPArray)] byte[] buffer, int length);
 #endif
     }

@@ -1,13 +1,11 @@
 ﻿namespace System.Threading
 {
     using System.Runtime.CompilerServices;
-    using System.Runtime.ConstrainedExecution;
-    using System.Security.Principal;
 
     /// <summary>
     /// Partial implementation of Monitor
     /// </summary>
-    public partial class Monitor
+    partial class Monitor
     {
         private const int CLOCK_REALTIME = 0;
 

@@ -913,7 +913,7 @@ namespace System.Threading
         }
     }
 
-    internal sealed class RegisteredWaitHandleSafe : CriticalFinalizerObject
+    internal sealed partial class RegisteredWaitHandleSafe : CriticalFinalizerObject
     {
         private static IntPtr InvalidHandle
         {
@@ -1073,14 +1073,6 @@ namespace System.Threading
                 }
             }
         }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void WaitHandleCleanupNative(IntPtr handle);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern bool UnregisterWaitNative(IntPtr handle, SafeHandle waitObject);
     }
 
 [System.Runtime.InteropServices.ComVisible(true)]
@@ -1347,7 +1339,7 @@ namespace System.Threading
 #endif
 #endif
 #endif
-    public static class ThreadPool
+    public static partial class ThreadPool
     {
 
         #if FEATURE_CORECLR
@@ -1769,15 +1761,6 @@ namespace System.Threading
             return ToObjectArray(GetLocallyQueuedWorkItems());
         }
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        internal static extern bool RequestWorkerThread();
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        unsafe private static extern bool PostQueuedCompletionStatus(NativeOverlapped* overlapped);
-
         [System.Security.SecurityCritical]  // auto-generated_required
         [CLSCompliant(false)]
         unsafe public static bool UnsafeQueueNativeOverlapped(NativeOverlapped* overlapped)
@@ -1803,34 +1786,6 @@ namespace System.Threading
 
         // Native methods: 
     
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern bool SetMinThreadsNative(int workerThreads, int completionPortThreads);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern bool SetMaxThreadsNative(int workerThreads, int completionPortThreads);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void GetMinThreadsNative(out int workerThreads, out int completionPortThreads);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void GetMaxThreadsNative(out int workerThreads, out int completionPortThreads);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void GetAvailableThreadsNative(out int workerThreads, out int completionPortThreads);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern bool NotifyWorkItemComplete();
-
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern void ReportThreadStatus(bool isWorking);
-
         [System.Security.SecuritySafeCritical]
         internal static void NotifyWorkItemProgress()
         {
@@ -1838,31 +1793,6 @@ namespace System.Threading
                 ThreadPool.InitializeVMTp(ref ThreadPoolGlobals.enableWorkerTracking);
             NotifyWorkItemProgressNative();
         }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern void NotifyWorkItemProgressNative();
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern bool IsThreadPoolHosted();
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern void InitializeVMTp(ref bool enableWorkerTracking);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern IntPtr RegisterWaitForSingleObjectNative(  
-             WaitHandle             waitHandle,
-             Object                 state,
-             uint                   timeOutInterval,
-             bool                   executeOnlyOnce,
-             RegisteredWaitHandle   registeredWaitHandle,
-             ref StackCrawlMark     stackMark,
-             bool                   compressStack   
-             );
 
 #if !FEATURE_CORECLR
         [System.Security.SecuritySafeCritical]  // auto-generated
@@ -1912,10 +1842,5 @@ namespace System.Threading
             }
             return ret;
         }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        private static extern bool BindIOCompletionCallbackNative(IntPtr fileHandle);
     }
 }

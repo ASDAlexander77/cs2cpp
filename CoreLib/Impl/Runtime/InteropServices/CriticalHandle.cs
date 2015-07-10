@@ -2,7 +2,7 @@
 
 namespace System.Runtime.InteropServices
 {
-    public abstract partial class CriticalHandle
+    partial class CriticalHandle
     {
         private void FireCustomerDebugProbe()
         {
