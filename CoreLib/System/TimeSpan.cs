@@ -36,6 +36,9 @@ namespace System
         public static readonly TimeSpan MaxValue = new TimeSpan(Int64.MaxValue);
         public static readonly TimeSpan MinValue = new TimeSpan(Int64.MinValue);
 
+        internal const long MaxSeconds = Int64.MaxValue / TicksPerSecond;
+        internal const long MinSeconds = Int64.MinValue / TicksPerSecond;
+
         private const double MillisecondsPerTick = 1.0 / TicksPerMillisecond;
         private const double SecondsPerTick = 1.0 / TicksPerSecond;
         private const double MinutesPerTick = 1.0 / TicksPerMinute;
@@ -50,14 +53,24 @@ namespace System
             m_ticks = ticks;
         }
 
-        
-        extern public TimeSpan(int hours, int minutes, int seconds);
 
-        
-        extern public TimeSpan(int days, int hours, int minutes, int seconds);
+        public TimeSpan(int hours, int minutes, int seconds)
+        {
+            m_ticks = TimeToTicks(hours, minutes, seconds);
+        }
 
-        
-        extern public TimeSpan(int days, int hours, int minutes, int seconds, int milliseconds);
+        public TimeSpan(int days, int hours, int minutes, int seconds)
+            : this(days, hours, minutes, seconds, 0)
+        {
+        }
+
+        public TimeSpan(int days, int hours, int minutes, int seconds, int milliseconds)
+        {
+            Int64 totalMilliSeconds = ((Int64)days * 3600 * 24 + (Int64)hours * 3600 + (Int64)minutes * 60 + seconds) * 1000 + milliseconds;
+            if (totalMilliSeconds > MaxMilliSeconds || totalMilliSeconds < MinMilliSeconds)
+                throw new ArgumentOutOfRangeException(null, Environment.GetResourceString("Overflow_TimeSpanTooLong"));
+            m_ticks = (long)totalMilliSeconds * TicksPerMillisecond;
+        }
 
         public long Ticks
         {
@@ -238,6 +251,15 @@ namespace System
             return t1.m_ticks >= t2.m_ticks;
         }
 
+        internal static long TimeToTicks(int hour, int minute, int second)
+        {
+            // totalSeconds is bounded by 2^31 * 2^12 + 2^31 * 2^8 + 2^31,
+            // which is less than 2^44, meaning we won't overflow totalSeconds.
+            long totalSeconds = (long)hour * 3600 + (long)minute * 60 + (long)second;
+            if (totalSeconds > MaxSeconds || totalSeconds < MinSeconds)
+                throw new ArgumentOutOfRangeException(null, Environment.GetResourceString("Overflow_TimeSpanTooLong"));
+            return totalSeconds * TicksPerSecond;
+        }
     }
 }
 

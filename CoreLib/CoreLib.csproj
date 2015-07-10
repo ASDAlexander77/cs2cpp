@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Impl\ArgIterator.cs" />
+    <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
@@ -427,7 +428,10 @@
       <DependentUpon>CultureInfo.en.NoCulture</DependentUpon>
     </EmbeddedResource>
     <Compile Include="System\Globalization\CultureTypes.cs" />
-    <Compile Include="System\Globalization\DateTimeFormat.cs" />
+    <Compile Include="System\Globalization\DateTimeFormat.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Globalization\DateTimeFormatInfo.cs" />
     <Compile Include="System\Globalization\DaylightTime.cs" />
     <Compile Include="System\Globalization\NumberFormatInfo.cs" />
