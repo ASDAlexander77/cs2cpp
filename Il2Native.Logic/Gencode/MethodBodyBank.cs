@@ -170,6 +170,9 @@
             // Interlocked
             ExchangeGen.Register(typeResolver);
             CompareExchangeGen.Register(typeResolver);
+
+            // AppDomain
+            CreateDomainGen.Register(typeResolver);
         }
 
         [Obsolete]

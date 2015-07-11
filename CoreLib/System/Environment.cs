@@ -94,7 +94,7 @@
 
         public static string GetEnvironmentVariable(string envVarName)
         {
-            throw new NotImplementedException();
+            return string.Empty;
         }
     }
 }

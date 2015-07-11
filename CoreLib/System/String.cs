@@ -984,7 +984,7 @@ namespace System
 
         public int IndexOf(string value, StringComparison comparison)
         {
-            throw new NotImplementedException();
+            return IndexOf(value);
         }
 
         public int IndexOf(char value, int startIndex, int count)

@@ -1376,7 +1376,7 @@ namespace Microsoft.Win32
         
         internal static IntPtr GetStdHandle(int nStdHandle)  // param is NOT a handle, but it returns one!
         {
-            throw new NotImplementedException();
+            return new IntPtr(nStdHandle);
         }
 
         // From wincon.h

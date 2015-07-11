@@ -322,10 +322,6 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.Return();
             }
-            else
-            {
-                ilCodeBuilder.Throw(IlReader.FindConstructor(typeResolver.System.System_NullReferenceException, typeResolver));
-            }
 
             ilCodeBuilder.Add(jumpIfNotNull);
 
@@ -716,7 +712,7 @@ namespace Il2Native.Logic.Gencode
                     operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
 
                     var opCodeThis = OpCodePart.CreateNop;
-                    opCodeThis.Result = new ConstValue("0/*null*/", declaringType);
+                    opCodeThis.Result = new ConstValue("(System_String*)1/*dummay value for __this*/", declaringType);
                     operands.Insert(0, opCodeThis);
 
                     opCodeNope.OpCodeOperands = operands.ToArray();

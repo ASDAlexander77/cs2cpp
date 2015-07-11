@@ -69,6 +69,7 @@
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />
+    <Compile Include="Gencode\InternalMethods\AppDomain\CreateDomain.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetLengthDimGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetLengthGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetLowerBoundGen.cs" />
