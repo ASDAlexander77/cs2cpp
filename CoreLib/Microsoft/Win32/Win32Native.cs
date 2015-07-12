@@ -113,6 +113,64 @@ namespace Microsoft.Win32
     [SuppressUnmanagedCodeSecurityAttribute()]
     internal static class Win32Native
     {
+        private const int STDIN_FILENO = 0;
+        private const int STDOUT_FILENO = 1;
+        private const int STDERR_FILENO = 2;
+
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public unsafe static extern byte* realpath(byte* file_name, byte* resolved_name);
+
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public unsafe static extern int write(int fd, void* buf, int count);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static void* fopen(byte* fileName, byte* mode);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fclose(void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fread(void* ptr, int elementSize, int count, void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fwrite(void* ptr, int elementSize, int count, void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fflush(void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fseek(void* ptr, int offset, int origin);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int ftell(void* ptr);
+
+        public static byte[] ToAsciiString(string s)
+        {
+            if (s == null)
+            {
+                throw new ArgumentNullException("s", "String");
+            }
+
+            var byteCount = Encoding.ASCII.GetByteCount(s);
+            // +1 needed for ending \0
+            var bytes = new byte[byteCount + 1];
+            var bytesReceived = Encoding.ASCII.GetBytes(s, 0, s.Length, bytes, 0);
+            return bytes;
+        }
+
+        public static byte[] ToAsciiString(char[] chars)
+        {
+            if (chars == null)
+            {
+                throw new ArgumentNullException("chars", "Chars");
+            }
+
+            var byteCount = Encoding.ASCII.GetByteCount(chars);
+            // +1 needed for ending \0
+            var bytes = new byte[byteCount + 1];
+            var bytesReceived = Encoding.ASCII.GetBytes(chars, 0, chars.Length, bytes, 0);
+            return bytes;
+        }
 
         internal const int KEY_QUERY_VALUE = 0x0001;
         internal const int KEY_SET_VALUE = 0x0002;
@@ -765,7 +823,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static int FormatMessage(int dwFlags, IntPtr lpSource,
                     int dwMessageId, int dwLanguageId, [Out]StringBuilder lpBuffer,
                     int nSize, IntPtr va_list_arguments)
@@ -792,14 +850,14 @@ namespace Microsoft.Win32
             }
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         internal static IntPtr LocalAlloc_NoSafeHandle(int uFlags, UIntPtr sizetdwBytes)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         SafeLocalAllocHandle LocalAlloc(
             [In] int uFlags,
@@ -808,7 +866,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static IntPtr LocalFree(IntPtr handle)
         {
@@ -816,7 +874,7 @@ namespace Microsoft.Win32
         }
 
         // MSDN says the length is a SIZE_T.
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static void ZeroMemory(IntPtr address, UIntPtr length)
         {
@@ -844,14 +902,14 @@ namespace Microsoft.Win32
         // VirtualAlloc should generally be avoided, but is needed in 
         // the MemoryFailPoint implementation (within a CER) to increase the 
         // size of the page file, ignoring any host memory allocators.
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         unsafe internal static void* VirtualAlloc(void* address, UIntPtr numBytes, int commitOrReserve, int pageProtectionMode)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         unsafe internal static bool VirtualFree(void* address, UIntPtr numBytes, int pageFreeMode)
         {
@@ -871,7 +929,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         private static IntPtr GetModuleHandle(String moduleName)
         {
@@ -894,7 +952,7 @@ namespace Microsoft.Win32
 
         // There is no need to call CloseProcess or to use a SafeHandle if you get the handle
         // using GetCurrentProcess as it returns a pseudohandle
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool IsWow64Process(
                    [In]
@@ -1054,7 +1112,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         internal static SafeWaitHandle CreateMutex(SECURITY_ATTRIBUTES lpSecurityAttributes, bool initialOwner, String name)
         {
@@ -1067,7 +1125,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         internal static bool ReleaseMutex(SafeWaitHandle handle)
         {
@@ -1077,7 +1135,28 @@ namespace Microsoft.Win32
 
         internal unsafe static int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero)
         {
-            throw new NotImplementedException();
+            if (path == null)
+            {
+                throw new ArgumentNullException("path", "path");
+            }
+
+            var byteCount = Encoding.ASCII.GetByteCount(path, string.wcslen(path));
+            // +1 needed for ending \0
+            var bytes = stackalloc byte[byteCount + 1];
+
+            var bytesReceived = Encoding.ASCII.GetBytes(path, string.wcslen(path), bytes, byteCount);
+
+            var chars = stackalloc byte[numBufferChars * sizeof(char)];
+
+            var result = (int)realpath(bytes, chars);
+
+            if (result != 0)
+            {
+                Encoding.Unicode.GetChars(chars, numBufferChars, buffer, numBufferChars);
+                return result;
+            }
+
+            return result;
         }
 
 
@@ -1143,7 +1222,7 @@ namespace Microsoft.Win32
         // The safe version does not support devices (aka if will only open
         // files on disk), while the unsafe version give you the full semantic
         // of the native version.
-        
+
         private static SafeFileHandle CreateFile(String lpFileName,
                     int dwDesiredAccess, System.IO.FileShare dwShareMode,
                     SECURITY_ATTRIBUTES securityAttrs, System.IO.FileMode dwCreationDisposition,
@@ -1158,21 +1237,21 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static IntPtr MapViewOfFile(
             SafeFileMappingHandle handle, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumerOfBytesToMap)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool UnmapViewOfFile(IntPtr lpBaseAddress)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool CloseHandle(IntPtr handle)
         {
@@ -1182,7 +1261,13 @@ namespace Microsoft.Win32
 
         internal static int GetFileType(SafeFileHandle handle)
         {
-            throw new NotImplementedException();
+            var stdId = handle.DangerousGetHandle().ToInt32();
+            if (stdId == STD_OUTPUT_HANDLE || stdId == STD_ERROR_HANDLE)
+            {
+                return FILE_TYPE_CHAR;
+            }
+
+            return FILE_TYPE_DISK;
         }
 
 
@@ -1191,7 +1276,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool FlushFileBuffers(SafeFileHandle hFile)
         {
@@ -1224,7 +1309,7 @@ namespace Microsoft.Win32
         // struct in a callback (or an EndRead method called by that callback), 
         // and pass in an address for the numBytesRead parameter.  
 
-        
+
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, IntPtr numBytesRead_mustBeZero, NativeOverlapped* overlapped)
         {
             throw new NotImplementedException();
@@ -1243,15 +1328,28 @@ namespace Microsoft.Win32
         // struct in a callback (or an EndWrite method called by that callback),
         // and pass in an address for the numBytesRead parameter.  
 
-        
+
         internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, IntPtr numBytesWritten_mustBeZero, NativeOverlapped* lpOverlapped)
         {
             throw new NotImplementedException();
         }
-        
+
         internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero)
         {
-            throw new NotImplementedException();
+            if (handle.DangerousGetHandle().ToInt32() == STD_OUTPUT_HANDLE)
+            {
+                numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
+            }
+            else if (handle.DangerousGetHandle().ToInt32() == STD_ERROR_HANDLE)
+            {
+                numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
+            }
+            else
+            {
+                numBytesWritten = fwrite(bytes, sizeof(byte), numBytesToWrite, handle.DangerousGetHandle().ToPointer());
+            }
+
+            return numBytesWritten < numBytesToWrite ? 0 : 1;
         }
 
         // This is only available on Vista or higher
@@ -1288,14 +1386,14 @@ namespace Microsoft.Win32
         }
 
         // The following 4 methods are used by Microsoft.WlcProfile
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool QueryPerformanceCounter(out long value)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool QueryPerformanceFrequency(out long value)
         {
@@ -1308,7 +1406,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool ReleaseSemaphore(SafeWaitHandle handle, int releaseCount, out int previousCount)
@@ -1344,7 +1442,7 @@ namespace Microsoft.Win32
         {
             throw new NotImplementedException();
         }
-        
+
         internal unsafe static bool SetFileTime(SafeFileHandle hFile, FILE_TIME* creationTime,
                     FILE_TIME* lastAccessTime, FILE_TIME* lastWriteTime)
         {
@@ -1373,7 +1471,7 @@ namespace Microsoft.Win32
         internal const int STD_OUTPUT_HANDLE = -11;
         internal const int STD_ERROR_HANDLE = -12;
 
-        
+
         internal static IntPtr GetStdHandle(int nStdHandle)  // param is NOT a handle, but it returns one!
         {
             return new IntPtr(nStdHandle);
@@ -1532,7 +1630,7 @@ namespace Microsoft.Win32
             return CopyFileEx(src, dst, IntPtr.Zero, IntPtr.Zero, ref cancel, failIfExists ? 1U : 0U);
         }
 #else // FEATURE_CORESYSTEM
-        
+
         internal static bool CopyFile(
                     String src, String dst, bool failIfExists)
         {
@@ -1540,7 +1638,7 @@ namespace Microsoft.Win32
         }
 #endif // FEATURE_CORESYSTEM
 
-        
+
         internal static bool CreateDirectory(
                     String path, SECURITY_ATTRIBUTES lpSecurityAttributes)
         {
@@ -1577,7 +1675,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool FindNextFile(
                     SafeFindHandle hndFindFile,
                     [In, Out, MarshalAs(UnmanagedType.LPStruct)]
@@ -1586,14 +1684,14 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool FindClose(IntPtr handle)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static int GetCurrentDirectory(
                   int nBufferLength,
                   [Out]StringBuilder lpBuffer)
@@ -1699,7 +1797,7 @@ namespace Microsoft.Win32
         // A Win32 HandlerRoutine
         internal delegate bool ConsoleCtrlHandlerRoutine(int controlType);
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool SetConsoleCtrlHandler(ConsoleCtrlHandlerRoutine handler, bool addOrRemove)
         {
@@ -1876,7 +1974,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
             out CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo)
         {
@@ -1895,21 +1993,21 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool FillConsoleOutputCharacter(IntPtr hConsoleOutput,
             char character, int nLength, COORD dwWriteCoord, out int pNumCharsWritten)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool FillConsoleOutputAttribute(IntPtr hConsoleOutput,
             short wColorAttribute, int numCells, COORD startCoord, out int pNumBytesWritten)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static unsafe bool SetConsoleWindowInfo(IntPtr hConsoleOutput,
             bool absolute, SMALL_RECT* consoleWindow)
         {
@@ -1922,21 +2020,21 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool SetConsoleCursorPosition(IntPtr hConsoleOutput,
             COORD cursorPosition)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool GetConsoleCursorInfo(IntPtr hConsoleOutput,
             out CONSOLE_CURSOR_INFO cci)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool SetConsoleCursorInfo(IntPtr hConsoleOutput,
             ref CONSOLE_CURSOR_INFO cci)
         {
@@ -1967,7 +2065,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static unsafe bool ReadConsoleW(SafeFileHandle hConsoleInput, Byte* lpBuffer, Int32 nNumberOfCharsToRead, out Int32 lpNumberOfCharsRead, IntPtr pInputControl)
         {
@@ -1980,14 +2078,14 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static unsafe bool WriteConsoleW(SafeFileHandle hConsoleOutput, Byte* lpBuffer, Int32 nNumberOfCharsToWrite, out Int32 lpNumberOfCharsWritten, IntPtr lpReservedMustBeNull)
         {
             throw new NotImplementedException();
         }
 
-          // Appears to always succeed
+        // Appears to always succeed
         internal static short GetKeyState(int virtualKeyCode)
         {
             throw new NotImplementedException();
@@ -2190,14 +2288,14 @@ namespace Microsoft.Win32
 
         internal const int NameSamCompatible = 2;
 
-        
+
         // Win32 return type is BOOLEAN (which is 1 byte and not BOOL which is 4bytes)
         internal static byte GetUserNameEx(int format, [Out]StringBuilder domainName, ref uint domainNameLen)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool LookupAccountName(string machineName, string accountName, byte[] sid,
                                  ref int sidLen, [Out]StringBuilder domainName, ref uint domainNameLen, out int peUse)
         {
@@ -2213,14 +2311,14 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static bool GetUserObjectInformation(IntPtr hObj, int nIndex,
             [MarshalAs(UnmanagedType.LPStruct)] USEROBJECTFLAGS pvBuffer, int nLength, ref int lpnLengthNeeded)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static IntPtr SendMessageTimeout(IntPtr hWnd, int Msg, IntPtr wParam, String lParam, uint fuFlags, uint uTimeout, IntPtr lpdwResult)
         {
             throw new NotImplementedException();
@@ -2263,7 +2361,7 @@ namespace Microsoft.Win32
 #endif // FEATURE_COMINTEROP
 
 #if FEATURE_CORECLR
-        
+
         internal static int RtlNtStatusToDosError(
             [In]    int status)
         {
@@ -2277,7 +2375,7 @@ namespace Microsoft.Win32
             [In]    int         status);
 #endif
         // Get the current FIPS policy setting on Vista and above
-        
+
         internal static uint BCryptGetFipsAlgorithmMode(
                 [MarshalAs(UnmanagedType.U1), Out]out bool pfEnabled)
         {
@@ -2288,7 +2386,7 @@ namespace Microsoft.Win32
         // Managed ACLs
         //
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]        
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         internal static
         bool AdjustTokenPrivileges(
             [In]     SafeAccessTokenHandle TokenHandle,
@@ -2301,7 +2399,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         bool AllocateLocallyUniqueId(
             [In, Out] ref LUID Luid)
@@ -2309,7 +2407,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         bool CheckTokenMembership(
             [In]     SafeAccessTokenHandle TokenHandle,
@@ -2319,7 +2417,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static BOOL ConvertSdToStringSd(
             byte[] securityDescriptor,
             /* DWORD */ uint requestedRevision,
@@ -2330,7 +2428,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static BOOL ConvertStringSdToSd(
             string stringSd,
             /* DWORD */ uint stringSdRevision,
@@ -2340,7 +2438,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static BOOL ConvertStringSidToSid(
             string stringSid,
             out IntPtr ByteArray
@@ -2349,7 +2447,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool ConvertSidToStringSid(
             IntPtr Sid,
@@ -2360,7 +2458,7 @@ namespace Microsoft.Win32
         }
 
 
-        
+
         internal static BOOL CreateWellKnownSid(
             int sidType,
             byte[] domainSid,
@@ -2370,7 +2468,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         bool DuplicateHandle(
             [In]     IntPtr hSourceProcessHandle,
@@ -2385,7 +2483,7 @@ namespace Microsoft.Win32
         }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        
+
         internal static
         bool DuplicateHandle(
             [In]     IntPtr hSourceProcessHandle,
@@ -2421,7 +2519,7 @@ namespace Microsoft.Win32
             [In]     uint                       TokenType,
             [In,Out] ref SafeAccessTokenHandle  phNewToken);
 #endif
-        
+
         internal static BOOL IsEqualDomainSid(
             byte[] sid1,
             byte[] sid2,
@@ -2442,14 +2540,14 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint GetSecurityDescriptorLength(
             IntPtr byteArray)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint GetSecurityInfoByHandle(
             SafeHandle handle,
             /*DWORD*/ uint objectType,
@@ -2463,7 +2561,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint GetSecurityInfoByName(
             string name,
             /*DWORD*/ uint objectType,
@@ -2477,7 +2575,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         bool GetTokenInformation(
             [In]  IntPtr TokenHandle,
@@ -2489,7 +2587,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         bool GetTokenInformation(
             [In]  SafeAccessTokenHandle TokenHandle,
@@ -2501,7 +2599,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static BOOL GetWindowsAccountDomainSid(
             byte[] sid,
             [Out] byte[] resultSid,
@@ -2667,7 +2765,7 @@ namespace Microsoft.Win32
             public CLAIM_VALUES_ATTRIBUTE_V1 Values;
         }
 
-        
+
         internal static BOOL IsWellKnownSid(
             byte[] sid,
             int type)
@@ -2675,7 +2773,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint LsaOpenPolicy(
             string systemName,
             ref LSA_OBJECT_ATTRIBUTES attributes,
@@ -2687,7 +2785,7 @@ namespace Microsoft.Win32
         }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        
+
         internal static
         bool LookupPrivilegeValue(
             [In]     string lpSystemName,
@@ -2697,7 +2795,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint LsaLookupSids(
             SafeLsaPolicyHandle handle,
             int count,
@@ -2709,14 +2807,14 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static int LsaFreeMemory(IntPtr handle)
         {
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint LsaLookupNames(
             SafeLsaPolicyHandle handle,
             int count,
@@ -2728,7 +2826,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint LsaLookupNames2(
             SafeLsaPolicyHandle handle,
             int flags,
@@ -2741,7 +2839,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         int LsaConnectUntrusted(
             [In, Out] ref SafeLsaLogonProcessHandle LsaHandle)
@@ -2749,7 +2847,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         int LsaGetLogonSessionData(
             [In]     ref LUID LogonId,
@@ -2758,7 +2856,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         int LsaLogonUser(
             [In]     SafeLsaLogonProcessHandle LsaHandle,
@@ -2779,7 +2877,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         int LsaLookupAuthenticationPackage(
             [In]     SafeLsaLogonProcessHandle LsaHandle,
@@ -2789,7 +2887,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static
         int LsaRegisterLogonProcess(
             [In]     ref UNICODE_INTPTR_STRING LogonProcessName,
@@ -2799,21 +2897,21 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static int LsaDeregisterLogonProcess(IntPtr handle)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static int LsaClose(IntPtr handle)
         {
             throw new NotImplementedException();
         }
 
-        
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static int LsaFreeReturnBuffer(IntPtr handle)
         {
@@ -2821,7 +2919,7 @@ namespace Microsoft.Win32
         }
 
 #if FEATURE_IMPERSONATION || FEATURE_CORECLR
-        
+
         internal static
         bool OpenProcessToken(
             [In]     IntPtr ProcessToken,
@@ -2833,7 +2931,7 @@ namespace Microsoft.Win32
 #endif
 
 #if FEATURE_CORECLR
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static
         bool OpenThreadToken(
@@ -2846,7 +2944,7 @@ namespace Microsoft.Win32
         }
 #endif
 
-        
+
         internal static /*DWORD*/ uint SetSecurityInfoByName(
             string name,
             /*DWORD*/ uint objectType,
@@ -2859,7 +2957,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         internal static /*DWORD*/ uint SetSecurityInfoByHandle(
             SafeHandle handle,
             /*DWORD*/ uint objectType,
@@ -2882,7 +2980,7 @@ namespace Microsoft.Win32
 #endif // FEATURE_FUSION
 
 #if FEATURE_CORECLR
-        
+
         [SuppressUnmanagedCodeSecurityAttribute()]
         internal unsafe static int WideCharToMultiByte(
             int CodePage,
@@ -2897,7 +2995,7 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        
+
         [SuppressUnmanagedCodeSecurityAttribute()]
         internal unsafe static int MultiByteToWideChar(
             int CodePage,
@@ -2911,7 +3009,7 @@ namespace Microsoft.Win32
         }
 #endif  // FEATURE_CORECLR
 
-        
+
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static bool QueryUnbiasedInterruptTime(out ulong UnbiasedTime)
         {

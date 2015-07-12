@@ -551,7 +551,29 @@ namespace System
 
         private String TrimHelper(char[] trimChars, int trimType)
         {
-            throw new NotImplementedException();
+            //end will point to the first non-trimmed character on the right
+            //start will point to the first non-trimmed character on the Left
+            int end = this.Length - 1;
+            int start = 0;
+
+            //Trim specified characters.
+            if (trimType != TrimTail)
+            {
+                for (start = 0; start < this.Length; start++)
+                {
+                    if (!Char.IsWhiteSpace(this[start])) break;
+                }
+            }
+
+            if (trimType != TrimHead)
+            {
+                for (end = Length - 1; end >= start; end--)
+                {
+                    if (!Char.IsWhiteSpace(this[end])) break;
+                }
+            }
+
+            return CreateTrimmedString(start, end);
         }
 
         public String(char[] value, int startIndex, int length)
@@ -1011,17 +1033,30 @@ namespace System
 
         public int IndexOfAny(char[] anyOf)
         {
-            throw new NotImplementedException();
+            return IndexOfAny(anyOf, 0);
         }
 
         public int IndexOfAny(char[] anyOf, int startIndex)
         {
-            throw new NotImplementedException();
+            return IndexOfAny(anyOf, startIndex, anyOf.Length - startIndex);
         }
 
         public int IndexOfAny(char[] anyOf, int startIndex, int count)
         {
-            throw new NotImplementedException();
+            var length = Length;
+            for (var ci = 0; ci < length; ci++)
+            {
+                var length2 = startIndex + count;
+                for (var i = startIndex; i < length2; i++)
+                {
+                    if (this[ci] == anyOf[i])
+                    {
+                        return ci;
+                    }
+                }
+            }
+
+            return -1;
         }
 
         public bool Contains(string value)
@@ -1637,7 +1672,7 @@ namespace System
             Buffer.Memcpy((byte*)dmem, (byte*)smem, charCount * 2); // 2 used everywhere instead of sizeof(char)
         }
 
-        private static unsafe int wcslen(char* ptr)
+        public static unsafe int wcslen(char* ptr)
         {
             char* end = ptr;
 
