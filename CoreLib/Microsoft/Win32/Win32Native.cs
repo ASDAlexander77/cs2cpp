@@ -828,7 +828,9 @@ namespace Microsoft.Win32
                     int dwMessageId, int dwLanguageId, [Out]StringBuilder lpBuffer,
                     int nSize, IntPtr va_list_arguments)
         {
-            throw new NotImplementedException();
+            lpBuffer.Append("Error: ");
+            lpBuffer.Append(dwMessageId.ToString());
+            return 0;
         }
 
         // Gets an error message for a Win32 error code.
@@ -1153,7 +1155,7 @@ namespace Microsoft.Win32
             if (result != 0)
             {
                 Encoding.Unicode.GetChars(chars, numBufferChars, buffer, numBufferChars);
-                return result;
+                return string.wcslen(buffer);
             }
 
             return result;

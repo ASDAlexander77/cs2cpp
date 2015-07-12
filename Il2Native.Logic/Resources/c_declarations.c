@@ -18,8 +18,8 @@ typedef unsigned long long uint64_t;
 #define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
-#if defined(_WINDOWS)
-#define realpath __fullpath
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+#define realpath _fullpath
 #endif
 
 extern void *__builtin_memset(void *,int32_t,uint32_t);
