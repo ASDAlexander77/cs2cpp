@@ -118,7 +118,7 @@ namespace Microsoft.Win32
         private const int STDERR_FILENO = 2;
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        public unsafe static extern byte* realpath(byte* file_name, byte* resolved_name);
+        public unsafe static extern byte* __get_full_path(byte* file_name, byte* resolved_name);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int write(int fd, void* buf, int count);
@@ -1144,17 +1144,17 @@ namespace Microsoft.Win32
 
             var byteCount = Encoding.ASCII.GetByteCount(path, string.wcslen(path));
             // +1 needed for ending \0
-            var bytes = stackalloc byte[byteCount + 1];
+            var relative_path_ascii = stackalloc byte[byteCount + 1];
 
-            var bytesReceived = Encoding.ASCII.GetBytes(path, string.wcslen(path), bytes, byteCount);
+            var bytesReceived = Encoding.ASCII.GetBytes(path, string.wcslen(path), relative_path_ascii, byteCount);
 
-            var chars = stackalloc byte[numBufferChars * sizeof(char)];
+            var resolved_path_ascii = stackalloc byte[numBufferChars * sizeof(char)];
 
-            var result = (int)realpath(bytes, chars);
+            var result = (int)__get_full_path(relative_path_ascii, resolved_path_ascii);
 
             if (result != 0)
             {
-                Encoding.Unicode.GetChars(chars, numBufferChars, buffer, numBufferChars);
+                Encoding.Unicode.GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
                 return string.wcslen(buffer);
             }
 

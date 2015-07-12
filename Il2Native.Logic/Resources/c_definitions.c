@@ -7,3 +7,16 @@ extern "C" Void Exit(Int32 status)
 {
 	return exit(status);
 }
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+extern "C" Byte* _fullpath(Byte* absPath, const Byte* relPath, Int32 maxLength);
+extern "C" Byte* __get_full_path(Byte* partial, Byte* full)
+{
+	return (Byte*)_fullpath(full, partial, 260);
+}
+#else
+extern "C" Byte* __get_full_path(Byte* partial, Byte* full)
+{
+	return (Byte*)realpath(partial, full);
+}
+#endif

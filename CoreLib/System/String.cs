@@ -1706,9 +1706,14 @@ namespace System
             return count;
         }
 
-        public bool StartsWith(string longPathPrefix, StringComparison ordinal)
+        public bool StartsWith(string prefix, StringComparison ordinal)
         {
-            throw new NotImplementedException();
+            if (Length < prefix.Length)
+            {
+                return false;
+            }
+
+            return string.CompareOrdinal(this, 0, prefix, 0, prefix.Length) == 0;
         }
 
         public string Remove(int i, int i1)

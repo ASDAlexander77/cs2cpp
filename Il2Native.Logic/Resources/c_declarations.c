@@ -18,10 +18,6 @@ typedef unsigned long long uint64_t;
 #define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
-#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
-#define realpath _fullpath
-#endif
-
 extern void *__builtin_memset(void *,int32_t,uint32_t);
 #define Memset __builtin_memset
 
@@ -130,6 +126,8 @@ inline Void __set_thread_static(Int32 key, System_Object* _object)
 {
 	pthread_setspecific(key, _object);
 }
+
+extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
 struct System_InvalidCastException;
 Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
