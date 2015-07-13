@@ -1264,6 +1264,7 @@ namespace Il2Native.Logic
                         case Code.Beq:
                         case Code.Beq_S:
                             oper = " == ";
+                            unsigned = true;
                             break;
                         case Code.Bne_Un:
                         case Code.Bne_Un_S:

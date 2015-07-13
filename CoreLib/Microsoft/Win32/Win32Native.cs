@@ -1490,8 +1490,15 @@ namespace Microsoft.Win32
 
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
         {
-            numBytesRead = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
-            return numBytesRead;
+            var r = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
+            if (r >= 0)
+            {
+                numBytesRead = r;
+                return 1;
+            }
+
+            numBytesRead = 0;
+            return 0;
         }
 
         // Note there are two different WriteFile prototypes - this is to use 
@@ -1521,10 +1528,16 @@ namespace Microsoft.Win32
             }
             else
             {
-                numBytesWritten = write(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToWrite);
+                var r = write(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToWrite);
+                if (r >= 0)
+                {
+                    numBytesWritten = r;
+                    return 1;
+                }
             }
 
-            return numBytesWritten;
+            numBytesWritten = 0;
+            return 0;
         }
 
         // This is only available on Vista or higher
