@@ -1,5 +1,7 @@
 ﻿namespace System
 {
+    using System.Diagnostics.Contracts;
+
     using Runtime.CompilerServices;
 
     public static class Environment
@@ -23,6 +25,8 @@
         public static string CurrentDirectory { get; set; }
 
         public static int ExitCode { get; set; }
+
+        private static OperatingSystem _os;
 
         public static int TickCount
         {
@@ -53,7 +57,29 @@
             }
         }
 
-        public static OperatingSystem OSVersion { get; set; }
+        public static OperatingSystem OSVersion
+        {
+            [System.Security.SecuritySafeCritical]  // auto-generated
+            get
+            {
+                Contract.Ensures(Contract.Result<OperatingSystem>() != null);
+
+                if (_os == null)
+                { // We avoid the lock since we don't care if two threads will set this at the same time.
+#if PLATFORM_UNIX
+                    PlatformID id = PlatformID.Unix;
+#else
+                    PlatformID id = PlatformID.Win32NT;
+#endif // PLATFORM_UNIX
+
+                    var v = new Version(6, 1, 7600);
+                    _os = new OperatingSystem(id, v);
+                }
+
+                Contract.Assert(_os != null, "m_os != null");
+                return _os;
+            }
+        }
         
         public static bool HasShutdownStarted { get; set; }
 

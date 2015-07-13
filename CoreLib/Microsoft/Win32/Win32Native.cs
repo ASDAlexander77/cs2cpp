@@ -88,6 +88,7 @@
 namespace Microsoft.Win32
 {
     using System;
+    using System.IO;
     using System.Security;
     using System.Security.Principal;
     using System.Text;
@@ -114,35 +115,106 @@ namespace Microsoft.Win32
     internal static class Win32Native
     {
         private const int STDIN_FILENO = 0;
+
         private const int STDOUT_FILENO = 1;
+
         private const int STDERR_FILENO = 2;
+
+        private const int O_RDONLY = 0x0000;	/* open for reading only */
+
+        private const int O_WRONLY = 0x0001;	/* open for writing only */
+
+        private const int O_RDWR = 0x0002;	/* open for reading and writing */
+
+        private const int O_CREAT = 0x0200;		/* create if nonexistant */
+
+        private const int O_TRUNC = 0x0400;		/* truncate to zero length */
+
+        private const int O_EXCL = 0x0800;		/* error if already exists */
+
+        private const int F_SETFD = 2;		/* set file descriptor flags */
+
+        private const int LOCK_SH = 0x01;		/* shared file lock */
+
+        private const int LOCK_EX = 0x02;		/* exclusive file lock */
+
+        private const int LOCK_NB = 0x04;		/* don't block when locking */
+
+        private const int LOCK_UN = 0x08;		/* unlock file */
+
+        /* access function */
+        private const int F_OK = 0;	/* test for existence of file */
+
+        private const int X_OK = 0x01;	/* test for execute or search permission */
+
+        private const int W_OK = 0x02;	/* test for write permission */
+
+        private const int R_OK = 0x04;	/* test for read permission */
+
+        private const int O_DIRECT = 00040000;
+
+        private const int S_IRWXU = 0000700;			/* RWX mask for owner */
+
+        private const int S_IRUSR = 0000400;			/* R for owner */
+
+        private const int S_IWUSR = 0000200;			/* W for owner */
+
+        private const int S_IXUSR = 0000100;			/* X for owner */
+
+        private const int S_IRWXO = 0000007;			/* RWX mask for other */
+
+        private const int S_IROTH = 0000004;			/* R for other */
+
+        private const int S_IWOTH = 0000002;			/* W for other */
+
+        private const int S_IXOTH = 0000001;			/* X for other */
+
+        private const int S_IRWXG = 0000070;			/* RWX mask for group */
+
+        private const int S_IRGRP = 0000040;			/* R for group */
+
+        private const int S_IWGRP = 0000020;			/* W for group */
+
+        private const int S_IXGRP = 0000010;			/* X for group */
+
+        private const uint GENERIC_READ = 0x80000000;
+
+        private const uint GENERIC_WRITE = 0x40000000;
+
+        private const int CREATE_NEW = 1;
+
+        private const int CREATE_ALWAYS = 2;
+
+        private const int OPEN_EXISTING = 3;
+
+        private const int OPEN_ALWAYS = 4;
+
+        private const int TRUNCATE_EXISTING = 5;
+
+        private const int FILE_FLAG_NO_BUFFERING = 0x20000000;
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern byte* __get_full_path(byte* file_name, byte* resolved_name);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int open(byte* fileName, int flags, int mode);
+
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int write(int fd, void* buf, int count);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static void* fopen(byte* fileName, byte* mode);
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public unsafe static extern int read(int fd, void* buf, int count);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fclose(void* stream);
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static extern int fcntl(int fd, int cmd, __arglist);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fread(void* ptr, int elementSize, int count, void* stream);
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static extern int flock(int fd, int operation);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fwrite(void* ptr, int elementSize, int count, void* stream);
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static unsafe extern int access(byte* pathname, int mode);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fflush(void* stream);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fseek(void* ptr, int offset, int origin);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int ftell(void* ptr);
+        private static int _errorMode;
 
         public static byte[] ToAsciiString(string s)
         {
@@ -1148,13 +1220,13 @@ namespace Microsoft.Win32
 
             var bytesReceived = Encoding.ASCII.GetBytes(path, string.wcslen(path), relative_path_ascii, byteCount);
 
-            var resolved_path_ascii = stackalloc byte[numBufferChars * sizeof(char)];
+            var resolved_path_ascii = stackalloc byte[numBufferChars];
 
             var result = (int)__get_full_path(relative_path_ascii, resolved_path_ascii);
 
             if (result != 0)
             {
-                Encoding.Unicode.GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
+                Encoding.ASCII.GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
                 return string.wcslen(buffer);
             }
 
@@ -1230,7 +1302,115 @@ namespace Microsoft.Win32
                     SECURITY_ATTRIBUTES securityAttrs, System.IO.FileMode dwCreationDisposition,
                     int dwFlagsAndAttributes, IntPtr hTemplateFile)
         {
-            throw new NotImplementedException();
+            int filed = -1;
+            int create_flags = (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+            int open_flags = 0;
+            bool fFileExists = false;
+
+            if (lpFileName == null)
+            {
+                return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+            }
+
+            unsafe
+            {
+                fixed (byte* filename_ascii = ToAsciiString(lpFileName))
+                {
+                    switch ((uint)dwDesiredAccess)
+                    {
+                        case GENERIC_READ:
+                            open_flags |= O_RDONLY;
+                            break;
+                        case GENERIC_WRITE:
+                            open_flags |= O_WRONLY;
+                            break;
+                        case GENERIC_READ | GENERIC_WRITE:
+                            open_flags |= O_RDWR;
+                            break;
+                        default:
+                            return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+                    }
+
+                    switch (dwCreationDisposition)
+                    {
+                        case System.IO.FileMode.Create:
+                            // check whether the file exists
+                            if (access(filename_ascii, F_OK) == 0)
+                            {
+                                fFileExists = true;
+                            }
+
+                            open_flags |= O_CREAT | O_TRUNC;
+                            break;
+                        case System.IO.FileMode.CreateNew:
+                            open_flags |= O_CREAT | O_EXCL;
+                            break;
+                        case System.IO.FileMode.Open:
+                            /* don't need to do anything here */
+                            break;
+                        case System.IO.FileMode.OpenOrCreate:
+                            if (access(filename_ascii, F_OK) == 0)
+                            {
+                                fFileExists = true;
+                            }
+
+                            open_flags |= O_CREAT;
+                            break;
+                        case System.IO.FileMode.Truncate:
+                            open_flags |= O_TRUNC;
+                            break;
+                        default:
+                            return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+
+                    }
+
+                    if ((dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING) > 0)
+                    {
+                        open_flags |= O_DIRECT;
+                    }
+
+                    filed = open(filename_ascii, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
+                    if (filed < 0)
+                    {
+                        return new SafeFileHandle(new IntPtr(0), false);
+                    }
+                }
+            }
+
+#if flock
+            var lock_mode = (dwShareMode == 0 /* FILE_SHARE_NONE */) ? LOCK_EX : LOCK_SH;
+
+            if (flock(filed, lock_mode | LOCK_NB) != 0)
+            {
+                return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+            }
+#endif
+
+#if O_DIRECT
+            if ((dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING) > 0)
+            {
+#if F_NOCACHE
+                if (-1 == fcntl(filed, F_NOCACHE, 1))
+                {
+                    return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+                }
+#else
+#error Insufficient support for uncached I/O on this platform
+#endif
+            }
+#endif
+
+#if fcntl
+            /* make file descriptor close-on-exec; inheritable handles will get
+              "uncloseonexeced" in CreateProcess if they are actually being inherited*/
+            var ret = fcntl(filed, F_SETFD, __arglist(1));
+            if (-1 == ret)
+            {
+                return new SafeFileHandle(INVALID_HANDLE_VALUE, false);
+            }
+#endif
+
+            return new SafeFileHandle(new IntPtr(filed), false);
         }
 
 
@@ -1253,13 +1433,11 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool CloseHandle(IntPtr handle)
         {
-            throw new NotImplementedException();
+            return true;
         }
-
 
         internal static int GetFileType(SafeFileHandle handle)
         {
@@ -1317,10 +1495,10 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
         {
-            throw new NotImplementedException();
+            numBytesRead = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
+            return numBytesRead < numBytesToRead ? 0 : 1;
         }
 
         // Note there are two different WriteFile prototypes - this is to use 
@@ -1348,7 +1526,7 @@ namespace Microsoft.Win32
             }
             else
             {
-                numBytesWritten = fwrite(bytes, sizeof(byte), numBytesToWrite, handle.DangerousGetHandle().ToPointer());
+                numBytesWritten = write(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToWrite);
             }
 
             return numBytesWritten < numBytesToWrite ? 0 : 1;
@@ -1762,13 +1940,17 @@ namespace Microsoft.Win32
 
         private static int SetErrorMode_VistaAndOlder(int newMode)
         {
-            throw new NotImplementedException();
+            var oldMode = _errorMode;
+            _errorMode = newMode;
+            return oldMode;
         }
 
 
         private static bool SetErrorMode_Win7AndNewer(int newMode, out int oldMode)
         {
-            throw new NotImplementedException();
+            oldMode = _errorMode;
+            _errorMode = newMode;
+            return true;
         }
 
         // RTM versions of Win7 and Windows Server 2008 R2
