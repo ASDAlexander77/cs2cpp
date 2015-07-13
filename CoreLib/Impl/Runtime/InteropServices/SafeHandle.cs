@@ -6,12 +6,10 @@ namespace System.Runtime.InteropServices
     {
         void InternalFinalize()
         {
-            throw new NotImplementedException();
         }
 
         private void InternalDispose()
         {
-            throw new NotImplementedException();
         }
 
         public void SetHandleAsInvalid()

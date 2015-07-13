@@ -126,11 +126,11 @@ namespace Microsoft.Win32
 
         private const int O_RDWR = 0x0002;	/* open for reading and writing */
 
-        private const int O_CREAT = 0x0200;		/* create if nonexistant */
+        private const int O_CREAT = 0x0100;		/* create if nonexistant */
 
-        private const int O_TRUNC = 0x0400;		/* truncate to zero length */
+        private const int O_TRUNC = 0x0200;		/* truncate to zero length */
 
-        private const int O_EXCL = 0x0800;		/* error if already exists */
+        private const int O_EXCL = 0x0040;		/* error if already exists */
 
         private const int F_SETFD = 2;		/* set file descriptor flags */
 
@@ -145,51 +145,37 @@ namespace Microsoft.Win32
         /* access function */
         private const int F_OK = 0;	/* test for existence of file */
 
-        private const int X_OK = 0x01;	/* test for execute or search permission */
-
-        private const int W_OK = 0x02;	/* test for write permission */
-
-        private const int R_OK = 0x04;	/* test for read permission */
-
         private const int O_DIRECT = 00040000;
-
-        private const int S_IRWXU = 0000700;			/* RWX mask for owner */
 
         private const int S_IRUSR = 0000400;			/* R for owner */
 
         private const int S_IWUSR = 0000200;			/* W for owner */
 
-        private const int S_IXUSR = 0000100;			/* X for owner */
-
-        private const int S_IRWXO = 0000007;			/* RWX mask for other */
-
         private const int S_IROTH = 0000004;			/* R for other */
 
-        private const int S_IWOTH = 0000002;			/* W for other */
-
-        private const int S_IXOTH = 0000001;			/* X for other */
-
-        private const int S_IRWXG = 0000070;			/* RWX mask for group */
-
         private const int S_IRGRP = 0000040;			/* R for group */
-
-        private const int S_IWGRP = 0000020;			/* W for group */
-
-        private const int S_IXGRP = 0000010;			/* X for group */
 
         private const uint GENERIC_READ = 0x80000000;
 
         private const uint GENERIC_WRITE = 0x40000000;
 
-        private const int CREATE_NEW = 1;
+        public const uint FILE_ATTRIBUTE_READONLY = 0x00000001;
 
-        private const int CREATE_ALWAYS = 2;
+        public const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
 
-        private const int OPEN_EXISTING = 3;
+        public const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
 
-        private const int OPEN_ALWAYS = 4;
+        public const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
 
-        private const int TRUNCATE_EXISTING = 5;
+        public const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
+
+        public const uint FILE_ATTRIBUTE_DEVICE = 0x00000040;
+
+        public const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+
+        private const uint S_IFMT = 0xF000;
+
+        private const uint S_IFDIR = 0x4000;
 
         private const int FILE_FLAG_NO_BUFFERING = 0x20000000;
 
@@ -198,6 +184,9 @@ namespace Microsoft.Win32
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private extern unsafe static int open(byte* fileName, int flags, int mode);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern static int close(int fd);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int write(int fd, void* buf, int count);
@@ -213,6 +202,9 @@ namespace Microsoft.Win32
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public static unsafe extern int access(byte* pathname, int mode);
+
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static unsafe extern int stat(byte* path, int* buf);
 
         private static int _errorMode;
 
@@ -1436,6 +1428,7 @@ namespace Microsoft.Win32
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static bool CloseHandle(IntPtr handle)
         {
+            close(handle.ToInt32());
             return true;
         }
 
@@ -1498,7 +1491,7 @@ namespace Microsoft.Win32
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
         {
             numBytesRead = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
-            return numBytesRead < numBytesToRead ? 0 : 1;
+            return numBytesRead;
         }
 
         // Note there are two different WriteFile prototypes - this is to use 
@@ -1519,17 +1512,19 @@ namespace Microsoft.Win32
             if (handle.DangerousGetHandle().ToInt32() == STD_OUTPUT_HANDLE)
             {
                 numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
+                return numBytesWritten < numBytesToWrite ? 0 : 1;
             }
             else if (handle.DangerousGetHandle().ToInt32() == STD_ERROR_HANDLE)
             {
                 numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
+                return numBytesWritten < numBytesToWrite ? 0 : 1;
             }
             else
             {
                 numBytesWritten = write(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToWrite);
             }
 
-            return numBytesWritten < numBytesToWrite ? 0 : 1;
+            return numBytesWritten;
         }
 
         // This is only available on Vista or higher
@@ -1679,11 +1674,6 @@ namespace Microsoft.Win32
 
         internal const uint FILE_MAP_WRITE = 0x0002;
         internal const uint FILE_MAP_READ = 0x0004;
-
-        // Constants from WinNT.h
-        internal const int FILE_ATTRIBUTE_READONLY = 0x00000001;
-        internal const int FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
-        internal const int FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400;
 
         internal const int IO_REPARSE_TAG_MOUNT_POINT = unchecked((int)0xA0000003);
 
@@ -1879,10 +1869,56 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
+        struct stat_data
+        {
+            public int st_dev;     /* ID of device containing file */
+            public int st_ino;     /* inode number */
+            public int st_mode;    /* protection */
+            public int st_nlink;   /* number of hard links */
+            public int st_uid;     /* user ID of owner */
+            public int st_gid;     /* group ID of owner */
+            public int st_rdev;    /* device ID (if special file) */
+            public int st_size;    /* total size, in bytes */
+            public int st_blksize; /* blocksize for file system I/O */
+            public int st_blocks;  /* number of 512B blocks allocated */
+            public int st_atime;   /* time of last access */
+            public int st_mtime;   /* time of last modification */
+            public int st_ctime;   /* time of last status change */
+        };
 
         internal static bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation)
         {
-            throw new NotImplementedException();
+            if (name == null)
+            {
+                return false;
+            }
+
+            unsafe
+            {
+                var data = new stat_data();
+                fixed (byte* filename_ascii = ToAsciiString(name))
+                {
+                    var returnCode = stat(filename_ascii, &data.st_dev);
+                    if (returnCode != 0)
+                    {
+                        return false;
+                    }
+    
+                    var fileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+                    // if this is folder, return false
+                    if ((data.st_mode & S_IFMT) == S_IFDIR)
+                    {
+                        fileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                    }
+
+                    lpFileInformation.fileAttributes = (int)fileAttributes;
+                    lpFileInformation.fileSizeLow = data.st_size;
+                    lpFileInformation.fileSizeHigh = 0;
+
+                    return true;
+                }
+            }
         }
 
 
