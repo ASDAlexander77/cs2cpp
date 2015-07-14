@@ -206,6 +206,9 @@ namespace Microsoft.Win32
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public static unsafe extern int stat(byte* path, int* buf);
 
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public static unsafe extern int fstat(int fd, int* buf);
+
         private static int _errorMode;
 
         public static byte[] ToAsciiString(string s)
@@ -1639,7 +1642,18 @@ namespace Microsoft.Win32
 
         internal static int GetFileSize(SafeFileHandle hFile, out int highSize)
         {
-            throw new NotImplementedException();
+            highSize = 0;
+            unsafe
+            {
+                var data = new stat_data();
+                var returnCode = fstat(hFile.DangerousGetHandle().ToInt32(), &data.st_dev);
+                if (returnCode != 0)
+                {
+                    return 0;
+                }
+
+                return data.st_size;
+            }
         }
 
         internal static bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh)
@@ -1916,7 +1930,7 @@ namespace Microsoft.Win32
                     {
                         return false;
                     }
-    
+
                     var fileAttributes = FILE_ATTRIBUTE_NORMAL;
 
                     // if this is folder, return false
