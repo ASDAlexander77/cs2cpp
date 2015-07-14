@@ -1354,7 +1354,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
         public void Test_Mono_Tests_Async()
         {
             // 0

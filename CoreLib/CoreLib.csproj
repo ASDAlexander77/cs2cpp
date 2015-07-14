@@ -28,7 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FEATURE_CORECLR FEATURE_EXCEPTIONDISPATCHINFO</DefineConstants>
+    <DefineConstants>TRACE;FEATURE_CORECLR FEATURE_EXCEPTIONDISPATCHINFO SUPPORT_PTHREAD_MUTEX_TIMEDLOCK</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
