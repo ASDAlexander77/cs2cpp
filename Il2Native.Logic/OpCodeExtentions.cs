@@ -791,11 +791,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
+        public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod, bool exactMatch = false)
         {
             if (method.MetadataName == genericMethod.MetadataName && method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
             {
-                return method.IsMatchingGenericParamsAndReturnType(genericMethod);
+                return method.IsMatchingGenericParamsAndReturnType(genericMethod, exactMatch);
             }
 
             return false;
@@ -1369,7 +1369,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool CompareTypeWithGenericType(IType type, IType genType, bool testVoid = false)
+        private static bool CompareTypeWithGenericType(IType type, IType genType, bool testVoid = false, bool exactMatch = false)
         {
             if (testVoid)
             {
@@ -1394,7 +1394,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
+            if (!exactMatch && (genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
             {
                 return true;
             }
@@ -1415,7 +1415,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool IsMatchingGenericParamsAndReturnType(this IMethod method, IMethod genericMethod)
+        private static bool IsMatchingGenericParamsAndReturnType(this IMethod method, IMethod genericMethod, bool exactMatch = false)
         {
             var params1 = method.GetParameters().ToArray();
             var genParams2 = genericMethod.GetParameters().ToArray();
@@ -1436,13 +1436,13 @@ namespace Il2Native.Logic
             for (var i = 0; i < params1.Length; i++)
             {
                 if (params1[i].IsOut != genParams2[i].IsOut || params1[i].IsRef != genParams2[i].IsRef
-                    || !CompareTypeWithGenericType(params1[i].ParameterType, genParams2[i].ParameterType))
+                    || !CompareTypeWithGenericType(params1[i].ParameterType, genParams2[i].ParameterType, exactMatch: exactMatch))
                 {
                     return false;
                 }
             }
 
-            if (CompareTypeWithGenericType(method.ReturnType, genericMethod.ReturnType, true))
+            if (CompareTypeWithGenericType(method.ReturnType, genericMethod.ReturnType, true, exactMatch))
             {
                 return true;
             }

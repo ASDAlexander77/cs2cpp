@@ -4,6 +4,7 @@
 namespace System
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Runtime.CompilerServices;
 
     /**
@@ -32,6 +33,11 @@ namespace System
         public const long TicksPerDay = TicksPerHour * 24;
 
         public static readonly TimeSpan Zero = new TimeSpan(0);
+
+        private const int MillisPerSecond = 1000;
+        private const int MillisPerMinute = MillisPerSecond * 60; //     60,000
+        private const int MillisPerHour = MillisPerMinute * 60;   //  3,600,000
+        private const int MillisPerDay = MillisPerHour * 24;      // 86,400,000
 
         public static readonly TimeSpan MaxValue = new TimeSpan(Int64.MaxValue);
         public static readonly TimeSpan MinValue = new TimeSpan(Int64.MinValue);
@@ -195,6 +201,37 @@ namespace System
             return new TimeSpan(val);
         }
 
+        public static TimeSpan FromHours(double value)
+        {
+            return Interval(value, MillisPerHour);
+        }
+
+        private static TimeSpan Interval(double value, int scale)
+        {
+            if (Double.IsNaN(value))
+                throw new ArgumentException(Environment.GetResourceString("Arg_CannotBeNaN"));
+            Contract.EndContractBlock();
+            double tmp = value * scale;
+            double millis = tmp + (value >= 0 ? 0.5 : -0.5);
+            if ((millis > Int64.MaxValue / TicksPerMillisecond) || (millis < Int64.MinValue / TicksPerMillisecond))
+                throw new OverflowException(Environment.GetResourceString("Overflow_TimeSpanTooLong"));
+            return new TimeSpan((long)millis * TicksPerMillisecond);
+        }
+
+        public static TimeSpan FromMilliseconds(double value)
+        {
+            return Interval(value, 1);
+        }
+
+        public static TimeSpan FromMinutes(double value)
+        {
+            return Interval(value, MillisPerMinute);
+        }
+
+        public static TimeSpan FromSeconds(double value)
+        {
+            return Interval(value, MillisPerSecond);
+        }
         
         public override String ToString()
         {

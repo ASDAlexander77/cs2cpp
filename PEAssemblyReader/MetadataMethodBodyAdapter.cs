@@ -199,8 +199,8 @@ namespace PEAssemblyReader
                         var module = peModuleSymbol.Module;
                         var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                         var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
-                        localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
 
+                        localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
                         var index = 0;
                         return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
                     }
