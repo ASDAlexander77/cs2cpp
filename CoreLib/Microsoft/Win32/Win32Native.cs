@@ -1900,17 +1900,22 @@ namespace Microsoft.Win32
         {
             public int st_dev;     /* ID of device containing file */
             public int st_ino;     /* inode number */
-            public int st_mode;    /* protection */
-            public int st_nlink;   /* number of hard links */
-            public int st_uid;     /* user ID of owner */
-            public int st_gid;     /* group ID of owner */
+            public ushort st_mode;    /* protection */
+            public short st_nlink;   /* number of hard links */
+            public short st_uid;     /* user ID of owner */
+            public short st_gid;     /* group ID of owner */
             public int st_rdev;    /* device ID (if special file) */
             public int st_size;    /* total size, in bytes */
-            public int st_blksize; /* blocksize for file system I/O */
-            public int st_blocks;  /* number of 512B blocks allocated */
             public int st_atime;   /* time of last access */
             public int st_mtime;   /* time of last modification */
             public int st_ctime;   /* time of last status change */
+            public int reserved0;
+            public int reserved1;
+            public int reserved2;
+            public int reserved3;
+            public int reserved4;
+            public int reserved5;
+            public int reserved6;
         };
 
         internal static bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation)
