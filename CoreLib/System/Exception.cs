@@ -71,32 +71,20 @@ namespace System
         {
             get
             {
-                throw new NotImplementedException();
+                return string.Empty;
             }
         }
 
         public string RemoteStackTrace
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get;
+            set;
         }
 
         public object WatsonBuckets
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get;
+            set;
         }
 
         public override String ToString()

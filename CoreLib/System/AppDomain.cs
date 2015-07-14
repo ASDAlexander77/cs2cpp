@@ -86,18 +86,7 @@ namespace System
 
         public int Id { get; set; }
 
-        public EventHandler DomainUnload
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public EventHandler DomainUnload { get; set; }
 
         public Assembly Load(String assemblyString)
         {
@@ -107,9 +96,7 @@ namespace System
             string name = Assembly.ParseAssemblyName(assemblyString, ref fVersion, ref ver);
 
             return LoadInternal(name, fVersion, ver[0], ver[1], ver[2], ver[3]);
-
         }
-
         
         public Assembly[] GetAssemblies()
         {

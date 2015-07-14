@@ -96,7 +96,7 @@ namespace System.Threading.Tasks
 
         public static Guid CreateGuidForTaskID(int continuationId)
         {
-            throw new NotImplementedException();
+            return new Guid();
         }
 
         public bool IsEnabled()
@@ -106,87 +106,87 @@ namespace System.Threading.Tasks
 
         public void ParallelFork(int i, int i1, int forkJoinContextId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void AwaitTaskContinuationScheduled(int id, int i, int continuationId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void RunningContinuationList(int id, int p1, object currentContinuation)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskStarted(int id, int p1, int p2)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void ParallelJoin(int i, int i1, int forkJoinContextId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void ParallelInvokeEnd(int i, int i1, int forkJoinContextId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void NewID(int newId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskWaitBegin(int i, int i1, int id, TaskWaitBehavior synchronous, int i2, int getDomainId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskScheduled(int id, int i, int id1, int i1, int options, int getDomainId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskCompleted(int id, int p1, int p2, bool isFaulted)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void ParallelInvokeBegin(int i, int i1, int forkJoinContextId, ForkJoinOperationType parallelInvoke, int length)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskWaitEnd(int id, int p1, int p2)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskWaitContinuationComplete(int id)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void TaskWaitContinuationStarted(int continuationId)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void RunningContinuation(int id, object continuationObject)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void ParallelLoopEnd(int i, int i1, int forkJoinContextId, long nTotalIterations)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void ParallelLoopBegin(int i, int i1, int forkJoinContextId, ForkJoinOperationType parallelFor, long fromInclusive, long toExclusive)
         {
-            throw new NotImplementedException();
+            
         }
     }
 }
