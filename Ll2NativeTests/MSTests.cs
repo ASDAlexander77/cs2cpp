@@ -1355,6 +1355,25 @@ namespace Ll2NativeTests
         /// </summary>
         [TestMethod]
         [Ignore]
+        public void Test_Mono_Tests_Async()
+        {
+            // 0
+
+            var skip = new List<int>(new[]
+            {
+                0
+            });
+
+            foreach (var index in Enumerable.Range(1, 48).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.CompileAndRun(string.Format("test-async-{0:00}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        [Ignore]
         public void Test_Mono_DTests()
         {
             // 0
