@@ -147,6 +147,8 @@ namespace Microsoft.Win32
 
         private const int O_DIRECT = 00040000;
 
+        private const int O_BINARY = 0x8000;
+
         private const int S_IRUSR = 0000400;			/* R for owner */
 
         private const int S_IWUSR = 0000200;			/* W for owner */
@@ -1364,6 +1366,8 @@ namespace Microsoft.Win32
                         open_flags |= O_DIRECT;
                     }
 
+                    open_flags |= O_BINARY;
+
                     filed = open(filename_ascii, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
                     if (filed < 0)
                     {
@@ -1494,14 +1498,14 @@ namespace Microsoft.Win32
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
         {
             var r = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
-            if (r >= 0)
+            if (r == -1)
             {
-                numBytesRead = r;
-                return 1;
+                numBytesRead = 0;
+                return 0;
             }
 
-            numBytesRead = 0;
-            return 0;
+            numBytesRead = r;
+            return 1;
         }
 
         // Note there are two different WriteFile prototypes - this is to use 
@@ -1519,20 +1523,21 @@ namespace Microsoft.Win32
 
         internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero)
         {
-            if (handle.DangerousGetHandle().ToInt32() == STD_OUTPUT_HANDLE)
+            var fd = handle.DangerousGetHandle().ToInt32();
+            if (fd == STD_OUTPUT_HANDLE)
             {
                 numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
                 return numBytesWritten < numBytesToWrite ? 0 : 1;
             }
-            else if (handle.DangerousGetHandle().ToInt32() == STD_ERROR_HANDLE)
+            else if (fd == STD_ERROR_HANDLE)
             {
                 numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
                 return numBytesWritten < numBytesToWrite ? 0 : 1;
             }
             else
             {
-                var r = write(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToWrite);
-                if (r >= 0)
+                var r = write(fd, bytes, numBytesToWrite);
+                if (r != -1)
                 {
                     numBytesWritten = r;
                     return 1;
