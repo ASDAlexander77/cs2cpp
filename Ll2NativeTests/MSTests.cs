@@ -961,6 +961,7 @@ namespace Ll2NativeTests
             // 503 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 507 - BUG in compiling 2 (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
             // 511 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetGenericArguments'
+            // 512 - expected NullReferenceException
             // 528 - error CS0315: The type 'int' cannot be used as type parameter 'U' in the generic type or method 'GenericType<U>'. There is no boxing conversion from 'int' to 'System.IEquatable<int>'. TODO: Investigate
             // 529 - error CS0315: The type 'byte' cannot be used as type parameter 'V' in the generic type or method 'Base<V>'. There is no boxing conversion from 'byte' to 'System.IEquatable<byte>'.
             // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
@@ -1042,6 +1043,7 @@ namespace Ll2NativeTests
                 503,
                 507,
                 511,
+                512,
                 528,
                 529,
                 554,

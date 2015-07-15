@@ -1791,16 +1791,19 @@ namespace Il2Native.Logic
             }
 
             writer.Write("(");
+
+            var bits = 32;
             if (unsigned)
             {
-                this.WriteUnsigned(estimatedResultOperand0.Type);
+                bits = Math.Max(estimatedResultOperand0.Type.IntTypeBitSize(), estimatedResultOperand1.Type.IntTypeBitSize());
+                this.WriteUnsigned(bits);
             }
 
             this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             writer.Write(op);
             if (unsigned)
             {
-                this.WriteUnsigned(estimatedResultOperand1.Type);
+                this.WriteUnsigned(bits);
             }
 
             this.WriteOperandResultOrActualWrite(writer, opCode, 1);
@@ -1810,6 +1813,16 @@ namespace Il2Native.Logic
         private void WriteUnsigned(IType type)
         {
             var bits = type.IntTypeBitSize();
+            if (bits == 0)
+            {
+                return;
+            }
+
+            this.WriteUnsigned(bits);
+        }
+
+        private void WriteUnsigned(int bits)
+        {
             if (bits == 0)
             {
                 return;
