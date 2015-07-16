@@ -42,16 +42,6 @@ namespace Il2Native.Logic.Gencode
                     return true;
             }
 
-            if (!cWriter.MultiThreadingSupport)
-            {
-                switch (method.MetadataName)
-                {
-                    case "Enter":
-                    case "Exit":
-                        return true;
-                }                
-            }
-
             return false;
         }
 
@@ -73,28 +63,38 @@ namespace Il2Native.Logic.Gencode
             switch (method.MetadataName)
             {
                 case "GetMutexAddress":
-                    var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_mutex_address((Void*)", estimatedResult.Type);
-                    writer.Write(")");
+
+                    if (cWriter.MultiThreadingSupport)
+                    {
+                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_mutex_address((Void*)", estimatedResult.Type);
+                        writer.Write(")");
+                    }
+                    else
+                    {
+                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__null_address((Void*)", estimatedResult.Type);
+                        writer.Write(")");
+                    }
 
                     break;
 
                 case "GetCondAddress":
-                    estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                    cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_cond_address((Void*)", estimatedResult.Type);
-                    writer.Write(")");
+
+                    if (cWriter.MultiThreadingSupport)
+                    {
+                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_cond_address((Void*)", estimatedResult.Type);
+                        writer.Write(")");
+                    }
+                    else
+                    {
+                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__null_address((Void*)", estimatedResult.Type);
+                        writer.Write(")");                        
+                    }
 
                     break;
-            }
-
-            if (!cWriter.MultiThreadingSupport)
-            {
-                switch (method.MetadataName)
-                {
-                    case "Enter":
-                    case "Exit":
-                        break;
-                }
             }
         }
     }

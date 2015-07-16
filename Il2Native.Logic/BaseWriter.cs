@@ -1794,7 +1794,7 @@ namespace Il2Native.Logic
 
                     case Code.Stsfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                        return operand.IsThreadStatic ? System.System_Object : operand.FieldType;
+                        return this.MultiThreadingSupport && operand.IsThreadStatic ? System.System_Object : operand.FieldType;
                     case Code.Stfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
                         retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
@@ -2351,7 +2351,7 @@ namespace Il2Native.Logic
                 case Code.Ldfld:
                 case Code.Ldsfld:
                     var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    return operand.IsThreadStatic ? System.System_Object : operand.FieldType;
+                    return (this.MultiThreadingSupport && operand.IsThreadStatic) ? System.System_Object : operand.FieldType;
 
                 case Code.Ldflda:
                 case Code.Ldsflda:

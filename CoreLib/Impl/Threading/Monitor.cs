@@ -55,7 +55,13 @@
 
             unsafe
             {
-                var returnCode = pthread_mutex_lock(GetMutexAddress(obj));
+                var mutexAddress = GetMutexAddress(obj);
+                if (mutexAddress == null)
+                {
+                    return;
+                }
+
+                var returnCode = pthread_mutex_lock(mutexAddress);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EBUSY:
@@ -97,7 +103,13 @@
 
             unsafe
             {
-                var returnCode = pthread_mutex_unlock(GetMutexAddress(obj));
+                var mutexAddress = GetMutexAddress(obj);
+                if (mutexAddress == null)
+                {
+                    return;
+                }
+
+                var returnCode = pthread_mutex_unlock(mutexAddress);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EBUSY:
@@ -135,7 +147,13 @@
             {
                 while (returnCode == (int)Thread.ReturnCode.EBUSY)
                 {
-                    returnCode = pthread_mutex_trylock(GetMutexAddress(obj));
+                    var mutexAddress = GetMutexAddress(obj);
+                    if (mutexAddress == null)
+                    {
+                        return;
+                    }
+
+                    returnCode = pthread_mutex_trylock(mutexAddress);
                     switch ((Thread.ReturnCode)returnCode)
                     {
                         case Thread.ReturnCode.EINVAL:
@@ -179,7 +197,13 @@
                 timestruct[0] += timeout / 1000;
                 timestruct[1] += (timeout % 1000) * 1000000;
 
-                var returnCode = pthread_mutex_timedlock(GetMutexAddress(obj), timestruct);
+                var mutexAddress = GetMutexAddress(obj);
+                if (mutexAddress == null)
+                {
+                    return;
+                }
+
+                var returnCode = pthread_mutex_timedlock(mutexAddress, timestruct);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:
@@ -234,9 +258,21 @@
             unsafe
             {
                 var returnCode = -1;
+                var condAddress = GetCondAddress(obj);
+                if (condAddress == null)
+                {
+                    return false;
+                }
+
+                var mutexAddress = GetMutexAddress(obj);
+                if (mutexAddress == null)
+                {
+                    return false;
+                }
+
                 if (millisecondsTimeout == Timeout.Infinite)
                 {
-                    returnCode = pthread_cond_wait(GetCondAddress(obj), GetMutexAddress(obj));
+                    returnCode = pthread_cond_wait(condAddress, mutexAddress);
                 }
                 else
                 {
@@ -247,7 +283,7 @@
                     timestruct[0] += millisecondsTimeout / 1000;
                     timestruct[1] += (millisecondsTimeout % 1000) * 1000000;
 
-                    returnCode = pthread_cond_timedwait(GetCondAddress(obj), GetMutexAddress(obj), timestruct);
+                    returnCode = pthread_cond_timedwait(condAddress, mutexAddress, timestruct);
                 }
 
                 switch ((Thread.ReturnCode)returnCode)
@@ -285,7 +321,13 @@
 
             unsafe
             {
-                var returnCode = pthread_cond_signal(GetCondAddress(obj));
+                var condAddress = GetCondAddress(obj);
+                if (condAddress == null)
+                {
+                    return;
+                }
+
+                var returnCode = pthread_cond_signal(condAddress);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:
@@ -313,7 +355,13 @@
 
             unsafe
             {
-                var returnCode = pthread_cond_broadcast(GetCondAddress(obj));
+                var condAddress = GetCondAddress(obj);
+                if (condAddress == null)
+                {
+                    return;
+                }
+
+                var returnCode = pthread_cond_broadcast(condAddress);
                 switch ((Thread.ReturnCode)returnCode)
                 {
                     case Thread.ReturnCode.EINVAL:

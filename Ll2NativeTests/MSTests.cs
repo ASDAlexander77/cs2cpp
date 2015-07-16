@@ -1368,7 +1368,8 @@ namespace Ll2NativeTests
             {
                 2,
                 3,
-                4
+                4,
+                6
             });
 
             foreach (var index in Enumerable.Range(1, 48).Where(n => !skip.Contains(n)))
