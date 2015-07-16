@@ -591,24 +591,6 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName(CWriter.VTable, typeResolver));
             }
 
-            // init all interfaces
-            var nesting = new Stack<IType>();
-            foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces(nesting))
-            {
-                // set virtual table
-                codeBuilder.LoadArgument(0);
-
-                // you need to have next line to select correct interface in case the same interface used many times
-                foreach (var ownerInterface in nesting)
-                {
-                    codeBuilder.Castclass(ownerInterface);
-                }
-
-                codeBuilder.Castclass(@interface);
-                codeBuilder.LoadToken(@interface.ToVirtualTableImplementation(declaringType));
-                codeBuilder.SaveField(@interface.GetInterfaceVTable(typeResolver));
-            }
-
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;

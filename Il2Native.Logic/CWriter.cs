@@ -2173,16 +2173,6 @@ namespace Il2Native.Logic
                 baseType.WriteTypeWithoutModifiers(this);
                 this.Output.WriteLine(" base;");
             }
-
-            var index = 0;
-            foreach (var @interface in this.ThisType.GetInterfacesExcludingBaseAllInterfaces())
-            {
-                @interface.WriteTypeWithoutModifiers(this);
-                this.Output.Write(" ifce_");
-                this.Output.Write(@interface.FullName.CleanUpName());
-                this.Output.WriteLine(";");
-                index++;
-            }
         }
 
         /// <summary>
@@ -2546,7 +2536,21 @@ namespace Il2Native.Logic
                 this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
+            if (interfaceType != null)
+            {
+                writer.Write("((");
+                classType.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("*)");
+            }
+
             this.WriteResultOrActualWrite(writer, operand);
+
+            if (interfaceType != null)
+            {
+                writer.Write(")");
+            }
+
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
             this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName(CWriter.VTable, this)*/);
@@ -4060,11 +4064,6 @@ namespace Il2Native.Logic
 
                 for (var i = 0; i < path.Count; i++)
                 {
-                    if (path[i] != "base")
-                    {
-                        writer.Write("ifce_");
-                    }
-
                     writer.Write(path[i]);
 
                     if (fieldInfo != null || i < path.Count - 1)
@@ -4757,15 +4756,9 @@ namespace Il2Native.Logic
             // TODO: review next line (use sizeof)
             var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
 
-            var index = 0;
-            if (type.HasAnyVirtualMethod(this))
-            {
-                var virtualTable = type.GetVirtualTable(this);
+            var hasAnyVirtualMethod = type.HasAnyVirtualMethod(this);
 
-                virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
-                index++;
-                this.Output.WriteLine(string.Empty);
-            }
+            var index = hasAnyVirtualMethod ? 1 : 0;
 
             foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces(null).Distinct())
             {
@@ -4786,6 +4779,13 @@ namespace Il2Native.Logic
 
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface, @interface);
 
+                this.Output.WriteLine(string.Empty);
+            }
+
+            if (hasAnyVirtualMethod)
+            {
+                var virtualTable = type.GetVirtualTable(this);
+                virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -4810,6 +4810,16 @@ namespace Il2Native.Logic
             WriteClassName(table);
             writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;
+
+            // Interfaces for current level
+            foreach (var @interface in type.GetInterfaces())
+            {
+                @interface.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("* ");
+                writer.Write(@interface.FullName.CleanUpName());
+                writer.WriteLine(";");
+            }
 
             if (!type.IsInterface)
             {

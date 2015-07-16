@@ -1166,6 +1166,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        [Obsolete("New interface layout should be")]
         public static IEnumerable<IType> SelectAllNestedChildrenExceptFirstInterfaces(this IType type)
         {
             var index = 0;
@@ -1189,6 +1190,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        [Obsolete("New interface layout should be")]
         public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type, Stack<IType> nesting)
         {
             if (type.BaseType != null)

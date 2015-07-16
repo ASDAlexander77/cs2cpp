@@ -197,9 +197,10 @@ namespace Il2Native.Logic.Gencode
             return string.Concat(type.FullName, " vtable ", @interface.FullName, implementation ? " interface_impl"  : " interface").CleanUpName();
         }
 
+        [Obsolete("Reduce casting here when interfaces are done")]
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
         {
-            return string.Concat("(::Void**) (((::Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
         }
 
         /// <summary>
@@ -216,6 +217,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
+        [Obsolete("I do not like this function, get rid of it")]
         public static int GetVirtualMethodIndexAndRequiredInterface(
             this IType thisType,
             IMethod methodInfo,
@@ -339,7 +341,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)
         {
-            return string.Concat("(::Void**) (((::Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
         }
 
         /// <summary>
@@ -406,7 +408,7 @@ namespace Il2Native.Logic.Gencode
         {
             WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
             cWriter.Output.Write(" = ");
-            VirtualTableDefinition(virtualTable, type, cWriter, interfaceIndex, baseTypeFieldsOffset);
+            VirtualTableDefinition(virtualTable, interfaceType ?? type, cWriter, interfaceIndex, baseTypeFieldsOffset);
             cWriter.Output.Write(";");
         }
 
@@ -419,7 +421,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("const struct ");
-            VirtualTableDeclaration(virtualTable, cWriter);
+            VirtualTableDeclaration(virtualTable, interfaceType ?? type, cWriter);
             cWriter.Output.Write(" ");
             if (interfaceType == null)
             {
@@ -431,7 +433,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, bool methodsOnly = false, IType declarationType = null)
+        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter, bool methodsOnly = false, IType declarationType = null)
         {
             var writer = cWriter.Output;
 
@@ -444,6 +446,16 @@ namespace Il2Native.Logic.Gencode
 
                 // RTTI info class
                 writer.WriteLine("::Byte* rttiInfo;");
+            }
+
+            // Interfaces for current level
+            foreach (var @interface in type.GetInterfaces())
+            {
+                @interface.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("* ");
+                writer.Write(@interface.FullName.CleanUpName());
+                writer.WriteLine(";");
             }
 
             // define virtual table
@@ -468,13 +480,25 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent++;
             writer.WriteLine(
-                "(::Byte*) {0},",
+                "(Byte*) {0},",
                 interfaceIndex == 0
                     ? "0"
                     : string.Format("-{0}", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
-            writer.Write("(::Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
+            writer.Write("(Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
+
+            // Interfaces for current level
+            foreach (var @interface in type.GetInterfaces())
+            {
+                writer.WriteLine(",");
+
+                writer.Write("(");
+                @interface.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("*) ");
+                writer.Write(type.GetVirtualInterfaceTableNameReference(@interface, cWriter));
+            }
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)
@@ -488,7 +512,6 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteMethodPointerType(writer, methodKey);
                 writer.Write(")");
                 writer.Write(" ");
-
 
                 if (method == null || virtualMethod.Value.IsAbstract)
                 {
