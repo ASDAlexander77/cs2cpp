@@ -81,21 +81,31 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
 #else
-            writer.Write("((");
-            (methodInfo.DeclaringType).WriteTypeName(writer, false);
-            writer.Write(CWriter.VTable);
-            writer.Write("*)");
+            var declaringType = methodInfo.DeclaringType;
+            if (!declaringType.IsInterface)
+            {
+                writer.Write("((");
+                declaringType.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("*)");
+            }
 
             if (requiredInterface != null || effectiveType.IsInterface)
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
+                ////cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
+                cWriter.WriteResultOrActualWrite(writer, opCodeMethodInfo.OpCodeOperands[0]);
             }
             else
             {
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
-            writer.Write(")->");
+            if (!declaringType.IsInterface)
+            {
+                writer.Write(")");
+            }
+
+            writer.Write("->");
             cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo);
 #endif
         }
@@ -438,9 +448,9 @@ namespace Il2Native.Logic.Gencode
                 .WriteFunctionCallArguments(
                     opCodeMethodInfo,
                     resultOfFirstOperand,
-                    isVirtual,
                     hasThis,
                     isCtor,
+                    isIndirectMethodCall,
                     thisResultNumber,
                     thisType,
                     methodInfo.ReturnType,

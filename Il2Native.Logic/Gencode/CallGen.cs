@@ -44,9 +44,9 @@ namespace Il2Native.Logic.Gencode
             this IEnumerable<IParameter> parameterInfos,
             OpCodePart opCodeMethodInfo,
             BaseWriter.ReturnResult resultOfFirstOperand,
-            bool @isVirtual,
             bool hasThis,
             bool isCtor,
+            bool isIndirectMethodCall,
             FullyDefinedReference resultNumberForThis,
             IType thisType,
             IType returnType,
@@ -71,24 +71,23 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (!isCtor && used != null && used.Length > 0)
                 {
-                    if (thisType.IsInterface)
+                    var castToInterfaceIsApplied = false;
+                    if (isIndirectMethodCall && thisType.IsInterface)
                     {
-                        writer.Write("(");
+                        var opCodeCastclass = used[0] as OpCodeTypePart;
+                        castToInterfaceIsApplied = opCodeCastclass != null && opCodeCastclass.Any(Code.Castclass) && opCodeCastclass.Operand.TypeEquals(thisType);
+
+                        writer.Write("");
                         cWriter.WriteCCastOnly(thisType);
-                        writer.Write("__interface_to_object(");
+                        writer.Write("(");
                     }
 
                     // this expression
-                    opCodeMethodInfo.WriteFunctionCallThisExpression(
-                        thisType,
-                        isCtor,
-                        used[0],
-                        resultOfFirstOperand,
-                        cWriter);
+                    cWriter.WriteResultOrActualWrite(writer, !castToInterfaceIsApplied ? used[0] : used[0].OpCodeOperands[0]);
 
-                    if (thisType.IsInterface)
+                    if (isIndirectMethodCall && thisType.IsInterface)
                     {
-                        writer.Write("))");
+                        writer.Write(")");
                     }
                 }
 
@@ -97,7 +96,7 @@ namespace Il2Native.Logic.Gencode
 
             var parameters = parameterInfos;
             var argsContainsThisArg = used != null ? (used.Length - (parameters != null ? parameters.Count() : 0)) > 0 : false;
-            var argShift = @isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0;
+            var argShift = hasThis && !isCtor && argsContainsThisArg ? 1 : 0;
 
             // add parameters
             if (parameters != null)
@@ -140,30 +139,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.Write(")");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="opCodeFirstOperand">
-        /// </param>
-        /// <param name="resultOfFirstOperand">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteFunctionCallThisExpression(
-            this OpCodePart opCodeMethodInfo,
-            IType thisType,
-            bool isCtor,
-            OpCodePart opCodeFirstOperand,
-            BaseWriter.ReturnResult resultOfFirstOperand,
-            CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-            cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
         }
 
         /// <summary>

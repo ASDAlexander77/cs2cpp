@@ -357,48 +357,46 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            bool isVirtualCall;
-            if (this.OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
+            // cast to interface
+            if (opCode.ToCode() == Code.Castclass)
             {
-                if (isVirtualCall)
+                var opCodeTypePart = opCode as OpCodeTypePart;
+                if (opCodeTypePart.Operand.IsInterface)
                 {
-                    var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
-                    Debug.Assert(methodDeclarationType != null);
-                    if (methodDeclarationType.IsInterface)
-                    {
-                        var address = opCode.AddressStart;
-                        if (address == 0)
-                        {
-                            address = opCode.GetHashCode();
-                            if (opCode.UsedBy != null)
-                            {
-                                address += opCode.UsedBy.OpCode.AddressStart;
-                            }
-
-                            if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
-                            {
-                                address += opCode.OpCodeOperands[0].AddressStart;
-                            }
-                        }
-
-                        opCode.Result = new FullyDefinedReference(string.Concat("__expr", address), methodDeclarationType);
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    opCode.Result = new FullyDefinedReference(string.Concat("__expr", GetAddressLabelPart(opCode)), opCodeTypePart.Operand);
+                    return true;
                 }
+            }
 
+            if (this.OpCodeWithVariableDeclaration(opCode))
+            {
                 return true;
             }
 
             return false;
         }
 
-        private bool OpCodeWithVariableDeclaration(OpCodePart opCode, out bool isVirtualCall)
+        private static int GetAddressLabelPart(OpCodePart opCode)
         {
-            isVirtualCall = false;
+            var address = opCode.AddressStart;
+            if (address == 0)
+            {
+                address = opCode.GetHashCode();
+                if (opCode.UsedBy != null)
+                {
+                    address += opCode.UsedBy.OpCode.AddressStart;
+                }
 
+                if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
+                {
+                    address += opCode.OpCodeOperands[0].AddressStart;
+                }
+            }
+            return address;
+        }
+
+        private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
+        {
             switch (opCode.ToCode())
             {
                 case Code.Dup:
@@ -419,12 +417,9 @@ namespace Il2Native.Logic
                 case Code.Call:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     return ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand);
-            }
-
-            if (opCode.UsedByAlternativeValues == null && IsVirtualCallThisExpression(opCode))
-            {
-                isVirtualCall = true;
-                return true;
+                case Code.Castclass:
+                    var opCodeTypePart = opCode as OpCodeTypePart;
+                    return opCodeTypePart.Operand.IsInterface;
             }
 
             return false;
@@ -725,7 +720,7 @@ namespace Il2Native.Logic
                     {
                         this.Output.Write("__get_thread_static((Int32)&");
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
-                        this.Output.Write(")");                        
+                        this.Output.Write(")");
                     }
                     else if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
                     {
@@ -2538,10 +2533,10 @@ namespace Il2Native.Logic
 
             if (interfaceType != null)
             {
-                writer.Write("((");
+                writer.Write("(*(");
                 classType.WriteTypeName(writer, false);
                 writer.Write(CWriter.VTable);
-                writer.Write("*)");
+                writer.Write("**)");
             }
 
             this.WriteResultOrActualWrite(writer, operand);
@@ -3175,8 +3170,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" _phi{0};", addressStart);
             }
 
-            bool isVirtualCall;
-            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
+            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode))
             {
                 this.Output.Write("_phi{0} = ", addressStart);
             }
@@ -4381,8 +4375,7 @@ namespace Il2Native.Logic
             {
                 ActualWriteForVirtualOpCodes(opCodeOperand);
 
-                bool isVirtualCall;
-                if (this.OpCodeWithVariableDeclaration(opCodeOperand, out isVirtualCall))
+                if (this.OpCodeWithVariableDeclaration(opCodeOperand))
                 {
                     this.ActualWrite(this.Output, opCodeOperand, true);
                 }

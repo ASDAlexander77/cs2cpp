@@ -96,7 +96,8 @@ namespace Il2Native.Logic
 
         public static bool IsIndirectMethodCall(this IMethod method, IType thisType)
         {
-            return method.IsAbstract || method.IsVirtual || (method.DeclaringType.IsInterface && method.DeclaringType.TypeEquals(thisType));
+            var isInterface = method.DeclaringType.IsInterface;
+            return (method.IsAbstract && !isInterface) || method.IsVirtual || method.IsOverride || (isInterface && method.DeclaringType.TypeEquals(thisType));
         }
 
         public static int GetStaticArrayInitSize(this IType fieldType)

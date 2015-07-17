@@ -2121,8 +2121,8 @@ namespace Il2Native.Logic
                     case Code.Callvirt:
                         var effectiveOperandPosition = operandPosition;
                         var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                        if (opCodePart.Any(Code.Callvirt) ||
-                            opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                        if (!(opCodePartMethod.Operand.DeclaringType != null && opCodePartMethod.Operand.DeclaringType.IsInterface)
+                            && opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
                         {
                             if (operandPosition == 0)
                             {
