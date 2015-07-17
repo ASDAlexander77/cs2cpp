@@ -357,17 +357,6 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            // cast to interface
-            if (opCode.ToCode() == Code.Castclass)
-            {
-                var opCodeTypePart = opCode as OpCodeTypePart;
-                if (opCodeTypePart.Operand.IsInterface)
-                {
-                    opCode.Result = new FullyDefinedReference(string.Concat("__expr", GetAddressLabelPart(opCode)), opCodeTypePart.Operand);
-                    return true;
-                }
-            }
-
             if (this.OpCodeWithVariableDeclaration(opCode))
             {
                 return true;
@@ -417,9 +406,6 @@ namespace Il2Native.Logic
                 case Code.Call:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     return ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand);
-                case Code.Castclass:
-                    var opCodeTypePart = opCode as OpCodeTypePart;
-                    return opCodeTypePart.Operand.IsInterface;
             }
 
             return false;

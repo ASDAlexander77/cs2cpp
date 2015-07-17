@@ -107,6 +107,12 @@ inline Void* __null_address(Void* _object)
 	return (Void*)0;
 }
 
+template < typename T > inline T* __set_vtable(T* _object, Void** _vtbl)
+{
+	_object->__vtbl = _vtbl;
+	return _object;
+}
+
 class System_Object;
 extern "C" Int32 pthread_key_create(Int32* key, Void* destructor);
 extern "C" Int32 pthread_key_delete(Int32 key);

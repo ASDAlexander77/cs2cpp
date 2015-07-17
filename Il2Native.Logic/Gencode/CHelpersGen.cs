@@ -15,6 +15,9 @@ namespace Il2Native.Logic.Gencode
     using System.Reflection;
     using CodeParts;
     using Exceptions;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using InternalMethods;
     using PEAssemblyReader;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -493,8 +496,38 @@ namespace Il2Native.Logic.Gencode
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    writer.Write("(");
-                    cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
+                    writer.Write("__set_vtable(");
+
+                    // call box
+                    var opCodeMethodInfoPart = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedBoxMethod(cWriter.System.System_Int32, cWriter));
+
+                    var voidPointerType = cWriter.System.System_Void.ToPointerType();
+                    var opCodeToPointer = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, voidPointerType);
+                    opCodeToPointer.OpCodeOperands = new OpCodePart[] { opCodeOperand };
+
+                    var opCodeToInt = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, cWriter.System.System_Int32);
+                    opCodeToInt.OpCodeOperands = new OpCodePart[] { opCodeToPointer };
+
+                    opCodeMethodInfoPart.OpCodeOperands = new OpCodePart[] { opCodeToInt };
+
+                    var opCodeToPointerResult = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, voidPointerType);
+                    opCodeToPointerResult.OpCodeOperands = new OpCodePart[] { opCodeMethodInfoPart };
+
+                    var opCodeToTypeResult = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, toType);
+                    opCodeToTypeResult.OpCodeOperands = new OpCodePart[] { opCodeToPointerResult };
+
+                    // actual call box
+                    cWriter.ActualWriteOpCode(writer, opCodeToTypeResult);
+
+                    writer.Write(", ");
+
+                    ////writer.Write("(");
+                    ////cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
+                    ////writer.Write(")");
+
+                    var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, bareType.ToVirtualTableImplementation(toType));
+                    cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+
                     writer.Write(")");
                 }
                 else
