@@ -95,8 +95,7 @@ namespace Il2Native.Logic.Gencode
 
             if (requiredInterface != null || effectiveType.IsInterface)
             {
-                ////cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
-                cWriter.WriteResultOrActualWrite(writer, opCodeMethodInfo.OpCodeOperands[0]);
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
             }
             else
             {
