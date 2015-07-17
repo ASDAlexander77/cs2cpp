@@ -87,7 +87,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (isIndirectMethodCall && thisType.IsInterface)
                     {
-                        writer.Write(")");
+                        writer.Write("->__this)");
                     }
                 }
 

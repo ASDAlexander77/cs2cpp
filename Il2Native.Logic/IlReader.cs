@@ -684,10 +684,17 @@ namespace Il2Native.Logic
                     yield return field;
                 }
             }
-            else if (type.IsObject || (type.IsInterface && type.BaseType == null && !type.GetInterfaces().Any()))
+            else if (type.IsObject)
             {
                 var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
+            }
+            else if (type.IsInterface && type.BaseType == null && !type.GetInterfaces().Any())
+            {
+                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
+                yield return field;
+                var thisField = typeResolver.System.System_Void.ToPointerType().ToField(type, "__this");
+                yield return thisField;
             }
 
             if (!type.IsPrivateImplementationDetails)
