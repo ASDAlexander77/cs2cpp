@@ -85,7 +85,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
 #else
             var declaringType = methodInfo.DeclaringType;
-            if (!declaringType.IsInterface)
+            //if (!declaringType.IsInterface)
             {
                 writer.Write("((");
                 declaringType.WriteTypeName(writer, false);
@@ -103,7 +103,7 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
-            if (!declaringType.IsInterface)
+            //if (!declaringType.IsInterface)
             {
                 writer.Write(")");
             }
@@ -525,7 +525,7 @@ namespace Il2Native.Logic.Gencode
                     ////cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
                     ////writer.Write(")");
 
-                    var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, bareType.ToVirtualTableImplementation(toType));
+                    var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType));
                     cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
 
                     writer.Write(")");
