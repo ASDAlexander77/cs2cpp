@@ -204,7 +204,7 @@ namespace Il2Native.Logic.Gencode
                 rollbackType = true;
             }
 
-            if (isIndirectMethodCall && methodDeclaringType.IsInterface && methodDeclaringType.HasExplicitInterfaceMethodOverride(methodInfo))
+            if (isIndirectMethodCall && !methodDeclaringType.IsInterface && methodDeclaringType.HasExplicitInterfaceMethodOverride(methodInfo))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;

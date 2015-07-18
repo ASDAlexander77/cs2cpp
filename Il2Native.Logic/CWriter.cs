@@ -2352,7 +2352,7 @@ namespace Il2Native.Logic
             this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex);
         }
 
-        private void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex)
+        public void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex)
         {
             if (field.DeclaringType.IsInterface)
             {
@@ -2361,6 +2361,25 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteFieldPath(classType, field);
+            }
+
+            if (fixedArrayElementIndex != null)
+            {
+                writer.Write("[");
+                this.WriteResultOrActualWrite(writer, fixedArrayElementIndex);
+                writer.Write("]");
+            }
+        }
+
+        public void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IType fieldDeclaringType, OpCodePart fixedArrayElementIndex)
+        {
+            if (fieldDeclaringType.IsInterface)
+            {
+                this.WriteInterfacePath(classType, fieldDeclaringType, null);
+            }
+            else
+            {
+                this.WriteFieldPath(classType, null);
             }
 
             if (fixedArrayElementIndex != null)
@@ -4808,34 +4827,11 @@ namespace Il2Native.Logic
             }
             else
             {
-                var usedMethods = new HashSet<IMethod>();
-
-                var virtualTable = type.GetVirtualInterfaceTableLayout(this);
-
                 var index = 0;
-
-                foreach (var method in virtualTable)
+                foreach (var method in Logic.IlReader.Methods(type, this))
                 {
-                    var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true, suffix: suffix);
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
                     writer.WriteLine(";");
-
-                    usedMethods.Add(method);
-                    index++;
-                }
-
-                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces(null).Skip(1))
-                {
-                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
-                    foreach (var method in virtualTableOfSecondaryInterface)
-                    {
-                        var suffix = usedMethods.Contains(method) ? string.Concat("_redef_", index) : null;
-                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true, suffix: suffix);
-                        writer.WriteLine(";");
-
-                        usedMethods.Add(method);
-                        index++;
-                    }
                 }
             }
 
@@ -4847,12 +4843,12 @@ namespace Il2Native.Logic
 
         public static void WriteInterfaceDeclarationsInVirtualTable(IType type, CIndentedTextWriter writer)
         {
-// Interfaces for current level
+            // Interfaces for current level
             foreach (var @interface in type.GetInterfaces())
             {
                 @interface.WriteTypeName(writer, false);
                 writer.Write(CWriter.VTable);
-                writer.Write("* ");
+                writer.Write(" ");
                 writer.Write("ifce_");
                 writer.Write(@interface.FullName.CleanUpName());
                 writer.WriteLine(";");

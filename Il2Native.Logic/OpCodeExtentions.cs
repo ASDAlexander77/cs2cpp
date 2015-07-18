@@ -96,8 +96,7 @@ namespace Il2Native.Logic
 
         public static bool IsIndirectMethodCall(this IMethod method, IType thisType)
         {
-            var isInterface = method.DeclaringType.IsInterface;
-            return (method.IsAbstract && !isInterface) || method.IsVirtual || method.IsOverride || (isInterface && method.DeclaringType.TypeEquals(thisType));
+            return method.IsAbstract || method.IsVirtual || method.IsOverride;
         }
 
         public static int GetStaticArrayInitSize(this IType fieldType)
@@ -393,17 +392,6 @@ namespace Il2Native.Logic
             var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
             var parameterType = parameter.ParameterType;
             return parameterType;
-        }
-
-        public static IField GetInterfaceVTable(this IType @interface, ITypeResolver typeResolver)
-        {
-            var type = @interface;
-            ////while (type.GetInterfaces().Any())
-            ////{
-            ////    type = type.GetInterfaces().First();
-            ////}
-
-            return GetFieldByName(type, CWriter.VTable, typeResolver, false);
         }
 
         public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver, bool searchInBase = false)

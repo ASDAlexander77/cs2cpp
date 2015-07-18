@@ -2127,9 +2127,12 @@ namespace Il2Native.Logic
                             if (operandPosition == 0)
                             {
                                 var requiredIncomingType = opCodePartMethod.Operand.DeclaringType;
-                                return requiredIncomingType.IsValueType()
-                                    ? requiredIncomingType.ToClass()
-                                    : requiredIncomingType;
+                                if (!requiredIncomingType.IsInterface)
+                                {
+                                    return requiredIncomingType.IsValueType()
+                                        ? requiredIncomingType.ToClass()
+                                        : requiredIncomingType;
+                                }
                             }
 
                             effectiveOperandPosition--;

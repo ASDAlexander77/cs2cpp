@@ -93,9 +93,28 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("*)");
             }
 
+            var dotAccess = false;
             if (requiredInterface != null || effectiveType.IsInterface)
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
+                var classType = (requiredInterface ?? effectiveType);
+                var baseInterface = resultOfirstOperand.Type.TypeNotEquals(classType);
+
+                if (baseInterface)
+                {
+                    writer.Write("((");
+                    resultOfirstOperand.Type.WriteTypeName(writer, false);
+                    writer.Write(CWriter.VTable);
+                    writer.Write("*)");
+                }
+
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, resultOfirstOperand.Type.GetFieldByName(CWriter.VTable, cWriter));
+                if (baseInterface)
+                {
+                    writer.Write(")");
+                    writer.Write(!resultOfirstOperand.Type.IsStructureType() ? "->" : ".");
+                    cWriter.WriteFieldAccessLeftExpression(writer, resultOfirstOperand.Type, classType, null);
+                    dotAccess = true;
+                }
             }
             else
             {
@@ -107,7 +126,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(")");
             }
 
-            writer.Write("->");
+            writer.Write(dotAccess ? "." : "->");
             cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo);
 #endif
         }
