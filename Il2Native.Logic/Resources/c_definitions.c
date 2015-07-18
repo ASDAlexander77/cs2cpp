@@ -15,6 +15,7 @@ extern "C" Byte* __get_full_path(Byte* partial, Byte* full)
 	return (Byte*)_fullpath(full, partial, 260);
 }
 #else
+extern "C" Byte* realpath(Byte* path, const Byte* resolved_path);
 extern "C" Byte* __get_full_path(Byte* partial, Byte* full)
 {
 	return (Byte*)realpath(partial, full);

@@ -169,6 +169,7 @@ namespace Il2Native.Logic
 
             this.Module = type.Module;
             this.System = new SystemTypes(this.Module);
+            MethodBodyBank.Clear();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }
@@ -2121,8 +2122,7 @@ namespace Il2Native.Logic
                     case Code.Callvirt:
                         var effectiveOperandPosition = operandPosition;
                         var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                        if (!(opCodePartMethod.Operand.DeclaringType != null && opCodePartMethod.Operand.DeclaringType.IsInterface)
-                            && opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                        if (opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
                         {
                             if (operandPosition == 0)
                             {

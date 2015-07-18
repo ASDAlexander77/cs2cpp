@@ -398,10 +398,10 @@ namespace Il2Native.Logic
         public static IField GetInterfaceVTable(this IType @interface, ITypeResolver typeResolver)
         {
             var type = @interface;
-            while (type.GetInterfaces().Any())
-            {
-                type = type.GetInterfaces().First();
-            }
+            ////while (type.GetInterfaces().Any())
+            ////{
+            ////    type = type.GetInterfaces().First();
+            ////}
 
             return GetFieldByName(type, CWriter.VTable, typeResolver, false);
         }

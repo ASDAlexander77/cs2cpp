@@ -448,16 +448,6 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("::Byte* rttiInfo;");
             }
 
-            // Interfaces for current level
-            foreach (var @interface in type.GetInterfaces())
-            {
-                @interface.WriteTypeName(writer, false);
-                writer.Write(CWriter.VTable);
-                writer.Write("* ");
-                writer.Write(@interface.FullName.CleanUpName());
-                writer.WriteLine(";");
-            }
-
             // define virtual table
             foreach (var virtualMethod in virtualTable)
             {
@@ -487,18 +477,6 @@ namespace Il2Native.Logic.Gencode
 
             // RTTI info class
             writer.Write("(Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
-
-            // Interfaces for current level
-            foreach (var @interface in type.GetInterfaces())
-            {
-                writer.WriteLine(",");
-
-                writer.Write("(");
-                @interface.WriteTypeName(writer, false);
-                writer.Write(CWriter.VTable);
-                writer.Write("*) ");
-                writer.Write(type.GetVirtualInterfaceTableNameReference(@interface, cWriter));
-            }
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

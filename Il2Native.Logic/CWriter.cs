@@ -2092,7 +2092,6 @@ namespace Il2Native.Logic
         public override void StartProcess()
         {
             base.StartProcess();
-            MethodBodyBank.Clear();
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
             this.needToWriteUnreachable = false;
@@ -4044,6 +4043,11 @@ namespace Il2Native.Logic
 
                 for (var i = 0; i < path.Count; i++)
                 {
+                    if (path[i] != "base")
+                    {
+                        writer.Write("ifce_");
+                    }
+
                     writer.Write(path[i]);
 
                     if (fieldInfo != null || i < path.Count - 1)
@@ -4790,15 +4794,7 @@ namespace Il2Native.Logic
             writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;
 
-            // Interfaces for current level
-            foreach (var @interface in type.GetInterfaces())
-            {
-                @interface.WriteTypeName(writer, false);
-                writer.Write(CWriter.VTable);
-                writer.Write("* ");
-                writer.Write(@interface.FullName.CleanUpName());
-                writer.WriteLine(";");
-            }
+            WriteInterfaceDeclarationsInVirtualTable(type, writer);
 
             if (!type.IsInterface)
             {
@@ -4847,6 +4843,20 @@ namespace Il2Native.Logic
             writer.WriteLine("};");
 
             this.EndPreprocessorIf(table);
+        }
+
+        public static void WriteInterfaceDeclarationsInVirtualTable(IType type, CIndentedTextWriter writer)
+        {
+// Interfaces for current level
+            foreach (var @interface in type.GetInterfaces())
+            {
+                @interface.WriteTypeName(writer, false);
+                writer.Write(CWriter.VTable);
+                writer.Write("* ");
+                writer.Write("ifce_");
+                writer.Write(@interface.FullName.CleanUpName());
+                writer.WriteLine(";");
+            }
         }
 
         /// <summary>
