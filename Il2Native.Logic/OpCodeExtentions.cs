@@ -621,6 +621,17 @@ namespace Il2Native.Logic
             return true;
         }
 
+        public static bool IsFirstInterfaceOf(this IType baseInterface, IType derivedInterface)
+        {
+            var firstInterface = derivedInterface.GetInterfaces().FirstOrDefault();
+            if (firstInterface == null)
+            {
+                return false;
+            }
+
+            return firstInterface.TypeEquals(baseInterface) || baseInterface.IsFirstInterfaceOf(firstInterface);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="thisType">

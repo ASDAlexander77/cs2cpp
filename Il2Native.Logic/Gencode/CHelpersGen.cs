@@ -506,6 +506,13 @@ namespace Il2Native.Logic.Gencode
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
+                    if (toType.IsFirstInterfaceOf(bareType))
+                    {
+                        // no need to cast derived interface to base interface at first level
+                        WriteCCast(cWriter, opCodeOperand, toType);
+                        return true;
+                    }
+
                     writer.Write("__set_vtable(");
 
                     // call box
