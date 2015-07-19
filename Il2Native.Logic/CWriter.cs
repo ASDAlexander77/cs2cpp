@@ -2194,8 +2194,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
-            writer.Write(", (::Void*) &{0}", fromType.Type.GetRttiInfoName(this));
-            writer.Write(", (::Void*) &{0}", toType.GetRttiInfoName(this));
+            writer.Write(", (::Void*) 0");
+            writer.Write(", (::Void*) 0");
             writer.Write(", {0}))", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             return true;
@@ -3021,8 +3021,6 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                type.WriteRttiDefinition(this);
-
                 this.WriteVirtualTableImplementations(type);
 
                 ////StartPreprocessorIf(type, "DP");
@@ -4829,8 +4827,6 @@ namespace Il2Native.Logic
             writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;
 
-            WriteInterfaceDeclarationsInVirtualTable(type, writer);
-
             if (!type.IsInterface)
             {
                 var virtualTable = type.GetVirtualTable(this);
@@ -4843,7 +4839,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                var index = 0;
+                WriteInterfaceDeclarationsInVirtualTable(type, writer);
                 foreach (var method in Logic.IlReader.Methods(type, this))
                 {
                     this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);

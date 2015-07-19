@@ -200,7 +200,7 @@ namespace Il2Native.Logic.Gencode
         [Obsolete("Reduce casting here when interfaces are done")]
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
         {
-            return string.Concat("(Void**) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true));
         }
 
         /// <summary>
@@ -341,7 +341,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)
         {
-            return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) &", GetVirtualTableName(type, cWriter, true));
         }
 
         /// <summary>
@@ -352,7 +352,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static int GetVirtualTableSize(this List<CWriter.Pair<IMethod, IMethod>> virtualTable)
         {
-            return virtualTable.Count + 2;
+            return virtualTable.Count;
         }
 
         /// <summary>
@@ -440,14 +440,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
 
-            if (!methodsOnly)
-            {
-                writer.WriteLine("::Byte* thisOffset;");
-
-                // RTTI info class
-                writer.WriteLine("::Byte* rttiInfo;");
-            }
-
             // define virtual table
             foreach (var virtualMethod in virtualTable)
             {
@@ -467,21 +459,20 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.WriteLine("{");
-
             writer.Indent++;
-            writer.WriteLine(
-                "(Byte*) {0},",
-                interfaceIndex == 0
-                    ? "0"
-                    : string.Format("-{0}", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
-            // RTTI info class
-            writer.Write("(Byte*) &{0}", type.GetRttiInfoName(cWriter).CleanUpName());
-
+            var first = true;
             // define virtual table
             foreach (var virtualMethod in virtualTable)
             {
-                writer.WriteLine(",");
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    writer.WriteLine(",");
+                }
 
                 var methodKey = virtualMethod.Key;
                 var method = virtualMethod.Value;

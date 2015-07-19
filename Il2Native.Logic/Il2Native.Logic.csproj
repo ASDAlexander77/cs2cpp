@@ -126,10 +126,6 @@
     <Compile Include="Gencode\MemberLocationInfo.cs" />
     <Compile Include="Gencode\MemberTypes.cs" />
     <Compile Include="Gencode\MethodBodyBank.cs" />
-    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
-    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
-    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
-    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndSingleInterface.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetHashCodeMethod.cs" />
@@ -162,8 +158,6 @@
     <Compile Include="Gencode\ExceptionHandlingGen.cs" />
     <Compile Include="Gencode\CHelpersGen.cs" />
     <Compile Include="Gencode\ObjectInfrastructure.cs" />
-    <Compile Include="Gencode\Rtti\RttiClassGen.cs" />
-    <Compile Include="Gencode\Rtti\RttiPointerGen.cs" />
     <Compile Include="Gencode\TypeGen.cs" />
     <Compile Include="Gencode\VirtualTableGen.cs" />
     <Compile Include="ICodeWriter.cs" />
