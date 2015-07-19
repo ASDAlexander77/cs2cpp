@@ -1187,11 +1187,19 @@ namespace Il2Native.Logic
                 {
                     yield return baseInterface;
                 }
-            }
 
-            foreach (var topInterface in type.GetInterfaces())
+                var baseInterfaces = type.BaseType.GetAllInterfaces();
+                foreach (var topInterface in type.GetInterfaces().Where(i => !baseInterfaces.Contains(i)))
+                {
+                    yield return topInterface;
+                }
+            }
+            else
             {
-                yield return topInterface;
+                foreach (var topInterface in type.GetInterfaces())
+                {
+                    yield return topInterface;
+                }
             }
         }
 

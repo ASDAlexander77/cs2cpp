@@ -50,6 +50,7 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference resultNumberForThis,
             IType thisType,
             IType returnType,
+            IType ownerOfExplicitInterface,
             CWriter cWriter,
             bool varArg)
         {
@@ -80,6 +81,11 @@ namespace Il2Native.Logic.Gencode
                         writer.Write("");
                         cWriter.WriteCCastOnly(thisType);
                         writer.Write("(");
+                    }
+
+                    if (!isIndirectMethodCall && ownerOfExplicitInterface != null)
+                    {
+                        cWriter.WriteCCastOnly(ownerOfExplicitInterface);
                     }
 
                     // this expression
@@ -209,6 +215,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;
+                ownerOfExplicitInterface = methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType);
             }
             else if (rollbackType)
             {

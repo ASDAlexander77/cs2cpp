@@ -4769,13 +4769,7 @@ namespace Il2Native.Logic
 
             this.StartPreprocessorIf(type, "VTIMPL");
 
-            // TODO: review next line (use sizeof)
-            var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
-
             var hasAnyVirtualMethod = type.HasAnyVirtualMethod(this);
-
-            var index = hasAnyVirtualMethod ? 1 : 0;
-
             foreach (var @interface in type.DeepSelectInterfaces())
             {
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);

@@ -466,6 +466,7 @@ namespace Il2Native.Logic.Gencode
                     thisResultNumber,
                     thisType,
                     methodInfo.ReturnType,
+                    ownerOfExplicitInterface,
                     cWriter,
                     methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
         }
