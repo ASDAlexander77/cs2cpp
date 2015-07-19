@@ -2991,6 +2991,19 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, operand);
         }
 
+        public void WritePreDeclarations(IType type)
+        {
+            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            if (!type.IsPrivateImplementationDetails && type.IsInterface)
+            {
+                WriteVirtualTable(type);
+            }
+        }
+
         public void WritePostDeclarations(IType type)
         {
             if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
@@ -3014,7 +3027,10 @@ namespace Il2Native.Logic
 
                 ////StartPreprocessorIf(type, "DP");
 
-                WriteVirtualTable(type);
+                if (!type.IsInterface)
+                {
+                    WriteVirtualTable(type);
+                }
 
                 ////EndPreprocessorIf(type);
             }

@@ -90,6 +90,12 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
+        void WritePreDeclarations(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
         void WritePostDeclarations(IType type);
 
         /// <summary>

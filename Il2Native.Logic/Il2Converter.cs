@@ -43,6 +43,10 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
+            PreDeclaration,
+
+            /// <summary>
+            /// </summary>
             Declaration,
 
             /// <summary>
@@ -189,6 +193,10 @@ namespace Il2Native.Logic
                 if (mode == ConvertingMode.ForwardDeclaration)
                 {
                     ConvertForwardTypeDeclaration(codeWriter, type);
+                }
+                else if (mode == ConvertingMode.PreDeclaration)
+                {
+                    codeWriter.WritePreDeclarations(type);
                 }
                 else if (mode == ConvertingMode.Declaration)
                 {
@@ -1185,6 +1193,12 @@ namespace Il2Native.Logic
             ConvertAllRuntimeTypesForwardDeclaration(
                 codeHeaderWriter,
                 runtimeTypes);
+
+            ConvertAllTypes(
+                codeHeaderWriter,
+                types,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.PreDeclaration);
 
             WriteTypesWithGenericsStep(
                 codeHeaderWriter,

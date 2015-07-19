@@ -71,6 +71,7 @@ inline Void* __alloc(UInt32 size)
 	return (Void*) calloc(1, size);
 }
 
+// OBSOLETE
 inline Void* __interface_to_object(Void* _interface)
 {
 	if (!_interface)
@@ -109,7 +110,7 @@ inline Void* __null_address(Void* _object)
 
 template < typename T > inline T* __set_vtable(T* _object, Void** _vtbl)
 {
-	_object->__vtbl = _vtbl;
+	*(Void**)&_object->__vtbl = _vtbl;
 	return _object;
 }
 

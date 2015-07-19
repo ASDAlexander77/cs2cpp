@@ -598,6 +598,11 @@ namespace Il2Native.Logic.Gencode
 
             // write base name
             effectiveType.WriteTypeName(writer, isPointer, enumAsName);
+
+            if (type.IsVirtualTable)
+            {
+                writer.Write(CWriter.VTable);
+            }
         }
     }
 }

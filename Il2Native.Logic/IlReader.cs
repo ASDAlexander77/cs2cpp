@@ -686,13 +686,13 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject)
             {
-                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
+                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable);
                 yield return field;
             }
             
             if (type.IsInterface && !type.SpecialUsage())
             {
-                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
+                var field = type.ToVirtualTable().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
                 var thisField = typeResolver.System.System_Void.ToPointerType().ToField(type, "__this");
                 yield return thisField;

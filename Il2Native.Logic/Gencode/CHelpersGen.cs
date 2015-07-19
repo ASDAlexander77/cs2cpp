@@ -85,7 +85,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
 #else
             var declaringType = methodInfo.DeclaringType;
-            //if (!declaringType.IsInterface)
+            if (!declaringType.IsInterface)
             {
                 writer.Write("((");
                 declaringType.WriteTypeName(writer, false);
@@ -99,18 +99,9 @@ namespace Il2Native.Logic.Gencode
                 var classType = (requiredInterface ?? effectiveType);
                 var baseInterface = resultOfirstOperand.Type.TypeNotEquals(classType);
 
-                if (baseInterface)
-                {
-                    writer.Write("((");
-                    resultOfirstOperand.Type.WriteTypeName(writer, false);
-                    writer.Write(CWriter.VTable);
-                    writer.Write("*)");
-                }
-
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, resultOfirstOperand.Type.GetFieldByName(CWriter.VTable, cWriter));
                 if (baseInterface)
                 {
-                    writer.Write(")");
                     writer.Write(!resultOfirstOperand.Type.IsStructureType() ? "->" : ".");
                     cWriter.WriteFieldAccessLeftExpression(writer, resultOfirstOperand.Type, classType, null);
                     dotAccess = true;
@@ -121,7 +112,7 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
-            //if (!declaringType.IsInterface)
+            if (!declaringType.IsInterface)
             {
                 writer.Write(")");
             }
