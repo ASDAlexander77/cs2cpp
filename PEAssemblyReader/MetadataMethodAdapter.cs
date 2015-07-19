@@ -569,7 +569,13 @@ namespace PEAssemblyReader
 
         private IType CalculateExplicitInterface()
         {
-            return new MetadataTypeAdapter(this.methodDef.ExplicitInterfaceImplementations.First().ContainingType);
+            var first = this.methodDef.ExplicitInterfaceImplementations.FirstOrDefault();
+            if (first == null)
+            {
+                return null;
+            }
+
+            return new MetadataTypeAdapter(first.ContainingType);
         }
 
         /// <summary>

@@ -200,7 +200,7 @@ namespace Il2Native.Logic.Gencode
         [Obsolete("Reduce casting here when interfaces are done")]
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
         {
-            return string.Concat("(Void**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true));
+            return string.Concat("(Void **) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true));
         }
 
         /// <summary>
@@ -363,9 +363,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
+        public static bool HasExplicitInterfaceMethodOrPublic(this IType thisType, IMethod methodInfo)
         {
-            return thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride);
+            return thisType.GetMethods(BindingFlags.Instance).Any(m => methodInfo.IsMatchingExplicitInterfaceOverride(m) || (m.IsPublic && methodInfo.IsMatchingOverride(m)));
         }
 
         /// <summary>

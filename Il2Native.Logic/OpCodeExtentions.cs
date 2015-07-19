@@ -759,12 +759,18 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingExplicitInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
         {
-            if (interfaceMember.ExplicitName == publicMethod.Name)
+            if (publicMethod.ExplicitInterface != null && interfaceMember.Name == publicMethod.Name &&
+                interfaceMember.DeclaringType.TypeEquals(publicMethod.ExplicitInterface))
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }
 
             if (interfaceMember.FullName == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            if (interfaceMember.ExplicitName == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }
