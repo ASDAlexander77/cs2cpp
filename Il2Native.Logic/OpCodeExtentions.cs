@@ -1173,6 +1173,22 @@ namespace Il2Native.Logic
             }
         }
 
+        public static IEnumerable<IType> DeepSelectInterfaces(this IType type)
+        {
+            if (type.BaseType != null)
+            {
+                foreach (var baseInterface in type.BaseType.DeepSelectInterfaces())
+                {
+                    yield return baseInterface;
+                }
+            }
+
+            foreach (var topInterface in type.GetInterfaces())
+            {
+                yield return topInterface;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

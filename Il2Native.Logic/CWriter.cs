@@ -4776,32 +4776,17 @@ namespace Il2Native.Logic
 
             var index = hasAnyVirtualMethod ? 1 : 0;
 
-            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces(null).Distinct())
+            foreach (var @interface in type.DeepSelectInterfaces())
             {
-                var current = type;
-                IType typeContainingInterface = null;
-                while (current != null && current.GetAllInterfaces().Contains(@interface))
-                {
-                    typeContainingInterface = current;
-                    current = current.BaseType;
-                }
-
-                Debug.Assert(typeContainingInterface != null, "typeContainingInterface is null");
-
-                var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null ? typeContainingInterface.BaseType.GetTypeSize(this) : 0;
-                var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
-
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
-
-                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface, @interface);
-
+                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface);
                 this.Output.WriteLine(string.Empty);
             }
 
             if (hasAnyVirtualMethod)
             {
                 var virtualTable = type.GetVirtualTable(this);
-                virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
+                virtualTable.WriteTableOfMethodsWithImplementation(this, type);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -4840,7 +4825,7 @@ namespace Il2Native.Logic
             else
             {
                 WriteInterfaceDeclarationsInVirtualTable(type, writer);
-                foreach (var method in Logic.IlReader.Methods(type, this))
+                foreach (var method in Logic.IlReader.Methods(type, this).Where(m => !m.IsStatic))
                 {
                     this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
                     writer.WriteLine(";");

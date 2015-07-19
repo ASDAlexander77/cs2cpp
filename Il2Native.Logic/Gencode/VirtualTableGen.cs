@@ -402,13 +402,11 @@ namespace Il2Native.Logic.Gencode
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             CWriter cWriter,
             IType type,
-            int interfaceIndex,
-            int baseTypeFieldsOffset,
             IType interfaceType = null)
         {
             WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
-            cWriter.Output.Write(" = ");
-            VirtualTableDefinition(virtualTable, interfaceType ?? type, cWriter, interfaceIndex, baseTypeFieldsOffset);
+            cWriter.Output.Write("[] = ");
+            VirtualTableDefinition(virtualTable, interfaceType ?? type, cWriter);
             cWriter.Output.Write(";");
         }
 
@@ -420,9 +418,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("const struct ");
-            VirtualTableDeclaration(virtualTable, interfaceType ?? type, cWriter);
-            cWriter.Output.Write(" ");
+            writer.Write("const Void* ");
+            //VirtualTableDeclaration(virtualTable, interfaceType ?? type, cWriter);
+            //cWriter.Output.Write(" ");
             if (interfaceType == null)
             {
                 writer.Write(type.GetVirtualTableName(cWriter, true));
@@ -454,7 +452,7 @@ namespace Il2Native.Logic.Gencode
         }
 
         private static void VirtualTableDefinition(
-            List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter, int interfaceIndex, int baseTypeFieldsOffset)
+            List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter)
         {
             var writer = cWriter.Output;
 
@@ -478,7 +476,8 @@ namespace Il2Native.Logic.Gencode
                 var method = virtualMethod.Value;
 
                 writer.Write("(");
-                cWriter.WriteMethodPointerType(writer, methodKey);
+                //cWriter.WriteMethodPointerType(writer, methodKey);
+                writer.Write("Void*");
                 writer.Write(")");
                 writer.Write(" ");
 
