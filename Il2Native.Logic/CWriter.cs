@@ -1697,7 +1697,7 @@ namespace Il2Native.Logic
             bool isIndirectMethodCall;
             IType ownerOfExplicitInterface;
             IType requiredType;
-            IMethod publicMethodInfo;
+            IMethod requiredMethodInfo;
             methodInfo.FunctionCallProlog(
                 opCodeMethodInfoPart,
                 true,
@@ -1710,17 +1710,17 @@ namespace Il2Native.Logic
                 out isIndirectMethodCall,
                 out ownerOfExplicitInterface,
                 out requiredType,
-                out publicMethodInfo);
+                out requiredMethodInfo);
 
             if (isIndirectMethodCall)
             {
                 this.Output.Write("(::Void*)");
-                this.GenerateVirtualCall(opCodeMethodInfoPart, publicMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                this.GenerateVirtualCall(opCodeMethodInfoPart, requiredMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
             }
             else
             {
                 this.Output.Write("(::Byte*) &");
-                this.WriteMethodDefinitionName(writer, publicMethodInfo ?? methodInfo);
+                this.WriteMethodDefinitionName(writer, requiredMethodInfo ?? methodInfo);
             }
         }
 

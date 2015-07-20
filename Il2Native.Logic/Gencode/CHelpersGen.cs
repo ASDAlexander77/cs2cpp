@@ -421,7 +421,7 @@ namespace Il2Native.Logic.Gencode
             bool isIndirectMethodCall;
             IType ownerOfExplicitInterface;
             IType requiredType;
-            IMethod publicMethodInfo;
+            IMethod requiredMethodInfo;
             methodInfo.FunctionCallProlog(
                 opCodeMethodInfo,
                 isVirtual,
@@ -434,7 +434,7 @@ namespace Il2Native.Logic.Gencode
                 out isIndirectMethodCall,
                 out ownerOfExplicitInterface,
                 out requiredType,
-                out publicMethodInfo);
+                out requiredMethodInfo);
 
             FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
@@ -455,7 +455,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!isIndirectMethodCall)
             {
-                (publicMethodInfo ?? methodInfo).WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
+                (requiredMethodInfo ?? methodInfo).WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
             }
 
             methodInfo.GetParameters()
@@ -469,6 +469,7 @@ namespace Il2Native.Logic.Gencode
                     thisType,
                     methodInfo.ReturnType,
                     ownerOfExplicitInterface,
+                    requiredType,
                     cWriter,
                     methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
         }

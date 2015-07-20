@@ -51,6 +51,7 @@ namespace Il2Native.Logic.Gencode
             IType thisType,
             IType returnType,
             IType ownerOfExplicitInterface,
+            IType requiredType,
             CWriter cWriter,
             bool varArg)
         {
@@ -86,6 +87,10 @@ namespace Il2Native.Logic.Gencode
                     if (!isIndirectMethodCall && ownerOfExplicitInterface != null)
                     {
                         cWriter.WriteCCastOnly(ownerOfExplicitInterface);
+                    }
+                    else if (requiredType != null && thisType.TypeNotEquals(requiredType))
+                    {
+                        cWriter.WriteCCastOnly(requiredType);
                     }
 
                     // this expression
@@ -186,9 +191,9 @@ namespace Il2Native.Logic.Gencode
             out bool isIndirectMethodCall,
             out IType ownerOfExplicitInterface,
             out IType requiredType,
-            out IMethod publicMethodInfo)
+            out IMethod requiredMethodInfo)
         {
-            publicMethodInfo = null;
+            requiredMethodInfo = null;
             methodDeclaringType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
 
             var parameters = methodInfo.GetParameters();
@@ -214,7 +219,7 @@ namespace Il2Native.Logic.Gencode
 
             bool isExplicit;
             if (isIndirectMethodCall && !methodDeclaringType.IsInterface && methodInfo.DeclaringType.IsInterface &&
-                (methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType).HasExplicitInterfaceMethodOrPublic(methodInfo, out isExplicit, out publicMethodInfo)))
+                (methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType).HasExplicitInterfaceMethodOrPublic(methodInfo, out isExplicit, out requiredMethodInfo)))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;
@@ -230,6 +235,11 @@ namespace Il2Native.Logic.Gencode
             else if (rollbackType)
             {
                 methodDeclaringType = methodInfo.DeclaringType;
+            }
+
+            if (requiredMethodInfo != null)
+            {
+                requiredType = requiredMethodInfo.DeclaringType;
             }
         }
 
