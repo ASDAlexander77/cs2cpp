@@ -381,11 +381,26 @@ namespace Il2Native.Logic
                     address += opCode.OpCodeOperands[0].AddressStart;
                 }
             }
+
             return address;
         }
 
         private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
         {
+            // to support casting interface to interface which is not directly inherited
+            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Castclass))
+            {
+                var opCodeType = opCode.UsedBy.OpCode as OpCodeTypePart;
+                var estimatedResultOf = this.EstimatedResultOf(opCode);
+                if (opCodeType != null
+                    && (opCodeType.Operand.IsInterface && estimatedResultOf.Type.IsInterface && !opCodeType.Operand.IsFirstInterfaceOf(estimatedResultOf.Type)))
+                {
+                    // this is interface to interface cast which is not directly inherited
+                    opCode.Result = new FullyDefinedReference(string.Format("__expr{0}", GetAddressLabelPart(opCode)), estimatedResultOf.Type);
+                    return true;
+                }
+            }
+
             switch (opCode.ToCode())
             {
                 case Code.Dup:
@@ -1682,6 +1697,7 @@ namespace Il2Native.Logic
             bool isIndirectMethodCall;
             IType ownerOfExplicitInterface;
             IType requiredType;
+            IMethod publicMethodInfo;
             methodInfo.FunctionCallProlog(
                 opCodeMethodInfoPart,
                 true,
@@ -1693,17 +1709,18 @@ namespace Il2Native.Logic
                 out resultOfFirstOperand,
                 out isIndirectMethodCall,
                 out ownerOfExplicitInterface,
-                out requiredType);
+                out requiredType,
+                out publicMethodInfo);
 
             if (isIndirectMethodCall)
             {
                 this.Output.Write("(::Void*)");
-                this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                this.GenerateVirtualCall(opCodeMethodInfoPart, publicMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
             }
             else
             {
                 this.Output.Write("(::Byte*) &");
-                this.WriteMethodDefinitionName(writer, methodInfo);
+                this.WriteMethodDefinitionName(writer, publicMethodInfo ?? methodInfo);
             }
         }
 
@@ -2535,19 +2552,11 @@ namespace Il2Native.Logic
                 this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
-            if (interfaceType != null)
-            {
-                writer.Write("(*(");
-                classType.WriteTypeName(writer, false);
-                writer.Write(CWriter.VTable);
-                writer.Write("**)");
-            }
-
             this.WriteResultOrActualWrite(writer, operand);
 
             if (interfaceType != null)
             {
-                writer.Write(")");
+                writer.Write("->__vtbl");
             }
 
             writer.Write("->");
@@ -4770,7 +4779,8 @@ namespace Il2Native.Logic
             this.StartPreprocessorIf(type, "VTIMPL");
 
             var hasAnyVirtualMethod = type.HasAnyVirtualMethod(this);
-            foreach (var @interface in type.DeepSelectInterfaces())
+            foreach (var @interface in type.GetInterfaces(false))
+            //foreach (var @interface in type.DeepSelectInterfaces())
             {
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface);

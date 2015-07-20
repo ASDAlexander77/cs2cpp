@@ -233,7 +233,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IEnumerable<IType> GetInterfaces();
+        IEnumerable<IType> GetInterfaces(bool unique = true);
 
         /// <summary>
         /// </summary>

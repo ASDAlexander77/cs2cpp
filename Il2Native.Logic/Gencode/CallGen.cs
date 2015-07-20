@@ -185,8 +185,10 @@ namespace Il2Native.Logic.Gencode
             out BaseWriter.ReturnResult resultOfFirstOperand,
             out bool isIndirectMethodCall,
             out IType ownerOfExplicitInterface,
-            out IType requiredType)
+            out IType requiredType,
+            out IMethod publicMethodInfo)
         {
+            publicMethodInfo = null;
             methodDeclaringType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
 
             var parameters = methodInfo.GetParameters();
@@ -210,12 +212,20 @@ namespace Il2Native.Logic.Gencode
                 rollbackType = true;
             }
 
+            bool isExplicit;
             if (isIndirectMethodCall && !methodDeclaringType.IsInterface && methodInfo.DeclaringType.IsInterface &&
-                (methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType).HasExplicitInterfaceMethodOrPublic(methodInfo)))
+                (methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType).HasExplicitInterfaceMethodOrPublic(methodInfo, out isExplicit, out publicMethodInfo)))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;
-                ownerOfExplicitInterface = methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType);
+                if (isExplicit)
+                {
+                    ownerOfExplicitInterface = methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType);
+                }
+                else
+                {
+                    ownerOfExplicitInterface = null;
+                }
             }
             else if (rollbackType)
             {

@@ -421,6 +421,7 @@ namespace Il2Native.Logic.Gencode
             bool isIndirectMethodCall;
             IType ownerOfExplicitInterface;
             IType requiredType;
+            IMethod publicMethodInfo;
             methodInfo.FunctionCallProlog(
                 opCodeMethodInfo,
                 isVirtual,
@@ -432,7 +433,8 @@ namespace Il2Native.Logic.Gencode
                 out resultOfFirstOperand,
                 out isIndirectMethodCall,
                 out ownerOfExplicitInterface,
-                out requiredType);
+                out requiredType,
+                out publicMethodInfo);
 
             FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
@@ -453,7 +455,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!isIndirectMethodCall)
             {
-                methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
+                (publicMethodInfo ?? methodInfo).WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
             }
 
             methodInfo.GetParameters()
@@ -504,23 +506,32 @@ namespace Il2Native.Logic.Gencode
 
             if (toType.IsInterface && !isNull)
             {
+                if (bareType.IsInterface && toType.IsFirstInterfaceOf(bareType))
+                {
+                    // no need to cast derived interface to base interface at first level
+                    WriteCCast(cWriter, opCodeOperand, toType);
+                    return true;
+                }
+
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    if (toType.IsFirstInterfaceOf(bareType))
-                    {
-                        // no need to cast derived interface to base interface at first level
-                        WriteCCast(cWriter, opCodeOperand, toType);
-                        return true;
-                    }
-
                     writer.Write("__set_vtable(");
 
                     // call box
                     var opCodeMethodInfoPart = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedBoxMethod(cWriter.System.System_Int32, cWriter));
 
+                    var mainOperand = opCodeOperand;
+
+                    if (bareType.IsInterface)
+                    {
+                        var opCodeLoadField = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, bareType.GetFieldByName("__this", cWriter));
+                        opCodeLoadField.OpCodeOperands = new OpCodePart[] { opCodeOperand };
+                        mainOperand = opCodeLoadField;
+                    }
+
                     var voidPointerType = cWriter.System.System_Void.ToPointerType();
                     var opCodeToPointer = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, voidPointerType);
-                    opCodeToPointer.OpCodeOperands = new OpCodePart[] { opCodeOperand };
+                    opCodeToPointer.OpCodeOperands = new OpCodePart[] { mainOperand };
 
                     var opCodeToInt = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, cWriter.System.System_Int32);
                     opCodeToInt.OpCodeOperands = new OpCodePart[] { opCodeToPointer };
@@ -538,12 +549,18 @@ namespace Il2Native.Logic.Gencode
 
                     writer.Write(", ");
 
-                    ////writer.Write("(");
-                    ////cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
-                    ////writer.Write(")");
-
-                    var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType));
-                    cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+                    if (bareType.IsInterface)
+                    {
+                        writer.Write("(Void**) &(");
+                        cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
+                        writer.Write(")");
+                    }
+                    else
+                    {
+                        // static pointer to vtable of an interface of the object
+                        var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType));
+                        cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+                    }
 
                     writer.Write(")");
                 }

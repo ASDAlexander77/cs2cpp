@@ -363,9 +363,18 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasExplicitInterfaceMethodOrPublic(this IType thisType, IMethod methodInfo)
+        public static bool HasExplicitInterfaceMethodOrPublic(this IType thisType, IMethod methodInfo, out bool isExplicit, out IMethod publicMethodInfo)
         {
-            return thisType.GetMethods(BindingFlags.Instance).Any(m => methodInfo.IsMatchingExplicitInterfaceOverride(m) || (m.IsPublic && methodInfo.IsMatchingOverride(m)));
+            isExplicit = false;
+            publicMethodInfo = null;
+            if (thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride))
+            {
+                isExplicit = true;
+                return true;
+            }
+
+            publicMethodInfo = thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(m => m.IsPublic && methodInfo.IsMatchingOverride(m));
+            return publicMethodInfo != null;
         }
 
         /// <summary>

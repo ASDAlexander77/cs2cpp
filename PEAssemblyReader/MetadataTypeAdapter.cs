@@ -919,8 +919,13 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IType> GetInterfaces()
+        public IEnumerable<IType> GetInterfaces(bool unique = true)
         {
+            if (!unique)
+            {
+                return this.typeDef.Interfaces.Select(@interface => @interface.ToAdapter());
+            }
+
             return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ToAdapter());
         }
 
