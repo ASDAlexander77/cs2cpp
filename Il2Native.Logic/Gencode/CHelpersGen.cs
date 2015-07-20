@@ -559,7 +559,7 @@ namespace Il2Native.Logic.Gencode
                     else
                     {
                         // static pointer to vtable of an interface of the object
-                        var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType));
+                        var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType.FindInterfaceOwner(toType)));
                         cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
                     }
 

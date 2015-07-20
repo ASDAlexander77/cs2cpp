@@ -564,11 +564,10 @@ namespace Il2Native.Logic
                         // special case
                         if (tokenType.IsVirtualTableImplementation)
                         {
-                            this.Output.Write(
-                                tokenType.InterfaceOwner != null
-                                    ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
-                                    : tokenType.GetVirtualTableNameReference(this));
-
+                            var vtName = tokenType.InterfaceOwner != null
+                                ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
+                                : tokenType.GetVirtualTableNameReference(this);
+                            this.Output.Write(vtName);
                             break;
                         }
 
