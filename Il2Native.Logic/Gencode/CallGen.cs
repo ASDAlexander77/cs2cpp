@@ -239,7 +239,7 @@ namespace Il2Native.Logic.Gencode
 
             if (requiredMethodInfo != null)
             {
-                requiredType = requiredMethodInfo.DeclaringType;
+                requiredType = requiredMethodInfo.DeclaringType.ToClass();
             }
         }
 
