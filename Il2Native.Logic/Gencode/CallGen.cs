@@ -94,11 +94,18 @@ namespace Il2Native.Logic.Gencode
                     }
 
                     // this expression
-                    cWriter.WriteResultOrActualWrite(writer, !castToInterfaceIsApplied ? used[0] : used[0].OpCodeOperands[0]);
+                    var opCodePart = !castToInterfaceIsApplied ? used[0] : used[0].OpCodeOperands[0];
+                    cWriter.WriteResultOrActualWrite(writer, opCodePart);
 
+                    var operandEstimatedResult = cWriter.EstimatedResultOf(opCodePart);
                     if (isIndirectMethodCall && thisType.IsInterface)
                     {
-                        writer.Write("->__this)");
+                        if (operandEstimatedResult.Type.IsInterface)
+                        {
+                            writer.Write("->__this");
+                        }
+
+                        writer.Write(")");
                     }
                 }
 
