@@ -194,7 +194,13 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualInterfaceTableName(this IType type, IType @interface, CWriter cWriter, bool implementation = false)
         {
-            return string.Concat(type.FullName, " vtable ", @interface.FullName, implementation ? " interface_impl"  : " interface").CleanUpName();
+            return
+                string.Concat(
+                    type.FullName,
+                    " vtable ",
+                    @interface.FullName,
+                    implementation ? " interface_impl" : " interface",
+                    CWriter.IsAssemblyNamespaceRequired(type) ? cWriter.AssemblyQualifiedName.CleanUpName() : "").CleanUpName();
         }
 
         [Obsolete("Reduce casting here when interfaces are done")]
@@ -336,7 +342,12 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualTableName(this IType type, CWriter cWriter, bool implementation = false)
         {
-            return string.Concat(type.FullName, implementation ? " vtable_impl" : " vtable").CleanUpName();
+            var name = string.Concat(
+                type.FullName,
+                implementation ? " vtable_impl" : " vtable",
+                CWriter.IsAssemblyNamespaceRequired(type) ? cWriter.AssemblyQualifiedName.CleanUpName() : "");
+
+            return name.CleanUpName();
         }
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)
@@ -414,7 +425,11 @@ namespace Il2Native.Logic.Gencode
             IType interfaceType = null,
             bool declaration = false)
         {
-            cWriter.Output.Write("extern ");
+            if (declaration)
+            {
+                cWriter.Output.Write("extern ");
+            }
+
             WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
             cWriter.Output.Write("[]");
             if (!declaration)

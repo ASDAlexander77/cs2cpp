@@ -4656,7 +4656,10 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.StartPreprocessorIf(type, "VTIMPL");
+            if (!declaration)
+            {
+                this.StartPreprocessorIf(type, "VTIMPL");
+            }
 
             var hasAnyVirtualMethod = type.HasAnyVirtualMethod(this);
             foreach (var @interface in type.GetInterfaces(false))
@@ -4674,7 +4677,10 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            this.EndPreprocessorIf(type);
+            if (!declaration)
+            {
+                this.EndPreprocessorIf(type);
+            }
         }
 
         private void WriteVirtualTable(IType typeParam)
