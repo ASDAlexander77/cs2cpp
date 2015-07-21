@@ -166,9 +166,9 @@ namespace Il2Native.Logic
         public void Initialize(IType type)
         {
             Debug.Assert(type != null, "You should provide type here");
-
             this.Module = type.Module;
             this.System = new SystemTypes(this.Module);
+            MethodBodyBank.Clear();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }

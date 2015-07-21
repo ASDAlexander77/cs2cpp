@@ -2111,7 +2111,6 @@ namespace Il2Native.Logic
         public override void StartProcess()
         {
             base.StartProcess();
-            MethodBodyBank.Clear();
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
             this.needToWriteUnreachable = false;
