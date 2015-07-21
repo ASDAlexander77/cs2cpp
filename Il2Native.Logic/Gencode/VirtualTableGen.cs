@@ -414,11 +414,7 @@ namespace Il2Native.Logic.Gencode
             IType interfaceType = null,
             bool declaration = false)
         {
-            if (declaration)
-            {
-                cWriter.Output.Write("extern ");
-            }
-
+            cWriter.Output.Write("extern ");
             WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
             cWriter.Output.Write("[]");
             if (!declaration)
