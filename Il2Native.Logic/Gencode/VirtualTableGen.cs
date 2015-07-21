@@ -411,11 +411,22 @@ namespace Il2Native.Logic.Gencode
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             CWriter cWriter,
             IType type,
-            IType interfaceType = null)
+            IType interfaceType = null,
+            bool declaration = false)
         {
+            if (declaration)
+            {
+                cWriter.Output.Write("extern ");
+            }
+
             WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
-            cWriter.Output.Write("[] = ");
-            VirtualTableDefinition(virtualTable, interfaceType ?? type, cWriter);
+            cWriter.Output.Write("[]");
+            if (!declaration)
+            {
+                cWriter.Output.Write(" = ");
+                VirtualTableDefinition(virtualTable, interfaceType ?? type, cWriter);
+            }
+
             cWriter.Output.Write(";");
         }
 

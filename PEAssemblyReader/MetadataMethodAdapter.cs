@@ -848,7 +848,7 @@ namespace PEAssemblyReader
         {
             var sb = new StringBuilder();
 
-            if (this.methodDef.ContainingType.IsGenericType && this.methodDef.IsExplicitInterfaceImplementation)
+            if (this.methodDef.IsExplicitInterfaceImplementation)
             {
                 var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.FirstOrDefault();
                 if (implMethodSymbol != null)

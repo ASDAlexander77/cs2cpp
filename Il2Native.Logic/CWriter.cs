@@ -166,82 +166,6 @@ namespace Il2Native.Logic
         public bool Stubs { get; private set; }
 
         /// <summary>
-        /// </summary>
-        /// <param name="currentType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <param name="nextCurrentType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        public static int FindInterfaceIndexForOneStep(IType currentType, IType @interface, out IType nextCurrentType)
-        {
-            nextCurrentType = currentType;
-            var found = false;
-            var interfaceIndex = -1;
-            foreach (var subInterface in currentType.GetInterfaces().ToList())
-            {
-                interfaceIndex++;
-
-                if (subInterface.TypeEquals(@interface))
-                {
-                    nextCurrentType = null;
-                    found = true;
-                    break;
-                }
-
-                if (subInterface.GetAllInterfaces().Contains(@interface))
-                {
-                    nextCurrentType = subInterface;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                throw new KeyNotFoundException("type can't be found");
-            }
-
-            return interfaceIndex;
-        }
-
-        public static IType FindInterfacePathForOneStep(IType currentType, IType @interface, out IType nextCurrentType)
-        {
-            nextCurrentType = currentType;
-            var found = false;
-            IType interfacePath = null;
-            foreach (var subInterface in currentType.GetInterfaces().ToList())
-            {
-                interfacePath = subInterface;
-
-                if (subInterface.TypeEquals(@interface))
-                {
-                    nextCurrentType = null;
-                    found = true;
-                    break;
-                }
-
-                if (subInterface.GetAllInterfaces().Contains(@interface))
-                {
-                    nextCurrentType = subInterface;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                throw new KeyNotFoundException("type can't be found");
-            }
-
-            return interfacePath;
-        }
-
-        /// <summary>
         ///     if true - suppress ; at the end of line
         /// </summary>
         /// <param name="writer">
@@ -455,10 +379,11 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldc_I4:
                     var opCodeInt32 = opCode as OpCodeInt32Part;
-                    if (opCodeInt32.Operand > int.MaxValue || opCodeInt32.Operand < int.MinValue)
+                    if (opCodeInt32.Operand == Int32.MinValue)
                     {
-                        this.Output.Write(opCodeInt32.Operand);
-                        this.Output.Write("L");
+                        this.Output.Write("(");
+                        this.Output.Write(opCodeInt32.Operand + 1);
+                        this.Output.Write("-1)");
                     }
                     else
                     {
@@ -472,8 +397,19 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldc_I8:
                     var opCodeInt64 = opCode as OpCodeInt64Part;
-                    this.Output.Write(opCodeInt64.Operand);
-                    this.Output.Write("L");
+                    if (opCodeInt64.Operand == Int64.MinValue)
+                    {
+                        this.Output.Write("(");
+                        this.Output.Write(opCodeInt64.Operand + 1);
+                        this.Output.Write("L");
+                        this.Output.Write("-1)");
+                    }
+                    else
+                    {
+                        this.Output.Write(opCodeInt64.Operand);
+                        this.Output.Write("L");
+                    }
+
                     break;
                 case Code.Ldc_R4:
                     var opCodeSingle = opCode as OpCodeSinglePart;
@@ -2603,6 +2539,7 @@ namespace Il2Native.Logic
             else
             {
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+                Debug.Assert(name != "Void_System_IO_Stream_GCopyToAsyncInternalCd__0_MoveNextFN");
                 writer.Write(name);
             }
         }
@@ -3029,7 +2966,7 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                this.WriteVirtualTableImplementations(type);
+                this.WriteVirtualTableImplementations(type, true);
 
                 ////StartPreprocessorIf(type, "DP");
 
@@ -3039,6 +2976,19 @@ namespace Il2Native.Logic
                 }
 
                 ////EndPreprocessorIf(type);
+            }
+        }
+
+        public void WritePostDefinitions(IType type)
+        {
+            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            if (!type.IsPrivateImplementationDetails)
+            {
+                this.WriteVirtualTableImplementations(type);
             }
         }
 
@@ -3368,75 +3318,6 @@ namespace Il2Native.Logic
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static List<int> FindInterfaceIndexes(IType type, IType @interface, int index)
-        {
-            var indexes = new List<int>();
-
-            var currentType = type;
-
-            var baseCount = 0;
-            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
-            {
-                // add base index;
-                indexes.Add(0);
-                baseCount++;
-                currentType = currentType.BaseType;
-            }
-
-            while (currentType != null)
-            {
-                var interfaceIndex = FindInterfaceIndexForOneStep(currentType, @interface, out currentType);
-                var indexToAdd = indexes.Count > baseCount ? interfaceIndex : index + interfaceIndex;
-                indexes.Add(indexToAdd);
-            }
-
-            return indexes;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static List<string> FindInterfacePath(IType type, IType @interface)
-        {
-            var indexes = new List<string>();
-
-            var currentType = type;
-
-            var baseCount = 0;
-            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
-            {
-                // add base index;
-                indexes.Add("base");
-                baseCount++;
-                currentType = currentType.BaseType;
-            }
-
-            while (currentType != null)
-            {
-                var interfacePath = FindInterfacePathForOneStep(currentType, @interface, out currentType);
-                indexes.Add(interfacePath.ToString().CleanUpName());
-            }
-
-            return indexes;
         }
 
         private int CalculateFieldIndex(IType type, string fieldName)
@@ -4060,7 +3941,7 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        private void WriteInterfacePath(IType classType, IType @interface, IField fieldInfo)
+        public void WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
         {
             var writer = this.Output;
 
@@ -4080,9 +3961,9 @@ namespace Il2Native.Logic
                     writer.Write("base.");
                 }
 
-                var path = FindInterfacePath(type, @interface);
+                var path = type.FindInterfacePath(@interface);
 
-                for (var i = 0; i < path.Count; i++)
+                for (var i = startPath; i < path.Count; i++)
                 {
                     if (path[i] != "base")
                     {
@@ -4767,7 +4648,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteVirtualTableImplementations(IType type)
+        private void WriteVirtualTableImplementations(IType type, bool declaration = false)
         {
             // write VirtualTable
             if (type.IsInterface)
@@ -4782,14 +4663,14 @@ namespace Il2Native.Logic
             //foreach (var @interface in type.DeepSelectInterfaces())
             {
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
-                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface);
+                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface, declaration);
                 this.Output.WriteLine(string.Empty);
             }
 
             if (hasAnyVirtualMethod)
             {
                 var virtualTable = type.GetVirtualTable(this);
-                virtualTable.WriteTableOfMethodsWithImplementation(this, type);
+                virtualTable.WriteTableOfMethodsWithImplementation(this, type, declaration: declaration);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -4811,6 +4692,7 @@ namespace Il2Native.Logic
             StartPreprocessorIf(table, "VTBL");
 
             writer.Write("struct ");
+
             WriteClassName(table);
             writer.WriteLine("{0} {1}", VTable, "{");
             writer.Indent++;

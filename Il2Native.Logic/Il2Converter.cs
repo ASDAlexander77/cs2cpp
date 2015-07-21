@@ -59,7 +59,11 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            Definition
+            Definition,
+
+            /// <summary>
+            /// </summary>
+            PostDefinition
         }
 
         public static bool VerboseOutput { get; set; }
@@ -221,6 +225,10 @@ namespace Il2Native.Logic
                         type,
                         genericMethodSpecializatonsForType,
                         processGenericMethodsOnly);
+                }
+                else if (mode == ConvertingMode.PostDefinition)
+                {
+                    codeWriter.WritePostDefinitions(type);
                 }
             }
         }
@@ -1229,6 +1237,8 @@ namespace Il2Native.Logic
             WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
 
             WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
+
+            WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PostDefinition);
 
             if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
             {

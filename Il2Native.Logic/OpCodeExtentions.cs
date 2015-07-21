@@ -331,6 +331,136 @@ namespace Il2Native.Logic
             return type;
         }
 
+        public static IType FindInterfaceEntry(this IType type, IType @interface)
+        {
+            var currentType = type;
+
+            var baseCount = 0;
+            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
+            {
+                baseCount++;
+                currentType = currentType.BaseType;
+            }
+
+            while (currentType != null)
+            {
+                return currentType.FindInterfacePathForOneStep(@interface, out currentType);
+            }
+
+            return null;
+        }
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static List<string> FindInterfacePath(this IType type, IType @interface)
+        {
+            var indexes = new List<string>();
+
+            var currentType = type;
+
+            var baseCount = 0;
+            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
+            {
+                // add base index;
+                indexes.Add("base");
+                baseCount++;
+                currentType = currentType.BaseType;
+            }
+
+            while (currentType != null)
+            {
+                var interfacePath = currentType.FindInterfacePathForOneStep(@interface, out currentType);
+                indexes.Add(interfacePath.ToString().CleanUpName());
+            }
+
+            return indexes;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <param name="nextCurrentType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
+        private static int FindInterfaceIndexForOneStep(this IType type, IType @interface, out IType nextCurrentType)
+        {
+            nextCurrentType = type;
+            var found = false;
+            var interfaceIndex = -1;
+            foreach (var subInterface in type.GetInterfaces().ToList())
+            {
+                interfaceIndex++;
+
+                if (subInterface.TypeEquals(@interface))
+                {
+                    nextCurrentType = null;
+                    found = true;
+                    break;
+                }
+
+                if (subInterface.GetAllInterfaces().Contains(@interface))
+                {
+                    nextCurrentType = subInterface;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw new KeyNotFoundException("type can't be found");
+            }
+
+            return interfaceIndex;
+        }
+
+        private static IType FindInterfacePathForOneStep(this IType type, IType @interface, out IType nextCurrentType)
+        {
+            nextCurrentType = type;
+            var found = false;
+            IType interfacePath = null;
+            foreach (var subInterface in type.GetInterfaces().ToList())
+            {
+                interfacePath = subInterface;
+
+                if (subInterface.TypeEquals(@interface))
+                {
+                    nextCurrentType = null;
+                    found = true;
+                    break;
+                }
+
+                if (subInterface.GetAllInterfaces().Contains(@interface))
+                {
+                    nextCurrentType = subInterface;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw new KeyNotFoundException("type can't be found");
+            }
+
+            return interfacePath;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="baseWriter">

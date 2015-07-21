@@ -559,8 +559,29 @@ namespace Il2Native.Logic.Gencode
                     else
                     {
                         // static pointer to vtable of an interface of the object
-                        var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(bareType.FindInterfaceOwner(toType)));
-                        cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+                        var interfaceOwner = bareType.FindInterfaceOwner(toType);
+                        var isImmidiateInterfaceOwner = interfaceOwner.GetInterfaces(false).Contains(toType);
+                        if (isImmidiateInterfaceOwner)
+                        {
+                            var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(interfaceOwner));
+                            cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+                        }
+                        else
+                        {
+                           
+                            var interfaceEntry = interfaceOwner.FindInterfaceEntry(toType);
+
+                            var opCodeVTableToken = new OpCodeTypePart(
+                                OpCodesEmit.Ldtoken, 0, 0, interfaceEntry.ToVirtualTableImplementation(interfaceOwner));
+
+                            writer.Write("(Void**) &(");
+                            writer.Write("(");
+                            cWriter.WriteCCastOnly(interfaceEntry.ToVirtualTable());
+                            cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
+                            writer.Write(")->");
+                            cWriter.WriteInterfacePath(bareType, toType, null, 1);
+                            writer.Write(")");
+                        }
                     }
 
                     writer.Write(")");
