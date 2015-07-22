@@ -157,27 +157,19 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixDataType;
             }
 
-            var bytesArrayType = typeResolver.System.System_Byte.ToArrayType(1);
-
             var sb = new StringBuilder();
 
-            sb.Append("::Byte* vtable");
-
-            var index = 0;
-            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
+            if (typeResolver.MultiThreadingSupport)
             {
-                if (sb.Length > 0)
-                {
-                    sb.Append("; ");
-                }
-
-                sb.Append("::Byte* ifce" + index++);
+                sb.Append("Byte* cond; ");
+                sb.Append("Byte* lock; ");
             }
 
-            sb.Append("; ::Int16 rank");
-            sb.Append("; ::Int16 typeCode");
-            sb.Append("; ::Int32 elementSize");
-            sb.Append("; ::Int32 length");
+            sb.Append("Byte* vtable;");
+            sb.Append("Int16 rank;");
+            sb.Append("Int16 typeCode;");
+            sb.Append("Int32 elementSize;");
+            sb.Append("Int32 length");
 
             _singleDimArrayPrefixDataType = sb.ToString();
             return _singleDimArrayPrefixDataType;
@@ -196,21 +188,15 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
+            if (typeResolver.MultiThreadingSupport)
+            {
+                sb.Append("(Byte*) -1, ");
+                sb.Append("(Byte*) -1, ");
+            }
+
             sb.AppendLine(string.Empty);
             sb.Append("(::Byte*) ");
             sb.Append(bytesArrayType.GetVirtualTableNameReference(cWriter));
-
-            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
-            {
-                if (sb.Length > 0)
-                {
-                    sb.AppendLine(", ");
-                }
-
-                sb.Append("(::Byte*) ");
-                sb.Append(bytesArrayType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
-            }
-
             sb.AppendLine(string.Empty);
 
             _singleDimArrayPrefixNullConstData = sb.ToString();

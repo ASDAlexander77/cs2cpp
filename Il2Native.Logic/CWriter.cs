@@ -470,7 +470,8 @@ namespace Il2Native.Logic
 
                     if (MultiThreadingSupport)
                     {
-                        this.Output.Write("(({1}) ((Byte**) &_s{0}{2}_ + 1))", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
+                        // shift for Mutex & Cond
+                        this.Output.Write("(({1}) ((Byte**) &_s{0}{2}_ + 2))", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
                     }
                     else
                     {

@@ -90,35 +90,21 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetStringPrefixDataType(ITypeResolver typeResolver)
         {
-            //return "i8*, i8*, i8*, i32, i32";
             if (_stringPrefixDataType != null)
             {
                 return _stringPrefixDataType;
             }
 
-            var stringSystemType = typeResolver.System.System_String;
-
             var sb = new StringBuilder();
 
             if (typeResolver.MultiThreadingSupport)
             {
+                sb.Append("Byte* cond; ");
                 sb.Append("Byte* lock; ");
             }
 
-            sb.Append("Byte* vtable");
-
-            var index = 0;
-            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
-            {
-                if (sb.Length > 0)
-                {
-                    sb.Append("; ");
-                }
-
-                sb.Append("Byte* ifce" + index++);
-            }
-
-            sb.Append("; Int32 len");
+            sb.Append("Byte* vtable;");
+            sb.Append("Int32 len");
 
             _stringPrefixDataType = sb.ToString();
             return _stringPrefixDataType;
@@ -144,23 +130,12 @@ namespace Il2Native.Logic.Gencode
             if (typeResolver.MultiThreadingSupport)
             {
                 sb.Append("(Byte*) -1, ");
+                sb.Append("(Byte*) -1, ");
             }
 
             sb.AppendLine(string.Empty);
             sb.Append("(::Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
-
-            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces(null))
-            {
-                if (sb.Length > 0)
-                {
-                    sb.AppendLine(", ");
-                }
-
-                sb.Append("(::Byte*) ");
-                sb.Append(stringSystemType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
-            }
-
             sb.AppendLine(string.Empty);
 
             _stringPrefixConstData = sb.ToString();
