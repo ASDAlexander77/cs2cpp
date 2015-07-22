@@ -2142,13 +2142,29 @@ namespace Il2Native.Logic
 
             writer.Write("((");
             toType.WriteTypePrefix(this);
-            writer.Write(") __dynamic_cast_null_test{0}(", throwExceptionIfNull ? "_throw" : string.Empty);
+            writer.Write(")");
 
-            this.WriteResultOrActualWrite(writer, opCodeOperand);
+            // call dynamic_cast or cast
+            var getStaticType = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedGetTypeStaticMethod(toType, this));
 
-            writer.Write(", (::Void*) 0");
-            writer.Write(", (::Void*) 0");
-            writer.Write(", {0}))", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
+            var castToObject = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
+            castToObject.OpCodeOperands = new [] { opCodeOperand };
+
+            var method = throwExceptionIfNull ? (IMethod)new SynthesizedCastMethod(this) : (IMethod)new SynthesizedDynamicCastMethod(this);
+            var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.OpCodeOperands = new OpCodePart[] { castToObject, getStaticType };
+            this.WriteCall(
+                opCodeNope,
+                method,
+                false,
+                false,
+                false,
+                null,
+                this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+
+            ////this.WriteResultOrActualWrite(writer, opCodeOperand);
+
+            writer.Write(")");
 
             return true;
         }

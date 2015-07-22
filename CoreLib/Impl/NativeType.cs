@@ -20,6 +20,23 @@
             }
         }
 
+        // prototype for dynamic_cast
+        public static object As(object obj, Type c)
+        {
+            var p = obj.GetType();
+            while (p != null)
+            {
+                if (p == c)
+                {
+                    return obj;
+                }
+
+                p = p.BaseType;
+            }
+
+            return null;
+        }
+
         public override object[] GetCustomAttributes(bool inherit)
         {
             throw new NotImplementedException();

@@ -812,6 +812,11 @@ namespace Il2Native.Logic
                 yield return new SynthesizedCtorSBytePtrStartLengthMethod(typeResolver);
                 yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(typeResolver);
             }
+            else if (type.IsObject)
+            {
+                yield return new SynthesizedDynamicCastMethod(typeResolver);
+                yield return new SynthesizedCastMethod(typeResolver);
+            }
 
             if (excludeSpecializations)
             {

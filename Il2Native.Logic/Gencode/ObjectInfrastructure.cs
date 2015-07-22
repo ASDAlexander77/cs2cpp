@@ -790,5 +790,56 @@ namespace Il2Native.Logic.Gencode
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
         }
+
+        public static IlCodeBuilder GetDynamicCastMethod(
+            this ITypeResolver typeResolver,
+            IType type,
+            bool throwInvalidCast = false)
+        {
+            var code = new IlCodeBuilder();
+
+            code.Parameters.Add(typeResolver.System.System_Object.ToParameter("_obj"));
+            code.Parameters.Add(typeResolver.System.System_Type.ToParameter("_type"));
+
+            code.Locals.Add(typeResolver.System.System_Type);
+
+            code.LoadArgument(0);
+            code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));            
+            code.SaveLocal(0);
+            var jump = code.Branch(Code.Br, Code.Br_S);
+
+            var cond_back_jump = code.CreateLabel();
+
+            code.LoadLocal(0);
+            code.LoadArgument(1);
+
+            var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
+            
+            code.LoadArgument(0);
+            code.Add(Code.Ret);           
+            
+            code.Add(jump_not_equal);
+
+            code.LoadLocal(0);
+            code.Call(typeResolver.System.System_Type.GetMethodsByName("get_BaseType", typeResolver).First(p => !p.GetParameters().Any()));
+            code.SaveLocal(0);
+
+            code.Add(jump);
+
+            code.LoadLocal(0);
+            code.Branch(Code.Brtrue, Code.Brtrue_S, cond_back_jump);
+
+            if (!throwInvalidCast)
+            {
+                code.LoadNull();
+                code.Add(Code.Ret);
+            }
+            else
+            {
+                code.Throw(IlReader.FindConstructor(typeResolver.ResolveType("System.InvalidCastException"), typeResolver));
+            }
+
+            return code;
+        }
     }
 }
