@@ -53,7 +53,6 @@ typedef double Double;
 
 extern "C" Void* calloc(UInt32, UInt32);
 extern "C" Void exit(Int32 status);
-extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();
 
 // RTTI externals
@@ -69,27 +68,6 @@ extern "C" Double fmod (Double, Double);
 inline Void* __alloc(UInt32 size)
 {
 	return (Void*) calloc(1, size);
-}
-
-// OBSOLETE
-inline Void* __interface_to_object(Void* _interface)
-{
-	if (!_interface)
-	{
-		return 0;
-	}
-
-	return (Void*) ((Byte*)_interface + *(*(Int32**)_interface - 2));
-}
-
-inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
-{
-	if (!src)
-	{
-		return 0;
-	}
-
-	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
 }
 
 inline Void* __get_mutex_address(Void* _object)
@@ -142,28 +120,6 @@ inline Void __set_thread_static(Int32 key, System_Object* _object)
 
 extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
-struct System_InvalidCastException;
-Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
-System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();
-inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
-{
-	if (!src)
-	{
-		return 0;
-	}
-
-	Void* casted = __dynamic_cast(src, rttiFrom, rttiTo, offset);
-	if (!casted)
-	{
-		System_InvalidCastException* _new;
-		_new = System_InvalidCastException_System_InvalidCastException__newFN();
-		Void_System_InvalidCastException__ctorFN(_new);
-		throw (::Void*) _new;
-	}
-
-	return casted;
-}
-
 struct System_DivideByZeroException;
 Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
 System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFN();
@@ -180,17 +136,6 @@ template < typename T > T __check_divide(T div)
 	return div;
 }
 
-struct System_NotSupportedException;
-Void Void_System_NotSupportedException__ctorFN(System_NotSupportedException* __this);
-System_NotSupportedException* System_NotSupportedException_System_NotSupportedException__newFN();
-inline Void* __throw_not_supported()
-{
-	System_NotSupportedException* _new;
-	_new = System_NotSupportedException_System_NotSupportedException__newFN();
-	Void_System_NotSupportedException__ctorFN(_new);
-	throw (::Void*) _new;
-}
-
 struct System_NullReferenceException;
 Void Void_System_NullReferenceException__ctorFN(System_NullReferenceException* __this);
 System_NullReferenceException* System_NullReferenceException_System_NullReferenceException__newFN();
@@ -204,6 +149,17 @@ inline Void __check_this(Void* __this)
 	System_NullReferenceException* _new;
 	_new = System_NullReferenceException_System_NullReferenceException__newFN();
 	Void_System_NullReferenceException__ctorFN(_new);
+	throw (Void*) _new;
+}
+
+struct System_NotSupportedException;
+Void Void_System_NotSupportedException__ctorFN(System_NotSupportedException* __this);
+System_NotSupportedException* System_NotSupportedException_System_NotSupportedException__newFN();
+inline Void* __throw_not_supported()
+{
+	System_NotSupportedException* _new;
+	_new = System_NotSupportedException_System_NotSupportedException__newFN();
+	Void_System_NotSupportedException__ctorFN(_new);
 	throw (::Void*) _new;
 }
 

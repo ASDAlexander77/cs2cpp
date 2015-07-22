@@ -3175,9 +3175,9 @@ namespace Il2Native.Logic
         {
             writer.Write("(");
             this.WriteCCastOnly(toType);
-            writer.Write("__interface_to_object(");
+            writer.Write("(");
             this.WriteResultOrActualWrite(writer, opCode);
-            writer.Write("))");
+            writer.Write(")->__this)");
         }
 
         /// <summary>
