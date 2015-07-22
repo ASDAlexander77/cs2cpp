@@ -53,7 +53,6 @@ typedef double Double;
 
 extern "C" Void* calloc(UInt32, UInt32);
 extern "C" Void exit(Int32 status);
-extern "C" Void __cxa_pure_virtual();
 
 // RTTI externals
 extern "C" void* _ZTVN10__cxxabiv117__class_type_infoE;
@@ -64,6 +63,8 @@ extern "C" void* _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
 
 // Float
 extern "C" Double fmod (Double, Double);
+
+extern "C" Void __pure_virtual();
 
 inline Void* __alloc(UInt32 size)
 {
@@ -160,12 +161,30 @@ inline Void* __throw_not_supported()
 	System_NotSupportedException* _new;
 	_new = System_NotSupportedException_System_NotSupportedException__newFN();
 	Void_System_NotSupportedException__ctorFN(_new);
-	throw (::Void*) _new;
+	throw (Void*) _new;
+}
+
+struct System_InvalidOperationException;
+Void Void_System_InvalidOperationException__ctorFN(System_InvalidOperationException* __this);
+System_InvalidOperationException* System_InvalidOperationException_System_InvalidOperationException__newFN();
+inline Void* __throw_invalid_operation()
+{
+	System_InvalidOperationException* _new;
+	_new = System_InvalidOperationException_System_InvalidOperationException__newFN();
+	Void_System_InvalidOperationException__ctorFN(_new);
+	throw (Void*) _new;
 }
 
 struct System_OverflowException;
 Void Void_System_OverflowException__ctorFN(System_OverflowException* __this);
 System_OverflowException* System_OverflowException_System_OverflowException__newFN();
+inline Void* __throw_overflow()
+{
+	System_OverflowException* _new;
+	_new = System_OverflowException_System_OverflowException__newFN();
+	Void_System_OverflowException__ctorFN(_new);
+	throw (Void*) _new;
+}
 
 inline SByte __add_ovf(SByte a, SByte b)
 {
@@ -174,20 +193,14 @@ inline SByte __add_ovf(SByte a, SByte b)
 	{
 		if (s < a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s >= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -201,20 +214,14 @@ inline Int16 __add_ovf(Int16 a, Int16 b)
 	{
 		if (s < a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s >= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -228,20 +235,14 @@ inline Int32 __add_ovf(Int32 a, Int32 b)
 	{
 		if (s < a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s >= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -255,20 +256,14 @@ inline Int64 __add_ovf(Int64 a, Int64 b)
 	{
 		if (s < a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s >= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -279,10 +274,7 @@ template < typename T > inline T __add_ovf_un(T a, T b)
 {
 	if ((T)-1 - (T)a <= (T) b)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a + b;
@@ -295,20 +287,14 @@ inline SByte __sub_ovf(SByte a, SByte b)
 	{
 		if (s > a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s <= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -319,10 +305,7 @@ inline Byte __sub_ovf(Byte a, Byte b)
 {
 	if (a < b)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a - b;
@@ -335,20 +318,14 @@ inline Int16 __sub_ovf(Int16 a, Int16 b)
 	{
 		if (s > a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s <= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -359,10 +336,7 @@ inline Char __sub_ovf(Char a, Char b)
 {
 	if (a < b)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a - b;
@@ -375,20 +349,14 @@ inline Int32 __sub_ovf(Int32 a, Int32 b)
 	{
 		if (s > a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s <= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -402,20 +370,14 @@ inline Int64 __sub_ovf(Int64 a, Int64 b)
 	{
 		if (s > a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (s <= a)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -426,10 +388,7 @@ template < typename T > inline T __sub_ovf_un(T a, T b)
 {
 	if ((T)a < (T) b)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a - b;
@@ -448,10 +407,7 @@ template < typename T > inline T __mul_ovf(T a, T b)
 			return a * b;
 		}
 
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 	if (b == MIN)
 	{
@@ -460,10 +416,7 @@ template < typename T > inline T __mul_ovf(T a, T b)
 			return a * b;
 		}
 
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	T sa = a >> (N - 1);
@@ -476,20 +429,14 @@ template < typename T > inline T __mul_ovf(T a, T b)
 	{
 		if (abs_a > MAX / abs_b)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 	else
 	{
 		if (abs_a > MIN / -abs_b)
 		{
-			System_OverflowException* _new;
-			_new = System_OverflowException_System_OverflowException__newFN();
-			Void_System_OverflowException__ctorFN(_new);
-			throw (::Void*) _new;
+			__throw_overflow();
 		}
 	}
 
@@ -500,10 +447,7 @@ inline Byte __mul_ovf_un(Byte a, Byte b)
 {
 	if (a != 0 && b > ((Byte)-1) / a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -513,10 +457,7 @@ inline UInt16 __mul_ovf_un(UInt16 a, UInt16 b)
 {
 	if (a != 0 && b > ((UInt16)-1) / a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -526,10 +467,7 @@ inline UInt32 __mul_ovf_un(UInt32 a, UInt32 b)
 {
 	if (a != 0 && b > ((UInt32)-1) / a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -539,10 +477,7 @@ inline UInt64 __mul_ovf_un(UInt64 a, UInt64 b)
 {
 	if (a != 0 && b > ((UInt64)-1) / a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -552,10 +487,7 @@ inline SByte __mul_ovf_un(SByte a, SByte b)
 {
 	if ((Byte)a != 0 && (Byte)b > ((Byte)-1) / (Byte)a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -565,10 +497,7 @@ inline Int16 __mul_ovf_un(Int16 a, UInt16 b)
 {
 	if ((UInt16)a != 0 && (UInt16)b > ((UInt16)-1) / (UInt16)a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -578,10 +507,7 @@ inline Int32 __mul_ovf_un(Int32 a, Int32 b)
 {
 	if ((UInt32)a != 0 && (UInt32)b > ((UInt32)-1) / (UInt32)a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
@@ -591,10 +517,7 @@ inline Int64 __mul_ovf_un(Int64 a, Int64 b)
 {
 	if ((UInt64)a != 0 && (UInt64)b > ((UInt64)-1) / (UInt64)a)
 	{
-		System_OverflowException* _new;
-		_new = System_OverflowException_System_OverflowException__newFN();
-		Void_System_OverflowException__ctorFN(_new);
-		throw (::Void*) _new;
+		__throw_overflow();
 	}
 
 	return a * b;
