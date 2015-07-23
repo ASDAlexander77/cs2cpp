@@ -4730,7 +4730,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                foreach (var @interface in type.GetInterfaces())
+                foreach (var @interface in type.GetInterfacesExcludingBaseAllInterfaces())
                 {
                     WriteInterfaceDeclarationInVirtualTable(writer, false, @interface);
                 }

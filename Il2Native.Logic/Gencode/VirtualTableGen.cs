@@ -83,7 +83,7 @@ namespace Il2Native.Logic.Gencode
 
             // add all interfaces
             virtualTable.AddRange(
-                thisType.GetInterfaces()
+                thisType.GetInterfacesExcludingBaseAllInterfaces()
                         .Select(@interface => new CWriter.Pair<IType, IType> { Kind = CWriter.PairKind.Interface, Key = @interface, Value = @interface }));
 
             // get all virtual methods in current type and replace or append
