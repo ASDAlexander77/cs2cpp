@@ -137,10 +137,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsRtti { get; }
-
-        /// <summary>
-        /// </summary>
         bool IsPrivateImplementationDetails { get; }
 
         /// <summary>
@@ -158,10 +154,6 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool UseAsClass { get; }
-
-        /// <summary>
-        /// </summary>
-        bool UseAsRtti { get; }
 
         /// <summary>
         /// </summary>
@@ -335,12 +327,6 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IType ToPinned();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
         IType ToPointerType();
 
         /// <summary>
@@ -356,11 +342,5 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToVirtualTable();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IType ToRtti();
     }
 }

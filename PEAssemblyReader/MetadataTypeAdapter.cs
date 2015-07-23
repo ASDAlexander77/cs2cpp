@@ -439,16 +439,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsRtti
-        {
-            get
-            {
-                return this.UseAsRtti;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public bool IsString
         {
             get
@@ -575,10 +565,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool UseAsRtti { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool UseAsVirtualTableImplementation { get; set; }
 
         /// <summary>
@@ -593,17 +579,6 @@ namespace PEAssemblyReader
             {
                 return this.typeDef;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType AsRtti()
-        {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsRtti = true;
-            return typeAdapter;
         }
 
         /// <summary>
@@ -753,12 +728,6 @@ namespace PEAssemblyReader
             }
 
             cmp = this.IsVirtualTable.CompareTo(type.IsVirtualTable);
-            if (cmp != 0)
-            {
-                return cmp;
-            }
-
-            cmp = this.IsRtti.CompareTo(type.IsRtti);
             if (cmp != 0)
             {
                 return cmp;
@@ -1134,7 +1103,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            if (!this.UseAsClass && !this.UseAsRtti && !this.UseAsVirtualTableImplementation && !this.UseAsVirtualTable)
+            if (!this.UseAsClass && !this.UseAsVirtualTableImplementation && !this.UseAsVirtualTable)
             {
                 return this;
             }
@@ -1188,20 +1157,6 @@ namespace PEAssemblyReader
         public IType ToPointerType()
         {
             return new PointerTypeSymbol(this.typeDef).ToAdapter();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToRtti()
-        {
-            if (this.UseAsRtti)
-            {
-                return this;
-            }
-
-            return this.AsRtti();
         }
 
         /// <summary>

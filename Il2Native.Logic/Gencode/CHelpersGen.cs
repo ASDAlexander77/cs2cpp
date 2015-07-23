@@ -548,7 +548,7 @@ namespace Il2Native.Logic.Gencode
                     // actual call box
                     cWriter.ActualWriteOpCode(writer, opCodeToTypeResult);
 
-                    writer.Write(", ");
+                    writer.Write(", (Void**)");
 
                     if (bareType.IsInterface)
                     {
@@ -558,37 +558,12 @@ namespace Il2Native.Logic.Gencode
                     }
                     else
                     {
-                        // static pointer to vtable of an interface of the object
-                        var interfaceOwner = bareType.FindInterfaceOwner(toType);
-                        var isImmidiateInterfaceOwner = interfaceOwner.GetInterfaces(false).Contains(toType);
-                        if (isImmidiateInterfaceOwner)
-                        {
-                            //var opCodeVTableToken = new OpCodeTypePart(OpCodesEmit.Ldtoken, 0, 0, toType.ToVirtualTableImplementation(interfaceOwner));
-                            //cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
-
-                            writer.Write("(");
-                            cWriter.WriteCCastOnly(bareType.ToVirtualTable());
-                            cWriter.WriteResultOrActualWrite(writer, mainOperand);
-                            cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
-                            writer.Write(")->");
-                            cWriter.WriteInterfacePath(bareType, toType, null);
-                        }
-                        else
-                        {
-                           
-                            var interfaceEntry = interfaceOwner.FindInterfaceEntry(toType);
-
-                            var opCodeVTableToken = new OpCodeTypePart(
-                                OpCodesEmit.Ldtoken, 0, 0, interfaceEntry.ToVirtualTableImplementation(interfaceOwner));
-
-                            writer.Write("(Void**) &(");
-                            writer.Write("(");
-                            cWriter.WriteCCastOnly(interfaceEntry.ToVirtualTable());
-                            cWriter.ActualWriteOpCode(writer, opCodeVTableToken);
-                            writer.Write(")->");
-                            cWriter.WriteInterfacePath(bareType, toType, null, 1);
-                            writer.Write(")");
-                        }
+                        writer.Write("(");
+                        cWriter.WriteCCastOnly(bareType.ToVirtualTable());
+                        cWriter.WriteResultOrActualWrite(writer, mainOperand);
+                        cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+                        writer.Write(")->");
+                        cWriter.WriteInterfacePath(bareType, toType, null);
                     }
 
                     writer.Write(")");

@@ -482,7 +482,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string TypeToCType(this IType type, bool? isPointerOpt = null, bool enumAsName = false, bool shortName = false)
         {
-            if (!type.UseAsClass)
+            if (!type.UseAsClass && !type.SpecialUsage())
             {
                 if (type.IsEnum && !enumAsName)
                 {

@@ -311,20 +311,6 @@ namespace Il2Native.Logic
 
         private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
         {
-            // to support casting interface to interface which is not directly inherited
-            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Castclass))
-            {
-                var opCodeType = opCode.UsedBy.OpCode as OpCodeTypePart;
-                var estimatedResultOf = this.EstimatedResultOf(opCode);
-                if (opCodeType != null
-                    && (opCodeType.Operand.IsInterface && estimatedResultOf.Type.IsInterface && !opCodeType.Operand.IsFirstInterfaceOf(estimatedResultOf.Type)))
-                {
-                    // this is interface to interface cast which is not directly inherited
-                    opCode.Result = new FullyDefinedReference(string.Format("__expr{0}", GetAddressLabelPart(opCode)), estimatedResultOf.Type);
-                    return true;
-                }
-            }
-
             switch (opCode.ToCode())
             {
                 case Code.Dup:
@@ -339,12 +325,36 @@ namespace Il2Native.Logic
                     return true;
                 case Code.Ldtoken:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
-                           (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
-                            opCodeFieldInfoPart.Operand.GetFieldRVAData() != null);
+                    if (opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
+                        (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
+                         opCodeFieldInfoPart.Operand.GetFieldRVAData() != null))
+                    {
+                        return true;
+                    }
+
+                    break;
                 case Code.Call:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-                    return ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand);
+                    if (ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand))
+                    {
+                        return true;
+                    }
+
+                    break;
+            }
+
+            // to support casting interface to interface which is not directly inherited
+            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Castclass))
+            {
+                var opCodeType = opCode.UsedBy.OpCode as OpCodeTypePart;
+                var estimatedResultOf = this.EstimatedResultOf(opCode);
+                if (opCodeType != null && opCode.UsedByAlternativeValues == null && opCodeType.Operand.IsInterface)
+                {
+                    // this is interface to interface cast which is not directly inherited
+                    var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
+                    opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
+                    return true;
+                }
             }
 
             return false;
