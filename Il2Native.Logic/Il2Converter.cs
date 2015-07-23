@@ -144,10 +144,7 @@ namespace Il2Native.Logic
 
             codeWriter.WriteBeforeMethods(type);
 
-            if (!type.IsInterface)
-            {
-                ConvertTypeDefinition(codeWriter, type, genericMethodSpecializatons, processGenericMethodsOnly, true);
-            }
+            ConvertTypeDefinition(codeWriter, type, genericMethodSpecializatons, processGenericMethodsOnly, true);
 
             codeWriter.WriteAfterMethods(type);
 
@@ -351,6 +348,11 @@ namespace Il2Native.Logic
                 var method in
                     IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
             {
+                if (forwardDeclarations && type.IsInterface && !method.IsStatic)
+                {
+                    continue;
+                }
+
                 if (VerboseOutput)
                 {
                     Trace.WriteLine(string.Format("writing method {0}", method));
