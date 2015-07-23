@@ -4673,14 +4673,8 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!declaration)
-            {
-                this.StartPreprocessorIf(type, "VTIMPL");
-            }
-
             var hasAnyVirtualMethod = type.HasAnyVirtualMethod(this);
-            foreach (var @interface in type.GetInterfaces(false))
-            //foreach (var @interface in type.DeepSelectInterfaces())
+            foreach (var @interface in type.GetInterfaces())
             {
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface, declaration);
@@ -4692,11 +4686,6 @@ namespace Il2Native.Logic
                 var virtualTable = type.GetVirtualTable(this);
                 virtualTable.WriteTableOfMethodsWithImplementation(this, type, declaration: declaration);
                 this.Output.WriteLine(string.Empty);
-            }
-
-            if (!declaration)
-            {
-                this.EndPreprocessorIf(type);
             }
         }
 
@@ -4724,15 +4713,28 @@ namespace Il2Native.Logic
             {
                 var virtualTable = type.GetVirtualTable(this);
 
-                foreach (var method in virtualTable.Select(v => v.Value))
+                foreach (var node in virtualTable)
                 {
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
-                    writer.WriteLine(";");
+                    if (node.Kind == PairKind.Interface)
+                    {
+                        WriteInterfaceDeclarationInVirtualTable(writer, true, ((CWriter.Pair<IType, IType>)node).Value);
+                    }
+
+                    if (node.Kind == PairKind.Method)
+                    {
+                        var method = ((CWriter.Pair<IMethod, IMethod>)node).Value;
+                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
+                        writer.WriteLine(";");
+                    }
                 }
             }
             else
             {
-                WriteInterfaceDeclarationsInVirtualTable(type, writer);
+                foreach (var @interface in type.GetInterfaces())
+                {
+                    WriteInterfaceDeclarationInVirtualTable(writer, false, @interface);
+                }
+
                 foreach (var method in Logic.IlReader.Methods(type, this).Where(m => !m.IsStatic))
                 {
                     this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
@@ -4746,18 +4748,19 @@ namespace Il2Native.Logic
             this.EndPreprocessorIf(table);
         }
 
-        public static void WriteInterfaceDeclarationsInVirtualTable(IType type, CIndentedTextWriter writer)
+        private static void WriteInterfaceDeclarationInVirtualTable(CIndentedTextWriter writer, bool asReference, IType @interface)
         {
-            // Interfaces for current level
-            foreach (var @interface in type.GetInterfaces())
+            @interface.WriteTypeName(writer, false);
+            writer.Write(CWriter.VTable);
+            if (asReference)
             {
-                @interface.WriteTypeName(writer, false);
-                writer.Write(CWriter.VTable);
-                writer.Write(" ");
-                writer.Write("ifce_");
-                writer.Write(@interface.FullName.CleanUpName());
-                writer.WriteLine(";");
+                writer.Write("*");
             }
+
+            writer.Write(" ");
+            writer.Write("ifce_");
+            writer.Write(@interface.FullName.CleanUpName());
+            writer.WriteLine(";");
         }
 
         /// <summary>
@@ -4803,13 +4806,26 @@ namespace Il2Native.Logic
             AdjustIntTypes = 1024
         }
 
+        public enum PairKind
+        {
+            Method,
+            Interface
+        }
+
+        public class Pair
+        {
+            /// <summary>
+            /// </summary>
+            public PairKind Kind { get; set; }            
+        }
+
         /// <summary>
         /// </summary>
         /// <typeparam name="K">
         /// </typeparam>
         /// <typeparam name="V">
         /// </typeparam>
-        public class Pair<K, V>
+        public class Pair<K, V> : Pair
         {
             /// <summary>
             /// </summary>

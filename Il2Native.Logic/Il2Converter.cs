@@ -144,12 +144,10 @@ namespace Il2Native.Logic
 
             codeWriter.WriteBeforeMethods(type);
 
-            ConvertTypeDefinition(
-                codeWriter,
-                type,
-                genericMethodSpecializatons,
-                processGenericMethodsOnly,
-                true);
+            if (!type.IsInterface)
+            {
+                ConvertTypeDefinition(codeWriter, type, genericMethodSpecializatons, processGenericMethodsOnly, true);
+            }
 
             codeWriter.WriteAfterMethods(type);
 

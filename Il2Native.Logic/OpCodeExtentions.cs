@@ -319,6 +319,8 @@ namespace Il2Native.Logic
 
         public static IType FindInterfaceOwner(this IType type, IType @interface)
         {
+            Debug.Assert(@interface.IsInterface, "Required interface type");
+
             while (!type.GetInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
             {
                 type = type.BaseType;
@@ -1316,30 +1318,6 @@ namespace Il2Native.Logic
                 foreach (var subChildInterface in childInterface.SelectAllNestedChildrenExceptFirstInterfaces())
                 {
                     yield return subChildInterface;
-                }
-            }
-        }
-
-        public static IEnumerable<IType> DeepSelectInterfaces(this IType type)
-        {
-            if (type.BaseType != null)
-            {
-                foreach (var baseInterface in type.BaseType.DeepSelectInterfaces())
-                {
-                    yield return baseInterface;
-                }
-
-                var baseInterfaces = type.BaseType.GetAllInterfaces();
-                foreach (var topInterface in type.GetInterfaces().Where(i => !baseInterfaces.Contains(i)))
-                {
-                    yield return topInterface;
-                }
-            }
-            else
-            {
-                foreach (var topInterface in type.GetInterfaces())
-                {
-                    yield return topInterface;
                 }
             }
         }

@@ -32,8 +32,8 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<CWriter.Pair<IMethod, IMethod>>> VirtualTableByType =
-            new SortedDictionary<string, List<CWriter.Pair<IMethod, IMethod>>>();
+        private static readonly IDictionary<string, List<CWriter.Pair>> VirtualTableByType =
+            new SortedDictionary<string, List<CWriter.Pair>>();
 
         /// <summary>
         /// </summary>
@@ -72,7 +72,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void BuildVirtualTable(
-            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
+            this List<CWriter.Pair> virtualTable,
             IType thisType,
             ITypeResolver typeResolver)
         {
@@ -80,6 +80,11 @@ namespace Il2Native.Logic.Gencode
             {
                 virtualTable.BuildVirtualTable(thisType.BaseType, typeResolver);
             }
+
+            // add all interfaces
+            virtualTable.AddRange(
+                thisType.GetInterfaces()
+                        .Select(@interface => new CWriter.Pair<IType, IType> { Kind = CWriter.PairKind.Interface, Key = @interface, Value = @interface }));
 
             // get all virtual methods in current type and replace or append
             foreach (
@@ -102,8 +107,12 @@ namespace Il2Native.Logic.Gencode
 
                 // find method in virtual table
                 var baseMethod = virtualOrAbstractMethod.IsOverride
-                    ? virtualTable.Last(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
-                    : virtualTable.LastOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+                                     ? virtualTable.Where(p => p.Kind == CWriter.PairKind.Method)
+                                                   .OfType<CWriter.Pair<IMethod, IMethod>>()
+                                                   .Last(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
+                                     : virtualTable.Where(p => p.Kind == CWriter.PairKind.Method)
+                                                   .OfType<CWriter.Pair<IMethod, IMethod>>()
+                                                   .LastOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
 
                 if (baseMethod == null)
                 {
@@ -137,7 +146,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<CWriter.Pair<IMethod, IMethod>> GetVirtualInterfaceTable(
+        public static IEnumerable<CWriter.Pair> GetVirtualInterfaceTable(
             this IType thisType,
             IType @interface,
             ITypeResolver typeResolver)
@@ -147,7 +156,7 @@ namespace Il2Native.Logic.Gencode
             var key = string.Concat(thisType.FullName, '+', @interface.FullName);
             if (VirtualInterfaceTableByType.TryGetValue(key, out virtualInterfaceTable))
             {
-                return virtualInterfaceTable;
+                return virtualInterfaceTable.OfType<CWriter.Pair>();
             }
 
             virtualInterfaceTable = new List<CWriter.Pair<IMethod, IMethod>>();
@@ -194,6 +203,8 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualInterfaceTableName(this IType type, IType @interface, CWriter cWriter, bool implementation = false)
         {
+            Debug.Assert(!type.IsInterface, "Interface is not expected here");
+            Debug.Assert(@interface.IsInterface, "Interface expected");
             return
                 string.Concat(
                     type.FullName,
@@ -237,7 +248,9 @@ namespace Il2Native.Logic.Gencode
                 var virtualTable = thisType.GetVirtualTable(typeResolver);
 
                 var index = 0;
-                foreach (var virtualMethod in virtualTable.Select(v => v.Value))
+                foreach (
+                    var virtualMethod in
+                        virtualTable.Where(v => v.Kind == CWriter.PairKind.Method).OfType<CWriter.Pair<IMethod, IMethod>>().Select(v => v.Value))
                 {
                     if (virtualMethod.IsMatchingOverride(methodInfo))
                     {
@@ -308,24 +321,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<CWriter.Pair<IMethod, IMethod>> GetVirtualTable(
+        public static IEnumerable<CWriter.Pair> GetVirtualTable(
             this IType thisType,
             ITypeResolver typeResolver)
         {
-            List<CWriter.Pair<IMethod, IMethod>> virtualTable;
+            List<CWriter.Pair> virtualTable;
 
             if (VirtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
             {
                 return virtualTable;
             }
 
-            virtualTable = new List<CWriter.Pair<IMethod, IMethod>>();
+            virtualTable = new List<CWriter.Pair>();
             virtualTable.BuildVirtualTable(thisType, typeResolver);
 
 #if DEBUG
             if (!thisType.IsAbstract)
             {
-                var issueMethod = virtualTable.FirstOrDefault(vm => vm.Value == null || vm.Value.IsAbstract);
+                var issueMethod = virtualTable.Where(v => v.Kind == CWriter.PairKind.Method).OfType<CWriter.Pair<IMethod, IMethod>>().FirstOrDefault(vm => vm.Value == null || vm.Value.IsAbstract);
                 Debug.Assert(issueMethod == null, "Not all virtual methods are resolved");
             }
 #endif
@@ -402,6 +415,8 @@ namespace Il2Native.Logic.Gencode
         {
             return
                 thisType.GetVirtualTable(cWriter)
+                    .Where(v => v.Kind == CWriter.PairKind.Method)
+                    .OfType<CWriter.Pair<IMethod, IMethod>>()
                     .Select(v => v.Value)
                     .Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
         }
@@ -419,7 +434,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="baseTypeFieldsOffset">
         /// </param>
         public static void WriteTableOfMethodsWithImplementation(
-            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
+            this IEnumerable<CWriter.Pair> virtualTable,
             CWriter cWriter,
             IType type,
             IType interfaceType = null,
@@ -430,7 +445,7 @@ namespace Il2Native.Logic.Gencode
                 cWriter.Output.Write("extern ");
             }
 
-            WriteVirtualTableImplementationDeclaration(virtualTable, cWriter, type, interfaceType);
+            WriteVirtualTableImplementationDeclaration(cWriter, type, interfaceType);
             cWriter.Output.Write("[]");
             if (!declaration)
             {
@@ -442,7 +457,6 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static void WriteVirtualTableImplementationDeclaration(
-            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             CWriter cWriter,
             IType type,
             IType interfaceType = null)
@@ -462,28 +476,8 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter, bool methodsOnly = false, IType declarationType = null)
-        {
-            var writer = cWriter.Output;
-
-            writer.WriteLine("{");
-            writer.Indent++;
-
-            // define virtual table
-            foreach (var virtualMethod in virtualTable)
-            {
-                var method = virtualMethod.Key;
-                cWriter.WriteMethodPointerType(writer, method, declarationType ?? method.DeclaringType, withName: true, shortName: false, excludeNamespace: true);
-                writer.WriteLine(";");
-            }
-
-            writer.Indent--;
-
-            writer.Write("}");
-        }
-
         private static void VirtualTableDefinition(
-            List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter)
+            IEnumerable<CWriter.Pair> virtualTable, IType type, CWriter cWriter)
         {
             var writer = cWriter.Output;
 
@@ -492,7 +486,7 @@ namespace Il2Native.Logic.Gencode
 
             var first = true;
             // define virtual table
-            foreach (var virtualMethod in virtualTable)
+            foreach (var virtualMethodPair in virtualTable)
             {
                 if (first)
                 {
@@ -503,7 +497,18 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(",");
                 }
 
-                var methodKey = virtualMethod.Key;
+                if (virtualMethodPair.Kind == CWriter.PairKind.Interface)
+                {
+                    var @interfacePair = virtualMethodPair as CWriter.Pair<IType, IType>;
+
+                    writer.Write("(Void*) &");
+                    writer.Write(type.FindInterfaceOwner(@interfacePair.Value).GetVirtualInterfaceTableName(@interfacePair.Value, cWriter, true));
+
+                    continue;
+                }
+
+                var virtualMethod = virtualMethodPair as CWriter.Pair<IMethod, IMethod>;
+
                 var method = virtualMethod.Value;
 
                 writer.Write("(");
