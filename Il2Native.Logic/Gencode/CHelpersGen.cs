@@ -571,7 +571,7 @@ namespace Il2Native.Logic.Gencode
                             cWriter.WriteResultOrActualWrite(writer, mainOperand);
                             cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
                             writer.Write(")->");
-                            cWriter.WriteInterfacePath(bareType, toType);
+                            cWriter.WriteInterfacePath(bareType, toType, null);
                         }
                         else
                         {
