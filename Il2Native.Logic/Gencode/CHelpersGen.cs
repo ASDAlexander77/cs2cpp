@@ -558,6 +558,11 @@ namespace Il2Native.Logic.Gencode
                     }
                     else
                     {
+                        if (bareType.FindInterfaceEntry(toType).TypeNotEquals(toType))
+                        {
+                            writer.Write("&");
+                        }
+
                         writer.Write("(");
                         cWriter.WriteCCastOnly(bareType.ToVirtualTable());
                         cWriter.WriteResultOrActualWrite(writer, mainOperand);

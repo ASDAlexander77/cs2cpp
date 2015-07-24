@@ -599,6 +599,7 @@ namespace PEAssemblyReader
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
             typeAdapter.UseAsVirtualTable = true;
+            typeAdapter.UseAsClass = this.UseAsClass;
             return typeAdapter;
         }
 

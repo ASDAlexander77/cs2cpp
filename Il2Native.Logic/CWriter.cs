@@ -3990,10 +3990,13 @@ namespace Il2Native.Logic
 
                 var path = type.FindInterfacePath(@interface);
 
+                var isInterface = false;
+                var isFirst = true;
                 for (var i = startPath; i < path.Count; i++)
                 {
                     if (path[i] != "base")
                     {
+                        isInterface = true;
                         writer.Write("ifce_");
                     }
 
@@ -4001,7 +4004,12 @@ namespace Il2Native.Logic
 
                     if (fieldInfo != null || i < path.Count - 1)
                     {
-                        writer.Write(".");
+                        writer.Write(!classType.IsInterface && isFirst ? "->" : ".");
+                    }
+
+                    if (isFirst && isInterface)
+                    {
+                        isFirst = false;
                     }
                 }
             }
