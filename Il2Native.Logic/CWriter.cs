@@ -3985,7 +3985,7 @@ namespace Il2Native.Logic
                     }
 
                     // first index is base type index
-                    writer.Write("base.");
+                    ////writer.Write("base.");
                 }
 
                 var path = type.FindInterfacePath(@interface);
