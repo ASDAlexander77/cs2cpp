@@ -4004,7 +4004,7 @@ namespace Il2Native.Logic
 
                     if (fieldInfo != null || i < path.Count - 1)
                     {
-                        writer.Write(!classType.IsInterface && isFirst ? "->" : ".");
+                        writer.Write(!classType.IsInterface && isFirst && isInterface ? "->" : ".");
                     }
 
                     if (isFirst && isInterface)
