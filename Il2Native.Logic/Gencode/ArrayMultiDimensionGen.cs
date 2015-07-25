@@ -16,13 +16,6 @@
 
             var shortType = typeResolver.System.System_Int16;
             var intType = typeResolver.System.System_Int32;
-            var pointerType = typeResolver.System.System_Byte.ToPointerType();
-
-            // return dummy fields to compensate interfaces for SingleDim array
-            foreach (var dummyField in arrayType.GetElementType().ToArrayType(1).GetInterfaces())
-            {
-                yield return pointerType.ToField(arrayType, dummyField.Name);
-            }
 
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");

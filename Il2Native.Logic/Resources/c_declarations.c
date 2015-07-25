@@ -54,13 +54,6 @@ typedef double Double;
 extern "C" Void* calloc(UInt32, UInt32);
 extern "C" Void exit(Int32 status);
 
-// RTTI externals
-extern "C" void* _ZTVN10__cxxabiv117__class_type_infoE;
-extern "C" void* _ZTVN10__cxxabiv119__pointer_type_infoE;
-extern "C" void* _ZTVN10__cxxabiv120__si_class_type_infoE;
-extern "C" void* _ZTVN10__cxxabiv121__vmi_class_type_infoE;
-extern "C" void* _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
-
 // Float
 extern "C" Double fmod (Double, Double);
 
@@ -87,11 +80,13 @@ inline Void* __null_address(Void* _object)
 	return (Void*)0;
 }
 
-template < typename T > inline T* __set_vtable(T* _object, Void** _vtbl)
+struct __interface_data
 {
-	*(Void**)&_object->__vtbl = _vtbl;
-	return _object;
-}
+	Void* __vtbl;
+	Void* __this;
+};
+
+Void* __new_interface(Void* _object, Void** _vtbl);
 
 class System_Object;
 extern "C" Int32 pthread_key_create(Int32* key, Void* destructor);

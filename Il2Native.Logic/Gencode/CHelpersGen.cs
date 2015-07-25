@@ -516,13 +516,10 @@ namespace Il2Native.Logic.Gencode
 
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    writer.Write("__set_vtable(");
-
-                    // call box
-                    var opCodeMethodInfoPart = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedBoxMethod(cWriter.System.System_Int32, cWriter));
+                    cWriter.WriteCCastOnly(toType);
+                    writer.Write("__new_interface((Void*)");
 
                     var mainOperand = opCodeOperand;
-
                     if (bareType.IsInterface)
                     {
                         var opCodeLoadField = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, bareType.GetFieldByName("__this", cWriter));
@@ -530,23 +527,8 @@ namespace Il2Native.Logic.Gencode
                         mainOperand = opCodeLoadField;
                     }
 
-                    var voidPointerType = cWriter.System.System_Void.ToPointerType();
-                    var opCodeToPointer = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, voidPointerType);
-                    opCodeToPointer.OpCodeOperands = new OpCodePart[] { mainOperand };
-
-                    var opCodeToInt = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, cWriter.System.System_Int32);
-                    opCodeToInt.OpCodeOperands = new OpCodePart[] { opCodeToPointer };
-
-                    opCodeMethodInfoPart.OpCodeOperands = new OpCodePart[] { opCodeToInt };
-
-                    var opCodeToPointerResult = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, voidPointerType);
-                    opCodeToPointerResult.OpCodeOperands = new OpCodePart[] { opCodeMethodInfoPart };
-
-                    var opCodeToTypeResult = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, toType);
-                    opCodeToTypeResult.OpCodeOperands = new OpCodePart[] { opCodeToPointerResult };
-
                     // actual call box
-                    cWriter.ActualWriteOpCode(writer, opCodeToTypeResult);
+                    cWriter.WriteResultOrActualWrite(writer, mainOperand);
 
                     writer.Write(", (Void**)");
 

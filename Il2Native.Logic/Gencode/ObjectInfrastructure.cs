@@ -804,6 +804,14 @@ namespace Il2Native.Logic.Gencode
             code.Locals.Add(typeResolver.System.System_Type);
 
             code.LoadArgument(0);
+            var jumpNull = code.Branch(Code.Brtrue, Code.Brtrue_S);
+
+            code.LoadNull();
+            code.Add(Code.Ret);
+
+            code.Add(jumpNull);
+
+            code.LoadArgument(0);
             code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));            
             code.SaveLocal(0);
             var jump = code.Branch(Code.Br, Code.Br_S);

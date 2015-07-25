@@ -1,3 +1,18 @@
+Void* __new_interface(Void* _object, Void** _vtbl) 
+{
+	__interface_data* __ret_interface;
+    __ret_interface = (__interface_data*) GC_MALLOC(sizeof(__interface_data));
+    if (__ret_interface) goto _continue;
+    System_OutOfMemoryException* _new;
+    _new = System_OutOfMemoryException_System_OutOfMemoryException__newFN();
+    Void_System_OutOfMemoryException__ctorFN(_new);
+    throw (Void*) _new;
+_continue:
+	__ret_interface->__vtbl = _vtbl;
+	__ret_interface->__this = _object;
+    return (Void*) __ret_interface;
+}
+
 extern "C" Void* Memcpy(Byte* dst, Byte* src, Int32 size)
 {
 	return __builtin_memcpy(dst, src, size);
