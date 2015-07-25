@@ -1625,6 +1625,11 @@ namespace Il2Native.Logic
             return IsMatchingParams(params1, params2);
         }
 
+        public static bool IsMethodVirtual(this IMethod method)
+        {
+            return method.IsAbstract || method.IsVirtual || method.IsOverride;
+        }
+
         public static bool IsMatchingParams(this IParameter[] params1, IParameter[] params2)
         {
             if (params1.Length != params2.Length)

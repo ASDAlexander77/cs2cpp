@@ -403,26 +403,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo, CWriter cWriter)
-        {
-            return
-                thisType.GetVirtualTable(cWriter)
-                    .Where(v => v.Kind == CWriter.PairKind.Method)
-                    .OfType<CWriter.Pair<IMethod, IMethod>>()
-                    .Select(v => v.Value)
-                    .Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="virtualTable">
         /// </param>
         /// <param name="cWriter">
@@ -500,9 +480,13 @@ namespace Il2Native.Logic.Gencode
                 if (virtualMethodPair.Kind == CWriter.PairKind.Interface)
                 {
                     var @interfacePair = virtualMethodPair as CWriter.Pair<IType, IType>;
+                    var @interface = @interfacePair.Value;
+                    var interfaceOwner = type.FindInterfaceOwner(@interface);
+
+                    var requiredInterfaceTableFromCurrentClass = HasVirtualOrExplicitMethod(interfaceOwner, @interface, cWriter);
 
                     writer.Write("(Void*) &");
-                    writer.Write(type.FindInterfaceOwner(@interfacePair.Value).GetVirtualInterfaceTableName(@interfacePair.Value, cWriter, true));
+                    writer.Write((requiredInterfaceTableFromCurrentClass ? type : interfaceOwner).GetVirtualInterfaceTableName(@interface, cWriter, true));
 
                     continue;
                 }
@@ -532,6 +516,17 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.Indent--;
             writer.Write("}");
+        }
+
+        public static bool HasVirtualOrExplicitMethod(IType interfaceOwner, IType @interface, CWriter cWriter)
+        {
+            Debug.Assert(!interfaceOwner.IsInterface);
+            Debug.Assert(@interface.IsInterface);
+
+            return interfaceOwner.GetVirtualInterfaceTable(@interface, cWriter)
+                .Where(m => m.Kind == CWriter.PairKind.Method)
+                .OfType<CWriter.Pair<IMethod, IMethod>>()
+                .Any(m => m.Value.IsMethodVirtual() || m.Value.IsExplicitInterfaceImplementation);
         }
 
         /// <summary>

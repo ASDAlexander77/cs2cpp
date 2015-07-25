@@ -4699,6 +4699,25 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
+            // add all interface vtables which have virtual methods
+            foreach (
+                var @interface in
+                    type.GetVirtualTable(this)
+                        .Where(p => p.Kind != PairKind.Method)
+                        .OfType<Pair<IType, IType>>()
+                        .Select(p => p.Value)
+                        .Where(t => !type.GetInterfaces().Contains(t)))
+            {
+                if (!VirtualTableGen.HasVirtualOrExplicitMethod(type, @interface, this))
+                {
+                    continue;
+                }
+
+                var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
+                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, @interface, declaration);
+                this.Output.WriteLine(string.Empty);
+            }
+
             if (hasAnyVirtualMethod)
             {
                 var virtualTable = type.GetVirtualTable(this);
