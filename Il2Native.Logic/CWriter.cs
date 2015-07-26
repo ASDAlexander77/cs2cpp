@@ -1660,12 +1660,12 @@ namespace Il2Native.Logic
 
             if (isIndirectMethodCall)
             {
-                this.Output.Write("(::Void*)");
-                this.GenerateVirtualCall(opCodeMethodInfoPart, requiredMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                this.Output.Write("(Void*)");
+                this.GenerateVirtualCall(opCodeMethodInfoPart, requiredMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType, ref requiredMethodInfo);
             }
             else
             {
-                this.Output.Write("(::Byte*) &");
+                this.Output.Write("(Byte*) &");
                 this.WriteMethodDefinitionName(writer, requiredMethodInfo ?? methodInfo);
             }
         }

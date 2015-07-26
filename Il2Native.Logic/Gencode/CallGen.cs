@@ -229,7 +229,11 @@ namespace Il2Native.Logic.Gencode
                 (methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType).HasExplicitInterfaceMethodOrPublic(methodInfo, out isExplicit, out requiredMethodInfo)))
             {
                 // this is explicit call of interface
-                isIndirectMethodCall = false;
+                if (requiredMethodInfo == null || !requiredMethodInfo.IsMethodVirtual())
+                {
+                    isIndirectMethodCall = false;
+                }
+
                 if (isExplicit)
                 {
                     ownerOfExplicitInterface = methodDeclaringType.FindInterfaceOwner(methodInfo.DeclaringType);

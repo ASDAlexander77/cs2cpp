@@ -51,7 +51,8 @@ namespace Il2Native.Logic.Gencode
             IType thisType,
             OpCodePart opCodeFirstOperand,
             BaseWriter.ReturnResult resultOfirstOperand,
-            ref IType requiredType)
+            ref IType requiredType,
+            ref IMethod requiredMethodInfo)
         {
             var writer = cWriter.Output;
 
@@ -85,6 +86,11 @@ namespace Il2Native.Logic.Gencode
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
 #else
             var declaringType = methodInfo.DeclaringType;
+            if (requiredMethodInfo != null && !requiredMethodInfo.DeclaringType.IsInterface)
+            {
+                declaringType = requiredMethodInfo.DeclaringType;
+            }
+
             if (!declaringType.IsInterface)
             {
                 writer.Write("((");
@@ -118,7 +124,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.Write(dotAccess ? "." : "->");
-            cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo);
+            cWriter.WriteMethodDefinitionNameNoPrefix(writer, requiredMethodInfo ?? methodInfo);
 #endif
         }
 
@@ -445,7 +451,8 @@ namespace Il2Native.Logic.Gencode
                     thisType,
                     opCodeFirstOperand,
                     resultOfFirstOperand,
-                    ref requiredType);
+                    ref requiredType,
+                    ref requiredMethodInfo);
             }
 
             if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
