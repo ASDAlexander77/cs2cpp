@@ -2493,7 +2493,7 @@ namespace Il2Native.Logic
         }
 
         // TODO: doNotEstimateResult is hack
-        public bool WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
+        public RequiredAfterInterfaceAccess WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
         {
             var effectiveType = this.WriteInterfaceAccessLeftSide(opCodePart, classType, interfaceType, doNotEstimateResult);
             return this.WriteInterfaceAccessRightSide(interfaceType, effectiveType);
@@ -2535,7 +2535,7 @@ namespace Il2Native.Logic
             return effectiveType;
         }
 
-        public bool WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
+        public RequiredAfterInterfaceAccess WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
         {
             var writer = this.Output;
 
@@ -3943,6 +3943,13 @@ namespace Il2Native.Logic
             this.Output.WriteLine("}");
         }
 
+        public enum RequiredAfterInterfaceAccess
+        {
+            Nothing,
+            Dot,
+            Arrow
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3955,11 +3962,11 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        public bool WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
+        public RequiredAfterInterfaceAccess WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
         {
             var writer = this.Output;
 
-            var requiredSeparator = false;
+            var requiredSeparator = RequiredAfterInterfaceAccess.Nothing;
 
             var type = classType;
             if (type.GetAllInterfaces().Contains(@interface))
@@ -3992,13 +3999,16 @@ namespace Il2Native.Logic
                     }
                 }
 
-                requiredSeparator = path.Count > 0;
+                if (path.Count > 0)
+                {
+                    requiredSeparator = path.Count == 1 ? RequiredAfterInterfaceAccess.Arrow : RequiredAfterInterfaceAccess.Dot;
+                }
             }
 
             if (fieldInfo != null)
             {
                 writer.Write(fieldInfo.Name);
-                return false;
+                return RequiredAfterInterfaceAccess.Nothing;
             }
 
             return requiredSeparator;

@@ -91,8 +91,8 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCCastOnly(estimatedResultOf.Type.ToClass().ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
-            var dotAccrss = cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
-            writer.Write(dotAccrss ? "." : "->");
+            var access = cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
+            WriteAccess(access, writer);
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType);
         }
@@ -108,13 +108,23 @@ namespace Il2Native.Logic.Gencode
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
             Debug.Assert(estimatedResultOf.Type.IsInterface, "Interface needed");
 
-            if (cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType))
-            {
-                writer.Write(".");
-            }
-
+            var access = cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType);
+            WriteAccess(access, writer);
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
+        }
+
+        private static void WriteAccess(CWriter.RequiredAfterInterfaceAccess access, CIndentedTextWriter writer)
+        {
+            switch (access)
+            {
+                case CWriter.RequiredAfterInterfaceAccess.Dot:
+                    writer.Write(".");
+                    break;
+                case CWriter.RequiredAfterInterfaceAccess.Arrow:
+                    writer.Write("->");
+                    break;
+            }
         }
 
         /// <summary>
