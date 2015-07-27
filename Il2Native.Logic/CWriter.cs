@@ -1887,7 +1887,7 @@ namespace Il2Native.Logic
             }
 
             var fieldByName = opCode.OpCodeOperands[0].RequiredOutgoingType.GetFieldByName(field, this);
-            this.WriteFieldAccess(writer, opCode, fieldByName, fixedArrayIndex);
+            this.WriteFieldAccess(opCode, fieldByName, fixedArrayElementIndex: fixedArrayIndex);
         }
 
         /// <summary>
@@ -1972,7 +1972,7 @@ namespace Il2Native.Logic
             if (isValueType && isUsedAsClass && !resultOfOperand0.Type.IsStructureType())
             {
                 // write first field access
-                this.WriteFieldAccess(writer, opCode, resultOfOperand0.Type.GetFieldByFieldNumber(0, this));
+                this.WriteFieldAccess(opCode, resultOfOperand0.Type.GetFieldByFieldNumber(0, this));
             }
             else if (loadingIntPtrFromVoidPtr && type.IsIntPtrOrUIntPtr())
             {
@@ -2300,14 +2300,16 @@ namespace Il2Native.Logic
         /// <summary>
         ///     fixing issue with Code.Ldind when you need to load first field value
         /// </summary>
-        /// <param name="writer">
-        /// </param>
         /// <param name="opCodePart">
         /// </param>
+        /// <param name="field"></param>
+        /// <param name="fixedArrayElementIndex"></param>
         /// <param name="index">
         /// </param>
-        public void WriteFieldAccess(CIndentedTextWriter writer, OpCodePart opCodePart, IField field, OpCodePart fixedArrayElementIndex = null)
+        public void WriteFieldAccess(OpCodePart opCodePart, IField field, OpCodePart fixedArrayElementIndex = null)
         {
+            var writer = this.Output;
+
             var operandEstimatedResultOf = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
             var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef
                 ? operandEstimatedResultOf.Type.GetElementType().ToClass()
@@ -3620,7 +3622,7 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsVoid());
 
             var estimatedResultOf = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-            this.WriteFieldAccess(writer, opCode, estimatedResultOf.Type.GetFieldByName("data", this), opCode.OpCodeOperands[1]);
+            this.WriteFieldAccess(opCode, estimatedResultOf.Type.GetFieldByName("data", this), fixedArrayElementIndex: opCode.OpCodeOperands[1]);
 
             var operandIndex = 2;
 

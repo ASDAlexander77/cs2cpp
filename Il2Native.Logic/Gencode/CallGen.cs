@@ -50,14 +50,33 @@ namespace Il2Native.Logic.Gencode
             {
                 return;
             }
+
+            // split in 2 (vtable call and vtable-interface call
+            if (methodInfo.DeclaringType.IsInterface)
+            {
+                cWriter.WriteCallInterface(opCodeMethodInfo, methodInfo, tryClause);
+            }
+
+            var writer = cWriter.Output;
+
+            // virtual call
+            writer.Write("(");
+            cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToVirtualTable());
+            cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+            writer.Write(")->");
+            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
+        }
+
+        private static void WriteCallInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        {
         }
 
         /// <summary>
         /// </summary>
         public static void WriteFunctionCallArguments(
             this CWriter cWriter,
-            OpCodePart opCodeMethodInfo,
-            bool skipThis = false)
+            OpCodePart opCodeMethodInfo)
         {
             var writer = cWriter.Output;
 
@@ -68,7 +87,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // add parameters
                 var comma = false;
-                foreach (var usedItem in opCodeOperands.Skip(skipThis ? 1 : 0))
+                foreach (var usedItem in opCodeOperands)
                 {
                     if (comma)
                     {

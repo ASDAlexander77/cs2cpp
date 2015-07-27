@@ -105,7 +105,7 @@ namespace Il2Native.Logic.Gencode
                 var classType = (requiredInterface ?? effectiveType);
                 var baseInterface = resultOfirstOperand.Type.TypeNotEquals(classType);
 
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, resultOfirstOperand.Type.GetFieldByName(CWriter.VTable, cWriter));
+                cWriter.WriteFieldAccess(opCodeMethodInfo, resultOfirstOperand.Type.GetFieldByName(CWriter.VTable, cWriter));
                 if (baseInterface)
                 {
                     writer.Write(!resultOfirstOperand.Type.IsStructureType() ? "->" : ".");
@@ -115,7 +115,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+                cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
             if (!declaringType.IsInterface)

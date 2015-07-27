@@ -347,7 +347,7 @@ namespace Il2Native.Logic.Gencode
                             () =>
                             {
                                 cWriter.WriteCCastOnly(method.DeclaringType);
-                                cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
+                                cWriter.WriteFieldAccess(opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
                             });
 
                     var methodRef = cWriter.WriteToString(
