@@ -311,6 +311,11 @@ namespace Il2Native.Logic
 
         private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
         {
+            if (this.IsSafeNotToMultiplyResult(opCode))
+            {
+                return false;
+            }
+
             switch (opCode.ToCode())
             {
                 case Code.Dup:
@@ -341,6 +346,15 @@ namespace Il2Native.Logic
                     }
 
                     break;
+            }
+
+            // when you use '__this' for virtual call
+            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0)
+            {
+                var estimatedResultOf = this.EstimatedResultOf(opCode);
+                var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
+                opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
+                return true;
             }
 
             // to support casting interface to interface which is not directly inherited
@@ -2485,6 +2499,12 @@ namespace Il2Native.Logic
         // TODO: doNotEstimateResult is hack
         public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
         {
+            var effectiveType = this.WriteInterfaceAccessLeftSide(opCodePart, classType, interfaceType, doNotEstimateResult);
+            this.WriteInterfaceAccessRightSide(interfaceType, effectiveType);
+        }
+
+        private IType WriteInterfaceAccessLeftSide(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult)
+        {
             var writer = this.Output;
 
             var operand = opCodePart;
@@ -2515,6 +2535,13 @@ namespace Il2Native.Logic
             {
                 writer.Write("->__vtbl");
             }
+
+            return effectiveType;
+        }
+
+        public void WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
+        {
+            var writer = this.Output;
 
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;

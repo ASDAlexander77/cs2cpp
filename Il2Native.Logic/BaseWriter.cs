@@ -1709,6 +1709,58 @@ namespace Il2Native.Logic
             this.ThisType = type;
         }
 
+        protected bool IsSafeNotToMultiplyResult(OpCodePart opCode)
+        {
+            var code = opCode.ToCode();
+            switch (code)
+            {
+                case Code.Conv_R_Un:
+                case Code.Conv_R4:
+                case Code.Conv_R8:
+                case Code.Conv_I1:
+                case Code.Conv_I2:
+                case Code.Conv_I4:
+                case Code.Conv_I8:
+                case Code.Conv_U1:
+                case Code.Conv_U2:
+                case Code.Conv_U4:
+                case Code.Conv_U8:
+                case Code.Ldfld:
+                case Code.Ldflda:
+                case Code.Ldlen:
+                case Code.Ldloc:
+                case Code.Ldloc_0:
+                case Code.Ldloc_1:
+                case Code.Ldloc_2:
+                case Code.Ldloc_3:
+                case Code.Ldloc_S:
+                case Code.Ldarg:
+                case Code.Ldarg_0:
+                case Code.Ldarg_1:
+                case Code.Ldarg_2:
+                case Code.Ldarg_3:
+                case Code.Ldarg_S:
+                case Code.Ldc_I4_0:
+                case Code.Ldc_I4_1:
+                case Code.Ldc_I4_2:
+                case Code.Ldc_I4_3:
+                case Code.Ldc_I4_4:
+                case Code.Ldc_I4_5:
+                case Code.Ldc_I4_6:
+                case Code.Ldc_I4_7:
+                case Code.Ldc_I4_8:
+                case Code.Ldc_I4_M1:
+                case Code.Ldc_I4:
+                case Code.Ldc_I4_S:
+                case Code.Ldc_I8:
+                case Code.Ldc_R4:
+                case Code.Ldc_R8:
+                    return true;
+            }
+
+            return false;
+        }
+
         protected void RequiredIncomingOutgoingTypes(OpCodePart opCodePart)
         {
             if (opCodePart.OpCodeOperands == null)

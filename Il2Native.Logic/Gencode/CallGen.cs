@@ -51,7 +51,7 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            // split in 2 (vtable call and vtable-interface call
+            // split in 2 - vtable call and vtable-interface call
             if (methodInfo.DeclaringType.IsInterface)
             {
                 cWriter.WriteCallInterface(opCodeMethodInfo, methodInfo, tryClause);
@@ -64,20 +64,58 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(");
             cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
-            writer.Write(")->");
+            writer.Write(")");
+            writer.Write("->");
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
         }
 
         private static void WriteCallInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
         {
+            Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
+
+            // split in 2 (interface call when 'this' is object and when 'this' is interface
+            var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
+            var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
+            if (estimatedResultOf.Type.IsInterface)
+            {
+                cWriter.WriteCallInterfaceForInterface(opCodeMethodInfo, methodInfo, tryClause);
+                return;
+            }
+
+            var writer = cWriter.Output;
+
+            writer.Write("(");
+            cWriter.WriteCCastOnly(estimatedResultOf.Type.ToVirtualTable());
+            cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+            writer.Write(")");
+            cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
+            writer.Write("->");
+            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType);
+        }
+
+        private static void WriteCallInterfaceForInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        {
+            Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
+
+            // split in 2 (interface call when 'this' is object and when 'this' is interface
+            var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
+            var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
+            Debug.Assert(estimatedResultOf.Type.IsInterface, "Interface needed");
+
+            cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType);
+            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
         }
 
         /// <summary>
         /// </summary>
         public static void WriteFunctionCallArguments(
             this CWriter cWriter,
-            OpCodePart opCodeMethodInfo)
+            OpCodePart opCodeMethodInfo,
+            IType castThisTo = null,
+            bool interfaceThisAccess = false)
         {
             var writer = cWriter.Output;
 
@@ -87,19 +125,27 @@ namespace Il2Native.Logic.Gencode
             if (opCodeOperands != null)
             {
                 // add parameters
-                var comma = false;
+                var first = true;
                 foreach (var usedItem in opCodeOperands)
                 {
-                    if (comma)
+                    if (!first)
                     {
                         writer.Write(", ");
                     }
-                    else
+                    else if (castThisTo != null)
                     {
-                        comma = true;
+                        cWriter.WriteCCastOnly(castThisTo);
                     }
 
+                    // operand write
                     cWriter.WriteResultOrActualWrite(usedItem);
+
+                    if (first && interfaceThisAccess)
+                    {
+                        writer.Write("->__this");
+                    }
+
+                    first = false;
                 }
             }
 
