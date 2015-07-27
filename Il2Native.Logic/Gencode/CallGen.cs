@@ -101,12 +101,18 @@ namespace Il2Native.Logic.Gencode
         {
             Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
 
+            var writer = cWriter.Output;
+
             // split in 2 (interface call when 'this' is object and when 'this' is interface
             var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
             Debug.Assert(estimatedResultOf.Type.IsInterface, "Interface needed");
 
-            cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType);
+            if (cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType))
+            {
+                writer.Write(".");
+            }
+
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
         }

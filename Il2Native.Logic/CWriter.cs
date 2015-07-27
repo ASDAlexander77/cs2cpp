@@ -2488,10 +2488,10 @@ namespace Il2Native.Logic
         }
 
         // TODO: doNotEstimateResult is hack
-        public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
+        public bool WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
         {
             var effectiveType = this.WriteInterfaceAccessLeftSide(opCodePart, classType, interfaceType, doNotEstimateResult);
-            this.WriteInterfaceAccessRightSide(interfaceType, effectiveType);
+            return this.WriteInterfaceAccessRightSide(interfaceType, effectiveType);
         }
 
         private IType WriteInterfaceAccessLeftSide(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult)
@@ -2530,13 +2530,13 @@ namespace Il2Native.Logic
             return effectiveType;
         }
 
-        public void WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
+        public bool WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
         {
             var writer = this.Output;
 
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName(CWriter.VTable, this)*/);
+            return this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName(CWriter.VTable, this)*/);
         }
 
         /// <summary>
@@ -3950,9 +3950,11 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        public void WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
+        public bool WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
         {
             var writer = this.Output;
+
+            var requiredSeparator = false;
 
             var type = classType;
             if (type.GetAllInterfaces().Contains(@interface))
@@ -3984,12 +3986,17 @@ namespace Il2Native.Logic
                         isFirst = false;
                     }
                 }
+
+                requiredSeparator = path.Count > 0;
             }
 
             if (fieldInfo != null)
             {
                 writer.Write(fieldInfo.Name);
+                return false;
             }
+
+            return requiredSeparator;
         }
 
         /// <summary>
