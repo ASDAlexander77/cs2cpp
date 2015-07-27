@@ -2584,7 +2584,6 @@ namespace Il2Native.Logic
             else
             {
                 var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
-                Debug.Assert(name != "Void_System_IO_Stream_GCopyToAsyncInternalCd__0_MoveNextFN");
                 writer.Write(name);
             }
         }
@@ -3962,6 +3961,7 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
+        [Obsolete("make a full review")]
         public RequiredAfterInterfaceAccess WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
         {
             var writer = this.Output;
@@ -4001,7 +4001,7 @@ namespace Il2Native.Logic
 
                 if (path.Count > 0)
                 {
-                    requiredSeparator = path.Count == 1 ? RequiredAfterInterfaceAccess.Arrow : RequiredAfterInterfaceAccess.Dot;
+                    requiredSeparator = path.Count == 1 && !type.IsInterface ? RequiredAfterInterfaceAccess.Arrow : RequiredAfterInterfaceAccess.Dot;
                 }
             }
 
