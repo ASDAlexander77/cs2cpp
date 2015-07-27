@@ -816,27 +816,22 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Call:
-                case Code.Callvirt:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
-
-                    ////if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
-                    ////{
-                    ////    Debug.Assert(false, "review");
-
-                    ////    // convert value to object
-                    ////    // TODO: Review next line, it seems not needed anymore
-                    ////    methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
-                    ////    this.Output.WriteLine(";");
-                    ////}
 
                     this.WriteCall(
                         opCodeMethodInfoPart,
                         methodBase,
-                        code == Code.Callvirt,
-                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
-                        false,
-                        null,
+                        this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+
+                    break;
+                case Code.Callvirt:
+                    opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
+                    methodBase = opCodeMethodInfoPart.Operand;
+
+                    this.WriteCallVirtual(
+                        opCodeMethodInfoPart,
+                        methodBase,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
@@ -948,7 +943,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.WriteResultOrActualWrite(writer, opCode);
+                        this.WriteResultOrActualWrite(opCode);
                     }
 
                     break;
@@ -987,7 +982,7 @@ namespace Il2Native.Logic
                     }
                     else if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
-                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
                     }
 
                     break;
@@ -1410,7 +1405,7 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
-                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
                     }
 
                     break;
@@ -1420,7 +1415,7 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     if (!this.WriteDynamicCast(writer, opCode, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass()))
                     {
-                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
                     }
 
                     break;
@@ -1636,6 +1631,7 @@ namespace Il2Native.Logic
 
         private void WriteFunctionAddressForVirtualMethod(CIndentedTextWriter writer, IMethod methodInfo, OpCodeMethodInfoPart opCodeMethodInfoPart)
         {
+            /*
             IType thisType;
             bool hasThisArgument;
             OpCodePart opCodeFirstOperand;
@@ -1668,6 +1664,7 @@ namespace Il2Native.Logic
                 this.Output.Write("(Byte*) &");
                 this.WriteMethodDefinitionName(writer, requiredMethodInfo ?? methodInfo);
             }
+            */
         }
 
         private bool IsStructSave(IType localType, ReturnResult estResult)
@@ -1984,7 +1981,7 @@ namespace Il2Native.Logic
                 writer.Write("((");
                 type.ToPointerType().WriteTypePrefix(this);
                 writer.Write(")");
-                this.WriteResultOrActualWrite(writer, opCode.OpCodeOperands[0]);
+                this.WriteResultOrActualWrite(opCode.OpCodeOperands[0]);
                 writer.Write(")->");
                 this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
             }
@@ -2167,10 +2164,6 @@ namespace Il2Native.Logic
             this.WriteCall(
                 opCodeNope,
                 method,
-                false,
-                false,
-                false,
-                null,
                 this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
             ////this.WriteResultOrActualWrite(writer, opCodeOperand);
@@ -2226,7 +2219,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(";");
                 this.Output.Write("_phi{0} = ", addressStart);
-                this.WriteResultOrActualWrite(this.Output, opCode);
+                this.WriteResultOrActualWrite(opCode);
             }
 
             opCode.Result = new FullyDefinedReference(
@@ -2279,7 +2272,7 @@ namespace Il2Native.Logic
                 this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
-            this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
+            this.WriteResultOrActualWrite(opCodeFieldInfoPart.OpCodeOperands[0]);
 
             writer.Write(")");
 
@@ -2322,7 +2315,7 @@ namespace Il2Native.Logic
 
             writer.Write("(");
 
-            this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
+            this.WriteResultOrActualWrite(opCodePart.OpCodeOperands[0]);
 
             writer.Write(")");
 
@@ -2345,7 +2338,7 @@ namespace Il2Native.Logic
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
-                this.WriteResultOrActualWrite(writer, fixedArrayElementIndex);
+                this.WriteResultOrActualWrite(fixedArrayElementIndex);
                 writer.Write("]");
             }
         }
@@ -2364,7 +2357,7 @@ namespace Il2Native.Logic
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
-                this.WriteResultOrActualWrite(writer, fixedArrayElementIndex);
+                this.WriteResultOrActualWrite(fixedArrayElementIndex);
                 writer.Write("]");
             }
         }
@@ -2514,7 +2507,7 @@ namespace Il2Native.Logic
                 this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
-            this.WriteResultOrActualWrite(writer, operand);
+            this.WriteResultOrActualWrite(operand);
 
             if (interfaceType != null)
             {
@@ -2960,7 +2953,7 @@ namespace Il2Native.Logic
             }
 
             var operand = opCode.OpCodeOperands[index];
-            this.WriteResultOrActualWrite(writer, operand);
+            this.WriteResultOrActualWrite(operand);
         }
 
         public void WritePreDeclarations(IType type)
@@ -3070,9 +3063,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="operand">
         /// </param>
-        public void WriteResultOrActualWrite(CIndentedTextWriter writer, OpCodePart operand)
+        public void WriteResultOrActualWrite(OpCodePart operand)
         {
-            this.ActualWrite(writer, operand);
+            this.ActualWrite(this.Output, operand);
             this.WriteResult(operand.Result);
         }
 
@@ -3186,7 +3179,7 @@ namespace Il2Native.Logic
             writer.Write("(");
             this.WriteCCastOnly(toType);
             writer.Write("(");
-            this.WriteResultOrActualWrite(writer, opCode);
+            this.WriteResultOrActualWrite(opCode);
             writer.Write(")->__this)");
         }
 
@@ -3893,7 +3886,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteResultOrActualWrite(this.Output, opCode.OpCodeOperands[0]);
+                this.WriteResultOrActualWrite(opCode.OpCodeOperands[0]);
             }
         }
 
@@ -3980,34 +3973,24 @@ namespace Il2Native.Logic
                     type = type.BaseType;
                     if (type == null)
                     {
-                        // throw new IndexOutOfRangeException("Could not find an type");
                         break;
                     }
-
-                    // first index is base type index
-                    ////writer.Write("base.");
                 }
 
                 var path = type.FindInterfacePath(@interface);
 
-                var isInterface = false;
                 var isFirst = true;
                 for (var i = startPath; i < path.Count; i++)
                 {
-                    if (path[i] != "base")
-                    {
-                        isInterface = true;
-                        writer.Write("ifce_");
-                    }
-
+                    writer.Write("ifce_");
                     writer.Write(path[i]);
 
                     if (fieldInfo != null || i < path.Count - 1)
                     {
-                        writer.Write(!classType.IsInterface && isFirst && isInterface ? "->" : ".");
+                        writer.Write(!classType.IsInterface && isFirst ? "->" : ".");
                     }
 
-                    if (isFirst && isInterface)
+                    if (isFirst)
                     {
                         isFirst = false;
                     }

@@ -369,12 +369,8 @@ namespace Il2Native.Logic
 
             var currentType = type;
 
-            var baseCount = 0;
             while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
             {
-                // add base index;
-                ////indexes.Add("base");
-                baseCount++;
                 currentType = currentType.BaseType;
             }
 

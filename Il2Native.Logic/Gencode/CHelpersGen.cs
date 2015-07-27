@@ -253,7 +253,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCCastOnly(toType);
 
             writer.Write("(");
-            cWriter.WriteResultOrActualWrite(writer, opCode);
+            cWriter.WriteResultOrActualWrite(opCode);
             writer.Write(")");
         }
 
@@ -396,95 +396,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="isVirtual">
-        /// </param>
-        /// <param name="hasThis">
-        /// </param>
-        /// <param name="isCtor">
-        /// </param>
-        /// <param name="thisResultNumber">
-        /// </param>
-        /// <param name="tryClause">
-        /// </param>
-        public static void WriteCall(
-            this CWriter cWriter,
-            OpCodePart opCodeMethodInfo,
-            IMethod methodInfo,
-            bool isVirtual,
-            bool hasThis,
-            bool isCtor,
-            FullyDefinedReference thisResultNumber,
-            TryClause tryClause)
-        {
-            IType thisType;
-            bool hasThisArgument;
-            OpCodePart opCodeFirstOperand;
-            BaseWriter.ReturnResult resultOfFirstOperand;
-            bool isIndirectMethodCall;
-            IType ownerOfExplicitInterface;
-            IType requiredType;
-            IMethod requiredMethodInfo;
-            methodInfo.FunctionCallProlog(
-                opCodeMethodInfo,
-                isVirtual,
-                hasThis,
-                cWriter,
-                out thisType,
-                out hasThisArgument,
-                out opCodeFirstOperand,
-                out resultOfFirstOperand,
-                out isIndirectMethodCall,
-                out ownerOfExplicitInterface,
-                out requiredType,
-                out requiredMethodInfo);
-
-            FullyDefinedReference methodAddressResultNumber = null;
-            if (isIndirectMethodCall)
-            {
-                cWriter.GenerateVirtualCall(
-                    opCodeMethodInfo,
-                    methodInfo,
-                    thisType,
-                    opCodeFirstOperand,
-                    resultOfFirstOperand,
-                    ref requiredType,
-                    ref requiredMethodInfo);
-            }
-
-            if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
-            {
-                return;
-            }
-
-            if (!isIndirectMethodCall)
-            {
-                (requiredMethodInfo ?? methodInfo).WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
-            }
-
-            methodInfo.GetParameters()
-                .WriteFunctionCallArguments(
-                    opCodeMethodInfo,
-                    resultOfFirstOperand,
-                    hasThis,
-                    isCtor,
-                    isIndirectMethodCall,
-                    thisResultNumber,
-                    thisType,
-                    methodInfo.ReturnType,
-                    ownerOfExplicitInterface,
-                    requiredType,
-                    cWriter,
-                    methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="fromResult">
@@ -535,7 +446,7 @@ namespace Il2Native.Logic.Gencode
                     }
 
                     // actual call box
-                    cWriter.WriteResultOrActualWrite(writer, mainOperand);
+                    cWriter.WriteResultOrActualWrite(mainOperand);
 
                     writer.Write(", (Void**)");
 
@@ -554,7 +465,7 @@ namespace Il2Native.Logic.Gencode
 
                         writer.Write("(");
                         cWriter.WriteCCastOnly(bareType.ToVirtualTable());
-                        cWriter.WriteResultOrActualWrite(writer, mainOperand);
+                        cWriter.WriteResultOrActualWrite(mainOperand);
                         cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
                         writer.Write(")->");
                         cWriter.WriteInterfacePath(bareType, toType, null);
@@ -735,11 +646,11 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memcpy(");
-            cWriter.WriteResultOrActualWrite(writer, op1);
+            cWriter.WriteResultOrActualWrite(op1);
             writer.Write(", ");
-            cWriter.WriteResultOrActualWrite(writer, op2);
+            cWriter.WriteResultOrActualWrite(op2);
             writer.Write(", ");
-            cWriter.WriteResultOrActualWrite(writer, size);
+            cWriter.WriteResultOrActualWrite(size);
             writer.Write(")");
         }
 
@@ -756,7 +667,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((::Byte*) (");
-            cWriter.WriteResultOrActualWrite(writer, op1);
+            cWriter.WriteResultOrActualWrite(op1);
             writer.Write("), 0, sizeof(");
             type.WriteTypePrefix(cWriter);
             writer.Write("))");
@@ -767,9 +678,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((::Byte*) (");
-            cWriter.WriteResultOrActualWrite(writer, op1);
+            cWriter.WriteResultOrActualWrite(op1);
             writer.Write("), 0, (");
-            cWriter.WriteResultOrActualWrite(writer, size);
+            cWriter.WriteResultOrActualWrite(size);
             writer.Write("))");
         }
 
@@ -781,11 +692,11 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("Memset((::Byte*) (");
-            cWriter.WriteResultOrActualWrite(writer, reference);
+            cWriter.WriteResultOrActualWrite(reference);
             writer.Write("), ");
-            cWriter.WriteResultOrActualWrite(writer, init);
+            cWriter.WriteResultOrActualWrite(init);
             writer.Write(", (");
-            cWriter.WriteResultOrActualWrite(writer, size);
+            cWriter.WriteResultOrActualWrite(size);
             writer.Write("))");
         }
     }

@@ -363,10 +363,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCode,
                 method,
-                false,
-                false,
-                false,
-                null,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
@@ -396,14 +392,9 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCodePart,
             IConstructor methodBase)
         {
-            var resAlloc = opCodePart.Result;
             cWriter.WriteCall(
                 opCodePart,
                 methodBase,
-                opCodePart.ToCode() == Code.Callvirt,
-                true,
-                true,
-                resAlloc,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
@@ -424,10 +415,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCodeNope,
                 method,
-                false,
-                false,
-                false,
-                opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
@@ -448,10 +435,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCodeNope,
                 method,
-                false,
-                true,
-                false,
-                opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
@@ -472,10 +455,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCodeNope,
                 method,
-                false,
-                false,
-                false,
-                opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
 
             cWriter.Output.WriteLine(";");
@@ -495,10 +474,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCode,
                 method,
-                false,
-                true,
-                false,
-                null,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
@@ -700,7 +675,7 @@ namespace Il2Native.Logic.Gencode
                     opCodeNope.OpCodeOperands = operands.ToArray();
                 }
 
-                cWriter.WriteCall(opCodeNope, stringCtorMethodBase, false, hasThis, false, null, cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
+                cWriter.WriteCall(opCodeNope, stringCtorMethodBase, cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
 
                 opCodeConstructorInfoPart.Result = objectReference;
             }

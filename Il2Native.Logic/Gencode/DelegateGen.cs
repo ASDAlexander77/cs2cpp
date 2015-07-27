@@ -169,10 +169,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCall(
                 opCodeNope,
                 method,
-                false,
-                !isStatic,
-                false,
-                objectResult,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
 
             return opCodeNope.Result;
