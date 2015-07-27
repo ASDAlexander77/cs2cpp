@@ -841,7 +841,8 @@ namespace Il2Native.Logic
                     this.WriteCall(
                         opCodeMethodInfoPart,
                         methodBase,
-                        this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                        this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null,
+                        opCode.Any(Code.Callvirt));
 
                     break;
                 case Code.Add:

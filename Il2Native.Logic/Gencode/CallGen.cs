@@ -33,7 +33,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="tryClause">
         /// </param>
-        public static void WriteCall(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        public static void WriteCall(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool callVirtual = false)
         {
             if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             //  split in 2 - direct call and virtual call
-            if (methodInfo.IsMethodVirtual())
+            if (methodInfo.IsMethodVirtual() && callVirtual)
             {
                 cWriter.WriteCallVirtual(opCodeMethodInfo, methodInfo, tryClause);
                 return;
