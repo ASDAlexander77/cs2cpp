@@ -91,8 +91,8 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCCastOnly(estimatedResultOf.Type.ToClass().ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
-            cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
-            writer.Write("->");
+            var dotAccrss = cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
+            writer.Write(dotAccrss ? "." : "->");
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType);
         }
