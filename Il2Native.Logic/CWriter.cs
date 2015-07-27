@@ -2883,37 +2883,6 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="firstParameterType">
         /// </param>
-        /// <param name="firstParameterOpCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public void WriteNewWithCallingConstructor(
-            OpCodePart opCode, IType type, IType firstParameterType, OpCodePart firstParameterOpCode, FullyDefinedReference predefinedObjectReference = null)
-        {
-            // find constructor
-            var constructorInfo =
-                Logic.IlReader.Constructors(type, this)
-                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
-
-            ////Debug.Assert(constructorInfo != null, "Could not find required constructor");
-            type.WriteCallNewObjectMethod(this, opCode);
-
-            opCode.OpCodeOperands = new[] { firstParameterOpCode };
-
-            if (constructorInfo != null)
-            {
-                this.WriteCallConstructor(opCode, constructorInfo);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="firstParameterType">
-        /// </param>
         /// <param name="firstParameterValue">
         /// </param>
         /// <returns>
@@ -4384,10 +4353,18 @@ namespace Il2Native.Logic
         private void WriteNewSingleArray(OpCodeTypePart opCodeTypePart)
         {
             var arrayType = opCodeTypePart.Operand.ToArrayType(1);
-
             var objectReference = this.WriteVariableForNew(opCodeTypePart, arrayType, "_newarr");
 
-            this.WriteNewWithCallingConstructor(opCodeTypePart, arrayType, this.System.System_Int32, opCodeTypePart.OpCodeOperands[0], objectReference);
+            // find constructor
+            var constructorInfo =
+                Logic.IlReader.Constructors(arrayType, this)
+                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(this.System.System_Int32));
+
+            Debug.Assert(constructorInfo != null, "Could not find constructor for an array");
+
+            var opConsturctorInfo = new OpCodeConstructorInfoPart(OpCodesEmit.Newarr, 0, 0, constructorInfo);
+            opConsturctorInfo.OpCodeOperands = opCodeTypePart.OpCodeOperands;
+            this.WriteNew(opConsturctorInfo, arrayType, objectReference);
         }
 
         public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")

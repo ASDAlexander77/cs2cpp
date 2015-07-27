@@ -55,6 +55,7 @@ namespace Il2Native.Logic.Gencode
             if (methodInfo.DeclaringType.IsInterface)
             {
                 cWriter.WriteCallInterface(opCodeMethodInfo, methodInfo, tryClause);
+                return;
             }
 
             var writer = cWriter.Output;

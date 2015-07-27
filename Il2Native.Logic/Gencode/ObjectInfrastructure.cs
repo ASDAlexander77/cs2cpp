@@ -648,7 +648,13 @@ namespace Il2Native.Logic.Gencode
         {
             var @class = declaringType.ToClass();
             var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, @class);
+            WriteNew(cWriter, opCodeConstructorInfoPart, declaringType, objectReference);
+        }
 
+        public static void WriteNew(
+            this CWriter cWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType, FullyDefinedReference objectReference)
+        {
+            var @class = declaringType.ToClass();
             if (!declaringType.IsString)
             {
                 @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
@@ -670,8 +676,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // special string case
-                var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
-                    declaringType, opCodeConstructorInfoPart.Operand.GetParameters(), cWriter);
+                var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(declaringType, opCodeConstructorInfoPart.Operand.GetParameters(), cWriter);
                 var hasThis = stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis);
 
                 OpCodePart opCodeNope = opCodeConstructorInfoPart;
