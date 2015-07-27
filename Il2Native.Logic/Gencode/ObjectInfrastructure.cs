@@ -663,9 +663,13 @@ namespace Il2Native.Logic.Gencode
                 var opCodeNope = OpCodePart.CreateNop;
                 opCodeNope.Result = objectReference;
 
-                var callOps = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length + 1);
+                var callOps = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands != null ? opCodeConstructorInfoPart.OpCodeOperands.Length : 0 + 1);
                 callOps.Add(opCodeNope);
-                callOps.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+                if (opCodeConstructorInfoPart.OpCodeOperands != null)
+                {
+                    callOps.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+                }
+
                 opCodeConstructorInfoPart.OpCodeOperands = callOps.ToArray();
 
                 // call
