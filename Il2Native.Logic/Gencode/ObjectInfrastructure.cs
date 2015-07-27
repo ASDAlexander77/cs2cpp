@@ -131,9 +131,10 @@ namespace Il2Native.Logic.Gencode
 
                 var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
                 var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
+                
                 Debug.Assert(defaultConstructor != null, "default constructor is null");
-                newAlloc.New(defaultConstructor);
 
+                newAlloc.New(defaultConstructor);
                 newAlloc.Throw();
 
                 newAlloc.Add(jump);
@@ -410,7 +411,6 @@ namespace Il2Native.Logic.Gencode
         {
             var method = new SynthesizedGetTypeStaticMethod(type, cWriter);
             var opCodeNope = OpCodePart.CreateNop;
-            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             cWriter.WriteCall(
                 opCodeNope,
@@ -451,7 +451,11 @@ namespace Il2Native.Logic.Gencode
             var method = new SynthesizedNewMethod(type, cWriter);
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
-            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
+            if (type.IsArray)
+            {
+                opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
+            }
+
             cWriter.WriteCall(
                 opCodeNope,
                 method,
@@ -649,9 +653,19 @@ namespace Il2Native.Logic.Gencode
             {
                 @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
 
-                opCodeConstructorInfoPart.Result = objectReference;
+                // for '__this'
+                var opCodeNope = OpCodePart.CreateNop;
+                opCodeNope.Result = objectReference;
 
+                var callOps = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length + 1);
+                callOps.Add(opCodeNope);
+                callOps.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+                opCodeConstructorInfoPart.OpCodeOperands = callOps.ToArray();
+
+                // call
                 cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+
+                opCodeConstructorInfoPart.Result = objectReference;
             }
             else
             {
@@ -665,12 +679,15 @@ namespace Il2Native.Logic.Gencode
                 {
                     // insert 'This' as null
                     opCodeNope = OpCodePart.CreateNop;
-                    var operands = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length);
-                    operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+                    var operands = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length + 1);
 
+                    // this
                     var opCodeThis = OpCodePart.CreateNop;
                     opCodeThis.Result = new ConstValue("(System_String*)1/*dummay value for __this*/", declaringType);
-                    operands.Insert(0, opCodeThis);
+                    operands.Add(opCodeThis);
+
+                    // params
+                    operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
 
                     opCodeNope.OpCodeOperands = operands.ToArray();
                 }
