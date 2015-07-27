@@ -64,7 +64,7 @@ namespace Il2Native.Logic.Gencode
 
             // virtual call
             writer.Write("(");
-            cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToVirtualTable());
+            cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToClass().ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
             writer.Write("->");
@@ -88,7 +88,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("(");
-            cWriter.WriteCCastOnly(estimatedResultOf.Type.ToVirtualTable());
+            cWriter.WriteCCastOnly(estimatedResultOf.Type.ToClass().ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
             cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
