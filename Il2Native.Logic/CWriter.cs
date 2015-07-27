@@ -349,12 +349,16 @@ namespace Il2Native.Logic
             }
 
             // when you use '__this' for virtual call
-            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0)
+            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Call, Code.Callvirt) && opCode.UsedBy.OperandPosition == 0)
             {
-                var estimatedResultOf = this.EstimatedResultOf(opCode);
-                var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
-                opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
-                return true;
+                var methodInfoOpCode = opCode.UsedBy.OpCode as OpCodeMethodInfoPart;
+                if (methodInfoOpCode != null && methodInfoOpCode.Operand.IsMethodVirtual())
+                {
+                    var estimatedResultOf = this.EstimatedResultOf(opCode);
+                    var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
+                    opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
+                    return true;
+                }
             }
 
             // to support casting interface to interface which is not directly inherited
