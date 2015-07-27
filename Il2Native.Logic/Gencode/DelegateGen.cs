@@ -161,9 +161,16 @@ namespace Il2Native.Logic.Gencode
             var method = new SynthesizedInvokeMethod(methodResult, invokeMethod, isStatic);
             var opCodeNope = OpCodePart.CreateNop;
 
+            var argAdditionalCount = isStatic ? 0 : 1;
+            var argShift = isStatic ? 1 : 0;
+
             opCodeNope.OpCodeOperands =
-                Enumerable.Range(0, invokeMethod.GetParameters().Count())
-                    .Select(p => new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + 1))
+                Enumerable.Range(0, invokeMethod.GetParameters().Count() + argAdditionalCount)
+                    .Select(
+                        p =>
+                            !isStatic && p == 0
+                                ? new OpCodePart(OpCodesEmit.Nop, 0, 0) { Result = objectResult }
+                                : new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + argShift))
                     .ToArray();
 
             cWriter.WriteCall(
@@ -292,7 +299,7 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.InitializeObject(method.ReturnType);
                 codeBuilder.LoadLocal(0);
             }
-            
+
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;

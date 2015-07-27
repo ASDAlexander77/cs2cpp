@@ -40,17 +40,19 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            //  split in 2 - direct call and virtual call
+            if (methodInfo.IsMethodVirtual())
+            {
+                cWriter.WriteCallVirtual(opCodeMethodInfo, methodInfo, tryClause);
+                return;
+            }
+
             cWriter.WriteFunctionNameExpression(methodInfo);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
         }
 
-        public static void WriteCallVirtual(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        private static void WriteCallVirtual(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
         {
-            if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
-            {
-                return;
-            }
-
             // split in 2 - vtable call and vtable-interface call
             if (methodInfo.DeclaringType.IsInterface)
             {

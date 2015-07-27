@@ -830,20 +830,11 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Call:
+                case Code.Callvirt:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
 
                     this.WriteCall(
-                        opCodeMethodInfoPart,
-                        methodBase,
-                        this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
-
-                    break;
-                case Code.Callvirt:
-                    opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-                    methodBase = opCodeMethodInfoPart.Operand;
-
-                    this.WriteCallVirtual(
                         opCodeMethodInfoPart,
                         methodBase,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
