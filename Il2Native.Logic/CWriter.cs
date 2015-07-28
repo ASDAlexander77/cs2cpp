@@ -1154,7 +1154,7 @@ namespace Il2Native.Logic
                         null);
 
                     this.Output.Write(" = (Byte*) &");
-                    this.WriteCall(opCodeMethodInfoPart, methodInfo, null, true, true);
+                    this.WriteCall(opCodeMethodInfoPart, methodInfo, null, opCode.ToCode() == Code.Ldvirtftn, true);
                     this.Output.WriteLine(";");
 
                     opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
