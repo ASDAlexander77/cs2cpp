@@ -1153,9 +1153,18 @@ namespace Il2Native.Logic
                         System.System_IntPtr.GetFieldByFieldNumber(0, this),
                         null);
 
-                    this.Output.Write(" = (Byte*) &");
-                    this.WriteCall(opCodeMethodInfoPart, methodInfo, null, opCode.ToCode() == Code.Ldvirtftn, true);
-                    this.Output.WriteLine(";");
+                    if (opCode.ToCode() != Code.Ldvirtftn)
+                    {
+                        this.Output.Write(" = (Byte*) &");
+                        this.WriteCall(opCodeMethodInfoPart, methodInfo, null, false, true);
+                        this.Output.WriteLine(";");
+                    }
+                    else
+                    {
+                        this.Output.Write(" = (Byte*) ");
+                        this.WriteCall(opCodeMethodInfoPart, methodInfo, null, true, true);
+                        this.Output.WriteLine(";");
+                    }
 
                     opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
 
