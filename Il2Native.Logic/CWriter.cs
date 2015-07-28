@@ -1137,8 +1137,11 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldftn:
+                case Code.Ldvirtftn:
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
+
+                    var methodInfo = opCodeMethodInfoPart.Operand;
 
                     System.System_IntPtr.WriteTypePrefix(this);
                     var ptrVar = string.Format("_ptr{0}", opCode.AddressStart);
@@ -1149,32 +1152,9 @@ namespace Il2Native.Logic
                         System.System_IntPtr,
                         System.System_IntPtr.GetFieldByFieldNumber(0, this),
                         null);
-                    this.Output.Write(" = (::Byte*) &");
-                    this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPart.Operand);
-                    this.Output.WriteLine(";");
 
-                    opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
-
-                    break;
-
-                case Code.Ldvirtftn:
-
-                    opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-
-                    var methodInfo = opCodeMethodInfoPart.Operand;
-
-                    System.System_IntPtr.WriteTypePrefix(this);
-                    ptrVar = string.Format("_ptr{0}", opCode.AddressStart);
-                    this.Output.WriteLine(" {0};", ptrVar);
-                    this.Output.Write("{0}.", ptrVar);
-                    this.WriteFieldAccessLeftExpression(
-                        this.Output,
-                        System.System_IntPtr,
-                        System.System_IntPtr.GetFieldByFieldNumber(0, this),
-                        null);
-
-                    this.Output.Write(" = ");
-                    this.WriteFunctionAddressForVirtualMethod(writer, methodInfo, opCodeMethodInfoPart);
+                    this.Output.Write(" = (Byte*) &");
+                    this.WriteCall(opCodeMethodInfoPart, methodInfo, null, true, true);
                     this.Output.WriteLine(";");
 
                     opCode.Result = new FullyDefinedReference(ptrVar, System.System_IntPtr);
@@ -1637,44 +1617,6 @@ namespace Il2Native.Logic
             }
 
             return true;
-        }
-
-        private void WriteFunctionAddressForVirtualMethod(CIndentedTextWriter writer, IMethod methodInfo, OpCodeMethodInfoPart opCodeMethodInfoPart)
-        {
-            /*
-            IType thisType;
-            bool hasThisArgument;
-            OpCodePart opCodeFirstOperand;
-            ReturnResult resultOfFirstOperand;
-            bool isIndirectMethodCall;
-            IType ownerOfExplicitInterface;
-            IType requiredType;
-            IMethod requiredMethodInfo;
-            methodInfo.FunctionCallProlog(
-                opCodeMethodInfoPart,
-                true,
-                true,
-                this,
-                out thisType,
-                out hasThisArgument,
-                out opCodeFirstOperand,
-                out resultOfFirstOperand,
-                out isIndirectMethodCall,
-                out ownerOfExplicitInterface,
-                out requiredType,
-                out requiredMethodInfo);
-
-            if (isIndirectMethodCall)
-            {
-                this.Output.Write("(Void*)");
-                this.GenerateVirtualCall(opCodeMethodInfoPart, requiredMethodInfo ?? methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType, ref requiredMethodInfo);
-            }
-            else
-            {
-                this.Output.Write("(Byte*) &");
-                this.WriteMethodDefinitionName(writer, requiredMethodInfo ?? methodInfo);
-            }
-            */
         }
 
         private bool IsStructSave(IType localType, ReturnResult estResult)

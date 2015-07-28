@@ -33,7 +33,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="tryClause">
         /// </param>
-        public static void WriteCall(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool callVirtual = false)
+        public static void WriteCall(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool callVirtual = false, bool excludeArguments = false)
         {
             if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
@@ -43,20 +43,26 @@ namespace Il2Native.Logic.Gencode
             //  split in 2 - direct call and virtual call
             if (methodInfo.IsMethodVirtual() && callVirtual)
             {
-                cWriter.WriteCallVirtual(opCodeMethodInfo, methodInfo, tryClause);
+                cWriter.WriteCallVirtual(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
                 return;
             }
 
             cWriter.WriteFunctionNameExpression(methodInfo);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
         }
 
-        private static void WriteCallVirtual(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        private static void WriteCallVirtual(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)
         {
             // split in 2 - vtable call and vtable-interface call
             if (methodInfo.DeclaringType.IsInterface)
             {
-                cWriter.WriteCallInterface(opCodeMethodInfo, methodInfo, tryClause);
+                cWriter.WriteCallInterface(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
                 return;
             }
 
@@ -68,11 +74,17 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
             writer.Write("->");
-            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteFunctionNameExpression(methodInfo, true);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
         }
 
-        private static void WriteCallInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        private static void WriteCallInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)
         {
             Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
 
@@ -81,7 +93,7 @@ namespace Il2Native.Logic.Gencode
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
             if (estimatedResultOf.Type.IsInterface)
             {
-                cWriter.WriteCallInterfaceForInterface(opCodeMethodInfo, methodInfo, tryClause);
+                cWriter.WriteCallInterfaceForInterface(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
                 return;
             }
 
@@ -93,10 +105,16 @@ namespace Il2Native.Logic.Gencode
             writer.Write(")");
             cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type, true);
             cWriter.WriteFunctionNameExpression(methodInfo, true);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType);
         }
 
-        private static void WriteCallInterfaceForInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause)
+        private static void WriteCallInterfaceForInterface(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)
         {
             Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
 
@@ -107,6 +125,12 @@ namespace Il2Native.Logic.Gencode
 
             cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType, allowLastAccess: true);
             cWriter.WriteFunctionNameExpression(methodInfo, true);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
         }
 
