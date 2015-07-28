@@ -91,9 +91,8 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCCastOnly(estimatedResultOf.Type.ToClass().ToVirtualTable());
             cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
-            var access = cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type);
-            WriteAccess(access, writer);
-            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteInterfaceAccessRightSide(methodInfo.DeclaringType, estimatedResultOf.Type, true);
+            cWriter.WriteFunctionNameExpression(methodInfo, true);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType);
         }
 
@@ -101,30 +100,14 @@ namespace Il2Native.Logic.Gencode
         {
             Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
 
-            var writer = cWriter.Output;
-
             // split in 2 (interface call when 'this' is object and when 'this' is interface
             var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
             Debug.Assert(estimatedResultOf.Type.IsInterface, "Interface needed");
 
-            var access = cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType);
-            WriteAccess(access, writer);
-            cWriter.WriteFunctionNameExpression(methodInfo);
+            cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType, allowLastAccess: true);
+            cWriter.WriteFunctionNameExpression(methodInfo, true);
             cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
-        }
-
-        private static void WriteAccess(CWriter.RequiredAfterInterfaceAccess access, CIndentedTextWriter writer)
-        {
-            switch (access)
-            {
-                case CWriter.RequiredAfterInterfaceAccess.Dot:
-                    writer.Write(".");
-                    break;
-                case CWriter.RequiredAfterInterfaceAccess.Arrow:
-                    writer.Write("->");
-                    break;
-            }
         }
 
         /// <summary>
@@ -187,7 +170,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteFunctionNameExpression(
             this CWriter cWriter,
-            IMethod methodInfo)
+            IMethod methodInfo,
+            bool noGenericSuffix = false)
         {
             var writer = cWriter.Output;
 
@@ -199,7 +183,14 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // default method name
-                cWriter.WriteMethodDefinitionName(writer, methodInfo);
+                if (noGenericSuffix)
+                {
+                    cWriter.WriteMethodDefinitionNameNoGenericSuffix(writer, methodInfo);
+                }
+                else
+                {
+                    cWriter.WriteMethodDefinitionName(writer, methodInfo);
+                }
             }
         }
     }

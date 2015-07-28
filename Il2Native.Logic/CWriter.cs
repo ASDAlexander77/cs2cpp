@@ -2297,14 +2297,7 @@ namespace Il2Native.Logic
 
             type = type.IsByRef ? type.GetElementType() : type;
 
-            if (fieldInfo.DeclaringType.IsInterface)
-            {
-                this.WriteInterfacePath(type, fieldInfo.DeclaringType, fieldInfo);
-            }
-            else
-            {
-                this.WriteFieldPath(type, fieldInfo);
-            }
+            this.WriteFieldPath(type, fieldInfo);
         }
 
         /// <summary>
@@ -2338,15 +2331,7 @@ namespace Il2Native.Logic
 
         public void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex)
         {
-            if (field.DeclaringType.IsInterface)
-            {
-                this.WriteInterfacePath(classType, field.DeclaringType, field);
-            }
-            else
-            {
-                this.WriteFieldPath(classType, field);
-            }
-
+            this.WriteFieldPath(classType, field);
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
@@ -2359,7 +2344,7 @@ namespace Il2Native.Logic
         {
             if (fieldDeclaringType.IsInterface)
             {
-                this.WriteInterfacePath(classType, fieldDeclaringType, null);
+                this.WriteInterfacePath(classType, fieldDeclaringType, false);
             }
             else
             {
@@ -2493,10 +2478,10 @@ namespace Il2Native.Logic
         }
 
         // TODO: doNotEstimateResult is hack
-        public RequiredAfterInterfaceAccess WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
+        public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false, bool allowLastAccess = false)
         {
             var effectiveType = this.WriteInterfaceAccessLeftSide(opCodePart, classType, interfaceType, doNotEstimateResult);
-            return this.WriteInterfaceAccessRightSide(interfaceType, effectiveType);
+            this.WriteInterfaceAccessRightSide(interfaceType, effectiveType, allowLastAccess);
         }
 
         private IType WriteInterfaceAccessLeftSide(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult)
@@ -2535,13 +2520,13 @@ namespace Il2Native.Logic
             return effectiveType;
         }
 
-        public RequiredAfterInterfaceAccess WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType)
+        public void WriteInterfaceAccessRightSide(IType interfaceType, IType effectiveType, bool allowLastAccess)
         {
             var writer = this.Output;
 
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            return this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName(CWriter.VTable, this)*/);
+            this.WriteInterfacePath(effectiveType, interfaceType, allowLastAccess);
         }
 
         /// <summary>
@@ -2567,7 +2552,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
+            this.WriteMethodDefinitionNameNoGenericSuffix(writer, methodBase, ownerOfExplicitInterface, shortName);
             if (methodBase.DeclaringType != null && IsAssemblyNamespaceRequired(methodBase.DeclaringType, methodBase, ownerOfExplicitInterface))
             {
                 writer.Write("_");
@@ -2575,7 +2560,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
+        public void WriteMethodDefinitionNameNoGenericSuffix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
             if (methodBase.DeclaringType == null)
             {
@@ -2701,7 +2686,7 @@ namespace Il2Native.Logic
             writer.Write("(*");
             if (withName)
             {
-                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);
+                this.WriteMethodDefinitionNameNoGenericSuffix(writer, methodBase, shortName: shortName);
             }
 
             if (!string.IsNullOrEmpty(suffix))
@@ -3942,13 +3927,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine("}");
         }
 
-        public enum RequiredAfterInterfaceAccess
-        {
-            Nothing,
-            Dot,
-            Arrow
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3961,12 +3939,9 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        [Obsolete("make a full review")]
-        public RequiredAfterInterfaceAccess WriteInterfacePath(IType classType, IType @interface, IField fieldInfo, int startPath = 0)
+        public void WriteInterfacePath(IType classType, IType @interface, bool allowLastAccess)
         {
             var writer = this.Output;
-
-            var requiredSeparator = RequiredAfterInterfaceAccess.Nothing;
 
             var type = classType;
             if (type.GetAllInterfaces().Contains(@interface))
@@ -3983,14 +3958,14 @@ namespace Il2Native.Logic
                 var path = type.FindInterfacePath(@interface);
 
                 var isFirst = true;
-                for (var i = startPath; i < path.Count; i++)
+                for (var i = 0; i < path.Count; i++)
                 {
                     writer.Write("ifce_");
                     writer.Write(path[i]);
 
-                    if (fieldInfo != null || i < path.Count - 1)
+                    if (allowLastAccess || i < path.Count - 1)
                     {
-                        writer.Write(!classType.IsInterface && isFirst ? "->" : ".");
+                        writer.Write(isFirst && !classType.IsInterface ? "->" : ".");
                     }
 
                     if (isFirst)
@@ -3998,20 +3973,7 @@ namespace Il2Native.Logic
                         isFirst = false;
                     }
                 }
-
-                if (path.Count > 0)
-                {
-                    requiredSeparator = path.Count == 1 && !type.IsInterface ? RequiredAfterInterfaceAccess.Arrow : RequiredAfterInterfaceAccess.Dot;
-                }
             }
-
-            if (fieldInfo != null)
-            {
-                writer.Write(fieldInfo.Name);
-                return RequiredAfterInterfaceAccess.Nothing;
-            }
-
-            return requiredSeparator;
         }
 
         /// <summary>
