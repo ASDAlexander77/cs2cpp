@@ -822,14 +822,14 @@ namespace Il2Native.Logic
             {
                 if (!excludeSpecializations)
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
                     }
                 }
                 else
                 {
-                    foreach (var method in type.GetMethods(flags))
+                    foreach (var method in type.GetMethods(flags).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
                     }
@@ -849,15 +849,14 @@ namespace Il2Native.Logic
             }
 
             // return Generic Method Specializations for a type
-            foreach (var method in
-                genMethodSpecializationForType)
+            foreach (var method in genMethodSpecializationForType)
             {
                 yield return method;
             }
 
             if (type.IsStructureType())
             {
-                foreach (var method in genMethodSpecializationForType)
+                foreach (var method in genMethodSpecializationForType.Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
                 }

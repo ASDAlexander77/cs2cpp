@@ -864,12 +864,8 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Call(method);
             codeBuilder.Add(Code.Ret);
 
-            var methodGenerated = codeBuilder.GetMethod(method);
-
-            return new DelegateGen.SynthesizedInvokeMethod(
-                methodGenerated,
-                methodGenerated.GetMethodBody(),
-                "_object");
+            var methodGenerated = codeBuilder.GetMethod(method, "_object");
+            return methodGenerated;
         }
     }
 }

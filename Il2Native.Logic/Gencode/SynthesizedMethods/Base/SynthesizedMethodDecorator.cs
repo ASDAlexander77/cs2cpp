@@ -55,6 +55,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.genericContext = genericContext;
         }
 
+        public string Suffix
+        {
+            get; set;
+        }
+
         protected SynthesizedMethodDecorator(IMethod method)
         {
             this.method = method;
@@ -72,22 +77,22 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public string FullName
         {
-            get { return this.method.FullName; }
+            get { return string.Concat(this.method.FullName, this.Suffix); }
         }
 
         public string MetadataFullName
         {
-            get { return this.method.MetadataFullName; }
+            get { return string.Concat(this.method.MetadataFullName, this.Suffix); }
         }
 
         public string MetadataName
         {
-            get { return this.method.MetadataName; }
+            get { return string.Concat(this.method.MetadataName, this.Suffix); }
         }
 
         public string Name
         {
-            get { return this.method.Name; }
+            get { return string.Concat(this.method.Name, this.Suffix); }
         }
 
         public string Namespace
@@ -142,7 +147,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public string ExplicitName
         {
-            get { return this.method.ExplicitName; }
+            get { return string.Concat(this.method.ExplicitName, this.Suffix); }
         }
 
         public bool IsConstructor
@@ -317,7 +322,55 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
         {
-            return this.method.ToString(ownerOfExplicitInterface, shortName);
+            var result = new StringBuilder();
+
+            // write return type
+            result.Append(this.ReturnType);
+            result.Append(' ');
+
+            // write Full Name
+            if (ownerOfExplicitInterface != null)
+            {
+                result.Append(ownerOfExplicitInterface.FullName);
+                result.Append('.');
+            }
+
+            if (shortName)
+            {
+                result.Append(this.Name);
+            }
+            else
+            {
+                result.Append(this.FullName);
+            }
+
+            // write Parameter Types
+            result.Append('(');
+            var index = 0;
+            foreach (var parameterType in this.GetParameters())
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(parameterType);
+                index++;
+            }
+
+            if (CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append("__arglist");
+            }
+
+            result.Append(')');
+
+            return result.ToString();
         }
 
         public override bool Equals(object obj)

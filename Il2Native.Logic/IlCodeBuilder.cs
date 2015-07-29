@@ -65,9 +65,11 @@
             MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
-        public IMethod GetMethod(IMethod originalMethod)
+        public IMethod GetMethod(IMethod originalMethod, string suffix = "")
         {
-            return MethodBodyBank.GetMethodDecorator(originalMethod, this.GetCode(), _tokenResolutions, _locals, _parameters);
+            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(originalMethod, this.GetCode(), this._tokenResolutions, this._locals, this._parameters);
+            synthesizedMethodDecorator.Suffix = suffix;
+            return synthesizedMethodDecorator;
         }
 
         public IMethodBody GetMethodBody(IMethodBody originalOpt = null)
