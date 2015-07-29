@@ -48,6 +48,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.genericContext = genericContext;
         }
 
+        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IGenericContext genericContext)
+            : this(method)
+        {
+            this.methodBody = methodBody;
+            this.genericContext = genericContext;
+        }
+
         protected SynthesizedMethodDecorator(IMethod method)
         {
             this.method = method;

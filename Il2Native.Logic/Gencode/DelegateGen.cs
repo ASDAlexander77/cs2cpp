@@ -159,12 +159,12 @@ namespace Il2Native.Logic.Gencode
             bool isStatic)
         {
             var method = new SynthesizedInvokeMethod(methodResult, invokeMethod, isStatic);
-            var opCodeNope = OpCodePart.CreateNop;
+            var opCodeMethodInfo = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, method);
 
             var argAdditionalCount = isStatic ? 0 : 1;
             var argShift = isStatic ? 1 : 0;
 
-            opCodeNope.OpCodeOperands =
+            opCodeMethodInfo.OpCodeOperands =
                 Enumerable.Range(0, invokeMethod.GetParameters().Count() + argAdditionalCount)
                     .Select(
                         p =>
@@ -174,11 +174,11 @@ namespace Il2Native.Logic.Gencode
                     .ToArray();
 
             cWriter.WriteCall(
-                opCodeNope,
+                opCodeMethodInfo,
                 method,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
 
-            return opCodeNope.Result;
+            return opCodeMethodInfo.Result;
         }
 
         /// <summary>
@@ -378,7 +378,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private class SynthesizedInvokeMethod : IMethod
+        public class SynthesizedInvokeMethod : IMethod
         {
             /// <summary>
             /// </summary>
@@ -390,23 +390,28 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            /// <param name="writer">
-            /// </param>
-            /// <param name="objectResult">
-            /// </param>
-            /// <param name="methodResult">
-            /// </param>
-            /// <param name="invokeMethod">
-            /// </param>
-            /// <param name="isStatic">
-            /// </param>
+            private readonly string suffix;
+
+            /// <summary>
+            /// </summary>
             public SynthesizedInvokeMethod(
                 FullyDefinedReference methodResult,
                 IMethod invokeMethod,
                 bool isStatic)
+                : this(invokeMethod, isStatic, null)
             {
                 this.MethodResult = methodResult;
+            }
+
+            /// <summary>
+            /// </summary>
+            public SynthesizedInvokeMethod(
+                IMethod invokeMethod,
+                bool isStatic,
+                string suffix)
+            {
                 this.invokeMethod = invokeMethod;
+                this.suffix = suffix;
                 this.isStatic = isStatic;
             }
 
@@ -451,14 +456,14 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public string ExplicitName
             {
-                get { return this.MethodResult.ToString(); }
+                get { return this.MethodResult != null ? this.MethodResult.ToString() : string.Concat(this.invokeMethod.ExplicitName, this.suffix); }
             }
 
             /// <summary>
             /// </summary>
             public string FullName
             {
-                get { return this.MethodResult.ToString(); }
+                get { return this.MethodResult != null ? this.MethodResult.ToString() : string.Concat(this.invokeMethod.FullName, this.suffix); }
             }
 
             /// <summary>
@@ -566,7 +571,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public string Name
             {
-                get { return this.MethodResult.ToString(); }
+                get { return this.MethodResult != null ? this.MethodResult.ToString() : string.Concat(this.invokeMethod.Name, this.suffix); }
             }
 
             /// <summary>

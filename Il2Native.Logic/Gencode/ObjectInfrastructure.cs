@@ -850,5 +850,23 @@ namespace Il2Native.Logic.Gencode
 
             return code;
         }
+
+        public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            var count = method.GetParameters().Count() + (method.IsStatic ? 0 : 1);
+            foreach (var argNum in Enumerable.Range(0, count))
+            {
+                codeBuilder.LoadArgument(argNum);
+            }
+
+            codeBuilder.Call(new DelegateGen.SynthesizedInvokeMethod(method, method.IsStatic, "_object"));
+            codeBuilder.Add(Code.Ret);
+
+            var methodWrapper = codeBuilder.GetMethod(method);
+            return methodWrapper;
+        }
+
     }
 }
