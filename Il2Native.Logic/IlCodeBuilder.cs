@@ -67,8 +67,16 @@
 
         public IMethod GetMethod(IMethod originalMethod, string suffix = "")
         {
-            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(originalMethod, this.GetCode(), this._tokenResolutions, this._locals, this._parameters);
+            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(
+                originalMethod,
+                this.GetCode(),
+                this._tokenResolutions,
+                this._locals,
+                this._parameters);
+            
             synthesizedMethodDecorator.Suffix = suffix;
+            synthesizedMethodDecorator.IsStructObjectAdapter = true;
+
             return synthesizedMethodDecorator;
         }
 

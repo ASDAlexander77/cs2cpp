@@ -110,8 +110,8 @@
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthEncodingMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedStrLenMethod.cs" />
-    <Compile Include="IConstBytes.cs" />
-    <Compile Include="IIlReader.cs" />
+    <Compile Include="Interfaces\IConstBytes.cs" />
+    <Compile Include="Interfaces\IIlReader.cs" />
     <Compile Include="IlCodeBuilder.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
@@ -122,7 +122,7 @@
     <Compile Include="Gencode\InternalMethods\Array\ArrayCopyGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\EqualsGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\GetHashCodeGen.cs" />
-    <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
+    <Compile Include="Interfaces\IMethodBodyCustomAction.cs" />
     <Compile Include="Gencode\InternalMethods\Object\MemberwiseCloneGen.cs" />
     <Compile Include="Gencode\InternalMethods\CompilerServices\UnsafeCastToStackPointerGen.cs" />
     <Compile Include="Gencode\MemberLocationInfo.cs" />
@@ -147,7 +147,8 @@
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />
-    <Compile Include="ITypeResolver.cs" />
+    <Compile Include="Interfaces\IMethodStructMethodAdapter.cs" />
+    <Compile Include="Interfaces\ITypeResolver.cs" />
     <Compile Include="MethodKey.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="NamespaceContainer.cs" />
@@ -162,7 +163,7 @@
     <Compile Include="Gencode\ObjectInfrastructure.cs" />
     <Compile Include="Gencode\TypeGen.cs" />
     <Compile Include="Gencode\VirtualTableGen.cs" />
-    <Compile Include="ICodeWriter.cs" />
+    <Compile Include="Interfaces\ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>

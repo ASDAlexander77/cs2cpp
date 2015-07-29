@@ -22,7 +22,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedMethodDecorator : IMethod, IMethodBodyCustomAction
+    public class SynthesizedMethodDecorator : IMethod, IMethodBodyCustomAction, IMethodStructMethodAdapter
     {
         private readonly IMethodBody methodBody;
         private readonly IModule module;
@@ -253,6 +253,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public bool IsPrivate
         {
             get { return this.method.IsPrivate; }
+        }
+
+        public bool IsStructObjectAdapter { get; set; }
+
+        public IMethod Original
+        {
+            get { return this.method; }
         }
 
         public int CompareTo(object obj)

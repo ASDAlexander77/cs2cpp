@@ -722,9 +722,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false)
+        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
         {
-            return Methods(type, DefaultFlags, typeResolver, excludeSpecializations);
+            return Methods(type, DefaultFlags, typeResolver, excludeSpecializations, structObjectAdaptersOnly);
         }
 
         /// <summary>
@@ -735,87 +735,89 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false)
+        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
         {
             Debug.Assert(type != null);
 
-            if (!excludeSpecializations)
-            {
-                foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
-                {
-                    yield return method;
-                }
-            }
-            else
-            {
-                foreach (var method in type.GetMethods(flags))
-                {
-                    yield return method;
-                }
-            }
-
-            if (type.IsPrivateImplementationDetails)
-            {
-                yield break;
-            }
-
             var normal = type.ToNormal();
-
-            if (!type.IsInterface)
+            if (!structObjectAdaptersOnly)
             {
-                yield return new SynthesizedNewMethod(type, typeResolver);
-                yield return new SynthesizedInitMethod(type, typeResolver);
-
-                if (IlReader.FindFinalizer(type, typeResolver) != null)
+                if (!excludeSpecializations)
                 {
-                    yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+                    {
+                        yield return method;
+                    }
+                }
+                else
+                {
+                    foreach (var method in type.GetMethods(flags))
+                    {
+                        yield return method;
+                    }
                 }
 
-                yield return new SynthesizedGetSizeMethod(type, typeResolver);
-                yield return new SynthesizedGetTypeMethod(type, typeResolver);
-            }
+                if (type.IsPrivateImplementationDetails)
+                {
+                    yield break;
+                }
 
-            yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
+                if (!type.IsInterface)
+                {
+                    yield return new SynthesizedNewMethod(type, typeResolver);
+                    yield return new SynthesizedInitMethod(type, typeResolver);
 
-            // append internal methods
-            if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
-            {
-                yield return new SynthesizedBoxMethod(type, typeResolver);
-                yield return new SynthesizedUnboxMethod(type, typeResolver);
-            }
+                    if (IlReader.FindFinalizer(type, typeResolver) != null)
+                    {
+                        yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
+                    }
 
-            if (normal.IsEnum)
-            {
-                yield return new SynthesizedEnumGetHashCodeMethod(type, typeResolver);
-                yield return new SynthesizedEnumToStringMethod(type, typeResolver);
-            }
+                    yield return new SynthesizedGetSizeMethod(type, typeResolver);
+                    yield return new SynthesizedGetTypeMethod(type, typeResolver);
+                }
 
-            // append methods or MultiArray
-            if (type.IsMultiArray)
-            {
-                yield return new SynthesizedMultiDimArrayGetMethod(type, typeResolver);
-                yield return new SynthesizedMultiDimArraySetMethod(type, typeResolver);
-                yield return new SynthesizedMultiDimArrayAddressMethod(type, typeResolver);
-            }
-            else if (type.IsArray)
-            {
-                yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, typeResolver);
-                yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
-                yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
-                yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
-                yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, typeResolver);
-            }
-            else if (type.IsString)
-            {
-                yield return new SynthesizedStrLenMethod(typeResolver);
-                yield return new SynthesizedCtorSBytePtrMethod(typeResolver);
-                yield return new SynthesizedCtorSBytePtrStartLengthMethod(typeResolver);
-                yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(typeResolver);
-            }
-            else if (type.IsObject)
-            {
-                yield return new SynthesizedDynamicCastMethod(typeResolver);
-                yield return new SynthesizedCastMethod(typeResolver);
+                yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
+
+                // append internal methods
+                if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
+                {
+                    yield return new SynthesizedBoxMethod(type, typeResolver);
+                    yield return new SynthesizedUnboxMethod(type, typeResolver);
+                }
+
+                if (normal.IsEnum)
+                {
+                    yield return new SynthesizedEnumGetHashCodeMethod(type, typeResolver);
+                    yield return new SynthesizedEnumToStringMethod(type, typeResolver);
+                }
+
+                // append methods or MultiArray
+                if (type.IsMultiArray)
+                {
+                    yield return new SynthesizedMultiDimArrayGetMethod(type, typeResolver);
+                    yield return new SynthesizedMultiDimArraySetMethod(type, typeResolver);
+                    yield return new SynthesizedMultiDimArrayAddressMethod(type, typeResolver);
+                }
+                else if (type.IsArray)
+                {
+                    yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, typeResolver);
+                    yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
+                    yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
+                    yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
+                    yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, typeResolver);
+                }
+                else if (type.IsString)
+                {
+                    yield return new SynthesizedStrLenMethod(typeResolver);
+                    yield return new SynthesizedCtorSBytePtrMethod(typeResolver);
+                    yield return new SynthesizedCtorSBytePtrStartLengthMethod(typeResolver);
+                    yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(typeResolver);
+                }
+                else if (type.IsObject)
+                {
+                    yield return new SynthesizedDynamicCastMethod(typeResolver);
+                    yield return new SynthesizedCastMethod(typeResolver);
+                }
             }
 
             if (type.IsStructureType())
@@ -848,10 +850,13 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            // return Generic Method Specializations for a type
-            foreach (var method in genMethodSpecializationForType)
+            if (!structObjectAdaptersOnly)
             {
-                yield return method;
+                // return Generic Method Specializations for a type
+                foreach (var method in genMethodSpecializationForType)
+                {
+                    yield return method;
+                }
             }
 
             if (type.IsStructureType())
