@@ -689,7 +689,7 @@ namespace Il2Native.Logic
                 var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable);
                 yield return field;
             }
-            
+
             if (type.IsInterface && !type.SpecialUsage())
             {
                 var field = type.ToVirtualTable().ToField(type, CWriter.VTable, isVirtualTable: true);
@@ -818,6 +818,24 @@ namespace Il2Native.Logic
                 yield return new SynthesizedCastMethod(typeResolver);
             }
 
+            if (type.IsStructureType())
+            {
+                if (!excludeSpecializations)
+                {
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+                    {
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                    }
+                }
+                else
+                {
+                    foreach (var method in type.GetMethods(flags))
+                    {
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                    }
+                }
+            }
+
             if (excludeSpecializations)
             {
                 yield break;
@@ -835,6 +853,14 @@ namespace Il2Native.Logic
                 genMethodSpecializationForType)
             {
                 yield return method;
+            }
+
+            if (type.IsStructureType())
+            {
+                foreach (var method in genMethodSpecializationForType)
+                {
+                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                }
             }
         }
 
@@ -917,10 +943,10 @@ namespace Il2Native.Logic
         public void Load()
         {
             this.Assembly = !this.isDll
-                                ? this.UsingRoslyn 
-                                    ? this.CompileInMemory 
+                                ? this.UsingRoslyn
+                                    ? this.CompileInMemory
                                         ? this.CompileWithRoslynInMemory(this.Sources)
-                                        : this.CompileWithRoslyn(this.Sources) 
+                                        : this.CompileWithRoslyn(this.Sources)
                                     : this.Compile(this.Sources)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
 

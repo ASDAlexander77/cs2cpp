@@ -2731,13 +2731,6 @@ namespace Il2Native.Logic
             }
 
             this.WriteMethodEnd(method, genericMethodContext);
-
-            // add extra methods for struct to support 'object'
-            if (method.DeclaringType.IsStructureType())
-            {
-                var methodWrapper = ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
-                this.WriteMethodEnd(methodWrapper, genericMethodContext);
-            }
         }
 
         /// <summary>
