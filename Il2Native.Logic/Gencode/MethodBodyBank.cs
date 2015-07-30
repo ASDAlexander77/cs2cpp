@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using InternalMethods;
     using PEAssemblyReader;
@@ -99,11 +98,12 @@
             byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
-            IList<IParameter> parameters)
+            IList<IParameter> parameters,
+            IEnumerable<IExceptionHandlingClause> exceptionHandlingClauses)
         {
             return new SynthesizedMethodDecorator(
                 m,
-                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, null, code),
+                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, exceptionHandlingClauses, code),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }
@@ -126,7 +126,8 @@
             IList<IType> locals,
             IList<IParameter> parameters)
         {
-            Register(methodFullName, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
+            Register(methodFullName, m => GetMethodDecorator(
+                m, code, tokenResolutions, locals, parameters, new IExceptionHandlingClause[0]));
         }
 
         private static void Register(string methodFullName, Func<IMethod, IMethod> func)

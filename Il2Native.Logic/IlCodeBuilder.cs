@@ -72,7 +72,8 @@
                 this.GetCode(),
                 this._tokenResolutions,
                 this._locals,
-                this._parameters);
+                this._parameters,
+                this.GetExceptions());
 
             return synthesizedMethodDecorator;
         }
@@ -84,7 +85,8 @@
                 this.GetCode(),
                 this._tokenResolutions,
                 this._locals,
-                this._parameters);
+                this._parameters,
+                this.GetExceptions());
             
             return synthesizedMethodDecorator;
         }
