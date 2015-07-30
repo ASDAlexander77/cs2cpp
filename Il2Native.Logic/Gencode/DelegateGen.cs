@@ -270,8 +270,6 @@ namespace Il2Native.Logic.Gencode
             var codeBuilder = new IlCodeBuilder();
 
             codeBuilder.Parameters.AddRange(method.GetParameters());
-            codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
-            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
 
             codeBuilder.LoadNull();
             codeBuilder.Add(Code.Ret);
@@ -283,7 +281,7 @@ namespace Il2Native.Logic.Gencode
         {
             var codeBuilder = new IlCodeBuilder();
 
-            codeBuilder.Parameters.Add(typeResolver.System.System_IAsyncResult.ToParameter(name: "asyncResult"));
+            codeBuilder.Parameters.AddRange(method.GetParameters());
 
             if (!method.ReturnType.IsValueType)
             {
