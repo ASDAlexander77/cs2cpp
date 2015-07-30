@@ -4674,7 +4674,13 @@ namespace Il2Native.Logic
 
                     if (node.Kind == PairKind.Method)
                     {
-                        var method = ((CWriter.Pair<IMethod, IMethod>)node).Key;
+                        var method = ((CWriter.Pair<IMethod, IMethod>)node).Value;
+                        var methodExtra = method as IMethodExtraAttributes;
+                        if (methodExtra != null && methodExtra.IsStructObjectAdapter)
+                        {
+                            method = methodExtra.Original;
+                        }
+
                         this.WriteMethodPointerType(writer, method, withName: true, shortName: false, excludeNamespace: true);
                         writer.WriteLine(";");
                     }
