@@ -865,7 +865,7 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Add(Code.Ret);
 
             var methodGenerated = codeBuilder.GetMethodDecorator(method);
-            methodGenerated.Suffix = "_object";
+            methodGenerated.Suffix = "__entry_for_object";
             methodGenerated.IsStructObjectAdapter = true;
             return methodGenerated;
         }
