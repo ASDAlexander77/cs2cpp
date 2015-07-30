@@ -569,7 +569,7 @@ namespace Il2Native.Logic.Gencode
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, type, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
+                virtualTable.AddMethodsToVirtualInterfaceTable(type, firstChildInterface, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
             }
 
             // get all virtual methods in current type and replace or append
