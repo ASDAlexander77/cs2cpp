@@ -269,6 +269,7 @@ namespace Il2Native.Logic.Gencode
         {
             var codeBuilder = new IlCodeBuilder();
 
+            codeBuilder.Parameters.AddRange(method.GetParameters());
             codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
             codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
 
