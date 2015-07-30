@@ -254,15 +254,12 @@ namespace Il2Native.Logic.Gencode
 
         public static IlCodeBuilder GetDelegateInvokeMethod(this ITypeResolver typeResolver, IMethod method)
         {
-            var intPtrType = typeResolver.System.System_IntPtr;
-
             var codeBuilder = new IlCodeBuilder();
-
-            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
-            codeBuilder.Parameters.Add(intPtrType.ToParameter(name: "method"));
-
+            
+            codeBuilder.Parameters.AddRange(method.GetParameters());
+            
             AddDelegateInvokeBody(codeBuilder, method, typeResolver);
-
+           
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
@@ -285,8 +282,7 @@ namespace Il2Native.Logic.Gencode
         {
             var codeBuilder = new IlCodeBuilder();
 
-            codeBuilder.Parameters.Add(typeResolver.System.System_AsyncCallback.ToParameter(name: "asyncCallback"));
-            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
+            codeBuilder.Parameters.Add(typeResolver.System.System_IAsyncResult.ToParameter(name: "asyncResult"));
 
             if (!method.ReturnType.IsValueType)
             {
