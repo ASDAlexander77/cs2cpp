@@ -861,10 +861,12 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.LoadArgument(argNum);
             }
 
-            codeBuilder.Call(method);
+            codeBuilder.CallDirect(method);
             codeBuilder.Add(Code.Ret);
 
-            var methodGenerated = codeBuilder.GetMethod(method, "_object");
+            var methodGenerated = codeBuilder.GetMethodDecorator(method);
+            methodGenerated.Suffix = "_object";
+            methodGenerated.IsStructObjectAdapter = true;
             return methodGenerated;
         }
     }

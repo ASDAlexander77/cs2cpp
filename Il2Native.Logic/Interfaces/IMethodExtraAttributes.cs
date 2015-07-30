@@ -2,7 +2,7 @@
 {
     using PEAssemblyReader;
 
-    public interface IMethodStructMethodAdapter
+    public interface IMethodExtraAttributes
     {
         bool IsStructObjectAdapter { get; }
 

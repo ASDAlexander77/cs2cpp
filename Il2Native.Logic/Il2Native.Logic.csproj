@@ -147,7 +147,7 @@
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />
-    <Compile Include="Interfaces\IMethodStructMethodAdapter.cs" />
+    <Compile Include="Interfaces\IMethodExtraAttributes.cs" />
     <Compile Include="Interfaces\ITypeResolver.cs" />
     <Compile Include="MethodKey.cs" />
     <Compile Include="MethodsWalker.cs" />

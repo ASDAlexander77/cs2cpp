@@ -22,7 +22,7 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<CWriter.Pair<IMethod, IMethod>>> VirtualInterfaceTableByType = 
+        private static readonly IDictionary<string, List<CWriter.Pair<IMethod, IMethod>>> VirtualInterfaceTableByType =
             new SortedDictionary<string, List<CWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
@@ -52,12 +52,16 @@ namespace Il2Native.Logic.Gencode
             var allExplicit = IlReader.Methods(
                 thisType.FindInterfaceOwner(@interface),
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver).Where(m => m.IsExplicitInterfaceImplementation).ToList();
+                typeResolver)
+                .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
+                .Where(m => m.IsExplicitInterfaceImplementation).ToList();
 
             var allPublicAndInternal = IlReader.Methods(
                 thisType,
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver).Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
+                typeResolver)
+                .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
+                .Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
 
             // we need to use reverse to be able to select first possible method from direved class first
             virtualTable.AddMethodsToVirtualInterfaceTable(thisType, @interface, allExplicit, allPublicAndInternal, typeResolver, thisType.IsArray);
@@ -87,9 +91,10 @@ namespace Il2Native.Logic.Gencode
                         .Select(@interface => new CWriter.Pair<IType, IType> { Kind = CWriter.PairKind.Interface, Key = @interface, Value = @interface }));
 
             // get all virtual methods in current type and replace or append
-            foreach (
-                var virtualOrAbstractMethodItem in
-                    IlReader.Methods(thisType, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
+            foreach (var virtualOrAbstractMethodItem in
+                IlReader.Methods(thisType, typeResolver)
+                        .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
+                        .Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
                 var virtualOrAbstractMethod = virtualOrAbstractMethodItem;
 
@@ -98,12 +103,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (virtualOrAbstractMethod.IsAbstract && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
-                    virtualTable.Add(
-                        new CWriter.Pair<IMethod, IMethod>
-                        {
-                            Key = virtualOrAbstractMethod,
-                            Value = virtualOrAbstractMethod
-                        });
+                    virtualTable.Add(new CWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
                     continue;
                 }
 
@@ -119,9 +119,12 @@ namespace Il2Native.Logic.Gencode
                 if (thisType.IsStructureType())
                 {
                     // replace virtual/interface method with adapter
-                    var adapterMethod = IlReader.Methods(thisType, typeResolver, structObjectAdaptersOnly: true)
-                        .FirstOrDefault(m => m is IMethodStructMethodAdapter &&
-                                    ((IMethodStructMethodAdapter)m).Original.Equals(virtualOrAbstractMethod));
+                    var adapterMethod =
+                        IlReader.Methods(thisType, typeResolver, structObjectAdaptersOnly: true)
+                                .FirstOrDefault(
+                                    m =>
+                                    m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter
+                                    && ((IMethodExtraAttributes)m).Original.Equals(virtualOrAbstractMethod));
 
                     ////Debug.Assert(adapterMethod != null, "Could not find adapter method for method: " + virtualOrAbstractMethod.Name);
 
@@ -133,12 +136,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (baseMethod == null)
                 {
-                    virtualTable.Add(
-                        new CWriter.Pair<IMethod, IMethod>
-                        {
-                            Key = virtualOrAbstractMethod,
-                            Value = virtualOrAbstractMethod
-                        });
+                    virtualTable.Add(new CWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
                     continue;
                 }
 
@@ -608,7 +606,7 @@ namespace Il2Native.Logic.Gencode
             {
                 Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
             }
-#endif 
+#endif
 
             if (type.IsStructureType())
             {
@@ -616,8 +614,8 @@ namespace Il2Native.Logic.Gencode
                 {
                     // replace virtual/interface method with adapter
                     var adapterMethod = IlReader.Methods(type, typeResolver, structObjectAdaptersOnly: true)
-                        .FirstOrDefault(m => m is IMethodStructMethodAdapter &&
-                                    ((IMethodStructMethodAdapter)m).Original.Equals(interfaceMethod.Value));
+                        .FirstOrDefault(m => m is IMethodExtraAttributes &&
+                                    ((IMethodExtraAttributes)m).Original.Equals(interfaceMethod.Value));
 
                     ////Debug.Assert(adapterMethod != null, "Could not find adapter method for method: " + virtualOrAbstractMethod.Name);
 

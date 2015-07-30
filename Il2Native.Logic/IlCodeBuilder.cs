@@ -65,7 +65,19 @@
             MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
-        public IMethod GetMethod(IMethod originalMethod, string suffix = "")
+        public IMethod GetMethod(IMethod originalMethod)
+        {
+            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(
+                originalMethod,
+                this.GetCode(),
+                this._tokenResolutions,
+                this._locals,
+                this._parameters);
+
+            return synthesizedMethodDecorator;
+        }
+
+        public SynthesizedMethodDecorator GetMethodDecorator(IMethod originalMethod)
         {
             var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(
                 originalMethod,
@@ -74,9 +86,6 @@
                 this._locals,
                 this._parameters);
             
-            synthesizedMethodDecorator.Suffix = suffix;
-            synthesizedMethodDecorator.IsStructObjectAdapter = true;
-
             return synthesizedMethodDecorator;
         }
 
@@ -327,6 +336,13 @@
             Debug.Assert(method != null, "@method is null");
             TokenResolutions.Add(method);
             this.Add(method.IsMethodVirtual() ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
+        }
+
+        public void CallDirect(IMethod method)
+        {
+            Debug.Assert(method != null, "@method is null");
+            TokenResolutions.Add(method);
+            this.Add(Code.Call, (int)TokenResolutions.Count);
         }
 
         public void InitializeObject(IType type)

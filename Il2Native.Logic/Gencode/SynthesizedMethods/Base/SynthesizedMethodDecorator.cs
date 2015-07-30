@@ -22,7 +22,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedMethodDecorator : IMethod, IMethodBodyCustomAction, IMethodStructMethodAdapter
+    public class SynthesizedMethodDecorator : IMethod, IMethodBodyCustomAction, IMethodExtraAttributes
     {
         private readonly IMethodBody methodBody;
         private readonly IModule module;
