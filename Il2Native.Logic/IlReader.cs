@@ -826,14 +826,14 @@ namespace Il2Native.Logic
                 {
                     foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                     {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
                 else
                 {
                     foreach (var method in type.GetMethods(flags).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                     {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
             }
@@ -863,7 +863,7 @@ namespace Il2Native.Logic
             {
                 foreach (var method in genMethodSpecializationForType.Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
                 {
-                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method);
+                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
             }
         }

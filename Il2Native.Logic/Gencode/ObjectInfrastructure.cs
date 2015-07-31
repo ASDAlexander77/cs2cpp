@@ -845,7 +845,7 @@ namespace Il2Native.Logic.Gencode
             return code;
         }
 
-        public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method)
+        public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method, ITypeResolver typeResolver)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -853,6 +853,15 @@ namespace Il2Native.Logic.Gencode
             foreach (var argNum in Enumerable.Range(0, count))
             {
                 codeBuilder.LoadArgument(argNum);
+
+                // in case of this
+                if (argNum == 0 || !method.IsStatic)
+                {
+                    codeBuilder.Castclass(typeResolver.System.System_Byte.ToPointerType());
+                    codeBuilder.SizeOf(typeResolver.System.System_Void.ToPointerType());
+                    codeBuilder.Add(Code.Add);
+                    codeBuilder.Castclass(method.DeclaringType.ToNormal().ToPointerType());
+                }
             }
 
             codeBuilder.CallDirect(method);
