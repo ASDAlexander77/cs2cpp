@@ -2556,7 +2556,7 @@ namespace Il2Native.Logic
             {
                 // TODO: improve next line to get rid of using SynthesizedInitMethod.Name
                 var methodExtraAttributes = method as IMethodExtraAttributes;
-                if (thisType.IsStructureType() && method.Name != SynthesizedInitMethod.Name
+                if (thisType.IsStructureType() && !method.Name.StartsWith(".")
                     && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
                 {
                     thisType.ToPointerType().WriteTypePrefix(this, true);
