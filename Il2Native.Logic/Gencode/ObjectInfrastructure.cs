@@ -289,6 +289,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
+                ilCodeBuilder.LoadFieldAddress(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
                 ilCodeBuilder.LoadArgument(0);
                 if (isNullable)
                 {
