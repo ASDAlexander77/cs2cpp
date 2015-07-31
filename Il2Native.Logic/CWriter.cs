@@ -1492,26 +1492,7 @@ namespace Il2Native.Logic
 
                     var opCodeNone = OpCodePart.CreateNop;
 
-                    if (opCodeTypePart.Operand.IsStructureType())
-                    {
-                        // TODO: IntPtr hack, cast operation (review it)
-                        var isIntPtrOrUIntPtr = opCodeTypePart.Operand.IsIntPtrOrUIntPtr();
-                        if (isIntPtrOrUIntPtr)
-                        {
-                            this.WriteCCastOnly(@class);
-                        }
-
-                        WriteOperandResultOrActualWrite(this.Output, opCode, 0);
-                        opCode.Result = new FullyDefinedReference(constrVar, @class);
-
-                        if (!isIntPtrOrUIntPtr)
-                        {
-                            this.Output.WriteLine(";");
-                            // TODO: this is hack to init structure if it is from Class member (ideally you need to initialize it when you call new on Class)
-                            @class.WriteCallInitObjectMethod(this, opCode);
-                        }
-                    }
-                    else if (opCodeTypePart.Operand.IsValueType())
+                    if (opCodeTypePart.Operand.IsValueType() || opCodeTypePart.Operand.IsStructureType())
                     {
                         opCodeNone.OpCodeOperands = new[]
                         {
@@ -2229,8 +2210,14 @@ namespace Il2Native.Logic
             }
             else if (effectiveType.IsPointer)
             {
-                effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                this.WriteCCastOnly(effectiveType.ToPointerType());
+                var declaringType = opCodeFieldInfoPart.Operand.DeclaringType;
+                var declaringTypePointer = declaringType.ToPointerType();
+                if (declaringTypePointer.TypeNotEquals(effectiveType))
+                {
+                    this.WriteCCastOnly(declaringTypePointer);
+                }
+
+                effectiveType = declaringType;
             }
 
             this.WriteResultOrActualWrite(opCodeFieldInfoPart.OpCodeOperands[0]);
@@ -2567,7 +2554,16 @@ namespace Il2Native.Logic
 
             if (hasThis)
             {
-                thisType.ToClass().WriteTypePrefix(this, true);
+                // TODO: improve next line to get rid of using SynthesizedInitMethod.Name
+                if (thisType.IsStructureType() && method.Name != SynthesizedInitMethod.Name)
+                {
+                    thisType.ToPointerType().WriteTypePrefix(this, true);
+                }
+                else
+                {
+                    thisType.ToClass().WriteTypePrefix(this, true);
+                }
+
                 hasParameterWritten = true;
 
                 if (!noArgumentName)
@@ -3192,17 +3188,12 @@ namespace Il2Native.Logic
 
             this.WriteClassName(type);
 
-            if (type.IsStructureType())
-            {
-                this.Output.Write("_Data");
-            }
-
             this.externDeclarations.Clear();
         }
 
         private void WriteClassName(IType type)
         {
-            type.ToClass().WriteTypeName(this.Output, false, true);
+            type.WriteTypeName(this.Output, false, true);
         }
 
         public void WriteTypeEnd(IType type)

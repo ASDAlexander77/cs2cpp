@@ -493,6 +493,11 @@ namespace Il2Native.Logic.Gencode
                 {
                     return type.Name;
                 }
+
+                if (type.IsStructureType())
+                {
+                    return string.Concat(shortName ? type.Name : type.FullName, "__struct_data");
+                }
             }
 
             return shortName ? type.Name : type.FullName;
