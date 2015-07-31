@@ -289,14 +289,18 @@ namespace Il2Native.Logic.Gencode
             {
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
-                ilCodeBuilder.LoadFieldAddress(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
-                ilCodeBuilder.LoadArgument(0);
-                if (isNullable)
+                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                if (firstField != null)
                 {
-                    ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
-                }
+                    ilCodeBuilder.LoadFieldAddress(firstField);
+                    ilCodeBuilder.LoadArgument(0);
+                    if (isNullable)
+                    {
+                        ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                    }
 
-                ilCodeBuilder.CopyObject(normal);
+                    ilCodeBuilder.CopyObject(normal);
+                }
             }
 
             ilCodeBuilder.Add(Code.Dup);

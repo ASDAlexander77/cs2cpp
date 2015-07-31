@@ -567,7 +567,7 @@ namespace Il2Native.Logic
 
                             if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
                             {
-                                this.Output.Write(" + sizeof(::Void*)");
+                                this.Output.Write(" + sizeof(Void*)");
                             }
 
                             this.Output.WriteLine(";");
@@ -3195,7 +3195,14 @@ namespace Il2Native.Logic
 
         private void WriteClassName(IType type)
         {
-            type.WriteTypeName(this.Output, false, true);
+            if (type.IsStructureType())
+            {
+                type.WriteTypeName(this.Output, false, true);
+            }
+            else
+            {
+                type.ToClass().WriteTypeName(this.Output, false, true);
+            }
         }
 
         public void WriteTypeEnd(IType type)
@@ -4397,8 +4404,7 @@ namespace Il2Native.Logic
                 if (fieldType.IsStaticArrayInit)
                 {
                     var staticArrayInitSize = fieldType.GetStaticArrayInitSize();
-                    this.Output.Write("{ (Void**) 0");
-                    this.Output.Write(", { ");
+                    this.Output.Write("{ ");
                     var data = field.GetFieldRVAData();
                     var index = 0;
                     foreach (var b in data.Take(staticArrayInitSize))
@@ -4411,11 +4417,11 @@ namespace Il2Native.Logic
                         this.Output.Write(b);
                     }
 
-                    this.Output.Write("} }");
+                    this.Output.Write("}");
                 }
                 else
                 {
-                    fieldType.ToClass().WriteTypeWithoutModifiers(this);
+                    fieldType.WriteTypeWithoutModifiers(this);
                     this.Output.Write("()/*undef*/");
                 }
             }

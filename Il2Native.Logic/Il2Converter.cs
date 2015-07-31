@@ -286,6 +286,12 @@ namespace Il2Native.Logic
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
             codeWriter.WriteForwardTypeDeclaration(type, genericTypeContext);
+
+            // if it is Struct we need to generate struct Data
+            if (type.IsStructureType())
+            {
+                codeWriter.WriteForwardTypeDeclaration(type.ToClass(), genericTypeContext);
+            }
         }
 
         /// <summary>
