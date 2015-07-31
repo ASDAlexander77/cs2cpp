@@ -3192,6 +3192,11 @@ namespace Il2Native.Logic
 
             this.WriteClassName(type);
 
+            if (type.IsStructureType())
+            {
+                this.Output.Write("_Data");
+            }
+
             this.externDeclarations.Clear();
         }
 

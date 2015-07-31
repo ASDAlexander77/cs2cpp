@@ -5,6 +5,7 @@ namespace System
 {
 
     using System;
+    using System.Diagnostics.Contracts;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Globalization;
@@ -217,8 +218,24 @@ namespace System
             return DateTime.Compare(this, (DateTime)val);
         }
 
+        public static int DaysInMonth(int year, int month)
+        {
+            if (month < 1 || month > 12) throw new ArgumentOutOfRangeException("month", Environment.GetResourceString("ArgumentOutOfRange_Month"));
+            Contract.EndContractBlock();
+            // IsLeapYear checks the year argument
+            int[] days = IsLeapYear(year) ? DaysToMonth366 : DaysToMonth365;
+            return days[month] - days[month - 1];
+        }
 
-        public extern static int DaysInMonth(int year, int month);
+        public static bool IsLeapYear(int year)
+        {
+            if (year < 1 || year > 9999)
+            {
+                throw new ArgumentOutOfRangeException("year", Environment.GetResourceString("ArgumentOutOfRange_Year"));
+            }
+            Contract.EndContractBlock();
+            return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+        }
 
         public override bool Equals(Object val)
         {

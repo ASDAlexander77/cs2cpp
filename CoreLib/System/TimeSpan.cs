@@ -166,25 +166,39 @@ namespace System
             return new TimeSpan(m_ticks + ts.m_ticks);
         }
 
-        
-        extern public static int Compare(TimeSpan t1, TimeSpan t2);
+        public static int Compare(TimeSpan t1, TimeSpan t2)
+        {
+            if (t1.m_ticks > t2.m_ticks) return 1;
+            if (t1.m_ticks < t2.m_ticks) return -1;
+            return 0;
+        }
 
-        
-        extern public int CompareTo(Object value);
+        // Returns a value less than zero if this  object
+        public int CompareTo(Object value)
+        {
+            if (value == null) return 1;
+            if (!(value is TimeSpan))
+                throw new ArgumentException(Environment.GetResourceString("Arg_MustBeTimeSpan"));
+            long t = ((TimeSpan)value).m_ticks;
+            if (m_ticks > t) return 1;
+            if (m_ticks < t) return -1;
+            return 0;
+        }
 
         public TimeSpan Duration()
         {
             return new TimeSpan(m_ticks >= 0 ? m_ticks : -m_ticks);
         }
 
-
         public override bool Equals(Object value)
         {
             throw new NotImplementedException();
         }
 
-        
-        extern public static bool Equals(TimeSpan t1, TimeSpan t2);
+        public static bool Equals(TimeSpan t1, TimeSpan t2)
+        {
+            return t1.m_ticks == t2.m_ticks;
+        }
 
         public TimeSpan Negate()
         {

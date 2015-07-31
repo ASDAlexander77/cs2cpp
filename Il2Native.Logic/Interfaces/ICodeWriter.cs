@@ -131,6 +131,10 @@ namespace Il2Native.Logic
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
         void WriteTypeEnd(IType type);
 
         /// <summary>

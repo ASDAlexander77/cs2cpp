@@ -123,23 +123,13 @@ namespace Il2Native.Logic
         {
             if (!processGenericMethodsOnly)
             {
-                codeWriter.WriteTypeStart(type, genericContext);
+                WriteTypeDefinition(codeWriter, type, genericContext);
 
-                var fields = IlReader.Fields(type, codeWriter);
-
-                Debug.Assert(!type.IsGenericTypeDefinition);
-
-                codeWriter.WriteBeforeFields();
-
-                codeWriter.WriteInheritance();
-
-                // fields
-                foreach (var field in fields)
+                // if it is Struct we need to generate struct Data
+                if (type.IsStructureType())
                 {
-                    codeWriter.WriteField(field);
+                    WriteTypeDefinition(codeWriter, type.ToClass(), genericContext);
                 }
-
-                codeWriter.WriteAfterFields();
             }
 
             codeWriter.WriteBeforeMethods(type);
@@ -152,6 +142,30 @@ namespace Il2Native.Logic
             {
                 codeWriter.WriteTypeEnd(type);
             }
+        }
+
+        private static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
+        {
+            codeWriter.WriteTypeStart(type, genericContext);
+
+            var fields = IlReader.Fields(type, codeWriter);
+
+            Debug.Assert(!type.IsGenericTypeDefinition);
+
+            codeWriter.WriteBeforeFields();
+
+            if (!type.IsStructureType())
+            {
+                codeWriter.WriteInheritance();
+            }
+
+            // fields
+            foreach (var field in fields)
+            {
+                codeWriter.WriteField(field);
+            }
+
+            codeWriter.WriteAfterFields();
         }
 
         /// <summary>
