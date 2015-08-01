@@ -824,14 +824,14 @@ namespace Il2Native.Logic
             {
                 if (!excludeSpecializations)
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => ShouldHaveStructToObjectAdapter(m)))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
                 else
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
+                    foreach (var method in type.GetMethods(flags).Where(m => ShouldHaveStructToObjectAdapter(m)))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
@@ -861,11 +861,21 @@ namespace Il2Native.Logic
 
             if (type.IsStructureType())
             {
-                foreach (var method in genMethodSpecializationForType.Where(m => m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic))
+                foreach (var method in genMethodSpecializationForType.Where(m => ShouldHaveStructToObjectAdapter(m)))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
             }
+        }
+
+        private static bool ShouldHaveStructToObjectAdapter(IMethod m)
+        {
+            if (m.IsStatic)
+            {
+                return false;
+            }
+
+            return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
         }
 
         /// <summary>

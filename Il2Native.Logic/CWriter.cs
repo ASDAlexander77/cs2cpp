@@ -617,7 +617,7 @@ namespace Il2Native.Logic
                     var varName = string.Format("_alloc{0}", opCode.AddressStart);
                     System.System_Byte.ToPointerType().WriteTypePrefix(this);
                     writer.WriteLine(" {0};", varName);
-                    this.UnaryOper(writer, opCode, string.Format("{0} = (::Byte*) alloca(", varName));
+                    this.UnaryOper(writer, opCode, string.Format("{0} = (Byte*) alloca(", varName));
                     writer.WriteLine(");");
 
                     // do not remove, otherwise stackoverflow
@@ -2556,7 +2556,7 @@ namespace Il2Native.Logic
             {
                 // TODO: improve next line to get rid of using SynthesizedInitMethod.Name
                 var methodExtraAttributes = method as IMethodExtraAttributes;
-                if (thisType.IsStructureType() && !method.Name.StartsWith(".")
+                if (thisType.IsStructureType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
                     && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
                 {
                     thisType.ToPointerType().WriteTypePrefix(this, true);

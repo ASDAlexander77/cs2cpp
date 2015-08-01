@@ -9,11 +9,13 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
+    [Obsolete("duplicate of SynthesizedMethod")]
     public class SynthesizedMethodStringAdapter : SynthesizedMethodBase
     {
         private readonly IParameter[] parameters;

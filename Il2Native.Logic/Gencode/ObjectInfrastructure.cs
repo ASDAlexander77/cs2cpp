@@ -17,7 +17,7 @@ namespace Il2Native.Logic.Gencode
     using System.Reflection;
     using System.Reflection.Emit;
     using CodeParts;
-
+    using DebugInfo.DebugInfoSymbolWriter;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
 
     using PEAssemblyReader;
@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("(::Byte*) ");
+            writer.Write("(Byte*) ");
             writer.Write(cWriter.GetAllocator(false, false));
             writer.Write("(");
             cWriter.WriteResult(size);
@@ -131,7 +131,7 @@ namespace Il2Native.Logic.Gencode
 
                 var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
                 var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
-                
+
                 Debug.Assert(defaultConstructor != null, "default constructor is null");
 
                 newAlloc.New(defaultConstructor);
@@ -202,6 +202,56 @@ namespace Il2Native.Logic.Gencode
             newAlloc.Castclass(declaringClassType);
         }
 
+        public static void GetAllocateMemoryCodeForStructInStack(
+            this ITypeResolver typeResolver, IlCodeBuilder newAlloc, IType declaringClassType, bool doNotTestNullValue)
+        {
+            var type = declaringClassType.ToNormal();
+
+            var localSize = newAlloc.Locals.Count;
+            newAlloc.Locals.Add(typeResolver.System.System_Int32);
+
+            var localPointer = newAlloc.Locals.Count;
+            newAlloc.Locals.Add(type.ToPointerType());
+
+            newAlloc.SizeOf(type);
+            newAlloc.SaveLocal(localSize);
+            newAlloc.LoadLocal(localSize);
+
+            newAlloc.Call(
+                new SynthesizedMethodStringAdapter(
+                    "alloca",
+                    null,
+                    typeResolver.System.System_Void.ToPointerType(),
+                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+
+            newAlloc.SaveLocal(localPointer);
+
+            if (!doNotTestNullValue)
+            {
+                newAlloc.LoadLocal(localPointer);
+                var jump = newAlloc.Branch(Code.Brtrue, Code.Brtrue_S);
+
+                var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
+                var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
+
+                Debug.Assert(defaultConstructor != null, "default constructor is null");
+
+                newAlloc.New(defaultConstructor);
+                newAlloc.Throw();
+
+                newAlloc.Add(jump);
+            }
+
+            // if this is atomic, you need to init memory
+            newAlloc.LoadLocal(localPointer);
+            newAlloc.LoadConstant(0);
+            newAlloc.LoadLocal(localSize);
+            newAlloc.Add(Code.Initblk);
+
+            newAlloc.LoadLocal(localPointer);
+            newAlloc.Castclass(type);
+        }
+
         private static bool CanBeAllocatedAtomically(this ITypeResolver typeResolver, IType declaringClassType)
         {
             if (declaringClassType.IsInterface)
@@ -267,7 +317,7 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.Add(jump);
             }
 
-            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
+            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue, boxing: true);
 
             ilCodeBuilder.Parameters.Add(type.ToParameter("_value"));
 
@@ -732,16 +782,22 @@ namespace Il2Native.Logic.Gencode
         /// <param name="enableStringFastAllocation"></param>
         /// <param name="opCodePart">
         /// </param>
-        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false)
+        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false, bool boxing = false)
         {
-            var declaringClassType = type.ToClass();
-
-            typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
-
-            if (!doNotCallInit)
+            var classType = type.ToClass();
+            var normalType = type.ToNormal();
+            if (normalType.IsStructureType() && !boxing)
             {
-                ilCodeBuilder.Add(Code.Dup);
-                ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
+                typeResolver.GetAllocateMemoryCodeForStructInStack(ilCodeBuilder, normalType, doNotTestNullValue);
+            }
+            else
+            {
+                typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, classType, doNotTestNullValue, enableStringFastAllocation);
+                if (!doNotCallInit)
+                {
+                    ilCodeBuilder.Add(Code.Dup);
+                    ilCodeBuilder.Call(new SynthesizedInitMethod(classType, typeResolver));
+                }
             }
 
             if (!enableStringFastAllocation)
@@ -812,7 +868,7 @@ namespace Il2Native.Logic.Gencode
             code.Add(jumpNull);
 
             code.LoadArgument(0);
-            code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));            
+            code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));
             code.SaveLocal(0);
             var jump = code.Branch(Code.Br, Code.Br_S);
 
@@ -822,10 +878,10 @@ namespace Il2Native.Logic.Gencode
             code.LoadArgument(1);
 
             var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
-            
+
             code.LoadArgument(0);
-            code.Add(Code.Ret);           
-            
+            code.Add(Code.Ret);
+
             code.Add(jump_not_equal);
 
             code.LoadLocal(0);
