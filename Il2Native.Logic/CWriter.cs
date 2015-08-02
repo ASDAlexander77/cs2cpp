@@ -564,12 +564,6 @@ namespace Il2Native.Logic
                             System.System_Byte.ToPointerType().WriteTypePrefix(this);
                             this.Output.Write(") &");
                             this.WriteStaticFieldName(opCodeFieldInfoPartToken.Operand);
-
-                            if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
-                            {
-                                this.Output.Write(" + sizeof(Void*)");
-                            }
-
                             this.Output.WriteLine(";");
 
                             this.Output.Write("{0}.", tokenVar);
