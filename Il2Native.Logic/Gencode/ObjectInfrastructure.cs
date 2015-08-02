@@ -916,7 +916,7 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.LoadArgument(argNum);
 
                 // in case of this
-                if (argNum == 0 || !method.IsStatic)
+                if (argNum == 0 && !method.IsStatic)
                 {
                     codeBuilder.Castclass(typeResolver.System.System_Byte.ToPointerType());
                     codeBuilder.SizeOf(typeResolver.System.System_Void.ToPointerType());

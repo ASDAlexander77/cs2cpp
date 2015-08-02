@@ -234,7 +234,7 @@ namespace Il2Native.Logic
             this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
 
             this.MethodReturnType = null;
-            this.ThisType = methodInfo.DeclaringType;
+            this.ReadThisTypeInfo(methodInfo);
 
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
             this.NoBody = !methodBody.HasBody;
@@ -1705,13 +1705,35 @@ namespace Il2Native.Logic
             }
         }
 
+        protected void ReadThisTypeInfo(IType type)
+        {
+            this.ThisType = type;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        protected void ReadTypeInfo(IType type)
+        protected void ReadThisTypeInfo(IMethod method)
         {
-            this.ThisType = type;
+            Debug.Assert(method.Name != ".init");
+
+            var thisType = method.DeclaringType;
+            if (thisType == null)
+            {
+                return;
+            }
+
+            var methodExtraAttributes = method as IMethodExtraAttributes;
+            if (thisType.IsStructureType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
+                && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
+            {
+                this.ThisType = thisType.ToPointerType();
+            }
+            else
+            {
+                this.ThisType = thisType.ToClass();
+            }
         }
 
         protected bool IsSafeNotToMultiplyResult(OpCodePart opCode)

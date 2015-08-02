@@ -2554,17 +2554,7 @@ namespace Il2Native.Logic
 
             if (hasThis)
             {
-                // TODO: improve next line to get rid of using SynthesizedInitMethod.Name
-                var methodExtraAttributes = method as IMethodExtraAttributes;
-                if (thisType.IsStructureType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
-                    && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
-                {
-                    thisType.ToPointerType().WriteTypePrefix(this, true);
-                }
-                else
-                {
-                    thisType.ToClass().WriteTypePrefix(this, true);
-                }
+                thisType.WriteTypePrefix(this, true);
 
                 hasParameterWritten = true;
 
@@ -3178,7 +3168,7 @@ namespace Il2Native.Logic
         {
             this.Output.WriteLine(string.Empty);
 
-            this.ReadTypeInfo(type);
+            this.ReadThisTypeInfo(type);
 
 #if EXTRA_VALIDATION
             Debug.Assert(!type.IsGenericTypeDefinition);
