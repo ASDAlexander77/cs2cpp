@@ -679,6 +679,11 @@ namespace Il2Native.Logic
 
             if (sourceType.UseAsClass && !destinationType.UseAsClass && sourceType.ToNormal().TypeEquals(destinationType))
             {
+                return ConversionType.PointerToValue;           
+            }
+
+            if (sourceType.IsPointer && !destinationType.UseAsClass && sourceType.GetElementType().TypeEquals(destinationType))
+            {
                 return ConversionType.PointerToValue;
             }
 
@@ -2535,8 +2540,10 @@ namespace Il2Native.Logic
                 case Code.Newobj:
                     var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                     return opCodeConstructorInfoPart == null
-                               ? opCodePart.ReadExceptionFromStackType.ToClass()
-                               : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
+                        ? opCodePart.ReadExceptionFromStackType.ToClass()
+                        : opCodeConstructorInfoPart.Operand.DeclaringType.IsStructureType()
+                            ? opCodeConstructorInfoPart.Operand.DeclaringType.ToPointerType()
+                            : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
 
                 case Code.Newarr:
                     var opCodeTypePart = opCodePart as OpCodeTypePart;

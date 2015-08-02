@@ -503,7 +503,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallNewObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var method = new SynthesizedNewMethod(type, cWriter);
+            var method = new SynthesizedNewMethod(type.ToNormal(), cWriter);
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             if (type.IsArray)

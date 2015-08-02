@@ -4327,8 +4327,18 @@ namespace Il2Native.Logic
 
         public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")
         {
-            // temp var
-            type.WriteTypePrefix(this);
+            var normalType = type.ToNormal();
+            if (normalType.IsStructureType())
+            {
+                // temp var
+                normalType.ToPointerType().WriteTypePrefix(this);               
+            }
+            else
+            {
+                // temp var
+                type.WriteTypePrefix(this);
+            }
+
             var newVar = string.Format("{1}{0}", opCodePart.AddressStart, name);
             this.Output.WriteLine(" {0};", newVar);
 
