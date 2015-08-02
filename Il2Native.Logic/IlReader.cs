@@ -709,7 +709,7 @@ namespace Il2Native.Logic
                 yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
             }
 
-            if (type.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
+            if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
             {
                 yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
                 yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");

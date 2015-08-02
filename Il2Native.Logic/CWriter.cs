@@ -3174,7 +3174,7 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.StartPreprocessorIf(type, "D");
+            this.StartPreprocessorIf(type, type.UseAsClass ? "DC" : "D");
 
             this.Output.Write("struct ");
 

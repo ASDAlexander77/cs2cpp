@@ -1716,8 +1716,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void ReadThisTypeInfo(IMethod method)
         {
-            Debug.Assert(method.Name != ".init");
-
             var thisType = method.DeclaringType;
             if (thisType == null)
             {
