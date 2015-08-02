@@ -915,6 +915,30 @@ namespace Il2Native.Logic.Gencode
 
             code.Parameters.Add(typeResolver.System.System_Type.ToParameter("_type"));
 
+            foreach (var @interface in type.GetAllInterfaces())
+            {
+                code.Call(new SynthesizedGetTypeStaticMethod(@interface, typeResolver));
+                code.LoadArgument(1);
+
+                var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
+
+                code.LoadArgument(0);
+                code.LoadToken(@interface.ToVirtualTableImplementation(type.FindInterfaceOwner(@interface)));
+                code.Call(
+                    new SynthesizedMethod(
+                        "__new_interface",
+                        typeResolver.System.System_Void.ToPointerType(),
+                        new[]
+                        {
+                            typeResolver.System.System_Void.ToPointerType().ToParameter("_obj"),
+                            typeResolver.System.System_Void.ToPointerType().ToPointerType().ToParameter("_vtbl")
+                        }));
+
+                code.Add(Code.Ret);
+
+                code.Add(jump_not_equal);                
+            }
+
             code.LoadNull();
             code.Add(Code.Ret);
 

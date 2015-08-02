@@ -9,12 +9,13 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Linq;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedResolveInterfaceMethod : SynthesizedIlCodeBuilderStaticMethod
+    public class SynthesizedResolveInterfaceMethod : SynthesizedIlCodeBuilderThisMethod
     {
         public const string Name = ".dyniface";
 
@@ -26,10 +27,18 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedResolveInterfaceMethod(ITypeResolver typeResolver)
-            : base(null, Name, typeResolver.System.System_Object, typeResolver.System.System_Object.ToClass())
+        public SynthesizedResolveInterfaceMethod(IType type, ITypeResolver typeResolver)
+            : base(null, Name, type, typeResolver.System.System_Object)
         {
             this.typeResolver = typeResolver;
+            if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
+            {
+                IsVirtual = true;
+            }
+            else
+            {
+                IsOverride = true;
+            }
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()

@@ -774,6 +774,7 @@ namespace Il2Native.Logic
 
                     yield return new SynthesizedGetSizeMethod(type, typeResolver);
                     yield return new SynthesizedGetTypeMethod(type, typeResolver);
+                    yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
                 }
 
                 yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
@@ -817,7 +818,6 @@ namespace Il2Native.Logic
                 {
                     yield return new SynthesizedDynamicCastMethod(typeResolver);
                     yield return new SynthesizedCastMethod(typeResolver);
-                    yield return new SynthesizedResolveInterfaceMethod(typeResolver);
                 }
             }
 
