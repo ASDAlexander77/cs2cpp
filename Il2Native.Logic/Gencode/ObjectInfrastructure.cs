@@ -922,8 +922,14 @@ namespace Il2Native.Logic.Gencode
 
                 var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
 
+                // this
                 code.LoadArgument(0);
-                code.LoadToken(@interface.ToVirtualTableImplementation(type.FindInterfaceOwner(@interface)));
+
+                // interface vtable
+                var interfaceOwner = type.FindInterfaceOwner(@interface);
+                var requiredInterfaceTableFromCurrentClass = VirtualTableGen.HasVirtualOrExplicitMethod(interfaceOwner, @interface, typeResolver);
+                code.LoadToken(type.FindInterfaceEntry(@interface).ToVirtualTableImplementation((requiredInterfaceTableFromCurrentClass ? type : interfaceOwner)));
+
                 code.Call(
                     new SynthesizedMethod(
                         "__new_interface",

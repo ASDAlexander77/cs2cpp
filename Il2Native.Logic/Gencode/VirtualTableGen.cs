@@ -459,8 +459,8 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("const Void* ");
-            //VirtualTableDeclaration(virtualTable, interfaceType ?? type, cWriter);
-            //cWriter.Output.Write(" ");
+            //VirtualTableDeclaration(virtualTable, interfaceType ?? type, typeResolver);
+            //typeResolver.Output.Write(" ");
             if (interfaceType == null)
             {
                 writer.Write(type.GetVirtualTableName(cWriter, true));
@@ -511,7 +511,7 @@ namespace Il2Native.Logic.Gencode
                 var method = virtualMethod.Value;
 
                 writer.Write("(");
-                //cWriter.WriteMethodPointerType(writer, methodKey);
+                //typeResolver.WriteMethodPointerType(writer, methodKey);
                 writer.Write("Void*");
                 writer.Write(")");
                 writer.Write(" ");
@@ -533,12 +533,12 @@ namespace Il2Native.Logic.Gencode
             writer.Write("}");
         }
 
-        public static bool HasVirtualOrExplicitMethod(IType interfaceOwner, IType @interface, CWriter cWriter)
+        public static bool HasVirtualOrExplicitMethod(IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
         {
             Debug.Assert(!interfaceOwner.IsInterface);
             Debug.Assert(@interface.IsInterface);
 
-            return interfaceOwner.GetVirtualInterfaceTable(@interface, cWriter)
+            return interfaceOwner.GetVirtualInterfaceTable(@interface, typeResolver)
                 .Where(m => m.Kind == CWriter.PairKind.Method)
                 .OfType<CWriter.Pair<IMethod, IMethod>>()
                 .Any(m => m.Value.IsMethodVirtual() || m.Value.IsExplicitInterfaceImplementation);
