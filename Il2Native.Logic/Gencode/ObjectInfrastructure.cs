@@ -928,7 +928,8 @@ namespace Il2Native.Logic.Gencode
                 // interface vtable
                 var interfaceOwner = type.FindInterfaceOwner(@interface);
                 var requiredInterfaceTableFromCurrentClass = VirtualTableGen.HasVirtualOrExplicitMethod(interfaceOwner, @interface, typeResolver);
-                code.LoadToken(type.FindInterfaceEntry(@interface).ToVirtualTableImplementation((requiredInterfaceTableFromCurrentClass ? type : interfaceOwner)));
+                var requiredType = (requiredInterfaceTableFromCurrentClass ? type : interfaceOwner);
+                code.LoadToken(requiredType.FindInterfaceEntry(@interface).ToVirtualTableImplementation(requiredType));
 
                 code.Call(
                     new SynthesizedMethod(
