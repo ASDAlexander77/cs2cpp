@@ -595,7 +595,7 @@ namespace Il2Native.Logic.Gencode
 
             var effectiveType = type;
 
-            if (effectiveType.IsPointer)
+            if (effectiveType.IsPointer || effectiveType.IsByRef)
             {
                 effectiveType.GetElementType().WriteTypeWithoutModifiers(codeWriter, type.IsPointer, enumAsName);
                 return;
