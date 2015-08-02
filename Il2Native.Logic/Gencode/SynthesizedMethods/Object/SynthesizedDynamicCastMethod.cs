@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SynthesizedNewMethod.cs" company="">
+// <copyright file="SynthesizedDynamicCastMethod.cs" company="">
 //   
 // </copyright>
 // <summary>

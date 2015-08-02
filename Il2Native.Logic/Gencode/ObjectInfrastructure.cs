@@ -906,6 +906,21 @@ namespace Il2Native.Logic.Gencode
             return code;
         }
 
+        public static IlCodeBuilder GetResolveInterfaceMethod(
+            this ITypeResolver typeResolver,
+            IType type,
+            bool throwInvalidCast = false)
+        {
+            var code = new IlCodeBuilder();
+
+            code.Parameters.Add(typeResolver.System.System_Type.ToParameter("_type"));
+
+            code.LoadNull();
+            code.Add(Code.Ret);
+
+            return code;
+        }
+
         public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method, ITypeResolver typeResolver)
         {
             var codeBuilder = new IlCodeBuilder();

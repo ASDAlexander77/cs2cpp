@@ -817,6 +817,7 @@ namespace Il2Native.Logic
                 {
                     yield return new SynthesizedDynamicCastMethod(typeResolver);
                     yield return new SynthesizedCastMethod(typeResolver);
+                    yield return new SynthesizedResolveInterfaceMethod(typeResolver);
                 }
             }
 

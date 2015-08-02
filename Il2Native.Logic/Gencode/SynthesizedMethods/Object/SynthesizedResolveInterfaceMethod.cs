@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SynthesizedCastMethod.cs" company="">
+// <copyright file="SynthesizedResolveInterfaceMethod.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -14,9 +14,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedCastMethod : SynthesizedIlCodeBuilderStaticMethod
+    public class SynthesizedResolveInterfaceMethod : SynthesizedIlCodeBuilderStaticMethod
     {
-        public const string Name = ".cast";
+        public const string Name = ".dyniface";
 
         private readonly ITypeResolver typeResolver;
 
@@ -26,7 +26,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedCastMethod(ITypeResolver typeResolver)
+        public SynthesizedResolveInterfaceMethod(ITypeResolver typeResolver)
             : base(null, Name, typeResolver.System.System_Object, typeResolver.System.System_Object.ToClass())
         {
             this.typeResolver = typeResolver;
@@ -34,7 +34,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return typeResolver.GetDynamicCastMethod(Type, true);
+            return typeResolver.GetResolveInterfaceMethod(Type, true);
         }
     }
 }
