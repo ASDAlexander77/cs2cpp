@@ -4621,7 +4621,7 @@ namespace Il2Native.Logic
                         .Select(p => p.Value)
                         .Where(t => !type.GetInterfaces().Contains(t)))
             {
-                if (!VirtualTableGen.HasVirtualOrExplicitMethod(type, @interface, this))
+                if (!VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, type.FindInterfaceOwner(@interface), @interface, this))
                 {
                     continue;
                 }

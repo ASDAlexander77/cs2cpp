@@ -497,8 +497,7 @@ namespace Il2Native.Logic.Gencode
                     var @interfacePair = virtualMethodPair as CWriter.Pair<IType, IType>;
                     var @interface = @interfacePair.Value;
                     var interfaceOwner = type.FindInterfaceOwner(@interface);
-
-                    var requiredInterfaceTableFromCurrentClass = HasVirtualOrExplicitMethod(interfaceOwner, @interface, cWriter);
+                    var requiredInterfaceTableFromCurrentClass = HasVirtualMethodOrExplicitMethod(type, interfaceOwner, @interface, cWriter);
 
                     writer.Write("(Void*) &");
                     writer.Write((requiredInterfaceTableFromCurrentClass ? type : interfaceOwner).GetVirtualInterfaceTableName(@interface, cWriter, true));
@@ -533,7 +532,22 @@ namespace Il2Native.Logic.Gencode
             writer.Write("}");
         }
 
-        public static bool HasVirtualOrExplicitMethod(IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
+        public static bool HasVirtualMethodOrExplicitMethod(IType type, IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
+        {
+            Debug.Assert(!type.IsInterface);
+            Debug.Assert(!interfaceOwner.IsInterface);
+            Debug.Assert(@interface.IsInterface);
+
+            return HasVirtualMethodInInterface(interfaceOwner, @interface, typeResolver) || HasExplicitMethod(type, typeResolver);
+        }
+
+        private static bool HasExplicitMethod(IType type, ITypeResolver typeResolver)
+        {
+            Debug.Assert(!type.IsInterface);
+            return IlReader.Methods(type, typeResolver).Any(m => m.IsExplicitInterfaceImplementation);
+        }
+
+        private static bool HasVirtualMethodInInterface(IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
         {
             Debug.Assert(!interfaceOwner.IsInterface);
             Debug.Assert(@interface.IsInterface);

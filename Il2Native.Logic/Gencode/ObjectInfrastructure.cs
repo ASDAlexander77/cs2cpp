@@ -927,7 +927,7 @@ namespace Il2Native.Logic.Gencode
 
                 // interface vtable
                 var interfaceOwner = type.FindInterfaceOwner(@interface);
-                var requiredInterfaceTableFromCurrentClass = VirtualTableGen.HasVirtualOrExplicitMethod(interfaceOwner, @interface, typeResolver);
+                var requiredInterfaceTableFromCurrentClass = VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, interfaceOwner, @interface, typeResolver);
                 var requiredType = (requiredInterfaceTableFromCurrentClass ? type : interfaceOwner);
                 code.LoadToken(requiredType.FindInterfaceEntry(@interface).ToVirtualTableImplementation(requiredType));
 
@@ -961,7 +961,7 @@ namespace Il2Native.Logic.Gencode
             {
                 codeBuilder.LoadArgument(argNum);
 
-                // in case of this
+                // in case of 'this'
                 if (argNum == 0 && !method.IsStatic)
                 {
                     codeBuilder.Castclass(typeResolver.System.System_Byte.ToPointerType());
