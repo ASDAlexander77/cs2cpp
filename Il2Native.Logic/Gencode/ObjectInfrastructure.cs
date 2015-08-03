@@ -922,25 +922,9 @@ namespace Il2Native.Logic.Gencode
 
                 var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
 
-                // this
                 code.LoadArgument(0);
-
-                // interface vtable
-                var interfaceOwner = type.FindInterfaceOwner(@interface);
-                var requiredInterfaceTableFromCurrentClass = VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, interfaceOwner, @interface, typeResolver);
-                var requiredType = (requiredInterfaceTableFromCurrentClass ? type : interfaceOwner);
-                code.LoadToken(requiredType.FindInterfaceEntry(@interface).ToVirtualTableImplementation(requiredType));
-
-                code.Call(
-                    new SynthesizedMethod(
-                        "__new_interface",
-                        typeResolver.System.System_Void.ToPointerType(),
-                        new[]
-                        {
-                            typeResolver.System.System_Void.ToPointerType().ToParameter("_obj"),
-                            typeResolver.System.System_Void.ToPointerType().ToPointerType().ToParameter("_vtbl")
-                        }));
-
+                code.Castclass(@interface);
+                code.Castclass(typeResolver.System.System_Void.ToPointerType());
                 code.Add(Code.Ret);
 
                 code.Add(jump_not_equal);                
@@ -950,6 +934,27 @@ namespace Il2Native.Logic.Gencode
             code.Add(Code.Ret);
 
             return code;
+        }
+
+        public static IEnumerable<IType> HaveStaticVirtualTablesForInterfaces(this IType type, ITypeResolver typeResolver)
+        {
+            foreach (var @interface in type.GetInterfaces())
+            {
+                yield return @interface;
+            }
+
+            foreach (
+                var @interface in
+                    type.GetVirtualTable(typeResolver)
+                        .Where(p => p.Kind != CWriter.PairKind.Method)
+                        .OfType<CWriter.Pair<IType, IType>>()
+                        .Select(p => p.Value)
+                        .Where(t => !type.GetInterfaces().Contains(t))
+                        .Where(@interface => VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, type.FindInterfaceOwner(@interface), @interface, typeResolver))
+                )
+            {
+                yield return @interface;
+            }
         }
 
         public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method, ITypeResolver typeResolver)
