@@ -162,12 +162,17 @@ namespace Il2Native.Logic.Gencode
                         cWriter.WriteCCastOnly(castThisTo);
                     }
 
+                    if (first && interfaceThisAccess)
+                    {
+                        writer.Write("__this_from_interface(");
+                    }
+
                     // operand write
                     cWriter.WriteResultOrActualWrite(usedItem);
 
                     if (first && interfaceThisAccess)
                     {
-                        writer.Write("->__this");
+                        writer.Write(")");
                     }
 
                     first = false;

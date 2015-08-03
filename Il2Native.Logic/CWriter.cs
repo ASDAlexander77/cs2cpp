@@ -3087,11 +3087,10 @@ namespace Il2Native.Logic
 
         public void WriteInterfaceToObjectCast(CIndentedTextWriter writer, OpCodePart opCode, IType toType)
         {
-            writer.Write("(");
             this.WriteCCastOnly(toType);
-            writer.Write("(");
+            writer.Write("__this_from_interface(");
             this.WriteResultOrActualWrite(opCode);
-            writer.Write(")->__this)");
+            writer.Write(")");
         }
 
         /// <summary>

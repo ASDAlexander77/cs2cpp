@@ -87,6 +87,10 @@ struct __interface_data
 };
 
 Void* __new_interface(Void* _object, Void** _vtbl);
+inline Void* __this_from_interface(Void* _object) 
+{
+	return (Void*) (_object ? (((__interface_data*)_object)->__this) : 0);
+}
 
 class System_Object;
 extern "C" Int32 pthread_key_create(Int32* key, Void* destructor);
