@@ -202,56 +202,6 @@ namespace Il2Native.Logic.Gencode
             newAlloc.Castclass(declaringClassType);
         }
 
-        public static void GetAllocateMemoryCodeForStructInStack(
-            this ITypeResolver typeResolver, IlCodeBuilder newAlloc, IType declaringClassType, bool doNotTestNullValue)
-        {
-            var type = declaringClassType.ToNormal();
-
-            var localSize = newAlloc.Locals.Count;
-            newAlloc.Locals.Add(typeResolver.System.System_Int32);
-
-            var localPointer = newAlloc.Locals.Count;
-            newAlloc.Locals.Add(type.ToPointerType());
-
-            newAlloc.SizeOf(type);
-            newAlloc.SaveLocal(localSize);
-            newAlloc.LoadLocal(localSize);
-
-            newAlloc.Call(
-                new SynthesizedMethodStringAdapter(
-                    "alloca",
-                    null,
-                    typeResolver.System.System_Void.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
-
-            newAlloc.SaveLocal(localPointer);
-
-            if (!doNotTestNullValue)
-            {
-                newAlloc.LoadLocal(localPointer);
-                var jump = newAlloc.Branch(Code.Brtrue, Code.Brtrue_S);
-
-                var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
-                var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
-
-                Debug.Assert(defaultConstructor != null, "default constructor is null");
-
-                newAlloc.New(defaultConstructor);
-                newAlloc.Throw();
-
-                newAlloc.Add(jump);
-            }
-
-            // if this is atomic, you need to init memory
-            newAlloc.LoadLocal(localPointer);
-            newAlloc.LoadConstant(0);
-            newAlloc.LoadLocal(localSize);
-            newAlloc.Add(Code.Initblk);
-
-            newAlloc.LoadLocal(localPointer);
-            newAlloc.Castclass(type);
-        }
-
         private static bool CanBeAllocatedAtomically(this ITypeResolver typeResolver, IType declaringClassType)
         {
             if (declaringClassType.IsInterface)
@@ -317,7 +267,7 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.Add(jump);
             }
 
-            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue, boxing: true);
+            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
 
             ilCodeBuilder.Parameters.Add(type.ToParameter("_value"));
 
@@ -713,7 +663,16 @@ namespace Il2Native.Logic.Gencode
             var @class = declaringType.ToClass();
             if (!declaringType.IsString)
             {
-                @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+                if (!declaringType.IsStructureType())
+                {
+                    @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+                }
+                else
+                {
+                    // if this is atomic, you need to init memory
+                    cWriter.WriteMemSet(objectReference, 0, declaringType);
+                    cWriter.Output.Write(";");
+                }
 
                 // for '__this'
                 var opCodeNope = OpCodePart.CreateNop;
@@ -789,22 +748,14 @@ namespace Il2Native.Logic.Gencode
         /// <param name="enableStringFastAllocation"></param>
         /// <param name="opCodePart">
         /// </param>
-        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false, bool boxing = false)
+        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false)
         {
             var classType = type.ToClass();
-            var normalType = type.ToNormal();
-            if (normalType.IsStructureType() && !boxing)
+            typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, classType, doNotTestNullValue, enableStringFastAllocation);
+            if (!doNotCallInit)
             {
-                typeResolver.GetAllocateMemoryCodeForStructInStack(ilCodeBuilder, normalType, doNotTestNullValue);
-            }
-            else
-            {
-                typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, classType, doNotTestNullValue, enableStringFastAllocation);
-                if (!doNotCallInit)
-                {
-                    ilCodeBuilder.Add(Code.Dup);
-                    ilCodeBuilder.Call(new SynthesizedInitMethod(classType, typeResolver));
-                }
+                ilCodeBuilder.Add(Code.Dup);
+                ilCodeBuilder.Call(new SynthesizedInitMethod(classType, typeResolver));
             }
 
             if (!enableStringFastAllocation)

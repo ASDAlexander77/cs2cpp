@@ -597,5 +597,19 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteResultOrActualWrite(size);
             writer.Write("))");
         }
+
+        public static void WriteMemSet(
+            this CWriter cWriter,
+            FullyDefinedReference reference,
+            int init,
+            IType size)
+        {
+            var writer = cWriter.Output;
+            writer.Write("Memset((Byte*) ({0}", reference);
+            writer.Write("), {0}", init);
+            writer.Write(", sizeof(");
+            size.WriteTypePrefix(cWriter);
+            writer.Write("))");
+        }
     }
 }

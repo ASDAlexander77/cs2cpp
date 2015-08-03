@@ -4311,10 +4311,11 @@ namespace Il2Native.Logic
         public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")
         {
             var normalType = type.ToNormal();
-            if (normalType.IsStructureType())
+            var isStructureType = normalType.IsStructureType();
+            if (isStructureType)
             {
                 // temp var
-                normalType.ToPointerType().WriteTypePrefix(this);               
+                normalType.WriteTypePrefix(this);               
             }
             else
             {
@@ -4325,9 +4326,12 @@ namespace Il2Native.Logic
             var newVar = string.Format("{1}{0}", opCodePart.AddressStart, name);
             this.Output.WriteLine(" {0};", newVar);
 
-            this.Output.Write("{0} = ", newVar);
+            if (!isStructureType)
+            {
+                this.Output.Write("{0} = ", newVar);
+            }
 
-            var objectReference = new FullyDefinedReference(newVar, type);
+            var objectReference = new FullyDefinedReference(isStructureType ? string.Concat("&", newVar) : newVar, type);
             opCodePart.Result = objectReference;
             return objectReference;
         }
