@@ -867,6 +867,11 @@ namespace Il2Native.Logic.Gencode
 
             code.Add(jumpNull);
 
+            // test if it is an interface
+            code.LoadArgument(1);
+            code.Call(typeResolver.System.System_Type.GetMethodsByName("get_IsInterface", typeResolver).First(p => !p.GetParameters().Any()));
+            var jumpInterace = code.Branch(Code.Brtrue, Code.Brtrue_S);
+
             code.LoadArgument(0);
             code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));
             code.SaveLocal(0);
@@ -902,6 +907,24 @@ namespace Il2Native.Logic.Gencode
             {
                 code.Throw(IlReader.FindConstructor(typeResolver.ResolveType("System.InvalidCastException"), typeResolver));
             }
+
+            // end of object branch
+            code.Add(jumpInterace);
+
+            code.LoadArgument(0);
+            code.LoadArgument(1);
+            code.Call(typeResolver.System.System_Type.GetMethodsByName(SynthesizedResolveInterfaceMethod.Name, typeResolver).First());
+
+            if (throwInvalidCast)
+            {
+                // if result is null, throw exception
+                code.Add(Code.Dup);
+                var jumpOverThrow = code.Branch(Code.Brtrue, Code.Brtrue_S);
+                code.Throw(IlReader.FindConstructor(typeResolver.ResolveType("System.InvalidCastException"), typeResolver));
+                code.Add(jumpOverThrow);
+            }
+
+            code.Add(Code.Ret);
 
             return code;
         }

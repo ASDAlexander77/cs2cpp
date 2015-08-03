@@ -195,7 +195,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             sb.AppendLine(string.Empty);
-            sb.Append("(::Byte*) ");
+            sb.Append("(Byte*) ");
             sb.Append(bytesArrayType.GetVirtualTableNameReference(cWriter));
             sb.AppendLine(string.Empty);
 

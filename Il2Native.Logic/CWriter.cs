@@ -1551,7 +1551,7 @@ namespace Il2Native.Logic
 
                     var mkRefVar = this.WriteVariableDeclare(opCode, System.System_TypedReference, "_mkref");
                     opCode.Result = new FullyDefinedReference(mkRefVar, System.System_TypedReference);
-                    this.Output.Write("{0}.Value.m_value = (::Void*)", mkRefVar);
+                    this.Output.Write("{0}.Value.m_value = (Void*)", mkRefVar);
                     this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
 
                     break;
@@ -1657,10 +1657,10 @@ namespace Il2Native.Logic
             {
                 if (estimatedResultOperand0.IsReference && estimatedResultOperand1.IsReference)
                 {
-                    writer.Write("((::Byte*)");
+                    writer.Write("((Byte*)");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
                     writer.Write(op);
-                    writer.Write("(::Byte*)");
+                    writer.Write("(Byte*)");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 1);
                     writer.Write(")");
                     return;
