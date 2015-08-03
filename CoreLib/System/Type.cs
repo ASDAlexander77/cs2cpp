@@ -981,10 +981,9 @@ namespace System
         {
             get
             {
-                RuntimeType rt = this as RuntimeType;
+                ////RuntimeType rt = this as RuntimeType;
                 ////if (rt != null)
                 ////    return RuntimeTypeHandle.IsInterface(rt);
-                throw new NotImplementedException();
 
                 return ((GetAttributeFlagsImpl() & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Interface);
             }

@@ -12,29 +12,14 @@
 
         private Type baseType;
 
+        private TypeAttributes attributeFlags;
+
         public override string Name
         {
             get
             {
                 return this.name;
             }
-        }
-
-        // prototype for dynamic_cast
-        public static object As(object obj, Type c)
-        {
-            var p = obj.GetType();
-            while (p != null)
-            {
-                if (p == c)
-                {
-                    return obj;
-                }
-
-                p = p.BaseType;
-            }
-
-            return null;
         }
 
         public override object[] GetCustomAttributes(bool inherit)
@@ -192,7 +177,7 @@
 
         protected override TypeAttributes GetAttributeFlagsImpl()
         {
-            throw new NotImplementedException();
+            return attributeFlags;
         }
 
         protected override bool IsArrayImpl()

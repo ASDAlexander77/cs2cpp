@@ -659,12 +659,15 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Locals.Add(nativeRuntimeType);
             codeBuilder.LoadField(typeStorageType);
             codeBuilder.SaveLocal(0);
+            // name
             codeBuilder.LoadLocal(0);
             codeBuilder.LoadString(declaringType.Name);
             codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("name", typeResolver));
+            // fullname
             codeBuilder.LoadLocal(0);
             codeBuilder.LoadString(declaringType.FullName);
             codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("fullname", typeResolver));
+            // base
             if (declaringType.BaseType != null)
             {
                 codeBuilder.LoadLocal(0);
@@ -674,6 +677,10 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("baseType", typeResolver));
             }
 
+            // attributeFlags
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadConstant(declaringType.IsInterface ? (int)TypeAttributes.Interface : 0);
+            codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("attributeFlags", typeResolver));
             codeBuilder.Add(jumpIfNotNull);
 
             codeBuilder.LoadField(typeStorageType);
@@ -913,7 +920,7 @@ namespace Il2Native.Logic.Gencode
 
             code.LoadArgument(0);
             code.LoadArgument(1);
-            code.Call(typeResolver.System.System_Type.GetMethodsByName(SynthesizedResolveInterfaceMethod.Name, typeResolver).First());
+            code.Call(typeResolver.System.System_Object.GetMethodsByName(SynthesizedResolveInterfaceMethod.Name, typeResolver).First());
 
             if (throwInvalidCast)
             {
