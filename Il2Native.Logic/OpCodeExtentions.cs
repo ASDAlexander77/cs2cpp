@@ -1665,5 +1665,21 @@ namespace Il2Native.Logic
             startOrEnd = false;
             return false;
         }
+
+        public static IConstructor FindConstructor(this IType type, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
+        }
+
+        public static IConstructor FindConstructor(this IType type, IType firstParameterType, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Constructors(type, typeResolver)
+                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+        }
+
+        public static IMethod FindFinalizer(this IType type, ITypeResolver typeResolver)
+        {
+            return type.GetMethods(IlReader.DefaultFlags).FirstOrDefault(m => m.IsDestructor);
+        }
     }
 }

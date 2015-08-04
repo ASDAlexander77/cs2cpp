@@ -130,7 +130,7 @@ namespace Il2Native.Logic.Gencode
                 var jump = newAlloc.Branch(Code.Brtrue, Code.Brtrue_S);
 
                 var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
-                var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
+                var defaultConstructor = throwType.FindConstructor(typeResolver);
 
                 Debug.Assert(defaultConstructor != null, "default constructor is null");
 
@@ -151,7 +151,7 @@ namespace Il2Native.Logic.Gencode
 
             if (typeResolver.GcSupport)
             {
-                var finalizer = IlReader.FindFinalizer(declaringClassType, typeResolver);
+                var finalizer = declaringClassType.FindFinalizer(typeResolver);
                 if (finalizer != null)
                 {
                     // obj
@@ -349,20 +349,17 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                ilCodeBuilder.LoadArgument(0);
-
                 // copy structure
                 var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
                 if (firstField != null)
                 {
-                    ilCodeBuilder.LoadFieldAddress(firstField);
                     ilCodeBuilder.LoadArgument(0);
-                    if (isNullable)
-                    {
-                        ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
-                    }
-
+                    ilCodeBuilder.LoadFieldAddress(firstField);
                     ilCodeBuilder.LoadObject(normal);
+                }
+                else
+                {
+                    ilCodeBuilder.New(declaringClassType.FindConstructor(typeResolver));
                 }
             }
 
@@ -687,7 +684,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     // if this is atomic, you need to init memory
                     cWriter.WriteMemSet(objectReference, 0, declaringType);
-                    cWriter.Output.Write(";");
+                    cWriter.Output.WriteLine(";");
                 }
 
                 // for '__this'
@@ -815,7 +812,7 @@ namespace Il2Native.Logic.Gencode
 
             // TODO: can be removed when InsertMissingTypes is finished
             ilCodeBuilder.Castclass(type);
-            ilCodeBuilder.Call(IlReader.FindFinalizer(type, typeResolver));
+            ilCodeBuilder.Call(type.FindFinalizer(typeResolver));
 
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
@@ -879,7 +876,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                code.Throw(IlReader.FindConstructor(typeResolver.ResolveType("System.InvalidCastException"), typeResolver));
+                code.Throw(typeResolver.ResolveType("System.InvalidCastException").FindConstructor(typeResolver));
             }
 
             // end of object branch
@@ -894,7 +891,7 @@ namespace Il2Native.Logic.Gencode
                 // if result is null, throw exception
                 code.Add(Code.Dup);
                 var jumpOverThrow = code.Branch(Code.Brtrue, Code.Brtrue_S);
-                code.Throw(IlReader.FindConstructor(typeResolver.ResolveType("System.InvalidCastException"), typeResolver));
+                code.Throw(typeResolver.ResolveType("System.InvalidCastException").FindConstructor(typeResolver));
                 code.Add(jumpOverThrow);
             }
 

@@ -615,22 +615,6 @@ namespace Il2Native.Logic
             }
         }
 
-        public static IConstructor FindConstructor(IType type, ITypeResolver typeResolver)
-        {
-            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
-        }
-
-        public static IConstructor FindConstructor(IType type, IType firstParameterType, ITypeResolver typeResolver)
-        {
-            return Logic.IlReader.Constructors(type, typeResolver)
-                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
-        }
-
-        public static IMethod FindFinalizer(IType type, ITypeResolver typeResolver)
-        {
-            return type.GetMethods(IlReader.DefaultFlags).FirstOrDefault(m => m.IsDestructor);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -767,7 +751,7 @@ namespace Il2Native.Logic
                     yield return new SynthesizedNewMethod(type, typeResolver);
                     yield return new SynthesizedInitMethod(type, typeResolver);
 
-                    if (IlReader.FindFinalizer(type, typeResolver) != null)
+                    if (type.FindFinalizer(typeResolver) != null)
                     {
                         yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
                     }
@@ -1194,8 +1178,8 @@ namespace Il2Native.Logic
 
                         this.AddCalledMethod(method);
 
-                        var intPtrConstructor = Logic.IlReader.FindConstructor(
-                            this.TypeResolver.System.System_IntPtr, this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
+                        var intPtrConstructor = this.TypeResolver.System.System_IntPtr.FindConstructor(
+                            this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
                         this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.TypeResolver));
                         this.AddCalledMethod(intPtrConstructor);
 
