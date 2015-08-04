@@ -314,16 +314,14 @@ namespace Il2Native.Logic.Gencode
         public static IlCodeBuilder GetUnboxMethod(this ITypeResolver typeResolver, IType type)
         {
             var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
-            var declaringClassType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
-            var normal = declaringClassType.ToNormal();
-            var isStruct = normal.IsStructureType();
+            var isStruct = type.IsStructureType();
 
             var ilCodeBuilder = new IlCodeBuilder();
 
             ilCodeBuilder.LoadArgument(0);
             var jumpIfNotNull = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
-            if (typeResolver.Unsafe)
+            if (typeResolver.Unsafe || isNullable)
             {
                 ilCodeBuilder.Locals.Add(type);
                 ilCodeBuilder.LoadLocalAddress(0);
@@ -331,12 +329,17 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.Return();
             }
+            else
+            {
+                ilCodeBuilder.New(typeResolver.System.System_NullReferenceException.FindConstructor(typeResolver));
+                ilCodeBuilder.Throw();
+            }
 
             ilCodeBuilder.Add(jumpIfNotNull);
 
-            if (!isStruct)
+            if (!isStruct && !isNullable)
             {
-                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                var firstField = type.GetFieldByFieldNumber(0, typeResolver);
                 if (firstField != null)
                 {
                     ilCodeBuilder.LoadArgument(0);
@@ -350,16 +353,34 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // copy structure
-                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                var firstField = type.GetFieldByFieldNumber(0, typeResolver);
                 if (firstField != null)
                 {
-                    ilCodeBuilder.LoadArgument(0);
-                    ilCodeBuilder.LoadFieldAddress(firstField);
-                    ilCodeBuilder.LoadObject(normal);
+                    if (!isNullable)
+                    {
+                        ilCodeBuilder.LoadArgument(0);
+                        ilCodeBuilder.LoadFieldAddress(firstField);
+                        ilCodeBuilder.LoadObject(type);
+                    }
+                    else
+                    {
+                        ilCodeBuilder.Locals.Add(type);
+                        ilCodeBuilder.LoadLocalAddress(ilCodeBuilder.Locals.Count() - 1);
+                        var nullableValue = type.GetFieldByFieldNumber(1, typeResolver);
+                        ilCodeBuilder.LoadFieldAddress(nullableValue);
+
+                        ilCodeBuilder.LoadArgument(0);
+                        
+                        ilCodeBuilder.SaveObject(type);
+                        ilCodeBuilder.LoadLocal(ilCodeBuilder.Locals.Count() - 1);
+                    }
                 }
                 else
                 {
-                    ilCodeBuilder.New(declaringClassType.FindConstructor(typeResolver));
+                    ilCodeBuilder.Locals.Add(type);
+                    ilCodeBuilder.LoadLocalAddress(0);
+                    ilCodeBuilder.InitializeObject(type);
+                    ilCodeBuilder.LoadLocal(ilCodeBuilder.Locals.Count() - 1);
                 }
             }
 
