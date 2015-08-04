@@ -313,7 +313,10 @@ namespace Il2Native.Logic.Gencode
 
         public static IlCodeBuilder GetUnboxMethod(this ITypeResolver typeResolver, IType type)
         {
-            var declaringClassType = type.ToClass();
+            var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
+            var declaringClassType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
+            var normal = declaringClassType.ToNormal();
+            var isStruct = normal.IsStructureType();
 
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -331,7 +334,7 @@ namespace Il2Native.Logic.Gencode
 
             ilCodeBuilder.Add(jumpIfNotNull);
 
-            if (!type.IsStructureType())
+            if (!isStruct)
             {
                 var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
                 if (firstField != null)
@@ -347,7 +350,20 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 ilCodeBuilder.LoadArgument(0);
-                ilCodeBuilder.LoadObject(type);
+
+                // copy structure
+                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                if (firstField != null)
+                {
+                    ilCodeBuilder.LoadFieldAddress(firstField);
+                    ilCodeBuilder.LoadArgument(0);
+                    if (isNullable)
+                    {
+                        ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                    }
+
+                    ilCodeBuilder.LoadObject(normal);
+                }
             }
 
             ilCodeBuilder.Return();
