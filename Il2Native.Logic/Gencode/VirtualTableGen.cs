@@ -578,12 +578,10 @@ namespace Il2Native.Logic.Gencode
             Debug.Assert(!type.IsInterface, "Interface is not expected");
             Debug.Assert(@interface.IsInterface, "Interface is expected");
 
-            var baseInterfaces = @interface.GetInterfaces();
-            var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
-            if (firstChildInterface != null)
+            foreach (var baseInterface in @interface.GetInterfaces())
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(type, firstChildInterface, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
+                virtualTable.AddMethodsToVirtualInterfaceTable(type, baseInterface, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
             }
 
             // get all virtual methods in current type and replace or append
