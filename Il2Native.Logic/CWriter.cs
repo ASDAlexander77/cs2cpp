@@ -2424,6 +2424,10 @@ namespace Il2Native.Logic
             var operandResultCalc = this.EstimatedResultOf(operand);
             var operandType = operandResultCalc.Type;
             var effectiveType = !doNotEstimateResult ? operandType : classType;
+
+            writer.Write("(");
+
+            // TODO: review next if/else code, seems it is useless or looks like a hack
             if (effectiveType.IsValueType)
             {
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
@@ -2436,13 +2440,15 @@ namespace Il2Native.Logic
                     effectiveType = effectiveType.ToClass();
                 }
             }
-            else if (effectiveType.IsPointer)
+            else if (effectiveType.IsVoidPointer())
             {
                 effectiveType = classType;
-                this.WriteCCastOnly(effectiveType.ToPointerType());
+                this.WriteCCastOnly(classType);
             }
 
             this.WriteResultOrActualWrite(operand);
+
+            writer.Write(")");
 
             if (interfaceType != null)
             {

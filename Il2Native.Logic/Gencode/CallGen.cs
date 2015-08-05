@@ -97,6 +97,12 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            if (estimatedResultOf.Type.IsVoidPointer())
+            {
+                cWriter.WriteCallInterfaceForPointer(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
+                return;
+            }
+
             var writer = cWriter.Output;
 
             writer.Write("(");
@@ -121,9 +127,31 @@ namespace Il2Native.Logic.Gencode
             // split in 2 (interface call when 'this' is object and when 'this' is interface
             var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
-            Debug.Assert(estimatedResultOf.Type.IsInterface, "Interface needed");
+            var isVoidPointer = estimatedResultOf.Type.IsVoidPointer();
+            Debug.Assert(estimatedResultOf.Type.IsInterface || isVoidPointer, "Interface needed");
 
-            cWriter.WriteInterfaceAccess(thisOperand, estimatedResultOf.Type, methodInfo.DeclaringType, allowLastAccess: true);
+            cWriter.WriteInterfaceAccess(thisOperand, !isVoidPointer ? estimatedResultOf.Type : methodInfo.DeclaringType, methodInfo.DeclaringType, allowLastAccess: true);
+            cWriter.WriteFunctionNameExpression(methodInfo, true);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
+        }
+
+        private static void WriteCallInterfaceForPointer(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)
+        {
+            Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
+
+            // split in 2 (interface call when 'this' is object and when 'this' is interface
+            var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
+            var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
+            var isVoidPointer = estimatedResultOf.Type.IsVoidPointer();
+            Debug.Assert(isVoidPointer, "Pointer is needed");
+
+            cWriter.WriteInterfaceAccess(thisOperand, methodInfo.DeclaringType, methodInfo.DeclaringType, allowLastAccess: true);
             cWriter.WriteFunctionNameExpression(methodInfo, true);
 
             if (excludeArguments)
