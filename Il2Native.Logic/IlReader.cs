@@ -758,9 +758,10 @@ namespace Il2Native.Logic
 
                     yield return new SynthesizedGetSizeMethod(type, typeResolver);
                     yield return new SynthesizedGetTypeMethod(type, typeResolver);
-                    yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
                 }
 
+                // we return it to avoid using empty interfaces (because in C++ struct{} has size 1 not 0)
+                yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
                 yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
 
                 // append internal methods
