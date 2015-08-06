@@ -978,6 +978,16 @@ namespace PEAssemblyReader
         /// </returns>
         public bool IsAssignableFrom(IType type)
         {
+            if (type == null)
+            {
+                return false;
+            }
+
+            if (this.TypeEquals(type))
+            {
+                return true;
+            }
+
             if (type.IsDerivedFrom(this))
             {
                 return true;

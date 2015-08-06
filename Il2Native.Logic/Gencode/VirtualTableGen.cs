@@ -402,18 +402,18 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasExplicitInterfaceMethodOrPublic(this IType thisType, IMethod methodInfo, out bool isExplicit, out IMethod publicMethodInfo)
+        public static bool HasImplementedMethod(this IType thisType, IMethod methodInfo)
         {
-            isExplicit = false;
-            publicMethodInfo = null;
-            if (thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride))
+            if (methodInfo.DeclaringType.IsInterface)
             {
-                isExplicit = true;
-                return true;
+                if (thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride))
+                {
+                    return true;
+                }
             }
 
-            publicMethodInfo = thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(m => m.IsPublic && methodInfo.IsMatchingOverride(m));
-            return publicMethodInfo != null;
+            var existingMethodInfo = thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(m => methodInfo.IsMatchingOverride(m) && thisType.IsAssignableFrom(m.DeclaringType));
+            return existingMethodInfo != null;
         }
 
         /// <summary>
