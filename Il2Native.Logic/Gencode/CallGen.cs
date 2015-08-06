@@ -97,6 +97,12 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            if (estimatedResultOf.Type.ToNormal().IsValueType())
+            {
+                cWriter.WriteCallInterfaceForValueType(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
+                return;
+            }
+
             if (estimatedResultOf.Type.IsVoidPointer())
             {
                 cWriter.WriteCallInterfaceForPointer(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
@@ -131,6 +137,42 @@ namespace Il2Native.Logic.Gencode
             Debug.Assert(estimatedResultOf.Type.IsInterface || isVoidPointer, "Interface needed");
 
             cWriter.WriteInterfaceAccess(thisOperand, !isVoidPointer ? estimatedResultOf.Type : methodInfo.DeclaringType, methodInfo.DeclaringType, allowLastAccess: true);
+            cWriter.WriteFunctionNameExpression(methodInfo, true);
+
+            if (excludeArguments)
+            {
+                return;
+            }
+
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
+        }
+
+        private static void WriteCallInterfaceForValueType(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)
+        {
+            Debug.Assert(methodInfo.DeclaringType.IsInterface, "Method should belong to an interface");
+
+            // split in 2 (interface call when 'this' is object and when 'this' is interface
+            var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
+            var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
+            var bareType = estimatedResultOf.Type.ToNormal();
+            Debug.Assert(bareType.IsValueType(), "Value type is needed");
+
+            var writer = cWriter.Output;
+
+            // get vtable for an interface
+            if (bareType.FindInterfaceEntry(bareType).TypeNotEquals(methodInfo.DeclaringType))
+            {
+                writer.Write("&");
+            }
+
+            writer.Write("(");
+            cWriter.WriteCCastOnly(bareType.ToVirtualTable());
+            cWriter.WriteResultOrActualWrite(thisOperand);
+            cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+            writer.Write(")->");
+            cWriter.WriteInterfacePath(bareType, methodInfo.DeclaringType, false);
+
+            // function name
             cWriter.WriteFunctionNameExpression(methodInfo, true);
 
             if (excludeArguments)
