@@ -1495,26 +1495,36 @@ namespace Il2Native.Logic
                     {
                         // check if type has method in interface
                         var codeMethodInfoPart = opCode.Next as OpCodeMethodInfoPart;
-                        if (codeMethodInfoPart == null || !operandType.HasImplementedMethod(codeMethodInfoPart.Operand))
+                        if (codeMethodInfoPart == null ||
+                            !operandType.HasCorrespondingMethodForInterface(codeMethodInfoPart.Operand))
                         {
                             this.WriteVariableDeclare(opCode, @class, "_constr");
                             var constrVar = this.WriteVariable(opCode, "_constr");
 
                             opCodeNone.OpCodeOperands = new[]
-                                                            {
-                                                                new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
-                                                                    {
-                                                                        OpCodeOperands =
-                                                                            new[]
-                                                                                {
-                                                                                    opCode.OpCodeOperands[0]
-                                                                                }
-                                                                    }
-                                                            };
+                            {
+                                new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
+                                {
+                                    OpCodeOperands =
+                                        new[]
+                                        {
+                                            opCode.OpCodeOperands[0]
+                                        }
+                                }
+                            };
 
                             operandType.WriteCallBoxObjectMethod(this, opCodeNone);
 
                             opCode.Result = new FullyDefinedReference(constrVar, @class);
+                        }
+                        else
+                        {
+                            this.WriteVariableDeclare(opCode, operandType.ToPointerType(), "_constr");
+                            var constrVar = this.WriteVariable(opCode, "_constr");
+
+                            this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+
+                            opCode.Result = new FullyDefinedReference(constrVar, operandType.ToPointerType());
                         }
                     }
                     else

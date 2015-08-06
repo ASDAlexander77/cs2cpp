@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (estimatedResultOf.Type.ToNormal().IsValueType())
+            if (estimatedResultOf.Type.IsValueType())
             {
                 cWriter.WriteCallInterfaceForValueType(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
                 return;
@@ -153,29 +153,20 @@ namespace Il2Native.Logic.Gencode
 
             // split in 2 (interface call when 'this' is object and when 'this' is interface
             var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
+
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
             var bareType = estimatedResultOf.Type.ToNormal();
             Debug.Assert(bareType.IsValueType(), "Value type is needed");
 
-            var writer = cWriter.Output;
-
-            // get vtable for an interface
-            writer.Write("(");
-            cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToVirtualTable());
-            writer.Write("&");
-            writer.Write(bareType.GetVirtualInterfaceTableName(methodInfo.DeclaringType, cWriter, true));
-            writer.Write(")->");
-            cWriter.WriteInterfacePath(bareType, methodInfo.DeclaringType, false);
-
+            var actualMethod = bareType.GetCorrespondingMethodForInterface(methodInfo);
             // function name
-            cWriter.WriteFunctionNameExpression(methodInfo, true);
-
+            cWriter.WriteFunctionNameExpression(actualMethod);
             if (excludeArguments)
             {
                 return;
             }
 
-            cWriter.WriteFunctionCallArguments(opCodeMethodInfo, methodInfo.DeclaringType, interfaceThisAccess: true);
+            cWriter.WriteFunctionCallArguments(opCodeMethodInfo);
         }
 
         private static void WriteCallInterfaceForPointer(this CWriter cWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo, TryClause tryClause, bool excludeArguments = false)

@@ -394,6 +394,20 @@ namespace Il2Native.Logic.Gencode
             return virtualTable.Count;
         }
 
+        public static IMethod GetCorrespondingMethodForInterface(this IType thisType, IMethod methodInfo)
+        {
+            if (methodInfo.DeclaringType.IsInterface)
+            {
+                var existingMethodInfo = thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(methodInfo.IsMatchingExplicitInterfaceOverride);
+                if (existingMethodInfo != null)
+                {
+                    return existingMethodInfo;
+                }
+            }
+
+            return thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(m => methodInfo.IsMatchingOverride(m) && thisType.IsAssignableFrom(m.DeclaringType));
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="thisType">
@@ -402,18 +416,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasImplementedMethod(this IType thisType, IMethod methodInfo)
+        public static bool HasCorrespondingMethodForInterface(this IType thisType, IMethod methodInfo)
         {
-            if (methodInfo.DeclaringType.IsInterface)
-            {
-                if (thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride))
-                {
-                    return true;
-                }
-            }
-
-            var existingMethodInfo = thisType.GetMethods(BindingFlags.Instance).FirstOrDefault(m => methodInfo.IsMatchingOverride(m) && thisType.IsAssignableFrom(m.DeclaringType));
-            return existingMethodInfo != null;
+            return thisType.GetCorrespondingMethodForInterface(methodInfo) != null;
         }
 
         /// <summary>
