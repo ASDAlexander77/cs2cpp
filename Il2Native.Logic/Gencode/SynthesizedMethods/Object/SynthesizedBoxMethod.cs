@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Diagnostics;
     using System.Linq;
 
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
@@ -28,6 +29,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public SynthesizedBoxMethod(IType type, ITypeResolver typeResolver)
             : base(null, ".box", type, ReturningType(type, typeResolver))
         {
+            Debug.Assert(!type.UseAsClass, "Normal type should be used");
             this.typeResolver = typeResolver;
         }
 

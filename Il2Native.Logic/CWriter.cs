@@ -311,7 +311,7 @@ namespace Il2Native.Logic
 
         private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
         {
-            if (this.IsSafeNotToMultiplyResult(opCode))
+            if (this.IsSafeForMultilineCode(opCode))
             {
                 return false;
             }
@@ -1480,17 +1480,24 @@ namespace Il2Native.Logic
                     // TODO: not fully implemented, https://msdn.microsoft.com/library/system.reflection.emit.opcodes.constrained.aspx
                     // not implemented case when you need to box value type, read carefully documentation
 
-                    var @class = opCodeTypePart.Operand.ToClass();
+                    operandType = opCodeTypePart.Operand;
+                    var isNullable = operandType.TypeEquals(System.System_Nullable_T);
+                    if (isNullable)
+                    {
+                        operandType = operandType.GenericTypeArguments.First();
+                    }
+
+                    var @class = operandType.ToClass();
                     this.WriteVariableDeclare(opCode, @class, "_constr");
                     var constrVar = this.WriteVariable(opCode, "_constr");
 
                     var opCodeNone = OpCodePart.CreateNop;
 
-                    if (opCodeTypePart.Operand.IsValueType() || opCodeTypePart.Operand.IsStructureType())
+                    if (operandType.IsValueType())
                     {
                         opCodeNone.OpCodeOperands = new[]
                         {
-                            new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, opCodeTypePart.Operand)
+                            new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
                             {
                                 OpCodeOperands = new[]
                                 {
@@ -1499,12 +1506,12 @@ namespace Il2Native.Logic
                             },
                         };
 
-                        @class.WriteCallBoxObjectMethod(this, opCodeNone);
+                        operandType.WriteCallBoxObjectMethod(this, opCodeNone);
                     }
                     else
                     {
                         opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
-                        LoadIndirect(writer, opCodeNone, opCodeTypePart.Operand);
+                        LoadIndirect(writer, opCodeNone, operandType);
                     }
 
                     opCode.Result = new FullyDefinedReference(constrVar, @class);

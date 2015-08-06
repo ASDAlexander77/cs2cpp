@@ -1734,7 +1734,7 @@ namespace Il2Native.Logic
             }
         }
 
-        protected bool IsSafeNotToMultiplyResult(OpCodePart opCode)
+        protected bool IsSafeForMultilineCode(OpCodePart opCode)
         {
             var code = opCode.ToCode();
             switch (code)
