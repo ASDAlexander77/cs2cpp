@@ -160,15 +160,10 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             // get vtable for an interface
-            if (bareType.FindInterfaceEntry(bareType).TypeNotEquals(methodInfo.DeclaringType))
-            {
-                writer.Write("&");
-            }
-
             writer.Write("(");
-            cWriter.WriteCCastOnly(bareType.ToVirtualTable());
-            cWriter.WriteResultOrActualWrite(thisOperand);
-            cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
+            cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToVirtualTable());
+            writer.Write("&");
+            writer.Write(bareType.GetVirtualInterfaceTableName(methodInfo.DeclaringType, cWriter, true));
             writer.Write(")->");
             cWriter.WriteInterfacePath(bareType, methodInfo.DeclaringType, false);
 
