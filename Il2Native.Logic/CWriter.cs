@@ -1481,40 +1481,45 @@ namespace Il2Native.Logic
                     // not implemented case when you need to box value type, read carefully documentation
 
                     operandType = opCodeTypePart.Operand;
-                    var isNullable = operandType.TypeEquals(System.System_Nullable_T);
-                    if (isNullable)
+                    // if operand is struct we will call deal with it in Code.CallVirt method
+                    if (!operandType.IsStructureType())
                     {
-                        operandType = operandType.GenericTypeArguments.First();
-                    }
-
-                    var @class = operandType.ToClass();
-                    this.WriteVariableDeclare(opCode, @class, "_constr");
-                    var constrVar = this.WriteVariable(opCode, "_constr");
-
-                    var opCodeNone = OpCodePart.CreateNop;
-
-                    if (operandType.IsValueType())
-                    {
-                        opCodeNone.OpCodeOperands = new[]
+                        var isNullable = operandType.TypeEquals(System.System_Nullable_T);
+                        if (isNullable)
                         {
-                            new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
-                            {
-                                OpCodeOperands = new[]
-                                {
-                                    opCode.OpCodeOperands[0]
-                                }
-                            },
-                        };
+                            operandType = operandType.GenericTypeArguments.First();
+                        }
 
-                        operandType.WriteCallBoxObjectMethod(this, opCodeNone);
-                    }
-                    else
-                    {
-                        opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
-                        LoadIndirect(writer, opCodeNone, operandType);
-                    }
+                        var @class = operandType.ToClass();
+                        this.WriteVariableDeclare(opCode, @class, "_constr");
+                        var constrVar = this.WriteVariable(opCode, "_constr");
 
-                    opCode.Result = new FullyDefinedReference(constrVar, @class);
+                        var opCodeNone = OpCodePart.CreateNop;
+
+                        if (operandType.IsValueType())
+                        {
+                            opCodeNone.OpCodeOperands = new[]
+                                                            {
+                                                                new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
+                                                                    {
+                                                                        OpCodeOperands =
+                                                                            new[]
+                                                                                {
+                                                                                    opCode.OpCodeOperands[0]
+                                                                                }
+                                                                    },
+                                                            };
+
+                            operandType.WriteCallBoxObjectMethod(this, opCodeNone);
+                        }
+                        else
+                        {
+                            opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
+                            LoadIndirect(writer, opCodeNone, operandType);
+                        }
+
+                        opCode.Result = new FullyDefinedReference(constrVar, @class);
+                    }
 
                     break;
 
