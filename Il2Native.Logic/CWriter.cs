@@ -1482,44 +1482,38 @@ namespace Il2Native.Logic
 
                     operandType = opCodeTypePart.Operand;
                     // if operand is struct we will call deal with it in Code.CallVirt method
-                    if (!operandType.IsStructureType())
+                    var isNullable = operandType.TypeEquals(System.System_Nullable_T);
+                    if (isNullable)
                     {
-                        var isNullable = operandType.TypeEquals(System.System_Nullable_T);
-                        if (isNullable)
-                        {
-                            operandType = operandType.GenericTypeArguments.First();
-                        }
-
-                        var @class = operandType.ToClass();
-                        this.WriteVariableDeclare(opCode, @class, "_constr");
-                        var constrVar = this.WriteVariable(opCode, "_constr");
-
-                        var opCodeNone = OpCodePart.CreateNop;
-
-                        if (operandType.IsValueType())
-                        {
-                            opCodeNone.OpCodeOperands = new[]
-                                                            {
-                                                                new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
-                                                                    {
-                                                                        OpCodeOperands =
-                                                                            new[]
-                                                                                {
-                                                                                    opCode.OpCodeOperands[0]
-                                                                                }
-                                                                    },
-                                                            };
-
-                            operandType.WriteCallBoxObjectMethod(this, opCodeNone);
-                        }
-                        else
-                        {
-                            opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
-                            LoadIndirect(writer, opCodeNone, operandType);
-                        }
-
-                        opCode.Result = new FullyDefinedReference(constrVar, @class);
+                        operandType = operandType.GenericTypeArguments.First();
                     }
+
+                    var @class = operandType.ToClass();
+                    this.WriteVariableDeclare(opCode, @class, "_constr");
+                    var constrVar = this.WriteVariable(opCode, "_constr");
+
+                    var opCodeNone = OpCodePart.CreateNop;
+
+                    if (operandType.IsValueType())
+                    {
+                        opCodeNone.OpCodeOperands = new []
+                                                        {
+                                                            new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, operandType)
+                                                                {
+                                                                    OpCodeOperands =
+                                                                        new[] { opCode.OpCodeOperands[0] }
+                                                                }
+                                                        };
+
+                        operandType.WriteCallBoxObjectMethod(this, opCodeNone);
+                    }
+                    else
+                    {
+                        opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
+                        LoadIndirect(writer, opCodeNone, operandType);
+                    }
+
+                    opCode.Result = new FullyDefinedReference(constrVar, @class);
 
                     break;
 
@@ -2104,7 +2098,7 @@ namespace Il2Native.Logic
             var getStaticType = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedGetTypeStaticMethod(toType, this));
 
             var castToObject = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
-            castToObject.OpCodeOperands = new [] { opCodeOperand };
+            castToObject.OpCodeOperands = new[] { opCodeOperand };
 
             var method = throwExceptionIfNull ? (IMethod)new SynthesizedCastMethod(this) : (IMethod)new SynthesizedDynamicCastMethod(this);
             var opCodeNope = OpCodePart.CreateNop;
@@ -4333,7 +4327,7 @@ namespace Il2Native.Logic
             if (isStructureType)
             {
                 // temp var
-                normalType.WriteTypePrefix(this);               
+                normalType.WriteTypePrefix(this);
             }
             else
             {
@@ -4773,7 +4767,7 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            public PairKind Kind { get; set; }            
+            public PairKind Kind { get; set; }
         }
 
         /// <summary>
