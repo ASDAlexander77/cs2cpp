@@ -845,7 +845,7 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
+                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
 
             ////if (CompilerHelper.CompileWithOptimization)
             ////{

@@ -4659,11 +4659,6 @@ namespace Il2Native.Logic
 
         private void WriteVirtualTable(IType typeParam)
         {
-            if (typeParam.IsEnum)
-            {
-                return;
-            }
-
             var table = typeParam.ToVirtualTable();
             var type = typeParam.ToNormal();
 
