@@ -149,10 +149,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        int? Token { get; }
-
-        /// <summary>
-        /// </summary>
         bool UseAsClass { get; }
 
         /// <summary>

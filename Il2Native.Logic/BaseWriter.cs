@@ -297,7 +297,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false, bool ignoreAlternativeValues = false)
+        public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false, bool ignoreAlternativeValues = false, bool exactType = false)
         {
             if (!doNotUseCachedResult && opCode.HasResult && opCode.Result.Type != null)
             {
@@ -309,12 +309,12 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.UsedByAlternativeValues.RequiredOutgoingType);
             }
 
-            if (opCode.RequiredOutgoingType != null)
+            if (!doNotUseCachedResult && opCode.RequiredOutgoingType != null)
             {
                 return new ReturnResult(opCode.RequiredOutgoingType);
             }
 
-            return new ReturnResult(this.RequiredOutgoingType(opCode, ignoreAlternativeValues));
+            return new ReturnResult(this.RequiredOutgoingType(opCode, ignoreAlternativeValues, exactType));
         }
 
         /// <summary>
@@ -1822,7 +1822,8 @@ namespace Il2Native.Logic
         protected IType RequiredIncomingType(
             OpCodePart opCodePart,
             int operandPosition,
-            bool forArithmeticOperations = false)
+            bool forArithmeticOperations = false,
+            bool exactType = false)
         {
             if (opCodePart.Discovering)
             {
@@ -1872,7 +1873,7 @@ namespace Il2Native.Logic
 
                     case Code.Stsfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                        return this.MultiThreadingSupport && operand.IsThreadStatic ? System.System_Object : operand.FieldType;
+                        return this.MultiThreadingSupport && !exactType && operand.IsThreadStatic ? System.System_Object : operand.FieldType;
                     case Code.Stfld:
                         operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
                         retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
@@ -1939,7 +1940,7 @@ namespace Il2Native.Logic
 
                         if (operandPosition == 0)
                         {
-                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0], true, exactType: true);
                             return result.Type;
                         }
 
@@ -2154,7 +2155,7 @@ namespace Il2Native.Logic
 
                         if (operandPosition == 0)
                         {
-                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0], true, exactType: true);
                             return result.Type;
                         }
 
@@ -2374,7 +2375,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredOutgoingType(OpCodePart opCodePart, bool ignoreAlternativeValues = false)
+        protected IType RequiredOutgoingType(OpCodePart opCodePart, bool ignoreAlternativeValues = false, bool exactType = false)
         {
             if (!ignoreAlternativeValues && opCodePart.UsedByAlternativeValues != null)
             {
@@ -2431,7 +2432,7 @@ namespace Il2Native.Logic
                 case Code.Ldfld:
                 case Code.Ldsfld:
                     var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    return (this.MultiThreadingSupport && operand.IsThreadStatic) ? System.System_Object : operand.FieldType;
+                    return (this.MultiThreadingSupport && !exactType && operand.IsThreadStatic) ? System.System_Object : operand.FieldType;
 
                 case Code.Ldflda:
                 case Code.Ldsflda:
@@ -2482,7 +2483,7 @@ namespace Il2Native.Logic
                     return this.System.System_Double;
 
                 case Code.Ldelem_Ref:
-                    retType = opCodePart.RequiredIncomingTypes[0] ?? this.RequiredIncomingType(opCodePart, 0);
+                    retType = this.RequiredIncomingType(opCodePart, 0, exactType: true);
                     if (retType != null)
                     {
                         Debug.Assert(retType.HasElementType);

@@ -80,12 +80,6 @@
                 if (type != null && type.IsGenericParameter)
                 {
                     Debug.Assert(genericContext != null, "You are using generic without context");
-
-                    if (type.Token.HasValue)
-                    {
-                        return this.method.Module.ResolveType(type.Token.Value, genericContext);
-                    }
-
                     return genericContext.ResolveTypeParameter(type);
                 }
 

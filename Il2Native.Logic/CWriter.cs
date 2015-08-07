@@ -555,7 +555,7 @@ namespace Il2Native.Logic
                         {
                             // TODO: can be repeated (improve it, reduce using opCode.AddressStart here) 
                             System.System_RuntimeFieldHandle.WriteTypePrefix(this);
-                            var tokenVar = string.Format("_token{0}{1}", opCodeFieldInfoPartToken.Operand.FieldType.Token, opCode.AddressStart);
+                            var tokenVar = string.Format("_token{0}{1}", opCodeFieldInfoPartToken.Operand.FieldType.GetHashCode(), opCode.AddressStart);
                             this.Output.WriteLine(" {0};", tokenVar);
                             this.Output.Write("{0}.", tokenVar);
                             this.WriteFieldAccessLeftExpression(

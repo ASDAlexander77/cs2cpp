@@ -111,10 +111,12 @@ namespace Il2Native.Logic.Gencode
                 var baseMethod = virtualOrAbstractMethod.IsOverride
                                      ? virtualTable.Where(p => p.Kind == CWriter.PairKind.Method)
                                                    .OfType<CWriter.Pair<IMethod, IMethod>>()
-                                                   .Last(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
+                                                   .LastOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
                                      : virtualTable.Where(p => p.Kind == CWriter.PairKind.Method)
                                                    .OfType<CWriter.Pair<IMethod, IMethod>>()
                                                    .LastOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+
+                Debug.Assert(baseMethod != null || (!virtualOrAbstractMethod.IsOverride && baseMethod == null), "Could not resolve override method");
 
                 if (thisType.IsStructureType())
                 {

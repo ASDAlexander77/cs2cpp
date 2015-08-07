@@ -132,12 +132,6 @@ namespace PEAssemblyReader
             this.lazyDeclaringTypeOriginal = new Lazy<IType>(this.CalculateDeclaringTypeOriginal);
             this.lazyDeclaringType = new Lazy<IType>(this.CalculateDeclaringType);
             this.lazyGetElementType = new Lazy<IType>(this.CalculateGetElementType);
-
-            var peTypeSymbol = typeDef as PENamedTypeSymbol;
-            if (peTypeSymbol != null)
-            {
-                this.Token = MetadataTokens.GetToken(peTypeSymbol.Handle);
-            }
         }
 
         /// <summary>
@@ -557,10 +551,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public int? Token { get; private set; }
-
-        /// <summary>
-        /// </summary>
         public bool UseAsClass { get; set; }
 
         /// <summary>
@@ -777,11 +767,6 @@ namespace PEAssemblyReader
             var type = obj as IType;
             if (type != null)
             {
-                if (this.Token.HasValue && type.Token.HasValue && this.Token.Value != type.Token.Value)
-                {
-                    return false;
-                }
-
                 return this.CompareTo(type) == 0;
             }
 
