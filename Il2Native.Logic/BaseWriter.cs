@@ -2061,6 +2061,16 @@ namespace Il2Native.Logic
                                    ? this.System.System_Int32
                                    : operandPosition == 2 ? this.System.System_Double : null;
 
+                    case Code.Ldlen:
+
+                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0], true, exactType: true);
+                        if (result.Type.IsArray)
+                        {
+                            return result.Type;
+                        }
+
+                        return this.System.System_Byte.ToArrayType(1);
+
                     case Code.Ldelem_I:
 
                         if (operandPosition == 0)
