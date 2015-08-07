@@ -91,7 +91,7 @@ namespace Il2Native.Logic.Gencode
             // split in 2 (interface call when 'this' is object and when 'this' is interface
             var thisOperand = opCodeMethodInfo.OpCodeOperands[0];
             var estimatedResultOf = cWriter.EstimatedResultOf(thisOperand);
-            if (estimatedResultOf.Type.IsInterface)
+            if (estimatedResultOf.Type.IsInterface || estimatedResultOf.Type.IsVoidPointer())
             {
                 cWriter.WriteCallInterfaceForInterface(opCodeMethodInfo, methodInfo, tryClause, excludeArguments);
                 return;
