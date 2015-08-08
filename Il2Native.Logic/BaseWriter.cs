@@ -2218,7 +2218,7 @@ namespace Il2Native.Logic
                                 if (!requiredIncomingType.IsInterface)
                                 {
                                     return requiredIncomingType.IsValueType()
-                                        ? requiredIncomingType.ToClass()
+                                        ? requiredIncomingType.ToPointerType()
                                         : requiredIncomingType;
                                 }
                             }
@@ -2748,7 +2748,7 @@ namespace Il2Native.Logic
                     return this.System.System_UInt32;
 
                 case Code.Localloc:
-                    return this.System.System_Void.ToPointerType();
+                    return this.System.System_Byte.ToPointerType();
 
                 case Code.Dup:
                     return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
