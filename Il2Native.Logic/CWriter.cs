@@ -2254,7 +2254,7 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            writer.Write(!(originalType ?? type).IsValueType() ? "->" : ".");
+            writer.Write(!(originalType ?? type).IsStructureType() ? "->" : ".");
 
             type = type.IsByRef ? type.GetElementType() : type;
 
@@ -2285,7 +2285,7 @@ namespace Il2Native.Logic
 
             writer.Write(")");
 
-            writer.Write(!operandEstimatedResultOf.Type.IsValueType() ? "->" : ".");
+            writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
             this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex);
         }
@@ -2347,7 +2347,7 @@ namespace Il2Native.Logic
             }
 
             writer.Write(valueReference);
-            if (valueReference.Type.IsValueType())
+            if (valueReference.Type.IsStructureType())
             {
                 writer.Write(".");
             }
