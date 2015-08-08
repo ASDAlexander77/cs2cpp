@@ -236,7 +236,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            if (type.IsStructureType())
+            if (type.IsValueType())
             {
                 return typeResolver.CanBeAllocatedAtomically(type);
             }
@@ -252,7 +252,7 @@ namespace Il2Native.Logic.Gencode
             var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
             var declaringClassType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
             var normal = declaringClassType.ToNormal();
-            var isStruct = normal.IsStructureType();
+            var isValueType = normal.IsValueType();
 
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -274,7 +274,7 @@ namespace Il2Native.Logic.Gencode
             // we need to remove last code which is Code.Ret
             ilCodeBuilder.RemoveLast();
 
-            if (!isStruct)
+            if (!isValueType)
             {
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.LoadArgument(0);
@@ -314,7 +314,7 @@ namespace Il2Native.Logic.Gencode
         public static IlCodeBuilder GetUnboxMethod(this ITypeResolver typeResolver, IType type)
         {
             var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
-            var isStruct = type.IsStructureType();
+            var isValueType = type.IsValueType();
 
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -337,7 +337,7 @@ namespace Il2Native.Logic.Gencode
 
             ilCodeBuilder.Add(jumpIfNotNull);
 
-            if (!isStruct && !isNullable)
+            if (!isValueType && !isNullable)
             {
                 var firstField = type.GetFieldByFieldNumber(0, typeResolver);
                 if (firstField != null)
@@ -535,14 +535,14 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var isStruct = declaringType.IsStructureType();
+            var isValueType = declaringType.IsValueType();
 
             writer.WriteLine("; Returning Hash Code");
             writer.WriteLine(string.Empty);
 
             writer.WriteLine("; Get data");
 
-            if (!isStruct)
+            if (!isValueType)
             {
                 // write access to a field
                 if (cWriter.WriteFieldAccess(
@@ -697,7 +697,7 @@ namespace Il2Native.Logic.Gencode
             var @class = declaringType.ToClass();
             if (!declaringType.IsString)
             {
-                if (!declaringType.IsStructureType())
+                if (!declaringType.IsValueType())
                 {
                     @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
                 }

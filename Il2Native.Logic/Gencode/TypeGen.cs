@@ -204,7 +204,7 @@ namespace Il2Native.Logic.Gencode
                         yield return new MemberLocationInfo(field, CWriter.PointerSize);
                     }
                 }
-                else if (!excludingStructs && fieldType.IsStructureType())
+                else if (!excludingStructs && fieldType.IsValueType())
                 {
                     yield return new MemberLocationInfo(field, fieldType.GetTypeSize(typeResolver));
                 }

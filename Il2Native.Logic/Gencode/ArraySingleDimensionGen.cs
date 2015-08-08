@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
             // calculate alignment
             codeList.Add(Code.Dup);
 
-            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
+            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsValueType() ? elementSize : CWriter.PointerSize);
             codeList.LoadConstant(alignForType - 1);
             codeList.Add(Code.Add);
 

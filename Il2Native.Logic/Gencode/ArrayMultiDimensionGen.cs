@@ -282,7 +282,7 @@
             // calculate alignment
             codeBuilder.Add(Code.Dup);
 
-            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
+            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsValueType() ? elementSize : CWriter.PointerSize);
             codeBuilder.LoadConstant(alignForType - 1);
             codeBuilder.Add(Code.Add);
 

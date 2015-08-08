@@ -806,7 +806,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (type.IsStructureType())
+            if (type.IsValueType())
             {
                 if (!excludeSpecializations)
                 {
@@ -845,7 +845,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (type.IsStructureType())
+            if (type.IsValueType())
             {
                 foreach (var method in genMethodSpecializationForType.Where(m => ShouldHaveStructToObjectAdapter(m)))
                 {
@@ -1158,7 +1158,7 @@ namespace Il2Native.Logic
                             this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.TypeResolver));
                         }
 
-                        if (method.DeclaringType.IsStructureType() && method.IsConstructor)
+                        if (method.DeclaringType.IsValueType() && method.IsConstructor)
                         {
                             this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                         }
@@ -1284,7 +1284,7 @@ namespace Il2Native.Logic
 
                         if (code == Code.Initobj)
                         {
-                            if (type.IsStructureType())
+                            if (type.IsValueType())
                             {
                                 this.AddCalledMethod(new SynthesizedInitMethod(type, this.TypeResolver));
                             }

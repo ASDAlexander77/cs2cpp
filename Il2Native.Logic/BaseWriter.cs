@@ -1723,7 +1723,7 @@ namespace Il2Native.Logic
             }
 
             var methodExtraAttributes = method as IMethodExtraAttributes;
-            if (thisType.IsStructureType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
+            if (thisType.IsValueType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
                 && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
             {
                 this.ThisType = thisType.ToPointerType();
@@ -2572,7 +2572,7 @@ namespace Il2Native.Logic
                     var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                     return opCodeConstructorInfoPart == null
                         ? opCodePart.ReadExceptionFromStackType.ToClass()
-                        : opCodeConstructorInfoPart.Operand.DeclaringType.IsStructureType()
+                        : opCodeConstructorInfoPart.Operand.DeclaringType.IsValueType()
                             ? opCodeConstructorInfoPart.Operand.DeclaringType.ToPointerType()
                             : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
 

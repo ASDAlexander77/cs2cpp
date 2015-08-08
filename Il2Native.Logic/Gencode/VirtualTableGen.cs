@@ -118,7 +118,7 @@ namespace Il2Native.Logic.Gencode
 
                 Debug.Assert(baseMethod != null || (!virtualOrAbstractMethod.IsOverride && baseMethod == null), "Could not resolve override method");
 
-                if (thisType.IsStructureType())
+                if (thisType.IsValueType())
                 {
                     // replace virtual/interface method with adapter
                     var adapterMethod =
@@ -627,7 +627,7 @@ namespace Il2Native.Logic.Gencode
             }
 #endif
 
-            if (type.IsStructureType())
+            if (type.IsValueType())
             {
                 foreach (var interfaceMethod in list)
                 {

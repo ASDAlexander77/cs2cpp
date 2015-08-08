@@ -976,7 +976,7 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     type = opCodeTypePart.Operand;
-                    if (type.IsValueType || type.IsStructureType())
+                    if (type.IsValueType())
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
                     }
@@ -2254,7 +2254,7 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            writer.Write(!(originalType ?? type).IsStructureType() ? "->" : ".");
+            writer.Write(!(originalType ?? type).IsValueType() ? "->" : ".");
 
             type = type.IsByRef ? type.GetElementType() : type;
 
@@ -2285,7 +2285,7 @@ namespace Il2Native.Logic
 
             writer.Write(")");
 
-            writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
+            writer.Write(!operandEstimatedResultOf.Type.IsValueType() ? "->" : ".");
 
             this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex);
         }
@@ -2347,7 +2347,7 @@ namespace Il2Native.Logic
             }
 
             writer.Write(valueReference);
-            if (valueReference.Type.IsStructureType())
+            if (valueReference.Type.IsValueType())
             {
                 writer.Write(".");
             }
@@ -4346,8 +4346,8 @@ namespace Il2Native.Logic
         public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")
         {
             var normalType = type.ToNormal();
-            var isStructureType = normalType.IsStructureType();
-            if (isStructureType)
+            var isValueType = normalType.IsValueType();
+            if (isValueType)
             {
                 // temp var
                 normalType.WriteTypePrefix(this);
@@ -4361,12 +4361,12 @@ namespace Il2Native.Logic
             var newVar = string.Format("{1}{0}", opCodePart.AddressStart, name);
             this.Output.WriteLine(" {0};", newVar);
 
-            if (!isStructureType)
+            if (!isValueType)
             {
                 this.Output.Write("{0} = ", newVar);
             }
 
-            var objectReference = new FullyDefinedReference(isStructureType ? string.Concat("&", newVar) : newVar, type);
+            var objectReference = new FullyDefinedReference(isValueType ? string.Concat("&", newVar) : newVar, type);
             opCodePart.Result = objectReference;
             return objectReference;
         }
@@ -4499,7 +4499,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDefinitions(IType type)
         {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()) && !f.FieldType.IsGenericTypeDefinition))
+            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) && !f.FieldType.IsGenericTypeDefinition))
             {
                 this.WriteStaticField(field);
             }
