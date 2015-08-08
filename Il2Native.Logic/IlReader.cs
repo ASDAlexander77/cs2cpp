@@ -1559,6 +1559,12 @@ namespace Il2Native.Logic
             }
 
             this._usedTypeTokens.Add(type);
+
+            if (type.BaseType != null && type.BaseType.IsGenericTypeDefinition)
+            {
+                // when you use typeof(B<T>) you need to add token of base type which can be generic as well
+                AddTypeToken(type.BaseType);
+            }
         }
 
         /// <summary>
