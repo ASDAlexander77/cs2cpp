@@ -789,7 +789,7 @@ namespace Il2Native.Logic.Gencode
             if (!doNotCallInit)
             {
                 ilCodeBuilder.Add(Code.Dup);
-                ilCodeBuilder.Call(new SynthesizedInitMethod(classType, typeResolver));
+                ilCodeBuilder.Call(new SynthesizedInitMethod(type, typeResolver));
             }
 
             if (!enableStringFastAllocation)
