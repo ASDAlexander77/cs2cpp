@@ -3080,7 +3080,7 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(string.Empty);
 
-            if (!this.IsHeader && this.IsCoreLib)
+            if (!this.IsHeader && this.IsCoreLib && (!this.IsSplit || this.IsSplit && string.IsNullOrWhiteSpace(this.SplitNamespace)))
             {
                 // definitions
                 this.Output.WriteLine(Resources.c_definitions);
