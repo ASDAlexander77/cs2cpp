@@ -236,7 +236,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            if (type.IsValueType())
+            if (type.IsStructureType())
             {
                 return typeResolver.CanBeAllocatedAtomically(type);
             }
