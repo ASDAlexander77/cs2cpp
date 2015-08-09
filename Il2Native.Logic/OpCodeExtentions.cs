@@ -1681,5 +1681,23 @@ namespace Il2Native.Logic
         {
             return type.GetMethods(IlReader.DefaultFlags).FirstOrDefault(m => m.IsDestructor);
         }
+
+        public static IType GetThisTypeForMethod(this IMethod method)
+        {
+            var thisType = method.DeclaringType;
+            if (thisType == null)
+            {
+                return null;
+            }
+
+            var methodExtraAttributes = method as IMethodExtraAttributes;
+            if (thisType.IsValueType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
+                && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
+            {
+                return thisType.ToPointerType();
+            }
+
+            return thisType.ToClass();
+        }
     }
 }

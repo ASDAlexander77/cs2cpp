@@ -157,12 +157,6 @@ namespace Il2Native.Logic
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
 
-        public static bool IsVirtualCallThisExpression(OpCodePart opCode)
-        {
-            return opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0 &&
-                   !opCode.UsedBy.OpCode.Previous.Any(Code.Constrained);
-        }
-
         public void Initialize(IType type)
         {
             Debug.Assert(type != null, "You should provide type here");
@@ -1716,22 +1710,7 @@ namespace Il2Native.Logic
         /// </param>
         protected void ReadThisTypeInfo(IMethod method)
         {
-            var thisType = method.DeclaringType;
-            if (thisType == null)
-            {
-                return;
-            }
-
-            var methodExtraAttributes = method as IMethodExtraAttributes;
-            if (thisType.IsValueType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
-                && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
-            {
-                this.ThisType = thisType.ToPointerType();
-            }
-            else
-            {
-                this.ThisType = thisType.ToClass();
-            }
+            this.ThisType = method.GetThisTypeForMethod();
         }
 
         protected bool IsSafeForMultilineCode(OpCodePart opCode)
@@ -2217,9 +2196,7 @@ namespace Il2Native.Logic
                                 var requiredIncomingType = opCodePartMethod.Operand.DeclaringType;
                                 if (!requiredIncomingType.IsInterface)
                                 {
-                                    return requiredIncomingType.IsValueType()
-                                        ? requiredIncomingType.ToPointerType()
-                                        : requiredIncomingType;
+                                    return opCodePartMethod.Operand.GetThisTypeForMethod();
                                 }
                             }
 
