@@ -65,10 +65,10 @@
             ilCodeBuilder.LoadIndirect(parameterType, typeResolver);
             ilCodeBuilder.SaveLocal(0);
 
+            ilCodeBuilder.LoadArgument(3);
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.LoadArgument(2);
             ilCodeBuilder.LoadArgument(1);
-            ilCodeBuilder.LoadArgument(3);
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
                     CompareAndSwapBool, null, parameterType, new[] { parameterType.ToPointerType().ToParameter(Location), parameterType.ToParameter(Value), parameterType.ToParameter(Comparand) }));

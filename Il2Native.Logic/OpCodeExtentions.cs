@@ -1691,7 +1691,7 @@ namespace Il2Native.Logic
             }
 
             var methodExtraAttributes = method as IMethodExtraAttributes;
-            if (thisType.IsValueType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
+            if (!thisType.IsEnum && thisType.IsValueType() && (!method.Name.StartsWith(".") || method.Name == ".ctor")
                 && !(methodExtraAttributes != null && methodExtraAttributes.IsStructObjectAdapter))
             {
                 return thisType.ToPointerType();
