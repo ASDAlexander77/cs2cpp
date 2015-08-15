@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="OpCodeBytePart.cs" company="">
+// <copyright file="OpCodeFullyDefinedReferencePart.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -13,7 +13,7 @@ namespace Il2Native.Logic.CodeParts
 
     /// <summary>
     /// </summary>
-    public class OpCodeBytePart : OpCodeParamPart<byte>
+    public class OpCodeFullyDefinedReferencePart : OpCodeParamPart<FullyDefinedReference>
     {
         /// <summary>
         /// </summary>
@@ -25,7 +25,7 @@ namespace Il2Native.Logic.CodeParts
         /// </param>
         /// <param name="param">
         /// </param>
-        public OpCodeBytePart(OpCode opcode, int addressStart, int addressEnd, byte param)
+        public OpCodeFullyDefinedReferencePart(OpCode opcode, int addressStart, int addressEnd, FullyDefinedReference param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

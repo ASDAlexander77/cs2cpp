@@ -10,6 +10,9 @@
         bool GcSupport { get; }
 
         // TODO: should be in ICodeWriter
+        bool GcDebug { get; }
+
+        // TODO: should be in ICodeWriter
         bool MultiThreadingSupport { get; }
 
         // TODO: should be in ICodeWriter

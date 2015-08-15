@@ -9,6 +9,8 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Collections.Generic;
+    using System.Linq;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
     using PEAssemblyReader;
 
@@ -33,9 +35,20 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.typeResolver = typeResolver;
         }
 
-        public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
+        public override IEnumerable<IParameter> GetParameters()
         {
-            return this.Type.IsArray ? ArrayMultiDimensionGen.GetParameters(this.Type, this.typeResolver) : base.GetParameters();
+            var parameters = this.Type.IsArray ? ArrayMultiDimensionGen.GetParameters(this.Type, this.typeResolver) : base.GetParameters();
+
+            if (typeResolver.GcSupport)
+            {
+                // add file name and file
+                var list = parameters != null ? parameters.ToList() : new List<IParameter>();
+                list.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("__file"));
+                list.Add(typeResolver.System.System_Int32.ToParameter("__line"));
+                return list;
+            }
+
+            return parameters;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()

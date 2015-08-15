@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
 
@@ -38,6 +39,22 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
             var returningType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
             return returningType;
+        }
+
+        public override IEnumerable<IParameter> GetParameters()
+        {
+            var parameters = base.GetParameters();
+
+            if (typeResolver.GcSupport)
+            {
+                // add file name and file
+                var list = parameters != null ? parameters.ToList() : new List<IParameter>();
+                list.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("__file"));
+                list.Add(typeResolver.System.System_Int32.ToParameter("__line"));
+                return list;
+            }
+
+            return parameters;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()

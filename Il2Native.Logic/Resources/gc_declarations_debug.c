@@ -44,3 +44,18 @@
 #define GC_NO_THREAD_REDIRECTS 1
 
 #include "gc.h"
+
+#ifdef GC_ADD_CALLER
+# define __GC_EXTRAS GC_RETURN_ADDR, (const char*)__file, __line
+#else
+# define __GC_EXTRAS (const char*)__file, __line
+#endif
+
+#undef GC_MALLOC
+#undef GC_MALLOC_ATOMIC
+#undef GC_MALLOC_IGNORE_OFF_PAGE
+#undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
+#define GC_MALLOC(sz) GC_debug_malloc(sz, __GC_EXTRAS)
+#define GC_MALLOC_ATOMIC(sz) GC_debug_malloc_atomic(sz, __GC_EXTRAS)
+#define GC_MALLOC_IGNORE_OFF_PAGE(sz) GC_debug_malloc_ignore_off_page(sz, __GC_EXTRAS)
+#define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(sz) GC_debug_malloc_atomic_ignore_off_page(sz, __GC_EXTRAS)

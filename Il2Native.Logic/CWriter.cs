@@ -605,6 +605,13 @@ namespace Il2Native.Logic
                         this.Output.Write("()/*undef*/");
                     }
 
+                    // special case
+                    var opCodeFullyDefinedReferencePartToken = opCode as OpCodeFullyDefinedReferencePart;
+                    if (opCodeFullyDefinedReferencePartToken != null)
+                    {
+                        this.Output.Write(opCodeFullyDefinedReferencePartToken.Operand);
+                    }
+
                     break;
                 case Code.Localloc:
 

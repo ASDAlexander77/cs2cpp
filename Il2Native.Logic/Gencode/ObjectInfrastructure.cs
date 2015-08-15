@@ -400,8 +400,14 @@ namespace Il2Native.Logic.Gencode
         public static void WriteCallBoxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
             var method = new SynthesizedBoxMethod(type, cWriter);
+            var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.UsedBy = new UsedByInfo(opCode);
+            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
+
+            AppendDebugParemeters(cWriter, opCodeNope);
+
             cWriter.WriteCall(
-                opCode,
+                opCodeNope,
                 method,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
@@ -495,12 +501,34 @@ namespace Il2Native.Logic.Gencode
                 opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             }
 
+            AppendDebugParemeters(cWriter, opCodeNope);
+
             cWriter.WriteCall(
                 opCodeNope,
                 method,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
 
             cWriter.Output.WriteLine(";");
+        }
+
+        private static void AppendDebugParemeters(CWriter cWriter, OpCodePart opCodeNope)
+        {
+            if (cWriter.GcDebug)
+            {
+                var ops = opCodeNope.OpCodeOperands != null
+                    ? new List<OpCodePart>(opCodeNope.OpCodeOperands)
+                    : new List<OpCodePart>();
+
+                var opFile = OpCodePart.CreateNop;
+                opFile.Result = new FullyDefinedReference("(SByte*)__FILE__", cWriter.System.System_Void.ToPointerType());
+                ops.Add(opFile);
+
+                var opLine = OpCodePart.CreateNop;
+                opLine.Result = new FullyDefinedReference("__LINE__", cWriter.System.System_Int32);
+                ops.Add(opLine);
+
+                opCodeNope.OpCodeOperands = ops.ToArray();
+            }
         }
 
         /// <summary>
@@ -629,6 +657,13 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.LoadFieldAddress(typeStorageType);
             ////codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver));
             var nativeRuntimeType = typeResolver.ResolveType("System.NativeType");
+
+            if (typeResolver.GcDebug)
+            {
+                codeBuilder.LoadToken(new FullyDefinedReference("(SByte*)__FILE__", typeResolver.System.System_SByte.ToPointerType()));
+                codeBuilder.LoadToken(new FullyDefinedReference("__LINE__", typeResolver.System.System_Int32));
+            }
+
             codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
             codeBuilder.LoadNull();
 
