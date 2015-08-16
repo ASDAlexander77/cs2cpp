@@ -45,7 +45,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             var parameters = base.GetParameters();
 
-            if (typeResolver.GcSupport)
+            if (typeResolver.GcDebug)
             {
                 // add file name and file
                 var list = parameters != null ? parameters.ToList() : new List<IParameter>();

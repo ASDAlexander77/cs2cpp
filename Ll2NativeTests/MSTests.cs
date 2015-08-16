@@ -826,12 +826,12 @@ namespace Ll2NativeTests
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false));
 
-            //CompilerHelper.ExecCmd(
-            //    "g++",
-            //    string.Format(
-            //        "{0}-o CoreLib.obj -c CoreLib.cpp{1}",
-            //        CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
-            //        CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
+            CompilerHelper.ExecCmd(
+                "g++",
+                string.Format(
+                    "{0}-o CoreLib.obj -c CoreLib.cpp{1}",
+                    CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
+                    CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }
 
         /// <summary>
