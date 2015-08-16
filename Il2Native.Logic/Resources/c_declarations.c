@@ -91,6 +91,7 @@ struct __interface_data
 };
 
 Void* __new_interface(Void* _object, Void** _vtbl);
+Void* __new_interface_debug(Void* _object, Void** _vtbl, SByte* __file, Int32 __line);
 inline Void* __this_from_interface(Void* _object) 
 {
 	return (Void*) (_object ? (((__interface_data*)_object)->__this) : 0);

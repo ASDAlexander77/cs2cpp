@@ -42,7 +42,16 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("(Byte*) ");
-            writer.Write(cWriter.GetAllocator(false, false));
+
+            if (cWriter.GcDebug)
+            {
+                writer.Write("GC_MALLOC_ORIGINAL");
+            }
+            else
+            {
+                writer.Write(cWriter.GetAllocator(false, false));
+            }
+
             writer.Write("(");
             cWriter.WriteResult(size);
             writer.Write(")");
