@@ -1,5 +1,4 @@
 #ifdef __GC_MEMORY_DEBUG
-
 Void* __new_interface_debug(Void* _object, Void** _vtbl, SByte* __file, Int32 __line) 
 {
 	__interface_data* __ret_interface;

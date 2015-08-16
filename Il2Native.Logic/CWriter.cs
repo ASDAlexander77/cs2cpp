@@ -3062,6 +3062,11 @@ namespace Il2Native.Logic
 
             if (this.IsHeader && this.IsCoreLib)
             {
+                if (this.GcSupport && this.GcDebug)
+                {
+                    this.Output.WriteLine("#define __GC_MEMORY_DEBUG 1");
+                }
+
                 // declarations
                 this.Output.WriteLine(Resources.c_declarations);
                 this.Output.WriteLine(string.Empty);

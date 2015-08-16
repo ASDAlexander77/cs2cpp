@@ -127,13 +127,21 @@ extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
 struct System_DivideByZeroException;
 Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
+#ifdef __GC_MEMORY_DEBUG
+System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFSByteP__Int32N(SByte* __file, Int32 __line);
+#else
 System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFN();
+#endif
 template < typename T > T __check_divide(T div)
 {
 	if (!div)
 	{
 		System_DivideByZeroException* _new;
+#ifdef __GC_MEMORY_DEBUG
+		_new = System_DivideByZeroException_System_DivideByZeroException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
 		_new = System_DivideByZeroException_System_DivideByZeroException__newFN();
+#endif
 		Void_System_DivideByZeroException__ctorFN(_new);
 		throw (::Void*) _new;
 	}
@@ -143,7 +151,11 @@ template < typename T > T __check_divide(T div)
 
 struct System_NullReferenceException;
 Void Void_System_NullReferenceException__ctorFN(System_NullReferenceException* __this);
+#ifdef __GC_MEMORY_DEBUG
+System_NullReferenceException* System_NullReferenceException_System_NullReferenceException__newFSByteP__Int32N(SByte* __file, Int32 __line);
+#else
 System_NullReferenceException* System_NullReferenceException_System_NullReferenceException__newFN();
+#endif
 inline Void __check_this(Void* __this)
 {
 	if (__this)
@@ -152,40 +164,69 @@ inline Void __check_this(Void* __this)
 	}
 
 	System_NullReferenceException* _new;
+#ifdef __GC_MEMORY_DEBUG
+	_new = System_NullReferenceException_System_NullReferenceException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
 	_new = System_NullReferenceException_System_NullReferenceException__newFN();
+#endif
+
 	Void_System_NullReferenceException__ctorFN(_new);
 	throw (Void*) _new;
 }
 
 struct System_NotSupportedException;
 Void Void_System_NotSupportedException__ctorFN(System_NotSupportedException* __this);
+#ifdef __GC_MEMORY_DEBUG
+System_NotSupportedException* System_NotSupportedException_System_NotSupportedException__newFSByteP__Int32N(SByte* __file, Int32 __line);
+#else
 System_NotSupportedException* System_NotSupportedException_System_NotSupportedException__newFN();
+#endif
 inline Void* __throw_not_supported()
 {
 	System_NotSupportedException* _new;
+#ifdef __GC_MEMORY_DEBUG
+	_new = System_NotSupportedException_System_NotSupportedException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
 	_new = System_NotSupportedException_System_NotSupportedException__newFN();
+#endif
 	Void_System_NotSupportedException__ctorFN(_new);
 	throw (Void*) _new;
 }
 
 struct System_InvalidOperationException;
 Void Void_System_InvalidOperationException__ctorFN(System_InvalidOperationException* __this);
+#ifdef __GC_MEMORY_DEBUG
+System_InvalidOperationException* System_InvalidOperationException_System_InvalidOperationException__newFSByteP__Int32N(SByte* __file, Int32 __line);
+#else
 System_InvalidOperationException* System_InvalidOperationException_System_InvalidOperationException__newFN();
+#endif
 inline Void* __throw_invalid_operation()
 {
 	System_InvalidOperationException* _new;
+#ifdef __GC_MEMORY_DEBUG
+	_new = System_InvalidOperationException_System_InvalidOperationException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
 	_new = System_InvalidOperationException_System_InvalidOperationException__newFN();
+#endif
 	Void_System_InvalidOperationException__ctorFN(_new);
 	throw (Void*) _new;
 }
 
 struct System_OverflowException;
 Void Void_System_OverflowException__ctorFN(System_OverflowException* __this);
+#ifdef __GC_MEMORY_DEBUG
+System_OverflowException* System_OverflowException_System_OverflowException__newFSByteP__Int32N(SByte* __file, Int32 __line);
+#else
 System_OverflowException* System_OverflowException_System_OverflowException__newFN();
+#endif
 inline Void* __throw_overflow()
 {
 	System_OverflowException* _new;
+#ifdef __GC_MEMORY_DEBUG
+	_new = System_OverflowException_System_OverflowException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
 	_new = System_OverflowException_System_OverflowException__newFN();
+#endif
 	Void_System_OverflowException__ctorFN(_new);
 	throw (Void*) _new;
 }
