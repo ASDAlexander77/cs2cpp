@@ -114,9 +114,15 @@ namespace Il2Native.Logic.Gencode
             newAlloc.LoadConstant(100 * 1024);
             var ifBigger100k = newAlloc.Branch(Code.Bge_Un, Code.Bge_Un_S);
 
+            var allocator = typeResolver.GetAllocator(isAtomicAllocation, false);
+            if (typeResolver.GcDebug && enableStringFastAllocation)
+            {
+                allocator = "GC_MALLOC_ORIGINAL";
+            }
+
             newAlloc.Call(
                 new SynthesizedMethod(
-                    typeResolver.GetAllocator(isAtomicAllocation, false),
+                    allocator,
                     typeResolver.System.System_Void.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter("size") }));
 
