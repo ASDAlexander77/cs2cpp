@@ -61,5 +61,8 @@
 #define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(sz) GC_debug_malloc_atomic_ignore_off_page(sz, __GC_EXTRAS)
 
 #define GC_MALLOC_ORIGINAL(sz) GC_debug_malloc(sz, GC_EXTRAS)
+#define GC_MALLOC_ATOMIC_ORIGINAL(sz) GC_debug_malloc_atomic(sz, GC_EXTRAS)
+#define GC_MALLOC_IGNORE_OFF_PAGE_ORIGINAL(sz) GC_debug_malloc_ignore_off_page(sz, GC_EXTRAS)
+#define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE_ORIGINAL(sz) GC_debug_malloc_atomic_ignore_off_page(sz, GC_EXTRAS)
 
 #define __GC_MEMORY_DEBUG 1

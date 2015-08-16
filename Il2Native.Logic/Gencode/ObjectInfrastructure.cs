@@ -42,16 +42,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("(Byte*) ");
-
-            if (cWriter.GcDebug)
-            {
-                writer.Write("GC_MALLOC_ORIGINAL");
-            }
-            else
-            {
-                writer.Write(cWriter.GetAllocator(false, false));
-            }
-
+            writer.Write(cWriter.GetAllocator(false, false, cWriter.GcDebug));
             writer.Write("(");
             cWriter.WriteResult(size);
             writer.Write(")");
@@ -114,12 +105,8 @@ namespace Il2Native.Logic.Gencode
             newAlloc.LoadConstant(100 * 1024);
             var ifBigger100k = newAlloc.Branch(Code.Bge_Un, Code.Bge_Un_S);
 
-            var allocator = typeResolver.GetAllocator(isAtomicAllocation, false);
-            if (typeResolver.GcDebug && enableStringFastAllocation)
-            {
-                allocator = "GC_MALLOC_ORIGINAL";
-            }
-
+            var debugOriginalRequired = typeResolver.GcDebug && enableStringFastAllocation;
+            var allocator = typeResolver.GetAllocator(isAtomicAllocation, false, debugOriginalRequired);
             newAlloc.Call(
                 new SynthesizedMethod(
                     allocator,
@@ -130,12 +117,7 @@ namespace Il2Native.Logic.Gencode
 
             newAlloc.Add(ifBigger100k);
 
-            var allocatorBigObj = typeResolver.GetAllocator(isAtomicAllocation, true);
-            if (typeResolver.GcDebug && enableStringFastAllocation)
-            {
-                allocatorBigObj = "GC_MALLOC_ORIGINAL";
-            }
-
+            var allocatorBigObj = typeResolver.GetAllocator(isAtomicAllocation, true, debugOriginalRequired);
             newAlloc.Call(
                 new SynthesizedMethod(
                     allocatorBigObj,

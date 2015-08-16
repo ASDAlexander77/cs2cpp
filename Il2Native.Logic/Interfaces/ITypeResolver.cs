@@ -19,7 +19,7 @@
         bool Unsafe { get; }
 
         // TODO: should be in ICodeWriter
-        string GetAllocator(bool isAtomicAllocation, bool isBigObj);
+        string GetAllocator(bool isAtomicAllocation, bool isBigObj, bool debugOrigignalRequired);
 
         IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
 
