@@ -333,7 +333,7 @@ namespace Il2Native.Logic.Gencode
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
                     cWriter.WriteCCastOnly(toType);
-                    writer.Write("__new_interface((Void*)");
+                    writer.Write("__new_interface{0}((Void*)", cWriter.GcDebug ? "_debug" : string.Empty);
 
                     var mainOperand = opCodeOperand;
                     if (bareType.IsInterface)
@@ -367,6 +367,11 @@ namespace Il2Native.Logic.Gencode
                         cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
                         writer.Write(")->");
                         cWriter.WriteInterfacePath(bareType, toType, false);
+                    }
+
+                    if (cWriter.GcDebug)
+                    {
+                        writer.Write(", (SByte*)__FILE__, __LINE__");
                     }
 
                     writer.Write(")");

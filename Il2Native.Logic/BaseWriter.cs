@@ -168,14 +168,27 @@ namespace Il2Native.Logic
             ArraySingleDimensionGen.ResetClass();
         }
 
-        public virtual string GetAllocator(bool isAtomic, bool isBigObj)
+        public virtual string GetAllocator(bool isAtomic, bool isBigObj, bool debugOrigignalRequired)
         {
+            string allocator;
             if (isBigObj)
             {
-                return isAtomic ? "GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE" : "GC_MALLOC_IGNORE_OFF_PAGE";
+                allocator = isAtomic ? "GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE" : "GC_MALLOC_IGNORE_OFF_PAGE";
+                if (debugOrigignalRequired)
+                {
+                    return string.Concat(allocator, "_ORIGINAL");
+                }
+
+                return allocator;
             }
 
-            return isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
+            allocator = isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
+            if (debugOrigignalRequired)
+            {
+                return string.Concat(allocator, "_ORIGINAL");
+            }
+
+            return allocator;
         }
 
         /// <summary>

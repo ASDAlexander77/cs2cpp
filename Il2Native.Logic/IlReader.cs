@@ -1255,6 +1255,13 @@ namespace Il2Native.Logic
                             continue;
                         }
 
+                        var fullyDefinedReference = resolvedToken as FullyDefinedReference;
+                        if (fullyDefinedReference != null)
+                        {
+                            yield return new OpCodeFullyDefinedReferencePart(opCode, startAddress, currentAddress, fullyDefinedReference);
+                            continue;
+                        }
+
                         yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, token);
                         continue;
                     case Code.Newarr:

@@ -40,7 +40,7 @@
     <Compile Include="BaseWriter.cs" />
     <Compile Include="Code.cs" />
     <Compile Include="CodeEnum.cs" />
-    <Compile Include="CodeParts\OpCodeBytePart.cs" />
+    <Compile Include="CodeParts\OpCodeFullyDefinedReferencePart.cs" />
     <Compile Include="CodeParts\OpCodeConstructorInfoPart.cs" />
     <Compile Include="CodeParts\OpCodeDoublePart.cs" />
     <Compile Include="CodeParts\OpCodeFieldInfoPart.cs" />

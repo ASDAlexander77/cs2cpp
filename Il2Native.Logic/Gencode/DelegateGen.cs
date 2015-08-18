@@ -33,14 +33,11 @@ namespace Il2Native.Logic.Gencode
 
             codeList.LoadArgument(0);
             var invocationCountField = method.DeclaringType.BaseType.GetFieldByName("_invocationCount", typeResolver);
-#if !MSCORLIB
-            codeList.LoadField(invocationCountField);
-#else
+
             codeList.LoadFieldAddress(invocationCountField);
             // to load value from IntPtr
             codeList.LoadField(typeResolver.System.System_IntPtr.GetFieldByFieldNumber(0, typeResolver));
             codeList.Add(Code.Conv_I4);
-#endif
 
             var jumpForBrtrue_S = codeList.Branch(Code.Brtrue, Code.Brtrue_S);
 
@@ -61,9 +58,7 @@ namespace Il2Native.Logic.Gencode
             codeList.LoadArgument(0);
             codeList.LoadField(method.DeclaringType.BaseType.GetFieldByName("_invocationList", typeResolver));
 
-#if MSCORLIB
             codeList.Castclass(typeResolver.System.System_Object.ToArrayType(1));
-#endif
 
             codeList.LoadLocal(0);
             codeList.Add(Code.Ldelem_Ref);
@@ -93,14 +88,11 @@ namespace Il2Native.Logic.Gencode
             // for test
             codeList.LoadLocal(0);
             codeList.LoadArgument(0);
-#if !MSCORLIB
-            codeList.LoadField(invocationCountField);
-#else
+
             codeList.LoadFieldAddress(invocationCountField);
             // to load value from IntPtr
             codeList.LoadField(typeResolver.System.System_IntPtr.GetFieldByFieldNumber(0, typeResolver));
             codeList.Add(Code.Conv_I4);
-#endif
 
             codeList.Branch(Code.Blt, Code.Blt_S, labelForConditionLoop);
 

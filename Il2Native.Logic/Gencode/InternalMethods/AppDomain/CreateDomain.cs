@@ -13,6 +13,13 @@
 
             var nativeRuntimeType = typeResolver.ResolveType("System.AppDomain");
             codeBuilder.LoadArgument(0);
+
+            if (typeResolver.GcDebug)
+            {
+                codeBuilder.LoadToken(new FullyDefinedReference("(SByte*)__FILE__", typeResolver.System.System_SByte.ToPointerType()));
+                codeBuilder.LoadToken(new FullyDefinedReference("__LINE__", typeResolver.System.System_Int32));
+            }
+
             codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
             codeBuilder.Add(Code.Ret);
 

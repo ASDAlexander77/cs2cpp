@@ -1350,7 +1350,7 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 21).Where(n => !skip.Contains(n)))
             {
-                CompilerHelper.CompileAndRun(string.Format("gtest-variance-{0:00}", index));
+                CompilerHelper.CompileAndRun(string.Format("gtest-variance-{0:0}", index));
             }
         }
 

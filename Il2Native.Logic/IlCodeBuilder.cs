@@ -410,12 +410,6 @@
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
 
-        public void LoadToken(IConstBytes constBytes)
-        {
-            TokenResolutions.Add(constBytes);
-            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
-        }
-
         public void LoadToken(IField field)
         {
             Debug.Assert(field != null, "@field is null");
@@ -427,6 +421,13 @@
         {
             Debug.Assert(method != null, "@method is null");
             TokenResolutions.Add(method);
+            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
+        public void LoadToken(FullyDefinedReference fullyDefinedReference)
+        {
+            Debug.Assert(fullyDefinedReference != null, "@ref is null");
+            TokenResolutions.Add(fullyDefinedReference);
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
 

@@ -9,7 +9,7 @@ namespace System
     public abstract class MulticastDelegate : Delegate
     {
         private MulticastDelegate[] _invocationList;
-        private int _invocationCount;
+        private IntPtr _invocationCount;
 
         // This method returns the Invocation list of this multicast delegate.
         [System.Security.SecuritySafeCritical]
@@ -89,7 +89,7 @@ namespace System
             }
             else
             {
-                int invocationCount = _invocationCount;
+                int invocationCount = (int)_invocationCount;
                 resultCount = invocationCount + followCount;
                 resultList = null;
                 if (resultCount <= invocationList.Length)
@@ -256,8 +256,7 @@ namespace System
         {
             MulticastDelegate result = (MulticastDelegate)this.MemberwiseClone();
             result._invocationList = invocationList;
-            result._invocationCount = invocationCount;
-
+            result._invocationCount = (IntPtr)invocationCount;
             return result;
         }
 
