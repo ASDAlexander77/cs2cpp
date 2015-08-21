@@ -2125,7 +2125,7 @@ namespace Il2Native.Logic
             writer.Write(")");
 
             // call dynamic_cast or cast
-            var getStaticType = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedGetTypeStaticMethod(toType, this));
+            var getStaticType = new OpCodeFullyDefinedReferencePart(OpCodesEmit.Ldtoken, 0, 0, toType.GetFullyDefinedRefereneForRuntimeType(this));
 
             var castToObject = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
             castToObject.OpCodeOperands = new[] { opCodeOperand };
@@ -4421,7 +4421,7 @@ namespace Il2Native.Logic
                 this.Output.Write("extern ");
             }
 
-            fieldType.WriteTypePrefix(this);
+            fieldType.WriteTypePrefix(this, asStruct: field.IsStaticClassInitialization);
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
@@ -4442,7 +4442,7 @@ namespace Il2Native.Logic
         {
             var fieldType = field.FieldType;
 
-            if (fieldType.IsStructureType())
+            if (fieldType.IsStructureType() || field.IsStaticClassInitialization)
             {
                 this.Output.Write(" = ");
                 if (fieldType.IsStaticArrayInit)
@@ -4465,8 +4465,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    fieldType.WriteTypeWithoutModifiers(this);
-                    this.Output.Write("()/*undef*/");
+                    this.Output.Write("{ 0 }");
                 }
             }
             else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)
@@ -4495,7 +4494,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteStaticFieldName(IField field)
+        public void WriteStaticFieldName(IField field)
         {
             this.Output.Write(field.FullName.CleanUpName());
             if (IsAssemblyNamespaceRequired(field.DeclaringType))

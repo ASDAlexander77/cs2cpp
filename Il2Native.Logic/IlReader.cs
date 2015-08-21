@@ -685,7 +685,12 @@ namespace Il2Native.Logic
             if (!type.IsPrivateImplementationDetails)
             {
                 // special static field to store created type
-                yield return typeResolver.System.System_Type.ToField(type, ObjectInfrastructure.TypeHolderFieldName, isStatic: true);
+                yield return
+                    typeResolver.System.System_RuntimeType.ToField(
+                        type,
+                        ObjectInfrastructure.RuntimeTypeHolderFieldName,
+                        isStatic: true,
+                        isStaticClassInitialization: true);
             }
 
             if (type.IsStaticArrayInit)
@@ -762,7 +767,6 @@ namespace Il2Native.Logic
 
                 // we return it to avoid using empty interfaces (because in C++ struct{} has size 1 not 0)
                 yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
-                yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
 
                 // append internal methods
                 if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)

@@ -511,7 +511,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference)
+        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference, bool asStruct = false)
         {
             var refChar = '*';
             var effectiveType = type;
@@ -525,7 +525,8 @@ namespace Il2Native.Logic.Gencode
             do
             {
                 var isReference = !effectiveType.IsValueType;
-                if ((isReference || (!isReference && asReference && level == 0 && !type.IsByRef) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter)
+                var valueTypeAsReference = (!isReference && asReference && level == 0 && !type.IsByRef);
+                if ((isReference || valueTypeAsReference || effectiveType.IsPointer) && !effectiveType.IsGenericParameter && !(level == 0 && asStruct))
                 {
                     writer.Write(refChar);
                 }
@@ -569,14 +570,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, CWriter codeWriter, bool asReference = false, bool enumAsName = false)
+        public static void WriteTypePrefix(this IType type, CWriter codeWriter, bool asReference = false, bool enumAsName = false, bool asStruct = false)
         {
             var writer = codeWriter.Output;
 
             Debug.Assert(type != null, "Type can't be null to write");
 
             type.WriteTypeWithoutModifiers(codeWriter, enumAsName: enumAsName);
-            type.WriteTypeModifiers(writer, asReference);
+            type.WriteTypeModifiers(writer, asReference, asStruct);
         }
 
         /// <summary>

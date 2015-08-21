@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ArraySingleDimensionGen.cs" company="">
+// <copyright file="StringGen.cs" company="">
 //   
 // </copyright>
 // <summary>

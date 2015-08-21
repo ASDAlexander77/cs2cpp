@@ -32,7 +32,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
 
-        public const string TypeHolderFieldName = ".type";
+        public const string RuntimeTypeHolderFieldName = ".runtimetype";
 
         public static void WriteAllocateMemory(
             this CWriter cWriter,
@@ -455,25 +455,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallGetTypeObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
-        {
-            var method = new SynthesizedGetTypeStaticMethod(type, cWriter);
-            var opCodeNope = OpCodePart.CreateNop;
-            opCodeNope.UsedBy = new UsedByInfo(opCode);
-            cWriter.WriteCall(
-                opCodeNope,
-                method,
-                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         public static void WriteCallInitObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
             var method = new SynthesizedInitMethod(type, cWriter);
@@ -643,69 +624,7 @@ namespace Il2Native.Logic.Gencode
         {
             var codeBuilder = new IlCodeBuilder();
 
-            codeBuilder.Call(declaringType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, typeResolver));
-            codeBuilder.Add(Code.Ret);
-
-            return codeBuilder;
-        }
-
-        public static IlCodeBuilder GetGetTypeStaticMethod(this ITypeResolver typeResolver, IType declaringType)
-        {
-            var codeBuilder = new IlCodeBuilder();
-
-            var typeStorageType = declaringType.GetFieldByName(ObjectInfrastructure.TypeHolderFieldName, typeResolver);
-            codeBuilder.LoadField(typeStorageType);
-            var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
-
-            codeBuilder.LoadFieldAddress(typeStorageType);
-            ////codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver));
-            var nativeRuntimeType = typeResolver.ResolveType("System.NativeType");
-
-            if (typeResolver.GcDebug)
-            {
-                codeBuilder.LoadToken(new FullyDefinedReference("(SByte*)__FILE__", typeResolver.System.System_SByte.ToPointerType()));
-                codeBuilder.LoadToken(new FullyDefinedReference("__LINE__", typeResolver.System.System_Int32));
-            }
-
-            codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
-            codeBuilder.LoadNull();
-
-            codeBuilder.Call(
-                typeResolver.ResolveType("System.Threading.Interlocked")
-                            .GetMethodsByName("CompareExchange", typeResolver)
-                            .First(m => m.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_Object.ToByRefType())));
-
-            codeBuilder.Add(Code.Pop);
-
-            // start initializing RuntimeCache
-            codeBuilder.Locals.Add(nativeRuntimeType);
-            codeBuilder.LoadField(typeStorageType);
-            codeBuilder.SaveLocal(0);
-            // name
-            codeBuilder.LoadLocal(0);
-            codeBuilder.LoadString(declaringType.Name);
-            codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("name", typeResolver));
-            // fullname
-            codeBuilder.LoadLocal(0);
-            codeBuilder.LoadString(declaringType.FullName);
-            codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("fullname", typeResolver));
-            // base
-            if (declaringType.BaseType != null)
-            {
-                codeBuilder.LoadLocal(0);
-                codeBuilder.LoadToken(declaringType.BaseType);
-                codeBuilder.Call(
-                    typeResolver.System.System_Type.GetMethodsByName("GetTypeFromHandle", typeResolver).First(m => m.IsStatic && m.GetParameters().Count() == 1));
-                codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("baseType", typeResolver));
-            }
-
-            // attributeFlags
-            codeBuilder.LoadLocal(0);
-            codeBuilder.LoadConstant(declaringType.IsInterface ? (int)TypeAttributes.Interface : 0);
-            codeBuilder.SaveField(nativeRuntimeType.GetFieldByName("attributeFlags", typeResolver));
-            codeBuilder.Add(jumpIfNotNull);
-
-            codeBuilder.LoadField(typeStorageType);
+            codeBuilder.LoadToken(declaringType.GetFullyDefinedRefereneForRuntimeType((CWriter)typeResolver));
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
@@ -970,7 +889,7 @@ namespace Il2Native.Logic.Gencode
 
             foreach (var @interface in type.GetAllInterfaces())
             {
-                code.Call(new SynthesizedGetTypeStaticMethod(@interface, typeResolver));
+                code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)typeResolver));
                 code.LoadArgument(1);
 
                 var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);

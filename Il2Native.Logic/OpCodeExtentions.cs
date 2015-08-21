@@ -1699,5 +1699,23 @@ namespace Il2Native.Logic
 
             return thisType.ToClass();
         }
+
+        public static FullyDefinedReference GetFullyDefinedRefereneForRuntimeType(this IType type, CWriter cWriter)
+        {
+            var runtimeTypeReference = cWriter.WriteToString(
+                () =>
+                {
+                    cWriter.Output.Write("(");
+                    cWriter.System.System_Type.WriteTypePrefix(cWriter);
+                    cWriter.Output.Write(") &");
+                    cWriter.WriteStaticFieldName(
+                        IlReader.Fields(type, cWriter)
+                            .First(f => f.Name == ObjectInfrastructure.RuntimeTypeHolderFieldName));
+
+                    cWriter.System.System_Type.WriteTypePrefix(cWriter);
+                });
+
+            return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type);
+        }
     }
 }

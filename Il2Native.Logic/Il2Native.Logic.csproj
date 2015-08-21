@@ -85,8 +85,8 @@
     <Compile Include="Gencode\InternalMethods\Object\ObjectGetTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
+    <Compile Include="Gencode\StaticClassGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedConstBytesField.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
@@ -134,7 +134,6 @@
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetSizeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetTypeMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodBase.cs" />
@@ -221,11 +220,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\decimals.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\CoreLib\Impl\NativeType.cs">
-      <Link>Resources\NativeType.cs</Link>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_definitions.c" />

@@ -292,7 +292,6 @@
     <Compile Include="System\MidpointRounding.cs" />
     <Compile Include="System\MulticastDelegate.cs" />
     <Compile Include="System\MulticastNotSupportedException.cs" />
-    <Compile Include="Impl\NativeType.cs" />
     <Compile Include="System\NonSerializedAttribute.cs" />
     <Compile Include="System\NotImplementedException.cs" />
     <Compile Include="System\NotSupportedException.cs" />

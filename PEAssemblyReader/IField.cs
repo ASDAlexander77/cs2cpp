@@ -56,6 +56,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsStaticClassInitialization { get; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         byte[] GetFieldRVAData();

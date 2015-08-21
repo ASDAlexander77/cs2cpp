@@ -62,7 +62,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            typeInfo.Operand.WriteCallGetTypeObjectMethod(cWriter, opCodeMethodInfo);
+            cWriter.WriteResult(typeInfo.Operand.GetFullyDefinedRefereneForRuntimeType(cWriter));
             return true;
         }
     }
