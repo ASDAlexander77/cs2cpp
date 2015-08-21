@@ -1711,8 +1711,6 @@ namespace Il2Native.Logic
                     cWriter.WriteStaticFieldName(
                         IlReader.Fields(type, cWriter)
                             .First(f => f.Name == ObjectInfrastructure.RuntimeTypeHolderFieldName));
-
-                    cWriter.System.System_Type.WriteTypePrefix(cWriter);
                 });
 
             return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type);
