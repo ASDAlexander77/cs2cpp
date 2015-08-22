@@ -36,10 +36,10 @@ namespace Il2Native.Logic.Gencode
 
         public static void WriteClassInitialization(this CWriter cWriter, IType fieldType)
         {
-            WriteClassInitializationInternal(cWriter, fieldType, fieldType);
+            cWriter.WriteClassInitializationInternal(fieldType, fieldType);
         }
 
-        private static void WriteClassInitializationInternal(CWriter cWriter, IType type, IType instanceType)
+        private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, bool withBase = true)
         {
             var comma = false;
 
@@ -47,7 +47,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write("{ ");
 
-            if (type.BaseType != null)
+            if (withBase && type.BaseType != null)
             {
                 WriteClassInitializationInternal(cWriter, type.BaseType, instanceType);
                 comma = true;
@@ -73,7 +73,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    cWriter.WriteClassInitialization(field.FieldType);
+                    cWriter.WriteClassInitializationInternal(field.FieldType, field.FieldType, false);
                 }
 
                 comma = true;
