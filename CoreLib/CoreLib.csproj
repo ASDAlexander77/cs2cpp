@@ -335,7 +335,10 @@
     <Compile Include="System\Random.cs" />
     <Compile Include="System\Reflection\CallingConventions.cs" />
     <Compile Include="System\Reflection\CustomAttribute.cs" />
-    <Compile Include="System\Reflection\EventInfo.cs" />
+    <Compile Include="System\Reflection\EventInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\GenericParameterAttributes.cs" />
     <Compile Include="System\Reflection\InterfaceMapping.cs" />
     <Compile Include="System\Reflection\MemberFilter.cs" />
@@ -469,7 +472,10 @@
     <Compile Include="System\Reflection\AssemblyAttributes.cs" />
     <Compile Include="System\Reflection\AssemblyNameFlags.cs" />
     <Compile Include="System\Reflection\AssemblyReflectionAttributes.cs" />
-    <Compile Include="System\Reflection\Binder.cs" />
+    <Compile Include="System\Reflection\Binder.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\BindingFlags.cs" />
     <Compile Include="System\Reflection\ConstructorInfo.cs" />
     <Compile Include="System\Reflection\DefaultMemberAttribute.cs" />
@@ -482,9 +488,15 @@
     <Compile Include="System\Reflection\MemberInfo.cs" />
     <Compile Include="System\Reflection\MethodImplAttributes.cs" />
     <Compile Include="System\Reflection\MemberTypes.cs" />
-    <Compile Include="System\Reflection\MethodBase.cs" />
+    <Compile Include="System\Reflection\MethodBase.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\MethodInfo.cs" />
-    <Compile Include="System\Reflection\PropertyInfo.cs" />
+    <Compile Include="System\Reflection\PropertyInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\RuntimeConstructorInfo.cs" />
     <Compile Include="System\Reflection\RuntimeMethodInfo.cs" />
     <Compile Include="System\Resources\ResourceManager.cs" />
