@@ -14,6 +14,11 @@ namespace System
         {
             throw new NotImplementedException();
         }
+
+        public static ulong ToUInt64(object getValue)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

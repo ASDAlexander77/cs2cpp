@@ -52,6 +52,11 @@ namespace System.Runtime.InteropServices
         {
             return new Exception();
         }
+
+        public static int ReadInt32(IntPtr arModifiers, int p1)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 
