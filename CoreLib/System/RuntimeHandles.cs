@@ -1324,6 +1324,10 @@ namespace System
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal extern static bool IsConstructor(RuntimeMethodHandleInternal method);
+
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal extern static LoaderAllocator GetLoaderAllocator(RuntimeMethodHandleInternal method);
     }
 
     // This type is used to remove the expense of having a managed reference object that is dynamically 

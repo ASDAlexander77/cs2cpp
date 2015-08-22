@@ -74,6 +74,7 @@
     <Compile Include="System\AppContext\AppContextSwitches.cs" />
     <Compile Include="System\ArgIterator.cs" />
     <Compile Include="System\ArrayTypeMismatchException.cs" />
+    <Compile Include="System\BadImageFormatException.cs" />
     <Compile Include="System\BCLDebug.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentDictionary.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentQueue.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="System\ContextBoundObject.cs" />
     <Compile Include="System\DefaultBinder.cs" />
     <Compile Include="System\Diagnostics\Eventing\EventSource.cs" />
+    <Compile Include="System\FieldAccessException.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
     <Compile Include="System\IO\Directory.cs" />
     <Compile Include="System\IO\DirectoryInfo.cs" />
@@ -117,27 +119,47 @@
       <SubType>
       </SubType>
     </Compile>
-    <Compile Include="System\MissingMemberException.cs" />
+    <Compile Include="System\MissingMemberException.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\MissingMethodException.cs" />
     <Compile Include="System\OperatingSystem.cs" />
     <Compile Include="System\PlatformID.cs" />
+    <Compile Include="System\Reflection\AmbiguousMatchException.cs" />
+    <Compile Include="System\Reflection\Associates.cs" />
+    <Compile Include="System\Reflection\CustomAttributeFormatException.cs" />
     <Compile Include="System\Reflection\EventAttributes.cs" />
     <Compile Include="System\Reflection\FieldAttributes.cs" />
     <Compile Include="System\Reflection\ICustomAttributeProvider.cs" />
     <Compile Include="System\Reflection\InvalidFilterCriteriaException.cs" />
     <Compile Include="System\Reflection\IReflectableType.cs" />
+    <Compile Include="System\Reflection\LoaderAllocator.cs" />
+    <Compile Include="System\Reflection\MdConstant.cs" />
     <Compile Include="System\Reflection\MdImport.cs" />
     <Compile Include="System\Reflection\MethodAttributes.cs">
       <SubType>
       </SubType>
     </Compile>
+    <Compile Include="System\Reflection\Missing.cs" />
     <Compile Include="System\Reflection\ParameterAttributes.cs" />
-    <Compile Include="System\Reflection\ParameterInfo.cs" />
+    <Compile Include="System\Reflection\ParameterInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\Pointer.cs" />
     <Compile Include="System\Reflection\PropertyAttributes.cs" />
+    <Compile Include="System\Reflection\TargetException.cs" />
+    <Compile Include="System\Reflection\TargetInvocationException.cs" />
+    <Compile Include="System\Reflection\TargetParameterCountException.cs" />
     <Compile Include="System\Reflection\TypeInfo.cs" />
+    <Compile Include="System\Reflection\__Filters.cs" />
     <Compile Include="System\RtType.cs" />
     <Compile Include="System\RuntimeHandles.cs" />
     <Compile Include="System\Runtime\CompilerServices\ConditionalWeakTable.cs" />
+    <Compile Include="System\Runtime\CompilerServices\CustomConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />
+    <Compile Include="System\Runtime\CompilerServices\TypeForwardedToAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\YieldAwaitable.cs" />
     <Compile Include="System\Runtime\ExceptionServices\ExceptionServicesCommon.cs" />
     <Compile Include="System\Runtime\InteropServices\CriticalHandle.cs" />
@@ -334,7 +356,10 @@
     <Compile Include="System\ParseNumbers.cs" />
     <Compile Include="System\Random.cs" />
     <Compile Include="System\Reflection\CallingConventions.cs" />
-    <Compile Include="System\Reflection\CustomAttribute.cs" />
+    <Compile Include="System\Reflection\CustomAttribute.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\EventInfo.cs">
       <SubType>
       </SubType>
@@ -477,7 +502,10 @@
       </SubType>
     </Compile>
     <Compile Include="System\Reflection\BindingFlags.cs" />
-    <Compile Include="System\Reflection\ConstructorInfo.cs" />
+    <Compile Include="System\Reflection\ConstructorInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\DefaultMemberAttribute.cs" />
     <Compile Include="System\Reflection\FieldInfo.cs">
       <SubType>
@@ -492,13 +520,14 @@
       <SubType>
       </SubType>
     </Compile>
-    <Compile Include="System\Reflection\MethodInfo.cs" />
+    <Compile Include="System\Reflection\MethodInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\PropertyInfo.cs">
       <SubType>
       </SubType>
     </Compile>
-    <Compile Include="System\Reflection\RuntimeConstructorInfo.cs" />
-    <Compile Include="System\Reflection\RuntimeMethodInfo.cs" />
     <Compile Include="System\Resources\ResourceManager.cs" />
     <Compile Include="System\Runtime\CompilerServices\AccessedThroughPropertyAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\ExtensionAttribute.cs" />

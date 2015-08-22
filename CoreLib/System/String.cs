@@ -23,6 +23,8 @@ namespace System
         private int m_stringLength;
         private char m_firstChar;
 
+        internal char FirstChar { get { return m_firstChar; } }
+
         public override int GetHashCode()
         {
             unsafe
@@ -1148,6 +1150,13 @@ namespace System
 
         public extern int LastIndexOf(char value, int startIndex, int count);
 
+        public extern int LastIndexOf(string value, StringComparison sc = StringComparison.Ordinal);
+
+        public extern int LastIndexOf(string value, int startIndex, StringComparison sc = StringComparison.Ordinal);
+
+
+        public extern int LastIndexOf(string value, int startIndex, int count);
+
 
         public extern int LastIndexOfAny(char[] anyOf);
 
@@ -1192,7 +1201,7 @@ namespace System
             return -1;
         }
 
-        public String ToLower()
+        public String ToLower(CultureInfo cultureInfo = null)
         {
             var s = FastAllocateString(this.Length);
 
@@ -1726,7 +1735,12 @@ namespace System
             throw new NotImplementedException();
         }
 
-        public bool EndsWith(char endChar)
+        public bool EndsWith(char endChar, StringComparison stringComparison = StringComparison.Ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool EndsWith(string end, StringComparison stringComparison = StringComparison.Ordinal)
         {
             throw new NotImplementedException();
         }

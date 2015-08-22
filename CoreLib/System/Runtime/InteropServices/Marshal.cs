@@ -57,6 +57,11 @@ namespace System.Runtime.InteropServices
         {
             throw new NotImplementedException();
         }
+
+        public static int ReadInt16(IntPtr blobStart)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

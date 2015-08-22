@@ -72,7 +72,7 @@ namespace System {
             ClassName   = className;
             MemberName  = memberName;
         }
-           
+       
         // If ClassName != null, GetMessage will construct on the fly using it
         // and the other variables. This allows customization of the
         // format depending on the language environment.

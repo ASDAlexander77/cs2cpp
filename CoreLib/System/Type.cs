@@ -43,6 +43,8 @@ namespace System {
         public static readonly MemberFilter FilterName = new MemberFilter(__Filters.Instance.FilterName);
         public static readonly MemberFilter FilterNameIgnoreCase = new MemberFilter(__Filters.Instance.FilterIgnoreCase);
 
+        public static readonly Object Missing = System.Reflection.Missing.Value;
+
         public static readonly char Delimiter = '.'; 
 
         // EmptyTypes is used to indicate that we are looking for someting without any parameters.
@@ -1843,7 +1845,12 @@ namespace System {
         // private convenience data
         private const BindingFlags DefaultLookup = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
         internal const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-}
+
+        public TypeInfo GetTypeInfo()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
 #if CONTRACTS_FULL
     [ContractClassFor(typeof(Type))]

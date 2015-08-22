@@ -4,7 +4,9 @@
 /*=============================================================================
 **
 **
+**
 ** Purpose: The exception class for class loading failures.
+**
 **
 =============================================================================*/
 
@@ -16,20 +18,20 @@ namespace System {
     using System.Globalization;
 [System.Runtime.InteropServices.ComVisible(true)]
     [Serializable]
-    public class MissingFieldException : MissingMemberException {
-        public MissingFieldException() 
-            : base(Environment.GetResourceString("Arg_MissingFieldException")) {
-            SetErrorCode(__HResults.COR_E_MISSINGFIELD);
+    public class MissingMethodException : MissingMemberException {
+        public MissingMethodException() 
+            : base(Environment.GetResourceString("Arg_MissingMethodException")) {
+            SetErrorCode(__HResults.COR_E_MISSINGMETHOD);
         }
     
-        public MissingFieldException(String message) 
+        public MissingMethodException(String message) 
             : base(message) {
-            SetErrorCode(__HResults.COR_E_MISSINGFIELD);
+            SetErrorCode(__HResults.COR_E_MISSINGMETHOD);
         }
     
-        public MissingFieldException(String message, Exception inner) 
+        public MissingMethodException(String message, Exception inner) 
             : base(message, inner) {
-            SetErrorCode(__HResults.COR_E_MISSINGFIELD);
+            SetErrorCode(__HResults.COR_E_MISSINGMETHOD);
         }
 
         public override String Message
@@ -40,25 +42,25 @@ namespace System {
                     return base.Message;
                 } else {
                     // do any desired fixups to classname here.
-                    return Environment.GetResourceString("MissingField_Name",
-                                                                       (Signature != null ? FormatSignature(Signature) + " " : "") +
-                                                                       ClassName + "." + MemberName);
+                    return Environment.GetResourceString("MissingMethod_Name",
+                                                                       ClassName + "." + MemberName +
+                                                                       (Signature != null ? " " + FormatSignature(Signature) : ""));
                 }
             }
         }
     
         // Called from the EE
-        private MissingFieldException(String className, String fieldName, byte[] signature)
+        private MissingMethodException(String className, String methodName, byte[] signature)
         {
             ClassName   = className;
-            MemberName  = fieldName;
+            MemberName  = methodName;
             Signature   = signature;
         }
     
-        public MissingFieldException(String className, String fieldName)
+        public MissingMethodException(String className, String methodName)
         {
             ClassName   = className;
-            MemberName  = fieldName;
+            MemberName  = methodName;
         }
     
         // If ClassName != null, Message will construct on the fly using it

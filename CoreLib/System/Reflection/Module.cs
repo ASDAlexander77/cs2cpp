@@ -906,19 +906,6 @@ namespace System.Reflection
             return str;
         }
 
-        public override void GetPEKind(out PortableExecutableKinds peKind, out ImageFileMachine machine)
-        {
-            ModuleHandle.GetPEKind(GetNativeHandle(), out peKind, out machine);
-        }
-
-        public override int MDStreamVersion
-        {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            get
-            {
-                return ModuleHandle.GetMDStreamVersion(GetNativeHandle());
-            }
-        }
         #endregion
 
         #region Data Members

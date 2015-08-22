@@ -97,6 +97,20 @@ namespace System
             return (d.Equals(this)) ? null : this;
         }
     }
+
+    // These flags effect the way BindToMethodInfo and BindToMethodName are allowed to bind a delegate to a target method. Their
+    // values must be kept in sync with the definition in vm\comdelegate.h.
+    internal enum DelegateBindingFlags
+    {
+        StaticMethodOnly = 0x00000001, // Can only bind to static target methods
+        InstanceMethodOnly = 0x00000002, // Can only bind to instance (including virtual) methods
+        OpenDelegateOnly = 0x00000004, // Only allow the creation of delegates open over the 1st argument
+        ClosedDelegateOnly = 0x00000008, // Only allow the creation of delegates closed over the 1st argument
+        NeverCloseOverNull = 0x00000010, // A null target will never been considered as a possible null 1st argument
+        CaselessMatching = 0x00000020, // Use case insensitive lookup for methods matched by name
+        SkipSecurityChecks = 0x00000040, // Skip security checks (visibility, link demand etc.)
+        RelaxedSignature = 0x00000080, // Allow relaxed signature matching (co/contra variance)
+    }
 }
 
 

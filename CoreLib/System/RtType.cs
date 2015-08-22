@@ -32,6 +32,7 @@ using System.Runtime.Remoting.Metadata;
 using RuntimeTypeCache = System.RuntimeType.RuntimeTypeCache;
 using System.Runtime.InteropServices;
 using DebuggerStepThroughAttribute = System.Diagnostics.DebuggerStepThroughAttribute;
+using MdToken = System.Reflection.MetadataToken;
 using System.Runtime.Versioning;
 using System.Diagnostics.Contracts;
 
@@ -3676,28 +3677,6 @@ namespace System
                 return RuntimeTypeHandle.CanCastTo(fromType, this);
             }
 
-            // Special case for TypeBuilder to be backward-compatible.
-            if (c is System.Reflection.Emit.TypeBuilder)
-            {
-                // If c is a subclass of this class, then c can be cast to this type.
-                if (c.IsSubclassOf(this))
-                    return true;
-
-                if (this.IsInterface)
-                {
-                    return c.ImplementInterface(this);
-                }
-                else if (this.IsGenericParameter)
-                {
-                    Type[] constraints = GetGenericParameterConstraints();
-                    for (int i = 0; i < constraints.Length; i++)
-                        if (!constraints[i].IsAssignableFrom(c))
-                            return false;
-
-                    return true;
-                }
-            }
-
             // For anything else we return false.
             return false;
         }
@@ -4134,60 +4113,6 @@ namespace System
                 types = EmptyArray<Type>.Value;
 
             return types;
-        }
-
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        public override Type MakeGenericType(Type[] instantiation)
-        {
-            if (instantiation == null)
-                throw new ArgumentNullException("instantiation");
-            Contract.EndContractBlock();
-
-            RuntimeType[] instantiationRuntimeType = new RuntimeType[instantiation.Length];
-
-            if (!IsGenericTypeDefinition)
-                throw new InvalidOperationException(
-                    Environment.GetResourceString("Arg_NotGenericTypeDefinition", this));
-
-            if (GetGenericArguments().Length != instantiation.Length)
-                throw new ArgumentException(Environment.GetResourceString("Argument_GenericArgsCount"), "instantiation");
-
-            for (int i = 0; i < instantiation.Length; i ++)
-            {
-                Type instantiationElem = instantiation[i];
-                if (instantiationElem == null)
-                    throw new ArgumentNullException();
-
-                RuntimeType rtInstantiationElem = instantiationElem as RuntimeType;
-
-                if (rtInstantiationElem == null)
-                {
-                    Type[] instantiationCopy = new Type[instantiation.Length];
-                    for (int iCopy = 0; iCopy < instantiation.Length; iCopy++)
-                        instantiationCopy[iCopy] = instantiation[iCopy];
-                    instantiation = instantiationCopy;
-                    return System.Reflection.Emit.TypeBuilderInstantiation.MakeGenericType(this, instantiation);
-                }
-
-                instantiationRuntimeType[i] = rtInstantiationElem;
-            }
-
-            RuntimeType[] genericParameters = GetGenericArgumentsInternal();
-
-            SanityCheckGenericArguments(instantiationRuntimeType, genericParameters);
-
-            Type ret = null;
-            try 
-            {
-                ret = new RuntimeTypeHandle(this).Instantiate(instantiationRuntimeType);
-            }
-            catch (TypeLoadException e)
-            {
-                ValidateGenericArguments(this, instantiationRuntimeType, e);
-                throw e;
-            }
-
-            return ret;
         }
 
         public override bool IsGenericTypeDefinition
@@ -5200,37 +5125,6 @@ namespace System
                             throw new MissingMethodException(Environment.GetResourceString("MissingConstructor_Name", FullName));
                         }
 
-                        // If we're creating a delegate, we're about to call a
-                        // constructor taking an integer to represent a target
-                        // method. Since this is very difficult (and expensive)
-                        // to verify, we're just going to demand UnmanagedCode
-                        // permission before allowing this. Partially trusted
-                        // clients can instead use Delegate.CreateDelegate,
-                        // which allows specification of the target method via
-                        // name or MethodInfo.
-                        //if (isDelegate)
-                        if (RuntimeType.DelegateType.IsAssignableFrom(invokeMethod.DeclaringType))
-                        {
-#if FEATURE_CORECLR
-                            // In CoreCLR, CAS is not exposed externally. So what we really are looking
-                            // for is to see if the external caller of this API is transparent or not.
-                            // We get that information from the fact that a Demand will succeed only if
-                            // the external caller is not transparent. 
-                            try
-                            {
-#pragma warning disable 618
-                                new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
-#pragma warning restore 618
-                            }
-                            catch
-                            {
-                                throw new NotSupportedException(String.Format(CultureInfo.CurrentCulture, Environment.GetResourceString("NotSupported_DelegateCreationFromPT")));
-                            }
-#else // FEATURE_CORECLR
-                            new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
-#endif // FEATURE_CORECLR
-                        }
-
                         if (invokeMethod.GetParametersNoCopy().Length == 0)
                         {
                             if (args.Length != 0)
@@ -5322,7 +5216,6 @@ namespace System
                     
                     if (delegateCtorInfo == null)
                         InitializeDelegateCreator();
-                    delegateCreatePermissions.Assert();
 
                     // No synchronization needed here. In the worst case we create extra garbage
                     CtorDelegate ctor = (CtorDelegate)delegateCtorInfo.Invoke(new Object[] { null, RuntimeMethodHandle.GetFunctionPointer(ace.m_hCtorMethodHandle) });
@@ -5939,18 +5832,7 @@ namespace System.Reflection
 
         private static int GetHashCodeHelper(K key)
         {
-            string sKey = key as string;
-
-            // For strings we don't want the key to differ across domains as CerHashtable might be shared.
-            if(sKey == null)
-            {
-                return key.GetHashCode(); 
-
-            }
-            else
-            {
-                return sKey.GetLegacyNonRandomizedHashCode();
-            }               
+            return key.GetHashCode(); 
         }
 
         private void Rehash(int newSize)

@@ -15,7 +15,7 @@
 
 namespace System.Reflection 
 {
-    using System;
+    using System;    
     using System.Collections;
     using System.Collections.Generic;
     using CultureInfo = System.Globalization.CultureInfo;
@@ -383,51 +383,6 @@ namespace System.Reflection
             throw new NotImplementedException();
         }
 #endif //FEATURE_MULTIMODULE_ASSEMBLIES
-
-        //
-        // Locates a type from this assembly and creates an instance of it using
-        // the system activator. 
-        //
-        public Object CreateInstance(String typeName)
-        {
-            return CreateInstance(typeName,
-                                  false, // ignore case
-                                  BindingFlags.Public | BindingFlags.Instance,
-                                  null, // binder
-                                  null, // args
-                                  null, // culture
-                                  null); // activation attributes
-        }
-
-        public Object CreateInstance(String typeName,
-                                     bool ignoreCase)
-        {
-            return CreateInstance(typeName,
-                                  ignoreCase,
-                                  BindingFlags.Public | BindingFlags.Instance,
-                                  null, // binder
-                                  null, // args
-                                  null, // culture
-                                  null); // activation attributes
-        }
-
-        public virtual Object CreateInstance(String typeName, 
-                                     bool ignoreCase,
-                                     BindingFlags bindingAttr, 
-                                     Binder binder,
-                                     Object[] args,
-                                     CultureInfo culture,
-                                     Object[] activationAttributes)
-        {
-            Type t = GetType(typeName, false, ignoreCase);
-            if (t == null) return null;
-            return Activator.CreateInstance(t,
-                                            bindingAttr,
-                                            binder,
-                                            args,
-                                            culture,
-                                            activationAttributes);
-        }
 
         public virtual IEnumerable<Module> Modules
         {
@@ -846,23 +801,6 @@ namespace System.Reflection
 
                 return rtTypes.ToArray();
             }
-        }
-
-        // Load a resource based on the NameSpace of the type.
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.NoInlining)] // Methods containing StackCrawlMark local var has to be marked non-inlineable
-        public override Stream GetManifestResourceStream(Type type, String name)
-        {
-            StackCrawlMark stackMark = StackCrawlMark.LookForMyCaller;
-            return GetManifestResourceStream(type, name, false, ref stackMark);
-        }
-    
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.NoInlining)] // Methods containing StackCrawlMark local var has to be marked non-inlineable
-        public override Stream GetManifestResourceStream(String name)
-        {
-            StackCrawlMark stackMark = StackCrawlMark.LookForMyCaller;
-            return GetManifestResourceStream(name, ref stackMark, false);
         }
 
 #if FEATURE_CAS_POLICY
@@ -1400,33 +1338,6 @@ namespace System.Reflection
 #endif // !PLATFORM_UNIX
         }
 
-        [System.Security.SecurityCritical]  // auto-generated
-        internal Stream GetManifestResourceStream(
-            Type type,
-            String name,
-            bool skipSecurityCheck,
-            ref StackCrawlMark stackMark)
-        {
-            StringBuilder sb = new StringBuilder();
-            if(type == null) {
-                if (name == null)
-                    throw new ArgumentNullException("type");
-            }
-            else {
-                String nameSpace = type.Namespace;
-                if(nameSpace != null) {
-                    sb.Append(nameSpace);
-                    if(name != null) 
-                        sb.Append(Type.Delimiter);
-                }
-            }
-
-            if(name != null)
-                sb.Append(name);
-    
-            return GetManifestResourceStream(sb.ToString(), ref stackMark, skipSecurityCheck);
-        }
-
 #if FEATURE_CAS_POLICY
         internal bool IsStrongNameVerified
         {
@@ -1449,24 +1360,6 @@ namespace System.Reflection
                                                        out ulong length,
                                                        StackCrawlMarkHandle stackMark,
                                                        bool skipSecurityCheck);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        internal unsafe Stream GetManifestResourceStream(String name, ref StackCrawlMark stackMark, bool skipSecurityCheck)
-        {
-            ulong length = 0;
-            byte* pbInMemoryResource = GetResource(GetNativeHandle(), name, out length, JitHelpers.GetStackCrawlMarkHandle(ref stackMark), skipSecurityCheck);
-
-            if (pbInMemoryResource != null) {
-                //Console.WriteLine("Creating an unmanaged memory stream of length "+length);
-                if (length > Int64.MaxValue)
-                    throw new NotImplementedException(Environment.GetResourceString("NotImplemented_ResourcesLongerThan2^63"));
-
-                return new UnmanagedMemoryStream(pbInMemoryResource, (long)length, (long)length, FileAccess.Read, true);
-            }
-
-            //Console.WriteLine("GetManifestResourceStream: Blob "+name+" not found...");
-            return null;
-        }
 
         [System.Security.SecurityCritical]  // auto-generated
         [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
@@ -1645,36 +1538,6 @@ namespace System.Reflection
         internal bool IsAllSecurityTransparent()
         {
             return IsAllSecurityTransparent(GetNativeHandle());
-        }
-
-        [MethodImplAttribute(MethodImplOptions.NoInlining)] // Methods containing StackCrawlMark local var has to be marked non-inlineable  
-        public override Assembly GetSatelliteAssembly(CultureInfo culture)
-        {
-            StackCrawlMark stackMark = StackCrawlMark.LookForMyCaller;
-            return InternalGetSatelliteAssembly(culture, null, ref stackMark);
-        }
-
-        // Useful for binding to a very specific version of a satellite assembly
-        [MethodImplAttribute(MethodImplOptions.NoInlining)] // Methods containing StackCrawlMark local var has to be marked non-inlineable  
-        public override Assembly GetSatelliteAssembly(CultureInfo culture, Version version)
-        {
-            StackCrawlMark stackMark = StackCrawlMark.LookForMyCaller;
-            return InternalGetSatelliteAssembly(culture, version, ref stackMark);
-        }
-
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.NoInlining)] // Methods containing StackCrawlMark local var has to be marked non-inlineable  
-        internal Assembly InternalGetSatelliteAssembly(CultureInfo culture,
-                                                       Version version,
-                                                       ref StackCrawlMark stackMark)
-        {
-            if (culture == null)
-                throw new ArgumentNullException("culture");
-            Contract.EndContractBlock();
-
-
-            String name = GetSimpleName() + ".resources";
-            return InternalGetSatelliteAssembly(name, culture, version, true, ref stackMark);
         }
 
 #if FEATURE_CORECLR

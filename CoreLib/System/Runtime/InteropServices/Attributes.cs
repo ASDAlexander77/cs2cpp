@@ -1,4 +1,5 @@
-// Licensed under the MIT license.
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +522,6 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public unsafe sealed class MarshalAsAttribute : Attribute
     {
-        /*
         [System.Security.SecurityCritical]  // auto-generated
         internal static Attribute GetCustomAttribute(RuntimeParameterInfo parameter)
         {
@@ -582,7 +582,6 @@ namespace System.Runtime.InteropServices
                 unmanagedType, safeArraySubType, safeArrayUserDefinedType, arraySubType,
                 (short)sizeParamIndex, sizeConst, marshalTypeName, marshalTypeRef, marshalCookie, iidParamIndex);
         }
-        */
 
         internal MarshalAsAttribute(UnmanagedType val, VarEnum safeArraySubType, RuntimeType safeArrayUserDefinedSubType, UnmanagedType arraySubType,
             short sizeParamIndex, int sizeConst, string marshalType, RuntimeType marshalTypeRef, string marshalCookie, int iidParamIndex)
@@ -669,6 +668,19 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class PreserveSigAttribute : Attribute
     {
+        internal static Attribute GetCustomAttribute(RuntimeMethodInfo method)
+        {
+            if ((method.GetMethodImplementationFlags() & MethodImplAttributes.PreserveSig) == 0)
+                return null;
+
+            return new PreserveSigAttribute();
+        }
+
+        internal static bool IsDefined(RuntimeMethodInfo method)
+        {
+            return (method.GetMethodImplementationFlags() & MethodImplAttributes.PreserveSig) != 0;
+        }
+
         public PreserveSigAttribute()
         {
         }
@@ -678,6 +690,15 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class InAttribute : Attribute
     {
+        internal static Attribute GetCustomAttribute(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsIn ? new InAttribute() : null;
+        }
+        internal static bool IsDefined(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsIn;
+        }
+
         public InAttribute()
         {
         }
@@ -687,6 +708,15 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class OutAttribute : Attribute
     {
+        internal static Attribute GetCustomAttribute(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsOut ? new OutAttribute() : null;
+        }
+        internal static bool IsDefined(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsOut;
+        }
+
         public OutAttribute()
         {
         }
@@ -696,6 +726,15 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class OptionalAttribute : Attribute
     {
+        internal static Attribute GetCustomAttribute(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsOptional ? new OptionalAttribute() : null;
+        }
+        internal static bool IsDefined(RuntimeParameterInfo parameter)
+        {
+            return parameter.IsOptional;
+        }
+
         public OptionalAttribute()
         {
         }
@@ -730,6 +769,63 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public unsafe sealed class DllImportAttribute : Attribute
     {
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static Attribute GetCustomAttribute(RuntimeMethodInfo method)
+        {
+            if ((method.Attributes & MethodAttributes.PinvokeImpl) == 0)
+                return null;
+
+            MetadataImport scope = ModuleHandle.GetMetadataImport(method.Module.ModuleHandle.GetRuntimeModule());
+            string entryPoint, dllName = null;
+            int token = method.MetadataToken;
+            PInvokeAttributes flags = 0;
+
+            scope.GetPInvokeMap(token, out flags, out entryPoint, out dllName);
+
+            CharSet charSet = CharSet.None;
+
+            switch (flags & PInvokeAttributes.CharSetMask)
+            {
+                case PInvokeAttributes.CharSetNotSpec: charSet = CharSet.None; break;
+                case PInvokeAttributes.CharSetAnsi: charSet = CharSet.Ansi; break;
+                case PInvokeAttributes.CharSetUnicode: charSet = CharSet.Unicode; break;
+                case PInvokeAttributes.CharSetAuto: charSet = CharSet.Auto; break;
+
+                // Invalid: default to CharSet.None
+                default: break;
+            }
+
+            CallingConvention callingConvention = CallingConvention.Cdecl;
+
+            switch (flags & PInvokeAttributes.CallConvMask)
+            {
+                case PInvokeAttributes.CallConvWinapi: callingConvention = CallingConvention.Winapi; break;
+                case PInvokeAttributes.CallConvCdecl: callingConvention = CallingConvention.Cdecl; break;
+                case PInvokeAttributes.CallConvStdcall: callingConvention = CallingConvention.StdCall; break;
+                case PInvokeAttributes.CallConvThiscall: callingConvention = CallingConvention.ThisCall; break;
+                case PInvokeAttributes.CallConvFastcall: callingConvention = CallingConvention.FastCall; break;
+
+                // Invalid: default to CallingConvention.Cdecl
+                default: break;
+            }
+
+            bool exactSpelling = (flags & PInvokeAttributes.NoMangle) != 0;
+            bool setLastError = (flags & PInvokeAttributes.SupportsLastError) != 0;
+            bool bestFitMapping = (flags & PInvokeAttributes.BestFitMask) == PInvokeAttributes.BestFitEnabled;
+            bool throwOnUnmappableChar = (flags & PInvokeAttributes.ThrowOnUnmappableCharMask) == PInvokeAttributes.ThrowOnUnmappableCharEnabled;
+            bool preserveSig = (method.GetMethodImplementationFlags() & MethodImplAttributes.PreserveSig) != 0;
+
+            return new DllImportAttribute(
+                dllName, entryPoint, charSet, exactSpelling, setLastError, preserveSig,
+                callingConvention, bestFitMapping, throwOnUnmappableChar);
+        }
+
+        internal static bool IsDefined(RuntimeMethodInfo method)
+        {
+            return (method.Attributes & MethodAttributes.PinvokeImpl) != 0;
+        }
+
+
         internal DllImportAttribute(
             string dllName, string entryPoint, CharSet charSet, bool exactSpelling, bool setLastError, bool preserveSig,
             CallingConvention callingConvention, bool bestFitMapping, bool throwOnUnmappableChar)
@@ -770,6 +866,49 @@ namespace System.Runtime.InteropServices
     {
         private const int DEFAULT_PACKING_SIZE = 8;
 
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static Attribute GetCustomAttribute(RuntimeType type)
+        {
+            if (!IsDefined(type))
+                return null;
+
+            int pack = 0, size = 0;
+            LayoutKind layoutKind = LayoutKind.Auto;
+            switch (type.Attributes & TypeAttributes.LayoutMask)
+            {
+                case TypeAttributes.ExplicitLayout: layoutKind = LayoutKind.Explicit; break;
+                case TypeAttributes.AutoLayout: layoutKind = LayoutKind.Auto; break;
+                case TypeAttributes.SequentialLayout: layoutKind = LayoutKind.Sequential; break;
+                default: Contract.Assume(false); break;
+            }
+
+            CharSet charSet = CharSet.None;
+            switch (type.Attributes & TypeAttributes.StringFormatMask)
+            {
+                case TypeAttributes.AnsiClass: charSet = CharSet.Ansi; break;
+                case TypeAttributes.AutoClass: charSet = CharSet.Auto; break;
+                case TypeAttributes.UnicodeClass: charSet = CharSet.Unicode; break;
+                default: Contract.Assume(false); break;
+            }
+            type.GetRuntimeModule().MetadataImport.GetClassLayout(type.MetadataToken, out pack, out size);
+
+            // Metadata parameter checking should not have allowed 0 for packing size.
+            // The runtime later converts a packing size of 0 to 8 so do the same here
+            // because it's more useful from a user perspective. 
+            if (pack == 0)
+                pack = DEFAULT_PACKING_SIZE;
+
+            return new StructLayoutAttribute(layoutKind, pack, size, charSet);
+        }
+
+        internal static bool IsDefined(RuntimeType type)
+        {
+            if (type.IsInterface || type.HasElementType || type.IsGenericParameter)
+                return false;
+
+            return true;
+        }
+
         internal LayoutKind _val;
 
         internal StructLayoutAttribute(LayoutKind layoutKind, int pack, int size, CharSet charSet)
@@ -798,6 +937,24 @@ namespace System.Runtime.InteropServices
     [System.Runtime.InteropServices.ComVisible(true)]
     public unsafe sealed class FieldOffsetAttribute : Attribute
     {
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static Attribute GetCustomAttribute(RuntimeFieldInfo field)
+        {
+            int fieldOffset;
+
+            if (field.DeclaringType != null &&
+                field.GetRuntimeModule().MetadataImport.GetFieldOffset(field.DeclaringType.MetadataToken, field.MetadataToken, out fieldOffset))
+                return new FieldOffsetAttribute(fieldOffset);
+
+            return null;
+        }
+
+        [System.Security.SecurityCritical]  // auto-generated
+        internal static bool IsDefined(RuntimeFieldInfo field)
+        {
+            return GetCustomAttribute(field) != null;
+        }
+
         internal int _val;
         public FieldOffsetAttribute(int offset)
         {
