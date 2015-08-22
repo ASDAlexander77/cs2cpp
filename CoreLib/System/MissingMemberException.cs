@@ -1,0 +1,83 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+/*=============================================================================
+**
+**
+**
+** Purpose: The exception class for versioning problems with DLLS.
+**
+**
+=============================================================================*/
+
+namespace System {
+    
+    using System;
+    using System.Runtime.Remoting;
+    using System.Runtime.CompilerServices;
+    using System.Globalization;
+        using System.Security.Permissions;
+    using System.Runtime.Versioning;
+    using System.Diagnostics.Contracts;
+    
+    [System.Runtime.InteropServices.ComVisible(true)]
+    [Serializable] public class MissingMemberException : MemberAccessException {
+        public MissingMemberException() 
+            : base(Environment.GetResourceString("Arg_MissingMemberException")) {
+            SetErrorCode(__HResults.COR_E_MISSINGMEMBER);
+        }
+    
+        public MissingMemberException(String message) 
+            : base(message) {
+            SetErrorCode(__HResults.COR_E_MISSINGMEMBER);
+        }
+    
+        public MissingMemberException(String message, Exception inner) 
+            : base(message, inner) {
+            SetErrorCode(__HResults.COR_E_MISSINGMEMBER);
+        }
+    
+        public override String Message
+        {
+            [System.Security.SecuritySafeCritical]  // auto-generated
+            get {
+                if (ClassName == null) {
+                    return base.Message;
+                } else {
+                    // do any desired fixups to classname here.
+                    return Environment.GetResourceString("MissingMember_Name", 
+                                                                       ClassName + "." + MemberName +
+                                                                       (Signature != null ? " " + FormatSignature(Signature) : ""));
+                }
+            }
+        }
+    
+        // Called to format signature
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern String FormatSignature(byte [] signature);
+    
+    
+    
+        // Potentially called from the EE
+        private MissingMemberException(String className, String memberName, byte[] signature)
+        {
+            ClassName   = className;
+            MemberName  = memberName;
+            Signature   = signature;
+        }
+    
+        public MissingMemberException(String className, String memberName)
+        {
+            ClassName   = className;
+            MemberName  = memberName;
+        }
+           
+        // If ClassName != null, GetMessage will construct on the fly using it
+        // and the other variables. This allows customization of the
+        // format depending on the language environment.
+        protected String  ClassName;
+        protected String  MemberName;
+        protected byte[]  Signature;
+    }
+}

@@ -1666,10 +1666,6 @@ namespace System
 
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern IRuntimeMethodInfo GetDynamicMethod(DynamicMethod method, RuntimeModule module, string name, byte[] sig, Resolver resolver);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal static extern int GetToken(RuntimeModule module);
 
         private static void ValidateModulePointer(RuntimeModule module)

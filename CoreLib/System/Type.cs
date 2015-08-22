@@ -248,6 +248,27 @@ namespace System {
             get;
         }
 
+        // Return the Default binder used by the system.
+        static public Binder DefaultBinder
+        {
+            get
+            {
+                // Allocate the default binder if it hasn't been allocated yet.
+                if (defaultBinder == null)
+                    CreateBinder();
+                return defaultBinder;
+            }
+        }
+
+        static private void CreateBinder()
+        {
+            if (defaultBinder == null)
+            {
+                DefaultBinder binder = new DefaultBinder();
+                Interlocked.CompareExchange<Binder>(ref defaultBinder, binder, null);
+            }
+        }
+
        // Description of the Binding Process.
        // We must invoke a method that is accessable and for which the provided
        // parameters have the most specific match.  A method may be called if

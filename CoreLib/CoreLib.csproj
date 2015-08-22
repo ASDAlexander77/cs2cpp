@@ -93,6 +93,7 @@
     <Compile Include="System\ConsoleModifiers.cs" />
     <Compile Include="System\ConsoleSpecialKey.cs" />
     <Compile Include="System\ContextBoundObject.cs" />
+    <Compile Include="System\DefaultBinder.cs" />
     <Compile Include="System\Diagnostics\Eventing\EventSource.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
     <Compile Include="System\IO\Directory.cs" />
@@ -111,10 +112,18 @@
     <Compile Include="System\IO\PathHelper.cs" />
     <Compile Include="System\IO\PathTooLongException.cs" />
     <Compile Include="System\IO\SearchOption.cs" />
+    <Compile Include="System\MemberAccessException.cs" />
+    <Compile Include="System\MissingFieldException.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\MissingMemberException.cs" />
     <Compile Include="System\OperatingSystem.cs" />
     <Compile Include="System\PlatformID.cs" />
     <Compile Include="System\Reflection\EventAttributes.cs" />
     <Compile Include="System\Reflection\FieldAttributes.cs" />
+    <Compile Include="System\Reflection\ICustomAttributeProvider.cs" />
+    <Compile Include="System\Reflection\InvalidFilterCriteriaException.cs" />
     <Compile Include="System\Reflection\IReflectableType.cs" />
     <Compile Include="System\Reflection\MdImport.cs" />
     <Compile Include="System\Reflection\MethodAttributes.cs">
@@ -330,7 +339,10 @@
     <Compile Include="System\Reflection\GenericParameterAttributes.cs" />
     <Compile Include="System\Reflection\InterfaceMapping.cs" />
     <Compile Include="System\Reflection\MemberFilter.cs" />
-    <Compile Include="System\Reflection\Module.cs" />
+    <Compile Include="System\Reflection\Module.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\ParameterModifier.cs" />
     <Compile Include="System\Reflection\TypeAttributes.cs" />
     <Compile Include="System\Reflection\TypeFilter.cs" />
@@ -450,7 +462,10 @@
     <Compile Include="System\Globalization\DateTimeFormatInfo.cs" />
     <Compile Include="System\Globalization\DaylightTime.cs" />
     <Compile Include="System\Globalization\NumberFormatInfo.cs" />
-    <Compile Include="System\Reflection\Assembly.cs" />
+    <Compile Include="System\Reflection\Assembly.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\AssemblyAttributes.cs" />
     <Compile Include="System\Reflection\AssemblyNameFlags.cs" />
     <Compile Include="System\Reflection\AssemblyReflectionAttributes.cs" />
@@ -458,7 +473,10 @@
     <Compile Include="System\Reflection\BindingFlags.cs" />
     <Compile Include="System\Reflection\ConstructorInfo.cs" />
     <Compile Include="System\Reflection\DefaultMemberAttribute.cs" />
-    <Compile Include="System\Reflection\FieldInfo.cs" />
+    <Compile Include="System\Reflection\FieldInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\FieldReflectionAttributes.cs" />
     <Compile Include="System\Reflection\IReflect.cs" />
     <Compile Include="System\Reflection\MemberInfo.cs" />
@@ -468,7 +486,6 @@
     <Compile Include="System\Reflection\MethodInfo.cs" />
     <Compile Include="System\Reflection\PropertyInfo.cs" />
     <Compile Include="System\Reflection\RuntimeConstructorInfo.cs" />
-    <Compile Include="System\Reflection\RuntimeFieldInfo.cs" />
     <Compile Include="System\Reflection\RuntimeMethodInfo.cs" />
     <Compile Include="System\Resources\ResourceManager.cs" />
     <Compile Include="System\Runtime\CompilerServices\AccessedThroughPropertyAttribute.cs" />
