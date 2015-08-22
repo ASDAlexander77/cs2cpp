@@ -529,15 +529,11 @@ namespace Il2Native.Logic
                         // special case
                         if (tokenType.IsVirtualTableImplementation)
                         {
-                            var vtName = tokenType.InterfaceOwner != null
-                                ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
-                                : tokenType.GetVirtualTableNameReference(this);
-                            this.Output.Write(vtName);
+                            this.WriteVirtualTableImplementationReference(tokenType);
                             break;
                         }
 
-                        System.System_RuntimeTypeHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefualtStructInitialization();
                     }
 
                     var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
@@ -585,8 +581,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        System.System_RuntimeFieldHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefualtStructInitialization();
                     }
 
                     // to support direct method address loading
@@ -601,8 +596,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        System.System_RuntimeMethodHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefualtStructInitialization();
                     }
 
                     // special case
@@ -4465,7 +4459,14 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.Output.Write("{ 0 }");
+                    if (field.IsStaticClassInitialization)
+                    {
+                        this.WriteClassInitialization(fieldType);    
+                    }
+                    else
+                    {
+                        this.Output.WriteDefualtStructInitialization();
+                    }
                 }
             }
             else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)

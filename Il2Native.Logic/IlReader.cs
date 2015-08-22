@@ -670,7 +670,7 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject)
             {
-                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable);
+                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
             }
 
