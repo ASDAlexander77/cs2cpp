@@ -173,7 +173,6 @@
     <Compile Include="CWriter.cs" />
     <Compile Include="OpCodeExtentions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Gencode\RuntimeTypeConstBytes.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

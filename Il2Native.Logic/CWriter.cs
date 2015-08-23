@@ -4042,7 +4042,7 @@ namespace Il2Native.Logic
                 this.WriteDelegateStubFunctionBody(method);
                 this.Output.WriteLine(string.Empty);
             }
-            else if (!this.Stubs)
+            else if (!this.IsStubApplied(method))
             {
                 this.Output.WriteLine(";");
             }
@@ -4095,7 +4095,7 @@ namespace Il2Native.Logic
         private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
-            if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
+            if ((method.IsAbstract || (this.NoBody && !this.IsStubApplied(method))) && !isDelegateBodyFunctions)
             {
                 if (!method.IsUnmanagedMethodReference && this.methodsHaveDefinition.Contains(method))
                 {
@@ -4117,7 +4117,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if ((externDecl || !excludeNamespace) && !Stubs && NoBody && !externDecl)
+            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && NoBody && !externDecl)
             {
                 return true;
             }
@@ -4383,7 +4383,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WritePostMethodEnd(IMethod method)
         {
-            var stubFunc = this.Stubs && this.NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody();
+            var stubFunc = this.IsStubApplied(method) && this.NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody();
             if (stubFunc)
             {
                 this.DefaultStub(method);
@@ -4396,6 +4396,11 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine("}");
             }
+        }
+
+        private bool IsStubApplied(IMethod method)
+        {
+            return this.Stubs && !method.IsUnmanaged;
         }
 
         /// <summary>

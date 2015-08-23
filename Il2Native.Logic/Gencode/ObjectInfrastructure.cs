@@ -818,7 +818,8 @@ namespace Il2Native.Logic.Gencode
 
             // test if it is an interface
             code.LoadArgument(1);
-            code.Call(typeResolver.System.System_Type.GetMethodsByName("get_IsInterface", typeResolver).First(p => !p.GetParameters().Any()));
+            code.Castclass(typeResolver.System.System_Void.ToPointerType());
+            code.Call(typeResolver.System.System_RuntimeTypeHandle.GetMethodsByName("IsInterface", typeResolver).First(p => p.GetParameters().Count() == 1));
             var jumpInterace = code.Branch(Code.Brtrue, Code.Brtrue_S);
 
             code.LoadArgument(0);

@@ -824,7 +824,7 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false));
+                CompilerHelper.GetConverterArgs(false, stubs: true));
 
             CompilerHelper.ExecCmd(
                 "g++",

@@ -62,9 +62,10 @@ namespace System.Runtime.CompilerServices
         {
         }
 
+        //  will be replaced
         public static int GetHashCode(Object o)
         {
-            return o.GetHashCode();
+            throw new NotImplementedException();
         }
 
         public static bool TryEnsureSufficientExecutionStack()
