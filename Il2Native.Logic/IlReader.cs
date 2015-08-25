@@ -673,6 +673,16 @@ namespace Il2Native.Logic
                 var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
             }
+            else if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
+            {
+                yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
+                yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");
+            }
+            else if (normal.TypeEquals(typeResolver.System.System_RuntimeType))
+            {
+                yield return typeResolver.System.System_Int32.ToField(type, "typeAttributes");
+                yield return typeResolver.System.System_Object.ToField(type, "baseType");
+            }
 
             if (type.IsInterface && !type.SpecialUsage())
             {
@@ -696,12 +706,6 @@ namespace Il2Native.Logic
             if (type.IsStaticArrayInit)
             {
                 yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
-            }
-
-            if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
-            {
-                yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
-                yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");
             }
         }
 

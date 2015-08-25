@@ -83,6 +83,8 @@
     <Compile Include="Gencode\InternalMethods\Interlocked\CompareExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Interlocked\ExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\ObjectGetTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetBaseTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\IsInterfaceGen.cs" />
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StaticClassGen.cs" />
@@ -131,7 +133,6 @@
     <Compile Include="Gencode\MethodBodyBank.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedDummyMethodBody.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetSizeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedInitMethod.cs" />
