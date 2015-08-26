@@ -12,7 +12,7 @@
 
             var pointerType = typeResolver.System.System_Void.ToPointerType();
 
-            var debugOriginalRequired = true;
+            var debugOriginalRequired = typeResolver.GcDebug;
             var allocator = typeResolver.GetAllocator(false, false, debugOriginalRequired);
 
             ilCodeBuilder.SizeOf(pointerType);
