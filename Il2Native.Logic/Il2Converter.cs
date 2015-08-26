@@ -455,7 +455,7 @@ namespace Il2Native.Logic
 
             foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.RuntimeTypeHolderFieldName))
             {
-                codeWriter.WriteStaticField(field);
+                codeWriter.WriteStaticField(field, typeForRuntimeTypeInfo: type);
             }
         }
 
