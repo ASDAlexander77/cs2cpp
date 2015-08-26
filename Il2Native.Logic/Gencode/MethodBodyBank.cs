@@ -179,6 +179,7 @@
             // RuntimeTypeHandler
             IsInterfaceGen.Register(typeResolver);
             GetBaseTypeGen.Register(typeResolver);
+            GetGCHandleGen.Register(typeResolver);
         }
 
         [Obsolete]

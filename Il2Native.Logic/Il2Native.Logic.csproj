@@ -67,6 +67,7 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetGCHandleGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />
