@@ -10,7 +10,7 @@
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadArgument(0);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName("typeAttributes", typeResolver));
+            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName(RuntimeTypeInfoGen.TypeAttributesField, typeResolver));
             ilCodeBuilder.LoadConstant((int)TypeAttributes.Interface);
             ilCodeBuilder.Duplicate();
             ilCodeBuilder.Add(Code.And);

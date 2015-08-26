@@ -34,13 +34,15 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write(vtName);
         }
 
-        public static void WriteClassInitialization(this CWriter cWriter, IType fieldType)
+        public static void WriteClassInitialization(this CWriter cWriter, IType fieldType, IType typeOfRuntimeTypeInfo)
         {
-            cWriter.WriteClassInitializationInternal(fieldType, fieldType);
+            cWriter.WriteClassInitializationInternal(fieldType, fieldType, typeOfRuntimeTypeInfo);
         }
 
-        private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, bool withBase = true)
+        private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, IType typeOfRuntimeTypeInfo, bool withBase = true)
         {
+            var isRuntimeTypeInfo = instanceType.TypeEquals(cWriter.System.System_RuntimeType);
+
             var comma = false;
 
             var writer = cWriter.Output;
@@ -49,7 +51,7 @@ namespace Il2Native.Logic.Gencode
 
             if (withBase && type.BaseType != null)
             {
-                WriteClassInitializationInternal(cWriter, type.BaseType, instanceType);
+                WriteClassInitializationInternal(cWriter, type.BaseType, instanceType, typeOfRuntimeTypeInfo);
                 comma = true;
             }
 
@@ -60,6 +62,17 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(", ");
                 }
 
+                // to support runtimeType info
+                if (isRuntimeTypeInfo)
+                {
+                    var value = RuntimeTypeInfoGen.GetRuntimeTypeInfo(field, typeOfRuntimeTypeInfo, cWriter);
+                    if (value != null)
+                    {
+                        writer.Write(value);
+                        continue;
+                    }
+                }
+                
                 if (!field.FieldType.IsStructureType())
                 {
                     if (field.IsVirtualTable)
@@ -73,7 +86,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    cWriter.WriteClassInitializationInternal(field.FieldType, field.FieldType, false);
+                    cWriter.WriteClassInitializationInternal(field.FieldType, field.FieldType, typeOfRuntimeTypeInfo, false);
                 }
 
                 comma = true;

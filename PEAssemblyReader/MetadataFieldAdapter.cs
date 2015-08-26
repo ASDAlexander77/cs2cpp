@@ -38,6 +38,8 @@ namespace PEAssemblyReader
 
         private readonly Lazy<bool> lazyThreadStatic;
 
+        private object _constantValue;
+
         /// <summary>
         /// </summary>
         internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false, int fixedSize = 0)
@@ -158,7 +160,17 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (_constantValue != null)
+                {
+                    return _constantValue;
+                }
+
                 return this.fieldDef.ConstantValue;
+            }
+
+            set
+            {
+                _constantValue = value;
             }
         }
 

@@ -149,6 +149,6 @@ namespace Il2Native.Logic
         /// <param name="ownerOfExplicitInterface"></param>
         void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext);
 
-        void WriteStaticField(IField field, bool definition = true);
+        void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null);
     }
 }

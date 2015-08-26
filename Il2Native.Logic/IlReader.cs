@@ -680,8 +680,8 @@ namespace Il2Native.Logic
             }
             else if (normal.TypeEquals(typeResolver.System.System_RuntimeType))
             {
-                yield return typeResolver.System.System_Int32.ToField(type, "typeAttributes");
-                yield return typeResolver.System.System_Object.ToField(type, "baseType");
+                yield return typeResolver.System.System_Int32.ToField(type, RuntimeTypeInfoGen.TypeAttributesField);
+                yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
             }
 
             if (type.IsInterface && !type.SpecialUsage())
@@ -694,13 +694,10 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                // special static field to store created type
-                yield return
-                    typeResolver.System.System_RuntimeType.ToField(
-                        type,
-                        ObjectInfrastructure.RuntimeTypeHolderFieldName,
-                        isStatic: true,
-                        isStaticClassInitialization: true);
+                // special static field to store RuntimeType for a current type
+                var runtimeTypeStoreField = typeResolver.System.System_RuntimeType.ToField(
+                    type, ObjectInfrastructure.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                yield return runtimeTypeStoreField;
             }
 
             if (type.IsStaticArrayInit)

@@ -10,7 +10,7 @@
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadArgument(0);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName("baseType", typeResolver));
+            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName(RuntimeTypeInfoGen.BaseTypeField, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
 
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("type"));

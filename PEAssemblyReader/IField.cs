@@ -24,7 +24,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        object ConstantValue { get; }
+        object ConstantValue { get; set; }
 
         /// <summary>
         /// </summary>

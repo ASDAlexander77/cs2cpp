@@ -4409,7 +4409,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="externalRef">
         /// </param>
-        public void WriteStaticField(IField field, bool definition = true)
+        public void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null)
         {
             Debug.Assert(field.IsStatic, "Static field is required");
 
@@ -4426,7 +4426,7 @@ namespace Il2Native.Logic
             this.WriteStaticFieldName(field);
             if (definition)
             {
-                this.WriteStaticFieldInitialization(field);
+                this.WriteStaticFieldInitialization(field, typeForRuntimeTypeInfo);
 
                 if (field.IsThreadStatic)
                 {
@@ -4437,7 +4437,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(";");
         }
 
-        private void WriteStaticFieldInitialization(IField field)
+        private void WriteStaticFieldInitialization(IField field, IType typeForRuntimeTypeInfo = null)
         {
             var fieldType = field.FieldType;
 
@@ -4466,7 +4466,7 @@ namespace Il2Native.Logic
                 {
                     if (field.IsStaticClassInitialization)
                     {
-                        this.WriteClassInitialization(fieldType);    
+                        this.WriteClassInitialization(fieldType, typeForRuntimeTypeInfo);
                     }
                     else
                     {
@@ -4516,9 +4516,12 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDefinitions(IType type)
         {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) && !f.FieldType.IsGenericTypeDefinition))
+            foreach (
+                var field in
+                    Logic.IlReader.Fields(type, this)
+                         .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) && !f.FieldType.IsGenericTypeDefinition))
             {
-                this.WriteStaticField(field);
+                this.WriteStaticField(field, typeForRuntimeTypeInfo: type);
             }
         }
 
