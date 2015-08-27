@@ -25,7 +25,7 @@
             ilCodeBuilder.New(typeResolver.System.System_IntPtr.FindConstructor(pointerType, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("handle"));
+            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeTypeHandle.ToParameter("handle"));
             ilCodeBuilder.Parameters.Add(typeResolver.ResolveType("System.Runtime.InteropServices.GCHandleType").ToParameter("type"));
 
             ilCodeBuilder.Register(Name);
