@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.RuntimeTypeHandler
 {
+    using System.Linq;
+    using PEAssemblyReader;
     using SynthesizedMethods;
 
     public static class GetGCHandleGen
@@ -10,18 +12,18 @@
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
-            var pointerType = typeResolver.System.System_Void.ToPointerType();
-
-            var debugOriginalRequired = typeResolver.GcDebug;
-            var allocator = typeResolver.GetAllocator(false, false, debugOriginalRequired);
+            var gcHandleType = typeResolver.ResolveType("System.Runtime.InteropServices.GCHandle");
+            var cinstructor = Logic.IlReader.Constructors(
+                gcHandleType,
+                typeResolver).First(c => c.GetParameters().Count() == 2);
 
             ilCodeBuilder.LoadNull();
             ilCodeBuilder.LoadArgument(1);
-            ilCodeBuilder.New(typeResolver.ResolveType("System.Runtime.InteropServices.GCHandle").FindConstructor(pointerType, typeResolver));
-            ilCodeBuilder.Add(Code.Ret);
+            ilCodeBuilder.New(cinstructor);
 
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeTypeHandle.ToParameter("handle"));
-            ilCodeBuilder.Parameters.Add(typeResolver.ResolveType("System.Runtime.InteropServices.GCHandleType").ToParameter("type"));
+            ilCodeBuilder.CallDirect(gcHandleType.GetFirstMethodByName("ToIntPtr", typeResolver));
+
+            ilCodeBuilder.Add(Code.Ret);
 
             ilCodeBuilder.Register(Name);
         }
