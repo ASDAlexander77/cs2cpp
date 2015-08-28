@@ -15,14 +15,9 @@
             var debugOriginalRequired = typeResolver.GcDebug;
             var allocator = typeResolver.GetAllocator(false, false, debugOriginalRequired);
 
-            ilCodeBuilder.SizeOf(pointerType);
-            ilCodeBuilder.Call(
-                new SynthesizedMethod(
-                    allocator,
-                    pointerType,
-                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
-
-            ilCodeBuilder.New(typeResolver.System.System_IntPtr.FindConstructor(pointerType, typeResolver));
+            ilCodeBuilder.LoadNull();
+            ilCodeBuilder.LoadArgument(1);
+            ilCodeBuilder.New(typeResolver.ResolveType("System.Runtime.InteropServices.GCHandle").FindConstructor(pointerType, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
 
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeTypeHandle.ToParameter("handle"));

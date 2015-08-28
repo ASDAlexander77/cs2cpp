@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using InternalMethods;
-    using InternalMethods.GCHandle;
     using InternalMethods.RuntimeTypeHandler;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -181,11 +180,6 @@
             IsInterfaceGen.Register(typeResolver);
             GetBaseTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
-
-            // GCHandle
-            InternalSetGen.Register(typeResolver);
-            InternalGetGen.Register(typeResolver);
-            InternalFreeGen.Register(typeResolver);
         }
 
         [Obsolete]

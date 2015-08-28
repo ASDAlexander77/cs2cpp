@@ -3,13 +3,20 @@
 namespace System.Runtime.InteropServices
 {
     using System;
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
 
     partial struct GCHandle
     {
         // Internal native calls that this implementation uses.
         internal static IntPtr InternalAlloc(Object value, GCHandleType type)
         {
-            throw new NotImplementedException();
+            var data = new KeyValuePair<object, GCHandleType>(value, type);
+            var typedRef = __makeref(data);
+            unsafe
+            {
+                return new IntPtr(&typedRef);
+            }
         }
 
         internal static void InternalFree(IntPtr handle)
