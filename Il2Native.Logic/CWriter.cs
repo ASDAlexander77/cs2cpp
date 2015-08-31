@@ -4544,7 +4544,7 @@ namespace Il2Native.Logic
 
         public void StartPreprocessorIf(IType type, string prefix)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            if (IsAssemblyNamespaceRequired(type))
             {
                 var fullName = type.FullName.CleanUpName();
                 this.Output.Write("#ifndef {0}__", prefix);
@@ -4556,7 +4556,7 @@ namespace Il2Native.Logic
 
         public void EndPreprocessorIf(IType type)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            if (IsAssemblyNamespaceRequired(type))
             {
                 this.Output.WriteLine("#endif");
             }

@@ -16,6 +16,7 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Reflection.Emit;
     using CodeParts;
+    using DebugInfo.DebugInfoSymbolWriter;
     using Exceptions;
     using Gencode;
 
@@ -159,7 +160,7 @@ namespace Il2Native.Logic
 
         public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
             {
                 return true;
             }
