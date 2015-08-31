@@ -4072,26 +4072,6 @@ namespace Il2Native.Logic
             }
         }
 
-        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
-        {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
-            {
-                return true;
-            }
-
-            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
-            {
-                return true;
-            }
-
-            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
@@ -4502,12 +4482,7 @@ namespace Il2Native.Logic
 
         public void WriteStaticFieldName(IField field)
         {
-            this.Output.Write(field.FullName.CleanUpName());
-            if (IsAssemblyNamespaceRequired(field.DeclaringType))
-            {
-                this.Output.Write("_");
-                this.Output.Write(this.AssemblyQualifiedName.CleanUpName());
-            }
+            this.Output.Write(GetStaticFieldName(field));
         }
 
         /// <summary>

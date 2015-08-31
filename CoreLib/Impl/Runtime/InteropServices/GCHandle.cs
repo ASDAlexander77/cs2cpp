@@ -69,7 +69,16 @@ namespace System.Runtime.InteropServices
 
         internal static Object InternalCompareExchange(IntPtr handle, Object value, Object oldValue, bool isPinned)
         {
-            throw new NotImplementedException();
+            lock (syncObject)
+            {
+                var original = handlers[handle.ToInt32()].Value;
+                if (Object.ReferenceEquals(original, value) || (oldValue != null && original.Equals(oldValue)))
+                {
+                    handlers[handle.ToInt32()] = new KeyValuePair<object, GCHandleType>(value, isPinned ? GCHandleType.Pinned : default(GCHandleType));
+                }
+
+                return original;
+            }
         }
 
         internal static IntPtr InternalAddrOfPinnedObject(IntPtr handle)

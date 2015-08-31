@@ -180,6 +180,7 @@
             IsInterfaceGen.Register(typeResolver);
             GetBaseTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
+            GetModuleGen.Register(typeResolver);
         }
 
         [Obsolete]

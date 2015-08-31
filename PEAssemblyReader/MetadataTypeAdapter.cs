@@ -462,12 +462,19 @@ namespace PEAssemblyReader
             }
         }
 
-
         public bool IsPrivateImplementationDetails
         {
             get
             {
-                return this.FullName.StartsWith("<PrivateImplementationDetails>");
+                return this.FullName.StartsWith("<PrivateImplementationDetails>") || this.IsModule;
+            }
+        }
+
+        public bool IsModule
+        {
+            get
+            {
+                return this.FullName == "<Module>";
             }
         }
 

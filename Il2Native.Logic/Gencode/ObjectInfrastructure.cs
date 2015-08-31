@@ -32,8 +32,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
 
-        public const string RuntimeTypeHolderFieldName = ".runtimetype";
-
         public static void WriteAllocateMemory(
             this CWriter cWriter,
             OpCodePart opCodePart,

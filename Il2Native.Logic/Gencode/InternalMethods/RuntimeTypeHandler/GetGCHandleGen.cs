@@ -13,13 +13,13 @@
             var ilCodeBuilder = new IlCodeBuilder();
 
             var gcHandleType = typeResolver.ResolveType("System.Runtime.InteropServices.GCHandle");
-            var cinstructor = Logic.IlReader.Constructors(
+            var constructor = Logic.IlReader.Constructors(
                 gcHandleType,
                 typeResolver).First(c => c.GetParameters().Count() == 2);
 
             ilCodeBuilder.LoadNull();
             ilCodeBuilder.LoadArgument(1);
-            ilCodeBuilder.New(cinstructor);
+            ilCodeBuilder.New(constructor);
 
             ilCodeBuilder.CallDirect(gcHandleType.GetFirstMethodByName("ToIntPtr", typeResolver));
 

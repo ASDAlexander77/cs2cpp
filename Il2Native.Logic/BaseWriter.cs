@@ -157,6 +157,26 @@ namespace Il2Native.Logic
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
 
+        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            {
+                return true;
+            }
+
+            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
+            {
+                return true;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return true;
+            }
+
+            return false;
+        }
+        
         public void Initialize(IType type)
         {
             Debug.Assert(type != null, "You should provide type here");
@@ -294,6 +314,16 @@ namespace Il2Native.Logic
         public void RegisterType(IType type)
         {
             GlobalResolvedTypes[type.FullName] = type;
+        }
+
+        public string GetStaticFieldName(IField field)
+        {
+            if (IsAssemblyNamespaceRequired(field.DeclaringType))
+            {
+                return string.Concat(field.FullName.CleanUpName(), "_", this.AssemblyQualifiedName.CleanUpName());
+            }
+
+            return field.FullName.CleanUpName();
         }
 
         /// <summary>

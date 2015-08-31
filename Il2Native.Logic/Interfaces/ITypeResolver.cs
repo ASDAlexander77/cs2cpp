@@ -24,5 +24,7 @@
         IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
 
         void RegisterType(IType type);
+
+        string GetStaticFieldName(IField field);
     }
 }

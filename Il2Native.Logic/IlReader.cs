@@ -696,8 +696,15 @@ namespace Il2Native.Logic
             {
                 // special static field to store RuntimeType for a current type
                 var runtimeTypeStoreField = typeResolver.System.System_RuntimeType.ToField(
-                    type, ObjectInfrastructure.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                    type, RuntimeTypeInfoGen.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
                 yield return runtimeTypeStoreField;
+            }
+            else if (type.IsModule)
+            {
+                // special static field to store RuntimeType for a current type
+                var runtimeModuleStoreField = typeResolver.ResolveType("System.Reflection.RuntimeModule").ToField(
+                    type, RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                yield return runtimeModuleStoreField;
             }
 
             if (type.IsStaticArrayInit)

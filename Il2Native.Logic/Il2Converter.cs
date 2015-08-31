@@ -438,7 +438,7 @@ namespace Il2Native.Logic
         {
             var fields = IlReader.Fields(type, codeWriter);
             // fields
-            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.RuntimeTypeHolderFieldName))
+            foreach (var field in fields.Where(f => f.Name == RuntimeTypeInfoGen.RuntimeTypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field, false);
             }
@@ -453,7 +453,7 @@ namespace Il2Native.Logic
 
             var fields = IlReader.Fields(type, codeWriter);
 
-            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.RuntimeTypeHolderFieldName))
+            foreach (var field in fields.Where(f => f.Name == RuntimeTypeInfoGen.RuntimeTypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field, typeForRuntimeTypeInfo: type);
             }
@@ -998,7 +998,7 @@ namespace Il2Native.Logic
 
             // types in current assembly
             var readingTypesContext = ReadingTypesContext.New();
-            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && t.Name != "<Module>");
+            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
             {
                 typeToGet = typeToGet.Where(t => CheckFilter(filter, t));

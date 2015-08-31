@@ -141,6 +141,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsModule { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsStaticArrayInit { get; }
 
         /// <summary>
