@@ -961,7 +961,7 @@ namespace Il2Native.Logic
                     }
 
                     var value = GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
-                    if (value > 0 && value % typeSize == 0)
+                    if (value > 0 && typeSize > 0 && value % typeSize == 0)
                     {
                         this.ReplaceOperand(opCodePart.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
                         return true;

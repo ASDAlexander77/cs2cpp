@@ -731,8 +731,6 @@
             this.Add(Code.Conv_U);
         }
 
-
-
         private IEnumerable<byte> IterateBytes()
         {
             foreach (var codeItem in this.parts)

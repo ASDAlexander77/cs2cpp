@@ -181,6 +181,7 @@
             GetBaseTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
             GetModuleGen.Register(typeResolver);
+            ConstructNameGen.Register(typeResolver);
         }
 
         [Obsolete]
