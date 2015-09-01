@@ -29,134 +29,100 @@
         public static void GetMultiDimensionArrayCtor(
             IType arrayType,
             ITypeResolver typeResolver,
-            out object[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
+            out IlCodeBuilder ilCodeBuilder)
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var codeList = new List<object>();
+            ilCodeBuilder = new IlCodeBuilder();
 
             var arrayRank = arrayType.ArrayRank;
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
-            var elementSize = elementType.GetTypeSize(typeResolver, true);
 
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0,
-                        Code.Dup,
-                        Code.Dup,
-                        Code.Dup
-                    });
+            var token1 = arrayType.GetFieldByName("rank", typeResolver);
+            var token2 = arrayType.GetFieldByName("typeCode", typeResolver);
+            var token3 = arrayType.GetFieldByName("elementSize", typeResolver);
+            // lowerBounds
+            var token4 = typeResolver.System.System_Int32;
+            var token5 = arrayType.GetFieldByName("lowerBounds", typeResolver);
+            // bounds
+            var token6 = typeResolver.System.System_Int32;
+            var token7 = arrayType.GetFieldByName("lengths", typeResolver);
+            var token8 = arrayType.GetFieldByName("length", typeResolver);
 
-            codeList.AppendLoadInt(arrayRank);
-            codeList.AppendInt(Code.Stfld, 1);
-            codeList.AppendLoadInt(typeCode);
-            codeList.AppendInt(Code.Stfld, 2);
-            codeList.AppendLoadInt(elementSize);
-            codeList.AppendInt(Code.Stfld, 3);
+            ilCodeBuilder.LoadArgument(0);
+            ilCodeBuilder.Duplicate();
+            ilCodeBuilder.Duplicate();
+            ilCodeBuilder.Duplicate();
+
+            ilCodeBuilder.LoadConstant(arrayRank);
+            ilCodeBuilder.SaveField(token1);
+            ilCodeBuilder.LoadConstant(typeCode);
+            ilCodeBuilder.SaveField(token2);
+            ilCodeBuilder.SizeOf(elementType);
+            ilCodeBuilder.SaveField(token3);
 
             // init length
             // init multiplier
-            codeList.Add(Code.Ldc_I4_1);
+            ilCodeBuilder.Add(Code.Ldc_I4_1);
 
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
-                codeList.AppendLoadArgument(arrayType.ArrayRank - i);
-                codeList.Add(Code.Mul);
+                ilCodeBuilder.LoadArgument(arrayType.ArrayRank - i);
+                ilCodeBuilder.Add(Code.Mul);
             }
 
-            codeList.AppendInt(Code.Stfld, 8);
+            ilCodeBuilder.SaveField(token8);
 
             // init lowerBounds
             // set all 0
-            codeList.AppendLoadInt(arrayRank);
-            codeList.AppendInt(Code.Newarr, 4);
-            codeList.Add(Code.Stloc_0);
+            ilCodeBuilder.LoadConstant(arrayRank);
+            ilCodeBuilder.NewArray(token4);
+            ilCodeBuilder.Add(Code.Stloc_0);
 
             // init each item in lowerBounds
             foreach (var i in Enumerable.Range(0, arrayRank))
             {
-                codeList.Add(Code.Ldloc_0);
-                codeList.AppendLoadInt(i);
-                codeList.AddRange(
-                    new object[]
-                    {
-                        Code.Ldc_I4_0,
-                        Code.Stelem_I4
-                });
+                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.LoadConstant(i);
+                ilCodeBuilder.LoadConstant(0);
+                ilCodeBuilder.Add(Code.Stelem_I4);
             }
 
             // save new array into field lowerBounds
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ldarg_0,
-                        Code.Ldloc_0,
-                });
-            codeList.AppendInt(Code.Stfld, 5);
+            ilCodeBuilder.LoadArgument(0);
+            ilCodeBuilder.LoadLocal(0);
+            ilCodeBuilder.SaveField(token5);
 
             // init Bounds
-            codeList.AppendLoadInt(arrayRank);
-            codeList.AppendInt(Code.Newarr, 6);
-            codeList.Add(Code.Stloc_1);
+            ilCodeBuilder.LoadConstant(arrayRank);
+            ilCodeBuilder.NewArray(token6);
+            ilCodeBuilder.Add(Code.Stloc_1);
 
             // init each item in lowerBounds
             foreach (var i in Enumerable.Range(0, arrayRank))
             {
-                codeList.Add(Code.Ldloc_1);
-                codeList.AppendLoadInt(i);
+                ilCodeBuilder.Add(Code.Ldloc_1);
+                ilCodeBuilder.LoadConstant(i);
                 //codeList.AppendLoadArgument(i + 1);
-                codeList.AppendLoadArgument(arrayRank - i);
-                codeList.AddRange(
-                    new object[]
-                    {
-                        Code.Stelem_I4
-                    });
+                ilCodeBuilder.LoadArgument(arrayRank - i);
+                ilCodeBuilder.Add(Code.Stelem_I4);
             }
 
             // save new array into field lowerBounds
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ldarg_0,
-                        Code.Ldloc_1,
-                });
-            codeList.AppendInt(Code.Stfld, 7);
+            ilCodeBuilder.LoadArgument(0);
+            ilCodeBuilder.LoadLocal(1);
+            ilCodeBuilder.SaveField(token7);
 
             // return
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ret
-                });
+            ilCodeBuilder.Return();
 
             // locals
-            locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-
-            // tokens
-            tokenResolutions = new List<object>();
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
-            // lowerBounds
-            tokenResolutions.Add(typeResolver.System.System_Int32);
-            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
-            // bounds
-            tokenResolutions.Add(typeResolver.System.System_Int32);
-            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("length", typeResolver));
-
-            // code
-            code = codeList.ToArray();
+            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
 
             // parameters
-            parameters = GetParameters(arrayType, typeResolver);
+            ilCodeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));
         }
 
         public static void GetMultiDimensionArrayGet(
@@ -265,7 +231,6 @@
         {
             // add element size
             var elementType = arrayType.GetElementType();
-            var elementSize = elementType.GetTypeSize(typeResolver, true);
             codeBuilder.SizeOf(elementType);
 
             // init each item in lowerBounds
@@ -282,12 +247,28 @@
             // calculate alignment
             codeBuilder.Add(Code.Dup);
 
-            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsValueType() ? elementSize : CWriter.PointerSize);
-            codeBuilder.LoadConstant(alignForType - 1);
-            codeBuilder.Add(Code.Add);
+            if (!elementType.IsStructureType())
+            {
+                var alignForType = Math.Max(CWriter.PointerSize, elementType.GetKnownTypeSize());
+                codeBuilder.LoadConstant(alignForType - 1);
+                codeBuilder.Add(Code.Add);
 
-            codeBuilder.LoadConstant(~(alignForType - 1));
-            codeBuilder.Add(Code.And);
+                codeBuilder.LoadConstant(~(alignForType - 1));
+                codeBuilder.Add(Code.And);
+            }
+            else
+            {
+                codeBuilder.SizeOf(elementType);
+                codeBuilder.LoadConstant(1);
+                codeBuilder.Add(Code.Sub);
+                codeBuilder.Add(Code.Add);
+
+                codeBuilder.SizeOf(elementType);
+                codeBuilder.LoadConstant(1);
+                codeBuilder.Add(Code.Sub);
+                codeBuilder.Add(Code.Not);
+                codeBuilder.Add(Code.And);
+            }
 
             // parameters
             codeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));

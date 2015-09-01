@@ -3094,7 +3094,6 @@ namespace Il2Native.Logic
             }
 
             VirtualTableGen.Clear();
-            TypeGen.Clear();
         }
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)

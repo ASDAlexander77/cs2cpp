@@ -56,7 +56,6 @@ namespace Il2Native.Logic.Gencode
         {
             // add element size
             var elementType = arrayType.GetElementType();
-            var elementSize = elementType.GetTypeSize(typeResolver, true);
             codeList.SizeOf(elementType);
 
             // load length
@@ -69,12 +68,28 @@ namespace Il2Native.Logic.Gencode
             // calculate alignment
             codeList.Add(Code.Dup);
 
-            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsValueType() ? elementSize : CWriter.PointerSize);
-            codeList.LoadConstant(alignForType - 1);
-            codeList.Add(Code.Add);
+            if (!elementType.IsStructureType())
+            {
+                var alignForType = Math.Max(CWriter.PointerSize, elementType.GetKnownTypeSize());
+                codeList.LoadConstant(alignForType - 1);
+                codeList.Add(Code.Add);
 
-            codeList.LoadConstant(~(alignForType - 1));
-            codeList.Add(Code.And);
+                codeList.LoadConstant(~(alignForType - 1));
+                codeList.Add(Code.And);
+            }
+            else
+            {
+                codeList.SizeOf(elementType);
+                codeList.LoadConstant(1);
+                codeList.Add(Code.Sub);
+                codeList.Add(Code.Add);
+
+                codeList.SizeOf(elementType);
+                codeList.LoadConstant(1);
+                codeList.Add(Code.Sub);
+                codeList.Add(Code.Not);
+                codeList.Add(Code.And);
+            }
 
             // parameters
             codeList.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
@@ -83,62 +98,44 @@ namespace Il2Native.Logic.Gencode
         public static void GetSingleDimensionArrayCtor(
             IType arrayType,
             ITypeResolver typeResolver,
-            out object[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
+            out IlCodeBuilder codeBuilder)
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
 
-            var codeList = new List<object>();
+            codeBuilder = new IlCodeBuilder();
 
             var arrayRank = arrayType.ArrayRank;
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
-            var elementSize = elementType.GetTypeSize(typeResolver, true);
 
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0,
-                        Code.Dup,
-                        Code.Dup,
-                        Code.Dup,
-                    });
+            var token1 = arrayType.GetFieldByName("rank", typeResolver);
+            var token2 = arrayType.GetFieldByName("typeCode", typeResolver);
+            var token3 = arrayType.GetFieldByName("elementSize", typeResolver);
+            var token4 = arrayType.GetFieldByName("length", typeResolver);
 
-            codeList.AppendLoadInt(arrayRank);
-            codeList.AppendInt(Code.Stfld, 1);
-            codeList.AppendLoadInt(typeCode);
-            codeList.AppendInt(Code.Stfld, 2);
-            codeList.AppendLoadInt(elementSize);
-            codeList.AppendInt(Code.Stfld, 3);
-            codeList.AppendLoadArgument(1);
-            codeList.AppendInt(Code.Stfld, 4);
+            codeBuilder.LoadArgument(0);
+            codeBuilder.Duplicate();
+            codeBuilder.Duplicate();
+            codeBuilder.Duplicate();
+
+            codeBuilder.LoadConstant(arrayRank);
+            codeBuilder.SaveField(token1);
+            codeBuilder.LoadConstant(typeCode);
+            codeBuilder.SaveField(token2);
+            codeBuilder.SizeOf(elementType);
+            codeBuilder.SaveField(token3);
+            codeBuilder.LoadArgument(1);
+            codeBuilder.SaveField(token4);
 
             // return
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ret
-                });
+            codeBuilder.Return();
 
             // locals
-            locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-
-            // tokens
-            tokenResolutions = new List<object>();
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("length", typeResolver));
-
-            // code
-            code = codeList.ToArray();
+            codeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            codeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
 
             // parameters
-            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
+            codeBuilder.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
         }
 
         /// <summary>
@@ -216,7 +213,8 @@ namespace Il2Native.Logic.Gencode
             int length,
             int storeLength)
         {
-            return GetSingleDimArrayPrefixNullConstData(cWriter) + ", 0, " + elementType.GetTypeCode() + ", " + elementType.GetTypeSize(cWriter, true) + ", " + storeLength + ", ";
+            var typeName = cWriter.WriteToString(() => elementType.WriteTypePrefix(cWriter));
+            return GetSingleDimArrayPrefixNullConstData(cWriter) + ", 0, " + elementType.GetTypeCode() + ", sizeof(" + typeName + "), " + storeLength + ", ";
         }
     }
 }

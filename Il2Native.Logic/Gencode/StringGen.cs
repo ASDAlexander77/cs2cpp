@@ -37,7 +37,7 @@ namespace Il2Native.Logic.Gencode
             bool increaseSizeByOne = false)
         {
             // add element size
-            var elementSize = charType.GetTypeSize(typeResolver, true);
+            var elementSize = TypeGen.SystemTypeSizes[charType.Name];
             codeList.SizeOf(charType);
 
             // load length

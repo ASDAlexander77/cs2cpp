@@ -905,7 +905,7 @@ namespace Il2Native.Logic
             var typePart = opCodeOperandOther as OpCodeTypePart;
             var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperandOther);
             if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand))
-                || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
+                || elementType.GetKnownTypeSize() == integerValueFromOpCode)
             {
                 this.ReplaceOperand(opCodePart, opCodeOperand);
             }
@@ -943,7 +943,7 @@ namespace Il2Native.Logic
 
         private bool FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
         {
-            var typeSize = type.GetTypeSize(this, true);
+            var typeSize = type.GetKnownTypeSize();
             var opCodePart = index;
             switch (opCodePart.ToCode())
             {
