@@ -492,19 +492,9 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
-                    var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
-                    var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
 
-                    if (MultiThreadingSupport)
-                    {
-                        // shift for Mutex & Cond
-                        this.Output.Write("(({1}) ((Byte**) &_s{0}{2}_ + 2))", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
-                    }
-                    else
-                    {
-                        this.Output.Write("(({1}) &_s{0}{2}_)", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
-                    }
+                    this.WriteUnicodeStringReference(stringToken, (uint)opCodeString.Operand.Value.GetHashCode());
 
                     break;
                 case Code.Ldnull:
@@ -1631,6 +1621,26 @@ namespace Il2Native.Logic
             }
 
             return true;
+        }
+
+        public void WriteUnicodeStringReference(int stringToken, uint stringHashCode)
+        {
+            var stringType = this.System.System_String;
+            var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
+
+            if (MultiThreadingSupport)
+            {
+                // shift for Mutex & Cond
+                this.Output.Write(
+                    "(({1}) ((Byte**) &_s{0}{2}_ + 2))",
+                    stringToken,
+                    strType,
+                    stringHashCode);
+            }
+            else
+            {
+                this.Output.Write("(({1}) &_s{0}{2}_)", stringToken, strType, stringHashCode);
+            }
         }
 
         private bool IsStructSave(IType localType, ReturnResult estResult)
@@ -4398,6 +4408,14 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("extern ");
             }
+            else
+            {
+                // preprocess all internal instances
+                if (field.IsStaticClassInitialization)
+                {
+                    this.WriteNestedClassInitializations(field, typeForRuntimeTypeInfo);
+                }
+            }
 
             fieldType.WriteTypePrefix(this, asStruct: field.IsStaticClassInitialization);
 
@@ -4414,6 +4432,11 @@ namespace Il2Native.Logic
             }
 
             this.Output.WriteLine(";");
+        }
+
+        private void WriteNestedClassInitializations(IField field, IType typeForRuntimeTypeInfo = null)
+        {
+            this.WriteNestedClassInitializations(field.FieldType, typeForRuntimeTypeInfo);
         }
 
         private void WriteStaticFieldInitialization(IField field, IType typeForRuntimeTypeInfo = null)
@@ -4578,7 +4601,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="pair">
         /// </param>
-        private void WriteUnicodeString(KeyValuePair<int, string> pair)
+        public void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
             if (!this.stringTokenDefinitionWritten.Add(pair.Key * pair.Value.GetHashCode()))
             {

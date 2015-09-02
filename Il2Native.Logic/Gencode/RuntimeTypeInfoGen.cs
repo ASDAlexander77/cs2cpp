@@ -24,6 +24,10 @@
                     return type.IsInterface ? (int)TypeAttributes.Interface : 0;
                 case BaseTypeField:
                     return type.BaseType != null ? type.BaseType.GetFullyDefinedRefereneForRuntimeType(cWriter) : null;
+                case NameField:
+                    return type.Name;
+                case FullNameField:
+                    return type.FullName;
             }
 
             return null;

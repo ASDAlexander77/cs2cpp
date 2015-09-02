@@ -34,12 +34,17 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write(vtName);
         }
 
-        public static void WriteClassInitialization(this CWriter cWriter, IType fieldType, IType typeOfRuntimeTypeInfo)
+        public static void WriteClassInitialization(this CWriter cWriter, IType fieldType, object valueInstance)
         {
-            cWriter.WriteClassInitializationInternal(fieldType, fieldType, typeOfRuntimeTypeInfo);
+            cWriter.WriteClassInitializationInternal(fieldType, fieldType, valueInstance);
         }
 
-        private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, IType typeOfRuntimeTypeInfo, bool withBase = true)
+        public static void WriteNestedClassInitializations(this CWriter cWriter, IType fieldType, object valueInstance)
+        {
+            cWriter.WriteNestedClassInitializationsInternal(fieldType, fieldType, valueInstance);
+        }
+
+        private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, object valueInstance, bool withBase = true)
         {
             var isRuntimeTypeInfo = instanceType.TypeEquals(cWriter.System.System_RuntimeType);
 
@@ -51,7 +56,7 @@ namespace Il2Native.Logic.Gencode
 
             if (withBase && type.BaseType != null)
             {
-                WriteClassInitializationInternal(cWriter, type.BaseType, instanceType, typeOfRuntimeTypeInfo);
+                WriteClassInitializationInternal(cWriter, type.BaseType, instanceType, valueInstance);
                 comma = true;
             }
 
@@ -65,10 +70,18 @@ namespace Il2Native.Logic.Gencode
                 // to support runtimeType info
                 if (isRuntimeTypeInfo)
                 {
-                    var value = RuntimeTypeInfoGen.GetRuntimeTypeInfo(field, typeOfRuntimeTypeInfo, cWriter);
+                    var value = RuntimeTypeInfoGen.GetRuntimeTypeInfo(field, valueInstance as IType, cWriter);
                     if (value != null)
                     {
-                        writer.Write(value);
+                        if (value is string)
+                        {
+                            cWriter.WriteUnicodeStringReference(Math.Abs(field.GetHashCode()), (uint)value.GetHashCode());
+                        }
+                        else
+                        {
+                            writer.Write(value);
+                        }
+
                         continue;
                     }
                 }
@@ -86,13 +99,42 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    cWriter.WriteClassInitializationInternal(field.FieldType, field.FieldType, typeOfRuntimeTypeInfo, false);
+                    cWriter.WriteClassInitializationInternal(field.FieldType, field.FieldType, valueInstance, false);
                 }
 
                 comma = true;
             }
 
             writer.Write(" }");
+        }
+
+        private static void WriteNestedClassInitializationsInternal(this CWriter cWriter, IType type, IType instanceType, object valueInstance, bool withBase = true)
+        {
+            var isRuntimeTypeInfo = instanceType.TypeEquals(cWriter.System.System_RuntimeType);
+
+            if (withBase && type.BaseType != null)
+            {
+                WriteNestedClassInitializationsInternal(cWriter, type.BaseType, instanceType, valueInstance);
+            }
+
+            foreach (var field in IlReader.Fields(type, cWriter).Where(f => !f.IsStatic))
+            {
+                // to support runtimeType info
+                if (isRuntimeTypeInfo)
+                {
+                    var value = RuntimeTypeInfoGen.GetRuntimeTypeInfo(field, valueInstance as IType, cWriter);
+                    if (value is string)
+                    {
+                        cWriter.WriteUnicodeString(new KeyValuePair<int, string>(Math.Abs(field.GetHashCode()), value as string));
+                        continue;
+                    }
+                }
+
+                if (field.FieldType.IsStructureType())
+                {
+                    cWriter.WriteNestedClassInitializationsInternal(field.FieldType, field.FieldType, valueInstance, false);
+                }
+            }
         }
     }
 }
