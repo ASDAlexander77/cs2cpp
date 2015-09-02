@@ -680,8 +680,10 @@ namespace Il2Native.Logic
             }
             else if (normal.TypeEquals(typeResolver.System.System_RuntimeType))
             {
-                yield return typeResolver.System.System_Int32.ToField(type, RuntimeTypeInfoGen.TypeAttributesField);
-                yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
+                foreach (var runtimeTypeField in type.GetRuntimeTypeFields(typeResolver))
+                {
+                    yield return runtimeTypeField;
+                }
             }
 
             if (type.IsInterface && !type.SpecialUsage())
