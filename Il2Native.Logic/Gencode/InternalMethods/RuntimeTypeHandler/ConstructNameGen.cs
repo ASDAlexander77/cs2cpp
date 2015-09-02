@@ -9,8 +9,8 @@
             var ilCodeBuilder = new IlCodeBuilder();
 
             ilCodeBuilder.LoadArgumentAddress(2);
-            ilCodeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
-            ilCodeBuilder.LoadIndirect(typeResolver.System.System_IntPtr, typeResolver);
+            ilCodeBuilder.LoadFieldAddress(typeResolver.ResolveType("System.Runtime.CompilerServices.StringHandleOnStack").GetFieldByFieldNumber(0, typeResolver));
+            ilCodeBuilder.LoadField(typeResolver.ResolveType("System.IntPtr").GetFieldByFieldNumber(0, typeResolver));
             ilCodeBuilder.Castclass(typeResolver.System.System_String.ToPointerType());
             ilCodeBuilder.LoadString("Test");
             ilCodeBuilder.SaveIndirect(typeResolver.System.System_String, typeResolver);
