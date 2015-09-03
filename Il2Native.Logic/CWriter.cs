@@ -4472,7 +4472,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.WriteDefualtStructInitialization();
+                        this.Output.WriteDefualtStructInitialization(!Logic.IlReader.Fields(fieldType, this).Any(f => !f.IsStatic && !f.IsConst));
                     }
                 }
             }

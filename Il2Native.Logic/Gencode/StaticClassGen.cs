@@ -21,9 +21,9 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class StatucClassGen
     {
-        public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer)
+        public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer, bool empty = false)
         {
-            writer.Write("{ 0 }");
+            writer.Write(empty ? "{}" : "{ 0 }");
         }
 
         public static void WriteVirtualTableImplementationReference(this CWriter cWriter, IType tokenType)
