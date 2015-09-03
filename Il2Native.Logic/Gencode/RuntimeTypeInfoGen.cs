@@ -52,6 +52,7 @@
                     cWriter.WriteStaticFieldName(
                         IlReader.Fields(type, cWriter)
                             .First(f => f.Name == RuntimeTypeInfoGen.RuntimeTypeHolderFieldName));
+                    cWriter.Output.Write(".data");
                 });
 
             return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type);
@@ -60,7 +61,7 @@
         public static FullyDefinedReference GetFullyDefinedRefereneForStaticClass(this IType type, string fieldName, ITypeResolver typeResolver)
         {
             var field = IlReader.Fields(type, typeResolver).First(f => f.Name == fieldName);
-            return new FullyDefinedReference("&" + typeResolver.GetStaticFieldName(field), field.FieldType);
+            return new FullyDefinedReference("&" + typeResolver.GetStaticFieldName(field) + ".data", field.FieldType);
         }
 
         // Keep this in sync with FormatFlags defined in typestring.h

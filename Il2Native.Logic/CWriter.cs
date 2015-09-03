@@ -4417,7 +4417,17 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (field.IsStaticClassInitialization)
+            {
+                this.Output.Write("__static_data<");
+            }
+
             fieldType.WriteTypePrefix(this, asStruct: field.IsStaticClassInitialization);
+
+            if (field.IsStaticClassInitialization)
+            {
+                this.Output.Write(">");
+            }
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
@@ -4472,7 +4482,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.WriteDefualtStructInitialization(!Logic.IlReader.Fields(fieldType, this).Any(f => !f.IsStatic && !f.IsConst));
+                        this.Output.WriteDefualtStructInitialization();
                     }
                 }
             }

@@ -84,6 +84,13 @@ inline Void* __null_address(Void* _object)
 	return (Void*)0;
 }
 
+template < typename T > struct __static_data
+{
+	Byte* __mutex;
+	Byte* __cond;
+	T data;
+};
+
 struct __interface_data
 {
 	Void* __vtbl;

@@ -829,7 +829,7 @@ namespace Ll2NativeTests
             CompilerHelper.ExecCmd(
                 "g++",
                 string.Format(
-                    "{0}-o CoreLib.obj -c CoreLib.cpp{1}",
+                    "-fno-rtti {0}-o CoreLib.obj -c CoreLib.cpp{1}",
                     CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
                     CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }
@@ -837,7 +837,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        ///[Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        [Ignore]
         public void TestMscolibCSNative()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -1400,7 +1400,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        //[Ignore]
+        [Ignore]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined

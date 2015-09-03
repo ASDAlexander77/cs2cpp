@@ -23,7 +23,7 @@ namespace Il2Native.Logic.Gencode
     {
         public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer, bool empty = false)
         {
-            writer.Write(empty ? "{}" : "{ 0 }");
+            writer.Write("{ 0 }");
         }
 
         public static void WriteVirtualTableImplementationReference(this CWriter cWriter, IType tokenType)
@@ -36,7 +36,13 @@ namespace Il2Native.Logic.Gencode
 
         public static void WriteClassInitialization(this CWriter cWriter, IType fieldType, object valueInstance)
         {
+            var writer = cWriter.Output;
+
+            writer.Write("{ (Byte*) -1, (Byte*) -1, ");
+
             cWriter.WriteClassInitializationInternal(fieldType, fieldType, valueInstance);
+
+            writer.Write("}");
         }
 
         public static void WriteNestedClassInitializations(this CWriter cWriter, IType fieldType, object valueInstance)

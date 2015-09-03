@@ -133,10 +133,8 @@ namespace Il2Native.Logic.Gencode
                 sb.Append("(Byte*) -1, ");
             }
 
-            sb.AppendLine(string.Empty);
             sb.Append("(Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
-            sb.AppendLine(string.Empty);
 
             _stringPrefixConstData = sb.ToString();
             return _stringPrefixConstData;
