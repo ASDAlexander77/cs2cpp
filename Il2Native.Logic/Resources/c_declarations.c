@@ -8,7 +8,7 @@ typedef signed char SByte;
 typedef short Int16;
 typedef int Int32;
 typedef long long Int64;
-typedef unsigned short Byte;
+typedef unsigned char Byte;
 typedef unsigned short Char;
 typedef unsigned short UInt16;
 typedef unsigned int UInt32;
