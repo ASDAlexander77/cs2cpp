@@ -86,8 +86,10 @@ inline Void* __null_address(Void* _object)
 
 template < typename T > struct __static_data
 {
+#if __MULTI_THREADING
 	Byte* __mutex;
 	Byte* __cond;
+#endif
 	T data;
 };
 

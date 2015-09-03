@@ -19,9 +19,9 @@ namespace Il2Native.Logic.Gencode
 
     /// <summary>
     /// </summary>
-    public static class StatucClassGen
+    public static class StaticClassGen
     {
-        public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer, bool empty = false)
+        public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer)
         {
             writer.Write("{ 0 }");
         }
@@ -38,7 +38,11 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("{ (Byte*) -1, (Byte*) -1, ");
+            writer.Write("{");
+            if (cWriter.MultiThreadingSupport)
+            {
+                writer.Write(" (Byte*) -1, (Byte*) -1, ");
+            }
 
             cWriter.WriteClassInitializationInternal(fieldType, fieldType, valueInstance);
 
@@ -49,6 +53,81 @@ namespace Il2Native.Logic.Gencode
         {
             cWriter.WriteNestedClassInitializationsInternal(fieldType, fieldType, valueInstance);
         }
+
+        public static void WriteUnicodeStringReference(this CWriter cWriter, int stringToken, uint stringHashCode)
+        {
+            var stringType = cWriter.System.System_String;
+            var strType = cWriter.WriteToString(() => stringType.WriteTypePrefix(cWriter));
+
+            var writer = cWriter.Output;
+
+            if (cWriter.MultiThreadingSupport)
+            {
+                // shift for Mutex & Cond
+                writer.Write(
+                    "(({1}) ((Byte**) &_s{0}{2}_ + 2))",
+                    stringToken,
+                    strType,
+                    stringHashCode);
+            }
+            else
+            {
+                writer.Write("(({1}) &_s{0}{2}_)", stringToken, strType, stringHashCode);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="pair">
+        /// </param>
+        public static void WriteUnicodeString(this CWriter cWriter, KeyValuePair<int, string> pair)
+        {
+            if (!cWriter.stringTokenDefinitionWritten.Add(pair.Key * pair.Value.GetHashCode()))
+            {
+                return;
+            }
+
+            var align = pair.Value.Length % 2 == 0;
+
+            var writer = cWriter.Output;
+
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write(
+                "{5}struct {2} _s{0}{1}_ = {4} {3}",
+                pair.Key,
+                (uint)pair.Value.GetHashCode(),
+                cWriter.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
+                cWriter.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
+                "{",
+                cWriter.MultiThreadingSupport ? string.Empty : "const ");
+
+            writer.Write("{ ");
+
+            var index = 0;
+            foreach (var c in pair.Value.ToCharArray())
+            {
+                if (index > 0)
+                {
+                    writer.Write(", ");
+                }
+
+                writer.Write("{0}", (int)c);
+                index++;
+            }
+
+            if (index > 0)
+            {
+                writer.Write(", ");
+            }
+
+            if (align)
+            {
+                writer.Write("0, ");
+            }
+
+            writer.WriteLine("0 {0} {0};", '}');
+        }
+
 
         private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, object valueInstance, bool withBase = true)
         {

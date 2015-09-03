@@ -1623,26 +1623,6 @@ namespace Il2Native.Logic
             return true;
         }
 
-        public void WriteUnicodeStringReference(int stringToken, uint stringHashCode)
-        {
-            var stringType = this.System.System_String;
-            var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
-
-            if (MultiThreadingSupport)
-            {
-                // shift for Mutex & Cond
-                this.Output.Write(
-                    "(({1}) ((Byte**) &_s{0}{2}_ + 2))",
-                    stringToken,
-                    strType,
-                    stringHashCode);
-            }
-            else
-            {
-                this.Output.Write("(({1}) &_s{0}{2}_)", stringToken, strType, stringHashCode);
-            }
-        }
-
         private bool IsStructSave(IType localType, ReturnResult estResult)
         {
             if (!localType.IsStructureType() || localType.IsByRef || localType.TypeEquals(estResult.Type))
@@ -3069,6 +3049,11 @@ namespace Il2Native.Logic
                 if (this.GcSupport && this.GcDebug)
                 {
                     this.Output.WriteLine("#define __GC_MEMORY_DEBUG 1");
+                }
+
+                if (this.MultiThreadingSupport)
+                {
+                    this.Output.WriteLine("#define __MULTI_THREADING 1");
                 }
 
                 // declarations
@@ -4605,56 +4590,6 @@ namespace Il2Native.Logic
         private void EndPreprocessorIf()
         {
             this.Output.WriteLine("#endif");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="pair">
-        /// </param>
-        public void WriteUnicodeString(KeyValuePair<int, string> pair)
-        {
-            if (!this.stringTokenDefinitionWritten.Add(pair.Key * pair.Value.GetHashCode()))
-            {
-                return;
-            }
-
-            var align = pair.Value.Length % 2 == 0;
-
-            this.Output.Write(this.declarationPrefix);
-            this.Output.Write(
-                "{5}struct {2} _s{0}{1}_ = {4} {3}",
-                pair.Key,
-                (uint)pair.Value.GetHashCode(),
-                this.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
-                this.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
-                "{",
-                this.MultiThreadingSupport ? string.Empty : "const ");
-
-            this.Output.Write("{ ");
-
-            var index = 0;
-            foreach (var c in pair.Value.ToCharArray())
-            {
-                if (index > 0)
-                {
-                    this.Output.Write(", ");
-                }
-
-                this.Output.Write("{0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                this.Output.Write(", ");
-            }
-
-            if (align)
-            {
-                this.Output.Write("0, ");
-            }
-
-            this.Output.WriteLine("0 {0} {0};", '}');
         }
 
         /// <summary>
