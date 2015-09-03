@@ -837,7 +837,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void TestMscolibCSNative()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
