@@ -3682,8 +3682,7 @@ namespace Il2Native.Logic
                 foreach (
                     var staticConstructorPair in
                         staticConstructors.Where(
-                            staticConstructorPair => !staticConstructorPair.Value.Any(v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v))))
-                                          .ToList())
+                            staticConstructorPair => !staticConstructorPair.Value.Any(v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v)))).ToList())
                 {
                     staticConstructors.Remove(staticConstructorPair.Key);
                     newStaticConstructors.Add(staticConstructorPair.Key);
@@ -3873,6 +3872,11 @@ namespace Il2Native.Logic
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
+            if (this.GcSupport && this.IsCoreLib)
+            {
+                this.Output.WriteLine("GC_INIT();");
+            }
+
             if (this.MultiThreadingSupport)
             {
                 // initialize of Thread Statics
@@ -3885,11 +3889,6 @@ namespace Il2Native.Logic
             }
 
             this.SortStaticConstructorsByUsage();
-
-            if (this.GcSupport && this.IsCoreLib)
-            {
-                this.Output.WriteLine("GC_INIT();");
-            }
 
             foreach (var staticCtor in this.IlReader.StaticConstructors)
             {

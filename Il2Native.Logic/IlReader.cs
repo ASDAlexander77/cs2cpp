@@ -1162,10 +1162,7 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        if (code == Code.Call)
-                        {
-                            this.AddCalledMethod(method);
-                        }
+                        this.AddCalledMethod(method);
 
                         if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
                         {
