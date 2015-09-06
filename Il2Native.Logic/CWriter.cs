@@ -3662,44 +3662,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private void SortStaticConstructorsByUsage()
-        {
-            var staticConstructors = new Dictionary<IMethod, ISet<IType>>();
-            foreach (var staticCtor in this.IlReader.StaticConstructors)
-            {
-                var methodWalker = new MethodsWalker(staticCtor, this);
-                var reaquiredTypesWithStaticFields = methodWalker.DiscoverAllStaticFieldsDependencies();
-                staticConstructors.Add(staticCtor, reaquiredTypesWithStaticFields);
-            }
-
-            // rebuild order
-            var newStaticConstructors = new List<IMethod>();
-
-            var countBefore = 0;
-            do
-            {
-                countBefore = staticConstructors.Count;
-                foreach (
-                    var staticConstructorPair in
-                        staticConstructors.Where(
-                            staticConstructorPair => !staticConstructorPair.Value.Any(v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v)))).ToList())
-                {
-                    staticConstructors.Remove(staticConstructorPair.Key);
-                    newStaticConstructors.Add(staticConstructorPair.Key);
-                }
-            }
-            while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
-
-            Debug.Assert(staticConstructors.Keys.Count == 0, "Not All static constructors were resolved");
-
-            // add rest as is
-            newStaticConstructors.AddRange(staticConstructors.Keys);
-
-            this.IlReader.StaticConstructors = newStaticConstructors;
-        }
-
-        /// <summary>
-        /// </summary>
         private void WriteConstBytes(IConstBytes constBytes)
         {
             var bytes = constBytes.Data;
@@ -3888,13 +3850,11 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.SortStaticConstructorsByUsage();
-
-            foreach (var staticCtor in this.IlReader.StaticConstructors)
-            {
-                WriteMethodDefinitionName(this.Output, staticCtor);
-                this.Output.WriteLine("();");
-            }
+            ////foreach (var staticCtor in this.IlReader.StaticConstructors)
+            ////{
+            ////    WriteMethodDefinitionName(this.Output, staticCtor);
+            ////    this.Output.WriteLine("();");
+            ////}
 
             this.Output.Indent--;
             this.Output.WriteLine("}");
