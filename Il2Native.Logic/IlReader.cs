@@ -16,7 +16,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-
+    using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -818,6 +818,12 @@ namespace Il2Native.Logic
                     yield return new SynthesizedDynamicCastMethod(typeResolver);
                     yield return new SynthesizedCastMethod(typeResolver);
                 }
+
+                // return all get methods for static fields which are not primitive value type
+                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => (f.IsStatic || f.IsConst) && !f.FieldType.IsPrimitiveType()))
+                {
+                    yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
+                }
             }
 
             if (type.IsValueType())
@@ -861,7 +867,7 @@ namespace Il2Native.Logic
 
             if (type.IsValueType())
             {
-                foreach (var method in genMethodSpecializationForType.Where(m => ShouldHaveStructToObjectAdapter(m)))
+                foreach (var method in genMethodSpecializationForType.Where(ShouldHaveStructToObjectAdapter))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }

@@ -628,6 +628,12 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
+        public static void GetGetStaticMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        {
+            codeBuilder.LoadField(field);
+            codeBuilder.Add(Code.Ret);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="cWriter">
