@@ -697,7 +697,17 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        if (opCodeFieldInfoPart.Operand.IsStaticClassInitialization)
+                        {
+                            this.Output.Write("&");
+                        }
+
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+
+                        if (opCodeFieldInfoPart.Operand.IsStaticClassInitialization)
+                        {
+                            this.Output.Write(".data");
+                        }
                     }
 
                     break;
