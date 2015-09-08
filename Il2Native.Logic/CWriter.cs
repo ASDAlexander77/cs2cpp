@@ -4462,7 +4462,14 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.Output.Write(" = 0/*undef*/");
+                if (field.ConstantValue != null)
+                {
+                    this.Output.Write(string.Concat(" = ", field.ConstantValue));
+                }
+                else
+                {
+                    this.Output.Write(" = 0/*undef*/");
+                }
             }
         }
 

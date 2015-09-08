@@ -713,6 +713,11 @@ namespace Il2Native.Logic
             {
                 yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
             }
+
+            // to store info about initialized
+            var cctorCalled = typeResolver.System.System_Int32.ToField(type, "_cctor_called", isStatic: true);
+            cctorCalled.ConstantValue = -1;
+            yield return cctorCalled;
         }
 
         /// <summary>
@@ -820,7 +825,7 @@ namespace Il2Native.Logic
                 }
 
                 // return all get methods for static fields which are not primitive value type
-                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => (f.IsStatic || f.IsConst) && !f.FieldType.IsPrimitiveType()))
+                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => (f.IsStatic || f.IsConst) && !f.FieldType.IsPrimitiveType() && !f.IsStaticClassInitialization))
                 {
                     yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
                 }
