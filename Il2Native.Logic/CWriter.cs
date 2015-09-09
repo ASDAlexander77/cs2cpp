@@ -4462,9 +4462,20 @@ namespace Il2Native.Logic
             }
             else
             {
-                if (field.ConstantValue != null)
+                if (field.ConstantValue != null && !field.FieldType.IsStructureType() &&
+                    field.FieldType.TypeNotEquals(System.System_Single) &&
+                    field.FieldType.TypeNotEquals(System.System_Double) &&
+                    field.FieldType.TypeNotEquals(System.System_Char))
                 {
-                    this.Output.Write(string.Concat(" = ", field.ConstantValue));
+                    this.Output.Write(string.Concat(" = ", field.ConstantValue.ToString().ToLowerInvariant()));
+                    if (field.FieldType.TypeEquals(System.System_Int64))
+                    {
+                        this.Output.Write("L");
+                    }
+                    else if (field.FieldType.TypeEquals(System.System_UInt64))
+                    {
+                        this.Output.Write("UL");
+                    }
                 }
                 else
                 {
