@@ -1671,6 +1671,11 @@ namespace Il2Native.Logic
             return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
         }
 
+        public static IConstructor FindStaticConstructor(this IType type, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => c.IsStatic);
+        }
+
         public static IConstructor FindConstructor(this IType type, IType firstParameterType, ITypeResolver typeResolver)
         {
             return Logic.IlReader.Constructors(type, typeResolver)

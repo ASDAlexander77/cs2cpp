@@ -16,6 +16,7 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
+    using System.Threading;
     using CodeParts;
     using DebugInfo.DebugInfoSymbolWriter;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
@@ -31,6 +32,8 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
+
+        public const string CalledCctorFieldName = "_cctor_called";
 
         public static void WriteAllocateMemory(
             this CWriter cWriter,
@@ -630,6 +633,15 @@ namespace Il2Native.Logic.Gencode
 
         public static void GetGetStaticMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
         {
+            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            if (cctor != null)
+            {
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
+                codeBuilder.Call(cctor);
+                codeBuilder.Add(initializedJump);
+            }
+
             codeBuilder.LoadField(field);
             codeBuilder.Add(Code.Ret);
         }

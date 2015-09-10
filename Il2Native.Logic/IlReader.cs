@@ -715,7 +715,7 @@ namespace Il2Native.Logic
             }
 
             // to store info about initialized
-            var cctorCalled = typeResolver.System.System_Int32.ToField(type, "_cctor_called", isStatic: true);
+            var cctorCalled = typeResolver.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
             cctorCalled.ConstantValue = -1;
             yield return cctorCalled;
         }

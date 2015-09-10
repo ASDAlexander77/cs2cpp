@@ -1444,6 +1444,17 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes, IMethod method)
         {
             OpCodePart last = null;
+            if (method is IConstructor && method.IsStatic)
+            {
+                var zeroOpCode = new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
+                last = BuildChain(last, zeroOpCode);
+                yield return zeroOpCode;
+                var initializedField = method.DeclaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, this);
+                var setStaticFieldValueOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Stsfld, 0, 0, initializedField);
+                last = BuildChain(last, setStaticFieldValueOpCode);
+                yield return setStaticFieldValueOpCode;
+            }
+
             foreach (var opCodePart in opCodes)
             {
                 var opCodePartBefore = this.InsertBeforeOpCode(opCodePart);
