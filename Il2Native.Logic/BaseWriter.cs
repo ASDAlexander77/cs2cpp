@@ -19,7 +19,7 @@ namespace Il2Native.Logic
     using DebugInfo.DebugInfoSymbolWriter;
     using Exceptions;
     using Gencode;
-
+    using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
@@ -1337,8 +1337,22 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode)
+        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode, out bool replace)
         {
+            replace = false;
+
+            // replvae Code.Ldsfld with calling method
+            if (opCode.ToCode() == Code.Ldsfld)
+            {
+                var opCodeFieldType = opCode as OpCodeFieldInfoPart;
+                replace = true;
+                return new OpCodeMethodInfoPart(
+                    OpCodesEmit.Call,
+                    opCode.AddressStart,
+                    opCode.AddressEnd,
+                    new SynthesizedGetStaticMethod(opCodeFieldType.Operand.DeclaringType, opCodeFieldType.Operand, this));
+            }
+
             if (this.ExceptionHandlingClauses == null)
             {
                 return null;
@@ -1457,11 +1471,17 @@ namespace Il2Native.Logic
 
             foreach (var opCodePart in opCodes)
             {
-                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart);
+                var replace = false;
+                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart, out replace);
                 if (opCodePartBefore != null)
                 {
                     last = BuildChain(last, opCodePartBefore);
                     yield return opCodePartBefore;
+                }
+
+                if (replace)
+                {
+                    continue;
                 }
 
                 last = BuildChain(last, opCodePart);
