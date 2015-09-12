@@ -32,6 +32,7 @@
 
         public OpCodePart Pop()
         {
+            Debug.Assert(this.main.Count > 0);
             return this.main.Pop();
         }
 

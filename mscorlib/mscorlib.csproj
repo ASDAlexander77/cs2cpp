@@ -35,6 +35,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\CoreLib\ImplPAL\Win32\Win32Native.cs">
+      <Link>ImplPAL\Win32\Win32Native.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\ArgIterator.cs">
       <Link>Impl\ArgIterator.cs</Link>
     </Compile>

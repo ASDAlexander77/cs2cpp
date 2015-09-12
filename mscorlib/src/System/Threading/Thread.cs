@@ -736,28 +736,6 @@ namespace System.Threading {
         }
 
 
-        /* wait for a length of time proportial to 'iterations'.  Each iteration is should
-           only take a few machine instructions.  Calling this API is preferable to coding
-           a explict busy loop because the hardware can be informed that it is busy waiting. */
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        #if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-[HostProtection(Synchronization=true,ExternalThreading=true)]
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-
         [System.Security.SecuritySafeCritical]  // auto-generated
         #if PROTECTION
 #if PROTECTION
