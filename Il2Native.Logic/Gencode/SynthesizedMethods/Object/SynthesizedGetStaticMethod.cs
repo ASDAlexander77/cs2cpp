@@ -7,6 +7,8 @@
     /// </summary>
     public class SynthesizedGetStaticMethod : SynthesizedIlCodeBuilderStaticMethod
     {
+        public const string GetStaticMethodPrefix = "get_static_";
+
         private readonly ITypeResolver typeResolver;
         
         private readonly IField field;
@@ -18,7 +20,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetStaticMethod(IType type, IField field, ITypeResolver typeResolver)
-            : base(null, string.Concat("get_static_", field.Name), type, field.FieldType)
+            : base(null, string.Concat(GetStaticMethodPrefix, field.Name), type, field.FieldType)
         {
             this.typeResolver = typeResolver;
             this.field = field;

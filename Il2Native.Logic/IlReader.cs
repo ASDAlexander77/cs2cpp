@@ -825,7 +825,7 @@ namespace Il2Native.Logic
                 }
 
                 // return all get methods for static fields which are not primitive value type
-                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => f.IsStatic && !f.IsStaticClassInitialization))
+                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => f.IsStatic && !f.IsConst && !f.IsStaticClassInitialization))
                 {
                     yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
                 }

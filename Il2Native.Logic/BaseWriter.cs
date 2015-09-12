@@ -1337,20 +1337,26 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode, out bool replace)
+        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode, IMethod method, out bool replace)
         {
             replace = false;
 
             // replvae Code.Ldsfld with calling method
-            if (opCode.ToCode() == Code.Ldsfld)
+            if (opCode.ToCode() == Code.Ldsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                replace = true;
-                return new OpCodeMethodInfoPart(
-                    OpCodesEmit.Call,
-                    opCode.AddressStart,
-                    opCode.AddressEnd,
-                    new SynthesizedGetStaticMethod(opCodeFieldType.Operand.DeclaringType, opCodeFieldType.Operand, this));
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                {
+                    replace = true;
+                    return new OpCodeMethodInfoPart(
+                        OpCodesEmit.Call,
+                        opCode.AddressStart,
+                        opCode.AddressEnd,
+                        new SynthesizedGetStaticMethod(
+                            opCodeFieldType.Operand.DeclaringType,
+                            opCodeFieldType.Operand,
+                            this));
+                }
             }
 
             if (this.ExceptionHandlingClauses == null)
@@ -1472,7 +1478,7 @@ namespace Il2Native.Logic
             foreach (var opCodePart in opCodes)
             {
                 var replace = false;
-                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart, out replace);
+                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart, method, out replace);
                 if (opCodePartBefore != null)
                 {
                     last = BuildChain(last, opCodePartBefore);

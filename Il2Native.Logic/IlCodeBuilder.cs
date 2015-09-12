@@ -361,6 +361,20 @@
             this.Add(Code.Castclass, (int)TokenResolutions.Count);
         }
 
+        public void Unbox(IType type)
+        {
+            Debug.Assert(type != null, "@type is null");
+            TokenResolutions.Add(type);
+            this.Add(Code.Unbox, (int)TokenResolutions.Count);
+        }
+
+        public void UnboxAny(IType type)
+        {
+            Debug.Assert(type != null, "@type is null");
+            TokenResolutions.Add(type);
+            this.Add(Code.Unbox_Any, (int)TokenResolutions.Count);
+        }
+
         public void LoadString(string value)
         {
             Debug.Assert(!string.IsNullOrEmpty(value), "@string is empty");

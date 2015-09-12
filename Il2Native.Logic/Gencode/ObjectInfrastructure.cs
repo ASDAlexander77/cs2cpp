@@ -643,6 +643,13 @@ namespace Il2Native.Logic.Gencode
             }
 
             codeBuilder.LoadField(field);
+
+            if (field.IsThreadStatic && field.FieldType.IsStructureType())
+            {
+                codeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
+                codeBuilder.Unbox(field.FieldType);
+            }
+
             codeBuilder.Add(Code.Ret);
         }
 
