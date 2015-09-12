@@ -35,6 +35,48 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\CoreLib\Impl\ArgIterator.cs">
+      <Link>Impl\ArgIterator.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Console.cs">
+      <Link>Impl\Console.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\IO\__ConsoleStream.cs">
+      <Link>Impl\IO\__ConsoleStream.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\CriticalHandle.cs">
+      <Link>Impl\Runtime\InteropServices\CriticalHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\DependentHandle.cs">
+      <Link>Impl\Runtime\InteropServices\DependentHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\GCHandle.cs">
+      <Link>Impl\Runtime\InteropServices\GCHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\SafeHandle.cs">
+      <Link>Impl\Runtime\InteropServices\SafeHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\Monitor.cs">
+      <Link>Impl\Threading\Monitor.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\Overlapped.cs">
+      <Link>Impl\Threading\Overlapped.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\Thread.cs">
+      <Link>Impl\Threading\Thread.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\ThreadPool.cs">
+      <Link>Impl\Threading\ThreadPool.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\Timer.cs">
+      <Link>Impl\Threading\Timer.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Threading\WaitHandle.cs">
+      <Link>Impl\Threading\WaitHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Type.cs">
+      <Link>Impl\Type.cs</Link>
+    </Compile>
     <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Common\Preprocessed\AssemblyRefs.g.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

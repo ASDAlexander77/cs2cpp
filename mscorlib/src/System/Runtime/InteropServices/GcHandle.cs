@@ -40,7 +40,7 @@ namespace System.Runtime.InteropServices
 
     [StructLayout(LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public struct GCHandle
+    public partial struct GCHandle
     {
         // IMPORTANT: This must be kept in sync with the GCHandleType enum.
         private const GCHandleType MaxHandleType = GCHandleType.Pinned;
@@ -290,32 +290,6 @@ namespace System.Runtime.InteropServices
             m_handle = new IntPtr(((long)m_handle) | 1L);
 #endif
         }
-
-        // Internal native calls that this implementation uses.
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr InternalAlloc(Object value, GCHandleType type);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern void InternalFree(IntPtr handle);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern Object InternalGet(IntPtr handle);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern void InternalSet(IntPtr handle, Object value, bool isPinned);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern Object InternalCompareExchange(IntPtr handle, Object value, Object oldValue, bool isPinned);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr InternalAddrOfPinnedObject(IntPtr handle);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern void InternalCheckDomain(IntPtr handle);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal static extern GCHandleType InternalGetHandleType(IntPtr handle);
 
         // The actual integer handle value that the EE uses internally.
         private IntPtr m_handle;

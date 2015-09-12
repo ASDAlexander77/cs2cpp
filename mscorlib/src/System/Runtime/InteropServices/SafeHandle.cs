@@ -137,7 +137,7 @@ using System.Runtime.Versioning;
 #if !FEATURE_CORECLR
 [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode=true)]
 #endif
-public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
+public abstract partial class SafeHandle : CriticalFinalizerObject, IDisposable
 {
     // ! Do not add or rearrange fields as the EE depends on this layout.
     //------------------------------------------------------------------
@@ -197,10 +197,6 @@ public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
     }
 
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    extern void InternalFinalize();
-
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     protected void SetHandle(IntPtr handle) {
         this.handle = handle;
     }
@@ -257,19 +253,6 @@ public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
             InternalFinalize();
     }
 
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    private extern void InternalDispose();
-
-    // This should only be called for cases when you know for a fact that
-    // your handle is invalid and you want to record that information.
-    // An example is calling a syscall and getting back ERROR_INVALID_HANDLE.
-    // This method will normally leak handles!
-    [System.Security.SecurityCritical]  // auto-generated
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    public extern void SetHandleAsInvalid();
-
     // Implement this abstract method in your derived class to specify how to
     // free the handle. Be careful not write any code that's subject to faults
     // in this method (the runtime will prepare the infrastructure for you so
@@ -280,37 +263,5 @@ public abstract class SafeHandle : CriticalFinalizerObject, IDisposable
     // MDA is enabled.
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     protected abstract bool ReleaseHandle();
-
-    // Add a reason why this handle should not be relinquished (i.e. have
-    // ReleaseHandle called on it). This method has dangerous in the name since
-    // it must always be used carefully (e.g. called within a CER) to avoid
-    // leakage of the handle. It returns a boolean indicating whether the
-    // increment was actually performed to make it easy for program logic to
-    // back out in failure cases (i.e. is a call to DangerousRelease needed).
-    // It is passed back via a ref parameter rather than as a direct return so
-    // that callers need not worry about the atomicity of calling the routine
-    // and assigning the return value to a variable (the variable should be
-    // explicitly set to false prior to the call). The only failure cases are
-    // when the method is interrupted prior to processing by a thread abort or
-    // when the handle has already been (or is in the process of being)
-    // released.
-    [System.Security.SecurityCritical]  // auto-generated
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    public extern void DangerousAddRef(ref bool success);
-
-    // Partner to DangerousAddRef. This should always be successful when used in
-    // a correct manner (i.e. matching a successful DangerousAddRef and called
-    // from a region such as a CER where a thread abort cannot interrupt
-    // processing). In the same way that unbalanced DangerousAddRef calls can
-    // cause resource leakage, unbalanced DangerousRelease calls may cause
-    // invalid handle states to become visible to other threads. This
-    // constitutes a potential security hole (via handle recycling) as well as a
-    // correctness problem -- so don't ever expose Dangerous* calls out to
-    // untrusted code.
-    [System.Security.SecurityCritical]  // auto-generated
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    public extern void DangerousRelease();
 }
 }

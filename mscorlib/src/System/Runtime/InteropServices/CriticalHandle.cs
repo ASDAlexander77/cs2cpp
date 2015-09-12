@@ -142,7 +142,7 @@ namespace System.Runtime.InteropServices
 #if !FEATURE_CORECLR
 [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode=true)]
 #endif
-public abstract class CriticalHandle : CriticalFinalizerObject, IDisposable
+public abstract partial class CriticalHandle : CriticalFinalizerObject, IDisposable
 {
     // ! Do not add or rearrange fields as the EE depends on this layout.
     //------------------------------------------------------------------
@@ -202,10 +202,6 @@ public abstract class CriticalHandle : CriticalFinalizerObject, IDisposable
 
         GC.SuppressFinalize(this);
     }
-
-    [MethodImplAttribute(MethodImplOptions.InternalCall)]
-    [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-    private extern void FireCustomerDebugProbe();
 
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     protected void SetHandle(IntPtr handle) {

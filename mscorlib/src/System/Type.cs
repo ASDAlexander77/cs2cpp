@@ -34,7 +34,7 @@ namespace System {
 #if CONTRACTS_FULL
     [ContractClass(typeof(TypeContracts))]
 #endif
-    public abstract class Type : MemberInfo, _Type, IReflect
+    public abstract partial class Type : MemberInfo, _Type, IReflect
     {
         //
         // System.Type is appdomain agile type. Appdomain agile types cannot have precise static constructors. Make
@@ -342,17 +342,6 @@ namespace System {
                 throw new ArgumentNullException(null, Environment.GetResourceString("Arg_InvalidHandle"));
             return new RuntimeTypeHandle((RuntimeType)o.GetType());
         }
-
-        // Given a class handle, this will return the class for that handle.
-        [System.Security.SecurityCritical]
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern RuntimeType GetTypeFromHandleUnsafe(IntPtr handle);
-
-        [Pure]
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern Type GetTypeFromHandle(RuntimeTypeHandle handle);
-
 
         // Return the fully qualified name.  The name does contain the namespace.
         public abstract String FullName {

@@ -2007,6 +2007,8 @@ namespace System {
             return nExecuteAssembly(assembly, args);
         }
 
+        public extern static AppDomain CreateDomain(String friendlyName);
+
         public static AppDomain CurrentDomain
         {
             get {

@@ -121,7 +121,7 @@ namespace System.Threading {
     [ClassInterface(ClassInterfaceType.None)]
     [ComDefaultInterface(typeof(_Thread))]
 [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class Thread : CriticalFinalizerObject, _Thread
+    public sealed partial class Thread : CriticalFinalizerObject, _Thread
     {
         /*=========================================================================
         ** Data accessed from managed code that needs to be defined in
@@ -265,14 +265,6 @@ namespace System.Threading {
         public override int GetHashCode()
         {
             return m_ManagedThreadId;
-        }
-
-        extern public int ManagedThreadId
-        {
-            [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            get;
         }
 
         // Returns handle for interop with EE. The handle is guaranteed to be non-null.
@@ -457,9 +449,7 @@ namespace System.Threading {
         }
 #endif //!FEATURE_CORECLR
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void StartInternal(IPrincipal principal, ref StackCrawlMark stackMark);
+
 #if FEATURE_COMPRESSEDSTACK
         /// <internalonly/>
         [System.Security.SecurityCritical]  // auto-generated_required
@@ -489,12 +479,6 @@ namespace System.Threading {
 #endif // #if FEATURE_COMPRESSEDSTACK
 
 
-        // Helper method to get a logical thread ID for StringBuilder (for
-        // correctness) and for FileStream's async code path (for perf, to
-        // avoid creating a Thread instance).
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static IntPtr InternalGetCurrentThread();
 
         /*=========================================================================
         ** Raises a ThreadAbortException in the thread, which usually
@@ -566,12 +550,6 @@ namespace System.Threading {
 #endif // FEATURE_LEGACYNETCF
             AbortInternal();
         }
-
-        // Internal helper (since we can't place security demands on
-        // ecalls/fcalls).
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void AbortInternal();
 
 #if !FEATURE_CORECLR
         /*=========================================================================
@@ -673,43 +651,6 @@ namespace System.Threading {
 #endif
             set { SetPriorityNative((int)value); }
         }
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern int GetPriorityNative();
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void SetPriorityNative(int priority);
-
-        /*=========================================================================
-        ** Returns true if the thread has been started and is not dead.
-        =========================================================================*/
-        public extern bool IsAlive {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
-
-        /*=========================================================================
-        ** Returns true if the thread is a threadpool thread.
-        =========================================================================*/
-        public extern bool IsThreadPoolThread {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
-
-        /*=========================================================================
-        ** Waits for the thread to die or for timeout milliseconds to elapse.
-        ** Returns true if the thread died, or false if the wait timed out. If
-        ** Timeout.Infinite is given as the parameter, no timeout will occur.
-        **
-        ** Exceptions: ArgumentException if timeout < 0.
-        **             ThreadInterruptedException if the thread is interrupted while waiting.
-        **             ThreadStateException if the thread has not been started yet.
-        =========================================================================*/
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern bool JoinInternal(int millisecondsTimeout);
 
         [System.Security.SecuritySafeCritical]
         #if PROTECTION
@@ -777,18 +718,6 @@ namespace System.Threading {
             return Join((int)tm);
         }
 
-        /*=========================================================================
-        ** Suspends the current thread for timeout milliseconds. If timeout == 0,
-        ** forces the thread to give up the remainer of its timeslice.  If timeout
-        ** == Timeout.Infinite, no timeout will occur.
-        **
-        ** Exceptions: ArgumentException if timeout < 0.
-        **             ThreadInterruptedException if the thread is interrupted while sleeping.
-        =========================================================================*/
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void SleepInternal(int millisecondsTimeout);
-
         [System.Security.SecuritySafeCritical]  // auto-generated
         public static void Sleep(int millisecondsTimeout)
         {
@@ -828,8 +757,6 @@ namespace System.Threading {
 #endif
 #endif
 #endif
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        private static extern void SpinWaitInternal(int iterations);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         #if PROTECTION
@@ -852,27 +779,6 @@ namespace System.Threading {
         {
             SpinWaitInternal(iterations);
         }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        #if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-[HostProtection(Synchronization = true, ExternalThreading = true)]
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        private static extern bool YieldInternal();
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         #if PROTECTION
@@ -904,9 +810,6 @@ namespace System.Threading {
                 return GetCurrentThreadNative();
             }
         }
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall), ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        private static extern Thread GetCurrentThreadNative();
 
         [System.Security.SecurityCritical]  // auto-generated
         private void SetStartHelper(Delegate start, int maxStackSize)
@@ -942,19 +845,6 @@ namespace System.Threading {
             }                
         }
 
-        [SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern ulong GetProcessDefaultStackSize();
-
-        /*=========================================================================
-        ** PRIVATE Sets the IThreadable interface for the thread. Assumes that
-        ** start != null.
-        =========================================================================*/
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void SetStart(Delegate start, int maxStackSize);
-
         /*=========================================================================
         ** Clean up the thread when it goes away.
         =========================================================================*/
@@ -966,16 +856,8 @@ namespace System.Threading {
             InternalFinalize();
         }
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void InternalFinalize();
-
 #if FEATURE_COMINTEROP
-        [System.Security.SecurityCritical]  // auto-generated
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern void DisableComObjectEagerCleanup();
+
 #endif //FEATURE_COMINTEROP
 
         /*=========================================================================
@@ -1005,12 +887,6 @@ namespace System.Threading {
 #endif
             set { SetBackgroundNative(value); }
         }
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern bool IsBackgroundNative();
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void SetBackgroundNative(bool isBackground);
 
 
         /*=========================================================================
@@ -1022,9 +898,6 @@ namespace System.Threading {
             get { return (ThreadState)GetThreadStateNative(); }
         }
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern int GetThreadStateNative();
 
 #if FEATURE_COMINTEROP_APARTMENT_SUPPORT
         /*=========================================================================
@@ -1574,10 +1447,6 @@ namespace System.Threading {
         }
 
 #if! FEATURE_LEAK_CULTURE_INFO
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern void nativeInitCultureAccessors();
 #endif
 
         /*=============================================================*/
@@ -1675,13 +1544,6 @@ namespace System.Threading {
         ** Returns the current domain in which current thread is running.
         ======================================================================*/
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern AppDomain GetDomainInternal();
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern AppDomain GetFastDomainInternal();
-
         [System.Security.SecuritySafeCritical]  // auto-generated
         public static AppDomain GetDomain()
         {
@@ -1743,11 +1605,6 @@ namespace System.Threading {
             }
         }
 
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern void InformThreadNameChange(ThreadHandle t, String name, int len);
-
         internal Object AbortReason {
             [System.Security.SecurityCritical]  // auto-generated
             get {
@@ -1785,48 +1642,6 @@ namespace System.Threading {
 #endif
 #endif
 #endif
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void BeginCriticalRegion();
-
-        /*
-         *  This marks the end of a critical code region.
-         */
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        #if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-#if PROTECTION
-[HostProtection(Synchronization=true, ExternalThreading=true)]
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        public static extern void EndCriticalRegion();
-
-        /*
-         *  This marks the beginning of a code region that requires thread affinity.
-         */
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void BeginThreadAffinity();
-
-        /*
-         *  This marks the end of a code region that requires thread affinity.
-         */
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void EndThreadAffinity();
 
         /*=========================================================================
         ** Volatile Read & Write and MemoryBarrier methods.
@@ -2077,26 +1892,6 @@ namespace System.Threading {
             throw new NotImplementedException();
         }
 #endif
-
-        // Helper function to set the AbortReason for a thread abort.
-        //  Checks that they're not alredy set, and then atomically updates
-        //  the reason info (object + ADID).
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern void SetAbortReason(Object o);
-    
-        // Helper function to retrieve the AbortReason from a thread
-        //  abort.  Will perform cross-AppDomain marshalling if the object
-        //  lives in a different AppDomain from the requester.
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern Object GetAbortReason();
-    
-        // Helper function to clear the AbortReason.  Takes care of
-        //  AppDomain related cleanup if required.
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern void ClearAbortReason();
 
 
     } // End of class Thread

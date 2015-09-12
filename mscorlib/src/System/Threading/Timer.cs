@@ -43,7 +43,7 @@ namespace System.Threading
     //
     // Note that all instance methods of this class require that the caller hold a lock on TimerQueue.Instance.
     //
-    class TimerQueue
+    partial class TimerQueue
     {
         #region singleton pattern implementation
 
@@ -197,22 +197,6 @@ namespace System.Threading
         {
             Instance.FireNextTimers();
         }
-
-        [System.Security.SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        static extern AppDomainTimerSafeHandle CreateAppDomainTimer(uint dueTime);
-
-        [System.Security.SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        static extern bool ChangeAppDomainTimer(AppDomainTimerSafeHandle handle, uint dueTime);
-
-        [System.Security.SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        static extern bool DeleteAppDomainTimer(IntPtr handle);
 
         #endregion
 

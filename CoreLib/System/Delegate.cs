@@ -82,11 +82,6 @@ namespace System
             return !d1.Equals(d2);
         }
 
-        public unsafe void* ToPointer()
-        {
-            return _methodPtr.ToPointer();
-        }
-
         protected virtual Delegate CombineImpl(Delegate d)
         {
             throw new NotSupportedException("Combine");
