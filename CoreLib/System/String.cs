@@ -12,7 +12,7 @@ namespace System
     using System.Text;
 
     [Serializable]
-    public sealed class String : IComparable, IEnumerable<char>, IEnumerable
+    public sealed partial class String : IComparable, IEnumerable<char>, IEnumerable
     {
         public static readonly String Empty = "";
 
@@ -175,14 +175,6 @@ namespace System
             }
 
             return chars;
-        }
-
-        public int Length
-        {
-            get
-            {
-                return m_stringLength;
-            }
         }
 
         public String[] Split(params char[] separator)

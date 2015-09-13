@@ -41,6 +41,9 @@
     <Compile Include="..\CoreLib\Impl\ArgIterator.cs">
       <Link>Impl\ArgIterator.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Buffer.cs">
+      <Link>Impl\Buffer.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\Console.cs">
       <Link>Impl\Console.cs</Link>
     </Compile>
@@ -58,6 +61,9 @@
     </Compile>
     <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\SafeHandle.cs">
       <Link>Impl\Runtime\InteropServices\SafeHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\String.cs">
+      <Link>Impl\String.cs</Link>
     </Compile>
     <Compile Include="..\CoreLib\Impl\Threading\Monitor.cs">
       <Link>Impl\Threading\Monitor.cs</Link>

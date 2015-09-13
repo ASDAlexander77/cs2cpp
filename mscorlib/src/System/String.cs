@@ -42,7 +42,7 @@ namespace System {
     //
     [ComVisible(true)]
     [Serializable] 
-    public sealed class String : IComparable, ICloneable, IConvertible, IEnumerable
+    public sealed partial class String : IComparable, ICloneable, IConvertible, IEnumerable
         , IComparable<String>, IEnumerable<char>, IEquatable<String>
     {
         
@@ -896,20 +896,6 @@ namespace System {
                     return hash1 + (hash2 * 1566083941);
                 }
             }
-        }
-
-        // Gets the length of this string
-        //
-        /// This is a EE implemented function so that the JIT can recognise is specially
-        /// and eliminate checks on character fetchs in a loop like:
-        ///        for(int I = 0; I < str.Length; i++) str[i]
-        /// The actually code generated for this will be one instruction and will be inlined.
-        //
-        // Spec#: Add postcondition in a contract assembly.  Potential perf problem.
-        public extern int Length {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
         }
 
         // Creates an array of strings by splitting this string at each
