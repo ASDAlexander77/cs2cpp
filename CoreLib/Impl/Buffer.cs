@@ -30,32 +30,5 @@
                 Memcpy(pDest + destIndex, pSrc + srcIndex, len);
             }
         }
-
-        internal unsafe static void Memcpy(byte[] dest, int destIndex, byte* src, int srcIndex, int len)
-        {
-            // If dest has 0 elements, the fixed statement will throw an 
-            // IndexOutOfRangeException.  Special-case 0-byte copies.
-            if (len == 0)
-                return;
-            fixed (byte* pDest = &dest[0])
-            {
-                Memcpy(pDest + destIndex, src + srcIndex, len);
-            }
-        }
-
-        internal unsafe static void Memcpy(byte* pDest, int destIndex, byte[] src, int srcIndex, int len)
-        {
-            // If dest has 0 elements, the fixed statement will throw an 
-            // IndexOutOfRangeException.  Special-case 0-byte copies.
-            if (len == 0)
-                return;
-            fixed (byte* pSrc = &src[0])
-            {
-                Memcpy(pDest + destIndex, pSrc + srcIndex, len);
-            }
-        }
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        internal extern unsafe static void* Memcpy(byte* dst, byte* src, int len);
     }
 }
