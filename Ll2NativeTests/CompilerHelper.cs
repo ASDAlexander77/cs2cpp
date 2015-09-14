@@ -414,6 +414,12 @@
             }
 
             ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
+
+            // cleanup if success
+            foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())
+            {
+                File.Delete(fileToDelete);
+            }
         }
 
         /// <summary>
