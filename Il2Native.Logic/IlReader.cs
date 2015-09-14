@@ -825,7 +825,7 @@ namespace Il2Native.Logic
                 }
 
                 // return all get methods for static fields which are not primitive value type
-                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => f.IsStatic && !f.IsConst && !f.IsStaticClassInitialization))
+                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => RequiredGetStaticMethod(f, typeResolver)))
                 {
                     yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
                 }
@@ -877,6 +877,21 @@ namespace Il2Native.Logic
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
             }
+        }
+
+        private static bool RequiredGetStaticMethod(IField f, ITypeResolver typeResolver)
+        {
+            if (f.IsStaticClassInitialization)
+            {
+                return false;
+            }
+
+            if (f.IsConst)
+            {
+                return f.FieldType.TypeEquals(typeResolver.System.System_Decimal);
+            }
+
+            return f.IsStatic;
         }
 
         private static bool ShouldHaveStructToObjectAdapter(IMethod m)

@@ -4450,13 +4450,46 @@ namespace Il2Native.Logic
                         this.Output.Write(data[0]);
                         break;
                     case 16:
-                        this.Output.Write(BitConverter.ToInt16(data, 0));
+                        var int16 = BitConverter.ToInt16(data, 0);
+                        if (int16 == Int16.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int16 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int16);
+                        }
+
                         break;
                     case 32:
-                        this.Output.Write(BitConverter.ToInt32(data, 0));
+                        var int32 = BitConverter.ToInt32(data, 0);
+                        if (int32 == Int32.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int32 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int32);
+                        }
+
                         break;
                     case 64:
-                        this.Output.Write(BitConverter.ToInt64(data, 0));
+                        var int64 = BitConverter.ToInt64(data, 0);
+                        if (int64 == Int64.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int64 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int64);
+                        }
+
                         break;
                 }
             }

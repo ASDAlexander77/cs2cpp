@@ -92,7 +92,7 @@
 
         /// <summary>
         /// </summary>
-        public static bool Mscorlib = false;
+        public static bool Mscorlib = true;
 
         /// <summary>
         /// </summary>
