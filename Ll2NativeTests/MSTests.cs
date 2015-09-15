@@ -357,7 +357,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Timeout(2700000)]
+        [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
@@ -890,6 +890,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Timeout(36000000)]
         public void Test_Mono_GTests()
         {
             // 329 - DEBUG ASSERT - investigate
