@@ -784,6 +784,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Timeout(36000000)]
         public void Test_Mono_Tests_Anon()
         {
             // 34 - error CS0234: The type or namespace name 'Timers' does not exist in the namespace 'System' (are you missing an assembly reference?)
