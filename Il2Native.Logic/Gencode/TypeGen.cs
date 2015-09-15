@@ -250,10 +250,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="isPointer">
         /// </param>
-        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false, bool shortName = false)
+        public static void WriteTypeName(this IType type, CWriter cWriter, bool isPointer, bool enumAsName = false, bool shortName = false)
         {
+            var writer = cWriter.Output;
+
             var typeBaseName = type.TypeToCType(isPointer, enumAsName, shortName);
             writer.Write(typeBaseName.CleanUpName());
+            if (typeBaseName.Length > 0 && typeBaseName[0] == '<')
+            {
+                writer.Write("_");
+                writer.Write(cWriter.AssemblyQualifiedName.CleanUpName());
+            }
         }
 
         /// <summary>
@@ -282,22 +289,22 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypeWithoutModifiers(
             this IType type,
-            CWriter codeWriter,
+            CWriter cWriter,
             bool isPointer = false,
             bool enumAsName = false)
         {
-            var writer = codeWriter.Output;
+            var writer = cWriter.Output;
 
             var effectiveType = type;
 
             if (effectiveType.IsPointer || effectiveType.IsByRef)
             {
-                effectiveType.GetElementType().WriteTypeWithoutModifiers(codeWriter, type.IsPointer, enumAsName);
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(cWriter, type.IsPointer, enumAsName);
                 return;
             }
 
             // write base name
-            effectiveType.WriteTypeName(writer, isPointer, enumAsName);
+            effectiveType.WriteTypeName(cWriter, isPointer, enumAsName);
 
             if (type.IsVirtualTable)
             {

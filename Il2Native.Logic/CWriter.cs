@@ -523,7 +523,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.WriteDefualtStructInitialization();
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
@@ -571,7 +571,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.WriteDefualtStructInitialization();
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     // to support direct method address loading
@@ -586,7 +586,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.WriteDefualtStructInitialization();
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     // special case
@@ -3225,11 +3225,11 @@ namespace Il2Native.Logic
         {
             if (type.IsStructureType())
             {
-                type.WriteTypeName(this.Output, false, true);
+                type.WriteTypeName(this, false, true);
             }
             else
             {
-                type.ToClass().WriteTypeName(this.Output, false, true);
+                type.ToClass().WriteTypeName(this, false, true);
             }
         }
 
@@ -4436,7 +4436,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.WriteDefualtStructInitialization();
+                        this.Output.WriteDefaultStructInitialization();
                     }
                 }
             }
@@ -4584,6 +4584,11 @@ namespace Il2Native.Logic
             if (IsAssemblyNamespaceRequired(type))
             {
                 var fullName = type.FullName.CleanUpName();
+                if (type.Name.Length > 0 && type.Name[0] == '<' && !type.IsModule)
+                {
+                    fullName = string.Concat(fullName, "_", this.AssemblyQualifiedName.CleanUpName());
+                }
+
                 this.Output.Write("#ifndef {0}__", prefix);
                 this.Output.WriteLine(fullName);
                 this.Output.Write("#define {0}__", prefix);
@@ -4662,7 +4667,7 @@ namespace Il2Native.Logic
                 {
                     if (node.Kind == PairKind.Interface)
                     {
-                        WriteInterfaceDeclarationInVirtualTable(writer, true, ((CWriter.Pair<IType, IType>)node).Value);
+                        WriteInterfaceDeclarationInVirtualTable(this, true, ((CWriter.Pair<IType, IType>)node).Value);
                     }
 
                     if (node.Kind == PairKind.Method)
@@ -4683,7 +4688,7 @@ namespace Il2Native.Logic
             {
                 foreach (var @interface in type.GetInterfacesExcludingBaseAllInterfaces())
                 {
-                    WriteInterfaceDeclarationInVirtualTable(writer, false, @interface);
+                    WriteInterfaceDeclarationInVirtualTable(this, false, @interface);
                 }
 
                 foreach (var method in Logic.IlReader.Methods(type, this).Where(m => !m.IsStatic))
@@ -4699,9 +4704,11 @@ namespace Il2Native.Logic
             this.EndPreprocessorIf(table);
         }
 
-        private static void WriteInterfaceDeclarationInVirtualTable(CIndentedTextWriter writer, bool asReference, IType @interface)
+        private static void WriteInterfaceDeclarationInVirtualTable(CWriter cWriter, bool asReference, IType @interface)
         {
-            @interface.WriteTypeName(writer, false);
+            var writer = cWriter.Output;
+
+            @interface.WriteTypeName(cWriter, false);
             writer.Write(CWriter.VTable);
             if (asReference)
             {

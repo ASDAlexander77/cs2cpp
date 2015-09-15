@@ -21,7 +21,7 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class StaticClassGen
     {
-        public static void WriteDefualtStructInitialization(this CIndentedTextWriter writer)
+        public static void WriteDefaultStructInitialization(this CIndentedTextWriter writer)
         {
             writer.Write("{ 0 }");
         }
