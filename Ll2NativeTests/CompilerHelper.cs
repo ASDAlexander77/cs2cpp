@@ -125,6 +125,8 @@
                 }
             }
 
+            args.Add("ref:System.Core");
+
             if (roslyn)
             {
                 args.Add("roslyn");

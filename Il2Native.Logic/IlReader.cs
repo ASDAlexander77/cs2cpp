@@ -16,6 +16,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
+    using System.Text;
     using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
@@ -363,6 +364,10 @@ namespace Il2Native.Logic
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
+
+            var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
+            var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
+            this.ReferencesList = (refsValue ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
@@ -408,8 +413,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string[] ReferencesList { get; set; }
+
+        /// <summary>
+        /// </summary>
         public string DefaultDllLocations { get; private set; }
 
+        /// <summary>
+        /// </summary>
         public string DllFilePath { get; private set; }
 
         /// <summary>
@@ -1804,16 +1815,32 @@ namespace Il2Native.Logic
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
 
-            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+            var assemblies = new List<MetadataImageReference>();
+
+            if (this.ReferencesList.Length == 0)
+            {
+                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                    ? new MetadataImageReference(
+                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+                assemblies.Add(coreLibRefAssembly);
+            }
+            else
+            {
+                var added = new HashSet<AssemblyIdentity>();
+                foreach (var refItem in this.ReferencesList)
+                {
+                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                }
+            }
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, assemblies.ToArray(), options);
 
             using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
             {
@@ -1851,16 +1878,32 @@ namespace Il2Native.Logic
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
 
-            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+            var assemblies = new List<MetadataImageReference>();
+
+            if (this.ReferencesList.Length == 0)
+            {
+                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                    ? new MetadataImageReference(
+                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+                assemblies.Add(coreLibRefAssembly);
+            }
+            else
+            {
+                var added = new HashSet<AssemblyIdentity>();
+                foreach (var refItem in this.ReferencesList)
+                {
+                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                }
+            }
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, assemblies.ToArray(), options);
 
             var dllStream = new MemoryStream();
             var pdbStream = new MemoryStream();
@@ -1884,6 +1927,29 @@ namespace Il2Native.Logic
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(dllStream);
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
+        {
+            var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
+            if (resolvedFilePath == null)
+            {
+                return;
+            }
+
+            var metadata = this.GetAssemblyMetadata(assemblyIdentity);
+
+            if (added.Add(metadata.Assembly.Identity))
+            {
+                var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+                assemblies.Add(metadataImageReference);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
         }
 
         /// <summary>
@@ -2104,23 +2170,6 @@ namespace Il2Native.Logic
         /// </returns>
         private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
         {
-            if (assemblyIdentity.Name == "CoreLib")
-            {
-                return this.CoreLibPath;
-            }
-
-            if (assemblyIdentity.Name == "mscorlib")
-            {
-                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
-                {
-                    return this.CoreLibPath;
-                }
-
-                Debug.Assert(false, "you are using mscorlib from .NET");
-
-                return typeof(int).Assembly.Location;
-            }
-
             var dllFileName = string.Concat(assemblyIdentity.Name, ".dll");
             if (File.Exists(dllFileName))
             {
@@ -2136,8 +2185,64 @@ namespace Il2Native.Logic
                 }
             }
 
+            var windir = Environment.GetEnvironmentVariable("windir");
+
+            var dllFullNameGAC = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}\{1}_{2}_{3}_{4}", assemblyIdentity.Name, "4.0", assemblyIdentity.Version, assemblyIdentity.CultureName, GetAssemblyHashString(assemblyIdentity)));
+            if (File.Exists(dllFullNameGAC))
+            {
+                return dllFullNameGAC;
+            }
+
+            // find first possible
+            var dllFullNameGACSearch = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}", assemblyIdentity.Name));
+            try
+            {
+                foreach (var dll in Directory.EnumerateFiles(dllFullNameGACSearch, "*.dll", SearchOption.AllDirectories))
+                {
+                    // TODO: filter it here
+                    return dll;
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            if (assemblyIdentity.Name == "CoreLib")
+            {
+                return this.CoreLibPath;
+            }
+
+            if (assemblyIdentity.Name == "mscorlib")
+            {
+                if (assemblyIdentity.Version.Major <= 1 && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    return this.CoreLibPath;
+                }
+
+                ////Debug.Assert(false, "you are using mscorlib from .NET");
+
+                return typeof(int).Assembly.Location;
+            }
+
             Debug.Fail("Not implemented yet");
+
             return null;
+        }
+
+        private static object GetAssemblyHashString(AssemblyIdentity assemblyIdentity)
+        {
+            if (!assemblyIdentity.HasPublicKey)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var @byte in assemblyIdentity.PublicKey)
+            {
+                sb.AppendFormat("{0:N}", @byte);
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>

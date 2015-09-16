@@ -40,6 +40,8 @@ namespace Il2Native
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /exe                    Output file");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
+                Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
+                Console.WriteLine("                          Reference assembly by name or file");
                 Console.WriteLine("  /roslyn-                Compile C# source file with .NET Framework (default: Roslyn Compiler)");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /mt-                    Disable Multithreading support");
@@ -56,7 +58,7 @@ namespace Il2Native
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
                 Console.WriteLine("  Il2C file1.cs          Compiles one C# file");
-                Console.WriteLine("  Il2C /roslyn file1.cs file2.cs");
+                Console.WriteLine("  Il2C /roslyn /ref:System.Core file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
                 Console.WriteLine("  Il2C file1.dll         Converts one DLL file");
                 return 0;
