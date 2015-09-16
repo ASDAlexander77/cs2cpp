@@ -4436,7 +4436,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.WriteDefaultStructInitialization();
+                        this.Output.WriteDefaultStructInitialization(Logic.IlReader.Fields(fieldType, this).All(f => f.IsStatic || f.IsConst));
                     }
                 }
             }
