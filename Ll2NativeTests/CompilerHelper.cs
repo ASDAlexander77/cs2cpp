@@ -118,14 +118,13 @@
                 if (Mscorlib)
                 {
                     args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
+                    args.Add("ref:System.Core");
                 }
                 else
                 {
                     args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
                 }
             }
-
-            args.Add("ref:System.Core");
 
             if (roslyn)
             {
