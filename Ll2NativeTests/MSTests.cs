@@ -1305,7 +1305,9 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 28).Where(n => !skip.Contains(n)))
             {
+                CompilerHelper.AddSystemCore = true;
                 CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
+                CompilerHelper.AddSystemCore = false;
             }
         }
 

@@ -96,6 +96,10 @@
 
         /// <summary>
         /// </summary>
+        public static bool AddSystemCore = false;
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -118,7 +122,11 @@
                 if (Mscorlib)
                 {
                     args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
-                    args.Add("ref:System.Core");
+                    
+                    if (AddSystemCore)
+                    {
+                        args.Add("ref:System.Core");
+                    }
                 }
                 else
                 {
