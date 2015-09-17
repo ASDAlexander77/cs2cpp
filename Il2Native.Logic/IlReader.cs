@@ -926,7 +926,8 @@ namespace Il2Native.Logic
 
         public IEnumerable<string> References()
         {
-            return this.AllReferencesHelper(this.Assembly, true).Distinct();
+            var added = new HashSet<AssemblyIdentity>();
+            return this.AllReferencesHelper(this.Assembly, added, true).Distinct();
         }
 
         /// <summary>
@@ -935,7 +936,8 @@ namespace Il2Native.Logic
         /// </returns>
         public IEnumerable<string> AllReferences()
         {
-            return this.AllReferencesHelper(this.Assembly).Distinct();
+            var added = new HashSet<AssemblyIdentity>();
+            return this.AllReferencesHelper(this.Assembly, added).Distinct();
         }
 
         /// <summary>
@@ -1731,8 +1733,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata, bool excludingCurrent = false)
+        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata, HashSet<AssemblyIdentity> processed, bool excludingCurrent = false)
         {
+            if (!processed.Add(assemblyMetadata.Assembly.Identity))
+            {
+                yield break;
+            }
+
             if (!excludingCurrent)
             {
                 yield return assemblyMetadata.Assembly.Identity.Name;
@@ -1740,7 +1747,7 @@ namespace Il2Native.Logic
 
             foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
             {
-                foreach (var referenceName in this.AllReferencesHelper(this.GetAssemblyMetadata(reference)))
+                foreach (var referenceName in this.AllReferencesHelper(this.GetAssemblyMetadata(reference), processed))
                 {
                     yield return referenceName;
                 }
