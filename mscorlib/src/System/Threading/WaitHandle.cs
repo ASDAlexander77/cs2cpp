@@ -30,7 +30,7 @@ namespace System.Threading
 #if FEATURE_REMOTING
     public abstract class WaitHandle : MarshalByRefObject, IDisposable {
 #else // FEATURE_REMOTING
-    public abstract class WaitHandle : IDisposable {
+    public abstract partial class WaitHandle : IDisposable {
 #endif // FEATURE_REMOTING
         public const int WaitTimeout = 0x102;                    
 
@@ -262,10 +262,6 @@ namespace System.Threading
             }
             return (ret != WaitTimeout);
          }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern int WaitOneNative(SafeHandle waitableSafeHandle, uint millisecondsTimeout, bool hasThreadAffinity, bool exitContext);
     
         /*========================================================================
         ** Waits for signal from all the objects. 
@@ -275,11 +271,6 @@ namespace System.Threading
         ** If exitContext is true then the synchronization domain for the context 
         ** (if in a synchronized context) is exited before the wait and reacquired 
         ========================================================================*/
-        
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)] 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        private static extern int WaitMultiple(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext, bool WaitAll);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         public static bool WaitAll(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext)
@@ -502,11 +493,6 @@ namespace System.Threading
         ==  SignalAndWait
         ==
         ==================================================*/
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)] 
-        private static extern int SignalAndWaitOne(SafeWaitHandle waitHandleToSignal,SafeWaitHandle waitHandleToWaitOn, int millisecondsTimeout,
-                                            bool hasThreadAffinity,  bool exitContext);
 
         public static bool SignalAndWait(
                                         WaitHandle toSignal,

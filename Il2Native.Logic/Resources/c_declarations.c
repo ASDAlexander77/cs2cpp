@@ -1,14 +1,20 @@
 #ifdef _MSC_VER
 #error Not supported yet
 #elif __GNUC__ >= 3
-typedef signed char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long long int64_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
+
+typedef void Void;
+typedef bool Boolean;
+typedef signed char SByte;
+typedef short Int16;
+typedef int Int32;
+typedef long long Int64;
+typedef unsigned char Byte;
+typedef unsigned short Char;
+typedef unsigned short UInt16;
+typedef unsigned int UInt32;
+typedef unsigned long long UInt64;
+typedef float Single;
+typedef double Double;
 
 #define compare_and_swap __sync_val_compare_and_swap 
 #define compare_and_swap_bool __sync_bool_compare_and_swap 
@@ -18,26 +24,12 @@ typedef unsigned long long uint64_t;
 #define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
-extern void *__builtin_memset(void *,int32_t,uint32_t);
+extern void *__builtin_memset(Void*,Int32,UInt32);
 #define Memset __builtin_memset
 
-extern void *__builtin_memcpy(void *,const void *,uint32_t);
+extern void *__builtin_memcpy(Void*,const Void*,UInt32);
 
 #endif
-
-typedef void Void;
-typedef bool Boolean;
-typedef int8_t SByte;
-typedef int16_t Int16;
-typedef int32_t Int32;
-typedef int64_t Int64;
-typedef uint8_t Byte;
-typedef uint16_t Char;
-typedef uint16_t UInt16;
-typedef uint32_t UInt32;
-typedef uint64_t UInt64;
-typedef float Single;
-typedef double Double;
 
 #define GC_MALLOC __alloc
 #define GC_MALLOC_ATOMIC __alloc
@@ -83,6 +75,15 @@ inline Void* __null_address(Void* _object)
 	_object;
 	return (Void*)0;
 }
+
+template < typename T > struct __static_data
+{
+#if __MULTI_THREADING
+	Byte* __mutex;
+	Byte* __cond;
+#endif
+	T data;
+};
 
 struct __interface_data
 {

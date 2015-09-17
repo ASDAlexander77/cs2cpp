@@ -67,6 +67,10 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\ConstructNameGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetModuleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetGCHandleGen.cs" />
+    <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />
     <Compile Include="Gencode\InternalMethods\AppDomain\CreateDomain.cs" />
@@ -83,10 +87,12 @@
     <Compile Include="Gencode\InternalMethods\Interlocked\CompareExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Interlocked\ExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\ObjectGetTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetBaseTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\IsInterfaceGen.cs" />
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
+    <Compile Include="Gencode\StaticClassGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedConstBytesField.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
@@ -101,6 +107,7 @@
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedCastMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedDynamicCastMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedFinalizerWrapperMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayICollectionCopyToMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetCountMethod.cs" />
@@ -131,10 +138,8 @@
     <Compile Include="Gencode\MethodBodyBank.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedDummyMethodBody.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetSizeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetTypeMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodBase.cs" />
@@ -174,7 +179,6 @@
     <Compile Include="CWriter.cs" />
     <Compile Include="OpCodeExtentions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Gencode\RuntimeTypeConstBytes.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -221,11 +225,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\decimals.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\CoreLib\Impl\NativeType.cs">
-      <Link>Resources\NativeType.cs</Link>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_definitions.c" />

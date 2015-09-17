@@ -12,6 +12,14 @@ namespace System
 
         private IntPtr Value;
 
+        internal bool IsNull
+        {
+            get
+            {
+                return Value.IsNull() && Type.IsNull();
+            }
+        }
+
         public unsafe static Object ToObject(TypedReference value)
         {
             return InternalToObject(&value);

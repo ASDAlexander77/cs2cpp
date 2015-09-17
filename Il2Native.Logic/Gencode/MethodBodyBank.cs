@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using InternalMethods;
+    using InternalMethods.RuntimeTypeHandler;
     using PEAssemblyReader;
     using SynthesizedMethods;
 
@@ -174,6 +175,13 @@
 
             // AppDomain
             CreateDomainGen.Register(typeResolver);
+
+            // RuntimeTypeHandler
+            IsInterfaceGen.Register(typeResolver);
+            GetBaseTypeGen.Register(typeResolver);
+            GetGCHandleGen.Register(typeResolver);
+            GetModuleGen.Register(typeResolver);
+            ConstructNameGen.Register(typeResolver);
         }
 
         [Obsolete]

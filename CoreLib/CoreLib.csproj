@@ -41,13 +41,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common\PinnableBufferCache.cs" />
+    <Compile Include="ImplPAL\Win32\Win32Native.cs" />
     <Compile Include="Impl\ArgIterator.cs" />
+    <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
+    <Compile Include="Impl\String.cs" />
     <Compile Include="Impl\Threading\Monitor.cs" />
     <Compile Include="Impl\Threading\Overlapped.cs" />
     <Compile Include="Impl\Threading\Thread.cs" />
@@ -74,6 +77,7 @@
     <Compile Include="System\AppContext\AppContextSwitches.cs" />
     <Compile Include="System\ArgIterator.cs" />
     <Compile Include="System\ArrayTypeMismatchException.cs" />
+    <Compile Include="System\BadImageFormatException.cs" />
     <Compile Include="System\BCLDebug.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentDictionary.cs" />
     <Compile Include="System\Collections\Concurrent\ConcurrentQueue.cs" />
@@ -92,7 +96,10 @@
     <Compile Include="System\ConsoleKeyInfo.cs" />
     <Compile Include="System\ConsoleModifiers.cs" />
     <Compile Include="System\ConsoleSpecialKey.cs" />
+    <Compile Include="System\ContextBoundObject.cs" />
+    <Compile Include="System\DefaultBinder.cs" />
     <Compile Include="System\Diagnostics\Eventing\EventSource.cs" />
+    <Compile Include="System\FieldAccessException.cs" />
     <Compile Include="System\IAppDomainPauseManager.cs" />
     <Compile Include="System\IO\Directory.cs" />
     <Compile Include="System\IO\DirectoryInfo.cs" />
@@ -110,11 +117,52 @@
     <Compile Include="System\IO\PathHelper.cs" />
     <Compile Include="System\IO\PathTooLongException.cs" />
     <Compile Include="System\IO\SearchOption.cs" />
+    <Compile Include="System\MemberAccessException.cs" />
+    <Compile Include="System\MissingFieldException.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\MissingMemberException.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\MissingMethodException.cs" />
     <Compile Include="System\OperatingSystem.cs" />
     <Compile Include="System\PlatformID.cs" />
-    <Compile Include="System\Reflection\ParameterInfo.cs" />
+    <Compile Include="System\Reflection\AmbiguousMatchException.cs" />
+    <Compile Include="System\Reflection\Associates.cs" />
+    <Compile Include="System\Reflection\CustomAttributeFormatException.cs" />
+    <Compile Include="System\Reflection\EventAttributes.cs" />
+    <Compile Include="System\Reflection\FieldAttributes.cs" />
+    <Compile Include="System\Reflection\ICustomAttributeProvider.cs" />
+    <Compile Include="System\Reflection\InvalidFilterCriteriaException.cs" />
+    <Compile Include="System\Reflection\IReflectableType.cs" />
+    <Compile Include="System\Reflection\LoaderAllocator.cs" />
+    <Compile Include="System\Reflection\MdConstant.cs" />
+    <Compile Include="System\Reflection\MdImport.cs" />
+    <Compile Include="System\Reflection\MethodAttributes.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\Missing.cs" />
+    <Compile Include="System\Reflection\ParameterAttributes.cs" />
+    <Compile Include="System\Reflection\ParameterInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\Pointer.cs" />
+    <Compile Include="System\Reflection\PropertyAttributes.cs" />
+    <Compile Include="System\Reflection\TargetException.cs" />
+    <Compile Include="System\Reflection\TargetInvocationException.cs" />
+    <Compile Include="System\Reflection\TargetParameterCountException.cs" />
+    <Compile Include="System\Reflection\TypeInfo.cs" />
+    <Compile Include="System\Reflection\__Filters.cs" />
+    <Compile Include="System\RtType.cs" />
+    <Compile Include="System\RuntimeHandles.cs" />
     <Compile Include="System\Runtime\CompilerServices\ConditionalWeakTable.cs" />
+    <Compile Include="System\Runtime\CompilerServices\CustomConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />
+    <Compile Include="System\Runtime\CompilerServices\TypeForwardedToAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\YieldAwaitable.cs" />
     <Compile Include="System\Runtime\ExceptionServices\ExceptionServicesCommon.cs" />
     <Compile Include="System\Runtime\InteropServices\CriticalHandle.cs" />
@@ -163,8 +211,11 @@
     <Compile Include="System\Threading\ThreadPool.cs" />
     <Compile Include="System\Threading\WaitHandleCannotBeOpenedException.cs" />
     <Compile Include="System\Tuple.cs" />
+    <Compile Include="System\TypeLoadException.cs" />
     <Compile Include="System\_LocalDataStore.cs" />
     <Compile Include="System\_LocalDataStoreMgr.cs" />
+    <Compile Include="System\__Filters.cs" />
+    <Compile Include="System\__HResults.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="System\Action.cs" />
@@ -292,7 +343,6 @@
     <Compile Include="System\MidpointRounding.cs" />
     <Compile Include="System\MulticastDelegate.cs" />
     <Compile Include="System\MulticastNotSupportedException.cs" />
-    <Compile Include="Impl\NativeType.cs" />
     <Compile Include="System\NonSerializedAttribute.cs" />
     <Compile Include="System\NotImplementedException.cs" />
     <Compile Include="System\NotSupportedException.cs" />
@@ -309,20 +359,25 @@
     <Compile Include="System\ParseNumbers.cs" />
     <Compile Include="System\Random.cs" />
     <Compile Include="System\Reflection\CallingConventions.cs" />
-    <Compile Include="System\Reflection\CustomAttribute.cs" />
-    <Compile Include="System\Reflection\EventInfo.cs" />
+    <Compile Include="System\Reflection\CustomAttribute.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\EventInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\GenericParameterAttributes.cs" />
     <Compile Include="System\Reflection\InterfaceMapping.cs" />
     <Compile Include="System\Reflection\MemberFilter.cs" />
-    <Compile Include="System\Reflection\Module.cs" />
+    <Compile Include="System\Reflection\Module.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\ParameterModifier.cs" />
     <Compile Include="System\Reflection\TypeAttributes.cs" />
     <Compile Include="System\Reflection\TypeFilter.cs" />
     <Compile Include="System\RuntimeArgumentHandle.cs" />
-    <Compile Include="System\RuntimeFieldHandle.cs" />
-    <Compile Include="System\RuntimeMethodHandle.cs" />
-    <Compile Include="System\RuntimeType.cs" />
-    <Compile Include="System\RuntimeTypeHandle.cs" />
     <Compile Include="System\Runtime\CompilerServices\AsyncMethodBuilder.cs" />
     <Compile Include="System\Runtime\CompilerServices\DecimalConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\DynamicAttribute.cs" />
@@ -382,7 +437,10 @@
     <Compile Include="System\ThrowHelper.cs" />
     <Compile Include="System\TimeSpan.cs" />
     <Compile Include="System\TimeZone.cs" />
-    <Compile Include="System\Type.cs" />
+    <Compile Include="System\Type.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\TypeCode.cs" />
     <Compile Include="System\TypedReference.cs" />
     <Compile Include="System\UInt16.cs" />
@@ -435,26 +493,44 @@
     <Compile Include="System\Globalization\DateTimeFormatInfo.cs" />
     <Compile Include="System\Globalization\DaylightTime.cs" />
     <Compile Include="System\Globalization\NumberFormatInfo.cs" />
-    <Compile Include="System\Reflection\Assembly.cs" />
+    <Compile Include="System\Reflection\Assembly.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\AssemblyAttributes.cs" />
     <Compile Include="System\Reflection\AssemblyNameFlags.cs" />
     <Compile Include="System\Reflection\AssemblyReflectionAttributes.cs" />
-    <Compile Include="System\Reflection\Binder.cs" />
+    <Compile Include="System\Reflection\Binder.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\BindingFlags.cs" />
-    <Compile Include="System\Reflection\ConstructorInfo.cs" />
+    <Compile Include="System\Reflection\ConstructorInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\DefaultMemberAttribute.cs" />
-    <Compile Include="System\Reflection\FieldInfo.cs" />
+    <Compile Include="System\Reflection\FieldInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Reflection\FieldReflectionAttributes.cs" />
     <Compile Include="System\Reflection\IReflect.cs" />
     <Compile Include="System\Reflection\MemberInfo.cs" />
     <Compile Include="System\Reflection\MethodImplAttributes.cs" />
     <Compile Include="System\Reflection\MemberTypes.cs" />
-    <Compile Include="System\Reflection\MethodBase.cs" />
-    <Compile Include="System\Reflection\MethodInfo.cs" />
-    <Compile Include="System\Reflection\PropertyInfo.cs" />
-    <Compile Include="System\Reflection\RuntimeConstructorInfo.cs" />
-    <Compile Include="System\Reflection\RuntimeFieldInfo.cs" />
-    <Compile Include="System\Reflection\RuntimeMethodInfo.cs" />
+    <Compile Include="System\Reflection\MethodBase.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\MethodInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="System\Reflection\PropertyInfo.cs">
+      <SubType>
+      </SubType>
+    </Compile>
     <Compile Include="System\Resources\ResourceManager.cs" />
     <Compile Include="System\Runtime\CompilerServices\AccessedThroughPropertyAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\ExtensionAttribute.cs" />

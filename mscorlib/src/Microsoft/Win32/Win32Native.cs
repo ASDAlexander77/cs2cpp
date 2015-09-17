@@ -112,7 +112,7 @@ namespace Microsoft.Win32 {
 
     [System.Security.SecurityCritical]
     [SuppressUnmanagedCodeSecurityAttribute()]
-    internal static class Win32Native {
+    internal static partial class Win32Native {
 
         internal const int KEY_QUERY_VALUE        = 0x0001;
         internal const int KEY_SET_VALUE          = 0x0002;
@@ -857,15 +857,6 @@ namespace Microsoft.Win32 {
         [DllImport(KERNEL32)]
         internal static extern int GetACP();
 
-        [DllImport(KERNEL32, SetLastError=true)]
-        internal static extern bool SetEvent(SafeWaitHandle handle);
-
-        [DllImport(KERNEL32, SetLastError=true)]
-        internal static extern bool ResetEvent(SafeWaitHandle handle);
-
-        [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name);
-
         [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
         internal static extern SafeWaitHandle OpenEvent(/* DWORD */ int desiredAccess, bool inheritHandle, String name);
 
@@ -879,9 +870,6 @@ namespace Microsoft.Win32 {
         [DllImport(KERNEL32, SetLastError=true)]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]            
         internal static extern bool ReleaseMutex(SafeWaitHandle handle);
-
-        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
-        internal unsafe static extern int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero);
 
         [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
         internal unsafe static extern int GetFullPathName(String path, int numBufferChars, [Out]StringBuilder buffer, IntPtr mustBeZero);
@@ -931,16 +919,6 @@ namespace Microsoft.Win32 {
 
             return handle;
         }            
-    
-        // Do not use these directly, use the safe or unsafe versions above.
-        // The safe version does not support devices (aka if will only open
-        // files on disk), while the unsafe version give you the full semantic
-        // of the native version.
-        [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
-        private static extern SafeFileHandle CreateFile(String lpFileName,
-                    int dwDesiredAccess, System.IO.FileShare dwShareMode,
-                    SECURITY_ATTRIBUTES securityAttrs, System.IO.FileMode dwCreationDisposition,
-                    int dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
         internal static extern SafeFileMappingHandle CreateFileMapping(SafeFileHandle hFile, IntPtr lpAttributes, uint fProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, String lpName);
@@ -952,10 +930,6 @@ namespace Microsoft.Win32 {
         [DllImport(KERNEL32, ExactSpelling=true)]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress );
-
-        [DllImport(KERNEL32, SetLastError=true)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern bool CloseHandle(IntPtr handle);
 
         [DllImport(KERNEL32)]
         internal static extern int GetFileType(SafeFileHandle handle);
@@ -992,9 +966,6 @@ namespace Microsoft.Win32 {
         [DllImport(KERNEL32, SetLastError=true)]
         unsafe internal static extern int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, IntPtr numBytesRead_mustBeZero, NativeOverlapped* overlapped);
 
-        [DllImport(KERNEL32, SetLastError=true)]
-        unsafe internal static extern int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero);
-        
         // Note there are two different WriteFile prototypes - this is to use 
         // the type system to force you to not trip across a "feature" in 
         // Win32's async IO support.  You can't do the following three things
@@ -1004,9 +975,6 @@ namespace Microsoft.Win32 {
 
         [DllImport(KERNEL32, SetLastError=true)]
         internal static unsafe extern int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, IntPtr numBytesWritten_mustBeZero, NativeOverlapped* lpOverlapped);
-
-        [DllImport(KERNEL32, SetLastError=true)]
-        internal static unsafe extern int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero);
 
         // This is only available on Vista or higher
         [DllImport(KERNEL32, SetLastError=true)]
@@ -1072,9 +1040,6 @@ namespace Microsoft.Win32 {
                     FILE_TIME* lastAccessTime, FILE_TIME* lastWriteTime);
 
         [DllImport(KERNEL32, SetLastError=true)]
-        internal static extern int GetFileSize(SafeFileHandle hFile, out int highSize);
-
-        [DllImport(KERNEL32, SetLastError=true)]
         internal static extern bool LockFile(SafeFileHandle handle, int offsetLow, int offsetHigh, int countLow, int countHigh);
         
         [DllImport(KERNEL32, SetLastError=true)]
@@ -1086,9 +1051,6 @@ namespace Microsoft.Win32 {
         internal const int STD_INPUT_HANDLE = -10;
         internal const int STD_OUTPUT_HANDLE = -11;
         internal const int STD_ERROR_HANDLE = -12;
-
-        [DllImport(KERNEL32, SetLastError=true)]
-        internal static extern IntPtr GetStdHandle(int nStdHandle);  // param is NOT a handle, but it returns one!
 
         // From wincon.h
         internal const int CTRL_C_EVENT = 0;
@@ -1280,9 +1242,6 @@ namespace Microsoft.Win32 {
         internal static extern int GetCurrentDirectory(
                   int nBufferLength,
                   [Out]StringBuilder lpBuffer);
-
-        [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
-        internal static extern bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
         [DllImport(KERNEL32, SetLastError=true, CharSet=CharSet.Auto, BestFitMapping=false)]
         internal static extern bool SetFileAttributes(String name, int attr);

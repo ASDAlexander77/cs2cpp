@@ -141,6 +141,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsModule { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsStaticArrayInit { get; }
 
         /// <summary>
@@ -299,7 +303,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IField ToField(IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false);
+        IField ToField(IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false, bool isStaticClassInitialization = false);
 
         /// <summary>
         /// </summary>

@@ -699,7 +699,7 @@ namespace System.Runtime.CompilerServices
     // to use DependentHandles in a thread-safe way.
     //=========================================================================================
     [ComVisible(false)]
-    struct DependentHandle
+    partial struct DependentHandle
     {
         #region Constructors
         #if FEATURE_CORECLR
@@ -764,24 +764,6 @@ namespace System.Runtime.CompilerServices
                  nFree(handle);
             }
         }
-        #endregion
-
-        #region Private Members
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void nInitialize(Object primary, Object secondary, out IntPtr dependentHandle);
-
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void nGetPrimary(IntPtr dependentHandle, out Object primary);
-
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void nGetPrimaryAndSecondary(IntPtr dependentHandle, out Object primary, out Object secondary);
-
-        [System.Security.SecurityCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void nFree(IntPtr dependentHandle);
         #endregion
 
         #region Private Data Member

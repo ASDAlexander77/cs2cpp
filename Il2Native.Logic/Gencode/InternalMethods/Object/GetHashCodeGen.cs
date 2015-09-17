@@ -8,6 +8,7 @@
     public static class GetHashCodeGen
     {
         public static readonly string Name = "Int32 System.Object.GetHashCode()";
+        public static readonly string CompilerServices_GetHashCodeName = "Int32 System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(System.Object)";
 
         public static readonly object[] ByteCode =
         {
@@ -71,9 +72,11 @@
             locals.Add(typeResolver.System.System_Int32);
             locals.Add(typeResolver.System.System_Byte.ToPointerType());
 
-            var parameters = new List<IParameter>();
+            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, new List<IParameter>());
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            var parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_Object.ToParameter("o"));
+            MethodBodyBank.Register(CompilerServices_GetHashCodeName, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

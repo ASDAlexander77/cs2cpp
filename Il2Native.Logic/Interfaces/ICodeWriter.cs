@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
     using CodeParts;
     using PEAssemblyReader;
@@ -149,6 +150,8 @@ namespace Il2Native.Logic
         /// <param name="ownerOfExplicitInterface"></param>
         void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext);
 
-        void WriteStaticField(IField field, bool definition = true);
+        /// <summary>
+        /// </summary>
+        void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null);
     }
 }

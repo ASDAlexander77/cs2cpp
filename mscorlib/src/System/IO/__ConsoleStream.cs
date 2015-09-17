@@ -27,7 +27,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.IO {
 
-    internal sealed class __ConsoleStream : Stream
+    internal sealed partial class __ConsoleStream : Stream
     {
 
         // We know that if we are using console APIs rather than file APIs, then the encoding
@@ -263,9 +263,5 @@ namespace System.IO {
                 return Win32Native.ERROR_SUCCESS;
             return errorCode;            
         }
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void WaitForAvailableConsoleInput(SafeFileHandle file, bool isPipe);
     }
 }

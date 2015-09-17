@@ -44,7 +44,7 @@ namespace System {
     // someProgram 1> out 2> err
     // 
     //Contains only static data.  Serializable attribute not required.
-    public static class Console
+    public static partial class Console
     {   
         private const int DefaultConsoleBufferSize = 256;
         private const short AltVKCode = 0x12;
@@ -1322,11 +1322,6 @@ namespace System {
                     __Error.WinIOError();
             }
         }
-
-        [System.Security.SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Ansi)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern Int32 GetTitleNative(StringHandleOnStack outTitle, out Int32 outTitleLength);
          
         public static String Title {
             [System.Security.SecuritySafeCritical]  // auto-generated

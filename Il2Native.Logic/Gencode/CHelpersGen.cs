@@ -515,31 +515,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.SaveToField(opCode, field.FieldType, 0);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="op1">
-        /// </param>
-        /// <param name="op2">
-        /// </param>
-        public static void WriteMemCopy(
-            this CWriter cWriter,
-            IType type,
-            FullyDefinedReference op1,
-            FullyDefinedReference op2)
-        {
-            var writer = cWriter.Output;
-
-            writer.WriteLine(
-                "Memcpy({0}, {1}, {2})",
-                op1,
-                op2,
-                type.GetTypeSize(cWriter));
-        }
-
         public static void WriteMemCopy(
             this CWriter cWriter,
             OpCodePart op1,

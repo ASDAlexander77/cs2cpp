@@ -38,6 +38,8 @@ namespace PEAssemblyReader
 
         private readonly Lazy<bool> lazyThreadStatic;
 
+        private object _constantValue;
+
         /// <summary>
         /// </summary>
         internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false, int fixedSize = 0)
@@ -69,11 +71,12 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false, bool isStaticClassInitialization = false)
             : this(fieldDef, contaningType, isFixed, fixedSize)
         {
             this._fieldType = fieldType;
             this.IsVirtualTable = isVirtualTable;
+            this.IsStaticClassInitialization = isStaticClassInitialization;
         }
 
         /// <summary>
@@ -157,7 +160,17 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (_constantValue != null)
+                {
+                    return _constantValue;
+                }
+
                 return this.fieldDef.ConstantValue;
+            }
+
+            set
+            {
+                _constantValue = value;
             }
         }
 
@@ -277,11 +290,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsConstByteArray { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public string ConstByteArrayReference { get; set; }
+        public bool IsStaticClassInitialization { get; set; }
 
         public bool IsPublic
         {

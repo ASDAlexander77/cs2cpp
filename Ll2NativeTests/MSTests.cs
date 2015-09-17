@@ -357,7 +357,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Timeout(2700000)]
+        [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
@@ -784,6 +784,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Timeout(36000000)]
         public void Test_Mono_Tests_Anon()
         {
             // 34 - error CS0234: The type or namespace name 'Timers' does not exist in the namespace 'System' (are you missing an assembly reference?)
@@ -824,12 +825,12 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false));
+                CompilerHelper.GetConverterArgs(false, stubs: true));
 
             CompilerHelper.ExecCmd(
                 "g++",
                 string.Format(
-                    "{0}-o CoreLib.obj -c CoreLib.cpp{1}",
+                    "-fno-rtti {0}-o CoreLib.obj -c CoreLib.cpp{1}",
                     CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
                     CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }
@@ -837,7 +838,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        ///[Microsoft.VisualStudio.TestTools.UnitTesting.Ignore]
+        //[Ignore]
         public void TestMscolibCSNative()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
@@ -890,6 +891,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Timeout(36000000)]
         public void Test_Mono_GTests()
         {
             // 329 - DEBUG ASSERT - investigate
@@ -1303,7 +1305,9 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 28).Where(n => !skip.Contains(n)))
             {
+                CompilerHelper.AddSystemCore = true;
                 CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
+                CompilerHelper.AddSystemCore = false;
             }
         }
 
@@ -1400,7 +1404,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        //[Ignore]
+        [Ignore]
         public void TestMscorlibCompile()
         {
             // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined

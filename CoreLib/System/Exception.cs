@@ -18,6 +18,9 @@ namespace System
 
         public UIntPtr IPForWatsonBuckets;
 
+        // @MANAGED: HResult is used from within the EE!  Rename with care - check VM directory
+        internal int _HResult;     // HResult
+
         public Exception()
         {
         }
@@ -87,6 +90,18 @@ namespace System
             set;
         }
 
+        public int HResult
+        {
+            get
+            {
+                return _HResult;
+            }
+            protected set
+            {
+                _HResult = value;
+            }
+        }
+
         public override String ToString()
         {
             String message = _message;
@@ -109,6 +124,11 @@ namespace System
         public void RestoreExceptionDispatchInfo(ExceptionDispatchInfo exceptionDispatchInfo)
         {
             throw new NotImplementedException();
+        }
+
+        internal void SetErrorCode(int hr)
+        {
+            HResult = hr;
         }
     }
 

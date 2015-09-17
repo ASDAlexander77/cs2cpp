@@ -100,6 +100,11 @@
             return name + Space + value;
         }
 
+        public static string GetResourceString(string name, object value)
+        {
+            return name + Space + value;
+        }
+
         public static string GetResourceString(string name, object value, object value2)
         {
             return name + Space + value + Space + value2;
@@ -108,6 +113,11 @@
         public static string GetResourceString(string name, string value, string value2)
         {
             return name + Space + value + Space + value2;
+        }
+
+        public static string GetResourceString(string name, string value, string value2, string value3, string value4)
+        {
+            return name + Space + value + Space + value2 + value3 + value4;
         }
 
         [MethodImpl(MethodImplOptions.Unmanaged)]

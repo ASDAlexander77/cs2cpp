@@ -365,7 +365,7 @@ namespace System.Threading
         {
             var returnCode = pthread_once(
                 ref key_once,
-                new pthread_make_shared_keys_delegate(pthread_make_shared_keys).ToPointer());
+                new pthread_make_shared_keys_delegate(pthread_make_shared_keys)._methodPtr.ToPointer());
             switch ((ReturnCode)returnCode)
             {
                 case ReturnCode.EINVAL:
@@ -413,7 +413,7 @@ namespace System.Threading
                 returnCode = GC_PTHREAD_CREATE(
                     ref pthread,
                     ref pthreadAttr,
-                    new pthread_start_routine_delegate(pthread_start_routine).ToPointer(),
+                    new pthread_start_routine_delegate(pthread_start_routine)._methodPtr.ToPointer(),
                     this);
                 switch ((ReturnCode)returnCode)
                 {

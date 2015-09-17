@@ -40,6 +40,7 @@ namespace Il2Native.Logic
         /// </returns>
         public ISet<IType> DiscoverAllStaticFieldsDependencies()
         {
+            // TODO: When you discover virtual method you need to discover all derived methods.
             var calledMethods = new NamespaceContainer<MethodKey>();
             var readStaticFields = new NamespaceContainer<IField>();
 

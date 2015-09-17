@@ -92,7 +92,11 @@
 
         /// <summary>
         /// </summary>
-        public static bool Mscorlib = false;
+        public static bool Mscorlib = true;
+
+        /// <summary>
+        /// </summary>
+        public static bool AddSystemCore = false;
 
         /// <summary>
         /// </summary>
@@ -118,6 +122,11 @@
                 if (Mscorlib)
                 {
                     args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
+                    
+                    if (AddSystemCore)
+                    {
+                        args.Add("ref:System.Core");
+                    }
                 }
                 else
                 {
@@ -414,6 +423,12 @@
             }
 
             ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
+
+            // cleanup if success
+            foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())
+            {
+                File.Delete(fileToDelete);
+            }
         }
 
         /// <summary>

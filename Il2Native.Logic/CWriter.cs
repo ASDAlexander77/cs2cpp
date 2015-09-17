@@ -492,19 +492,9 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
-                    var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
-                    var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
 
-                    if (MultiThreadingSupport)
-                    {
-                        // shift for Mutex & Cond
-                        this.Output.Write("(({1}) ((Byte**) &_s{0}{2}_ + 2))", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
-                    }
-                    else
-                    {
-                        this.Output.Write("(({1}) &_s{0}{2}_)", stringToken, strType, (uint)opCodeString.Operand.Value.GetHashCode());
-                    }
+                    this.WriteUnicodeStringReference(stringToken, (uint)opCodeString.Operand.Value.GetHashCode());
 
                     break;
                 case Code.Ldnull:
@@ -529,15 +519,11 @@ namespace Il2Native.Logic
                         // special case
                         if (tokenType.IsVirtualTableImplementation)
                         {
-                            var vtName = tokenType.InterfaceOwner != null
-                                ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
-                                : tokenType.GetVirtualTableNameReference(this);
-                            this.Output.Write(vtName);
+                            this.WriteVirtualTableImplementationReference(tokenType);
                             break;
                         }
 
-                        System.System_RuntimeTypeHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
@@ -585,8 +571,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        System.System_RuntimeFieldHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     // to support direct method address loading
@@ -601,8 +586,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        System.System_RuntimeMethodHandle.WriteTypePrefix(this);
-                        this.Output.Write("()/*undef*/");
+                        this.Output.WriteDefaultStructInitialization();
                     }
 
                     // special case
@@ -713,7 +697,17 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        if (opCodeFieldInfoPart.Operand.IsStaticClassInitialization)
+                        {
+                            this.Output.Write("&");
+                        }
+
                         this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+
+                        if (opCodeFieldInfoPart.Operand.IsStaticClassInitialization)
+                        {
+                            this.Output.Write(".data");
+                        }
                     }
 
                     break;
@@ -2125,7 +2119,7 @@ namespace Il2Native.Logic
             writer.Write(")");
 
             // call dynamic_cast or cast
-            var getStaticType = new OpCodeMethodInfoPart(OpCodesEmit.Call, 0, 0, new SynthesizedGetTypeStaticMethod(toType, this));
+            var getStaticType = new OpCodeFullyDefinedReferencePart(OpCodesEmit.Ldtoken, 0, 0, toType.GetFullyDefinedRefereneForRuntimeType(this));
 
             var castToObject = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Object);
             castToObject.OpCodeOperands = new[] { opCodeOperand };
@@ -3067,6 +3061,11 @@ namespace Il2Native.Logic
                     this.Output.WriteLine("#define __GC_MEMORY_DEBUG 1");
                 }
 
+                if (this.MultiThreadingSupport)
+                {
+                    this.Output.WriteLine("#define __MULTI_THREADING 1");
+                }
+
                 // declarations
                 this.Output.WriteLine(Resources.c_declarations);
                 this.Output.WriteLine(string.Empty);
@@ -3100,7 +3099,6 @@ namespace Il2Native.Logic
             }
 
             VirtualTableGen.Clear();
-            TypeGen.Clear();
         }
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
@@ -3227,11 +3225,11 @@ namespace Il2Native.Logic
         {
             if (type.IsStructureType())
             {
-                type.WriteTypeName(this.Output, false, true);
+                type.WriteTypeName(this, false, true);
             }
             else
             {
-                type.ToClass().WriteTypeName(this.Output, false, true);
+                type.ToClass().WriteTypeName(this, false, true);
             }
         }
 
@@ -3674,45 +3672,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private void SortStaticConstructorsByUsage()
-        {
-            var staticConstructors = new Dictionary<IMethod, ISet<IType>>();
-            foreach (var staticCtor in this.IlReader.StaticConstructors)
-            {
-                var methodWalker = new MethodsWalker(staticCtor, this);
-                var reaquiredTypesWithStaticFields = methodWalker.DiscoverAllStaticFieldsDependencies();
-                staticConstructors.Add(staticCtor, reaquiredTypesWithStaticFields);
-            }
-
-            // rebuild order
-            var newStaticConstructors = new List<IMethod>();
-
-            var countBefore = 0;
-            do
-            {
-                countBefore = staticConstructors.Count;
-                foreach (
-                    var staticConstructorPair in
-                        staticConstructors.Where(
-                            staticConstructorPair => !staticConstructorPair.Value.Any(v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v))))
-                                          .ToList())
-                {
-                    staticConstructors.Remove(staticConstructorPair.Key);
-                    newStaticConstructors.Add(staticConstructorPair.Key);
-                }
-            }
-            while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
-
-            Debug.Assert(staticConstructors.Keys.Count == 0, "Not All static constructors were resolved");
-
-            // add rest as is
-            newStaticConstructors.AddRange(staticConstructors.Keys);
-
-            this.IlReader.StaticConstructors = newStaticConstructors;
-        }
-
-        /// <summary>
-        /// </summary>
         private void WriteConstBytes(IConstBytes constBytes)
         {
             var bytes = constBytes.Data;
@@ -3885,6 +3844,11 @@ namespace Il2Native.Logic
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
+            if (this.GcSupport && this.IsCoreLib)
+            {
+                this.Output.WriteLine("GC_INIT();");
+            }
+
             if (this.MultiThreadingSupport)
             {
                 // initialize of Thread Statics
@@ -3896,18 +3860,11 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.SortStaticConstructorsByUsage();
-
-            if (this.GcSupport && this.IsCoreLib)
-            {
-                this.Output.WriteLine("GC_INIT();");
-            }
-
-            foreach (var staticCtor in this.IlReader.StaticConstructors)
-            {
-                WriteMethodDefinitionName(this.Output, staticCtor);
-                this.Output.WriteLine("();");
-            }
+            ////foreach (var staticCtor in this.IlReader.StaticConstructors)
+            ////{
+            ////    WriteMethodDefinitionName(this.Output, staticCtor);
+            ////    this.Output.WriteLine("();");
+            ////}
 
             this.Output.Indent--;
             this.Output.WriteLine("}");
@@ -4048,7 +4005,7 @@ namespace Il2Native.Logic
                 this.WriteDelegateStubFunctionBody(method);
                 this.Output.WriteLine(string.Empty);
             }
-            else if (!this.Stubs)
+            else if (!this.IsStubApplied(method))
             {
                 this.Output.WriteLine(";");
             }
@@ -4078,30 +4035,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
-        {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
-            {
-                return true;
-            }
-
-            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
-            {
-                return true;
-            }
-
-            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         private bool WriteMethodProlog(IMethod method, bool excludeNamespace = false, bool externDecl = false, bool shortName = false)
         {
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
-            if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
+            if ((method.IsAbstract || (this.NoBody && !this.IsStubApplied(method))) && !isDelegateBodyFunctions)
             {
                 if (!method.IsUnmanagedMethodReference && this.methodsHaveDefinition.Contains(method))
                 {
@@ -4123,7 +4060,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if ((externDecl || !excludeNamespace) && !Stubs && NoBody && !externDecl)
+            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && NoBody && !externDecl)
             {
                 return true;
             }
@@ -4389,7 +4326,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WritePostMethodEnd(IMethod method)
         {
-            var stubFunc = this.Stubs && this.NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody();
+            var stubFunc = this.IsStubApplied(method) && this.NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody();
             if (stubFunc)
             {
                 this.DefaultStub(method);
@@ -4404,13 +4341,18 @@ namespace Il2Native.Logic
             }
         }
 
+        private bool IsStubApplied(IMethod method)
+        {
+            return this.Stubs && !method.IsUnmanaged;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="field">
         /// </param>
         /// <param name="externalRef">
         /// </param>
-        public void WriteStaticField(IField field, bool definition = true)
+        public void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null)
         {
             Debug.Assert(field.IsStatic, "Static field is required");
 
@@ -4420,14 +4362,32 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("extern ");
             }
+            else
+            {
+                // preprocess all internal instances
+                if (field.IsStaticClassInitialization)
+                {
+                    this.WriteNestedClassInitializations(field, typeForRuntimeTypeInfo);
+                }
+            }
 
-            fieldType.WriteTypePrefix(this);
+            if (field.IsStaticClassInitialization)
+            {
+                this.Output.Write("__static_data<");
+            }
+
+            fieldType.WriteTypePrefix(this, asStruct: field.IsStaticClassInitialization);
+
+            if (field.IsStaticClassInitialization)
+            {
+                this.Output.Write(">");
+            }
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
             if (definition)
             {
-                this.WriteStaticFieldInitialization(field);
+                this.WriteStaticFieldInitialization(field, typeForRuntimeTypeInfo);
 
                 if (field.IsThreadStatic)
                 {
@@ -4438,11 +4398,16 @@ namespace Il2Native.Logic
             this.Output.WriteLine(";");
         }
 
-        private void WriteStaticFieldInitialization(IField field)
+        private void WriteNestedClassInitializations(IField field, IType typeForRuntimeTypeInfo = null)
+        {
+            this.WriteNestedClassInitializations(field.FieldType, typeForRuntimeTypeInfo);
+        }
+
+        private void WriteStaticFieldInitialization(IField field, IType typeForRuntimeTypeInfo = null)
         {
             var fieldType = field.FieldType;
 
-            if (fieldType.IsStructureType())
+            if (fieldType.IsStructureType() || field.IsStaticClassInitialization)
             {
                 this.Output.Write(" = ");
                 if (fieldType.IsStaticArrayInit)
@@ -4465,8 +4430,14 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    fieldType.WriteTypeWithoutModifiers(this);
-                    this.Output.Write("()/*undef*/");
+                    if (field.IsStaticClassInitialization)
+                    {
+                        this.WriteClassInitialization(fieldType, typeForRuntimeTypeInfo);
+                    }
+                    else
+                    {
+                        this.Output.WriteDefaultStructInitialization(Logic.IlReader.Fields(fieldType, this).All(f => f.IsStatic || f.IsConst));
+                    }
                 }
             }
             else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)
@@ -4479,30 +4450,76 @@ namespace Il2Native.Logic
                         this.Output.Write(data[0]);
                         break;
                     case 16:
-                        this.Output.Write(BitConverter.ToInt16(data, 0));
+                        var int16 = BitConverter.ToInt16(data, 0);
+                        if (int16 == Int16.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int16 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int16);
+                        }
+
                         break;
                     case 32:
-                        this.Output.Write(BitConverter.ToInt32(data, 0));
+                        var int32 = BitConverter.ToInt32(data, 0);
+                        if (int32 == Int32.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int32 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int32);
+                        }
+
                         break;
                     case 64:
-                        this.Output.Write(BitConverter.ToInt64(data, 0));
+                        var int64 = BitConverter.ToInt64(data, 0);
+                        if (int64 == Int64.MinValue)
+                        {
+                            this.Output.Write("(");
+                            this.Output.Write(int64 + 1);
+                            this.Output.Write("-1)");
+                        }
+                        else
+                        {
+                            this.Output.Write(int64);
+                        }
+
                         break;
                 }
             }
             else
             {
-                this.Output.Write(" = 0/*undef*/");
+                if (field.ConstantValue != null && !field.FieldType.IsStructureType() &&
+                    field.FieldType.TypeNotEquals(System.System_Single) &&
+                    field.FieldType.TypeNotEquals(System.System_Double) &&
+                    field.FieldType.TypeNotEquals(System.System_Char))
+                {
+                    this.Output.Write(string.Concat(" = ", field.ConstantValue.ToString().ToLowerInvariant()));
+                    if (field.FieldType.TypeEquals(System.System_Int64))
+                    {
+                        this.Output.Write("L");
+                    }
+                    else if (field.FieldType.TypeEquals(System.System_UInt64))
+                    {
+                        this.Output.Write("UL");
+                    }
+                }
+                else
+                {
+                    this.Output.Write(" = 0/*undef*/");
+                }
             }
         }
 
-        private void WriteStaticFieldName(IField field)
+        public void WriteStaticFieldName(IField field)
         {
-            this.Output.Write(field.FullName.CleanUpName());
-            if (IsAssemblyNamespaceRequired(field.DeclaringType))
-            {
-                this.Output.Write("_");
-                this.Output.Write(this.AssemblyQualifiedName.CleanUpName());
-            }
+            this.Output.Write(GetStaticFieldName(field));
         }
 
         /// <summary>
@@ -4511,9 +4528,12 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDefinitions(IType type)
         {
-            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) && !f.FieldType.IsGenericTypeDefinition))
+            foreach (
+                var field in
+                    Logic.IlReader.Fields(type, this)
+                         .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) && !f.FieldType.IsGenericTypeDefinition))
             {
-                this.WriteStaticField(field);
+                this.WriteStaticField(field, typeForRuntimeTypeInfo: type);
             }
         }
 
@@ -4561,9 +4581,14 @@ namespace Il2Native.Logic
 
         public void StartPreprocessorIf(IType type, string prefix)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            if (IsAssemblyNamespaceRequired(type))
             {
                 var fullName = type.FullName.CleanUpName();
+                if (type.Name.Length > 0 && type.Name[0] == '<' && !type.IsModule)
+                {
+                    fullName = string.Concat(fullName, "_", this.AssemblyQualifiedName.CleanUpName());
+                }
+
                 this.Output.Write("#ifndef {0}__", prefix);
                 this.Output.WriteLine(fullName);
                 this.Output.Write("#define {0}__", prefix);
@@ -4573,7 +4598,7 @@ namespace Il2Native.Logic
 
         public void EndPreprocessorIf(IType type)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray)
+            if (IsAssemblyNamespaceRequired(type))
             {
                 this.Output.WriteLine("#endif");
             }
@@ -4590,56 +4615,6 @@ namespace Il2Native.Logic
         private void EndPreprocessorIf()
         {
             this.Output.WriteLine("#endif");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="pair">
-        /// </param>
-        private void WriteUnicodeString(KeyValuePair<int, string> pair)
-        {
-            if (!this.stringTokenDefinitionWritten.Add(pair.Key * pair.Value.GetHashCode()))
-            {
-                return;
-            }
-
-            var align = pair.Value.Length % 2 == 0;
-
-            this.Output.Write(this.declarationPrefix);
-            this.Output.Write(
-                "{5}struct {2} _s{0}{1}_ = {4} {3}",
-                pair.Key,
-                (uint)pair.Value.GetHashCode(),
-                this.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
-                this.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
-                "{",
-                this.MultiThreadingSupport ? string.Empty : "const ");
-
-            this.Output.Write("{ ");
-
-            var index = 0;
-            foreach (var c in pair.Value.ToCharArray())
-            {
-                if (index > 0)
-                {
-                    this.Output.Write(", ");
-                }
-
-                this.Output.Write("{0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                this.Output.Write(", ");
-            }
-
-            if (align)
-            {
-                this.Output.Write("0, ");
-            }
-
-            this.Output.WriteLine("0 {0} {0};", '}');
         }
 
         /// <summary>
@@ -4692,7 +4667,7 @@ namespace Il2Native.Logic
                 {
                     if (node.Kind == PairKind.Interface)
                     {
-                        WriteInterfaceDeclarationInVirtualTable(writer, true, ((CWriter.Pair<IType, IType>)node).Value);
+                        WriteInterfaceDeclarationInVirtualTable(this, true, ((CWriter.Pair<IType, IType>)node).Value);
                     }
 
                     if (node.Kind == PairKind.Method)
@@ -4713,7 +4688,7 @@ namespace Il2Native.Logic
             {
                 foreach (var @interface in type.GetInterfacesExcludingBaseAllInterfaces())
                 {
-                    WriteInterfaceDeclarationInVirtualTable(writer, false, @interface);
+                    WriteInterfaceDeclarationInVirtualTable(this, false, @interface);
                 }
 
                 foreach (var method in Logic.IlReader.Methods(type, this).Where(m => !m.IsStatic))
@@ -4729,9 +4704,11 @@ namespace Il2Native.Logic
             this.EndPreprocessorIf(table);
         }
 
-        private static void WriteInterfaceDeclarationInVirtualTable(CIndentedTextWriter writer, bool asReference, IType @interface)
+        private static void WriteInterfaceDeclarationInVirtualTable(CWriter cWriter, bool asReference, IType @interface)
         {
-            @interface.WriteTypeName(writer, false);
+            var writer = cWriter.Output;
+
+            @interface.WriteTypeName(cWriter, false);
             writer.Write(CWriter.VTable);
             if (asReference)
             {

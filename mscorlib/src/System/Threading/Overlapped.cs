@@ -140,7 +140,7 @@ namespace System.Threading
 
     #region class OverlappedData
 
-    sealed internal class OverlappedData
+    sealed internal partial class OverlappedData
     {
         // ! If you make any change to the layout here, you need to make matching change 
         // ! to OverlappedObject in vm\nativeoverlapped.h
@@ -250,22 +250,6 @@ namespace System.Threading
             get { return m_nativeOverlapped.EventHandle; }
             set { m_nativeOverlapped.EventHandle = value; }
         }
-        
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        unsafe private extern NativeOverlapped* AllocateNativeOverlapped();
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        unsafe internal static extern void FreeNativeOverlapped(NativeOverlapped* nativeOverlappedPtr);
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        unsafe internal static extern OverlappedData GetOverlappedFromNative(NativeOverlapped* nativeOverlappedPtr);        
-
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        unsafe internal static extern void CheckVMForIOPacket(out NativeOverlapped* pOVERLAP, out uint errorCode, out uint numBytes);
     }
 
     #endregion class OverlappedData

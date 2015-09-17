@@ -48,12 +48,9 @@ namespace System.Resources
 
         internal ResourceManager(string baseName, Assembly assembly, string cultureName, bool fThrowOnFailure)
         {
-            if (!Initialize(baseName, assembly, cultureName))
+            if (fThrowOnFailure)
             {
-                if (fThrowOnFailure)
-                {
-                    throw new ArgumentException();
-                }
+                throw new ArgumentException();
             }
         }
 
@@ -81,63 +78,6 @@ namespace System.Resources
                 cultureName = cultureName.Substring(0, iDash);
 
             return cultureName;
-        }
-
-        internal bool Initialize(string baseName, Assembly assembly, string cultureName)
-        {
-            string cultureNameSav = cultureName;
-            Assembly assemblySav = assembly;
-
-            m_resourceFileId = -1;  //set to invalid state
-
-            bool fTryBaseAssembly = false;
-
-            while (true)
-            {
-                bool fInvariantCulture = (cultureName == "");
-
-                string[] splitName = assemblySav.FullName.Split(',');
-
-                string assemblyName = splitName[0];
- 
-                if(!fInvariantCulture)
-                {
-                    assemblyName = assemblyName + "." + cultureName;
-                }
-                else if (!fTryBaseAssembly)
-                {
-                    assemblyName = assemblyName + s_resourcesExtension;
-                }
-
-                // append version
-                if (splitName.Length >= 1 && splitName[1] != null)
-                {
-                    assemblyName += ", " + splitName[1].Trim();
-                }
-
-                assembly = Assembly.Load( assemblyName, false );
-
-                if (assembly != null)
-                {
-                    if (Initialize(baseName, assemblySav, cultureNameSav, assembly))
-                        return true;
-                }
-
-                if (!fInvariantCulture)
-                {
-                    cultureName = GetParentCultureName(cultureName);
-                }
-                else if (!fTryBaseAssembly)
-                {
-                    fTryBaseAssembly = true;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return false;
         }
 
         internal bool Initialize(string baseName, Assembly assemblyBase, string cultureName, Assembly assemblyResource)

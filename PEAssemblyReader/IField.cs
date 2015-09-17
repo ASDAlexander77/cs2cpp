@@ -24,7 +24,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        object ConstantValue { get; }
+        object ConstantValue { get; set; }
 
         /// <summary>
         /// </summary>
@@ -53,6 +53,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsVirtualTable { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsStaticClassInitialization { get; }
 
         /// <summary>
         /// </summary>

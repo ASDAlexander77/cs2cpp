@@ -1012,6 +1012,11 @@ namespace System
                 return comparison(x, y);
             }
         }
+
+        public static Array UnsafeCreateInstance(Type paramArrayType, int p1)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal static class EmptyArray<T>

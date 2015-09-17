@@ -16,7 +16,8 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-
+    using System.Text;
+    using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -363,6 +364,10 @@ namespace Il2Native.Logic
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
+
+            var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
+            var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
+            this.ReferencesList = (refsValue ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
@@ -408,8 +413,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string[] ReferencesList { get; set; }
+
+        /// <summary>
+        /// </summary>
         public string DefaultDllLocations { get; private set; }
 
+        /// <summary>
+        /// </summary>
         public string DllFilePath { get; private set; }
 
         /// <summary>
@@ -670,8 +681,20 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject)
             {
-                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable);
+                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
+            }
+            else if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
+            {
+                yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
+                yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");
+            }
+            else if (normal.TypeEquals(typeResolver.System.System_RuntimeType))
+            {
+                foreach (var runtimeTypeField in type.GetRuntimeTypeFields(typeResolver))
+                {
+                    yield return runtimeTypeField;
+                }
             }
 
             if (type.IsInterface && !type.SpecialUsage())
@@ -684,8 +707,17 @@ namespace Il2Native.Logic
 
             if (!type.IsPrivateImplementationDetails)
             {
-                // special static field to store created type
-                yield return typeResolver.System.System_Type.ToField(type, ObjectInfrastructure.TypeHolderFieldName, isStatic: true);
+                // special static field to store RuntimeType for a current type
+                var runtimeTypeStoreField = typeResolver.System.System_RuntimeType.ToField(
+                    type, RuntimeTypeInfoGen.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                yield return runtimeTypeStoreField;
+            }
+            else if (type.IsModule)
+            {
+                // special static field to store RuntimeType for a current type
+                var runtimeModuleStoreField = typeResolver.ResolveType("System.Reflection.RuntimeModule").ToField(
+                    type, RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                yield return runtimeModuleStoreField;
             }
 
             if (type.IsStaticArrayInit)
@@ -693,11 +725,10 @@ namespace Il2Native.Logic
                 yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
             }
 
-            if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
-            {
-                yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
-                yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");
-            }
+            // to store info about initialized
+            var cctorCalled = typeResolver.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
+            cctorCalled.ConstantValue = -1;
+            yield return cctorCalled;
         }
 
         /// <summary>
@@ -762,7 +793,6 @@ namespace Il2Native.Logic
 
                 // we return it to avoid using empty interfaces (because in C++ struct{} has size 1 not 0)
                 yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
-                yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
 
                 // append internal methods
                 if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
@@ -804,20 +834,26 @@ namespace Il2Native.Logic
                     yield return new SynthesizedDynamicCastMethod(typeResolver);
                     yield return new SynthesizedCastMethod(typeResolver);
                 }
+
+                // return all get methods for static fields which are not primitive value type
+                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => RequiredGetStaticMethod(f, typeResolver)))
+                {
+                    yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
+                }
             }
 
             if (type.IsValueType())
             {
                 if (!excludeSpecializations)
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => ShouldHaveStructToObjectAdapter(m)))
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(ShouldHaveStructToObjectAdapter))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
                 else
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => ShouldHaveStructToObjectAdapter(m)))
+                    foreach (var method in type.GetMethods(flags).Where(ShouldHaveStructToObjectAdapter))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
@@ -847,11 +883,26 @@ namespace Il2Native.Logic
 
             if (type.IsValueType())
             {
-                foreach (var method in genMethodSpecializationForType.Where(m => ShouldHaveStructToObjectAdapter(m)))
+                foreach (var method in genMethodSpecializationForType.Where(ShouldHaveStructToObjectAdapter))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
             }
+        }
+
+        private static bool RequiredGetStaticMethod(IField f, ITypeResolver typeResolver)
+        {
+            if (f.IsStaticClassInitialization)
+            {
+                return false;
+            }
+
+            if (f.IsConst)
+            {
+                return f.FieldType.TypeEquals(typeResolver.System.System_Decimal);
+            }
+
+            return f.IsStatic;
         }
 
         private static bool ShouldHaveStructToObjectAdapter(IMethod m)
@@ -875,7 +926,8 @@ namespace Il2Native.Logic
 
         public IEnumerable<string> References()
         {
-            return this.AllReferencesHelper(this.Assembly, true).Distinct();
+            var added = new HashSet<AssemblyIdentity>();
+            return this.AllReferencesHelper(this.Assembly, added, true).Distinct();
         }
 
         /// <summary>
@@ -884,7 +936,8 @@ namespace Il2Native.Logic
         /// </returns>
         public IEnumerable<string> AllReferences()
         {
-            return this.AllReferencesHelper(this.Assembly).Distinct();
+            var added = new HashSet<AssemblyIdentity>();
+            return this.AllReferencesHelper(this.Assembly, added).Distinct();
         }
 
         /// <summary>
@@ -1148,10 +1201,7 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        if (code == Code.Call)
-                        {
-                            this.AddCalledMethod(method);
-                        }
+                        this.AddCalledMethod(method);
 
                         if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
                         {
@@ -1683,8 +1733,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata, bool excludingCurrent = false)
+        private IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata, HashSet<AssemblyIdentity> processed, bool excludingCurrent = false)
         {
+            if (!processed.Add(assemblyMetadata.Assembly.Identity))
+            {
+                yield break;
+            }
+
             if (!excludingCurrent)
             {
                 yield return assemblyMetadata.Assembly.Identity.Name;
@@ -1692,7 +1747,7 @@ namespace Il2Native.Logic
 
             foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
             {
-                foreach (var referenceName in this.AllReferencesHelper(this.GetAssemblyMetadata(reference)))
+                foreach (var referenceName in this.AllReferencesHelper(this.GetAssemblyMetadata(reference), processed))
                 {
                     yield return referenceName;
                 }
@@ -1767,16 +1822,32 @@ namespace Il2Native.Logic
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
 
-            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+            var assemblies = new List<MetadataImageReference>();
+
+            if (this.ReferencesList.Length == 0)
+            {
+                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                    ? new MetadataImageReference(
+                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+                assemblies.Add(coreLibRefAssembly);
+            }
+            else
+            {
+                var added = new HashSet<AssemblyIdentity>();
+                foreach (var refItem in this.ReferencesList)
+                {
+                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                }
+            }
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, assemblies.ToArray(), options);
 
             using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
             {
@@ -1814,16 +1885,32 @@ namespace Il2Native.Logic
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
 
-            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+            var assemblies = new List<MetadataImageReference>();
+
+            if (this.ReferencesList.Length == 0)
+            {
+                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                    ? new MetadataImageReference(
+                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+                assemblies.Add(coreLibRefAssembly);
+            }
+            else
+            {
+                var added = new HashSet<AssemblyIdentity>();
+                foreach (var refItem in this.ReferencesList)
+                {
+                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                }
+            }
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, assemblies.ToArray(), options);
 
             var dllStream = new MemoryStream();
             var pdbStream = new MemoryStream();
@@ -1847,6 +1934,29 @@ namespace Il2Native.Logic
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(dllStream);
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
+        {
+            var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
+            if (resolvedFilePath == null)
+            {
+                return;
+            }
+
+            var metadata = this.GetAssemblyMetadata(assemblyIdentity);
+
+            if (added.Add(metadata.Assembly.Identity))
+            {
+                var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+                assemblies.Add(metadataImageReference);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
         }
 
         /// <summary>
@@ -2067,23 +2177,6 @@ namespace Il2Native.Logic
         /// </returns>
         private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
         {
-            if (assemblyIdentity.Name == "CoreLib")
-            {
-                return this.CoreLibPath;
-            }
-
-            if (assemblyIdentity.Name == "mscorlib")
-            {
-                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
-                {
-                    return this.CoreLibPath;
-                }
-
-                Debug.Assert(false, "you are using mscorlib from .NET");
-
-                return typeof(int).Assembly.Location;
-            }
-
             var dllFileName = string.Concat(assemblyIdentity.Name, ".dll");
             if (File.Exists(dllFileName))
             {
@@ -2099,8 +2192,64 @@ namespace Il2Native.Logic
                 }
             }
 
+            var windir = Environment.GetEnvironmentVariable("windir");
+
+            var dllFullNameGAC = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}\{1}_{2}_{3}_{4}", assemblyIdentity.Name, "4.0", assemblyIdentity.Version, assemblyIdentity.CultureName, GetAssemblyHashString(assemblyIdentity)));
+            if (File.Exists(dllFullNameGAC))
+            {
+                return dllFullNameGAC;
+            }
+
+            // find first possible
+            var dllFullNameGACSearch = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}", assemblyIdentity.Name));
+            try
+            {
+                foreach (var dll in Directory.EnumerateFiles(dllFullNameGACSearch, "*.dll", SearchOption.AllDirectories))
+                {
+                    // TODO: filter it here
+                    return dll;
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            if (assemblyIdentity.Name == "CoreLib")
+            {
+                return this.CoreLibPath;
+            }
+
+            if (assemblyIdentity.Name == "mscorlib")
+            {
+                if (assemblyIdentity.Version.Major <= 1 && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    return this.CoreLibPath;
+                }
+
+                ////Debug.Assert(false, "you are using mscorlib from .NET");
+
+                return typeof(int).Assembly.Location;
+            }
+
             Debug.Fail("Not implemented yet");
+
             return null;
+        }
+
+        private static object GetAssemblyHashString(AssemblyIdentity assemblyIdentity)
+        {
+            if (!assemblyIdentity.HasPublicKey)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var @byte in assemblyIdentity.PublicKey)
+            {
+                sb.AppendFormat("{0:N}", @byte);
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>

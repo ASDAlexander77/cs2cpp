@@ -16,9 +16,10 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Reflection.Emit;
     using CodeParts;
+    using DebugInfo.DebugInfoSymbolWriter;
     using Exceptions;
     using Gencode;
-
+    using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
@@ -157,6 +158,26 @@ namespace Il2Native.Logic
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
 
+        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
+            {
+                return true;
+            }
+
+            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
+            {
+                return true;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return true;
+            }
+
+            return false;
+        }
+        
         public void Initialize(IType type)
         {
             Debug.Assert(type != null, "You should provide type here");
@@ -294,6 +315,16 @@ namespace Il2Native.Logic
         public void RegisterType(IType type)
         {
             GlobalResolvedTypes[type.FullName] = type;
+        }
+
+        public string GetStaticFieldName(IField field)
+        {
+            if (IsAssemblyNamespaceRequired(field.DeclaringType))
+            {
+                return string.Concat(field.FullName.CleanUpName(), "_", this.AssemblyQualifiedName.CleanUpName());
+            }
+
+            return field.FullName.CleanUpName();
         }
 
         /// <summary>
@@ -874,7 +905,7 @@ namespace Il2Native.Logic
             var typePart = opCodeOperandOther as OpCodeTypePart;
             var integerValueFromOpCode = this.GetIntegerValueFromOpCode(opCodeOperandOther);
             if ((opCodeOperandOther.Any(Code.Sizeof) && typePart != null && elementType.TypeEquals(typePart.Operand))
-                || elementType.GetTypeSize(this, true) == integerValueFromOpCode)
+                || elementType.GetKnownTypeSize() == integerValueFromOpCode)
             {
                 this.ReplaceOperand(opCodePart, opCodeOperand);
             }
@@ -912,7 +943,7 @@ namespace Il2Native.Logic
 
         private bool FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
         {
-            var typeSize = type.GetTypeSize(this, true);
+            var typeSize = type.GetKnownTypeSize();
             var opCodePart = index;
             switch (opCodePart.ToCode())
             {
@@ -930,7 +961,7 @@ namespace Il2Native.Logic
                     }
 
                     var value = GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
-                    if (value > 0 && value % typeSize == 0)
+                    if (value > 0 && typeSize > 0 && value % typeSize == 0)
                     {
                         this.ReplaceOperand(opCodePart.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
                         return true;
@@ -1306,8 +1337,28 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode)
+        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode, IMethod method, out bool replace)
         {
+            replace = false;
+
+            // replvae Code.Ldsfld with calling method
+            if (opCode.ToCode() == Code.Ldsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            {
+                var opCodeFieldType = opCode as OpCodeFieldInfoPart;
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                {
+                    replace = true;
+                    return new OpCodeMethodInfoPart(
+                        OpCodesEmit.Call,
+                        opCode.AddressStart,
+                        opCode.AddressEnd,
+                        new SynthesizedGetStaticMethod(
+                            opCodeFieldType.Operand.DeclaringType,
+                            opCodeFieldType.Operand,
+                            this));
+                }
+            }
+
             if (this.ExceptionHandlingClauses == null)
             {
                 return null;
@@ -1413,13 +1464,30 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes, IMethod method)
         {
             OpCodePart last = null;
+            if (method is IConstructor && method.IsStatic)
+            {
+                var zeroOpCode = new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
+                last = BuildChain(last, zeroOpCode);
+                yield return zeroOpCode;
+                var initializedField = method.DeclaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, this);
+                var setStaticFieldValueOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Stsfld, 0, 0, initializedField);
+                last = BuildChain(last, setStaticFieldValueOpCode);
+                yield return setStaticFieldValueOpCode;
+            }
+
             foreach (var opCodePart in opCodes)
             {
-                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart);
+                var replace = false;
+                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart, method, out replace);
                 if (opCodePartBefore != null)
                 {
                     last = BuildChain(last, opCodePartBefore);
                     yield return opCodePartBefore;
+                }
+
+                if (replace)
+                {
+                    continue;
                 }
 
                 last = BuildChain(last, opCodePart);

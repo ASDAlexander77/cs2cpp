@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ArraySingleDimensionGen.cs" company="">
+// <copyright file="StringGen.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -37,7 +37,7 @@ namespace Il2Native.Logic.Gencode
             bool increaseSizeByOne = false)
         {
             // add element size
-            var elementSize = charType.GetTypeSize(typeResolver, true);
+            var elementSize = TypeGen.SystemTypeSizes[charType.Name];
             codeList.SizeOf(charType);
 
             // load length
@@ -133,10 +133,8 @@ namespace Il2Native.Logic.Gencode
                 sb.Append("(Byte*) -1, ");
             }
 
-            sb.AppendLine(string.Empty);
             sb.Append("(Byte*) ");
             sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
-            sb.AppendLine(string.Empty);
 
             _stringPrefixConstData = sb.ToString();
             return _stringPrefixConstData;

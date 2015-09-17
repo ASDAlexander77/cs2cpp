@@ -436,20 +436,12 @@ namespace Il2Native.Logic
 
         private static void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
         {
-            var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-
-            IType typeDefinition;
-            IType typeSpecialization;
-            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
-
             var fields = IlReader.Fields(type, codeWriter);
             // fields
-            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.TypeHolderFieldName))
+            foreach (var field in fields.Where(f => f.Name == RuntimeTypeInfoGen.RuntimeTypeHolderFieldName))
             {
                 codeWriter.WriteStaticField(field, false);
             }
-
-            codeWriter.WriteMethodForwardDeclaration(method, null, genericTypeContext);
         }
 
         /// <summary>
@@ -459,20 +451,12 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
-            var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-
-            IType typeDefinition;
-            IType typeSpecialization;
-            var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
-
             var fields = IlReader.Fields(type, codeWriter);
 
-            foreach (var field in fields.Where(f => f.Name == ObjectInfrastructure.TypeHolderFieldName))
+            foreach (var field in fields.Where(f => f.Name == RuntimeTypeInfoGen.RuntimeTypeHolderFieldName))
             {
-                codeWriter.WriteStaticField(field);
+                codeWriter.WriteStaticField(field, typeForRuntimeTypeInfo: type);
             }
-
-            codeWriter.WriteMethod(method, null, genericTypeContext);
         }
 
         private static void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
@@ -1014,7 +998,7 @@ namespace Il2Native.Logic
 
             // types in current assembly
             var readingTypesContext = ReadingTypesContext.New();
-            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && t.Name != "<Module>");
+            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
             {
                 typeToGet = typeToGet.Where(t => CheckFilter(filter, t));
@@ -1022,8 +1006,6 @@ namespace Il2Native.Logic
 
             var types = typeToGet.ToList();
             var allTypes = ilReader.AllTypes().ToList();
-
-            EmbedNativeType(ilReader, types, allTypes);
 
             var usedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
 
@@ -1035,37 +1017,13 @@ namespace Il2Native.Logic
 
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
-            Debug.Assert(!ilReader.IsCoreLib || usedTypes.FirstOrDefault(t => t.FullName == "System.NativeType") != null, "Could not find native type");
-
             return usedTypes;
         }
 
-        private static void EmbedNativeType(IlReader ilReader, List<IType> types, List<IType> allTypes)
-        {
-            var nativeType = types.FirstOrDefault(t => t.FullName == "System.NativeType");
-            if (nativeType == null)
-            {
-                // load type
-                nativeType = LoadNativeTypeFromSource(ilReader, allTypes.First().AssemblyQualifiedName);
-
-                // append custom NativeType to support reflection
-                if (ilReader.IsCoreLib)
-                {
-                    // append to list of all types
-                    types.Add(nativeType);
-                    allTypes.Add(nativeType);
-                }
-
-                _codeWriter.RegisterType(nativeType);
-            }
-
-            nativeType.BaseType = _codeWriter.ResolveType("System.RuntimeType");
-        }
-
-        private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
-        {
-            return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => t.Name != "<Module>");
-        }
+        ////private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
+        ////{
+        ////    return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => t.Name != "<Module>");
+        ////}
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
         {
