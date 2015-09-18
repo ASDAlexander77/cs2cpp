@@ -191,22 +191,17 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (firstLevel && opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteStartOfPhiValues(writer, opCode, firstLevel);
+            }
+
             if (opCode.Result != null)
             {
                 this.WriteTemporaryExpressionResult(opCode);
             }
 
-            var processed = false;
-            if (opCode.UsedByAlternativeValues != null)
-            {
-                processed = this.WriteStartOfPhiValues(writer, opCode, firstLevel);
-            }
-
-            var done = false;
-            if (!processed)
-            {
-                done = this.ActualWriteOpCode(writer, opCode);
-            }
+            var done = this.ActualWriteOpCode(writer, opCode);
 
             if (firstLevel && opCode.UsedByAlternativeValues != null)
             {
@@ -981,10 +976,11 @@ namespace Il2Native.Logic
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
                     }
-                    else if (type.IsPointer)
-                    {
-                        this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
-                    }
+                    // TODO: review this code
+                    //else if (type.IsPointer)
+                    //{
+                    //    this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
+                    //}
                     else if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
                         this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
@@ -3101,13 +3097,8 @@ namespace Il2Native.Logic
             VirtualTableGen.Clear();
         }
 
-        public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
+        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
-            if (!firstLevel)
-            {
-                return false;
-            }
-
             var usedByAlternativeValues = opCode.UsedByAlternativeValues;
             while (usedByAlternativeValues.UsedByAlternativeValues != null)
             {
@@ -3126,8 +3117,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("_phi{0} = ", addressStart);
             }
-
-            return false;
         }
 
         public void WriteInterfaceToObjectCast(CIndentedTextWriter writer, OpCodePart opCode, IType toType)
@@ -3363,21 +3352,29 @@ namespace Il2Native.Logic
         /// </param>
         private void FieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
+            var writer = this.Output;
+            
+            var fieldType = opCodeFieldInfoPart.Operand.FieldType;
             if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
             {
-                this.Output.Write("swap(&");
+                writer.Write("swap(&");
                 this.WriteFieldAccess(opCodeFieldInfoPart);
+                if (fieldType.IsIntPtrOrUIntPtr())
+                {
+                    this.WriteFieldAccess(fieldType, fieldType.GetFieldByFieldNumber(0, this));
+                }
 
-                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                 this.SaveToField(opCodeFieldInfoPart, fieldType, prefix: ", ");
+                if (fieldType.IsIntPtrOrUIntPtr())
+                {
+                    this.WriteFieldAccess(fieldType, fieldType.GetFieldByFieldNumber(0, this));
+                }
 
-                this.Output.Write(")");
+                writer.Write(")");
             }
             else
             {
                 this.WriteFieldAccess(opCodeFieldInfoPart);
-
-                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                 this.SaveToField(opCodeFieldInfoPart, fieldType);
             }
         }
