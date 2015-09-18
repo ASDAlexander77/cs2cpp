@@ -981,10 +981,11 @@ namespace Il2Native.Logic
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
                     }
-                    else if (type.IsPointer)
-                    {
-                        this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
-                    }
+                    // TODO: review this code
+                    //else if (type.IsPointer)
+                    //{
+                    //    this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
+                    //}
                     else if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
                         this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
