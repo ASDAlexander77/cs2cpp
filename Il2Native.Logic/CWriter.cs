@@ -191,22 +191,17 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (firstLevel && opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteStartOfPhiValues(writer, opCode, firstLevel);
+            }
+
             if (opCode.Result != null)
             {
                 this.WriteTemporaryExpressionResult(opCode);
             }
 
-            var processed = false;
-            if (opCode.UsedByAlternativeValues != null)
-            {
-                processed = this.WriteStartOfPhiValues(writer, opCode, firstLevel);
-            }
-
-            var done = false;
-            if (!processed)
-            {
-                done = this.ActualWriteOpCode(writer, opCode);
-            }
+            var done = this.ActualWriteOpCode(writer, opCode);
 
             if (firstLevel && opCode.UsedByAlternativeValues != null)
             {
@@ -3102,13 +3097,8 @@ namespace Il2Native.Logic
             VirtualTableGen.Clear();
         }
 
-        public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
+        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
-            if (!firstLevel)
-            {
-                return false;
-            }
-
             var usedByAlternativeValues = opCode.UsedByAlternativeValues;
             while (usedByAlternativeValues.UsedByAlternativeValues != null)
             {
@@ -3127,8 +3117,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("_phi{0} = ", addressStart);
             }
-
-            return false;
         }
 
         public void WriteInterfaceToObjectCast(CIndentedTextWriter writer, OpCodePart opCode, IType toType)
