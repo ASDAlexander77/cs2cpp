@@ -3364,21 +3364,29 @@ namespace Il2Native.Logic
         /// </param>
         private void FieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
+            var writer = this.Output;
+            
+            var fieldType = opCodeFieldInfoPart.Operand.FieldType;
             if (opCodeFieldInfoPart.Previous != null && opCodeFieldInfoPart.Previous.Any(Code.Volatile))
             {
-                this.Output.Write("swap(&");
+                writer.Write("swap(&");
                 this.WriteFieldAccess(opCodeFieldInfoPart);
+                if (fieldType.IsIntPtrOrUIntPtr())
+                {
+                    this.WriteFieldAccess(fieldType, fieldType.GetFieldByFieldNumber(0, this));
+                }
 
-                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                 this.SaveToField(opCodeFieldInfoPart, fieldType, prefix: ", ");
+                if (fieldType.IsIntPtrOrUIntPtr())
+                {
+                    this.WriteFieldAccess(fieldType, fieldType.GetFieldByFieldNumber(0, this));
+                }
 
-                this.Output.Write(")");
+                writer.Write(")");
             }
             else
             {
                 this.WriteFieldAccess(opCodeFieldInfoPart);
-
-                var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                 this.SaveToField(opCodeFieldInfoPart, fieldType);
             }
         }
