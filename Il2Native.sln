@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLib", "CoreLib\CoreLib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReader", "PdbReader\PdbReader.csproj", "{68D11523-23EC-405F-ADB0-C2F2C0538589}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mscorlib", "mscorlib\mscorlib.csproj", "{182A767C-CB96-4DC6-9E76-44CF69DF680F}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{23D6F100-DA7F-45E5-B142-06BBC5F80883}"
 	ProjectSection(SolutionItems) = preProject
 		Performance1.psess = Performance1.psess
@@ -60,6 +62,10 @@ Global
 		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Release|Any CPU.Build.0 = Release|Any CPU
+		{182A767C-CB96-4DC6-9E76-44CF69DF680F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{182A767C-CB96-4DC6-9E76-44CF69DF680F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{182A767C-CB96-4DC6-9E76-44CF69DF680F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{182A767C-CB96-4DC6-9E76-44CF69DF680F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
