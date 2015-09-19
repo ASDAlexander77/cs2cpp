@@ -3597,11 +3597,19 @@ namespace Il2Native.Logic
         private void SaveIndirect(CIndentedTextWriter writer, OpCodePart opCode)
         {
             IType type = null;
+            var savingVoidPtrToIntPtr = false;
 
             switch (opCode.ToCode())
             {
                 case Code.Stind_I:
                     type = this.GetTypeOfReference(opCode);
+                    if (!type.IsPointer && !type.IsByRef && (type.IntTypeBitSize() == PointerSize * 8 || type.IsVoid()))
+                    {
+                        // using int as intptr
+                        savingVoidPtrToIntPtr = true;
+                        type = this.System.System_IntPtr;
+                    }
+
                     break;
                 case Code.Stind_I1:
 
@@ -3637,10 +3645,10 @@ namespace Il2Native.Logic
                     break;
             }
 
-            this.SaveIndirect(writer, opCode, type);
+            this.SaveIndirect(writer, opCode, type, savingVoidPtrToIntPtr);
         }
 
-        private void SaveIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type)
+        private void SaveIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type, bool savingVoidPtrToIntPtr = false)
         {
             Debug.Assert(!type.IsVoid());
 
@@ -3656,7 +3664,20 @@ namespace Il2Native.Logic
             }
 
             this.UnaryOper(writer, opCode, 0, string.Empty);
-            this.UnaryOper(writer, opCode, 1, ") = ", type);
+
+            if (!savingVoidPtrToIntPtr)
+            {
+                writer.Write(") = ");
+            }
+            else
+            {
+                writer.Write(")->");
+                var field = type.GetFieldByFieldNumber(0, this);
+                this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
+                writer.Write(" = ");
+            }
+
+            this.UnaryOper(writer, opCode, 1, "", type);
         }
 
         private void SetSettings(string fileName, string fileExt, string sourceFilePath, string pdbFilePath, string[] args)

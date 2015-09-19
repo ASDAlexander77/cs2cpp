@@ -518,6 +518,8 @@ namespace Il2Native.Logic
             PointerToBoxedValue,
             IntPtrToInt,
             PointerToInt,
+            PointerToIntPtr,
+            PointerToUIntPtr,
             IntToPointer,
             ArrayOfDerivedTypeToArrayOfBaseType,
             ArrayOfInterfaceToArrayOfObject,
@@ -630,6 +632,22 @@ namespace Il2Native.Logic
                 var fieldType = destinationType.GetFieldByFieldNumber(0, this).FieldType;
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, fieldType);
                 castOpCode.RequiredOutgoingType = fieldType;
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+
+            if (conversionType == ConversionType.PointerToIntPtr)
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_IntPtr);
+                castOpCode.RequiredOutgoingType = System.System_IntPtr;
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+
+            if (conversionType == ConversionType.PointerToUIntPtr)
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_UIntPtr);
+                castOpCode.RequiredOutgoingType = System.System_UIntPtr;
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
@@ -788,6 +806,16 @@ namespace Il2Native.Logic
             if (sourceType.IsPointer && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.PointerToInt;
+            }
+
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && destinationType.IsIntPtr())
+            {
+                return ConversionType.PointerToIntPtr;
+            }
+
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && destinationType.IsUIntPtr())
+            {
+                return ConversionType.PointerToUIntPtr;
             }
 
             if (sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize && destinationType.IsPointer)
