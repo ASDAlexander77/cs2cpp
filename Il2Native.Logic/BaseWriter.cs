@@ -808,12 +808,12 @@ namespace Il2Native.Logic
                 return ConversionType.PointerToInt;
             }
 
-            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && destinationType.IsIntPtr())
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && !(sourceType.IsPointer && sourceType.IsIntPtr()) && destinationType.IsIntPtr() && !destinationType.IsReference())
             {
                 return ConversionType.PointerToIntPtr;
             }
 
-            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && destinationType.IsUIntPtr())
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && !(sourceType.IsPointer && sourceType.IsUIntPtr()) && destinationType.IsUIntPtr() && !destinationType.IsReference())
             {
                 return ConversionType.PointerToUIntPtr;
             }

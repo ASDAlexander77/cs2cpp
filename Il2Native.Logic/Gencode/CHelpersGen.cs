@@ -406,9 +406,9 @@ namespace Il2Native.Logic.Gencode
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
             }
-            else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 && toType.IsIntPtrOrUIntPtr())
+            else if ((estimatedOperandResultOf.Type.IsPointer || estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8) && toType.IsIntPtrOrUIntPtr())
             {
-                cWriter.Output.Write("System_{0}_System_{0}_op_ExplicitFVoidPN(", toType.Name);
+                cWriter.Output.Write("System_{0}_System_{0}_op_ExplicitFVoidPN((Void*)", toType.Name);
                 cWriter.WriteResultOrActualWrite(opCodeOperand);
                 cWriter.Output.Write(")");
             }
