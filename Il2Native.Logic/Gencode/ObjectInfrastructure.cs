@@ -644,7 +644,7 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.LoadField(field);
 
-            if (field.IsThreadStatic && field.FieldType.IsStructureType())
+            if (field.IsThreadStatic && field.FieldType.IsValueType())
             {
                 codeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
                 codeBuilder.Unbox(field.FieldType);
