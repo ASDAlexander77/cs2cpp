@@ -3664,19 +3664,7 @@ namespace Il2Native.Logic
             }
 
             this.UnaryOper(writer, opCode, 0, string.Empty);
-
-            if (!savingVoidPtrToIntPtr)
-            {
-                writer.Write(") = ");
-            }
-            else
-            {
-                writer.Write(")->");
-                var field = type.GetFieldByFieldNumber(0, this);
-                this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
-                writer.Write(" = ");
-            }
-
+            writer.Write(") = ");
             this.UnaryOper(writer, opCode, 1, "", type);
         }
 
