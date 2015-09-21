@@ -77,10 +77,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyAllReferencedTypes;
-
-        /// <summary>
-        /// </summary>
         private readonly Lazy<IEnumerable<IType>> lazyAllTypes;
 
         /// <summary>
@@ -339,7 +335,6 @@ namespace Il2Native.Logic
             this.ThreadStaticFields = new List<IField>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
-            this.lazyAllReferencedTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true, true));
         }
 
         /// <summary>
@@ -368,6 +363,9 @@ namespace Il2Native.Logic
             var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
             var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
             this.ReferencesList = (refsValue ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            var mergePathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("merge:")) : null;
+            this.MergePath = mergePathArg != null ? mergePathArg.Substring("merge:".Length) : null;
         }
 
         /// <summary>
@@ -582,11 +580,19 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        protected AssemblyMetadata MergeAssembly { get; private set; }
+
+        /// <summary>
+        /// </summary>
         protected string FirstSource { get; private set; }
 
         /// <summary>
         /// </summary>
         protected string[] Sources { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected string MergePath { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -915,15 +921,6 @@ namespace Il2Native.Logic
             return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<IType> AllReferencedTypes()
-        {
-            return this.lazyAllReferencedTypes.Value;
-        }
-
         public IEnumerable<string> References()
         {
             var added = new HashSet<AssemblyIdentity>();
@@ -1007,6 +1004,11 @@ namespace Il2Native.Logic
             {
                 this.DllFilePath = this.FirstSource;
                 this.PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.MergePath))
+            {
+                this.MergeAssembly = AssemblyMetadata.CreateFromImageStream(new FileStream(this.MergePath, FileMode.Open, FileAccess.Read));
             }
         }
 
@@ -2134,10 +2136,7 @@ namespace Il2Native.Logic
         private IEnumerable<IType> ReadTypes(bool readAll = false, bool ignoreCurrent = false)
         {
             var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
-            foreach (var type in this.ReadTypes(assemblySymbol, readAll, ignoreCurrent))
-            {
-                yield return type;
-            }
+            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent);
         }
 
         private IEnumerable<IType> ReadTypes(AssemblySymbol assemblySymbol, bool readAll = false, bool ignoreCurrent = false)
@@ -2167,6 +2166,18 @@ namespace Il2Native.Logic
                     }
                 }
             }
+        }
+
+        public IEnumerable<IType> MergeTypes(List<IType> allTypes)
+        {
+            ISet<IType> usedTypes = new NamespaceContainer<IType>();
+            foreach (var type in allTypes)
+            {
+                usedTypes.Add(type);
+            }
+
+            var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
+            return this.ReadTypes(assemblySymbol, true).Where(mergeType => usedTypes.Add(mergeType));
         }
 
         /// <summary>

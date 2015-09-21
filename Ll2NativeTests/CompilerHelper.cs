@@ -114,7 +114,8 @@
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
             bool stubs = false,
-            bool split = false)
+            bool split = false,
+            bool merge = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -132,6 +133,11 @@
                 {
                     args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
                 }
+            }
+
+            if (merge)
+            {
+                args.Add(string.Concat("merge:", CoreLibPath));
             }
 
             if (roslyn)
