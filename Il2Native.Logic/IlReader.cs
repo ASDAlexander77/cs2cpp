@@ -9,6 +9,7 @@ namespace Il2Native.Logic
     using System;
     using System.CodeDom.Compiler;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -2170,14 +2171,41 @@ namespace Il2Native.Logic
 
         public IEnumerable<IType> MergeTypes(List<IType> allTypes)
         {
+            IDictionary<IType, IType> types = new SortedDictionary<IType, IType>();
             ISet<IType> usedTypes = new NamespaceContainer<IType>();
             foreach (var type in allTypes)
             {
                 usedTypes.Add(type);
+                types[type] = type;
             }
 
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
-            return this.ReadTypes(assemblySymbol, true).Where(mergeType => usedTypes.Add(mergeType));
+            foreach (var mergeType in this.ReadTypes(assemblySymbol, true))
+            {
+                if (usedTypes.Add(mergeType))
+                {
+                    yield return mergeType;
+                }
+                else
+                {
+                    var originalType = types[mergeType];
+                    IDictionary<string, IMethod> emptyMethods = new SortedDictionary<string, IMethod>();
+                    // load all empty methods
+                    foreach (var methodWithoutBody in originalType.GetMethods(DefaultFlags).Where(m => !m.GetMethodBody().HasBody))
+                    {
+                        emptyMethods[methodWithoutBody.ToString()] = methodWithoutBody;
+                    }
+
+                    foreach (var methodWithBody in from methodWithBody in mergeType.GetMethods(DefaultFlags)
+                        let methodBody = methodWithBody.GetMethodBody()
+                        where methodBody.HasBody
+                        where emptyMethods.ContainsKey(methodWithBody.ToString())
+                        select methodWithBody)
+                    {
+                        MethodBodyBank.Register(methodWithBody.ToString(), m => methodWithBody);
+                    }
+                }
+            }
         }
 
         /// <summary>

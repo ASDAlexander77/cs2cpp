@@ -131,7 +131,7 @@
                 m, code, tokenResolutions, locals, parameters, new IExceptionHandlingClause[0]));
         }
 
-        private static void Register(string methodFullName, Func<IMethod, IMethod> func)
+        public static void Register(string methodFullName, Func<IMethod, IMethod> func)
         {
             MethodsByFullName[methodFullName] = func;
         }
