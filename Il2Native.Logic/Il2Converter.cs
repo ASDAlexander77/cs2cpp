@@ -1007,8 +1007,8 @@ namespace Il2Native.Logic
             var types = typeToGet.ToList();
             var allTypes = ilReader.AllTypes().ToList();
             var missingMergedTypes = ilReader.MergeTypes(allTypes).ToList();
-            types.AddRange(missingMergedTypes);
-            allTypes.AddRange(missingMergedTypes);
+            ////types.AddRange(missingMergedTypes);
+            ////allTypes.AddRange(missingMergedTypes);
 
             var usedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
 

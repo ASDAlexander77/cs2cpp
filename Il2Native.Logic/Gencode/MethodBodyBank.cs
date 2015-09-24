@@ -13,6 +13,8 @@
         private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
             new SortedDictionary<string, Func<IMethod, IMethod>>();
 
+        private static bool initialized = false;
+
         private static readonly object Locker = new object();
 
         public static void Clear()
@@ -22,12 +24,12 @@
 
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
-            if (MethodsByFullName.Count == 0)
+            if (!initialized)
             {
                 lock (Locker)
                 {
                     // we double check to filter threads waiting on 'lock'
-                    if (MethodsByFullName.Count == 0)
+                    if (!initialized)
                     {
                         RegisterAll(typeResolver);
                     }
@@ -125,10 +127,11 @@
             byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
-            IList<IParameter> parameters)
+            IList<IParameter> parameters,
+            IExceptionHandlingClause[] exceptionHandlingClause = null)
         {
             Register(methodFullName, m => GetMethodDecorator(
-                m, code, tokenResolutions, locals, parameters, new IExceptionHandlingClause[0]));
+                m, code, tokenResolutions, locals, parameters, exceptionHandlingClause ?? new IExceptionHandlingClause[0]));
         }
 
         public static void Register(string methodFullName, Func<IMethod, IMethod> func)

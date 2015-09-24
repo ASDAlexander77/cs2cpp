@@ -2198,7 +2198,7 @@ namespace Il2Native.Logic
 
                     foreach (var methodWithBody in from methodWithBody in mergeType.GetMethods(DefaultFlags)
                         let methodBody = methodWithBody.GetMethodBody()
-                        where methodBody.HasBody
+                        where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
                         where emptyMethods.ContainsKey(methodWithBody.ToString())
                         select methodWithBody)
                     {
