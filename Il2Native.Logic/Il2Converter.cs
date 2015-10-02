@@ -429,6 +429,7 @@ namespace Il2Native.Logic
         {
             typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
             typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
+
             return typeDefinition != null || typeSpecialization != null
                 ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
                 : null;

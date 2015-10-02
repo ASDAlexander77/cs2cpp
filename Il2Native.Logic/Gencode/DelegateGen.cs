@@ -416,6 +416,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public string AssemblyFullyQualifiedName { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public CallingConventions CallingConvention
             {
                 get { return this.isStatic ? CallingConventions.Standard : CallingConventions.HasThis; }

@@ -91,6 +91,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public IType DeclaringType

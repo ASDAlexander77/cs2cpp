@@ -112,6 +112,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                return this.methodDef.ContainingType.ContainingAssembly.Identity.ToString();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public CallingConventions CallingConvention

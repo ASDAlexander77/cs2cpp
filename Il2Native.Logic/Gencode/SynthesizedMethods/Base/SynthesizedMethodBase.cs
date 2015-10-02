@@ -51,6 +51,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
+        public virtual string AssemblyFullyQualifiedName { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public virtual CallingConventions CallingConvention
         {
             get { return CallingConventions.Standard; }
