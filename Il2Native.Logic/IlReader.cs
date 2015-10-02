@@ -2171,6 +2171,11 @@ namespace Il2Native.Logic
 
         public IEnumerable<IType> MergeTypes(List<IType> allTypes)
         {
+            if (this.MergeAssembly == null)
+            {
+                yield break;
+            }
+
             IDictionary<IType, IType> types = new SortedDictionary<IType, IType>();
             ISet<IType> usedTypes = new NamespaceContainer<IType>();
             foreach (var type in allTypes)

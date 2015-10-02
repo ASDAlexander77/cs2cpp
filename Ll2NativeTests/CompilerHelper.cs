@@ -137,7 +137,7 @@
 
             if (merge)
             {
-                args.Add(string.Concat("merge:", CoreLibPath));
+                args.Add(string.Concat("merge:", MscorlibPath));
             }
 
             if (roslyn)
