@@ -132,6 +132,13 @@ namespace PEAssemblyReader
             return context;
         }
 
+        public static IGenericContext CreateCustomMap(IType typeDefinition, IType typeSpecialization)
+        {
+            var context = new MetadataGenericContext();
+            context.CustomTypeSubstitution = CreateMap(typeDefinition, typeSpecialization);
+            return context;
+        }
+
         private static MutableTypeMap CreateMap(IMethod methodDefinition, IMethod methodSpecialization, IMethod additionalMethodDefinition = null)
         {
             var customTypeSubstitution = new MutableTypeMap();
@@ -162,6 +169,27 @@ namespace PEAssemblyReader
                     var baseType = FindBaseOrInterface(methodSpecAdapter.MethodDef.ContainingType, additionalMethodSymbolDef.ContainingType);
                     AppendMappingSpecialCaseForBaseType(customTypeSubstitution, methodSpecAdapter.MethodDef.ContainingType, baseType);
                 }
+            }
+
+            return customTypeSubstitution;
+        }
+
+        private static MutableTypeMap CreateMap(IType typeDefinition, IType typeSpecialization)
+        {
+            var customTypeSubstitution = new MutableTypeMap();
+
+            var typeSpecAdapter = typeSpecialization as MetadataTypeAdapter;
+            if (typeSpecAdapter != null)
+            {
+                var typeSymbolSpec = typeSpecAdapter.TypeDef as NamedTypeSymbol;
+                AppendMapping(customTypeSubstitution, typeSymbolSpec);
+            }
+
+            var typeDefAdapter = typeDefinition as MetadataTypeAdapter;
+            if (typeDefAdapter != null)
+            {
+                var typeSymbolDef = typeDefAdapter.TypeDef as NamedTypeSymbol;
+                AppendMapping(customTypeSubstitution, typeSymbolDef, true);
             }
 
             return customTypeSubstitution;
