@@ -1211,6 +1211,8 @@ namespace PEAssemblyReader
                 return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
             }
 
+            Debug.Assert(false);
+
             throw new KeyNotFoundException();
         }
 

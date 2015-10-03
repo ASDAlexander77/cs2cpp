@@ -431,9 +431,7 @@ namespace Il2Native.Logic
             typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
             return typeDefinition != null || typeSpecialization != null
-                ? type.AssemblyFullyQualifiedName.Contains("1.0.0.0")
-                    ? MetadataGenericContext.CreateCustomMap(typeDefinition, typeSpecialization)
-                    : MetadataGenericContext.Create(typeDefinition, typeSpecialization)
+                ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
                 : null;
         }
 
