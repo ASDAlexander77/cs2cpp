@@ -16,7 +16,7 @@ namespace System {
     [Serializable]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public abstract class Delegate : ICloneable, ISerializable 
+    public abstract partial class Delegate : ICloneable, ISerializable 
     {
         // _target is the object we will invoke on
         [System.Security.SecurityCritical]

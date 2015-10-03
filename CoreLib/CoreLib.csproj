@@ -45,6 +45,7 @@
     <Compile Include="Impl\ArgIterator.cs" />
     <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
+    <Compile Include="Impl\Delegate.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Math.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />

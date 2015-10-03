@@ -47,6 +47,9 @@
     <Compile Include="..\CoreLib\Impl\Console.cs">
       <Link>Impl\Console.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Delegate.cs">
+      <Link>Impl\Delegate.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\IO\__ConsoleStream.cs">
       <Link>Impl\IO\__ConsoleStream.cs</Link>
     </Compile>
