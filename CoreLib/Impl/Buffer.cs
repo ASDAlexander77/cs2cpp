@@ -18,14 +18,12 @@
             Memcpy(dstBytes, dstOffsetBytes, srcBytes, srcOffsetBytes, byteCount);
         }
 
+        [MethodImpl(MethodImplOptions.Unmanaged)]
 #if WIN64
-        private unsafe static void __Memmove(byte* dest, byte* src, ulong len)
+        extern private unsafe static void __Memmove(byte* dest, byte* src, ulong len);
 #else
-        private unsafe static void __Memmove(byte* dest, byte* src, uint len)
+        extern private static unsafe void __Memmove(byte* dest, byte* src, uint len);
 #endif
-        {
-            Memcpy(dest, src, (int)len);
-        }
 
         internal unsafe static void Memcpy(byte[] dest, int destIndex, byte[] src, int srcIndex, int len)
         {

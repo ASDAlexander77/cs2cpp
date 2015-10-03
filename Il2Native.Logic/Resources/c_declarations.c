@@ -52,6 +52,7 @@ extern "C" Double fmod (Double, Double);
 // misc
 extern "C" Void __pure_virtual();
 extern "C" Void* Memcpy(Byte* dst, Byte* src, Int32 size);
+extern "C" Void __Memmove(Byte* dst, Byte* src, UInt32 size);
 extern "C" Void Exit(Int32 status);
 extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
