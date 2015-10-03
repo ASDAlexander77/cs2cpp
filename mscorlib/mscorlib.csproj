@@ -50,6 +50,9 @@
     <Compile Include="..\CoreLib\Impl\IO\__ConsoleStream.cs">
       <Link>Impl\IO\__ConsoleStream.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Math.cs">
+      <Link>Impl\Math.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\CriticalHandle.cs">
       <Link>Impl\Runtime\InteropServices\CriticalHandle.cs</Link>
     </Compile>
