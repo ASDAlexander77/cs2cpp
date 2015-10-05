@@ -15,6 +15,7 @@ namespace Il2Native.Logic
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Gencode;
 
@@ -431,9 +432,7 @@ namespace Il2Native.Logic
             typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
             return typeDefinition != null || typeSpecialization != null
-                ? type.AssemblyFullyQualifiedName.Contains("1.0.0.0")
-                    ? MetadataGenericContext.CreateCustomMap(typeDefinition, typeSpecialization)
-                    : MetadataGenericContext.Create(typeDefinition, typeSpecialization)
+                ? MetadataGenericContext.Create(typeDefinition, typeSpecialization)
                 : null;
         }
 
@@ -1009,9 +1008,9 @@ namespace Il2Native.Logic
 
             var types = typeToGet.ToList();
             var allTypes = ilReader.AllTypes().ToList();
-            var missingMergedTypes = ilReader.MergeTypes(allTypes).ToList();
-            ////types.AddRange(missingMergedTypes);
-            ////allTypes.AddRange(missingMergedTypes);
+
+            List<KeyValuePair<IType, IEnumerable<IMethod>>> typesToMerge;
+            ilReader.MergeTypes(allTypes, out typesToMerge);
 
             var usedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
 

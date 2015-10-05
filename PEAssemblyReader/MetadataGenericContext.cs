@@ -90,7 +90,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IType TypeSpecialization { get; private set; }
+        public IType TypeSpecialization { get; set; }
 
         /// <summary>
         /// </summary>
@@ -135,6 +135,8 @@ namespace PEAssemblyReader
         public static IGenericContext CreateCustomMap(IType typeDefinition, IType typeSpecialization)
         {
             var context = new MetadataGenericContext();
+            context.TypeDefinition = typeDefinition;
+            context.TypeSpecialization = typeSpecialization;
             context.CustomTypeSubstitution = CreateMap(typeDefinition, typeSpecialization);
             return context;
         }

@@ -2169,11 +2169,13 @@ namespace Il2Native.Logic
             }
         }
 
-        public IEnumerable<IType> MergeTypes(List<IType> allTypes)
+        public void MergeTypes(List<IType> allTypes, out List<KeyValuePair<IType, IEnumerable<IMethod>>> typesToMerge)
         {
+            typesToMerge = null;
+
             if (this.MergeAssembly == null)
             {
-                yield break;
+                return;
             }
 
             IDictionary<IType, IType> types = new SortedDictionary<IType, IType>();
@@ -2184,12 +2186,14 @@ namespace Il2Native.Logic
                 types[type] = type;
             }
 
+            typesToMerge = new List<KeyValuePair<IType, IEnumerable<IMethod>>>();
+
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
             foreach (var mergeType in this.ReadTypes(assemblySymbol, true))
             {
                 if (usedTypes.Add(mergeType))
                 {
-                    yield return mergeType;
+                    typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, mergeType.GetMethods(DefaultFlags)));
                 }
                 else
                 {
@@ -2201,13 +2205,15 @@ namespace Il2Native.Logic
                         emptyMethods[methodWithoutBody.ToString()] = methodWithoutBody;
                     }
 
-                    foreach (var methodWithBody in from methodWithBody in mergeType.GetMethods(DefaultFlags)
+                    var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags)
                         let methodBody = methodWithBody.GetMethodBody()
                         where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
                         where emptyMethods.ContainsKey(methodWithBody.ToString())
-                        select methodWithBody)
+                        select methodWithBody).ToList();
+
+                    if (methodsWithBody.Any())
                     {
-                        MethodBodyBank.Register(methodWithBody.ToString(), m => methodWithBody);
+                        typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, methodsWithBody));
                     }
                 }
             }
