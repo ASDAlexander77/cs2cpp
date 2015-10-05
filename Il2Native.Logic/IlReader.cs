@@ -2169,9 +2169,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public void MergeTypes(List<IType> allTypes, out List<KeyValuePair<IType, IEnumerable<IMethod>>> typesToMerge)
+        public void MergeTypes(List<IType> allTypes, out List<KeyValuePair<IType, IEnumerable<IMethod>>> typesToMerge, out List<IType> allTypesToMerge)
         {
             typesToMerge = null;
+            allTypesToMerge = null;
 
             if (this.MergeAssembly == null)
             {
@@ -2187,13 +2188,17 @@ namespace Il2Native.Logic
             }
 
             typesToMerge = new List<KeyValuePair<IType, IEnumerable<IMethod>>>();
+            allTypesToMerge = new List<IType>();
 
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
             foreach (var mergeType in this.ReadTypes(assemblySymbol, true))
             {
+                allTypesToMerge.Add(mergeType);
+
                 if (usedTypes.Add(mergeType))
                 {
-                    typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, mergeType.GetMethods(DefaultFlags)));
+                    // TODO: temporarily disabled
+                    ////typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, mergeType.GetMethods(DefaultFlags)));
                 }
                 else
                 {
