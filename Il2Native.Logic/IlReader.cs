@@ -70,7 +70,8 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache =
+            new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         /// <summary>
         /// </summary>
@@ -86,7 +87,8 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies =
+            new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -363,7 +365,9 @@ namespace Il2Native.Logic
 
             var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
             var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
-            this.ReferencesList = (refsValue ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            this.ReferencesList = (refsValue ?? string.Empty).Split(
+                new[] { ';' },
+                StringSplitOptions.RemoveEmptyEntries);
 
             var mergePathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("merge:")) : null;
             this.MergePath = mergePathArg != null ? mergePathArg.Substring("merge:".Length) : null;
@@ -373,35 +377,23 @@ namespace Il2Native.Logic
         /// </summary>
         public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
         {
-            set
-            {
-                genMethodSpec = value;
-            }
+            set { genMethodSpec = value; }
         }
 
         /// <summary>
         /// </summary>
         public string AssemblyQualifiedName
         {
-            get
-            {
-                return this.Assembly.Assembly.Identity.Name;
-            }
+            get { return this.Assembly.Assembly.Identity.Name; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<MethodKey> CalledMethods
         {
-            get
-            {
-                return this._calledMethods;
-            }
+            get { return this._calledMethods; }
 
-            set
-            {
-                this._calledMethods = value;
-            }
+            set { this._calledMethods = value; }
         }
 
         /// <summary>
@@ -426,20 +418,14 @@ namespace Il2Native.Logic
         /// </summary>
         public bool IsCoreLib
         {
-            get
-            {
-                return !this.Assembly.Assembly.AssemblyReferences.Any();
-            }
+            get { return !this.Assembly.Assembly.AssemblyReferences.Any(); }
         }
 
         /// <summary>
         /// </summary>
         public string ModuleName
         {
-            get
-            {
-                return this.Assembly.ManifestModule.Name;
-            }
+            get { return this.Assembly.ManifestModule.Name; }
         }
 
         /// <summary>
@@ -458,105 +444,63 @@ namespace Il2Native.Logic
         /// </summary>
         public ISet<IType> UsedArrayTypes
         {
-            get
-            {
-                return this._usedArrayTypes;
-            }
+            get { return this._usedArrayTypes; }
 
-            set
-            {
-                this._usedArrayTypes = value;
-            }
+            set { this._usedArrayTypes = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IType> UsedTypeTokens
         {
-            get
-            {
-                return this._usedTypeTokens;
-            }
+            get { return this._usedTypeTokens; }
 
-            set
-            {
-                this._usedTypeTokens = value;
-            }
+            set { this._usedTypeTokens = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IMethod> UsedGenericSpecialiazedMethods
         {
-            get
-            {
-                return this.usedGenericSpecialiazedMethods;
-            }
+            get { return this.usedGenericSpecialiazedMethods; }
 
-            set
-            {
-                this.usedGenericSpecialiazedMethods = value;
-            }
+            set { this.usedGenericSpecialiazedMethods = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IType> UsedGenericSpecialiazedTypes
         {
-            get
-            {
-                return this.usedGenericSpecialiazedTypes;
-            }
+            get { return this.usedGenericSpecialiazedTypes; }
 
-            set
-            {
-                this.usedGenericSpecialiazedTypes = value;
-            }
+            set { this.usedGenericSpecialiazedTypes = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IField> UsedStaticFieldsToRead
         {
-            get
-            {
-                return this.usedStaticFieldsToRead;
-            }
+            get { return this.usedStaticFieldsToRead; }
 
-            set
-            {
-                this.usedStaticFieldsToRead = value;
-            }
+            set { this.usedStaticFieldsToRead = value; }
         }
 
         /// <summary>
         /// </summary>
         public IDictionary<int, string> UsedStrings
         {
-            get
-            {
-                return this._usedStrings;
-            }
+            get { return this._usedStrings; }
 
-            set
-            {
-                this._usedStrings = value;
-            }
+            set { this._usedStrings = value; }
         }
 
         /// <summary>
         /// </summary>
         public IList<IConstBytes> UsedConstBytes
         {
-            get
-            {
-                return this._usedConstBytes;
-            }
+            get { return this._usedConstBytes; }
 
-            set
-            {
-                this._usedConstBytes = value;
-            }
+            set { this._usedConstBytes = value; }
         }
 
         /// <summary>
@@ -595,7 +539,16 @@ namespace Il2Native.Logic
         /// </summary>
         protected string MergePath { get; private set; }
 
-        /// <summary>
+
+        public bool HasMergeAssembly 
+        {
+            get
+            {
+                return this.MergeAssembly != null;
+            }
+        }
+
+    /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
