@@ -2122,7 +2122,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void MergeTypes(List<IType> allTypes, out List<KeyValuePair<IType, IEnumerable<IMethod>>> typesToMerge, out List<IType> allTypesToMerge)
+        public void MergeTypes(List<IType> allTypes, out IDictionary<IType, IEnumerable<IMethod>> typesToMerge, out List<IType> allTypesToMerge)
         {
             typesToMerge = null;
             allTypesToMerge = null;
@@ -2140,7 +2140,7 @@ namespace Il2Native.Logic
                 types[type] = type;
             }
 
-            typesToMerge = new List<KeyValuePair<IType, IEnumerable<IMethod>>>();
+            typesToMerge = new SortedDictionary<IType, IEnumerable<IMethod>>();
             allTypesToMerge = new List<IType>();
 
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
@@ -2156,11 +2156,18 @@ namespace Il2Native.Logic
                 else
                 {
                     var originalType = types[mergeType];
-                    IDictionary<string, IMethod> emptyMethods = new SortedDictionary<string, IMethod>();
+                    var emptyMethods = new SortedDictionary<string, IMethod>();
+                    var methods = new SortedDictionary<string, IMethod>();
+
                     // load all empty methods
-                    foreach (var methodWithoutBody in originalType.GetMethods(DefaultFlags).Where(m => !m.GetMethodBody().HasBody))
+                    foreach (var method in originalType.GetMethods(DefaultFlags))
                     {
-                        emptyMethods[methodWithoutBody.ToString()] = methodWithoutBody;
+                        if (!method.GetMethodBody().HasBody)
+                        {
+                            emptyMethods[method.ToString()] = method;
+                        }
+
+                        methods[method.ToString()] = method;
                     }
 
                     var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags)
@@ -2171,7 +2178,16 @@ namespace Il2Native.Logic
 
                     if (methodsWithBody.Any())
                     {
-                        typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, methodsWithBody));
+                        var missingMethods = (from method in mergeType.GetMethods(DefaultFlags)
+                            let methodBody = method.GetMethodBody()
+                            where !method.IsGenericMethodDefinition
+                            where !methods.ContainsKey(method.ToString())
+                            select method);
+
+                        typesToMerge.Add(
+                            new KeyValuePair<IType, IEnumerable<IMethod>>(
+                                mergeType,
+                                methodsWithBody.Union(missingMethods).ToList()));
                     }
                 }
             }
