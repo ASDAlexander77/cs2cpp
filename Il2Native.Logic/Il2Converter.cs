@@ -1074,6 +1074,21 @@ namespace Il2Native.Logic
                 readTypesContext.MergeTypes = typesToMerge;
 
                 Debug.Assert(false);
+
+                // join all types not used in main assembly
+                ISet<IType> hashSet = new NamespaceContainer<IType>();
+                foreach (var type in readTypesContext.UsedTypes)
+                {
+                    hashSet.Add(type);
+                }
+
+                foreach (var type in usedTypesToMerge)
+                {
+                    if (hashSet.Add(type))
+                    {
+                        readTypesContext.UsedTypes.Add(type);
+                    }
+                }
             }
 
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
