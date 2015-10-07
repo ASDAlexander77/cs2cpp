@@ -120,6 +120,7 @@ namespace Il2Native.Logic
             IType type,
             IGenericContext genericContext,
             IEnumerable<IMethod> genericMethodSpecializatons,
+            MergeTypeContext mergeType,
             bool processGenericMethodsOnly = false)
         {
             if (!processGenericMethodsOnly)
@@ -135,7 +136,7 @@ namespace Il2Native.Logic
 
             codeWriter.WriteBeforeMethods(type);
 
-            ConvertTypeDefinition(codeWriter, type, genericMethodSpecializatons, null, processGenericMethodsOnly, true);
+            ConvertTypeDefinition(codeWriter, type, genericMethodSpecializatons, mergeType, processGenericMethodsOnly, true);
 
             codeWriter.WriteAfterMethods(type);
 
@@ -203,10 +204,10 @@ namespace Il2Native.Logic
                 IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
                 readTypes.GenericMethodSpecializations.TryGetValue(type, out genericMethodSpecializatonsForType);
 
-                IEnumerable<IMethod> methodsToMerge = null;
-                if (readTypes.TypesWithMethods != null)
+                MergeTypeContext mergeType = null;
+                if (readTypes.MergeTypes != null)
                 {
-                    readTypes.TypesWithMethods.TryGetValue(type, out methodsToMerge);
+                    readTypes.MergeTypes.TryGetValue(type, out mergeType);
                 }
 
                 if (mode == ConvertingMode.ForwardDeclaration)
@@ -223,6 +224,7 @@ namespace Il2Native.Logic
                         codeWriter,
                         type,
                         genericMethodSpecializatonsForType,
+                        mergeType,
                         processGenericMethodsOnly);
                 }
                 else if (mode == ConvertingMode.PostDeclaration)
@@ -239,7 +241,7 @@ namespace Il2Native.Logic
                         codeWriter,
                         type,
                         genericMethodSpecializatonsForType,
-                        methodsToMerge,
+                        mergeType,
                         processGenericMethodsOnly);
                 }
                 else if (mode == ConvertingMode.PostDefinition)
@@ -321,6 +323,7 @@ namespace Il2Native.Logic
             ICodeWriter codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
+            MergeTypeContext mergeType,
             bool processGenericMethodsOnly = false)
         {
             if (VerboseOutput)
@@ -332,14 +335,14 @@ namespace Il2Native.Logic
             IType typeSpecialization;
             var genericTypeContext = GetGenericTypeContext(type, out typeDefinition, out typeSpecialization);
 
-            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, processGenericMethodsOnly);
+            WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, mergeType, processGenericMethodsOnly);
         }
 
         private static void ConvertTypeDefinition(
             ICodeWriter codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
-            IEnumerable<IMethod> mertedMethods,
+            MergeTypeContext mergeType,
             bool processGenericMethodsOnly = false,
             bool forwardDeclarations = false)
         {
@@ -426,15 +429,32 @@ namespace Il2Native.Logic
                     }
                 }
 
-                if (mertedMethods != null && !forwardDeclarations)
+                // merge methods
+                if (mergeType != null)
                 {
-                    foreach (var mergedMethod in mertedMethods)
+                    if (!forwardDeclarations)
                     {
-                        var genericMethodContext = method.IsGenericMethod
-                                                       ? MetadataGenericContext.Create(typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
-                                                       : genericTypeContext;
+                        foreach (var mergedMethod in mergeType.MethodsWithBody.Union(mergeType.MissingMethods))
+                        {
+                            var genericMethodContext = method.IsGenericMethod
+                                                           ? MetadataGenericContext.Create(
+                                                               typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
+                                                           : genericTypeContext;
 
-                        codeWriter.WriteMethod(mergedMethod, null, genericMethodContext);
+                            codeWriter.WriteMethod(mergedMethod, null, genericMethodContext);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var mergedMethod in mergeType.MissingMethods)
+                        {
+                            var genericMethodContext = method.IsGenericMethod
+                                                           ? MetadataGenericContext.Create(
+                                                               typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
+                                                           : genericTypeContext;
+
+                            codeWriter.WriteMethodForwardDeclaration(mergedMethod, null, genericMethodContext);
+                        }
                     }
                 }
             }
@@ -1034,7 +1054,7 @@ namespace Il2Native.Logic
 
             if (ilReader.HasMergeAssembly)
             {
-                IDictionary<IType, IEnumerable<IMethod>> typesToMerge;
+                IDictionary<IType, MergeTypeContext> typesToMerge;
                 List<IType> allTypesToMerge;
                 ilReader.MergeTypes(allTypes, out typesToMerge, out allTypesToMerge);
 
@@ -1046,12 +1066,12 @@ namespace Il2Native.Logic
                 var readTypesContextToMerge = ReadTypesContext.New();
                 readTypesContextToMerge.UsedTypes = usedTypesToMerge;
                 readTypesContextToMerge.GenericMethodSpecializations = genericMethodSpecializationsSortedToMerge;
-                readTypesContextToMerge.TypesWithMethods = typesToMerge;
+                readTypesContextToMerge.MergeTypes = typesToMerge;
 
                 // TODO: merge
                 //ilReader.UsedTypeTokens = mergerReadingTypesContext.UsedTypeTokens;
 
-                readTypesContext.TypesWithMethods = typesToMerge;
+                readTypesContext.MergeTypes = typesToMerge;
 
                 Debug.Assert(false);
             }
@@ -1353,7 +1373,7 @@ namespace Il2Native.Logic
 
         public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
 
-        public IDictionary<IType, IEnumerable<IMethod>> TypesWithMethods { get; set; }
+        public IDictionary<IType, MergeTypeContext> MergeTypes { get; set; }
 
         public static ReadTypesContext New()
         {
@@ -1362,7 +1382,26 @@ namespace Il2Native.Logic
 
         public ReadTypesContext Clone()
         {
-            return (ReadTypesContext) this.MemberwiseClone();
+            return (ReadTypesContext)this.MemberwiseClone();
+        }
+    }
+
+    public class MergeTypeContext
+    {
+        public IEnumerable<IMethod> MethodsWithBody { get; set; }
+
+        public IEnumerable<IMethod> MissingMethods { get; set; }
+
+        public IEnumerable<IField> MissingFields { get; set; }
+
+        public static MergeTypeContext New()
+        {
+            return new MergeTypeContext();
+        }
+
+        public MergeTypeContext Clone()
+        {
+            return (MergeTypeContext)this.MemberwiseClone();
         }
     }
 

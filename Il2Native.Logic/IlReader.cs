@@ -2122,7 +2122,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void MergeTypes(List<IType> allTypes, out IDictionary<IType, IEnumerable<IMethod>> typesToMerge, out List<IType> allTypesToMerge)
+        public void MergeTypes(List<IType> allTypes, out IDictionary<IType, MergeTypeContext> typesToMerge, out List<IType> allTypesToMerge)
         {
             typesToMerge = null;
             allTypesToMerge = null;
@@ -2140,7 +2140,7 @@ namespace Il2Native.Logic
                 types[type] = type;
             }
 
-            typesToMerge = new SortedDictionary<IType, IEnumerable<IMethod>>();
+            typesToMerge = new SortedDictionary<IType, MergeTypeContext>();
             allTypesToMerge = new List<IType>();
 
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
@@ -2171,23 +2171,24 @@ namespace Il2Native.Logic
                     }
 
                     var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags)
-                        let methodBody = methodWithBody.GetMethodBody()
-                        where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
-                        where emptyMethods.ContainsKey(methodWithBody.ToString())
-                        select methodWithBody).ToList();
+                                           let methodBody = methodWithBody.GetMethodBody()
+                                           where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
+                                           where emptyMethods.ContainsKey(methodWithBody.ToString())
+                                           select methodWithBody).ToList();
 
                     if (methodsWithBody.Any())
                     {
                         var missingMethods = (from method in mergeType.GetMethods(DefaultFlags)
-                            let methodBody = method.GetMethodBody()
-                            where !method.IsGenericMethodDefinition
-                            where !methods.ContainsKey(method.ToString())
-                            select method);
+                                              let methodBody = method.GetMethodBody()
+                                              where !method.IsGenericMethodDefinition
+                                              where !methods.ContainsKey(method.ToString())
+                                              select method).ToList();
 
-                        typesToMerge.Add(
-                            new KeyValuePair<IType, IEnumerable<IMethod>>(
-                                mergeType,
-                                methodsWithBody.Union(missingMethods).ToList()));
+                        var mergeTypeInfo = MergeTypeContext.New();
+                        mergeTypeInfo.MethodsWithBody = methodsWithBody;
+                        mergeTypeInfo.MissingMethods = missingMethods;
+
+                        typesToMerge.Add(new KeyValuePair<IType, MergeTypeContext>(mergeType, mergeTypeInfo));
                     }
                 }
             }
