@@ -1098,6 +1098,8 @@ namespace Il2Native.Logic
                 // join all generic methods
                 foreach (var typeWithGenericMethods in genericMethodSpecializationsSortedToMerge)
                 {
+                    Debug.Assert(false);
+
                     IEnumerable<IMethod> methodsPerType;
                     if (genericMethodSpecializations.TryGetValue(typeWithGenericMethods.Key, out methodsPerType))
                     {
