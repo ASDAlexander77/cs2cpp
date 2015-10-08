@@ -201,9 +201,11 @@ namespace Il2Native.Logic
                     continue;
                 }
 
+                // get method specializations
                 IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
                 readTypes.GenericMethodSpecializations.TryGetValue(type, out genericMethodSpecializatonsForType);
 
+                // get megre parts
                 MergeTypeContext mergeType = null;
                 if (readTypes.MergeTypes != null)
                 {
@@ -428,33 +430,33 @@ namespace Il2Native.Logic
                         }
                     }
                 }
+            }
 
-                // merge methods
-                if (mergeType != null)
+            // merge methods
+            if (mergeType != null)
+            {
+                if (!forwardDeclarations)
                 {
-                    if (!forwardDeclarations)
+                    foreach (var mergedMethod in mergeType.MethodsWithBody.Union(mergeType.MissingMethods))
                     {
-                        foreach (var mergedMethod in mergeType.MethodsWithBody.Union(mergeType.MissingMethods))
-                        {
-                            var genericMethodContext = method.IsGenericMethod
-                                                           ? MetadataGenericContext.Create(
-                                                               typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
-                                                           : genericTypeContext;
+                        var genericMethodContext = mergedMethod.IsGenericMethod
+                                                       ? MetadataGenericContext.Create(
+                                                           typeDefinition, typeSpecialization, mergedMethod.GetMethodDefinition(), mergedMethod)
+                                                       : genericTypeContext;
 
-                            codeWriter.WriteMethod(mergedMethod, null, genericMethodContext);
-                        }
+                        codeWriter.WriteMethod(mergedMethod, null, genericMethodContext);
                     }
-                    else
+                }
+                else
+                {
+                    foreach (var mergedMethod in mergeType.MissingMethods)
                     {
-                        foreach (var mergedMethod in mergeType.MissingMethods)
-                        {
-                            var genericMethodContext = method.IsGenericMethod
-                                                           ? MetadataGenericContext.Create(
-                                                               typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
-                                                           : genericTypeContext;
+                        var genericMethodContext = mergedMethod.IsGenericMethod
+                                                       ? MetadataGenericContext.Create(
+                                                           typeDefinition, typeSpecialization, mergedMethod.GetMethodDefinition(), mergedMethod)
+                                                       : genericTypeContext;
 
-                            codeWriter.WriteMethodForwardDeclaration(mergedMethod, null, genericMethodContext);
-                        }
+                        codeWriter.WriteMethodForwardDeclaration(mergedMethod, null, genericMethodContext);
                     }
                 }
             }
@@ -1072,8 +1074,6 @@ namespace Il2Native.Logic
                 //ilReader.UsedTypeTokens = mergerReadingTypesContext.UsedTypeTokens;
 
                 readTypesContext.MergeTypes = typesToMerge;
-
-                Debug.Assert(false);
 
                 // join all types not used in main assembly
                 ISet<IType> hashSet = new NamespaceContainer<IType>();

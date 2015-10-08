@@ -4216,10 +4216,10 @@ namespace Il2Native.Logic
 
         public void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface, IGenericContext genericContext)
         {
-            this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface), genericContext);
+            this.WriteMethodForwardDeclaration(new MethodKey(methodDecl, ownerOfExplicitInterface), genericContext);
         }
 
-        private void WriteMethodForwardDeclarationIfNotWrittenYet(MethodKey methodKey, IGenericContext genericContext)
+        private void WriteMethodForwardDeclaration(MethodKey methodKey, IGenericContext genericContext)
         {
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
