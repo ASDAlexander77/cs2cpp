@@ -422,7 +422,7 @@ namespace Il2Native.Logic
 
                         if (!forwardDeclarations)
                         {
-                            codeWriter.WriteMethod(methodSpecialization, methodDefinition, genericMethodContext);
+                            codeWriter.WriteMethod(methodSpecialization, methodSpecialization.GetMethodDefinition(), genericMethodContext);
                         }
                         else
                         {
