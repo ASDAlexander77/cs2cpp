@@ -437,7 +437,7 @@ namespace Il2Native.Logic
             {
                 if (!forwardDeclarations)
                 {
-                    foreach (var mergedMethod in mergeType.MethodsWithBody.Union(mergeType.MissingMethods))
+                    foreach (var mergedMethod in mergeType.MissingMethods)
                     {
                         var genericMethodContext = mergedMethod.IsGenericMethod
                                                        ? MetadataGenericContext.Create(
@@ -449,14 +449,14 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    foreach (var mergedMethod in mergeType.MissingMethods)
+                    foreach (var missingMethod in mergeType.MissingMethods)
                     {
-                        var genericMethodContext = mergedMethod.IsGenericMethod
+                        var genericMethodContext = missingMethod.IsGenericMethod
                                                        ? MetadataGenericContext.Create(
-                                                           typeDefinition, typeSpecialization, mergedMethod.GetMethodDefinition(), mergedMethod)
+                                                           typeDefinition, typeSpecialization, missingMethod.GetMethodDefinition(), missingMethod)
                                                        : genericTypeContext;
 
-                        codeWriter.WriteMethodForwardDeclaration(mergedMethod, null, genericMethodContext);
+                        codeWriter.WriteMethodForwardDeclaration(missingMethod, null, genericMethodContext);
                     }
                 }
             }
@@ -1051,7 +1051,8 @@ namespace Il2Native.Logic
             readTypesContext.UsedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
             readTypesContext.GenericMethodSpecializations = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
-            IlReader.GenericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
+            var genericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
+            IlReader.GenericMethodSpecializations = genericMethodSpecializations;
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
             if (ilReader.HasMergeAssembly)
@@ -1065,15 +1066,19 @@ namespace Il2Native.Logic
                 var usedTypesToMerge = FindUsedTypes(typesToMerge.Select(pair => pair.Key), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
                 var genericMethodSpecializationsSortedToMerge = GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
 
-                var readTypesContextToMerge = ReadTypesContext.New();
-                readTypesContextToMerge.UsedTypes = usedTypesToMerge;
-                readTypesContextToMerge.GenericMethodSpecializations = genericMethodSpecializationsSortedToMerge;
-                readTypesContextToMerge.MergeTypes = typesToMerge;
-
                 // TODO: merge
                 //ilReader.UsedTypeTokens = mergerReadingTypesContext.UsedTypeTokens;
 
                 readTypesContext.MergeTypes = typesToMerge;
+
+                ////Debug.Assert(false);
+
+                // register methods with body
+                foreach (var methodWithBody in typesToMerge.SelectMany(t => t.Value.MethodsWithBody))
+                {
+                    var body = methodWithBody;
+                    MethodBodyBank.Register(methodWithBody.ToString(), method => body);
+                }
 
                 // join all types not used in main assembly
                 ISet<IType> hashSet = new NamespaceContainer<IType>();
@@ -1087,6 +1092,21 @@ namespace Il2Native.Logic
                     if (hashSet.Add(type))
                     {
                         readTypesContext.UsedTypes.Add(type);
+                    }
+                }
+
+                // join all generic methods
+                foreach (var typeWithGenericMethods in genericMethodSpecializationsSortedToMerge)
+                {
+                    IEnumerable<IMethod> methodsPerType;
+                    if (genericMethodSpecializations.TryGetValue(typeWithGenericMethods.Key, out methodsPerType))
+                    {
+                        genericMethodSpecializations[typeWithGenericMethods.Key] =
+                            methodsPerType.Union(typeWithGenericMethods.Value);
+                    }
+                    else
+                    {
+                        genericMethodSpecializations[typeWithGenericMethods.Key] = typeWithGenericMethods.Value;
                     }
                 }
             }
