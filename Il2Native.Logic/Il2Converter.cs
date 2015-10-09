@@ -1155,7 +1155,7 @@ namespace Il2Native.Logic
 
                 // find all generic types etc
                 ////var usedTypesToMerge = mergerReadingTypesContext.UsedTypeTokens;
-                var usedTypesToMerge = FindUsedTypes(mergerReadingTypesContext.UsedTypeTokens.ToList(), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
+                var usedTypesToMerge = FindUsedTypes(mergerReadingTypesContext.UsedTypeTokens.Where(t => !t.IsGenericTypeDefinition).ToList(), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
                 var genericMethodSpecializationsSortedToMerge = GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
 
                 readTypesContext.MergeTypes = typesToMerge;
