@@ -1155,12 +1155,12 @@ namespace Il2Native.Logic
 
                 // find all generic types etc
                 ////var usedTypesToMerge = mergerReadingTypesContext.UsedTypeTokens;
-                var usedTypesToMerge = FindUsedTypes(mergerReadingTypesContext.UsedTypeTokens, allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
+                var usedTypesToMerge = FindUsedTypes(mergerReadingTypesContext.UsedTypeTokens.ToList(), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
                 var genericMethodSpecializationsSortedToMerge = GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
 
                 readTypesContext.MergeTypes = typesToMerge;
 
-                Debug.Assert(false);
+                //Debug.Assert(false);
 
                 // register methods with body
                 foreach (var methodWithBody in typesToMerge.SelectMany(t => t.Value.MethodsWithBody))
@@ -1176,7 +1176,7 @@ namespace Il2Native.Logic
                     hashSet.Add(type);
                 }
 
-                foreach (var type in usedTypesToMerge.Where(t => !t.IsGenericTypeDefinition).Select(t => t.ToNormal()).ToList())
+                foreach (var type in usedTypesToMerge.Where(t => !t.IsGenericTypeDefinition).Select(t => t.ToNormal()))
                 {
                     Debug.Assert(!type.UseAsClass, "Should not be class");
                     Debug.Assert(!type.IsByRef, "Should not be reference");
