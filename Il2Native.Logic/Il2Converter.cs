@@ -530,6 +530,32 @@ namespace Il2Native.Logic
             }
         }
 
+        private static void AddTypeIfTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
+        {
+            var effectiveType = type;
+            while (effectiveType.IsPointer || effectiveType.IsByRef)
+            {
+                effectiveType = effectiveType.GetElementType();
+            }
+
+            if (effectiveType.IsClass)
+            {
+                effectiveType = effectiveType.ToNormal();
+            }
+
+            if (effectiveType.IsArray)
+            {
+                readingTypesContext.AdditionalTypesToProcess.Add(effectiveType);
+            }
+
+            if (effectiveType.IsGenericType)
+            {
+                readingTypesContext.GenericTypeSpecializations.Add(effectiveType);
+            }
+
+            readingTypesContext.UsedTypeTokens.Add(effectiveType);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -883,6 +909,53 @@ namespace Il2Native.Logic
             }
         }
 
+        private static void DiscoverTypesAndAdditionalTypes(
+            IMethod method,
+            ReadingTypesContext readingTypesContext)
+        {
+            AddTypeIfTypeOrAdditionalType(method.DeclaringType, readingTypesContext);
+
+            if (!method.ReturnType.IsVoid())
+            {
+                AddTypeIfTypeOrAdditionalType(method.ReturnType, readingTypesContext);
+                ////DiscoverGenericSpecializedTypesAndAdditionalTypes(method.ReturnType, readingTypesContext);
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    AddTypeIfTypeOrAdditionalType(param.ParameterType, readingTypesContext);
+                    ////DiscoverGenericSpecializedTypesAndAdditionalTypes(param.ParameterType, readingTypesContext);
+                }
+            }
+
+            if (method.DeclaringType.IsInterface)
+            {
+                return;
+            }
+
+            var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
+            var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
+            if (methodBody != null)
+            {
+                foreach (var localVar in methodBody.LocalVariables)
+                {
+                    AddTypeIfTypeOrAdditionalType(localVar.LocalType, readingTypesContext);
+                }
+
+                methodWithCustomBodyOrDefault.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
+                    readingTypesContext.GenericTypeSpecializations,
+                    readingTypesContext.GenericMethodSpecializations,
+                    null,
+                    readingTypesContext.AdditionalTypesToProcess,
+                    readingTypesContext.UsedTypeTokens,
+                    new Queue<IMethod>(),
+                    _codeWriter);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="fileName">
@@ -1067,11 +1140,23 @@ namespace Il2Native.Logic
 
                 var mergerReadingTypesContext = ReadingTypesContext.New();
 
-                var usedTypesToMerge = FindUsedTypes(typesToMerge.Select(pair => pair.Key), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
-                var genericMethodSpecializationsSortedToMerge = GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
+                // find all used types from new methods
+                foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MethodsWithBody))
+                {
+                    DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
+                }
 
-                // TODO: merge
-                //ilReader.UsedTypeTokens = mergerReadingTypesContext.UsedTypeTokens;
+                foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MissingMethods))
+                {
+                    DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
+                }
+
+                //Debug.Assert(false);
+
+                // find all generic types etc
+                var usedTypesToMerge = mergerReadingTypesContext.UsedTypeTokens;
+                ////var usedTypesToMerge = FindUsedTypes(typesToMerge.Select(pair => pair.Key), allTypesToMerge, mergerReadingTypesContext, ilReader.TypeResolver);
+                var genericMethodSpecializationsSortedToMerge = GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
 
                 readTypesContext.MergeTypes = typesToMerge;
 
@@ -1091,10 +1176,23 @@ namespace Il2Native.Logic
                     hashSet.Add(type);
                 }
 
-                foreach (var type in usedTypesToMerge)
+                foreach (var type in usedTypesToMerge.Where(t => !t.IsGenericTypeDefinition).Select(t => t.ToNormal()))
                 {
+                    Debug.Assert(!type.UseAsClass, "Should not be class");
+                    Debug.Assert(!type.IsByRef, "Should not be reference");
+                    Debug.Assert(!type.IsPointer, "Should not be pointer");
+
                     if (hashSet.Add(type))
                     {
+                        if (type.IsStructureType())
+                        {
+                            var @class = type.ToClass();
+                            if (hashSet.Contains(@class))
+                            {
+                                readTypesContext.UsedTypes.Remove(@class);
+                            }
+                        }
+
                         readTypesContext.UsedTypes.Add(type);
                     }
                 }
