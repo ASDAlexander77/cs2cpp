@@ -418,15 +418,14 @@ namespace Il2Native.Logic
                         genericMethodSpecializatons.Where(
                             methodSpec => methodSpec.GetMethodDefinition().IsMatchingGeneric(methodDefinition, true) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
                     {
-                        var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, methodSpecialization);
+                        var genericMethodContext = MetadataGenericContext.Create(
+                            typeDefinition, typeSpecialization, methodSpecialization.GetMethodDefinition(), methodSpecialization);
 
                         if (!forwardDeclarations)
                         {
                             codeWriter.WriteMethod(
                                 methodSpecialization,
-                                methodSpecialization.GetMethodDefinition() is MetadataMethodAdapter
-                                    ? methodSpecialization.GetMethodDefinition()
-                                    : method,
+                                methodSpecialization.GetMethodDefinition(),
                                 genericMethodContext);
                         }
                         else
@@ -1103,8 +1102,6 @@ namespace Il2Native.Logic
                 // join all generic methods
                 foreach (var typeWithGenericMethods in genericMethodSpecializationsSortedToMerge)
                 {
-                    Debug.Assert(false);
-
                     IEnumerable<IMethod> methodsPerType;
                     if (genericMethodSpecializations.TryGetValue(typeWithGenericMethods.Key, out methodsPerType))
                     {
