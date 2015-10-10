@@ -1133,15 +1133,6 @@ namespace Il2Native.Logic
             if (ilReader.HasMergeAssembly)
             {
                 MergeType(ilReader, allTypes, readTypesContext, ilReader.TypeResolver);
-
-                // set array with 
-                var mergedFields = new SortedDictionary<IType, IEnumerable<IField>>();
-                foreach (var mergeTypeContext in readTypesContext.MergeTypes)
-                {
-                    mergedFields[mergeTypeContext.Key] = mergeTypeContext.Value.MissingFields;
-                }
-
-                IlReader.MergeFields = mergedFields;
             }
 
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
@@ -1161,10 +1152,7 @@ namespace Il2Native.Logic
             List<IType> allTypesToMerge;
             ilReader.MergeTypes(allTypes, out typesToMerge, out allTypesToMerge);
 
-            //Debug.Assert(false);
-
             var mergerReadingTypesContext = ReadingTypesContext.New();
-
             // find all used types from new methods
             foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MethodsWithBody))
             {
@@ -1191,7 +1179,14 @@ namespace Il2Native.Logic
 
             readTypesContext.MergeTypes = typesToMerge;
 
-            //Debug.Assert(false);
+            // set array with 
+            var mergedFields = new SortedDictionary<IType, IEnumerable<IField>>();
+            foreach (var mergeTypeContext in readTypesContext.MergeTypes)
+            {
+                mergedFields[mergeTypeContext.Key] = mergeTypeContext.Value.MissingFields;
+            }
+
+            IlReader.MergeFields = mergedFields;
 
             // register methods with body
             foreach (var methodWithBody in typesToMerge.SelectMany(t => t.Value.MethodsWithBody))
