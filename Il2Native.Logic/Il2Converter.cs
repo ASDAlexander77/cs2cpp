@@ -125,12 +125,12 @@ namespace Il2Native.Logic
         {
             if (!processGenericMethodsOnly)
             {
-                WriteTypeDefinition(codeWriter, type, mergeType, genericContext);
+                WriteTypeDefinition(codeWriter, type, genericContext);
 
                 // if it is Struct we need to generate struct Data
                 if (type.IsStructureType())
                 {
-                    WriteTypeDefinition(codeWriter, type.ToClass(), mergeType, genericContext);
+                    WriteTypeDefinition(codeWriter, type.ToClass(), genericContext);
                 }
             }
 
@@ -146,7 +146,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, MergeTypeContext mergeType, IGenericContext genericContext)
+        private static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
             codeWriter.WriteTypeStart(type, genericContext);
 
@@ -165,15 +165,6 @@ namespace Il2Native.Logic
             foreach (var field in fields)
             {
                 codeWriter.WriteField(field);
-            }
-
-            if (mergeType != null)
-            {
-                // merge fields
-                foreach (var field in mergeType.MissingFields)
-                {
-                    codeWriter.WriteField(field);
-                }                
             }
 
             codeWriter.WriteAfterFields();
@@ -245,21 +236,6 @@ namespace Il2Native.Logic
                 else if (mode == ConvertingMode.PreDefinition)
                 {
                     codeWriter.WritePreDefinitions(type);
-
-                    // merge static fields
-                    if (mergeType != null)
-                    {
-                        foreach (
-                            var field in
-                                mergeType.MissingFields
-                                    .Where(
-                                        f =>
-                                            f.IsStatic && (!f.IsConst || f.FieldType.IsValueType()) &&
-                                            !f.FieldType.IsGenericTypeDefinition))
-                        {
-                            codeWriter.WriteStaticField(field, typeForRuntimeTypeInfo: type);
-                        }
-                    }
                 }
                 else if (mode == ConvertingMode.Definition)
                 {
@@ -1157,6 +1133,15 @@ namespace Il2Native.Logic
             if (ilReader.HasMergeAssembly)
             {
                 MergeType(ilReader, allTypes, readTypesContext);
+
+                // set array with 
+                var mergedFields = new SortedDictionary<IType, IEnumerable<IField>>();
+                foreach (var mergeTypeContext in readTypesContext.MergeTypes)
+                {
+                    mergedFields[mergeTypeContext.Key] = mergeTypeContext.Value.MissingFields;
+                }
+
+                IlReader.MergeFields = mergedFields;
             }
 
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
