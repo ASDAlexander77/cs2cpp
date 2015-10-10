@@ -2158,6 +2158,7 @@ namespace Il2Native.Logic
                     var originalType = types[mergeType];
                     var emptyMethods = new SortedDictionary<string, IMethod>();
                     var methods = new SortedDictionary<string, IMethod>();
+                    var fields = new SortedDictionary<string, IField>();
 
                     // load all empty methods
                     foreach (var method in originalType.GetMethods(DefaultFlags))
@@ -2168,6 +2169,12 @@ namespace Il2Native.Logic
                         }
 
                         methods[method.ToString()] = method;
+                    }
+
+                    // load all fields
+                    foreach (var field in originalType.GetFields(DefaultFlags))
+                    {
+                        fields[field.ToString()] = field;
                     }
 
                     var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags)
@@ -2184,9 +2191,14 @@ namespace Il2Native.Logic
                                               where !methods.ContainsKey(method.ToString())
                                               select method).ToList();
 
+                        var missingFields = (from field in mergeType.GetFields(DefaultFlags)
+                                             where !fields.ContainsKey(field.Name)
+                                             select field).ToList();
+
                         var mergeTypeInfo = MergeTypeContext.New();
                         mergeTypeInfo.MethodsWithBody = methodsWithBody;
                         mergeTypeInfo.MissingMethods = missingMethods;
+                        mergeTypeInfo.MissingFields = missingFields;
 
                         typesToMerge.Add(new KeyValuePair<IType, MergeTypeContext>(mergeType, mergeTypeInfo));
                     }
