@@ -1132,7 +1132,7 @@ namespace Il2Native.Logic
 
             if (ilReader.HasMergeAssembly)
             {
-                MergeType(ilReader, allTypes, readTypesContext);
+                MergeType(ilReader, allTypes, readTypesContext, ilReader.TypeResolver);
 
                 // set array with 
                 var mergedFields = new SortedDictionary<IType, IEnumerable<IField>>();
@@ -1154,7 +1154,8 @@ namespace Il2Native.Logic
         private static void MergeType(
             IlReader ilReader,
             List<IType> allTypes,
-            ReadTypesContext readTypesContext)
+            ReadTypesContext readTypesContext,
+            ITypeResolver typeResolver)
         {
             IDictionary<IType, MergeTypeContext> typesToMerge;
             List<IType> allTypesToMerge;
@@ -1227,8 +1228,18 @@ namespace Il2Native.Logic
                 }
             }
 
-            var genericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
+            // reorder types again
+            var list = new List<IType>();
+            var usedTypesForOrder = new NamespaceContainer<IType>();
+            foreach (var usedType in readTypesContext.UsedTypes)
+            {
+                AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, null, typeResolver);
+            }
+
+            readTypesContext.UsedTypes = list;
+
             // join all generic methods
+            var genericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
             foreach (var typeWithGenericMethods in genericMethodSpecializationsSortedToMerge)
             {
                 IEnumerable<IMethod> methodsPerType;
@@ -1346,7 +1357,7 @@ namespace Il2Native.Logic
 
         private static void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
         {
-            if (type == null || type.IsPointer || type.IsByRef || (type.AssemblyQualifiedName != assemblyQualifiedName && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
+            if (type == null || type.IsPointer || type.IsByRef || ((assemblyQualifiedName != null && type.AssemblyQualifiedName != assemblyQualifiedName) && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
             {
                 return;
             }
