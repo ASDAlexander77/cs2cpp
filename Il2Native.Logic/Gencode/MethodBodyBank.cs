@@ -38,6 +38,7 @@
                     if (!initialized)
                     {
                         RegisterAll(typeResolver);
+                        initialized = true;
                     }
                 }
             }
