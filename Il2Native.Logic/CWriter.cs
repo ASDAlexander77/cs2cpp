@@ -2732,6 +2732,8 @@ namespace Il2Native.Logic
 
         public void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericMethodContext)
         {
+            Debug.Assert(method.Name != "FastAllocateString");
+
             if (method is IConstructor && method.IsStatic)
             {
                 this.IlReader.StaticConstructors.Add(method);

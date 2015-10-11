@@ -25,7 +25,11 @@
 
         public static void Clear()
         {
-            MethodsByFullName.Clear();
+            lock (Locker)
+            {
+                MethodsByFullName.Clear();
+                initialized = false;
+            }
         }
 
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
