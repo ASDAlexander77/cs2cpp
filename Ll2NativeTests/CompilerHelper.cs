@@ -92,11 +92,11 @@
 
         /// <summary>
         /// </summary>
-        public static bool Mscorlib = false;
+        public static bool Mscorlib = true;
 
         /// <summary>
         /// </summary>
-        public static bool AddSystemCore = false;
+        public static bool AddSystemCore = true;
 
         /// <summary>
         /// </summary>

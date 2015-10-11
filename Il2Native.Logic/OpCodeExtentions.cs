@@ -266,6 +266,7 @@ namespace Il2Native.Logic
             ISet<IType> structTypes,
             ISet<IType> arrayTypes,
             ISet<IType> usedTokenTypes,
+            ISet<IType> usedTypes,
             Queue<IMethod> stackCall,
             ITypeResolver typeResolver)
         {
@@ -281,6 +282,7 @@ namespace Il2Native.Logic
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
             reader.UsedTypeTokens = usedTokenTypes;
+            reader.UsedTypes = usedTypes;
             reader.TypeResolver = typeResolver;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true

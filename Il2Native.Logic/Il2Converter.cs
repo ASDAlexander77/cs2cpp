@@ -553,7 +553,7 @@ namespace Il2Native.Logic
                 readingTypesContext.GenericTypeSpecializations.Add(effectiveType);
             }
 
-            readingTypesContext.UsedTypeTokens.Add(effectiveType);
+            readingTypesContext.UsedTypes.Add(effectiveType);
         }
 
         /// <summary>
@@ -681,6 +681,7 @@ namespace Il2Native.Logic
                         null,
                         readingTypesContext.AdditionalTypesToProcess,
                         readingTypesContext.UsedTypeTokens,
+                        null,
                         new Queue<IMethod>(),
                         _codeWriter);
                 }
@@ -733,6 +734,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -904,6 +906,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -949,6 +952,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    readingTypesContext.UsedTypes,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -1170,7 +1174,7 @@ namespace Il2Native.Logic
             ////var usedTypesToMerge = mergerReadingTypesContext.UsedTypeTokens;
             var usedTypesToMerge =
                 FindUsedTypes(
-                    mergerReadingTypesContext.UsedTypeTokens.Where(t => !t.IsGenericTypeDefinition).ToList(),
+                    mergerReadingTypesContext.UsedTypes.Where(t => !t.IsGenericTypeDefinition).ToList(),
                     allTypesToMerge,
                     mergerReadingTypesContext,
                     ilReader.TypeResolver);
@@ -1516,6 +1520,7 @@ namespace Il2Native.Logic
             this.AdditionalTypesToProcess = new NamespaceContainer<IType>();
             this.UsedTypeTokens = new NamespaceContainer<IType>();
             this.DiscoveredTypes = new NamespaceContainer<IType>();
+            this.UsedTypes = new NamespaceContainer<IType>();
         }
 
         public ISet<IType> GenericTypeSpecializations { get; set; }
@@ -1527,6 +1532,8 @@ namespace Il2Native.Logic
         public ISet<IType> UsedTypeTokens { get; set; }
 
         public ISet<IType> DiscoveredTypes { get; set; }
+
+        public ISet<IType> UsedTypes { get; set; }
 
         public static ReadingTypesContext New()
         {

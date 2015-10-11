@@ -66,6 +66,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IType> _usedTypes;
+
+        /// <summary>
+        /// </summary>
         private IDictionary<int, string> _usedStrings;
 
         /// <summary>
@@ -467,6 +471,15 @@ namespace Il2Native.Logic
             get { return this._usedTypeTokens; }
 
             set { this._usedTypeTokens = value; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedTypes
+        {
+            get { return this._usedTypes; }
+
+            set { this._usedTypes = value; }
         }
 
         /// <summary>
@@ -1145,7 +1158,7 @@ namespace Il2Native.Logic
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {
-                            this.AddGenericSpecializedType(constructor.DeclaringType);
+                            this.AddGenericSpecializedTypeAndUsedType(constructor.DeclaringType);
                             this.AddGenericSpecializedMethod(constructor, stackCall);
 
                             this.AddArrayType(constructor.DeclaringType);
@@ -1163,18 +1176,18 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var method = module.ResolveMethod(token, genericContext);
 
-                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
                         this.AddArrayType(method.DeclaringType);
 
-                        this.AddGenericSpecializedType(method.ReturnType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
 
                         var methodParameters = method.GetParameters();
                         if (methodParameters != null)
                         {
                             foreach (var methodParameter in methodParameters)
                             {
-                                this.AddGenericSpecializedType(methodParameter.ParameterType);
+                                this.AddGenericSpecializedTypeAndUsedType(methodParameter.ParameterType);
                             }
                         }
 
@@ -1199,7 +1212,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         method = module.ResolveMethod(token, genericContext);
-                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
                         this.AddArrayType(method.DeclaringType);
@@ -1224,8 +1237,8 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericContext);
                         Debug.Assert(field != null);
-                        this.AddGenericSpecializedType(field.FieldType);
-                        this.AddGenericSpecializedType(field.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(field.FieldType);
+                        this.AddGenericSpecializedTypeAndUsedType(field.DeclaringType);
                         this.AddArrayType(field.FieldType);
                         this.AddArrayType(field.DeclaringType);
 
@@ -1245,7 +1258,7 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
-                            this.AddGenericSpecializedType(typeToken);
+                            this.AddGenericSpecializedTypeAndUsedType(typeToken);
                             this.AddArrayType(typeToken);
                             this.AddTypeToken(typeToken);
 
@@ -1313,7 +1326,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
 
-                        this.AddGenericSpecializedType(type);
+                        this.AddGenericSpecializedTypeAndUsedType(type);
                         this.AddArrayType(type);
 
                         if (code == Code.Initobj)
@@ -1603,6 +1616,26 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void AddUsedType(IType type)
+        {
+            if (this._usedTypes == null || type == null || type.SpecialUsage())
+            {
+                return;
+            }
+
+            this._usedTypes.Add(type);
+
+            if (type.BaseType != null && type.BaseType.IsGenericTypeDefinition)
+            {
+                // when you use typeof(B<T>) you need to add token of base type which can be generic as well
+                AddUsedType(type.BaseType);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="method">
         /// </param>
         public void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null)
@@ -1655,8 +1688,10 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void AddGenericSpecializedType(IType type)
+        private void AddGenericSpecializedTypeAndUsedType(IType type)
         {
+            this.AddUsedType(type);
+
             if (this.usedGenericSpecialiazedTypes == null || type == null)
             {
                 return;
@@ -1952,16 +1987,16 @@ namespace Il2Native.Logic
             {
                 foreach (var parameter in parameters)
                 {
-                    this.AddGenericSpecializedType(parameter.ParameterType);
+                    this.AddGenericSpecializedTypeAndUsedType(parameter.ParameterType);
                 }
             }
 
             // add return type
-            this.AddGenericSpecializedType(method.ReturnType);
+            this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
 
             // disover it again in specialized method
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, this._usedTypeTokens, stackCall, this.TypeResolver);
+                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, this._usedTypeTokens, this._usedTypes, stackCall, this.TypeResolver);
 
             stackCall.Dequeue();
         }
