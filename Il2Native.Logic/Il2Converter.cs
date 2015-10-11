@@ -1196,7 +1196,11 @@ namespace Il2Native.Logic
             foreach (var methodWithBody in typesToMerge.SelectMany(t => t.Value.MethodsWithBody))
             {
                 var body = methodWithBody;
-                MethodBodyBank.Register(methodWithBody.ToString(), method => body);
+                var methodFullName = methodWithBody.ToString();
+                if (!MethodBodyBank.HasRegisteredMethod(methodFullName))
+                {
+                    MethodBodyBank.Register(methodFullName, method => body);
+                }
             }
 
             // join all types not used in main assembly

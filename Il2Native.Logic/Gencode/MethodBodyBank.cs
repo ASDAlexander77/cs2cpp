@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using InternalMethods;
     using InternalMethods.RuntimeTypeHandler;
@@ -16,6 +17,11 @@
         private static bool initialized = false;
 
         private static readonly object Locker = new object();
+
+        public static bool HasRegisteredMethod(string methodFullName)
+        {
+            return MethodsByFullName.ContainsKey(methodFullName);
+        }
 
         public static void Clear()
         {
@@ -136,6 +142,8 @@
 
         public static void Register(string methodFullName, Func<IMethod, IMethod> func)
         {
+            Debug.Assert(!MethodsByFullName.ContainsKey(methodFullName), "Method already registered");
+
             MethodsByFullName[methodFullName] = func;
         }
 
