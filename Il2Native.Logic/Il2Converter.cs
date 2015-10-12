@@ -1247,8 +1247,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            Debug.Assert(false);
-
             // join all types not used in main assembly
             ISet<IType> hashSet = new NamespaceContainer<IType>();
             foreach (var type in readTypesContext.UsedTypes)
