@@ -184,7 +184,6 @@ namespace Il2Native.Logic
 
             this.Module = type.Module;
             this.System = new SystemTypes(this.Module);
-            MethodBodyBank.Clear();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }

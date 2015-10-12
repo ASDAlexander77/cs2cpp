@@ -957,8 +957,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            Debug.Assert(method.Name != "RegisterThread");
-
             var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
             var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
             if (methodBody != null)
@@ -1179,8 +1177,6 @@ namespace Il2Native.Logic
             List<IType> allTypesToMerge;
             ilReader.MergeTypes(allTypes, out typesToMerge, out allTypesToMerge);
 
-            Debug.Assert(false);
-
             var mergerReadingTypesContext = ReadingTypesContext.New();
             // find all used types from new methods
             foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MethodsWithBody))
@@ -1188,11 +1184,28 @@ namespace Il2Native.Logic
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
             }
 
+            // read all missing methods
+            var discoveredCalledMethods = ReadingTypesContext.New();
+            foreach (var calledMethod in mergerReadingTypesContext.CalledMethods)
+            {
+                discoveredCalledMethods.CalledMethods.Add(calledMethod);
+            }
+
+            var before = 0;
+            do
+            {
+                before = discoveredCalledMethods.CalledMethods.Count;
+                foreach (var method in discoveredCalledMethods.CalledMethods.ToList())
+                {
+                    DiscoverTypesAndAdditionalTypes(method.Method, discoveredCalledMethods);
+                }
+            } while (discoveredCalledMethods.CalledMethods.Count != before);
+
             // removed missing methods which are not called
             foreach (var typeToMerge in typesToMerge.Where(t => t.Value.MissingMethods != null))
             {
                 typeToMerge.Value.MissingMethods =
-                    typeToMerge.Value.MissingMethods.Where(missingMethod => mergerReadingTypesContext.CalledMethods.Any(cm => Equals(cm.Method, missingMethod)))
+                    typeToMerge.Value.MissingMethods.Where(missingMethod => discoveredCalledMethods.CalledMethods.Any(cm => Equals(cm.Method, missingMethod)))
                                .ToList();
             }
 
@@ -1227,11 +1240,14 @@ namespace Il2Native.Logic
             {
                 var body = methodWithBody;
                 var methodFullName = methodWithBody.ToString();
+
                 if (!MethodBodyBank.HasRegisteredMethod(methodFullName))
                 {
                     MethodBodyBank.Register(methodFullName, method => body);
                 }
             }
+
+            Debug.Assert(false);
 
             // join all types not used in main assembly
             ISet<IType> hashSet = new NamespaceContainer<IType>();

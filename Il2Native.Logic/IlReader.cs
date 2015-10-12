@@ -1630,8 +1630,6 @@ namespace Il2Native.Logic
         /// </param>
         public void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null)
         {
-            Debug.Assert(method.Name != "pthread_make_shared_keys");
-
             if (this._calledMethods == null || method == null || method.DeclaringType == null || string.IsNullOrEmpty(method.Name))
             {
                 return;
