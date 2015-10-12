@@ -1730,5 +1730,15 @@ namespace Il2Native.Logic
 
             return thisType.ToClass();
         }
+
+        public static bool ShouldHaveStructToObjectAdapter(this IMethod m)
+        {
+            if (m.IsStatic)
+            {
+                return false;
+            }
+
+            return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
+        }
     }
 }

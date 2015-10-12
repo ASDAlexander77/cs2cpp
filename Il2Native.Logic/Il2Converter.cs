@@ -353,8 +353,6 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("Converting {0} (definition)", type));
             }
 
-            Debug.Assert(type.Name != "VoidTaskResult");
-
             ////codeWriter.WriteBeforeMethods(type);
 
             IType typeDefinition;
@@ -433,6 +431,23 @@ namespace Il2Native.Logic
                         else
                         {
                             codeWriter.WriteMethodForwardDeclaration(methodSpecialization, null, genericMethodContext);
+                        }
+
+                        // write struct object adapters for struct types with generic methods
+                        if (type.IsValueType() && methodSpecialization.ShouldHaveStructToObjectAdapter())
+                        {
+                            var structObjectAdapter = ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(methodSpecialization, codeWriter);
+                            if (!forwardDeclarations)
+                            {
+                                codeWriter.WriteMethod(
+                                    structObjectAdapter,
+                                    structObjectAdapter.GetMethodDefinition(),
+                                    genericMethodContext);
+                            }
+                            else
+                            {
+                                codeWriter.WriteMethodForwardDeclaration(structObjectAdapter, null, genericMethodContext);
+                            }
                         }
                     }
                 }

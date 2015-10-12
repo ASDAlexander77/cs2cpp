@@ -840,14 +840,14 @@ namespace Il2Native.Logic
             {
                 if (!excludeSpecializations)
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(ShouldHaveStructToObjectAdapter))
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
                 else
                 {
-                    foreach (var method in type.GetMethods(flags).Where(ShouldHaveStructToObjectAdapter))
+                    foreach (var method in type.GetMethods(flags).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
@@ -877,7 +877,7 @@ namespace Il2Native.Logic
 
             if (type.IsValueType())
             {
-                foreach (var method in genMethodSpecializationForType.Where(ShouldHaveStructToObjectAdapter))
+                foreach (var method in genMethodSpecializationForType.Where(m => m.ShouldHaveStructToObjectAdapter()))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
@@ -897,16 +897,6 @@ namespace Il2Native.Logic
             }
 
             return f.IsStatic;
-        }
-
-        private static bool ShouldHaveStructToObjectAdapter(IMethod m)
-        {
-            if (m.IsStatic)
-            {
-                return false;
-            }
-
-            return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
         }
 
         public IEnumerable<string> References()
