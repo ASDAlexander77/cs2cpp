@@ -350,8 +350,10 @@ namespace Il2Native.Logic
         {
             if (VerboseOutput)
             {
-                Trace.WriteLine(string.Format("Converting {0} (definition)"));
+                Trace.WriteLine(string.Format("Converting {0} (definition)", type));
             }
+
+            Debug.Assert(type.Name != "VoidTaskResult");
 
             ////codeWriter.WriteBeforeMethods(type);
 
@@ -682,6 +684,7 @@ namespace Il2Native.Logic
                         readingTypesContext.AdditionalTypesToProcess,
                         readingTypesContext.UsedTypeTokens,
                         null,
+                        null,
                         new Queue<IMethod>(),
                         _codeWriter);
                 }
@@ -734,6 +737,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     null,
                     new Queue<IMethod>(),
                     _codeWriter);
@@ -907,6 +911,7 @@ namespace Il2Native.Logic
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
                     null,
+                    null,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -953,6 +958,7 @@ namespace Il2Native.Logic
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
                     readingTypesContext.UsedTypes,
+                    readingTypesContext.CalledMethods,
                     new Queue<IMethod>(),
                     _codeWriter);
             }
@@ -1163,15 +1169,20 @@ namespace Il2Native.Logic
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
             }
 
+            // removed missing methods which are not called
+            foreach (var typeToMerge in typesToMerge.Where(t => t.Value.MissingMethods != null))
+            {
+                typeToMerge.Value.MissingMethods =
+                    typeToMerge.Value.MissingMethods.Where(missingMethod => mergerReadingTypesContext.CalledMethods.Any(cm => Equals(cm.Method, missingMethod)))
+                               .ToList();
+            }
+
             foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MissingMethods))
             {
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
             }
 
-            //Debug.Assert(false);
-
             // find all generic types etc
-            ////var usedTypesToMerge = mergerReadingTypesContext.UsedTypeTokens;
             var usedTypesToMerge =
                 FindUsedTypes(
                     mergerReadingTypesContext.UsedTypes.Where(t => !t.IsGenericTypeDefinition).ToList(),
@@ -1525,6 +1536,7 @@ namespace Il2Native.Logic
             this.UsedTypeTokens = new NamespaceContainer<IType>();
             this.DiscoveredTypes = new NamespaceContainer<IType>();
             this.UsedTypes = new NamespaceContainer<IType>();
+            this.CalledMethods = new NamespaceContainer<MethodKey>();
         }
 
         public ISet<IType> GenericTypeSpecializations { get; set; }
@@ -1538,6 +1550,8 @@ namespace Il2Native.Logic
         public ISet<IType> DiscoveredTypes { get; set; }
 
         public ISet<IType> UsedTypes { get; set; }
+
+        public ISet<MethodKey> CalledMethods { get; set; }
 
         public static ReadingTypesContext New()
         {
