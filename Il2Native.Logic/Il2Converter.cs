@@ -957,6 +957,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(method.Name != "RegisterThread");
+
             var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
             var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
             if (methodBody != null)
@@ -1176,6 +1178,8 @@ namespace Il2Native.Logic
             IDictionary<IType, MergeTypeContext> typesToMerge;
             List<IType> allTypesToMerge;
             ilReader.MergeTypes(allTypes, out typesToMerge, out allTypesToMerge);
+
+            Debug.Assert(false);
 
             var mergerReadingTypesContext = ReadingTypesContext.New();
             // find all used types from new methods
