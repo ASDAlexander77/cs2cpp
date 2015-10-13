@@ -3133,9 +3133,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="exceptionName">
         /// </param>
-        public void WriteThrowException(CWriter cWriter, string exceptionName)
+        public void WriteThrowException(string exceptionName)
         {
-            var writer = cWriter.Output;
+            var writer = this.Output;
 
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
@@ -3145,7 +3145,7 @@ namespace Il2Native.Logic
             var invalidCastExceptionType = this.ResolveType(exceptionName);
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType, cWriter).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType, this).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
             opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
