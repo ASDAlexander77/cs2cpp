@@ -96,7 +96,7 @@
 
         /// <summary>
         /// </summary>
-        public static bool AddSystemCore = true;
+        public static bool AddSystemCore = false;
 
         /// <summary>
         /// </summary>

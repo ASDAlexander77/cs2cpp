@@ -1184,26 +1184,28 @@ namespace Il2Native.Logic
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
             }
 
-            // read all missing methods
-            var discoveredCalledMethods = ReadingTypesContext.New();
-            foreach (var calledMethod in mergerReadingTypesContext.CalledMethods)
-            {
-                discoveredCalledMethods.CalledMethods.Add(calledMethod);
-            }
-
-            var before = 0;
-            do
-            {
-                before = discoveredCalledMethods.CalledMethods.Count;
-                foreach (var method in discoveredCalledMethods.CalledMethods.ToList())
-                {
-                    DiscoverTypesAndAdditionalTypes(method.Method, discoveredCalledMethods);
-                }
-            } while (discoveredCalledMethods.CalledMethods.Count != before);
-
             // removed missing methods which are not called
             foreach (var typeToMerge in typesToMerge.Where(t => t.Value.MissingMethods != null))
             {
+                // read all missing methods
+                var discoveredCalledMethods = ReadingTypesContext.New();
+                foreach (var calledMethod in typeToMerge.Value.MethodsWithBody)
+                {
+                    discoveredCalledMethods.CalledMethods.Add(new MethodKey(calledMethod, null));
+                }
+
+                var before = 0;
+                do
+                {
+                    before = discoveredCalledMethods.CalledMethods.Count(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key));
+                    foreach (var method in discoveredCalledMethods.CalledMethods.Where(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)).ToList())
+                    {
+                        DiscoverTypesAndAdditionalTypes(method.Method, discoveredCalledMethods);
+                    }
+                }
+                while (discoveredCalledMethods.CalledMethods.Count(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)) != before);
+
+                // remove unsed missing methods in methods with body
                 typeToMerge.Value.MissingMethods =
                     typeToMerge.Value.MissingMethods.Where(missingMethod => discoveredCalledMethods.CalledMethods.Any(cm => Equals(cm.Method, missingMethod)))
                                .ToList();
