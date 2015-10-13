@@ -2197,8 +2197,6 @@ namespace Il2Native.Logic
             typesToMerge = new SortedDictionary<IType, MergeTypeContext>();
             allTypesToMerge = new List<IType>();
 
-            ////Debug.Assert(false);
-
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
             foreach (var mergeType in this.ReadTypes(assemblySymbol, true).Where(t => t.IsMerge))
             {
