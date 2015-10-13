@@ -3137,9 +3137,6 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            // throw InvalidCast result
-            writer.WriteLine(string.Empty);
-
             var opCodeThrow = new OpCodePart(OpCodesEmit.Throw, 0, 0);
 
             var invalidCastExceptionType = this.ResolveType(exceptionName);
@@ -3152,7 +3149,7 @@ namespace Il2Native.Logic
 
             this.WriteNewObject(opCodeNewInstance);
 
-            writer.WriteLine(string.Empty);
+            writer.WriteLine(";");
 
             this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
         }
