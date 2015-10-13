@@ -163,6 +163,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public bool IsVirtual { get; protected set; }
 
+        public bool IsMerge
+        {
+            get { return false; }
+        }
+
         /// <summary>
         /// </summary>
         public bool IsAnonymousDelegate { get; private set; }

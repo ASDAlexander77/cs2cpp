@@ -542,6 +542,16 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsMerge
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
             public string MetadataFullName
             {
                 get { return this.FullName; }

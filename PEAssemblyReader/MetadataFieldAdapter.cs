@@ -340,6 +340,17 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.fieldDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string MetadataFullName
         {
             get

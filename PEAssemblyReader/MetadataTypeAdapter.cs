@@ -503,6 +503,17 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.typeDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsVirtualTableImplementation
         {
             get

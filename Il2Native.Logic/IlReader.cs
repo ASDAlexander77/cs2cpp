@@ -564,7 +564,7 @@ namespace Il2Native.Logic
         protected string MergePath { get; private set; }
 
 
-        public bool HasMergeAssembly 
+        public bool HasMergeAssembly
         {
             get
             {
@@ -572,7 +572,7 @@ namespace Il2Native.Logic
             }
         }
 
-    /// <summary>
+        /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
@@ -721,7 +721,7 @@ namespace Il2Native.Logic
                 foreach (var mergeField in mergeFieldsForType)
                 {
                     yield return mergeField;
-                }                
+                }
             }
         }
 
@@ -2197,17 +2197,14 @@ namespace Il2Native.Logic
             typesToMerge = new SortedDictionary<IType, MergeTypeContext>();
             allTypesToMerge = new List<IType>();
 
+            ////Debug.Assert(false);
+
             var assemblySymbol = this.LoadAssemblySymbol(this.MergeAssembly);
-            foreach (var mergeType in this.ReadTypes(assemblySymbol, true))
+            foreach (var mergeType in this.ReadTypes(assemblySymbol, true).Where(t => t.IsMerge))
             {
                 allTypesToMerge.Add(mergeType);
 
-                if (usedTypes.Add(mergeType))
-                {
-                    // TODO: temporarily disabled
-                    ////typesToMerge.Add(new KeyValuePair<IType, IEnumerable<IMethod>>(mergeType, mergeType.GetMethods(DefaultFlags)));
-                }
-                else
+                if (!usedTypes.Add(mergeType))
                 {
                     var originalType = types[mergeType];
                     var emptyMethods = new SortedDictionary<string, IMethod>();
@@ -2231,31 +2228,26 @@ namespace Il2Native.Logic
                         fields[field.ToString()] = field;
                     }
 
-                    var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags))
+                    var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags)).Where(m => m.IsMerge)
                                            let methodBody = methodWithBody.GetMethodBody()
                                            where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
                                            where emptyMethods.ContainsKey(methodWithBody.ToString())
                                            select methodWithBody).ToList();
 
-                    if (methodsWithBody.Any())
-                    {
-                        var missingMethods = (from method in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags))
-                                              let methodBody = method.GetMethodBody()
-                                              where !method.IsGenericMethodDefinition
-                                              where !methods.ContainsKey(method.ToString())
-                                              select method).ToList();
+                    var missingMethods = (from method in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags)).Where(m => m.IsMerge)
+                                          let methodBody = method.GetMethodBody()
+                                          where !method.IsGenericMethodDefinition
+                                          where !methods.ContainsKey(method.ToString())
+                                          select method).ToList();
 
-                        var missingFields = (from field in mergeType.GetFields(DefaultFlags)
-                                             where !fields.ContainsKey(field.Name)
-                                             select field).ToList();
+                    var missingFields = mergeType.GetFields(DefaultFlags).Where(m => m.IsMerge).ToList();
 
-                        var mergeTypeInfo = MergeTypeContext.New();
-                        mergeTypeInfo.MethodsWithBody = methodsWithBody;
-                        mergeTypeInfo.MissingMethods = missingMethods;
-                        mergeTypeInfo.MissingFields = missingFields;
+                    var mergeTypeInfo = MergeTypeContext.New();
+                    mergeTypeInfo.MethodsWithBody = methodsWithBody;
+                    mergeTypeInfo.MissingMethods = missingMethods;
+                    mergeTypeInfo.MissingFields = missingFields;
 
-                        typesToMerge.Add(new KeyValuePair<IType, MergeTypeContext>(mergeType, mergeTypeInfo));
-                    }
+                    typesToMerge.Add(new KeyValuePair<IType, MergeTypeContext>(mergeType, mergeTypeInfo));
                 }
             }
         }

@@ -130,6 +130,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return this.method.IsAnonymousDelegate; }
         }
 
+        public bool IsMerge
+        {
+            get { return this.method.IsMerge; }
+        }
+
         public IModule Module
         {
             get { return this.module ?? this.method.Module; }

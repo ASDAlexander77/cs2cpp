@@ -55,7 +55,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IType> lazyExplicitInterface; 
+        private readonly Lazy<IType> lazyExplicitInterface;
 
         /// <summary>
         /// </summary>
@@ -492,6 +492,17 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.methodDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool HasProceduralBody
         {
             get;
@@ -884,7 +895,7 @@ namespace PEAssemblyReader
                 var positionOfAlias = this.methodDef.Name.IndexOf("::");
                 if (positionOfAlias >= 0)
                 {
-                    sb.Append(this.methodDef.Name.Substring(positionOfAlias + "::".Length));                    
+                    sb.Append(this.methodDef.Name.Substring(positionOfAlias + "::".Length));
                 }
                 else
                 {

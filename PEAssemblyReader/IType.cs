@@ -146,6 +146,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsStaticArrayInit { get; }
+        
+        /// <summary>
+        /// </summary>
+        bool IsMerge { get; }
 
         /// <summary>
         /// </summary>

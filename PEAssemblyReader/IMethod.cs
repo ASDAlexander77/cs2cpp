@@ -82,6 +82,11 @@ namespace PEAssemblyReader
         /// </summary>
         bool IsInline { get; }
 
+        /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsMerge { get; }
+
         /// custom field
         /// </summary>
         bool IsAnonymousDelegate { get; }

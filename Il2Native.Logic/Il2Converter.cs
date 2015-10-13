@@ -1184,34 +1184,6 @@ namespace Il2Native.Logic
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
             }
 
-            // removed missing methods which are not called
-            foreach (var typeToMerge in typesToMerge.Where(t => t.Value.MissingMethods != null))
-            {
-                // read all missing methods
-                var discoveredCalledMethods = ReadingTypesContext.New();
-                foreach (var calledMethod in typeToMerge.Value.MethodsWithBody)
-                {
-                    discoveredCalledMethods.CalledMethods.Add(new MethodKey(calledMethod, null));
-                }
-
-                var before = 0;
-                do
-                {
-                    var methodKeys = discoveredCalledMethods.CalledMethods.Where(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)).ToList();
-                    before = methodKeys.Count;
-                    foreach (var method in methodKeys)
-                    {
-                        DiscoverTypesAndAdditionalTypes(method.Method, discoveredCalledMethods);
-                    }
-                }
-                while (discoveredCalledMethods.CalledMethods.Count(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)) != before);
-
-                // remove unsed missing methods in methods with body
-                typeToMerge.Value.MissingMethods =
-                    typeToMerge.Value.MissingMethods.Where(missingMethod => discoveredCalledMethods.CalledMethods.Any(cm => Equals(cm.Method, missingMethod)))
-                               .ToList();
-            }
-
             foreach (var method in typesToMerge.SelectMany(mc => mc.Value.MissingMethods))
             {
                 DiscoverTypesAndAdditionalTypes(method, mergerReadingTypesContext);
@@ -1249,8 +1221,6 @@ namespace Il2Native.Logic
                     MethodBodyBank.Register(methodFullName, method => body);
                 }
             }
-
-            Debug.Assert(false);
 
             // join all types not used in main assembly
             ISet<IType> hashSet = new NamespaceContainer<IType>();
