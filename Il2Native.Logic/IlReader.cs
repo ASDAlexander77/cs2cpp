@@ -2215,7 +2215,7 @@ namespace Il2Native.Logic
                     var fields = new SortedDictionary<string, IField>();
 
                     // load all empty methods
-                    foreach (var method in originalType.GetMethods(DefaultFlags))
+                    foreach (var method in originalType.GetMethods(DefaultFlags).Union(originalType.GetConstructors(DefaultFlags)))
                     {
                         if (!method.GetMethodBody().HasBody)
                         {
@@ -2231,7 +2231,7 @@ namespace Il2Native.Logic
                         fields[field.ToString()] = field;
                     }
 
-                    var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags)
+                    var methodsWithBody = (from methodWithBody in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags))
                                            let methodBody = methodWithBody.GetMethodBody()
                                            where !methodWithBody.IsGenericMethodDefinition && methodBody.HasBody
                                            where emptyMethods.ContainsKey(methodWithBody.ToString())
@@ -2239,7 +2239,7 @@ namespace Il2Native.Logic
 
                     if (methodsWithBody.Any())
                     {
-                        var missingMethods = (from method in mergeType.GetMethods(DefaultFlags)
+                        var missingMethods = (from method in mergeType.GetMethods(DefaultFlags).Union(mergeType.GetConstructors(DefaultFlags))
                                               let methodBody = method.GetMethodBody()
                                               where !method.IsGenericMethodDefinition
                                               where !methods.ContainsKey(method.ToString())

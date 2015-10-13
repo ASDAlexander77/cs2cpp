@@ -2,16 +2,20 @@
 
 namespace System.Runtime.InteropServices
 {
+    [MergeCode]
     partial class SafeHandle
     {
+        [MergeCode]
         void InternalFinalize()
         {
         }
 
+        [MergeCode]
         private void InternalDispose()
         {
         }
 
+        [MergeCode]
         public void SetHandleAsInvalid()
         {
             throw new NotImplementedException();
@@ -30,6 +34,7 @@ namespace System.Runtime.InteropServices
         // when the method is interrupted prior to processing by a thread abort or
         // when the handle has already been (or is in the process of being)
         // released.
+        [MergeCode]
         public void DangerousAddRef(ref bool success)
         {
             throw new NotImplementedException();
@@ -44,6 +49,7 @@ namespace System.Runtime.InteropServices
         // constitutes a potential security hole (via handle recycling) as well as a
         // correctness problem -- so don't ever expose Dangerous* calls out to
         // untrusted code.
+        [MergeCode]
         public void DangerousRelease()
         {
             throw new NotImplementedException();

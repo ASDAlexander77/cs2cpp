@@ -1197,8 +1197,9 @@ namespace Il2Native.Logic
                 var before = 0;
                 do
                 {
-                    before = discoveredCalledMethods.CalledMethods.Count(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key));
-                    foreach (var method in discoveredCalledMethods.CalledMethods.Where(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)).ToList())
+                    var methodKeys = discoveredCalledMethods.CalledMethods.Where(m => m.Method.DeclaringType.TypeEquals(typeToMerge.Key)).ToList();
+                    before = methodKeys.Count;
+                    foreach (var method in methodKeys)
                     {
                         DiscoverTypesAndAdditionalTypes(method.Method, discoveredCalledMethods);
                     }
@@ -1248,6 +1249,8 @@ namespace Il2Native.Logic
                     MethodBodyBank.Register(methodFullName, method => body);
                 }
             }
+
+            Debug.Assert(false);
 
             // join all types not used in main assembly
             ISet<IType> hashSet = new NamespaceContainer<IType>();

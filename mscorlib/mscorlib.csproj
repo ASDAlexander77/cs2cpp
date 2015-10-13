@@ -92,6 +92,9 @@
     <Compile Include="..\CoreLib\Impl\Type.cs">
       <Link>Impl\Type.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\__Attributes.cs">
+      <Link>Impl\__Attributes.cs</Link>
+    </Compile>
     <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Common\Preprocessed\AssemblyRefs.g.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

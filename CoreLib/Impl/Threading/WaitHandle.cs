@@ -4,8 +4,10 @@
 
     using Microsoft.Win32.SafeHandles;
 
+    [MergeCode]
     partial class WaitHandle
     {
+        [MergeCode]
         private static int WaitOneNative(SafeHandle waitableSafeHandle, uint millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
         {
             var acquiredLock = false;
@@ -55,6 +57,7 @@
             }
         }
 
+        [MergeCode]
         private static int SignalAndWaitOne(
             SafeWaitHandle waitHandleToSignal, SafeWaitHandle waitHandleToWaitOn, int millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
         {
@@ -102,6 +105,7 @@
         ** (if in a synchronized context) is exited before the wait and reacquired 
         ========================================================================*/
 
+        [MergeCode]
         private static int WaitMultiple(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext, bool WaitAll)
         {
             // TODO: import code from https://github.com/neosmart/pevents/blob/master/pevents.cpp

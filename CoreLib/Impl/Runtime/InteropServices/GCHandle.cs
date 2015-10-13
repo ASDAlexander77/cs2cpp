@@ -6,13 +6,17 @@ namespace System.Runtime.InteropServices
     using System.Collections.Generic;
     using System.Runtime.CompilerServices;
 
+    [MergeCode]
     partial struct GCHandle
     {
+        [MergeCode]
         private static object syncObject = new object();
 
+        [MergeCode]
         private static Dictionary<int, KeyValuePair<object, GCHandleType>> handlers;
 
         // Internal native calls that this implementation uses.
+        [MergeCode]
         internal static IntPtr InternalAlloc(Object value, GCHandleType type)
         {
             lock (syncObject)
@@ -28,6 +32,7 @@ namespace System.Runtime.InteropServices
             }
         }
 
+        [MergeCode]
         internal static void InternalFree(IntPtr handle)
         {
             lock (syncObject)
@@ -41,6 +46,7 @@ namespace System.Runtime.InteropServices
             }
         }
 
+        [MergeCode]
         internal static Object InternalGet(IntPtr handle)
         {
             lock (syncObject)
@@ -54,6 +60,7 @@ namespace System.Runtime.InteropServices
             }
         }
 
+        [MergeCode]
         internal static void InternalSet(IntPtr handle, Object value, bool isPinned)
         {
             lock (syncObject)
@@ -67,6 +74,7 @@ namespace System.Runtime.InteropServices
             }
         }
 
+        [MergeCode]
         internal static Object InternalCompareExchange(IntPtr handle, Object value, Object oldValue, bool isPinned)
         {
             lock (syncObject)
@@ -81,15 +89,18 @@ namespace System.Runtime.InteropServices
             }
         }
 
+        [MergeCode]
         internal static IntPtr InternalAddrOfPinnedObject(IntPtr handle)
         {
             throw new NotImplementedException();
         }
 
+        [MergeCode]
         internal static void InternalCheckDomain(IntPtr handle)
         {
         }
 
+        [MergeCode]
         internal static GCHandleType InternalGetHandleType(IntPtr handle)
         {
             lock (syncObject)

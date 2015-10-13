@@ -6,46 +6,57 @@ namespace System.Threading
     /// <summary>
     /// Partial implementation of Thread
     /// </summary>
+    [MergeCode]
     partial class Thread
     {
         /// <summary>
         /// </summary>
+        [MergeCode]
         private static int key_once;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private static int currentThreadKey;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private static AppDomain currentDomain;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private ThreadState state;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private object abortReason;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private Delegate start;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private int maxStackSize;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private int pthread;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private PthreadAttr pthreadAttr;
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         public int ManagedThreadId
         {
             get
@@ -57,6 +68,7 @@ namespace System.Threading
         /*=========================================================================
         ** Returns true if the thread has been started and is not dead.
         =========================================================================*/
+        [MergeCode]
         public bool IsAlive
         {
             get
@@ -75,6 +87,7 @@ namespace System.Threading
         /*=========================================================================
         ** Returns true if the thread is a threadpool thread.
         =========================================================================*/
+        [MergeCode]
         public bool IsThreadPoolThread
         {
             get
@@ -84,58 +97,75 @@ namespace System.Threading
         }
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_self();
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_attr_init(ref PthreadAttr attr);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_attr_destroy(ref PthreadAttr attr);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_attr_setstacksize(ref PthreadAttr attr, int stacksize);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int GC_PTHREAD_CREATE(ref int pthread, ref PthreadAttr attr, void* startRoutine, object arg);
 
 #if SUPPORT_THREAD_CANCEL
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int GC_PTHREAD_CANCEL(int pthread);
 #endif
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int GC_PTHREAD_KILL(int pthread, int signal);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int GC_PTHREAD_JOIN(int pthread, object retVal);
 
 #if SUPPORT_THREAD_CANCEL
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
 #endif
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int pthread_setcanceltype(int type, int* oldtype);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int nanosleep(int* tv_sec, int* tv_nsec);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int pthread_key_create(ref int key, void* destructor);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_key_delete(int key);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern object pthread_getspecific(int key);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int pthread_setspecific(int key, object value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int pthread_once(ref int once_control, void* init_routine);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern int sched_yield();
 
         /// <summary>
@@ -145,6 +175,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="o">
         /// </param>
+        [MergeCode]
         internal void SetAbortReason(object o)
         {
             this.abortReason = o;
@@ -157,6 +188,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         internal object GetAbortReason()
         {
             return this.abortReason;
@@ -166,6 +198,7 @@ namespace System.Threading
         /// Helper function to clear the AbortReason.  Takes care of
         /// AppDomain related cleanup if required.
         /// </summary>
+        [MergeCode]
         internal void ClearAbortReason()
         {
             this.abortReason = null;
@@ -175,6 +208,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private static Thread GetCurrentThreadNative()
         {
             var thread = (Thread)pthread_getspecific(currentThreadKey);
@@ -191,6 +225,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private static AppDomain GetDomainInternal()
         {
             if (currentDomain == null)
@@ -205,6 +240,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private static AppDomain GetFastDomainInternal()
         {
             return currentDomain;
@@ -214,6 +250,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="millisecondsTimeout">
         /// </param>
+        [MergeCode]
         private static void SleepInternal(int millisecondsTimeout)
         {
             unsafe
@@ -241,6 +278,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         internal static IntPtr InternalGetCurrentThread()
         {
             throw new NotImplementedException();
@@ -254,6 +292,7 @@ namespace System.Threading
         /// </param>
         /// <param name="len">
         /// </param>
+        [MergeCode]
         private static void InformThreadNameChange(ThreadHandle t, string name, int len)
         {
         }
@@ -262,6 +301,7 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private static void nativeInitCultureAccessors()
         {
         }
@@ -275,6 +315,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="iterations">
         /// </param>
+        [MergeCode]
         private static void SpinWaitInternal(int iterations)
         {
             for (int i = 0; i < iterations; i++)
@@ -285,6 +326,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private static ulong GetProcessDefaultStackSize()
         {
             return 16 * 1024;
@@ -294,6 +336,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private static bool YieldInternal()
         {
             return sched_yield() == 0;
@@ -302,14 +345,17 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private void InternalFinalize()
         {
             pthread_attr_destroy(ref this.pthreadAttr);
             pthread_key_delete(currentThreadKey);
         }
 
+        [MergeCode]
         private delegate void pthread_make_shared_keys_delegate();
 
+        [MergeCode]
         private static void pthread_make_shared_keys()
         {
             unsafe
@@ -326,8 +372,10 @@ namespace System.Threading
             }
         }
 
+        [MergeCode]
         private delegate void pthread_start_routine_delegate(Thread thread);
 
+        [MergeCode]
         private static void pthread_start_routine(Thread thread)
         {
             try
@@ -361,6 +409,7 @@ namespace System.Threading
             }
         }
 
+        [MergeCode]
         private static unsafe void RegisterThread(Thread thread)
         {
             var returnCode = pthread_once(
@@ -389,6 +438,7 @@ namespace System.Threading
         /// </param>
         /// <param name="stackMark">
         /// </param>
+        [MergeCode]
         private void StartInternal(IPrincipal principal, ref StackCrawlMark stackMark)
         {
             unsafe
@@ -435,6 +485,7 @@ namespace System.Threading
         /// </param>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private bool JoinInternal(int millisecondsTimeout)
         {
             this.state = ThreadState.WaitSleepJoin;
@@ -457,6 +508,7 @@ namespace System.Threading
 
         /// <summary>
         /// </summary>
+        [MergeCode]
         private void AbortInternal()
         {
             this.state = ThreadState.AbortRequested;
@@ -476,6 +528,7 @@ namespace System.Threading
 #if SUPPORT_THREAD_CANCEL
         /// <summary>
         /// </summary>
+        [MergeCode]
         private void CancelInternal()
         {
             this.state = ThreadState.AbortRequested;
@@ -495,6 +548,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private int GetPriorityNative()
         {
             return 0;
@@ -504,6 +558,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="priority">
         /// </param>
+        [MergeCode]
         private void SetPriorityNative(int priority)
         {
         }
@@ -512,6 +567,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private int GetThreadStateNative()
         {
             return (int)this.state;
@@ -521,6 +577,7 @@ namespace System.Threading
         /// </summary>
         /// <returns>
         /// </returns>
+        [MergeCode]
         private bool IsBackgroundNative()
         {
             return false;
@@ -530,6 +587,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="isBackground">
         /// </param>
+        [MergeCode]
         private void SetBackgroundNative(bool isBackground)
         {
         }
@@ -540,16 +598,19 @@ namespace System.Threading
         /// </param>
         /// <param name="maxStackSize">
         /// </param>
+        [MergeCode]
         private void SetStart(Delegate start, int maxStackSize)
         {
             this.start = start;
             this.maxStackSize = maxStackSize;
         }
 
+        [MergeCode]
         public static void BeginCriticalRegion()
         {
         }
 
+        [MergeCode]
         public static void EndCriticalRegion()
         {
         }
@@ -557,6 +618,7 @@ namespace System.Threading
         /*
          *  This marks the beginning of a code region that requires thread affinity.
          */
+        [MergeCode]
         public static void BeginThreadAffinity()
         {
         }
@@ -564,16 +626,19 @@ namespace System.Threading
         /*
          *  This marks the end of a code region that requires thread affinity.
          */
+        [MergeCode]
         public static void EndThreadAffinity()
         {
         }
 
+        [MergeCode]
         private class ParameterizedStart
         {
             public Delegate @delegate;
             public object obj;
         }
 
+        [MergeCode]
         private unsafe struct PthreadAttr
         {
             private int state;
@@ -582,22 +647,26 @@ namespace System.Threading
             private SchedParam @param;
         }
 
+        [MergeCode]
         private struct SchedParam
         {
             private int schedPriority;
         }
 
+        [MergeCode]
         private enum PThreadCancel
         {
             Disable = 0,
             Enable = 1
         }
 
+        [MergeCode]
         private enum Signals
         {
             Terminate = 15
         }
 
+        [MergeCode]
         public enum ReturnCode
         {
             EPERM = 1,      /* Operation not permitted */

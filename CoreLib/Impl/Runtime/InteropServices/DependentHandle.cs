@@ -8,10 +8,13 @@ namespace System.Runtime.CompilerServices
 
     partial struct DependentHandle
     {
+        [MergeCode]
         private static object syncObject = new object();
 
+        [MergeCode]
         private static Dictionary<int, KeyValuePair<object, object>> handlers;
 
+        [MergeCode]
         private static void nInitialize(Object primary, Object secondary, out IntPtr dependentHandle)
         {
             lock (syncObject)
@@ -27,6 +30,7 @@ namespace System.Runtime.CompilerServices
             }
         }
 
+        [MergeCode]
         private static void nGetPrimary(IntPtr dependentHandle, out Object primary)
         {
             lock (syncObject)
@@ -40,6 +44,7 @@ namespace System.Runtime.CompilerServices
             }
         }
 
+        [MergeCode]
         private static void nGetPrimaryAndSecondary(IntPtr dependentHandle, out Object primary, out Object secondary)
         {
             lock (syncObject)
@@ -54,6 +59,7 @@ namespace System.Runtime.CompilerServices
             }
         }
 
+        [MergeCode]
         private static void nFree(IntPtr dependentHandle)
         {
             lock (syncObject)
