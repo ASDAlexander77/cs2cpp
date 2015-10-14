@@ -1224,9 +1224,19 @@ namespace Il2Native.Logic
 
             // join all types not used in main assembly
             ISet<IType> hashSet = new NamespaceContainer<IType>();
+            var genericDefinitions = new NamespaceContainer<IType>();
             foreach (var type in readTypesContext.UsedTypes)
             {
                 hashSet.Add(type);
+                if (type.IsGenericType)
+                {
+                    genericDefinitions.Add(type.GetTypeDefinition());
+                }
+
+                if (type.IsGenericTypeDefinition)
+                {
+                    genericDefinitions.Add(type);
+                }
             }
 
             foreach (var type in usedTypesToMerge.Where(t => !t.IsGenericTypeDefinition).Select(t => t.ToNormal()))
@@ -1237,6 +1247,17 @@ namespace Il2Native.Logic
 
                 if (hashSet.Add(type))
                 {
+                    if (!type.IsMerge)
+                    {
+                        Debug.Assert(!type.Name.StartsWith("KeyValuePair"));
+
+                        var genericDefFromMainAssembly = type.IsGenericType && genericDefinitions.Contains(type.GetTypeDefinition());
+                        if (!genericDefFromMainAssembly)
+                        {
+                            continue;
+                        }
+                    }
+
                     if (type.IsStructureType())
                     {
                         var @class = type.ToClass();
@@ -1245,6 +1266,8 @@ namespace Il2Native.Logic
                             readTypesContext.UsedTypes.Remove(@class);
                         }
                     }
+
+                    Debug.Assert(type.MetadataName != "AsyncLocal`1");
 
                     readTypesContext.UsedTypes.Add(type);
                 }
