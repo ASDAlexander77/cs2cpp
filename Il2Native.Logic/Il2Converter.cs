@@ -1247,11 +1247,15 @@ namespace Il2Native.Logic
 
                 if (hashSet.Add(type))
                 {
-                    if (!type.IsMerge)
+                    var currentType = type.ToBareType();
+                    while (currentType.IsNested)
                     {
-                        Debug.Assert(!type.Name.StartsWith("KeyValuePair"));
+                        currentType = currentType.DeclaringType;
+                    }
 
-                        var genericDefFromMainAssembly = type.IsGenericType && genericDefinitions.Contains(type.GetTypeDefinition());
+                    if (!currentType.IsMerge)
+                    {
+                        var genericDefFromMainAssembly = currentType.IsGenericType && genericDefinitions.Contains(currentType.GetTypeDefinition());
                         if (!genericDefFromMainAssembly)
                         {
                             continue;
@@ -1266,8 +1270,6 @@ namespace Il2Native.Logic
                             readTypesContext.UsedTypes.Remove(@class);
                         }
                     }
-
-                    Debug.Assert(type.MetadataName != "AsyncLocal`1");
 
                     readTypesContext.UsedTypes.Add(type);
                 }
