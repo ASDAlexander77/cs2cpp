@@ -1167,6 +1167,39 @@ namespace Il2Native.Logic
             return readTypesContext;
         }
 
+        private static bool CanBeMerged(IType type, NamespaceContainer<IType> originalGenericTypes, NamespaceContainer<IType> originalTypes = null)
+        {
+            Debug.Assert(!type.Name.Contains("AsyncLocal"));
+
+            var currentType = type.ToBareType();
+            while (currentType.IsNested)
+            {
+                currentType = currentType.DeclaringType;
+            }
+
+            if (originalTypes != null && originalTypes.Contains(currentType))
+            {
+                return true;
+            }
+
+            if (!currentType.IsMerge)
+            {
+                var genericDefFromMainAssembly = currentType.IsGenericType && originalGenericTypes.Contains(currentType.GetTypeDefinition());
+                if (!genericDefFromMainAssembly)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool CanBeMerged(IMethod method, NamespaceContainer<IType> originalGenericTypes, NamespaceContainer<IType> originalTypes)
+        {
+            Debug.Assert(method.IsGenericMethod, "Expect generic method here");
+            return method.IsGenericMethod && method.GetGenericArguments().All(t => CanBeMerged(t, originalGenericTypes, originalTypes));
+        }
+
         private static void MergeType(
             IlReader ilReader,
             List<IType> allTypes,
@@ -1223,11 +1256,13 @@ namespace Il2Native.Logic
             }
 
             // join all types not used in main assembly
-            ISet<IType> hashSet = new NamespaceContainer<IType>();
+            var hashSet = new NamespaceContainer<IType>();
             var genericDefinitions = new NamespaceContainer<IType>();
+            var originalTypes = new NamespaceContainer<IType>();
             foreach (var type in readTypesContext.UsedTypes)
             {
                 hashSet.Add(type);
+                originalTypes.Add(type);
                 if (type.IsGenericType)
                 {
                     genericDefinitions.Add(type.GetTypeDefinition());
@@ -1245,21 +1280,11 @@ namespace Il2Native.Logic
                 Debug.Assert(!type.IsByRef, "Should not be reference");
                 Debug.Assert(!type.IsPointer, "Should not be pointer");
 
-                if (hashSet.Add(type))
+                if (((ISet<IType>)hashSet).Add(type))
                 {
-                    var currentType = type.ToBareType();
-                    while (currentType.IsNested)
+                    if (!CanBeMerged(type, genericDefinitions))
                     {
-                        currentType = currentType.DeclaringType;
-                    }
-
-                    if (!currentType.IsMerge)
-                    {
-                        var genericDefFromMainAssembly = currentType.IsGenericType && genericDefinitions.Contains(currentType.GetTypeDefinition());
-                        if (!genericDefFromMainAssembly)
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     if (type.IsStructureType())
@@ -1293,11 +1318,11 @@ namespace Il2Native.Logic
                 if (genericMethodSpecializations.TryGetValue(typeWithGenericMethods.Key, out methodsPerType))
                 {
                     genericMethodSpecializations[typeWithGenericMethods.Key] =
-                        methodsPerType.Union(typeWithGenericMethods.Value);
+                        methodsPerType.Union(typeWithGenericMethods.Value.Where(m => CanBeMerged(m, genericDefinitions, originalTypes)));
                 }
                 else
                 {
-                    genericMethodSpecializations[typeWithGenericMethods.Key] = typeWithGenericMethods.Value;
+                    genericMethodSpecializations[typeWithGenericMethods.Key] = typeWithGenericMethods.Value.Where(m => CanBeMerged(m, genericDefinitions, originalTypes));
                 }
             }
         }
