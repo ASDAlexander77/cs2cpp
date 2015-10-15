@@ -124,6 +124,7 @@ namespace System
         [System.Runtime.CompilerServices.IndexerName("Chars")]
         public char this[int index]
         {
+            [MergeCode]
             get
             {
                 if (index < 0 || index >= m_stringLength)
