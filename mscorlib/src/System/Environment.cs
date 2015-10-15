@@ -39,7 +39,7 @@ namespace System {
     }
 
     [ComVisible(true)]
-    public static class Environment {
+    public static partial class Environment {
 
         // Assume the following constants include the terminating '\0' - use <, not <=
         const int MaxEnvVariableValueLength = 32767;  // maximum length for environment variable name and value
@@ -257,17 +257,8 @@ namespace System {
         **Arguments: None
         **Exceptions: None
         ==============================================================================*/
-        public static extern int TickCount {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
-        }
         
         // Terminates this process with the given exit code.
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        internal static extern void _Exit(int exitCode);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
 #pragma warning disable 618

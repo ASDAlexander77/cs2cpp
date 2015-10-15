@@ -40,11 +40,6 @@ extern "C" Void __Memmove(Byte* dst, Byte* src, UInt32 size)
 	__builtin_memcpy(dst, src, size);
 }
 
-extern "C" Void Exit(Int32 status)
-{
-	return exit(status);
-}
-
 extern "C" Void __pure_virtual()
 {
 	__throw_invalid_operation();
