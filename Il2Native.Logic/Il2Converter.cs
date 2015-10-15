@@ -1169,8 +1169,6 @@ namespace Il2Native.Logic
 
         private static bool CanBeMerged(IType type, NamespaceContainer<IType> originalGenericTypes, NamespaceContainer<IType> originalTypes = null)
         {
-            Debug.Assert(!type.Name.Contains("AsyncLocal"));
-
             var currentType = type.ToBareType();
             while (currentType.IsNested)
             {
@@ -1188,6 +1186,12 @@ namespace Il2Native.Logic
                 if (!genericDefFromMainAssembly)
                 {
                     return false;
+                }
+
+                if (currentType.IsGenericType)
+                {
+                    bool canBeMerged = currentType.GenericTypeArguments.All(t => CanBeMerged(t, originalGenericTypes, originalTypes));
+                    return canBeMerged;
                 }
             }
 
@@ -1282,7 +1286,7 @@ namespace Il2Native.Logic
 
                 if (((ISet<IType>)hashSet).Add(type))
                 {
-                    if (!CanBeMerged(type, genericDefinitions))
+                    if (!CanBeMerged(type, genericDefinitions, originalTypes))
                     {
                         continue;
                     }
