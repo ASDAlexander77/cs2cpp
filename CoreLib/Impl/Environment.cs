@@ -44,7 +44,7 @@
         [MergeCode]
         internal static void _Exit(int exitCode)
         {
-            __exit(exitCode);
+            exit(exitCode);
         }
     }
 }

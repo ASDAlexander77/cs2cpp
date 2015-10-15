@@ -425,7 +425,7 @@ namespace Il2Native.Logic
                         {
                             codeWriter.WriteMethod(
                                 methodSpecialization,
-                                methodSpecialization.GetMethodDefinition(),
+                                MethodBodyBank.GetMethodWithCustomBodyOrDefault(methodSpecialization.GetMethodDefinition(), codeWriter),
                                 genericMethodContext);
                         }
                         else
@@ -441,7 +441,7 @@ namespace Il2Native.Logic
                             {
                                 codeWriter.WriteMethod(
                                     structObjectAdapter,
-                                    structObjectAdapter.GetMethodDefinition(),
+                                    MethodBodyBank.GetMethodWithCustomBodyOrDefault(structObjectAdapter.GetMethodDefinition(), codeWriter),
                                     genericMethodContext);
                             }
                             else
