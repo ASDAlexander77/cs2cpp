@@ -1286,10 +1286,10 @@ namespace Il2Native.Logic
 
                 if (((ISet<IType>)hashSet).Add(type))
                 {
-                    if (!CanBeMerged(type, genericDefinitions, originalTypes))
-                    {
-                        continue;
-                    }
+                    ////if (!CanBeMerged(type, genericDefinitions, originalTypes))
+                    ////{
+                    ////    continue;
+                    ////}
 
                     if (type.IsStructureType())
                     {
