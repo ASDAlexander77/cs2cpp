@@ -1233,6 +1233,7 @@ namespace Il2Native.Logic
                     allTypesToMerge,
                     mergerReadingTypesContext,
                     ilReader.TypeResolver);
+
             var genericMethodSpecializationsSortedToMerge =
                 GroupGenericMethodsByType(mergerReadingTypesContext.GenericMethodSpecializations);
 
