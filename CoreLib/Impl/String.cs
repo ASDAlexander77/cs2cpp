@@ -5,10 +5,10 @@
     [MergeCode]
     public partial class String
     {
-        [MergeCode]
         public int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            [MergeCode]
             get
             {
                 return m_stringLength;
