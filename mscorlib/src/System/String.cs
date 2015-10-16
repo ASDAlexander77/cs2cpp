@@ -670,12 +670,6 @@ namespace System {
         // Gets the character at a specified position.
         //
         // Spec#: Apply the precondition here using a contract assembly.  Potential perf issue.
-        [System.Runtime.CompilerServices.IndexerName("Chars")]
-        public extern char this[int index] {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            [System.Security.SecuritySafeCritical] // public member
-            get;
-        }
 
         // Converts a substring of this string to an array of characters.  Copies the
         // characters of this string beginning at position startIndex and ending at

@@ -16,8 +16,6 @@
 
         public static string CurrentDirectory { get; set; }
 
-        public static int ExitCode { get; set; }
-
         private static OperatingSystem _os;
 
         public static int ProcessorCount

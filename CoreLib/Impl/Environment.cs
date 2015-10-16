@@ -22,9 +22,9 @@
             return key;
         }
 
-        [MergeCode]
         public static int TickCount
         {
+            [MergeCode]
             get
             {
                 unsafe
@@ -38,6 +38,14 @@
                     throw new Exception();
                 }
             }
+        }
+
+        public static int ExitCode
+        {
+            [MergeCode]
+            get;
+            [MergeCode]
+            set;
         }
 
         // Terminates this process with the given exit code.

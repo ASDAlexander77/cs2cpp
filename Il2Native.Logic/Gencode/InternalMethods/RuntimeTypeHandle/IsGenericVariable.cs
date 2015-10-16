@@ -6,6 +6,8 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
+            // TODO: finish it
+
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadConstant(0);
             ilCodeBuilder.Add(Code.Ret);
