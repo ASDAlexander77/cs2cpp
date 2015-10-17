@@ -9,7 +9,7 @@ namespace System
     using System.Runtime.CompilerServices;
     using System.Threading;
 
-    public static class GC
+    public static partial class GC
     {
         public static int MaxGeneration { get; set; }
 

@@ -8,6 +8,9 @@
         [MergeCode]
         private const int CLOCK_MONOTONIC = 1;
 
+        [MergeCode]
+        private static int _exitCode;
+
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         [MergeCode]
         public static extern unsafe int clock_gettime(int type, int* time);
@@ -43,9 +46,9 @@
         public static int ExitCode
         {
             [MergeCode]
-            get;
+            get { return _exitCode; }
             [MergeCode]
-            set;
+            set { _exitCode = value; }
         }
 
         // Terminates this process with the given exit code.

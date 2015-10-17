@@ -47,6 +47,7 @@
     <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\Delegate.cs" />
     <Compile Include="Impl\Environment.cs" />
+    <Compile Include="Impl\GC.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Math.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />

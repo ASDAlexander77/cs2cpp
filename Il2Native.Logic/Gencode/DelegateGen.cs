@@ -200,24 +200,24 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
             }
 
-            ////writer.Write("return ");
+            writer.Write("return ");
 
-            ////if (!method.ReturnType.IsVoid())
-            ////{
-            ////    if (method.ReturnType.IsStructureType())
-            ////    {
-            ////        method.ReturnType.WriteTypePrefix(cWriter);
-            ////        writer.Write("()");
-            ////    }
-            ////    else
-            ////    {
-            ////        writer.Write("(");
-            ////        method.ReturnType.WriteTypePrefix(cWriter);
-            ////        writer.Write(")0");
-            ////    }
-            ////}
+            if (!method.ReturnType.IsVoid())
+            {
+                if (method.ReturnType.IsStructureType())
+                {
+                    method.ReturnType.WriteTypePrefix(cWriter);
+                    writer.Write("()");
+                }
+                else
+                {
+                    writer.Write("(");
+                    method.ReturnType.WriteTypePrefix(cWriter);
+                    writer.Write(")0");
+                }
+            }
 
-            cWriter.WriteThrowException(cWriter.System.System_NotImplementedException.FullName);
+            ////cWriter.WriteThrowException(cWriter.System.System_NotImplementedException.FullName);
             
             if (!disableCurlyBrakets)
             {
