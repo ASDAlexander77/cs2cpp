@@ -1125,6 +1125,7 @@ namespace Il2Native.Logic
 
             if (type.NotSpecialUsage())
             {
+                Debug.Assert(!type.IsGenericTypeDefinition);
                 requiredTypesByType.Add(type);
             }
         }

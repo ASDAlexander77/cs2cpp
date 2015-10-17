@@ -2641,8 +2641,8 @@ namespace System
         private IntPtr m_cache;
         internal IntPtr m_handle;
 
-#if FEATURE_APPX
         private INVOCATION_FLAGS m_invocationFlags;
+#if FEATURE_APPX
 
         internal bool IsNonW8PFrameworkAPI()
         {

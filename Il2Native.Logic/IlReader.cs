@@ -1581,6 +1581,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!type.IsGenericTypeDefinition);
+
             this._usedArrayTypes.Add(type);
         }
 
@@ -2302,12 +2304,12 @@ namespace Il2Native.Logic
 
             if (assemblyIdentity.Name == "mscorlib")
             {
-                if (assemblyIdentity.Version.Major <= 1 && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
                 {
                     return this.CoreLibPath;
                 }
 
-                ////Debug.Assert(false, "you are using mscorlib from .NET");
+                Debug.Assert(false, "you are using mscorlib from .NET");
 
                 return typeof(int).Assembly.Location;
             }

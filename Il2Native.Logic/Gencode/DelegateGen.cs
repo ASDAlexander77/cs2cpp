@@ -200,6 +200,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
             }
 
+#if RETURN_EMPTY
             writer.Write("return ");
 
             if (!method.ReturnType.IsVoid())
@@ -216,8 +217,9 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(")0");
                 }
             }
-
-            ////cWriter.WriteThrowException(cWriter.System.System_NotImplementedException.FullName);
+#else
+            cWriter.WriteThrowException(cWriter.System.System_NotImplementedException.FullName);
+#endif
             
             if (!disableCurlyBrakets)
             {
