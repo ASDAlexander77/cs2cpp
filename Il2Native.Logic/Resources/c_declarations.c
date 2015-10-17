@@ -85,6 +85,21 @@ template < typename T > struct __static_data
 	T data;
 };
 
+#if __MULTI_THREADING
+template < int N > struct __static_str
+#else
+template < int N > const struct __static_str
+#endif
+{
+#if __MULTI_THREADING
+	Byte* __mutex;
+	Byte* __cond;
+#endif
+    Void** __vtbl;
+    Int32 length;
+	wchar_t data[N];
+};
+
 struct __interface_data
 {
 	Void* __vtbl;

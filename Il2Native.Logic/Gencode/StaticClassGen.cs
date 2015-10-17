@@ -98,41 +98,35 @@ namespace Il2Native.Logic.Gencode
 
             var writer = cWriter.Output;
 
-            writer.Write(cWriter.declarationPrefix);
             writer.Write(
-                "{5}struct {2} _s{0}{1}_ = {4} {3}",
+                "__static_str<{2}> _s{0}{1}_ = {4} {3}",
                 pair.Key,
                 (uint)pair.Value.GetHashCode(),
-                cWriter.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
+                pair.Value.Length + (align ? 2 : 1),
                 cWriter.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
-                "{",
-                cWriter.MultiThreadingSupport ? string.Empty : "const ");
+                "{");
 
-            writer.Write("{ ");
-
-            var index = 0;
+            writer.Write("L\"");
             foreach (var c in pair.Value.ToCharArray())
             {
-                if (index > 0)
+                if (Char.IsLetterOrDigit(c) || c == ' ' || (Char.IsPunctuation(c) && c != '\\' && c != '"'))
                 {
-                    writer.Write(", ");
+                    writer.Write(c);
                 }
-
-                writer.Write("{0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                writer.Write(", ");
+                else
+                {
+                    writer.Write("\\x{0:X}", (uint)c);
+                }
             }
 
             if (align)
             {
-                writer.Write("0, ");
+                writer.Write("\\0");
             }
 
-            writer.WriteLine("0 {0} {0};", '}');
+            writer.Write("\"");
+
+            writer.WriteLine(" {0};", '}');
         }
 
 
