@@ -56,6 +56,9 @@
     <Compile Include="..\CoreLib\Impl\GC.cs">
       <Link>Impl\GC.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Globalization\CultureInfo.cs">
+      <Link>Impl\Globalization\CultureInfo.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\IO\__ConsoleStream.cs">
       <Link>Impl\IO\__ConsoleStream.cs</Link>
     </Compile>

@@ -10,7 +10,7 @@ namespace System.Globalization
     using System.Runtime.CompilerServices;
     using System.Reflection;
     using System.Resources;
-    public class CultureInfo : /*ICloneable, */IFormatProvider
+    public partial class CultureInfo : /*ICloneable, */IFormatProvider
     {
         internal NumberFormatInfo numInfo = null;
         internal DateTimeFormatInfo dateTimeInfo = null;

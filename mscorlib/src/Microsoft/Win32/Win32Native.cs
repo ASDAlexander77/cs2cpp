@@ -931,9 +931,6 @@ namespace Microsoft.Win32 {
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress );
 
-        [DllImport(KERNEL32)]
-        internal static extern int GetFileType(SafeFileHandle handle);
-
         [DllImport(KERNEL32, SetLastError=true)]
         internal static extern bool SetEndOfFile(SafeFileHandle hFile);
 

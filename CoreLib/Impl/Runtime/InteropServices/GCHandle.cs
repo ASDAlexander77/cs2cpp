@@ -10,18 +10,13 @@ namespace System.Runtime.InteropServices
     {
         private static object syncObject = new object();
 
-        private static Dictionary<int, KeyValuePair<object, GCHandleType>> handlers;
+        private static Dictionary<int, KeyValuePair<object, GCHandleType>> handlers = new Dictionary<int, KeyValuePair<object, GCHandleType>>();
 
         // Internal native calls that this implementation uses.
         internal static IntPtr InternalAlloc(Object value, GCHandleType type)
         {
             lock (syncObject)
             {
-                if (handlers == null)
-                {
-                    handlers = new Dictionary<int, KeyValuePair<object, GCHandleType>>();
-                }
-
                 var index = handlers.Count;
                 handlers.Add(index, new KeyValuePair<object, GCHandleType>(value, type));
                 return new IntPtr(index);
@@ -32,11 +27,6 @@ namespace System.Runtime.InteropServices
         {
             lock (syncObject)
             {
-                if (handlers == null)
-                {
-                    throw new NullReferenceException();
-                }
-
                 handlers.Remove(handle.ToInt32());
             }
         }
@@ -45,11 +35,6 @@ namespace System.Runtime.InteropServices
         {
             lock (syncObject)
             {
-                if (handlers == null)
-                {
-                    throw new NullReferenceException();
-                }
-
                 return handlers[handle.ToInt32()].Key;
             }
         }
@@ -58,11 +43,6 @@ namespace System.Runtime.InteropServices
         {
             lock (syncObject)
             {
-                if (handlers == null)
-                {
-                    throw new NullReferenceException();
-                }
-
                 handlers[handle.ToInt32()] = new KeyValuePair<object, GCHandleType>(value, isPinned ? GCHandleType.Pinned : default(GCHandleType));
             }
         }
@@ -94,11 +74,6 @@ namespace System.Runtime.InteropServices
         {
             lock (syncObject)
             {
-                if (handlers == null)
-                {
-                    throw new NullReferenceException();
-                }
-
                 return handlers[handle.ToInt32()].Value;
             }
         }

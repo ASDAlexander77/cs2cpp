@@ -1242,11 +1242,12 @@ namespace System {
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         internal static String GetResourceString(String key) {
-#if FEATURE_CORECLR
-            return GetResourceStringLocal(key);
-#else
+// TODO: my temp implementation
+//#if FEATURE_CORECLR
+//            return GetResourceStringLocal(key);
+//#else
             return GetResourceFromDefault(key);
-#endif //FEATURE_CORECLR
+//#endif //FEATURE_CORECLR
         }
 
         [System.Security.SecuritySafeCritical]  // auto-generated

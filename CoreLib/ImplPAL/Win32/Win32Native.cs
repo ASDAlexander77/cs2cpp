@@ -318,6 +318,17 @@ namespace Microsoft.Win32
             return result;
         }
 
+        internal static int GetFileType(SafeFileHandle handle)
+        {
+            var stdId = handle.DangerousGetHandle().ToInt32();
+            if (stdId == STD_OUTPUT_HANDLE || stdId == STD_ERROR_HANDLE)
+            {
+                return FILE_TYPE_CHAR;
+            }
+
+            return FILE_TYPE_DISK;
+        }
+
         // Do not use these directly, use the safe or unsafe versions above.
         // The safe version does not support devices (aka if will only open
         // files on disk), while the unsafe version give you the full semantic
