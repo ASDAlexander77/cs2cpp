@@ -10,6 +10,7 @@
     {
         public const string RuntimeTypeHolderFieldName = ".runtimetype";
         public const string RuntimeModuleHolderFieldName = ".runtimemodule";
+        public const string RuntimeAssemblyHolderFieldName = ".runtimeassembly";
 
         public const string TypeAttributesField = "typeAttributes";
         public const string BaseTypeField = "baseType";

@@ -188,6 +188,7 @@
             GetBaseTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
             GetModuleGen.Register(typeResolver);
+            GetAssemblyGen.Register(typeResolver);
             ConstructNameGen.Register(typeResolver);
             IsGenericVariable.Register(typeResolver);
         }
