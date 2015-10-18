@@ -215,10 +215,6 @@ namespace System.Runtime.CompilerServices {
         #endif
         public delegate void CleanupCode(Object userData, bool exceptionThrown);
 
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern void ExecuteCodeWithGuaranteedCleanup(TryCode code, CleanupCode backoutCode, Object userData);
-
 #if FEATURE_CORECLR
         [System.Security.SecurityCritical] // auto-generated
 #endif

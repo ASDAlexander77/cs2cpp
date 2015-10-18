@@ -13,6 +13,7 @@ namespace Il2Native.Logic.Gencode
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
 
     using PEAssemblyReader;
@@ -110,8 +111,14 @@ namespace Il2Native.Logic.Gencode
             writer.Write("L\"");
             foreach (var c in pair.Value.ToCharArray())
             {
-                if (c >= 0x20 && c != 0x7f)
+                var code = (uint)c;
+                if (code >= 0x20 && code != 0x7f)
                 {
+                    if (c == '\\' || c == '"')
+                    {
+                        writer.Write(@"\");
+                    }
+
                     writer.Write(c);
                 }
                 else

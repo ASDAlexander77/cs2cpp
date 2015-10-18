@@ -2,24 +2,18 @@
 {
     using Runtime.CompilerServices;
 
-    [MergeCode]
     public static partial class Environment
     {
-        [MergeCode]
         private const int CLOCK_MONOTONIC = 1;
 
-        [MergeCode]
         private static int _exitCode;
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern unsafe int clock_gettime(int type, int* time);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern void exit(int exitCode);
 
-        [MergeCode]
         internal static String GetResourceFromDefault(String key)
         {
             return key;
@@ -27,7 +21,6 @@
 
         public static int TickCount
         {
-            [MergeCode]
             get
             {
                 unsafe
@@ -45,14 +38,11 @@
 
         public static int ExitCode
         {
-            [MergeCode]
             get { return _exitCode; }
-            [MergeCode]
             set { _exitCode = value; }
         }
 
         // Terminates this process with the given exit code.
-        [MergeCode]
         internal static void _Exit(int exitCode)
         {
             exit(exitCode);

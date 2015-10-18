@@ -6,6 +6,24 @@ namespace System.Runtime.CompilerServices {
         {
             // TODO: finish it
         }
+
+        public static void ExecuteCodeWithGuaranteedCleanup(
+            TryCode code,
+            CleanupCode backoutCode,
+            Object userData)
+        {
+            var exceptionThrown = false;
+            try
+            {
+                code.Invoke(userData);            
+            }
+            catch
+            {
+                exceptionThrown = true;
+            }
+
+            backoutCode.Invoke(userData, exceptionThrown);
+        }
     }
 }
 

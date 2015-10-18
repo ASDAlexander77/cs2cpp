@@ -5,48 +5,37 @@
     /// <summary>
     /// Partial implementation of Monitor
     /// </summary>
-    [MergeCode]
     partial class Monitor
     {
-        [MergeCode]
         private const int CLOCK_REALTIME = 0;
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int clock_gettime(int clk_id, int* timespec);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_mutex_lock(void* mutex);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_mutex_trylock(void* mutex);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_mutex_unlock(void* mutex);
 
 #if SUPPORT_PTHREAD_MUTEX_TIMEDLOCK
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_mutex_timedlock(void* mutex, int* timespec_timeout);
 #endif
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_cond_wait(void* cond, void* mutex);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_cond_timedwait(void* cond, void* mutex, int* timespec_timeout);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_cond_signal(void* cond);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private static extern unsafe int pthread_cond_broadcast(void* cond);
 
         /*=========================================================================
@@ -57,7 +46,6 @@
         **
         ** Exceptions: ArgumentNullException if object is null.
         =========================================================================*/
-        [MergeCode]
         public static void Enter(Object obj)
         {
             if (obj == null)
@@ -106,7 +94,6 @@
         **             SynchronizationLockException if the current thread does not
         **             own the lock.
         =========================================================================*/
-        [MergeCode]
         public static void Exit(Object obj)
         {
             if (obj == null)
@@ -147,7 +134,6 @@
             }
         }
 
-        [MergeCode]
         private static void ReliableEnter(Object obj, ref bool lockTaken)
         {
             if (obj == null)
@@ -195,13 +181,10 @@
             }
         }
 
-        [MergeCode]
         private static extern unsafe void* GetMutexAddress(object o);
 
-        [MergeCode]
         private static extern unsafe void* GetCondAddress(object o);
 
-        [MergeCode]
         private static void ReliableEnterTimeout(Object obj, int timeout, ref bool lockTaken)
         {
 #if SUPPORT_PTHREAD_MUTEX_TIMEDLOCK
@@ -249,7 +232,6 @@
 #endif
         }
 
-        [MergeCode]
         private static bool IsEnteredNative(Object obj)
         {
             throw new NotImplementedException();
@@ -266,7 +248,6 @@
         **
             ** Exceptions: ArgumentNullException if object is null.
         ========================================================================*/
-        [MergeCode]
         private static bool ObjWait(bool exitContext, int millisecondsTimeout, Object obj)
         {
             if (obj == null)
@@ -331,7 +312,6 @@
         * Exceptions: SynchronizationLockException if this method is not called inside
         * a synchronized block of code.
         ========================================================================*/
-        [MergeCode]
         private static void ObjPulse(Object obj)
         {
             if (obj == null)
@@ -366,7 +346,6 @@
         /*========================================================================
         ** Sends a notification to all waiting objects. 
         ========================================================================*/
-        [MergeCode]
         private static void ObjPulseAll(Object obj)
         {
             if (obj == null)

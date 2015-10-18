@@ -19,150 +19,105 @@ namespace Microsoft.Win32
     // global declaration on the class.
 
     [SuppressUnmanagedCodeSecurityAttribute()]
-    [MergeCode]
     internal static partial class Win32Native
     {
-        [MergeCode]
         private const int STDIN_FILENO = 0;
 
-        [MergeCode]
         private const int STDOUT_FILENO = 1;
 
-        [MergeCode]
         private const int STDERR_FILENO = 2;
 
-        [MergeCode]
         private const int O_RDONLY = 0x0000;	/* open for reading only */
 
-        [MergeCode]
         private const int O_WRONLY = 0x0001;	/* open for writing only */
 
-        [MergeCode]
         private const int O_RDWR = 0x0002;	/* open for reading and writing */
 
-        [MergeCode]
         private const int O_CREAT = 0x0100;		/* create if nonexistant */
 
-        [MergeCode]
         private const int O_TRUNC = 0x0200;		/* truncate to zero length */
 
-        [MergeCode]
         private const int O_EXCL = 0x0040;		/* error if already exists */
 
-        [MergeCode]
         private const int F_SETFD = 2;		/* set file descriptor flags */
 
-        [MergeCode]
         private const int LOCK_SH = 0x01;		/* shared file lock */
 
-        [MergeCode]
         private const int LOCK_EX = 0x02;		/* exclusive file lock */
 
-        [MergeCode]
         private const int LOCK_NB = 0x04;		/* don't block when locking */
 
-        [MergeCode]
         private const int LOCK_UN = 0x08;		/* unlock file */
 
         /* access function */
-        [MergeCode]
         private const int F_OK = 0;	/* test for existence of file */
 
-        [MergeCode]
         private const int O_DIRECT = 00040000;
 
-        [MergeCode]
         private const int O_BINARY = 0x8000;
 
-        [MergeCode]
         private const int S_IRUSR = 0000400;			/* R for owner */
 
-        [MergeCode]
         private const int S_IWUSR = 0000200;			/* W for owner */
 
-        [MergeCode]
         private const int S_IROTH = 0000004;			/* R for other */
 
-        [MergeCode]
         private const int S_IRGRP = 0000040;			/* R for group */
 
-        [MergeCode]
         private const uint GENERIC_READ = 0x80000000;
 
-        [MergeCode]
         private const uint GENERIC_WRITE = 0x40000000;
 
-        [MergeCode]
         public const uint FILE_ATTRIBUTE_HIDDEN = 0x00000002;
 
-        [MergeCode]
         public const uint FILE_ATTRIBUTE_SYSTEM = 0x00000004;
 
-        //[MergeCode]
         //public const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
 
-        [MergeCode]
         public const uint FILE_ATTRIBUTE_ARCHIVE = 0x00000020;
 
-        [MergeCode]
         public const uint FILE_ATTRIBUTE_DEVICE = 0x00000040;
 
-        [MergeCode]
         public const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
 
-        [MergeCode]
         private const uint S_IFMT = 0xF000;
 
-        [MergeCode]
         private const uint S_IFDIR = 0x4000;
 
-        [MergeCode]
         private const int FILE_FLAG_NO_BUFFERING = 0x20000000;
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public unsafe static extern byte* __get_full_path(byte* file_name, byte* resolved_name);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private extern unsafe static int open(byte* fileName, int flags, int mode);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         private extern static int close(int fd);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public unsafe static extern int write(int fd, void* buf, int count);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public unsafe static extern int read(int fd, void* buf, int count);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern int fcntl(int fd, int cmd, __arglist);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern int flock(int fd, int operation);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static unsafe extern int access(byte* pathname, int mode);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static unsafe extern int stat(byte* path, int* buf);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static unsafe extern int fstat(int fd, int* buf);
 
-        [MergeCode]
         private static int _errorMode;
 
-        [MergeCode]
         struct stat_data
         {
             public int st_dev;     /* ID of device containing file */
@@ -185,7 +140,6 @@ namespace Microsoft.Win32
             public int reserved6;
         };
 
-        [MergeCode]
         public static byte[] ToAsciiString(string s)
         {
             if (s == null)
@@ -200,7 +154,6 @@ namespace Microsoft.Win32
             return bytes;
         }
 
-        [MergeCode]
         public static byte[] ToAsciiString(char[] chars)
         {
             if (chars == null)
@@ -215,7 +168,6 @@ namespace Microsoft.Win32
             return bytes;
         }
 
-        [MergeCode]
         internal static bool SetEvent(SafeWaitHandle handle)
         {
             var acquiredLock = false;
@@ -257,7 +209,6 @@ namespace Microsoft.Win32
             return true;
         }
 
-        [MergeCode]
         internal static bool ResetEvent(SafeWaitHandle handle)
         {
             var acquiredLock = false;
@@ -289,7 +240,6 @@ namespace Microsoft.Win32
             return true;
         }
 
-        [MergeCode]
         internal static SafeWaitHandle CreateEvent(SECURITY_ATTRIBUTES lpSecurityAttributes, bool isManualReset, bool initialState, String name)
         {
             // state, type
@@ -308,7 +258,6 @@ namespace Microsoft.Win32
             }
         }
 
-        [MergeCode]
         private static unsafe int wcslen(char* ptr)
         {
             char* end = ptr;
@@ -343,7 +292,6 @@ namespace Microsoft.Win32
             return count;
         }
 
-        [MergeCode]
         internal unsafe static int GetFullPathName(char* path, int numBufferChars, char* buffer, IntPtr mustBeZero)
         {
             if (path == null)
@@ -375,7 +323,6 @@ namespace Microsoft.Win32
         // files on disk), while the unsafe version give you the full semantic
         // of the native version.
 
-        [MergeCode]
         private static SafeFileHandle CreateFile(String lpFileName,
                     int dwDesiredAccess, System.IO.FileShare dwShareMode,
                     SECURITY_ATTRIBUTES securityAttrs, System.IO.FileMode dwCreationDisposition,
@@ -495,14 +442,12 @@ namespace Microsoft.Win32
         }
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        [MergeCode]
         internal static bool CloseHandle(IntPtr handle)
         {
             close(handle.ToInt32());
             return true;
         }
 
-        [MergeCode]
         unsafe internal static int ReadFile(SafeFileHandle handle, byte* bytes, int numBytesToRead, out int numBytesRead, IntPtr mustBeZero)
         {
             var r = read(handle.DangerousGetHandle().ToInt32(), bytes, numBytesToRead);
@@ -516,7 +461,6 @@ namespace Microsoft.Win32
             return 1;
         }
 
-        [MergeCode]
         internal static unsafe int WriteFile(SafeFileHandle handle, byte* bytes, int numBytesToWrite, out int numBytesWritten, IntPtr mustBeZero)
         {
             var fd = handle.DangerousGetHandle().ToInt32();
@@ -544,7 +488,6 @@ namespace Microsoft.Win32
             return 0;
         }
 
-        [MergeCode]
         internal static int GetFileSize(SafeFileHandle hFile, out int highSize)
         {
             highSize = 0;
@@ -561,13 +504,11 @@ namespace Microsoft.Win32
             }
         }
 
-        [MergeCode]
         internal static IntPtr GetStdHandle(int nStdHandle)  // param is NOT a handle, but it returns one!
         {
             return new IntPtr(nStdHandle);
         }
 
-        [MergeCode]
         internal static bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation)
         {
             if (name == null)

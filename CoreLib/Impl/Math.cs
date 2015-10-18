@@ -5,140 +5,109 @@
     public static partial class Math
     {
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double log10(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double log(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double pow(double value, double power);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double ceil(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double floor(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double cos(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double cosh(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double sin(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double sinh(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double tan(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double tanh(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double sqrt(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double acos(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double asin(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double atan(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double atan2(double y, double x);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double exp(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern float fabsf(float value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double fabs(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double fmod(double value1, double value2);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double round(double value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern unsafe double modf(double p, double* value);
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        [MergeCode]
         public static extern double copysign(double value1, double value2);
 
-        [MergeCode]
         public static double Acos(double d)
         {
             return acos(d);
         }
 
-        [MergeCode]
         public static double Asin(double d)
         {
             return asin(d);
         }
 
-        [MergeCode]
         public static double Atan(double x)
         {
             return atan(x);
         }
 
-        [MergeCode]
         public static double Ceiling(double a)
         {
             return ceil(a);
         }
 
-        [MergeCode]
         public static double Cos(double a)
         {
             return cos(a);
         }
 
-        [MergeCode]
         public static double Cosh(double value)
         {
             return cosh(value);
         }
 
-        [MergeCode]
         public static double Floor(double d)
         {
             return floor(d);
         }
 
-        [MergeCode]
         public static double Round(double d)
         {
             //return round(a);
@@ -165,37 +134,31 @@
             return flrTempVal;
         }
 
-        [MergeCode]
         public static double Sin(double a)
         {
             return sin(a);
         }
 
-        [MergeCode]
         public static double Tan(double a)
         {
             return tan(a);
         }
 
-        [MergeCode]
         public static double Sinh(double value)
         {
             return sinh(value);
         }
 
-        [MergeCode]
         public static double Tanh(double value)
         {
             return tanh(value);
         }
 
-        [MergeCode]
         private static unsafe double SplitFractionDouble(double* value)
         {
             return modf(*value, value);
         }
 
-        [MergeCode]
         public static double Exp(double x)
         {
             if (Double.IsInfinity(x))
@@ -208,7 +171,6 @@
             return exp(x);
         }
 
-        [MergeCode]
         public static double Pow(double x, double y)
         {
             unsafe
@@ -237,31 +199,26 @@
             return pow(x, y);
         }
 
-        [MergeCode]
         public static double Sqrt(double d)
         {
             return sqrt(d);
         }
 
-        [MergeCode]
         public static double Log(double d)
         {
             return log(d);
         }
 
-        [MergeCode]
         public static double Log10(double d)
         {
             return log10(d);
         }
 
-        [MergeCode]
         public static float Abs(float value)
         {
             return fabsf(value);
         }
 
-        [MergeCode]
         public static double Abs(double value)
         {
             return fabs(value);

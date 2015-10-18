@@ -211,7 +211,6 @@ namespace System.Threading
 #if FEATURE_CORECLR
         // Adding an empty default ctor for annotation purposes
         [System.Security.SecuritySafeCritical] // auto-generated
-        [MergeCode]
         internal Thread() { }
 #endif // FEATURE_CORECLR
 

@@ -77,6 +77,10 @@ namespace System.Runtime.CompilerServices
         {
             throw new NotImplementedException();
         }
+
+        public delegate void TryCode(Object userData);
+
+        public delegate void CleanupCode(Object userData, bool exceptionThrown);
     }
 }
 

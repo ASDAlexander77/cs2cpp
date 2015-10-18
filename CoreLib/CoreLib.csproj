@@ -63,7 +63,6 @@
     <Compile Include="Impl\Threading\Timer.cs" />
     <Compile Include="Impl\Threading\WaitHandle.cs" />
     <Compile Include="Impl\Type.cs" />
-    <Compile Include="Impl\__Attributes.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileMappingHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFindHandle.cs" />
