@@ -9,7 +9,7 @@ namespace System.Runtime.CompilerServices
     using System.Threading.Tasks;
 
     [Serializable]
-    public static class RuntimeHelpers
+    public static partial class RuntimeHelpers
     {
         
         public static void InitializeArray(Array array, RuntimeFieldHandle fldHandle)

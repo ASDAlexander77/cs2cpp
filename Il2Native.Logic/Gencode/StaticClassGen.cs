@@ -98,6 +98,7 @@ namespace Il2Native.Logic.Gencode
 
             var writer = cWriter.Output;
 
+            writer.Write(cWriter.declarationPrefix);
             writer.Write(
                 "__static_str<{2}> _s{0}{1}_ = {4} {3}",
                 pair.Key,
@@ -109,7 +110,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("L\"");
             foreach (var c in pair.Value.ToCharArray())
             {
-                if (Char.IsLetterOrDigit(c) || c == ' ' || (Char.IsPunctuation(c) && c != '\\' && c != '"'))
+                if (c >= 0x20 && c != 0x7f)
                 {
                     writer.Write(c);
                 }

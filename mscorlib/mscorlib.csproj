@@ -62,6 +62,9 @@
     <Compile Include="..\CoreLib\Impl\Math.cs">
       <Link>Impl\Math.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\CompilerServices\RuntimeHelpers.cs">
+      <Link>Impl\Runtime\CompilerServices\RuntimeHelpers.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\CriticalHandle.cs">
       <Link>Impl\Runtime\InteropServices\CriticalHandle.cs</Link>
     </Compile>

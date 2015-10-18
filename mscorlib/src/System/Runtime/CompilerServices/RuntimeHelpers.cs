@@ -21,7 +21,7 @@ namespace System.Runtime.CompilerServices {
     using System.Runtime.Versioning;
     using System.Diagnostics.Contracts;
 
-    public static class RuntimeHelpers
+    public static partial class RuntimeHelpers
     {
         [System.Security.SecuritySafeCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
@@ -187,11 +187,6 @@ namespace System.Runtime.CompilerServices {
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         internal static extern bool TryEnsureSufficientExecutionStack();
 #endif
-
-        [System.Security.SecurityCritical]  // auto-generated_required
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern void ProbeForSufficientStack();
 
         // This method is a marker placed immediately before a try clause to mark the corresponding catch and finally blocks as
         // constrained. There's no code here other than the probe because most of the work is done at JIT time when we spot a call to this routine.

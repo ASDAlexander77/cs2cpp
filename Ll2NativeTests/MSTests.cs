@@ -1411,7 +1411,7 @@ namespace Ll2NativeTests
                 Path.GetFullPath(
                     @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll"),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true, merge: false));
+                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
         }
 
         /// <summary>

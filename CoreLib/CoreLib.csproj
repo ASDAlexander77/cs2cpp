@@ -50,6 +50,7 @@
     <Compile Include="Impl\GC.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Math.cs" />
+    <Compile Include="Impl\Runtime\CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
