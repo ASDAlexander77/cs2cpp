@@ -17,16 +17,13 @@
         public static string CurrentDirectory { get; set; }
 
         private static OperatingSystem _os;
-
+        
         public static int ProcessorCount
         {
+            [System.Security.SecuritySafeCritical]  // auto-generated
             get
             {
-                return 2;
-            }
-            set
-            {
-                throw new NotImplementedException();
+                return GetProcessorCount();
             }
         }
 

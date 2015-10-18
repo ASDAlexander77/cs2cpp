@@ -52,10 +52,6 @@ namespace System.Runtime.CompilerServices {
         // This call will generate an exception if the specified class constructor threw an 
         // exception when it ran. 
 
-        [System.Security.SecuritySafeCritical]
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern void _RunClassConstructor(RuntimeType type);
-
         public static void RunClassConstructor(RuntimeTypeHandle type) 
         {
             _RunClassConstructor(type.GetRuntimeType());

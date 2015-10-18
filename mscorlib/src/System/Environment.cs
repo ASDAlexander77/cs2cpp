@@ -501,11 +501,6 @@ namespace System {
             }
         }
 
-        [SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern Int32 GetProcessorCount();
-
         public static int ProcessorCount {
             [System.Security.SecuritySafeCritical]  // auto-generated
             get {

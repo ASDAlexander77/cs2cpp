@@ -47,5 +47,10 @@
         {
             exit(exitCode);
         }
+
+        private static int GetProcessorCount()
+        {
+            return 2;
+        }
     }
 }

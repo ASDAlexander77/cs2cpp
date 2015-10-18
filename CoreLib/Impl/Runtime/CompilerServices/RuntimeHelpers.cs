@@ -4,7 +4,11 @@ namespace System.Runtime.CompilerServices {
     {
         public static void ProbeForSufficientStack()
         {
-            // TODO: finish it
+        }
+
+        private static void _RunClassConstructor(RuntimeType type)
+        {
+            // TODO: finish it, should it execute static constructor
         }
 
         public static void ExecuteCodeWithGuaranteedCleanup(
