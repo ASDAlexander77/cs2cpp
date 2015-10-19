@@ -96,7 +96,7 @@
 
         /// <summary>
         /// </summary>
-        public static bool AddSystemCore = false;
+        public static bool AddSystemLinq = false;
 
         /// <summary>
         /// </summary>
@@ -123,9 +123,10 @@
                 {
                     args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
                     
-                    if (AddSystemCore)
+                    if (AddSystemLinq)
                     {
-                        args.Add("ref:System.Core");
+                        //args.Add("ref:System.Core");
+                        args.Add(@"ref:E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Linq.dll");
                     }
                 }
                 else

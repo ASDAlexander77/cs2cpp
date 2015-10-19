@@ -369,6 +369,10 @@ namespace Il2Native.Logic
             if (!this.isDll)
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
+                if (this.DefaultDllLocations == null && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    this.DefaultDllLocations = Path.GetDirectoryName(this.CoreLibPath);
+                }
             }
 
             var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
@@ -1808,23 +1812,7 @@ namespace Il2Native.Logic
 
             var assemblies = new List<MetadataImageReference>();
 
-            if (this.ReferencesList.Length == 0)
-            {
-                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                    ? new MetadataImageReference(
-                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
-
-                assemblies.Add(coreLibRefAssembly);
-            }
-            else
-            {
-                var added = new HashSet<AssemblyIdentity>();
-                foreach (var refItem in this.ReferencesList)
-                {
-                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                }
-            }
+            this.LoadReferencesForCompiling(assemblies);
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
@@ -1871,23 +1859,7 @@ namespace Il2Native.Logic
 
             var assemblies = new List<MetadataImageReference>();
 
-            if (this.ReferencesList.Length == 0)
-            {
-                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                    ? new MetadataImageReference(
-                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
-
-                assemblies.Add(coreLibRefAssembly);
-            }
-            else
-            {
-                var added = new HashSet<AssemblyIdentity>();
-                foreach (var refItem in this.ReferencesList)
-                {
-                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                }
-            }
+            this.LoadReferencesForCompiling(assemblies);
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
@@ -1920,6 +1892,40 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromImageStream(dllStream);
         }
 
+        private void LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
+        {
+            var added = new HashSet<AssemblyIdentity>();
+            var coreLibLoaded = false;
+
+            if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
+            {
+                AddAsseblyReference(assemblies, added, this.CoreLibPath);
+                coreLibLoaded = true;
+            }
+
+            if (this.ReferencesList != null)
+            {
+                foreach (var refItem in this.ReferencesList)
+                {
+                    if (File.Exists(refItem))
+                    {
+                        AddAsseblyReference(assemblies, added, refItem);
+                    }
+                    else
+                    {
+                        this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                        coreLibLoaded = true;
+                    }
+                }
+            }
+
+            if (!coreLibLoaded)
+            {
+                AddAsseblyReference(assemblies, added, typeof(int).Assembly.Location);
+                coreLibLoaded = true;
+            }
+        }
+
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
         {
             var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
@@ -1928,11 +1934,27 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var metadata = this.GetAssemblyMetadata(assemblyIdentity);
-
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
             if (added.Add(metadata.Assembly.Identity))
             {
                 var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+                assemblies.Add(metadataImageReference);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
+        {
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+
+            if (added.Add(metadata.Assembly.Identity))
+            {
                 assemblies.Add(metadataImageReference);
 
                 // process nested

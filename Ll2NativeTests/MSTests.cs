@@ -870,7 +870,8 @@ namespace Ll2NativeTests
         {
             CompilerHelper.Mscorlib = true;
             //CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";            
-            CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";            
+            CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
+            CompilerHelper.AddSystemLinq = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
@@ -1306,9 +1307,9 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 28).Where(n => !skip.Contains(n)))
             {
-                CompilerHelper.AddSystemCore = true;
+                CompilerHelper.AddSystemLinq = true;
                 CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
-                CompilerHelper.AddSystemCore = false;
+                CompilerHelper.AddSystemLinq = false;
             }
         }
 
