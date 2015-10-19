@@ -1637,7 +1637,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!method.IsGenericMethod)
+            if (!method.IsGenericMethod && !method.IsGenericMethodDefinition)
             {
                 if (method.DeclaringType.IsGenericType && !stackCall.Contains(method))
                 {
@@ -1895,12 +1895,14 @@ namespace Il2Native.Logic
         private void LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
         {
             var added = new HashSet<AssemblyIdentity>();
-            var coreLibLoaded = false;
 
             if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
             {
                 AddAsseblyReference(assemblies, added, this.CoreLibPath);
-                coreLibLoaded = true;
+            }
+            else
+            {
+                AddAsseblyReference(assemblies, added, typeof(int).Assembly.Location);
             }
 
             if (this.ReferencesList != null)
@@ -1914,15 +1916,8 @@ namespace Il2Native.Logic
                     else
                     {
                         this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                        coreLibLoaded = true;
                     }
                 }
-            }
-
-            if (!coreLibLoaded)
-            {
-                AddAsseblyReference(assemblies, added, typeof(int).Assembly.Location);
-                coreLibLoaded = true;
             }
         }
 
@@ -2287,7 +2282,31 @@ namespace Il2Native.Logic
                 }
             }
 
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                if (this.SetCorLib(assemblySymbol, loadedRefAssemblySymbol as PEAssemblySymbol))
+                {
+                    return;
+                }
+            }
+
             Debug.Fail("CoreLib not set");
+        }
+
+        private bool SetCorLib(PEAssemblySymbol assemblySymbol, PEAssemblySymbol fromAssemblySymbol)
+        {
+            var loadedRefAssemblies = from assemblyIdentity in fromAssemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
+                if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
+                {
+                    assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public const BindingFlags DefaultFlags =
