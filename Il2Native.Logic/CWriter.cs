@@ -3667,8 +3667,7 @@ namespace Il2Native.Logic
 
         private void SetSettings(string fileName, string fileExt, string sourceFilePath, string pdbFilePath, string[] args)
         {
-            var extension = Path.GetExtension(fileName);
-            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + fileExt : fileName;
+            this.outputFile = fileName + fileExt;
 
             this.ReadParameters(sourceFilePath, pdbFilePath, args);
         }

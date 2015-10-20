@@ -1637,7 +1637,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!method.IsGenericMethod && !method.IsGenericMethodDefinition)
+            if (!method.IsGenericMethod)
             {
                 if (method.DeclaringType.IsGenericType && !stackCall.Contains(method))
                 {
@@ -1968,6 +1968,8 @@ namespace Il2Native.Logic
         /// </param>
         private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
         {
+            Debug.Assert(!method.IsGenericMethodDefinition, "Generic Method is not fully resolved");
+
             stackCall.Enqueue(method);
 
             // add all generic types in parameters

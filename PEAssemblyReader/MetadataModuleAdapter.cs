@@ -1412,7 +1412,7 @@ namespace PEAssemblyReader
             {
                 var methodSymbolContext = metadataMethodAdapter.MethodDef;
                 var constructedFrom = methodSymbol.ConstructedFrom;
-                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, methodSymbolContext, methodTypeSubstitution));
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, methodSymbolContext, methodTypeSubstitution ?? methodSymbolContext.TypeSubstitution));
             }
 
             var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
@@ -1420,7 +1420,7 @@ namespace PEAssemblyReader
             {
                 var namedTypeSymbolContext = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
                 var constructedFrom = methodSymbol.ConstructedFrom;
-                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, namedTypeSymbolContext, methodTypeSubstitution));
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, namedTypeSymbolContext, methodTypeSubstitution ?? namedTypeSymbolContext.TypeSubstitution));
             }
 
             return null;
