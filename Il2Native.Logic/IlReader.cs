@@ -2271,23 +2271,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
-            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            if (SetCorLib(assemblySymbol, assemblySymbol))
             {
-                var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
-                if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
-                {
-                    assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
-                    return;
-                }
-            }
-
-            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
-            {
-                if (this.SetCorLib(assemblySymbol, loadedRefAssemblySymbol as PEAssemblySymbol))
-                {
-                    return;
-                }
+                return;
             }
 
             Debug.Fail("CoreLib not set");
@@ -2302,6 +2288,14 @@ namespace Il2Native.Logic
                 if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
                 {
                     assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
+                    return true;
+                }
+            }
+
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                if (this.SetCorLib(assemblySymbol, loadedRefAssemblySymbol as PEAssemblySymbol))
+                {
                     return true;
                 }
             }
