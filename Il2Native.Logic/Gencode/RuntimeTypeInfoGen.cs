@@ -16,6 +16,7 @@
         public const string BaseTypeField = "baseType";
         public const string NameField = "name";
         public const string FullNameField = "fullName";
+        public const string RuntimeModuleField = "runtimeModule";
 
         public static object GetRuntimeTypeInfo(IField field, IType type, CWriter cWriter)
         {
@@ -29,6 +30,12 @@
                     return type.Name;
                 case FullNameField:
                     return type.FullName;
+                case RuntimeModuleField:
+                    return
+                        cWriter.ResolveType("<Module>")
+                            .GetFullyDefinedRefereneForStaticClass(
+                                RuntimeTypeInfoGen.RuntimeModuleHolderFieldName,
+                                cWriter);
             }
 
             return null;
@@ -40,6 +47,7 @@
             yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
+            yield return typeResolver.System.System_RuntimeModule.ToField(type, RuntimeTypeInfoGen.RuntimeModuleField);
         }
 
         public static FullyDefinedReference GetFullyDefinedRefereneForRuntimeType(this IType type, CWriter cWriter)

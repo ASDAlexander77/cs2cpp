@@ -1539,6 +1539,8 @@ namespace PEAssemblyReader
                 return typeSymbol.ToAdapter();
             }
 
+            Debug.Assert(false, string.Format("Type '{0}' can't be resolved", fullName));
+
             throw new KeyNotFoundException();
         }
     }

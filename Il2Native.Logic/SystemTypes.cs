@@ -55,6 +55,8 @@
             this.System_NullReferenceException = module.ResolveType("System.NullReferenceException", null);
             this.System_Type = module.ResolveType("System.Type", null);
             this.System_RuntimeType = module.ResolveType("System.RuntimeType", null);
+            this.System_RuntimeModule = module.ResolveType("System.Reflection.RuntimeModule", null);
+            this.System_RuntimeAssembly = module.ResolveType("System.Reflection.RuntimeAssembly", null);
         }
 
         public IType System_Object { get; private set; }
@@ -154,5 +156,9 @@
         public IType System_Type { get; private set; }
 
         public IType System_RuntimeType { get; private set; }
+
+        public IType System_RuntimeModule { get; private set; }
+
+        public IType System_RuntimeAssembly { get; private set; }
     }
 }

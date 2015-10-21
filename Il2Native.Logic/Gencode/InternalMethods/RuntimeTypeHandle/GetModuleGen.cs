@@ -7,11 +7,11 @@
         public static void Register(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
-
-            var runtimeModuleType = typeResolver.ResolveType("<Module>");
-
-            ilCodeBuilder.LoadToken(runtimeModuleType.GetFullyDefinedRefereneForStaticClass(RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, typeResolver));
+            ilCodeBuilder.LoadArgument(0);
+            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName(RuntimeTypeInfoGen.RuntimeModuleField, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
+
+            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("type"));
 
             ilCodeBuilder.Register(Name);
         }
