@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using InternalMethods;
+    using InternalMethods.ModuleHandle;
     using InternalMethods.RuntimeTypeHandler;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -191,6 +192,9 @@
             GetAssemblyGen.Register(typeResolver);
             ConstructNameGen.Register(typeResolver);
             IsGenericVariable.Register(typeResolver);
+
+            // ModuleHandle
+            GetModuleTypeGen.Register(typeResolver);
         }
 
         [Obsolete]
