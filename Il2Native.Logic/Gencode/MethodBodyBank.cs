@@ -194,6 +194,7 @@
             IsGenericVariableGen.Register(typeResolver);
             GetCorElementTypeGen.Register(typeResolver);
             GetInterfacesGen.Register(typeResolver);
+            HasInstantiationGen.Register(typeResolver);
 
             // ModuleHandle
             GetModuleTypeGen.Register(typeResolver);
