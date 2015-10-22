@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -16,7 +17,48 @@
         public const string BaseTypeField = "baseType";
         public const string NameField = "name";
         public const string FullNameField = "fullName";
+        public const string CorElementTypeField = "corElementType";
         public const string RuntimeModuleField = "runtimeModule";
+
+        internal enum CorElementType : byte
+        {
+            End = 0,
+            Void = 1,
+            Boolean = 2,
+            Char = 3,
+            I1 = 4,
+            U1 = 5,
+            I2 = 6,
+            U2 = 7,
+            I4 = 8,
+            U4 = 9,
+            I8 = 10,
+            U8 = 11,
+            R4 = 12,
+            R8 = 13,
+            String = 14,
+            Ptr = 15,
+            ByRef = 16,
+            ValueType = 17,
+            Class = 18,
+            Var = 19,
+            Array = 20,
+            GenericInst = 21,
+            TypedByRef = 22,
+            I = 24,
+            U = 25,
+            FnPtr = 27,
+            Object = 28,
+            SzArray = 29,
+            MVar = 30,
+            CModReqd = 31,
+            CModOpt = 32,
+            Internal = 33,
+            Max = 34,
+            Modifier = 64,
+            Sentinel = 65,
+            Pinned = 69,
+        }
 
         public static object GetRuntimeTypeInfo(IField field, IType type, CWriter cWriter)
         {
@@ -30,6 +72,58 @@
                     return type.Name;
                 case FullNameField:
                     return type.FullName;
+                case CorElementTypeField:
+
+                    switch (type.FullName)
+                    {
+                        case "System.Void": return CorElementType.Void;
+                        case "System.Boolean": return CorElementType.Boolean;
+                        case "System.Char": return CorElementType.Char;
+                        case "System.SByte": return CorElementType.I1;
+                        case "System.Byte": return CorElementType.U1;
+                        case "System.Int16": return CorElementType.I2;
+                        case "System.UInt16": return CorElementType.U2;
+                        case "System.Int32": return CorElementType.I4;
+                        case "System.UInt32": return CorElementType.U4;
+                        case "System.Int64": return CorElementType.I8;
+                        case "System.UInt64": return CorElementType.U8;
+                        case "System.Single": return CorElementType.R4;
+                        case "System.Double": return CorElementType.R8;
+                        case "System.String": return CorElementType.String;
+                        case "System.Array": return CorElementType.Array;
+                        case "System.TypedReference": return CorElementType.TypedByRef;
+                        case "System.IntPtr": return CorElementType.I;
+                        case "System.UIntPtr": return CorElementType.U;
+                        case "System.Object": return CorElementType.Object;
+                    }
+
+                    if (type.IsArray)
+                    {
+                        return CorElementType.SzArray;
+                    }
+
+                    if (type.IsPointer)
+                    {
+                        return CorElementType.Ptr;
+                    }
+
+                    if (type.IsByRef)
+                    {
+                        return CorElementType.ByRef;
+                    }
+
+                    if (type.IsPinned)
+                    {
+                        return CorElementType.Pinned;
+                    }
+
+                    if (type.IsValueType)
+                    {
+                        return CorElementType.ValueType;
+                    }
+
+                    return CorElementType.Class;
+
                 case RuntimeModuleField:
                     return
                         cWriter.ResolveType("<Module>")
@@ -47,6 +141,7 @@
             yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
+            yield return typeResolver.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);
             yield return typeResolver.System.System_RuntimeModule.ToField(type, RuntimeTypeInfoGen.RuntimeModuleField);
         }
 
@@ -56,7 +151,7 @@
                 () =>
                 {
                     cWriter.Output.Write("(");
-                    cWriter.System.System_Type.WriteTypePrefix(cWriter); 
+                    cWriter.System.System_Type.WriteTypePrefix(cWriter);
                     cWriter.Output.Write(") &");
                     cWriter.WriteStaticFieldName(
                         IlReader.Fields(type, cWriter)

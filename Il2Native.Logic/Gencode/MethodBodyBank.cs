@@ -191,7 +191,9 @@
             GetModuleGen.Register(typeResolver);
             GetAssemblyGen.Register(typeResolver);
             ConstructNameGen.Register(typeResolver);
-            IsGenericVariable.Register(typeResolver);
+            IsGenericVariableGen.Register(typeResolver);
+            GetCorElementTypeGen.Register(typeResolver);
+            GetInterfacesGen.Register(typeResolver);
 
             // ModuleHandle
             GetModuleTypeGen.Register(typeResolver);

@@ -70,9 +70,11 @@
     <Compile Include="Gencode\InternalMethods\ModuleHandle\GetModuleTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ConstructNameGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetAssemblyGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetCorElementTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariable.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariableGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />
