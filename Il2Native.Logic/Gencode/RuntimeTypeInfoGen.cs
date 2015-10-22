@@ -76,53 +76,53 @@
 
                     switch (type.FullName)
                     {
-                        case "System.Void": return CorElementType.Void;
-                        case "System.Boolean": return CorElementType.Boolean;
-                        case "System.Char": return CorElementType.Char;
-                        case "System.SByte": return CorElementType.I1;
-                        case "System.Byte": return CorElementType.U1;
-                        case "System.Int16": return CorElementType.I2;
-                        case "System.UInt16": return CorElementType.U2;
-                        case "System.Int32": return CorElementType.I4;
-                        case "System.UInt32": return CorElementType.U4;
-                        case "System.Int64": return CorElementType.I8;
-                        case "System.UInt64": return CorElementType.U8;
-                        case "System.Single": return CorElementType.R4;
-                        case "System.Double": return CorElementType.R8;
-                        case "System.String": return CorElementType.String;
-                        case "System.Array": return CorElementType.Array;
-                        case "System.TypedReference": return CorElementType.TypedByRef;
-                        case "System.IntPtr": return CorElementType.I;
-                        case "System.UIntPtr": return CorElementType.U;
-                        case "System.Object": return CorElementType.Object;
+                        case "System.Void": return (byte)CorElementType.Void;
+                        case "System.Boolean": return (byte)CorElementType.Boolean;
+                        case "System.Char": return (byte)CorElementType.Char;
+                        case "System.SByte": return (byte)CorElementType.I1;
+                        case "System.Byte": return (byte)CorElementType.U1;
+                        case "System.Int16": return (byte)CorElementType.I2;
+                        case "System.UInt16": return (byte)CorElementType.U2;
+                        case "System.Int32": return (byte)CorElementType.I4;
+                        case "System.UInt32": return (byte)CorElementType.U4;
+                        case "System.Int64": return (byte)CorElementType.I8;
+                        case "System.UInt64": return (byte)CorElementType.U8;
+                        case "System.Single": return (byte)CorElementType.R4;
+                        case "System.Double": return (byte)CorElementType.R8;
+                        case "System.String": return (byte)CorElementType.String;
+                        case "System.Array": return (byte)CorElementType.Array;
+                        case "System.TypedReference": return (byte)CorElementType.TypedByRef;
+                        case "System.IntPtr": return (byte)CorElementType.I;
+                        case "System.UIntPtr": return (byte)CorElementType.U;
+                        case "System.Object": return (byte)CorElementType.Object;
                     }
 
                     if (type.IsArray)
                     {
-                        return CorElementType.SzArray;
+                        return (byte)CorElementType.SzArray;
                     }
 
                     if (type.IsPointer)
                     {
-                        return CorElementType.Ptr;
+                        return (byte)CorElementType.Ptr;
                     }
 
                     if (type.IsByRef)
                     {
-                        return CorElementType.ByRef;
+                        return (byte)CorElementType.ByRef;
                     }
 
                     if (type.IsPinned)
                     {
-                        return CorElementType.Pinned;
+                        return (byte)CorElementType.Pinned;
                     }
 
                     if (type.IsValueType)
                     {
-                        return CorElementType.ValueType;
+                        return (byte)CorElementType.ValueType;
                     }
 
-                    return CorElementType.Class;
+                    return (byte)CorElementType.Class;
 
                 case RuntimeModuleField:
                     return

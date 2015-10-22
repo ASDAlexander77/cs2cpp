@@ -2,7 +2,7 @@
 {
     public static class IsGenericVariableGen
     {
-        public static readonly string Name = "Boolean System.RuntimeTypeHandle.IsGenericVariableGen(System.RuntimeType)";
+        public static readonly string Name = "Boolean System.RuntimeTypeHandle.IsGenericVariable(System.RuntimeType)";
 
         public static void Register(ITypeResolver typeResolver)
         {

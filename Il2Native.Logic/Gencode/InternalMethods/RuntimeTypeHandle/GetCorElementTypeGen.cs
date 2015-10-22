@@ -2,7 +2,7 @@
 {
     public static class GetCorElementTypeGen
     {
-        public static readonly string Name = "System.Reflection.CorElementType System.RuntimeTypeHandle.GetCorElementTypeGen(System.RuntimeType)";
+        public static readonly string Name = "System.Reflection.CorElementType System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)";
 
         public static void Register(ITypeResolver typeResolver)
         {
