@@ -2,7 +2,7 @@
 {
     public static class GetInterfacesGen
     {
-        public static readonly string Name = "System.Type[] System.Type.GetInterfaces(System.RuntimeType)";
+        public static readonly string Name = "System.Type[] System.RuntimeTypeHandle.GetInterfaces(System.RuntimeType)";
 
         public static void Register(ITypeResolver typeResolver)
         {

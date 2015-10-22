@@ -74,6 +74,7 @@
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\HasInstantiationGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariableGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />

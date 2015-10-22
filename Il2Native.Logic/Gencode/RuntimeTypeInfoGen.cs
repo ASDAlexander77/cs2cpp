@@ -18,6 +18,8 @@
         public const string NameField = "name";
         public const string FullNameField = "fullName";
         public const string CorElementTypeField = "corElementType";
+        public const string HasInstantiationField = "hasInstantiation";
+        public const string IsGenericVariableField = "isGenericVariable";
         public const string RuntimeModuleField = "runtimeModule";
 
         internal enum CorElementType : byte
@@ -124,6 +126,12 @@
 
                     return (byte)CorElementType.Class;
 
+                case HasInstantiationField:
+                    return type.IsGenericType;
+
+                case IsGenericVariableField:
+                    return type.IsGenericParameter;
+
                 case RuntimeModuleField:
                     return
                         cWriter.ResolveType("<Module>")
@@ -142,6 +150,8 @@
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
             yield return typeResolver.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);
+            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.HasInstantiationField);
+            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericVariableField);
             yield return typeResolver.System.System_RuntimeModule.ToField(type, RuntimeTypeInfoGen.RuntimeModuleField);
         }
 
