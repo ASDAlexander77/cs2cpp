@@ -127,10 +127,10 @@
                     return (byte)CorElementType.Class;
 
                 case HasInstantiationField:
-                    return type.IsGenericType;
+                    return type.IsGenericType ? 1 : 0;
 
                 case IsGenericVariableField:
-                    return type.IsGenericParameter;
+                    return type.IsGenericParameter ? 1 : 0;
 
                 case RuntimeModuleField:
                     return
