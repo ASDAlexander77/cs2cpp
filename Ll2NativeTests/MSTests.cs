@@ -869,21 +869,20 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestSystemLinq()
         {
-            
-            ////Il2Converter.Convert(
-            ////                @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Private.Uri.dll",
-            ////                CompilerHelper.OutputPath,
-            ////                CompilerHelper.GetConverterArgs(false, stubs: false, split: false));
+            Il2Converter.Convert(
+                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Private.Uri.dll",
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: false, split: false));
 
             ////Il2Converter.Convert(
             ////                @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Resources.ResourceManager.dll",
             ////                CompilerHelper.OutputPath,
             ////                CompilerHelper.GetConverterArgs(false, stubs: false, split: false));
 
-            Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Collections.dll",
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: false, split: false));
+            ////Il2Converter.Convert(
+            ////                @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Collections.dll",
+            ////                CompilerHelper.OutputPath,
+            ////                CompilerHelper.GetConverterArgs(false, stubs: false, split: false));
 
             ////Il2Converter.Convert(
             ////                @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Diagnostics.Debug.dll",

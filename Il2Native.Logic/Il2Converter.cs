@@ -11,6 +11,7 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel.Design;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -1148,7 +1149,13 @@ namespace Il2Native.Logic
                 typeDict[type.ToString()] = type;
             }
 
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).Where(t => CheckFilter(filter, t, typeDict)).ToList();
+            var typesToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
+            if (!ilReader.IsCoreLib)
+            {
+                typesToGet = typesToGet.Where(t => CheckFilter(filter, t, typeDict));
+            }
+
+            var types = typesToGet.ToList();
 
             readTypesContext.UsedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
             readTypesContext.GenericMethodSpecializations = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
@@ -1208,10 +1215,11 @@ namespace Il2Native.Logic
 
         private static bool CheckFilter(string[] filters, IType type, IDictionary<string, IType> allTypes)
         {
-            if (allTypes != null)
+            if (allTypes != null && !type.IsModule)
             {
-                var existringType = allTypes[type.ToString()];
-                if (existringType != null && existringType.AssemblyQualifiedName != type.AssemblyQualifiedName)
+                IType existringType;
+                if (allTypes.TryGetValue(type.ToString(), out existringType) && existringType != null &&
+                    existringType.AssemblyQualifiedName != type.AssemblyQualifiedName)
                 {
                     return false;
                 }
