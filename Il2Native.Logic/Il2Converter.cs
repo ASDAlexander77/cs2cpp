@@ -829,7 +829,6 @@ namespace Il2Native.Logic
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
 
-            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             var readTypes = ReadingTypes(
                 ilReader,
                 settings.Filter);
@@ -1140,14 +1139,16 @@ namespace Il2Native.Logic
             // types in current assembly
             var readTypesContext = ReadTypesContext.New();
             var readingTypesContext = ReadingTypesContext.New();
-            var typeToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
-            if (filter != null)
+
+            var allTypes = ilReader.AllTypes().ToList();
+
+            var typeDict = new SortedDictionary<string, IType>();
+            foreach (var type in allTypes)
             {
-                typeToGet = typeToGet.Where(t => CheckFilter(filter, t));
+                typeDict[type.ToString()] = type;
             }
 
-            var types = typeToGet.ToList();
-            var allTypes = ilReader.AllTypes().ToList();
+            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).Where(t => CheckFilter(filter, t, typeDict)).ToList();
 
             readTypesContext.UsedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
             readTypesContext.GenericMethodSpecializations = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
@@ -1205,8 +1206,22 @@ namespace Il2Native.Logic
         ////    return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => !t.IsModule);
         ////}
 
-        private static bool CheckFilter(IEnumerable<string> filters, IType type)
+        private static bool CheckFilter(string[] filters, IType type, IDictionary<string, IType> allTypes)
         {
+            if (allTypes != null)
+            {
+                var existringType = allTypes[type.ToString()];
+                if (existringType != null && existringType.AssemblyQualifiedName != type.AssemblyQualifiedName)
+                {
+                    return false;
+                }
+            }
+
+            if (filters == null || filters.Length == 0)
+            {
+                return true;
+            }
+
             foreach (var filter in filters)
             {
                 if (filter.EndsWith("*"))
