@@ -14,6 +14,7 @@ namespace Il2Native.Logic.Gencode
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using DebugInfo.DebugInfoSymbolWriter;
     using PEAssemblyReader;
 
     /// <summary>

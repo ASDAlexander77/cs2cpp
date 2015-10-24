@@ -12,7 +12,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection.Emit;
     using System.Text;
-
+    using DebugInfo.DebugInfoSymbolWriter;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
 
@@ -1753,7 +1753,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (!type.SpecialUsage() && type.IsInternal && !type.Name.StartsWith("Runtime"))
+            if (type.IsInternal && !type.Name.StartsWith("Runtime"))
             {
                 return true;
             }
@@ -1768,7 +1768,7 @@ namespace Il2Native.Logic
                 return currentAssemblyNamespace;
             }
 
-            if (!type.SpecialUsage() && type.IsInternal && !type.Name.StartsWith("Runtime"))
+            if (type.IsInternal && !type.Name.StartsWith("Runtime"))
             {
                 return type.AssemblyQualifiedName;
             }
