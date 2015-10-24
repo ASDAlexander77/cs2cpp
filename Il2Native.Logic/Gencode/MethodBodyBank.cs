@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Resources;
     using InternalMethods;
     using InternalMethods.ModuleHandle;
     using InternalMethods.RuntimeTypeHandler;
@@ -24,6 +25,11 @@
             return MethodsByFullName.ContainsKey(methodFullName);
         }
 
+        public static void Reset()
+        {
+            initialized = false;
+        }
+
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
             if (!initialized)
@@ -33,6 +39,7 @@
                     // we double check to filter threads waiting on 'lock'
                     if (!initialized)
                     {
+                        MethodsByFullName.Clear();
                         RegisterAll(typeResolver);
                         initialized = true;
                     }

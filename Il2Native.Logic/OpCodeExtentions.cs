@@ -1753,6 +1753,11 @@ namespace Il2Native.Logic
                 return true;
             }
 
+            if (!type.SpecialUsage() && type.IsInternal && !type.Name.StartsWith("Runtime"))
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -1763,7 +1768,7 @@ namespace Il2Native.Logic
                 return currentAssemblyNamespace;
             }
 
-            if (type.IsInternal)
+            if (!type.SpecialUsage() && type.IsInternal && !type.Name.StartsWith("Runtime"))
             {
                 return type.AssemblyQualifiedName;
             }

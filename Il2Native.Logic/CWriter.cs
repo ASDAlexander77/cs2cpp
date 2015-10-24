@@ -2520,7 +2520,7 @@ namespace Il2Native.Logic
             if (methodBase.IsAssemblyNamespaceRequired(ownerOfExplicitInterface))
             {
                 writer.Write("_");
-                writer.Write(this.AssemblyQualifiedName.CleanUpName());
+                writer.Write(methodBase.GetAssemblyNamespace(this.AssemblyQualifiedName).CleanUpName());
             }
         }
 
