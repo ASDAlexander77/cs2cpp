@@ -1171,43 +1171,6 @@ namespace Il2Native.Logic
             return readTypesContext;
         }
 
-        private static bool CanBeMerged(IType type, NamespaceContainer<IType> originalGenericTypes, NamespaceContainer<IType> originalTypes = null)
-        {
-            var currentType = type.ToBareType();
-            while (currentType.IsNested)
-            {
-                currentType = currentType.DeclaringType;
-            }
-
-            if (originalTypes != null && originalTypes.Contains(currentType))
-            {
-                return true;
-            }
-
-            if (!currentType.IsMerge)
-            {
-                var genericDefFromMainAssembly = currentType.IsGenericType && originalGenericTypes.Contains(currentType.GetTypeDefinition());
-                if (!genericDefFromMainAssembly)
-                {
-                    return false;
-                }
-
-                if (currentType.IsGenericType)
-                {
-                    bool canBeMerged = currentType.GenericTypeArguments.All(t => CanBeMerged(t, originalGenericTypes, originalTypes));
-                    return canBeMerged;
-                }
-            }
-
-            return true;
-        }
-
-        private static bool CanBeMerged(IMethod method, NamespaceContainer<IType> originalGenericTypes, NamespaceContainer<IType> originalTypes)
-        {
-            Debug.Assert(method.IsGenericMethod, "Expect generic method here");
-            return method.IsGenericMethod && method.GetGenericArguments().All(t => CanBeMerged(t, originalGenericTypes, originalTypes));
-        }
-
         ////private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
         ////{
         ////    return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => !t.IsModule);

@@ -1,3 +1,5 @@
+#if NORMALIZATION_FORM
+
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -324,3 +326,5 @@ namespace System.Text
             NormalizationForm normForm, byte* pTableData);
     }
 }
+
+#endif

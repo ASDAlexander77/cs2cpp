@@ -2152,7 +2152,7 @@ namespace Il2Native.Logic
         {
             var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
             var added = new NamespaceContainer<IType>();
-            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent, readAll ? added : null);
+            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent, /*readAll ? added :*/ null);
         }
 
         private IEnumerable<IType> ReadTypes(AssemblySymbol assemblySymbol, bool readAll = false, bool ignoreCurrent = false, ISet<IType> added = null)

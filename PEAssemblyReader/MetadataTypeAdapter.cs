@@ -477,6 +477,14 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool IsInternal
+        {
+            get { return this.typeDef.DeclaredAccessibility == Accessibility.Internal; }
+        }
+
+
         public bool IsPrivateImplementationDetails
         {
             get

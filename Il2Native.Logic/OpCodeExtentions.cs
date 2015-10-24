@@ -24,6 +24,11 @@ namespace Il2Native.Logic
     {
         public static string CleanUpName(this string typeBaseName)
         {
+            if (typeBaseName == null)
+            {
+                return null;
+            }
+
             var s = new char[typeBaseName.Length];
 
             var n = ' ';
@@ -1739,6 +1744,76 @@ namespace Il2Native.Logic
             }
 
             return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
+        }
+
+        public static bool IsAssemblyNamespaceRequired(this IType type)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
+            {
+                return currentAssemblyNamespace;
+            }
+
+            if (type.IsInternal)
+            {
+                return type.AssemblyQualifiedName;
+            }
+
+            return null;
+        }
+
+        public static bool IsAssemblyNamespaceRequired(this IMethod method, IType ownerOfExplicitInterface = null)
+        {
+            if (method.IsUnmanaged || method.IsUnmanagedMethodReference || method.IsUnmanagedDllImport)
+            {
+                return false;
+            }
+
+            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
+            {
+                return true;
+            }
+
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+            {
+                return true;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string GetAssemblyNamespace(this IMethod method, string currentAssemblyNamespace, IType ownerOfExplicitInterface = null)
+        {
+            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
+            {
+                return GetAssemblyNamespace(method.DeclaringType, currentAssemblyNamespace);
+            }
+
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+            {
+                return currentAssemblyNamespace;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return currentAssemblyNamespace;
+            }
+
+            return null;
         }
     }
 }

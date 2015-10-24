@@ -1384,6 +1384,7 @@ namespace System {
             return nb;
         }
 
+#if NORMALIZATION_FORM
         // Normalization Methods
         // These just wrap calls to Normalization class
         public bool IsNormalized()
@@ -1441,6 +1442,7 @@ namespace System {
 #endif // !FEATURE_NORM_IDNA_ONLY            
             return Normalization.Normalize(this, normalizationForm);
         }
+#endif
 
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]

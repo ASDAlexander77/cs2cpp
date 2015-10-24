@@ -2517,7 +2517,7 @@ namespace Il2Native.Logic
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
             this.WriteMethodDefinitionNameNoGenericSuffix(writer, methodBase, ownerOfExplicitInterface, shortName);
-            if (methodBase.DeclaringType != null && IsAssemblyNamespaceRequired(methodBase.DeclaringType, methodBase, ownerOfExplicitInterface))
+            if (methodBase.IsAssemblyNamespaceRequired(ownerOfExplicitInterface))
             {
                 writer.Write("_");
                 writer.Write(this.AssemblyQualifiedName.CleanUpName());
@@ -4583,27 +4583,39 @@ namespace Il2Native.Logic
 
         public void StartPreprocessorIf(IType type, string prefix)
         {
-            if (IsAssemblyNamespaceRequired(type))
-            {
+            ////var effectiveType = type;
+            ////while (effectiveType.IsNested)
+            ////{
+            ////    effectiveType = effectiveType.DeclaringType;
+            ////}
+
+            ////if (type.IsAssemblyNamespaceRequired() || (effectiveType.IsInternal || type.IsInternal))
+            ////{
                 var fullName = type.FullName.CleanUpName();
                 if (type.Name.Length > 0 && type.Name[0] == '<' && !type.IsModule)
                 {
-                    fullName = string.Concat(fullName, "_", this.AssemblyQualifiedName.CleanUpName());
+                    fullName = string.Concat(fullName, "_", type.GetAssemblyNamespace(this.AssemblyQualifiedName).CleanUpName());
                 }
 
                 this.Output.Write("#ifndef {0}__", prefix);
                 this.Output.WriteLine(fullName);
                 this.Output.Write("#define {0}__", prefix);
                 this.Output.WriteLine(fullName);
-            }
+            ////}
         }
 
         public void EndPreprocessorIf(IType type)
         {
-            if (IsAssemblyNamespaceRequired(type))
-            {
+            ////var effectiveType = type;
+            ////while (effectiveType.IsNested)
+            ////{
+            ////    effectiveType = effectiveType.DeclaringType;
+            ////}
+
+            ////if (type.IsAssemblyNamespaceRequired() || effectiveType.IsInternal || type.IsInternal)
+            ////{
                 this.Output.WriteLine("#endif");
-            }
+            ////}
         }
 
         private void StartPreprocessorIf(string id, string prefix)
