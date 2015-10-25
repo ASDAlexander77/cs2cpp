@@ -2006,7 +2006,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol, ISet<IType> added = null)
+        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol)
         {
             Debug.Assert(assemblySymbol != null, "missing assembly");
 
@@ -2016,16 +2016,10 @@ namespace Il2Native.Logic
                 foreach (var metadataTypeAdapter in
                     from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers()) select new MetadataTypeAdapter(symbol))
                 {
-                    if (added == null || added.Add(metadataTypeAdapter))
+                    yield return metadataTypeAdapter;
+                    foreach (var nestedType in EnumAllNestedTypes(metadataTypeAdapter))
                     {
-                        yield return metadataTypeAdapter;
-                        foreach (var nestedType in EnumAllNestedTypes(metadataTypeAdapter))
-                        {
-                            if (added == null || added.Add(nestedType))
-                            {
-                                yield return nestedType;
-                            }
-                        }
+                        yield return nestedType;
                     }
                 }
             }
@@ -2151,11 +2145,10 @@ namespace Il2Native.Logic
         private IEnumerable<IType> ReadTypes(bool readAll = false, bool ignoreCurrent = false)
         {
             var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
-            var added = new NamespaceContainer<IType>();
-            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent, /*readAll ? added :*/ null);
+            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent);
         }
 
-        private IEnumerable<IType> ReadTypes(AssemblySymbol assemblySymbol, bool readAll = false, bool ignoreCurrent = false, ISet<IType> added = null)
+        private IEnumerable<IType> ReadTypes(AssemblySymbol assemblySymbol, bool readAll = false, bool ignoreCurrent = false)
         {
             if (readAll)
             {
@@ -2167,7 +2160,7 @@ namespace Il2Native.Logic
                         throw new Exception(string.Format("Assembly '{0}' is missing", moduleAssemblySymbol));
                     }
 
-                    foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol, added))
+                    foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol))
                     {
                         yield return metadataTypeAdapter;
                     }
@@ -2177,7 +2170,7 @@ namespace Il2Native.Logic
             if (!ignoreCurrent)
             {
                 // 3) Load Types
-                foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol, added))
+                foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
                 {
                     yield return metadataTypeAdapter;
                 }

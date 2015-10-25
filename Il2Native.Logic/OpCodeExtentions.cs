@@ -13,6 +13,7 @@ namespace Il2Native.Logic
     using System.Reflection.Emit;
     using System.Text;
     using DebugInfo.DebugInfoSymbolWriter;
+    using Gencode.SynthesizedMethods;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
 
@@ -1753,7 +1754,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (type.IsInternal && !type.Name.StartsWith("Runtime"))
+            if (type.IsAnyParentOrSelfInternal() && !type.Name.StartsWith("Runtime"))
             {
                 return true;
             }
@@ -1768,7 +1769,7 @@ namespace Il2Native.Logic
                 return currentAssemblyNamespace;
             }
 
-            if (type.IsInternal && !type.Name.StartsWith("Runtime"))
+            if (type.IsAnyParentOrSelfInternal() && !type.Name.StartsWith("Runtime"))
             {
                 return type.AssemblyQualifiedName;
             }
@@ -1803,11 +1804,6 @@ namespace Il2Native.Logic
 
         public static string GetAssemblyNamespace(this IMethod method, string currentAssemblyNamespace, IType ownerOfExplicitInterface = null)
         {
-            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
-            {
-                return GetAssemblyNamespace(method.DeclaringType, currentAssemblyNamespace);
-            }
-
             if (method.IsGenericMethod || method.IsGenericMethodDefinition)
             {
                 return currentAssemblyNamespace;
@@ -1818,7 +1814,38 @@ namespace Il2Native.Logic
                 return currentAssemblyNamespace;
             }
 
+            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
+            {
+                return GetAssemblyNamespace(method.DeclaringType, currentAssemblyNamespace);
+            }
+
             return null;
+        }
+
+        public static bool IsAnyParentOrSelfInternal(this IType type)
+        {
+            if (type == null)
+            {
+                return false;
+            }
+
+            var effectiveType = type;
+            do
+            {
+                if (effectiveType.IsInternal)
+                {
+                    return true;
+                }
+
+                if (!effectiveType.IsNested)
+                {
+                    break;
+                }
+
+                effectiveType = effectiveType.DeclaringType;
+            } while (effectiveType != null);
+             
+            return false;
         }
     }
 }

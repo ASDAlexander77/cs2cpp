@@ -4583,13 +4583,7 @@ namespace Il2Native.Logic
 
         public void StartPreprocessorIf(IType type, string prefix)
         {
-            ////var effectiveType = type;
-            ////while (effectiveType.IsNested)
-            ////{
-            ////    effectiveType = effectiveType.DeclaringType;
-            ////}
-
-            ////if (type.IsAssemblyNamespaceRequired() || (effectiveType.IsInternal || type.IsInternal))
+            ////if (type.IsAssemblyNamespaceRequired() || type.IsAnyParentOrSelfInternal())
             ////{
                 var fullName = type.FullName.CleanUpName();
                 if (type.Name.Length > 0 && type.Name[0] == '<' && !type.IsModule)
@@ -4606,13 +4600,7 @@ namespace Il2Native.Logic
 
         public void EndPreprocessorIf(IType type)
         {
-            ////var effectiveType = type;
-            ////while (effectiveType.IsNested)
-            ////{
-            ////    effectiveType = effectiveType.DeclaringType;
-            ////}
-
-            ////if (type.IsAssemblyNamespaceRequired() || effectiveType.IsInternal || type.IsInternal)
+            ////if (type.IsAssemblyNamespaceRequired() || type.IsAnyParentOrSelfInternal())
             ////{
                 this.Output.WriteLine("#endif");
             ////}

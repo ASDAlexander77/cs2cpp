@@ -1145,9 +1145,13 @@ namespace Il2Native.Logic
             var allTypes = ilReader.AllTypes().ToList();
 
             var typeDict = new SortedDictionary<string, IType>();
-            foreach (var type in allTypes)
+            foreach (var type in allTypes.Where(t => !t.IsInternal))
             {
-                typeDict[type.ToString()] = type;
+                var key = type.ToString();
+                if (!typeDict.ContainsKey(key))
+                {
+                    typeDict.Add(key, type);
+                }
             }
 
             var typesToGet = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
@@ -1179,7 +1183,7 @@ namespace Il2Native.Logic
 
         private static bool CheckFilter(string[] filters, IType type, IDictionary<string, IType> allTypes)
         {
-            if (allTypes != null && !type.IsModule)
+            if (allTypes != null && !type.IsModule && !type.IsPrivateImplementationDetails)
             {
                 IType existringType;
                 if (allTypes.TryGetValue(type.ToString(), out existringType) && existringType != null &&
