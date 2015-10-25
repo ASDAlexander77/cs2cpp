@@ -841,26 +841,10 @@ namespace Ll2NativeTests
         //[Ignore]
         public void TestMscolibCSNative()
         {
-            // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
-
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
-
-            ////if (CompilerHelper.CompileWithOptimization)
-            ////{
-            ////    CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-            ////    CompilerHelper.ExecCmd(
-            ////        "llc",
-            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.bc", CompilerHelper.Target));
-            ////}
-            ////else
-            ////{
-            ////    CompilerHelper.ExecCmd(
-            ////        "llc",
-            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.ll", CompilerHelper.Target));
-            ////}
         }
 
 
@@ -870,37 +854,37 @@ namespace Ll2NativeTests
         public void TestSystemLinq()
         {
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Private.Uri.dll",
+                            string.Format(@"{0}System.Private.Uri.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Resources.ResourceManager.dll",
+                            string.Format(@"{0}System.Resources.ResourceManager.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Collections.dll",
+                            string.Format(@"{0}System.Collections.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Diagnostics.Debug.dll",
+                            string.Format(@"{0}System.Diagnostics.Debug.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Runtime.dll",
+                            string.Format(@"{0}System.Runtime.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Runtime.Extensions.dll",
+                            string.Format(@"{0}System.Runtime.Extensions.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
 
             Il2Converter.Convert(
-                            @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Linq.dll",
+                            string.Format(@"{0}System.Linq.dll", CompilerHelper.CoreCLRDlls),
                             CompilerHelper.OutputPath,
                             CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
         }

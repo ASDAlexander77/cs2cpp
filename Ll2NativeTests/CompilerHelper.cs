@@ -20,7 +20,8 @@
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
-
+        public const string CoreCLRDlls = @"C:\Dev\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
+        
         public const string OutputObjectFileExt = "obj";
 
         public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
@@ -34,7 +35,8 @@
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
-        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\ ";
+        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
+        public const string CoreCLRDlls = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
         
         public const string OutputObjectFileExt = "obj";
         
