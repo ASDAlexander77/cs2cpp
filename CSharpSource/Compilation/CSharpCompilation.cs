@@ -726,7 +726,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     removeSet.Add(tree);
                 }
 
-                Debug.Assert(!removeSet.IsEmpty());
+                Debug.Assert(!((IEnumerable<SyntaxTree>)removeSet).IsEmpty());
 
                 // We're going to have to revise the ordinals of all
                 // trees after the first one removed, so just build
