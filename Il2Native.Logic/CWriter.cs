@@ -2543,10 +2543,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        private void WriteMethodEnd(IMethod method, IGenericContext genericContext)
+        private void WriteMethodEnd(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext)
         {
             var rest = this.PrepareWritingMethodBody(method);
-            this.WriteMethodBeginning(method, genericContext);
+            this.WriteMethodBeginning(method, methodOpCodeHolder, genericContext);
             this.WriteMethodBody(rest, method);
             this.WritePostMethodEnd(method);
         }
@@ -2737,14 +2737,14 @@ namespace Il2Native.Logic
                 this.IlReader.StaticConstructors.Add(method);
             }
 
-            this.WriteMethodStart(method, genericMethodContext);
+            this.WriteMethodStart(method, methodOpCodeHolder, genericMethodContext);
 
             foreach (var ilCode in IlReader.OpCodes(methodOpCodeHolder ?? method, genericMethodContext))
             {
                 this.WriteOpCode(ilCode);
             }
 
-            this.WriteMethodEnd(method, genericMethodContext);
+            this.WriteMethodEnd(method, methodOpCodeHolder, genericMethodContext);
         }
 
         /// <summary>
@@ -2753,7 +2753,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        private void WriteMethodStart(IMethod method, IGenericContext genericContext)
+        private void WriteMethodStart(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext)
         {
             this.StartProcess();
 
@@ -2765,7 +2765,7 @@ namespace Il2Native.Logic
                 this.methodsByToken[method.Token.Value] = method;
             }
 
-            this.ReadMethodInfo(method, genericContext);
+            this.ReadMethodInfo(method, methodOpCodeHolder, genericContext);
 
             var isMain = IsMain(method);
 
@@ -3224,7 +3224,7 @@ namespace Il2Native.Logic
             // write all extern declarations
             foreach (var externMethod in this.externDeclarations)
             {
-                this.ReadMethodInfo(externMethod, null);
+                this.ReadMethodInfo(externMethod, null, null);
                 this.WriteMethodProlog(externMethod, externDecl: true);
                 this.Output.WriteLine(";");
             }
@@ -3970,7 +3970,7 @@ namespace Il2Native.Logic
             this.WriteMethod(new SynthesizedMainMethod(mainSynthMethod, this.MainMethod, this), null, null);
         }
 
-        private void WriteMethodBeginning(IMethod method, IGenericContext genericContext)
+        private void WriteMethodBeginning(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext)
         {
             if (method.IsAbstract || method.IsSkipped())
             {
@@ -3980,7 +3980,7 @@ namespace Il2Native.Logic
             this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
-            this.ReadMethodInfo(method, genericContext);
+            this.ReadMethodInfo(method, methodOpCodeHolder, genericContext);
 
             // debug info
             this.WriteDebugInfoForMethod(method);
@@ -3992,18 +3992,13 @@ namespace Il2Native.Logic
 
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             // write local declarations
-            var methodBodyBytes = method.ResolveMethodBody(genericContext);
-            if (methodBodyBytes.HasBody || this.Ops.Count > 0)
+            if (!this.NoBody)
             {
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
-
-                if (methodBodyBytes.HasBody)
-                {
-                    this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-
-                    this.Output.StartMethodBody();
-                }
+                var methodBodyBytes = (methodOpCodeHolder ?? method).ResolveMethodBody(genericContext);
+                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
+                this.Output.StartMethodBody();
             }
             else if (isDelegateBodyFunctions)
             {
@@ -4065,7 +4060,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && (NoBody && this.Ops.Count == 0) && !externDecl)
+            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && NoBody && !externDecl)
             {
                 return true;
             }
@@ -4223,7 +4218,7 @@ namespace Il2Native.Logic
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
             {
-                this.ReadMethodInfo(ctor, genericContext);
+                this.ReadMethodInfo(ctor, null, genericContext);
                 this.WriteMethodProlog(ctor, true);
                 this.Output.WriteLine(";");
                 return;
@@ -4232,7 +4227,7 @@ namespace Il2Native.Logic
             var method = methodKey.Method;
             if (method != null)
             {
-                this.ReadMethodInfo(method, genericContext);
+                this.ReadMethodInfo(method, null, genericContext);
                 if (!this.WriteMethodProlog(method, true))
                 {
                     this.Output.WriteLine(";");
@@ -4331,8 +4326,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WritePostMethodEnd(IMethod method)
         {
-            var noBody = ((this.NoBody && this.Ops.Count == 0) || method.IsAbstract || method.IsSkipped()) && !method.IsDelegateFunctionBody();
-            if (this.IsStubApplied(method) && noBody)
+            if (method.IsAbstract || method.IsSkipped())
+            {
+                return;
+            }
+
+            var noBody = this.NoBody && !method.IsDelegateFunctionBody();
+            if (noBody && this.IsStubApplied(method))
             {
                 this.DefaultStub(method);
                 return;
@@ -4341,12 +4341,12 @@ namespace Il2Native.Logic
             if (!noBody)
             {
                 this.Output.Indent--;
-                if (!this.NoBody)
-                {
-                    this.Output.EndMethodBody();
-                }
-
+                this.Output.EndMethodBody();
                 this.Output.WriteLine("}");
+            }
+            else
+            {
+                Debug.Assert(!this.Ops.Any());
             }
         }
 

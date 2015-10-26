@@ -234,7 +234,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
+        public void ReadMethodInfo(IMethod methodInfo, IMethod methodOpCodeHolder, IGenericContext genericContext)
         {
             var parameters = methodInfo.GetParameters();
             this.Parameters = parameters != null ? parameters.ToArray() : new IParameter[0];
@@ -243,7 +243,7 @@ namespace Il2Native.Logic
             this.MethodReturnType = null;
             this.ReadThisTypeInfo(methodInfo);
 
-            var methodBody = methodInfo.ResolveMethodBody(genericContext);
+            var methodBody = (methodOpCodeHolder ?? methodInfo).ResolveMethodBody(genericContext);
             this.NoBody = !methodBody.HasBody;
             if (!this.NoBody)
             {
