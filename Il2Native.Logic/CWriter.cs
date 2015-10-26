@@ -3990,17 +3990,20 @@ namespace Il2Native.Logic
                 return;
             }
 
-            bool isDelegateBodyFunctions = method.IsDelegateFunctionBody();
+            var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
-            if (methodBodyBytes.HasBody)
+            if (methodBodyBytes.HasBody || this.Ops.Count > 0)
             {
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
 
-                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
+                if (methodBodyBytes.HasBody)
+                {
+                    this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
 
-                this.Output.StartMethodBody();
+                    this.Output.StartMethodBody();
+                }
             }
             else if (isDelegateBodyFunctions)
             {
@@ -4334,10 +4337,13 @@ namespace Il2Native.Logic
                 this.DefaultStub(method);
             }
 
-            if (!this.NoBody)
+            if (!this.NoBody || this.Ops.Count != 0)
             {
                 this.Output.Indent--;
-                this.Output.EndMethodBody();
+                if (!this.NoBody)
+                {
+                    this.Output.EndMethodBody();
+                }
 
                 this.Output.WriteLine("}");
             }

@@ -341,22 +341,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
-        public void TestCompileWithMscorlib()
-        {
-            var skip = new List<int>(new[] { 100 });
-            CompilerHelper.Mscorlib = true;
-            CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";
-
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.CompileAndRun(string.Format("test-{0}", index), ignoreBadFiles: true);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
@@ -847,6 +831,18 @@ namespace Ll2NativeTests
                 CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
         }
 
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        //[Ignore]
+        public void TestMscolibCSNative_Type()
+        {            
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.MscorlibPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false, stubs: true, split: true),
+                new[] { "System.Delegate" });
+        }
 
         /// <summary>
         /// </summary>
@@ -899,21 +895,6 @@ namespace Ll2NativeTests
             CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
             CompilerHelper.AddSystemLinq = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        [Ignore]
-        public void TestGenCompileWithMscorlib()
-        {
-            var skip = new List<int>();
-            CompilerHelper.Mscorlib = true;
-            CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
-            }
         }
 
         /// <summary>
@@ -1427,33 +1408,6 @@ namespace Ll2NativeTests
             {
                 CompilerHelper.CompileAndRun(string.Format("dtest-{0:000}", index));
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestMscorlibCompile()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(
-                    @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        [Ignore]
-        public void TestMscorlibCompile_TypeTest()
-        {
-            // Do not forget to set MSCORLIB variable
-            Il2Converter.Convert(
-                Path.GetFullPath(
-                    @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false),
-                new[] { "System.Delegate" });
         }
 
         #region Additional test attributes
