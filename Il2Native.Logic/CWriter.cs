@@ -4065,7 +4065,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && NoBody && !externDecl)
+            if ((externDecl || !excludeNamespace) && !this.IsStubApplied(method) && (NoBody && this.Ops.Count == 0) && !externDecl)
             {
                 return true;
             }
@@ -4331,13 +4331,14 @@ namespace Il2Native.Logic
         /// </param>
         private void WritePostMethodEnd(IMethod method)
         {
-            var stubFunc = this.IsStubApplied(method) && this.NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody();
-            if (stubFunc)
+            var noBody = ((this.NoBody && this.Ops.Count == 0) || method.IsAbstract || method.IsSkipped()) && !method.IsDelegateFunctionBody();
+            if (this.IsStubApplied(method) && noBody)
             {
                 this.DefaultStub(method);
+                return;
             }
 
-            if (!this.NoBody || this.Ops.Count != 0)
+            if (!noBody)
             {
                 this.Output.Indent--;
                 if (!this.NoBody)
