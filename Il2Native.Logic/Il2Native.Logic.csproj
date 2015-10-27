@@ -70,12 +70,14 @@
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\InternalMethods\ModuleHandle\GetModuleTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ConstructNameGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ContainsGenericVariablesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetAssemblyGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetCorElementTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\HasInstantiationGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericTypeDefinitionGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariableGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
