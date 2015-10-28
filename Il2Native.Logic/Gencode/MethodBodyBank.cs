@@ -194,6 +194,7 @@
             // RuntimeTypeHandler
             IsInterfaceGen.Register(typeResolver);
             GetBaseTypeGen.Register(typeResolver);
+            GetElementTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
             GetModuleGen.Register(typeResolver);
             GetAssemblyGen.Register(typeResolver);

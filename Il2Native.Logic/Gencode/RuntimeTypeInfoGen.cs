@@ -15,6 +15,7 @@
 
         public const string TypeAttributesField = "typeAttributes";
         public const string BaseTypeField = "baseType";
+        public const string ElementTypeField = "elementType";
         public const string NameField = "name";
         public const string FullNameField = "fullName";
         public const string CorElementTypeField = "corElementType";
@@ -72,6 +73,8 @@
                     return type.IsInterface ? (int)TypeAttributes.Interface : 0;
                 case BaseTypeField:
                     return type.BaseType != null ? type.BaseType.GetFullyDefinedRefereneForRuntimeType(cWriter) : null;
+                case ElementTypeField:
+                    return type.HasElementType ? type.GetElementType().GetFullyDefinedRefereneForRuntimeType(cWriter) : null;
                 case NameField:
                     return type.Name;
                 case FullNameField:
@@ -156,6 +159,7 @@
         {
             yield return typeResolver.System.System_Int32.ToField(type, RuntimeTypeInfoGen.TypeAttributesField);
             yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
+            yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.ElementTypeField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
             yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
             yield return typeResolver.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);

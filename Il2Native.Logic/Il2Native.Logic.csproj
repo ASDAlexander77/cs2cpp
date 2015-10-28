@@ -73,6 +73,7 @@
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ContainsGenericVariablesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetAssemblyGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetCorElementTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetElementTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
