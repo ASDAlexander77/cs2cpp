@@ -112,18 +112,41 @@ namespace Il2Native.Logic.Gencode
             foreach (var c in pair.Value.ToCharArray())
             {
                 var code = (uint)c;
-                if (code >= 0x20 && code != 0x7f)
+                switch (code)
                 {
-                    if (c == '\\' || c == '"')
-                    {
-                        writer.Write(@"\");
-                    }
+                    case 0x07: writer.Write(@"\a");
+                        break;
+                    case 0x08: writer.Write(@"\b");
+                        break;
+                    case 0x0C: writer.Write(@"\f");
+                        break;
+                    case 0x0A: writer.Write(@"\n");
+                        break;
+                    case 0x0D: writer.Write(@"\r");
+                        break;
+                    case 0x09: writer.Write(@"\t");
+                        break;
+                    case 0x0B: writer.Write(@"\v");
+                        break;
+                    case 0x5C: writer.Write(@"\\");
+                        break;
+                    case 0x27: writer.Write(@"\'");
+                        break;
+                    case 0x22: writer.Write(@"\""");
+                        break;
+                    case 0x3F: writer.Write(@"\?");
+                        break;
+                    default:
+                        if (code >= 0x20 && c <= 'z')
+                        {
+                            writer.Write(c);
+                        }
+                        else
+                        {
+                            writer.Write("\\u{0:X4}", (uint)c);
+                        }
 
-                    writer.Write(c);
-                }
-                else
-                {
-                    writer.Write("\\x{0:X}", (uint)c);
+                        break;
                 }
             }
 
