@@ -143,7 +143,14 @@ namespace Il2Native.Logic.Gencode
                         }
                         else
                         {
-                            writer.Write("\\u{0:X4}", (uint)c);
+                            if (Char.IsHighSurrogate(c) || Char.IsLowSurrogate(c))
+                            {
+                                writer.Write("\\x{0:X4}", (uint)c);
+                            }
+                            else
+                            {
+                                writer.Write("\\u{0:X4}", (uint)c);
+                            }
                         }
 
                         break;

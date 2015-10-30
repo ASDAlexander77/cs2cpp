@@ -598,6 +598,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            AddUsedTokenType(readingTypesContext, type);
+
             foreach (var @interface in type.GetInterfaces())
             {
                 DiscoverGenericSpecializedTypesAndAdditionalTypes(@interface, readingTypesContext);
@@ -623,6 +625,31 @@ namespace Il2Native.Logic
             foreach (var method in methods)
             {
                 DiscoverGenericSpecializedTypesAndAdditionalTypes(method, readingTypesContext);
+            }
+        }
+
+        private static void AddUsedTokenType(ReadingTypesContext readingTypesContext, IType type)
+        {
+            if (readingTypesContext == null)
+            {
+                return;
+            }
+
+            if (readingTypesContext.UsedTypeTokens == null)
+            {
+                return;
+            }
+
+            readingTypesContext.UsedTypeTokens.Add(type);
+
+            if (type.BaseType != null)
+            {
+                AddUsedTokenType(readingTypesContext, type.BaseType);
+            }
+
+            if (type.HasElementType)
+            {
+                AddUsedTokenType(readingTypesContext, type.GetElementType());
             }
         }
 
