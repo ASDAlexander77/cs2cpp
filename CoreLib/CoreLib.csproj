@@ -166,6 +166,7 @@
     <Compile Include="System\Reflection\__Filters.cs" />
     <Compile Include="System\RtType.cs" />
     <Compile Include="System\RuntimeHandles.cs" />
+    <Compile Include="System\Runtime\CompilerServices\CompilerGeneratedAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\ConditionalWeakTable.cs" />
     <Compile Include="System\Runtime\CompilerServices\CustomConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />

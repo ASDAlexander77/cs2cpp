@@ -336,6 +336,12 @@ namespace Il2Native.Logic
                 case Code.Call:
                 case Code.Callvirt:
 
+                    var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
+                    if (ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand))
+                    {
+                        return true;
+                    }
+
                     if ((opCode.UsedBy != null || opCode.UsedByAlternativeValues != null) && (opCode.UsedBy == null || !opCode.UsedBy.Any(Code.Pop)))
                     {
                         var estimatedResultOf = this.EstimatedResultOf(opCode);
@@ -4594,27 +4600,17 @@ namespace Il2Native.Logic
 
         public void StartPreprocessorIf(IType type, string prefix)
         {
-            ////if (type.IsAssemblyNamespaceRequired() || type.IsAnyParentOrSelfInternal())
-            ////{
-                var fullName = type.FullName.CleanUpName();
-                if (type.Name.Length > 0 && type.Name[0] == '<' && !type.IsModule)
-                {
-                    fullName = string.Concat(fullName, "_", type.GetAssemblyNamespace(this.AssemblyQualifiedName).CleanUpName());
-                }
+            var fullName = type.FullName.CleanUpName();
 
-                this.Output.Write("#ifndef {0}__", prefix);
-                this.Output.WriteLine(fullName);
-                this.Output.Write("#define {0}__", prefix);
-                this.Output.WriteLine(fullName);
-            ////}
+            this.Output.Write("#ifndef {0}__", prefix);
+            this.Output.WriteLine(fullName);
+            this.Output.Write("#define {0}__", prefix);
+            this.Output.WriteLine(fullName);
         }
 
         public void EndPreprocessorIf(IType type)
         {
-            ////if (type.IsAssemblyNamespaceRequired() || type.IsAnyParentOrSelfInternal())
-            ////{
-                this.Output.WriteLine("#endif");
-            ////}
+            this.Output.WriteLine("#endif");
         }
 
         private void StartPreprocessorIf(string id, string prefix)

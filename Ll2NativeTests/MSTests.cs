@@ -1375,13 +1375,21 @@ namespace Ll2NativeTests
             // 3 - throw NullReference exception because of safety check for 'this' which null but it not used. TODO: review it
             // 4 - WaitAll not implemented
             // 6 - BUG: fix required, seems when you call GetResult "this" is null which causes throwing an NullReference exception
+            // 10 - WaitAll not implemented
+            // 11 - WaitAll not implemented
+            // 12 - WaitAll not implemented
+            // 13 - GetMethods not implemented
 
             var skip = new List<int>(new[]
             {
                 2,
                 3,
                 4,
-                6
+                6,
+                10,
+                11,
+                12,
+                13
             });
 
             foreach (var index in Enumerable.Range(1, 48).Where(n => !skip.Contains(n)))
