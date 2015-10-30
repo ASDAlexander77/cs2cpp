@@ -1372,24 +1372,31 @@ namespace Ll2NativeTests
         public void Test_Mono_Tests_Async()
         {
             // 2 - WaitAll not implemented
-            // 3 - throw NullReference exception because of safety check for 'this' which null but it not used. TODO: review it
             // 4 - WaitAll not implemented
-            // 6 - BUG: fix required, seems when you call GetResult "this" is null which causes throwing an NullReference exception
+            // 6 - TODO: it works if compiled in DEBUG, but crashes when compile in RELEASE
             // 10 - WaitAll not implemented
             // 11 - WaitAll not implemented
             // 12 - WaitAll not implemented
             // 13 - GetMethods not implemented
+            // 14 - WaitAll not implemented
+            // 15 - WaitAll not implemented
+            // 16 - GetMethods not implemented
+            // 17 - GetMethods not implemented
+            // 18 - WaitAll not implemented
 
             var skip = new List<int>(new[]
             {
                 2,
-                3,
                 4,
                 6,
                 10,
                 11,
                 12,
-                13
+                13,
+                14,
+                16,
+                17,
+                18
             });
 
             foreach (var index in Enumerable.Range(1, 48).Where(n => !skip.Contains(n)))
