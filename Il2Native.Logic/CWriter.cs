@@ -334,9 +334,13 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Call:
-                    var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-                    if (ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand))
+                case Code.Callvirt:
+
+                    if ((opCode.UsedBy != null || opCode.UsedByAlternativeValues != null) && (opCode.UsedBy == null || !opCode.UsedBy.Any(Code.Pop)))
                     {
+                        var estimatedResultOf = this.EstimatedResultOf(opCode);
+                        var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
+                        opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
                         return true;
                     }
 
@@ -4154,7 +4158,7 @@ namespace Il2Native.Logic
             var currentAddress = -1;
             while (item != null)
             {
-                // move next item, we need next code to write address lables properly
+                // move next item, we need next code to write address labels properly
                 if (item.AddressEnd != 0)
                 {
                     currentAddress = item.AddressStart;

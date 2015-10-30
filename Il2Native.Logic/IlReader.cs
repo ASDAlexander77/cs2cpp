@@ -340,7 +340,7 @@ namespace Il2Native.Logic
         /// </summary>
         public IlReader()
         {
-            this.CompileInMemory = true;
+            this.CompileInMemory = false;
 
             this.StaticConstructors = new List<IMethod>();
             this.ThreadStaticFields = new List<IField>();
