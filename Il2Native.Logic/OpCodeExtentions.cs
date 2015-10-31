@@ -1749,7 +1749,7 @@ namespace Il2Native.Logic
 
         public static bool IsAssemblyNamespaceRequired(this IType type)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
             {
                 return true;
             }
@@ -1764,7 +1764,7 @@ namespace Il2Native.Logic
 
         public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
             {
                 return currentAssemblyNamespace;
             }
