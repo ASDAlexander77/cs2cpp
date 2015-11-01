@@ -361,6 +361,13 @@
             this.Add(Code.Castclass, (int)TokenResolutions.Count);
         }
 
+        public void Box(IType type)
+        {
+            Debug.Assert(type != null, "@type is null");
+            TokenResolutions.Add(type);
+            this.Add(Code.Box, (int)TokenResolutions.Count);
+        }
+
         public void Unbox(IType type)
         {
             Debug.Assert(type != null, "@type is null");

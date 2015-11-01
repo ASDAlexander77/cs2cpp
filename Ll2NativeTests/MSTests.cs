@@ -890,8 +890,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            CompilerHelper.Mscorlib = true;
-            CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
+            //CompilerHelper.Mscorlib = true;
+            //CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
             //CompilerHelper.AddSystemLinq = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
