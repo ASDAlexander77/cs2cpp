@@ -58,7 +58,7 @@ namespace System {
     [Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.Versioning.NonVersionable] // This only applies to field layout
-    public struct Decimal : IFormattable, IComparable, IConvertible, IDeserializationCallback
+    public partial struct Decimal : IFormattable, IComparable, IConvertible, IDeserializationCallback
             , IComparable<Decimal>, IEquatable<Decimal> {
 
         // Sign mask for the flags field. A value of zero in this bit indicates a

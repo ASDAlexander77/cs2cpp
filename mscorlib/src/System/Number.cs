@@ -283,44 +283,10 @@ namespace System {
     //
     //This class contains only static members and does not need to be serializable 
     [System.Runtime.CompilerServices.FriendAccessAllowed]
-    internal class Number
+    internal partial class Number
     {
         private Number() {
         }
-    
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatDecimal(Decimal value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatDouble(double value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatInt32(int value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatUInt32(uint value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatInt64(long value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatUInt64(ulong value, String format, NumberFormatInfo info);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern String FormatSingle(float value, String format, NumberFormatInfo info);
-    
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public unsafe static extern Boolean NumberBufferToDecimal(byte* number, ref Decimal value);
-        [System.Security.SecurityCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal unsafe static extern Boolean NumberBufferToDouble(byte* number, ref Double value);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        [System.Runtime.CompilerServices.FriendAccessAllowed]
-        [System.Security.SecurityCritical]  // auto-generated
-        internal static extern unsafe string FormatNumberBuffer(byte* number, string format, NumberFormatInfo info, char* allDigits);
 
         // Constants used by number parsing
         private const Int32 NumberMaxDigits = 50;

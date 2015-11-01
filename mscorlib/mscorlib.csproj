@@ -47,6 +47,9 @@
     <Compile Include="..\CoreLib\Impl\Console.cs">
       <Link>Impl\Console.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Decimal.cs">
+      <Link>Impl\Decimal.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\Delegate.cs">
       <Link>Impl\Delegate.cs</Link>
     </Compile>
@@ -64,6 +67,9 @@
     </Compile>
     <Compile Include="..\CoreLib\Impl\Math.cs">
       <Link>Impl\Math.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Number.cs">
+      <Link>Impl\Number.cs</Link>
     </Compile>
     <Compile Include="..\CoreLib\Impl\RuntimeTypeHandle.cs">
       <Link>Impl\RuntimeTypeHandle.cs</Link>
