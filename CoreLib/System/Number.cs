@@ -770,8 +770,7 @@ namespace System
             return i;
         }
 
-
-        private unsafe static Boolean ParseNumber(ref char* str, NumberStyles options, NUMBER* number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
+        private unsafe static Boolean ParseNumber(ref char* str, NumberStyles options, ref NumberBuffer number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
         {
 
             const Int32 StateSign = 0x0001;
@@ -781,8 +780,8 @@ namespace System
             const Int32 StateDecimal = 0x0010;
             const Int32 StateCurrency = 0x0020;
 
-            number->scale = 0;
-            number->sign = false;
+            number.scale = 0;
+            number.sign = false;
             string decSep;                  // decimal separator from NumberFormatInfo.
             string groupSep;                // group separator from NumberFormatInfo.
             string currSymbol = null;       // currency symbol from NumberFormatInfo.
@@ -797,10 +796,14 @@ namespace System
             if ((options & NumberStyles.AllowCurrencySymbol) != 0)
             {
                 currSymbol = numfmt.CurrencySymbol;
+
+#if !FEATURE_COREFX_GLOBALIZATION
                 if (numfmt.ansiCurrencySymbol != null)
                 {
                     ansicurrSymbol = numfmt.ansiCurrencySymbol;
                 }
+#endif
+
                 // The idea here is to match the currency separators and on failure match the number separators to keep the perf of VB's IsNumeric fast.
                 // The values of decSep are setup to use the correct relevant separator (currency in the if part and decimal in the else part).
                 altdecSep = numfmt.NumberDecimalSeparator;
@@ -817,11 +820,10 @@ namespace System
 
             Int32 state = 0;
             Boolean signflag = false; // Cache the results of "options & PARSE_LEADINGSIGN && !(state & STATE_SIGN)" to avoid doing this twice
-            Boolean bigNumber = (sb != null); // When a StringBuilder is provided then we use it in place of the number->digits char[50]
+            Boolean bigNumber = (sb != null); // When a StringBuilder is provided then we use it in place of the number.digits char[50]
             Boolean bigNumberHex = (bigNumber && ((options & NumberStyles.AllowHexSpecifier) != 0));
             Int32 maxParseDigits = bigNumber ? Int32.MaxValue : NumberMaxDigits;
 
-            char* digits = number->digits;
             char* p = str;
             char ch = *p;
             char* next;
@@ -830,13 +832,11 @@ namespace System
             {
                 // Eat whitespace unless we've found a sign which isn't followed by a currency symbol.
                 // "-Kr 1231.47" is legal but "- 1231.47" is not.
-                if (IsWhite(ch) && ((options & NumberStyles.AllowLeadingWhite) != 0)
-                    && (((state & StateSign) == 0) || (((state & StateSign) != 0) && (((state & StateCurrency) != 0) || numfmt.numberNegativePattern == 2))))
+                if (IsWhite(ch) && ((options & NumberStyles.AllowLeadingWhite) != 0) && (((state & StateSign) == 0) || (((state & StateSign) != 0) && (((state & StateCurrency) != 0) || numfmt.numberNegativePattern == 2))))
                 {
                     // Do nothing here. We will increase p at the end of the loop.
                 }
-                else if ((signflag = (((options & NumberStyles.AllowLeadingSign) != 0) && ((state & StateSign) == 0)))
-                         && ((next = MatchChars(p, numfmt.positiveSign)) != null))
+                else if ((signflag = (((options & NumberStyles.AllowLeadingSign) != 0) && ((state & StateSign) == 0))) && ((next = MatchChars(p, numfmt.positiveSign)) != null))
                 {
                     state |= StateSign;
                     p = next - 1;
@@ -844,22 +844,21 @@ namespace System
                 else if (signflag && (next = MatchChars(p, numfmt.negativeSign)) != null)
                 {
                     state |= StateSign;
-                    number->sign = true;
+                    number.sign = true;
                     p = next - 1;
                 }
                 else if (ch == '(' && ((options & NumberStyles.AllowParentheses) != 0) && ((state & StateSign) == 0))
                 {
                     state |= StateSign | StateParens;
-                    number->sign = true;
+                    number.sign = true;
                 }
-                else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null)
-                         || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
+                else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null) || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
                 {
                     state |= StateCurrency;
                     currSymbol = null;
                     ansicurrSymbol = null;
                     // We already found the currency symbol. There should not be more currency symbols. Set
-                    // currSymbol to null so that we won't search it again in the later code path.
+                    // currSymbol to NULL so that we won't search it again in the later code path.
                     p = next - 1;
                 }
                 else
@@ -872,8 +871,7 @@ namespace System
             Int32 digEnd = 0;
             while (true)
             {
-                if ((ch >= '0' && ch <= '9')
-                    || (((options & NumberStyles.AllowHexSpecifier) != 0) && ((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))))
+                if ((ch >= '0' && ch <= '9') || (((options & NumberStyles.AllowHexSpecifier) != 0) && ((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))))
                 {
                     state |= StateDigits;
 
@@ -881,8 +879,10 @@ namespace System
                     {
                         if (digCount < maxParseDigits)
                         {
-                            if (bigNumber) sb.Append(ch);
-                            else digits[digCount++] = ch;
+                            if (bigNumber)
+                                sb.Append(ch);
+                            else
+                                number.digits[digCount++] = ch;
                             if (ch != '0' || parseDecimal)
                             {
                                 digEnd = digCount;
@@ -890,25 +890,21 @@ namespace System
                         }
                         if ((state & StateDecimal) == 0)
                         {
-                            number->scale++;
+                            number.scale++;
                         }
                         state |= StateNonZero;
                     }
                     else if ((state & StateDecimal) != 0)
                     {
-                        number->scale--;
+                        number.scale--;
                     }
                 }
-                else if (((options & NumberStyles.AllowDecimalPoint) != 0) && ((state & StateDecimal) == 0)
-                         && ((next = MatchChars(p, decSep)) != null
-                             || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altdecSep)) != null))
+                else if (((options & NumberStyles.AllowDecimalPoint) != 0) && ((state & StateDecimal) == 0) && ((next = MatchChars(p, decSep)) != null || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altdecSep)) != null))
                 {
                     state |= StateDecimal;
                     p = next - 1;
                 }
-                else if (((options & NumberStyles.AllowThousands) != 0) && ((state & StateDigits) != 0) && ((state & StateDecimal) == 0)
-                         && ((next = MatchChars(p, groupSep)) != null
-                             || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altgroupSep)) != null))
+                else if (((options & NumberStyles.AllowThousands) != 0) && ((state & StateDigits) != 0) && ((state & StateDecimal) == 0) && ((next = MatchChars(p, groupSep)) != null || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altgroupSep)) != null))
                 {
                     p = next - 1;
                 }
@@ -920,9 +916,11 @@ namespace System
             }
 
             Boolean negExp = false;
-            number->precision = digEnd;
-            if (bigNumber) sb.Append('\0');
-            else digits[digEnd] = '\0';
+            number.precision = digEnd;
+            if (bigNumber)
+                sb.Append('\0');
+            else
+                number.digits[digEnd] = '\0';
             if ((state & StateDigits) != 0)
             {
                 if ((ch == 'E' || ch == 'e') && ((options & NumberStyles.AllowExponent) != 0))
@@ -953,13 +951,12 @@ namespace System
                                     ch = *++p;
                                 }
                             }
-                        }
-                        while (ch >= '0' && ch <= '9');
+                        } while (ch >= '0' && ch <= '9');
                         if (negExp)
                         {
                             exp = -exp;
                         }
-                        number->scale += exp;
+                        number.scale += exp;
                     }
                     else
                     {
@@ -972,8 +969,7 @@ namespace System
                     if (IsWhite(ch) && ((options & NumberStyles.AllowTrailingWhite) != 0))
                     {
                     }
-                    else if ((signflag = (((options & NumberStyles.AllowTrailingSign) != 0) && ((state & StateSign) == 0)))
-                             && (next = MatchChars(p, numfmt.positiveSign)) != null)
+                    else if ((signflag = (((options & NumberStyles.AllowTrailingSign) != 0) && ((state & StateSign) == 0))) && (next = MatchChars(p, numfmt.positiveSign)) != null)
                     {
                         state |= StateSign;
                         p = next - 1;
@@ -981,15 +977,14 @@ namespace System
                     else if (signflag && (next = MatchChars(p, numfmt.negativeSign)) != null)
                     {
                         state |= StateSign;
-                        number->sign = true;
+                        number.sign = true;
                         p = next - 1;
                     }
                     else if (ch == ')' && ((state & StateParens) != 0))
                     {
                         state &= ~StateParens;
                     }
-                    else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null)
-                             || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
+                    else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null) || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
                     {
                         currSymbol = null;
                         ansicurrSymbol = null;
@@ -1007,11 +1002,11 @@ namespace System
                     {
                         if (!parseDecimal)
                         {
-                            number->scale = 0;
+                            number.scale = 0;
                         }
                         if ((state & StateDecimal) == 0)
                         {
-                            number->sign = false;
+                            number.sign = false;
                         }
                     }
                     str = p;
@@ -1134,7 +1129,8 @@ namespace System
             fixed (char* stringPointer = str)
             {
                 char* p = stringPointer;
-                if (!ParseNumber(ref p, options, number, null, info, parseDecimal)
+                var numberBuffer = new NumberBuffer((byte*)number);
+                if (!ParseNumber(ref p, options, ref numberBuffer, null, info, parseDecimal)
                     || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
                 {
                     throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
