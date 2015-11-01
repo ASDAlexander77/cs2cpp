@@ -1366,6 +1366,23 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            {
+                var opCodeFieldType = opCode as OpCodeFieldInfoPart;
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                {
+                    replace = true;
+                    return new OpCodeMethodInfoPart(
+                        OpCodesEmit.Call,
+                        opCode.AddressStart,
+                        opCode.AddressEnd,
+                        new SynthesizedGetStaticAddressMethod(
+                            opCodeFieldType.Operand.DeclaringType,
+                            opCodeFieldType.Operand,
+                            this));
+                }
+            }
+
             if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;

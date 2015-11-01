@@ -113,6 +113,7 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetStaticAddressMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedSetStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedResolveInterfaceMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedCastMethod.cs" />

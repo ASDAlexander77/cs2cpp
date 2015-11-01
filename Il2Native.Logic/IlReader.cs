@@ -822,6 +822,7 @@ namespace Il2Native.Logic
                 foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => RequiredGetStaticMethod(f, typeResolver)))
                 {
                     yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
+                    yield return new SynthesizedGetStaticAddressMethod(type, staticField, typeResolver);
                     yield return new SynthesizedSetStaticMethod(type, staticField, typeResolver);
                 }
             }
