@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -426,6 +427,8 @@
             }
 
             ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
+
+            Thread.Sleep(1000);
 
             // cleanup if success
             foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())
