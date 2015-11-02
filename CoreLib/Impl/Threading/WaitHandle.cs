@@ -104,8 +104,23 @@
 
         private static int WaitMultiple(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext, bool WaitAll)
         {
-            // TODO: import code from https://github.com/neosmart/pevents/blob/master/pevents.cpp
-            throw new NotImplementedException();
+            if (WaitAll)
+            {
+                for (var index = 0; index < waitHandles.Length; index++)
+                {
+                    var handle = waitHandles[index];
+                    if (!handle.WaitOne(millisecondsTimeout, exitContext))
+                    {
+                        return index;
+                    }
+                }
+
+                return WAIT_OBJECT_0;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
