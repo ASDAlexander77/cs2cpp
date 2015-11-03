@@ -39,7 +39,7 @@ namespace System {
     }
 
     [ComVisible(true)]
-    public static class Environment {
+    public static partial class Environment {
 
         // Assume the following constants include the terminating '\0' - use <, not <=
         const int MaxEnvVariableValueLength = 32767;  // maximum length for environment variable name and value
@@ -257,17 +257,8 @@ namespace System {
         **Arguments: None
         **Exceptions: None
         ==============================================================================*/
-        public static extern int TickCount {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
-        }
         
         // Terminates this process with the given exit code.
-        [System.Security.SecurityCritical]  // auto-generated
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        internal static extern void _Exit(int exitCode);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
 #pragma warning disable 618
@@ -277,17 +268,6 @@ namespace System {
 #pragma warning restore 618
         public static void Exit(int exitCode) {
             _Exit(exitCode);
-        }
-
-
-        public static extern int ExitCode {
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
-    
-            [System.Security.SecuritySafeCritical]  // auto-generated
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            set;
         }
 
         // Note: The CLR's Watson bucketization code looks at the caller of the FCALL method
@@ -520,11 +500,6 @@ namespace System {
                 return buf.ToString();
             }
         }
-
-        [SecurityCritical]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        private static extern Int32 GetProcessorCount();
 
         public static int ProcessorCount {
             [System.Security.SecuritySafeCritical]  // auto-generated
@@ -1267,11 +1242,12 @@ namespace System {
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         internal static String GetResourceString(String key) {
-#if FEATURE_CORECLR
-            return GetResourceStringLocal(key);
-#else
+// TODO: my temp implementation
+//#if FEATURE_CORECLR
+//            return GetResourceStringLocal(key);
+//#else
             return GetResourceFromDefault(key);
-#endif //FEATURE_CORECLR
+//#endif //FEATURE_CORECLR
         }
 
         [System.Security.SecuritySafeCritical]  // auto-generated

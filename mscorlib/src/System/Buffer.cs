@@ -485,17 +485,6 @@ namespace System {
             __Memmove(dest, src, len);
         }
 
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [SuppressUnmanagedCodeSecurity]
-        [SecurityCritical]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-#if WIN64
-        extern private unsafe static void __Memmove(byte* dest, byte* src, ulong len);
-#else
-        extern private unsafe static void __Memmove(byte* dest, byte* src, uint len);
-#endif
-
-
         // The attributes on this method are chosen for best JIT performance. 
         // Please do not edit unless intentional.
         [System.Security.SecurityCritical]

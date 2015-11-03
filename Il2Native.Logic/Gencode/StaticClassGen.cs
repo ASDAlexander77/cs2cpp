@@ -13,6 +13,7 @@ namespace Il2Native.Logic.Gencode
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
 
     using PEAssemblyReader;
@@ -100,39 +101,70 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(cWriter.declarationPrefix);
             writer.Write(
-                "{5}struct {2} _s{0}{1}_ = {4} {3}",
+                "__static_str<{2}> _s{0}{1}_ = {4} {3}",
                 pair.Key,
                 (uint)pair.Value.GetHashCode(),
-                cWriter.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
+                pair.Value.Length + (align ? 2 : 1),
                 cWriter.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
-                "{",
-                cWriter.MultiThreadingSupport ? string.Empty : "const ");
+                "{");
 
-            writer.Write("{ ");
-
-            var index = 0;
+            writer.Write("L\"");
             foreach (var c in pair.Value.ToCharArray())
             {
-                if (index > 0)
+                var code = (uint)c;
+                switch (code)
                 {
-                    writer.Write(", ");
+                    case 0x07: writer.Write(@"\a");
+                        break;
+                    case 0x08: writer.Write(@"\b");
+                        break;
+                    case 0x0C: writer.Write(@"\f");
+                        break;
+                    case 0x0A: writer.Write(@"\n");
+                        break;
+                    case 0x0D: writer.Write(@"\r");
+                        break;
+                    case 0x09: writer.Write(@"\t");
+                        break;
+                    case 0x0B: writer.Write(@"\v");
+                        break;
+                    case 0x5C: writer.Write(@"\\");
+                        break;
+                    case 0x27: writer.Write(@"\'");
+                        break;
+                    case 0x22: writer.Write(@"\""");
+                        break;
+                    case 0x3F: writer.Write(@"\?");
+                        break;
+                    default:
+                        if (code >= 0x20 && c <= 'z')
+                        {
+                            writer.Write(c);
+                        }
+                        else
+                        {
+                            if (Char.IsHighSurrogate(c) || Char.IsLowSurrogate(c))
+                            {
+                                writer.Write("\\x{0:X4}", (uint)c);
+                            }
+                            else
+                            {
+                                writer.Write("\\u{0:X4}", (uint)c);
+                            }
+                        }
+
+                        break;
                 }
-
-                writer.Write("{0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                writer.Write(", ");
             }
 
             if (align)
             {
-                writer.Write("0, ");
+                writer.Write("\\0");
             }
 
-            writer.WriteLine("0 {0} {0};", '}');
+            writer.Write("\"");
+
+            writer.WriteLine(" {0};", '}');
         }
 
 

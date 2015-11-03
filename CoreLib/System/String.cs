@@ -121,26 +121,6 @@ namespace System
             return !Equals(a, b);
         }
 
-        [System.Runtime.CompilerServices.IndexerName("Chars")]
-        public char this[int index]
-        {
-            get
-            {
-                if (index < 0 || index >= m_stringLength)
-                {
-                    throw new ArgumentOutOfRangeException("index");
-                }
-
-                unsafe
-                {
-                    fixed (char* p = this)
-                    {
-                        return *(p + index);
-                    }
-                }
-            }
-        }
-
         public unsafe char[] ToCharArray()
         {
             int length = Length;

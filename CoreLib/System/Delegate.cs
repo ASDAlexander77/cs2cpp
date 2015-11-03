@@ -6,7 +6,7 @@ namespace System
     using System.Reflection;
 
     [Serializable()]
-    public abstract class Delegate
+    public abstract partial class Delegate
     {
         internal Object _target;
         internal IntPtr _methodPtr;
@@ -26,7 +26,6 @@ namespace System
 
         public MethodInfo Method
         {
-
             get
             {
                 throw new NotImplementedException();
@@ -35,7 +34,6 @@ namespace System
 
         public Object Target
         {
-
             get
             {
                 return this._target;

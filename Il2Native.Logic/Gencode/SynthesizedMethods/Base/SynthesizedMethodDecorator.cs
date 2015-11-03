@@ -70,6 +70,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return this.method.AssemblyQualifiedName; }
         }
 
+        public string AssemblyFullyQualifiedName
+        {
+            get { return this.method.AssemblyFullyQualifiedName; }
+        }
+
         public IType DeclaringType
         {
             get { return this.method.DeclaringType; }
@@ -123,6 +128,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public bool IsAnonymousDelegate
         {
             get { return this.method.IsAnonymousDelegate; }
+        }
+
+        public bool IsMerge
+        {
+            get { return this.method.IsMerge; }
         }
 
         public IModule Module

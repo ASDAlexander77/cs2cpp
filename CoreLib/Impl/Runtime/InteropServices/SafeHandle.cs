@@ -1,5 +1,3 @@
-// Licensed under the MIT license.
-
 namespace System.Runtime.InteropServices
 {
     partial class SafeHandle

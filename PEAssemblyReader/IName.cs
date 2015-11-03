@@ -20,6 +20,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        string AssemblyFullyQualifiedName { get; }
+
+        /// <summary>
+        /// </summary>
         IType DeclaringType { get; }
 
         /// <summary>

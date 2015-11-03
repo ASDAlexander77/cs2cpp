@@ -157,26 +157,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-
-        public static bool IsAssemblyNamespaceRequired(IType type, IMethod method = null, IType ownerOfExplicitInterface = null)
-        {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsModule)
-            {
-                return true;
-            }
-
-            if (method != null && (method.IsGenericMethod || method.IsGenericMethodDefinition))
-            {
-                return true;
-            }
-
-            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
-            {
-                return true;
-            }
-
-            return false;
-        }
         
         public void Initialize(IType type)
         {
@@ -184,7 +164,6 @@ namespace Il2Native.Logic
 
             this.Module = type.Module;
             this.System = new SystemTypes(this.Module);
-            MethodBodyBank.Clear();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }
@@ -255,7 +234,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
+        public void ReadMethodInfo(IMethod methodInfo, IMethod methodOpCodeHolder, IGenericContext genericContext)
         {
             var parameters = methodInfo.GetParameters();
             this.Parameters = parameters != null ? parameters.ToArray() : new IParameter[0];
@@ -264,7 +243,7 @@ namespace Il2Native.Logic
             this.MethodReturnType = null;
             this.ReadThisTypeInfo(methodInfo);
 
-            var methodBody = methodInfo.ResolveMethodBody(genericContext);
+            var methodBody = (methodOpCodeHolder ?? methodInfo).ResolveMethodBody(genericContext);
             this.NoBody = !methodBody.HasBody;
             if (!this.NoBody)
             {
@@ -319,9 +298,9 @@ namespace Il2Native.Logic
 
         public string GetStaticFieldName(IField field)
         {
-            if (IsAssemblyNamespaceRequired(field.DeclaringType))
+            if (field.DeclaringType.IsAssemblyNamespaceRequired())
             {
-                return string.Concat(field.FullName.CleanUpName(), "_", this.AssemblyQualifiedName.CleanUpName());
+                return string.Concat(field.FullName.CleanUpName(), "_", field.DeclaringType.GetAssemblyNamespace(this.AssemblyQualifiedName).CleanUpName());
             }
 
             return field.FullName.CleanUpName();
@@ -518,6 +497,8 @@ namespace Il2Native.Logic
             PointerToBoxedValue,
             IntPtrToInt,
             PointerToInt,
+            PointerToIntPtr,
+            PointerToUIntPtr,
             IntToPointer,
             ArrayOfDerivedTypeToArrayOfBaseType,
             ArrayOfInterfaceToArrayOfObject,
@@ -630,6 +611,22 @@ namespace Il2Native.Logic
                 var fieldType = destinationType.GetFieldByFieldNumber(0, this).FieldType;
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, fieldType);
                 castOpCode.RequiredOutgoingType = fieldType;
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+
+            if (conversionType == ConversionType.PointerToIntPtr)
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_IntPtr);
+                castOpCode.RequiredOutgoingType = System.System_IntPtr;
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+
+            if (conversionType == ConversionType.PointerToUIntPtr)
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_UIntPtr);
+                castOpCode.RequiredOutgoingType = System.System_UIntPtr;
                 this.InsertOperand(opCodeOperand, castOpCode);
                 return castOpCode;
             }
@@ -788,6 +785,16 @@ namespace Il2Native.Logic
             if (sourceType.IsPointer && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.PointerToInt;
+            }
+
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && !(sourceType.IsPointer && sourceType.IsIntPtr()) && destinationType.IsIntPtr() && !destinationType.IsReference())
+            {
+                return ConversionType.PointerToIntPtr;
+            }
+
+            if ((sourceType.IsPointer || sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize) && !(sourceType.IsPointer && sourceType.IsUIntPtr()) && destinationType.IsUIntPtr() && !destinationType.IsReference())
+            {
+                return ConversionType.PointerToUIntPtr;
             }
 
             if (sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize && destinationType.IsPointer)
@@ -1353,6 +1360,40 @@ namespace Il2Native.Logic
                         opCode.AddressStart,
                         opCode.AddressEnd,
                         new SynthesizedGetStaticMethod(
+                            opCodeFieldType.Operand.DeclaringType,
+                            opCodeFieldType.Operand,
+                            this));
+                }
+            }
+
+            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            {
+                var opCodeFieldType = opCode as OpCodeFieldInfoPart;
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                {
+                    replace = true;
+                    return new OpCodeMethodInfoPart(
+                        OpCodesEmit.Call,
+                        opCode.AddressStart,
+                        opCode.AddressEnd,
+                        new SynthesizedGetStaticAddressMethod(
+                            opCodeFieldType.Operand.DeclaringType,
+                            opCodeFieldType.Operand,
+                            this));
+                }
+            }
+
+            if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
+            {
+                var opCodeFieldType = opCode as OpCodeFieldInfoPart;
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                {
+                    replace = true;
+                    return new OpCodeMethodInfoPart(
+                        OpCodesEmit.Call,
+                        opCode.AddressStart,
+                        opCode.AddressEnd,
+                        new SynthesizedSetStaticMethod(
                             opCodeFieldType.Operand.DeclaringType,
                             opCodeFieldType.Operand,
                             this));

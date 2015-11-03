@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -20,7 +21,8 @@
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
-
+        public const string CoreCLRDlls = @"C:\Dev\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
+        
         public const string OutputObjectFileExt = "obj";
 
         public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
@@ -34,7 +36,8 @@
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
-        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\ ";
+        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
+        public const string CoreCLRDlls = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
         
         public const string OutputObjectFileExt = "obj";
         
@@ -92,11 +95,11 @@
 
         /// <summary>
         /// </summary>
-        public static bool Mscorlib = true;
+        public static bool Mscorlib = false;
 
         /// <summary>
         /// </summary>
-        public static bool AddSystemCore = false;
+        public static bool AddSystemLinq = false;
 
         /// <summary>
         /// </summary>
@@ -123,9 +126,10 @@
                 {
                     args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
                     
-                    if (AddSystemCore)
+                    if (AddSystemLinq)
                     {
-                        args.Add("ref:System.Core");
+                        //args.Add("ref:System.Core");
+                        args.Add(@"ref:E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Linq.dll");
                     }
                 }
                 else
@@ -423,6 +427,8 @@
             }
 
             ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
+
+            Thread.Sleep(1000);
 
             // cleanup if success
             foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())

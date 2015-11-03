@@ -4,14 +4,8 @@
 
     using Runtime.CompilerServices;
 
-    public static class Environment
+    public static partial class Environment
     {
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int clock_gettime(int type, int* time);
-
-        [MethodImpl(MethodImplOptions.Unmanaged)]
-        public static extern void __exit(int exitCode);
-
         public static string NewLine = "\r\n";
 
         public static string Space = " ";
@@ -20,40 +14,16 @@
 
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
 
-        private const int CLOCK_MONOTONIC = 1;
-
         public static string CurrentDirectory { get; set; }
 
-        public static int ExitCode { get; set; }
-
         private static OperatingSystem _os;
-
-        public static int TickCount
-        {
-            get
-            {
-                unsafe
-                {
-                    long time;
-                    if (clock_gettime(CLOCK_MONOTONIC, (int*)&time) == 0)
-                    {
-                        return (int) time >> 32;
-                    }
-
-                    throw new Exception();
-                }
-            }
-        }
-
+        
         public static int ProcessorCount
         {
+            [System.Security.SecuritySafeCritical]  // auto-generated
             get
             {
-                return 2;
-            }
-            set
-            {
-                throw new NotImplementedException();
+                return GetProcessorCount();
             }
         }
 
@@ -84,6 +54,11 @@
         public static bool HasShutdownStarted { get; set; }
 
         public static bool IsWindows8OrAbove { get; set; }
+
+        public static void Exit(int exitCode)
+        {
+            _Exit(exitCode);
+        }
 
         public static string GetResourceString(string name)
         {
@@ -119,9 +94,6 @@
         {
             return name + Space + value + Space + value2 + value3 + value4;
         }
-
-        [MethodImpl(MethodImplOptions.Unmanaged)]
-        public static extern void Exit(int exitCode);
 
         public static void FailFast(string getResourceString, Exception exception)
         {

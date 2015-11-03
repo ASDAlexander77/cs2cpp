@@ -51,6 +51,14 @@
             }
         }
 
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                return this.Method.AssemblyFullyQualifiedName;
+            }
+        }
+
         public IType DeclaringType
         {
             get

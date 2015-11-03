@@ -6,7 +6,7 @@ using System;
 
 namespace System.Collections
 {
-    public class DictionaryEntry
+    public struct DictionaryEntry
     {
         public Object Key;
         public Object Value;

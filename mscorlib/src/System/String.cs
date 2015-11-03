@@ -670,12 +670,6 @@ namespace System {
         // Gets the character at a specified position.
         //
         // Spec#: Apply the precondition here using a contract assembly.  Potential perf issue.
-        [System.Runtime.CompilerServices.IndexerName("Chars")]
-        public extern char this[int index] {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            [System.Security.SecuritySafeCritical] // public member
-            get;
-        }
 
         // Converts a substring of this string to an array of characters.  Copies the
         // characters of this string beginning at position startIndex and ending at
@@ -1390,6 +1384,7 @@ namespace System {
             return nb;
         }
 
+#if NORMALIZATION_FORM
         // Normalization Methods
         // These just wrap calls to Normalization class
         public bool IsNormalized()
@@ -1447,6 +1442,7 @@ namespace System {
 #endif // !FEATURE_NORM_IDNA_ONLY            
             return Normalization.Normalize(this, normalizationForm);
         }
+#endif
 
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]

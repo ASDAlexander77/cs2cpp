@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Il2Native.Logic</RootNamespace>
     <AssemblyName>Il2Native.Logic</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -67,9 +68,18 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\ConstructNameGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetModuleGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetGCHandleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ModuleHandle\GetModuleTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ConstructNameGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ContainsGenericVariablesGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetAssemblyGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetCorElementTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetElementTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\HasInstantiationGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericTypeDefinitionGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariableGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />
@@ -87,8 +97,8 @@
     <Compile Include="Gencode\InternalMethods\Interlocked\CompareExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Interlocked\ExchangeGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\ObjectGetTypeGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\GetBaseTypeGen.cs" />
-    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandler\IsInterfaceGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetBaseTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsInterfaceGen.cs" />
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StaticClassGen.cs" />
@@ -103,6 +113,8 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedGetStaticAddressMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedSetStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedResolveInterfaceMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedCastMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedDynamicCastMethod.cs" />

@@ -55,7 +55,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IType> lazyExplicitInterface; 
+        private readonly Lazy<IType> lazyExplicitInterface;
 
         /// <summary>
         /// </summary>
@@ -109,6 +109,14 @@ namespace PEAssemblyReader
             get
             {
                 return this.methodDef.ContainingType.ContainingAssembly.Identity.Name;
+            }
+        }
+
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                return this.methodDef.ContainingType.ContainingAssembly.Identity.ToString();
             }
         }
 
@@ -479,6 +487,17 @@ namespace PEAssemblyReader
             protected set
             {
                 this._inline = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.methodDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
             }
         }
 
@@ -876,7 +895,7 @@ namespace PEAssemblyReader
                 var positionOfAlias = this.methodDef.Name.IndexOf("::");
                 if (positionOfAlias >= 0)
                 {
-                    sb.Append(this.methodDef.Name.Substring(positionOfAlias + "::".Length));                    
+                    sb.Append(this.methodDef.Name.Substring(positionOfAlias + "::".Length));
                 }
                 else
                 {

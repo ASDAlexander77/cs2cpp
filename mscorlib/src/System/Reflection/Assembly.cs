@@ -1138,7 +1138,8 @@ namespace System.Reflection
         #endregion
 #endif // !FEATURE_CORECLR
 
-#if FEATURE_APPX
+// TODO: my fix to align type
+//#if FEATURE_APPX
         // The highest byte is the flags and the lowest 3 bytes are 
         // the cached ctor token of [DynamicallyInvocableAttribute].
         private enum ASSEMBLY_FLAGS : uint
@@ -1149,7 +1150,7 @@ namespace System.Reflection
             ASSEMBLY_FLAGS_SAFE_REFLECTION =    0x04000000,
             ASSEMBLY_FLAGS_TOKEN_MASK =         0x00FFFFFF,
         }
-#endif // FEATURE_APPX
+//#endif // FEATURE_APPX
 
         private const uint COR_E_LOADING_REFERENCE_ASSEMBLY = 0x80131058U;
 
@@ -1162,9 +1163,10 @@ namespace System.Reflection
         private object m_syncRoot;   // Used to keep collectible types alive and as the syncroot for reflection.emit
         private IntPtr m_assembly;    // slack for ptr datum on unmanaged side
 
-#if FEATURE_APPX
+// TODO: my fix to align type
+//#if FEATURE_APPX
         private ASSEMBLY_FLAGS m_flags;
-#endif
+//#endif
         #endregion
 
 #if FEATURE_APPX

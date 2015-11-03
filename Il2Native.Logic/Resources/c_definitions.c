@@ -35,9 +35,9 @@ extern "C" Void* Memcpy(Byte* dst, Byte* src, Int32 size)
 	return __builtin_memcpy(dst, src, size);
 }
 
-extern "C" Void Exit(Int32 status)
+extern "C" Void __Memmove(Byte* dst, Byte* src, UInt32 size)
 {
-	return exit(status);
+	__builtin_memcpy(dst, src, size);
 }
 
 extern "C" Void __pure_virtual()

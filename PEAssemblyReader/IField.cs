@@ -63,5 +63,9 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         byte[] GetFieldRVAData();
+
+        /// <summary>
+        /// </summary>
+        bool IsMerge { get; }
     }
 }

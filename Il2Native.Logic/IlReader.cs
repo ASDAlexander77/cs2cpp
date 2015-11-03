@@ -9,6 +9,7 @@ namespace Il2Native.Logic
     using System;
     using System.CodeDom.Compiler;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -49,6 +50,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private static IDictionary<IType, IEnumerable<IField>> mergeFields;
+
+        /// <summary>
+        /// </summary>
         private ISet<MethodKey> _calledMethods;
 
         /// <summary>
@@ -61,6 +66,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IType> _usedTypes;
+
+        /// <summary>
+        /// </summary>
         private IDictionary<int, string> _usedStrings;
 
         /// <summary>
@@ -69,15 +78,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache =
+            new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         /// <summary>
         /// </summary>
         private readonly bool isDll;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyAllReferencedTypes;
 
         /// <summary>
         /// </summary>
@@ -89,7 +95,8 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies =
+            new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -337,9 +344,8 @@ namespace Il2Native.Logic
 
             this.StaticConstructors = new List<IMethod>();
             this.ThreadStaticFields = new List<IField>();
-            this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
-            this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
-            this.lazyAllReferencedTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true, true));
+            this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes().ToList());
+            this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true).ToList());
         }
 
         /// <summary>
@@ -363,46 +369,47 @@ namespace Il2Native.Logic
             if (!this.isDll)
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
+                if (this.DefaultDllLocations == null && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    this.DefaultDllLocations = Path.GetDirectoryName(this.CoreLibPath);
+                }
             }
 
             var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
             var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
-            this.ReferencesList = (refsValue ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            this.ReferencesList = (refsValue ?? string.Empty).Split(
+                new[] { ';' },
+                StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
         /// </summary>
         public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
         {
-            set
-            {
-                genMethodSpec = value;
-            }
+            set { genMethodSpec = value; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public static IDictionary<IType, IEnumerable<IField>> MergeFields
+        {
+            set { mergeFields = value; }
         }
 
         /// <summary>
         /// </summary>
         public string AssemblyQualifiedName
         {
-            get
-            {
-                return this.Assembly.Assembly.Identity.Name;
-            }
+            get { return this.Assembly.Assembly.Identity.Name; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<MethodKey> CalledMethods
         {
-            get
-            {
-                return this._calledMethods;
-            }
+            get { return this._calledMethods; }
 
-            set
-            {
-                this._calledMethods = value;
-            }
+            set { this._calledMethods = value; }
         }
 
         /// <summary>
@@ -427,20 +434,14 @@ namespace Il2Native.Logic
         /// </summary>
         public bool IsCoreLib
         {
-            get
-            {
-                return !this.Assembly.Assembly.AssemblyReferences.Any();
-            }
+            get { return !this.Assembly.Assembly.AssemblyReferences.Any(); }
         }
 
         /// <summary>
         /// </summary>
         public string ModuleName
         {
-            get
-            {
-                return this.Assembly.ManifestModule.Name;
-            }
+            get { return this.Assembly.ManifestModule.Name; }
         }
 
         /// <summary>
@@ -459,105 +460,72 @@ namespace Il2Native.Logic
         /// </summary>
         public ISet<IType> UsedArrayTypes
         {
-            get
-            {
-                return this._usedArrayTypes;
-            }
+            get { return this._usedArrayTypes; }
 
-            set
-            {
-                this._usedArrayTypes = value;
-            }
+            set { this._usedArrayTypes = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IType> UsedTypeTokens
         {
-            get
-            {
-                return this._usedTypeTokens;
-            }
+            get { return this._usedTypeTokens; }
 
-            set
-            {
-                this._usedTypeTokens = value;
-            }
+            set { this._usedTypeTokens = value; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedTypes
+        {
+            get { return this._usedTypes; }
+
+            set { this._usedTypes = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IMethod> UsedGenericSpecialiazedMethods
         {
-            get
-            {
-                return this.usedGenericSpecialiazedMethods;
-            }
+            get { return this.usedGenericSpecialiazedMethods; }
 
-            set
-            {
-                this.usedGenericSpecialiazedMethods = value;
-            }
+            set { this.usedGenericSpecialiazedMethods = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IType> UsedGenericSpecialiazedTypes
         {
-            get
-            {
-                return this.usedGenericSpecialiazedTypes;
-            }
+            get { return this.usedGenericSpecialiazedTypes; }
 
-            set
-            {
-                this.usedGenericSpecialiazedTypes = value;
-            }
+            set { this.usedGenericSpecialiazedTypes = value; }
         }
 
         /// <summary>
         /// </summary>
         public ISet<IField> UsedStaticFieldsToRead
         {
-            get
-            {
-                return this.usedStaticFieldsToRead;
-            }
+            get { return this.usedStaticFieldsToRead; }
 
-            set
-            {
-                this.usedStaticFieldsToRead = value;
-            }
+            set { this.usedStaticFieldsToRead = value; }
         }
 
         /// <summary>
         /// </summary>
         public IDictionary<int, string> UsedStrings
         {
-            get
-            {
-                return this._usedStrings;
-            }
+            get { return this._usedStrings; }
 
-            set
-            {
-                this._usedStrings = value;
-            }
+            set { this._usedStrings = value; }
         }
 
         /// <summary>
         /// </summary>
         public IList<IConstBytes> UsedConstBytes
         {
-            get
-            {
-                return this._usedConstBytes;
-            }
+            get { return this._usedConstBytes; }
 
-            set
-            {
-                this._usedConstBytes = value;
-            }
+            set { this._usedConstBytes = value; }
         }
 
         /// <summary>
@@ -718,6 +686,11 @@ namespace Il2Native.Logic
                 var runtimeModuleStoreField = typeResolver.ResolveType("System.Reflection.RuntimeModule").ToField(
                     type, RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, isStatic: true, isStaticClassInitialization: true);
                 yield return runtimeModuleStoreField;
+
+                // special static field to store RuntimeType for a current type
+                var runtimeAssemblyStoreField = typeResolver.ResolveType("System.Reflection.RuntimeAssembly").ToField(
+                    type, RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, isStatic: true, isStaticClassInitialization: true);
+                yield return runtimeAssemblyStoreField;
             }
 
             if (type.IsStaticArrayInit)
@@ -729,6 +702,16 @@ namespace Il2Native.Logic
             var cctorCalled = typeResolver.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
             cctorCalled.ConstantValue = -1;
             yield return cctorCalled;
+
+            // merged fields
+            IEnumerable<IField> mergeFieldsForType;
+            if (mergeFields != null && mergeFields.TryGetValue(type, out mergeFieldsForType))
+            {
+                foreach (var mergeField in mergeFieldsForType)
+                {
+                    yield return mergeField;
+                }
+            }
         }
 
         /// <summary>
@@ -839,6 +822,8 @@ namespace Il2Native.Logic
                 foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => RequiredGetStaticMethod(f, typeResolver)))
                 {
                     yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
+                    yield return new SynthesizedGetStaticAddressMethod(type, staticField, typeResolver);
+                    yield return new SynthesizedSetStaticMethod(type, staticField, typeResolver);
                 }
             }
 
@@ -846,14 +831,14 @@ namespace Il2Native.Logic
             {
                 if (!excludeSpecializations)
                 {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(ShouldHaveStructToObjectAdapter))
+                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
                 }
                 else
                 {
-                    foreach (var method in type.GetMethods(flags).Where(ShouldHaveStructToObjectAdapter))
+                    foreach (var method in type.GetMethods(flags).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
                         yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                     }
@@ -883,7 +868,7 @@ namespace Il2Native.Logic
 
             if (type.IsValueType())
             {
-                foreach (var method in genMethodSpecializationForType.Where(ShouldHaveStructToObjectAdapter))
+                foreach (var method in genMethodSpecializationForType.Where(m => m.ShouldHaveStructToObjectAdapter()))
                 {
                     yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
                 }
@@ -903,25 +888,6 @@ namespace Il2Native.Logic
             }
 
             return f.IsStatic;
-        }
-
-        private static bool ShouldHaveStructToObjectAdapter(IMethod m)
-        {
-            if (m.IsStatic)
-            {
-                return false;
-            }
-
-            return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<IType> AllReferencedTypes()
-        {
-            return this.lazyAllReferencedTypes.Value;
         }
 
         public IEnumerable<string> References()
@@ -1168,7 +1134,7 @@ namespace Il2Native.Logic
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {
-                            this.AddGenericSpecializedType(constructor.DeclaringType);
+                            this.AddGenericSpecializedTypeAndUsedType(constructor.DeclaringType);
                             this.AddGenericSpecializedMethod(constructor, stackCall);
 
                             this.AddArrayType(constructor.DeclaringType);
@@ -1186,18 +1152,18 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var method = module.ResolveMethod(token, genericContext);
 
-                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
                         this.AddArrayType(method.DeclaringType);
 
-                        this.AddGenericSpecializedType(method.ReturnType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
 
                         var methodParameters = method.GetParameters();
                         if (methodParameters != null)
                         {
                             foreach (var methodParameter in methodParameters)
                             {
-                                this.AddGenericSpecializedType(methodParameter.ParameterType);
+                                this.AddGenericSpecializedTypeAndUsedType(methodParameter.ParameterType);
                             }
                         }
 
@@ -1222,7 +1188,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         method = module.ResolveMethod(token, genericContext);
-                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
                         this.AddArrayType(method.DeclaringType);
@@ -1247,8 +1213,8 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericContext);
                         Debug.Assert(field != null);
-                        this.AddGenericSpecializedType(field.FieldType);
-                        this.AddGenericSpecializedType(field.DeclaringType);
+                        this.AddGenericSpecializedTypeAndUsedType(field.FieldType);
+                        this.AddGenericSpecializedTypeAndUsedType(field.DeclaringType);
                         this.AddArrayType(field.FieldType);
                         this.AddArrayType(field.DeclaringType);
 
@@ -1268,7 +1234,7 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
-                            this.AddGenericSpecializedType(typeToken);
+                            this.AddGenericSpecializedTypeAndUsedType(typeToken);
                             this.AddArrayType(typeToken);
                             this.AddTypeToken(typeToken);
 
@@ -1336,7 +1302,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
 
-                        this.AddGenericSpecializedType(type);
+                        this.AddGenericSpecializedTypeAndUsedType(type);
                         this.AddArrayType(type);
 
                         if (code == Code.Initobj)
@@ -1601,6 +1567,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!type.IsGenericTypeDefinition);
+
             this._usedArrayTypes.Add(type);
         }
 
@@ -1621,6 +1589,26 @@ namespace Il2Native.Logic
             {
                 // when you use typeof(B<T>) you need to add token of base type which can be generic as well
                 AddTypeToken(type.BaseType);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void AddUsedType(IType type)
+        {
+            if (this._usedTypes == null || type == null || type.SpecialUsage())
+            {
+                return;
+            }
+
+            this._usedTypes.Add(type);
+
+            if (type.BaseType != null && type.BaseType.IsGenericTypeDefinition)
+            {
+                // when you use typeof(B<T>) you need to add token of base type which can be generic as well
+                AddUsedType(type.BaseType);
             }
         }
 
@@ -1678,8 +1666,10 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void AddGenericSpecializedType(IType type)
+        private void AddGenericSpecializedTypeAndUsedType(IType type)
         {
+            this.AddUsedType(type);
+
             if (this.usedGenericSpecialiazedTypes == null || type == null)
             {
                 return;
@@ -1824,23 +1814,7 @@ namespace Il2Native.Logic
 
             var assemblies = new List<MetadataImageReference>();
 
-            if (this.ReferencesList.Length == 0)
-            {
-                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                    ? new MetadataImageReference(
-                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
-
-                assemblies.Add(coreLibRefAssembly);
-            }
-            else
-            {
-                var added = new HashSet<AssemblyIdentity>();
-                foreach (var refItem in this.ReferencesList)
-                {
-                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                }
-            }
+            this.LoadReferencesForCompiling(assemblies);
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
@@ -1887,23 +1861,7 @@ namespace Il2Native.Logic
 
             var assemblies = new List<MetadataImageReference>();
 
-            if (this.ReferencesList.Length == 0)
-            {
-                var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
-                    ? new MetadataImageReference(
-                        new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                    : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
-
-                assemblies.Add(coreLibRefAssembly);
-            }
-            else
-            {
-                var added = new HashSet<AssemblyIdentity>();
-                foreach (var refItem in this.ReferencesList)
-                {
-                    this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                }
-            }
+            this.LoadReferencesForCompiling(assemblies);
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
@@ -1936,6 +1894,35 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromImageStream(dllStream);
         }
 
+        private void LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
+        {
+            var added = new HashSet<AssemblyIdentity>();
+
+            if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
+            {
+                AddAsseblyReference(assemblies, added, this.CoreLibPath);
+            }
+            else
+            {
+                AddAsseblyReference(assemblies, added, typeof(int).Assembly.Location);
+            }
+
+            if (this.ReferencesList != null)
+            {
+                foreach (var refItem in this.ReferencesList)
+                {
+                    if (File.Exists(refItem))
+                    {
+                        AddAsseblyReference(assemblies, added, refItem);
+                    }
+                    else
+                    {
+                        this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                    }
+                }
+            }
+        }
+
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
         {
             var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
@@ -1944,11 +1931,27 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var metadata = this.GetAssemblyMetadata(assemblyIdentity);
-
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
             if (added.Add(metadata.Assembly.Identity))
             {
                 var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+                assemblies.Add(metadataImageReference);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
+        {
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+
+            if (added.Add(metadata.Assembly.Identity))
+            {
                 assemblies.Add(metadataImageReference);
 
                 // process nested
@@ -1967,6 +1970,8 @@ namespace Il2Native.Logic
         /// </param>
         private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
         {
+            Debug.Assert(!method.IsGenericMethodDefinition, "Generic Method is not fully resolved");
+
             stackCall.Enqueue(method);
 
             // add all generic types in parameters
@@ -1975,16 +1980,24 @@ namespace Il2Native.Logic
             {
                 foreach (var parameter in parameters)
                 {
-                    this.AddGenericSpecializedType(parameter.ParameterType);
+                    this.AddGenericSpecializedTypeAndUsedType(parameter.ParameterType);
                 }
             }
 
             // add return type
-            this.AddGenericSpecializedType(method.ReturnType);
+            this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
 
             // disover it again in specialized method
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, this._usedTypeTokens, stackCall, this.TypeResolver);
+                this.usedGenericSpecialiazedTypes,
+                this.usedGenericSpecialiazedMethods,
+                null,
+                this._usedArrayTypes,
+                this._usedTypeTokens,
+                this._usedTypes,
+                this._calledMethods,
+                stackCall,
+                this.TypeResolver);
 
             stackCall.Dequeue();
         }
@@ -2134,23 +2147,11 @@ namespace Il2Native.Logic
         private IEnumerable<IType> ReadTypes(bool readAll = false, bool ignoreCurrent = false)
         {
             var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
-            foreach (var type in this.ReadTypes(assemblySymbol, readAll, ignoreCurrent))
-            {
-                yield return type;
-            }
+            return this.ReadTypes(assemblySymbol, readAll, ignoreCurrent);
         }
 
         private IEnumerable<IType> ReadTypes(AssemblySymbol assemblySymbol, bool readAll = false, bool ignoreCurrent = false)
         {
-            if (!ignoreCurrent)
-            {
-                // 3) Load Types
-                foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
-                {
-                    yield return metadataTypeAdapter;
-                }
-            }
-
             if (readAll)
             {
                 var moduleReferences = this.LoadReferences(this.Assembly);
@@ -2165,6 +2166,15 @@ namespace Il2Native.Logic
                     {
                         yield return metadataTypeAdapter;
                     }
+                }
+            }
+
+            if (!ignoreCurrent)
+            {
+                // 3) Load Types
+                foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
+                {
+                    yield return metadataTypeAdapter;
                 }
             }
         }
@@ -2221,12 +2231,12 @@ namespace Il2Native.Logic
 
             if (assemblyIdentity.Name == "mscorlib")
             {
-                if (assemblyIdentity.Version.Major <= 1 && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
                 {
                     return this.CoreLibPath;
                 }
 
-                ////Debug.Assert(false, "you are using mscorlib from .NET");
+                Debug.Assert(false, "you are using mscorlib from .NET");
 
                 return typeof(int).Assembly.Location;
             }
@@ -2265,18 +2275,36 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
+            if (SetCorLib(assemblySymbol, assemblySymbol))
+            {
+                return;
+            }
+
+            Debug.Fail("CoreLib not set");
+        }
+
+        private bool SetCorLib(PEAssemblySymbol assemblySymbol, PEAssemblySymbol fromAssemblySymbol)
+        {
+            var loadedRefAssemblies = from assemblyIdentity in fromAssemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
             foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
             {
                 var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
                 if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
                 {
                     assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
-                    return;
+                    return true;
                 }
             }
 
-            Debug.Fail("CoreLib not set");
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                if (this.SetCorLib(assemblySymbol, loadedRefAssemblySymbol as PEAssemblySymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public const BindingFlags DefaultFlags =

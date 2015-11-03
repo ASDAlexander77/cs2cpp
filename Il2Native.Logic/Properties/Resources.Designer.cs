@@ -64,20 +64,23 @@ namespace Il2Native.Logic.Properties {
         ///   Looks up a localized string similar to #ifdef _MSC_VER
         ///#error Not supported yet
         ///#elif __GNUC__ &gt;= 3
-        ///typedef signed char int8_t;
-        ///typedef short int16_t;
-        ///typedef int int32_t;
-        ///typedef long long int64_t;
-        ///typedef unsigned char uint8_t;
-        ///typedef unsigned short uint16_t;
-        ///typedef unsigned int uint32_t;
-        ///typedef unsigned long long uint64_t;
+        ///
+        ///typedef void Void;
+        ///typedef bool Boolean;
+        ///typedef signed char SByte;
+        ///typedef short Int16;
+        ///typedef int Int32;
+        ///typedef long long Int64;
+        ///typedef unsigned char Byte;
+        ///typedef unsigned short Char;
+        ///typedef unsigned short UInt16;
+        ///typedef unsigned int UInt32;
+        ///typedef unsigned long long UInt64;
+        ///typedef float Single;
+        ///typedef double Double;
         ///
         ///#define compare_and_swap __sync_val_compare_and_swap 
-        ///#define compare_and_swap_bool __sync_bool_compare_and_swap 
-        ///#define sync_synchronize __sync_synchronize
-        ///#define fetch_and_add __sync_fetch_and_add
-        ///#d [rest of string was truncated]&quot;;.
+        ///#define compare_and_swap_bool __sync_bool_comp [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {

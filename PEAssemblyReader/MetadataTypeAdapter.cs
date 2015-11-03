@@ -32,6 +32,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyAssemblyFullyQualifiedName;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<IType> lazyBaseType;
 
         /// <summary>
@@ -127,6 +131,7 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyBaseType = new Lazy<IType>(this.CalculateBaseType);
             this.lazyAssemblyQualifiedName = new Lazy<string>(this.CalculateAssemblyQualifiedName);
+            this.lazyAssemblyFullyQualifiedName = new Lazy<string>(this.CalculateAssemblyFullyQualifiedName);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
             this.lazyModule = new Lazy<MetadataModuleAdapter>(this.CalculateModule);
             this.lazyDeclaringTypeOriginal = new Lazy<IType>(this.CalculateDeclaringTypeOriginal);
@@ -151,6 +156,16 @@ namespace PEAssemblyReader
             get
             {
                 return this.lazyAssemblyQualifiedName.Value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                return this.lazyAssemblyFullyQualifiedName.Value;
             }
         }
 
@@ -462,6 +477,14 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool IsInternal
+        {
+            get { return this.typeDef.DeclaredAccessibility == Accessibility.Internal; }
+        }
+
+
         public bool IsPrivateImplementationDetails
         {
             get
@@ -483,6 +506,17 @@ namespace PEAssemblyReader
             get
             {
                 return this.Name.StartsWith("__StaticArrayInitTypeSize");
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.typeDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
             }
         }
 
@@ -1321,6 +1355,32 @@ namespace PEAssemblyReader
             }
 
             return effective.ContainingAssembly.Identity.Name;
+        }
+
+        private string CalculateAssemblyFullyQualifiedName()
+        {
+            var effective = this.typeDef;
+
+            while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
+            {
+                var arrayType = effective as ArrayTypeSymbol;
+                if (arrayType != null)
+                {
+                    effective = arrayType.ElementType;
+                    continue;
+                }
+
+                var pointerType = effective as PointerTypeSymbol;
+                if (pointerType != null)
+                {
+                    effective = pointerType.PointedAtType;
+                    continue;
+                }
+
+                break;
+            }
+
+            return effective.ContainingAssembly.Identity.ToString();
         }
 
         /// <summary>

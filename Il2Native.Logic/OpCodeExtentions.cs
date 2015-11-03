@@ -12,7 +12,8 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection.Emit;
     using System.Text;
-
+    using DebugInfo.DebugInfoSymbolWriter;
+    using Gencode.SynthesizedMethods;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
 
@@ -24,6 +25,11 @@ namespace Il2Native.Logic
     {
         public static string CleanUpName(this string typeBaseName)
         {
+            if (typeBaseName == null)
+            {
+                return null;
+            }
+
             var s = new char[typeBaseName.Length];
 
             var n = ' ';
@@ -266,6 +272,8 @@ namespace Il2Native.Logic
             ISet<IType> structTypes,
             ISet<IType> arrayTypes,
             ISet<IType> usedTokenTypes,
+            ISet<IType> usedTypes,
+            ISet<MethodKey> calledMethods,
             Queue<IMethod> stackCall,
             ITypeResolver typeResolver)
         {
@@ -281,6 +289,8 @@ namespace Il2Native.Logic
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
             reader.UsedTypeTokens = usedTokenTypes;
+            reader.UsedTypes = usedTypes;
+            reader.CalledMethods = calledMethods;
             reader.TypeResolver = typeResolver;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
@@ -1144,6 +1154,28 @@ namespace Il2Native.Logic
             return type != null && type.IsValueType;
         }
 
+        public static bool IsIntPtr(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.IntPtr":
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsUIntPtr(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.UIntPtr":
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool IsIntPtrOrUIntPtr(this IType thisType)
         {
             switch (thisType.FullName)
@@ -1703,6 +1735,117 @@ namespace Il2Native.Logic
             }
 
             return thisType.ToClass();
+        }
+
+        public static bool ShouldHaveStructToObjectAdapter(this IMethod m)
+        {
+            if (m.IsStatic)
+            {
+                return false;
+            }
+
+            return m.IsMethodVirtual() || m.IsExplicitInterfaceImplementation || m.IsPublic;
+        }
+
+        public static bool IsAssemblyNamespaceRequired(this IType type)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            {
+                return true;
+            }
+
+            if (type.IsAnyParentOrSelfInternal() && !type.Name.StartsWith("Runtime"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
+        {
+            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            {
+                return currentAssemblyNamespace;
+            }
+
+            if (type.IsAnyParentOrSelfInternal() && !type.Name.StartsWith("Runtime"))
+            {
+                return type.AssemblyQualifiedName;
+            }
+
+            return null;
+        }
+
+        public static bool IsAssemblyNamespaceRequired(this IMethod method, IType ownerOfExplicitInterface = null)
+        {
+            if (method.IsUnmanaged || method.IsUnmanagedMethodReference || method.IsUnmanagedDllImport)
+            {
+                return false;
+            }
+
+            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
+            {
+                return true;
+            }
+
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+            {
+                return true;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string GetAssemblyNamespace(this IMethod method, string currentAssemblyNamespace, IType ownerOfExplicitInterface = null)
+        {
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+            {
+                return currentAssemblyNamespace;
+            }
+
+            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            {
+                return currentAssemblyNamespace;
+            }
+
+            if (method.DeclaringType != null && method.DeclaringType.IsAssemblyNamespaceRequired())
+            {
+                return GetAssemblyNamespace(method.DeclaringType, currentAssemblyNamespace);
+            }
+
+            return null;
+        }
+
+        public static bool IsAnyParentOrSelfInternal(this IType type)
+        {
+            if (type == null)
+            {
+                return false;
+            }
+
+            var effectiveType = type;
+            do
+            {
+                if (effectiveType.IsInternal)
+                {
+                    return true;
+                }
+
+                if (!effectiveType.IsNested)
+                {
+                    break;
+                }
+
+                effectiveType = effectiveType.DeclaringType;
+            } while (effectiveType != null);
+             
+            return false;
         }
     }
 }

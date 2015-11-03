@@ -1211,6 +1211,8 @@ namespace PEAssemblyReader
                 return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
             }
 
+            Debug.Assert(false);
+
             throw new KeyNotFoundException();
         }
 
@@ -1410,7 +1412,7 @@ namespace PEAssemblyReader
             {
                 var methodSymbolContext = metadataMethodAdapter.MethodDef;
                 var constructedFrom = methodSymbol.ConstructedFrom;
-                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, methodSymbolContext, methodTypeSubstitution));
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, methodSymbolContext, methodTypeSubstitution ?? methodSymbolContext.TypeSubstitution));
             }
 
             var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
@@ -1418,7 +1420,7 @@ namespace PEAssemblyReader
             {
                 var namedTypeSymbolContext = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
                 var constructedFrom = methodSymbol.ConstructedFrom;
-                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, namedTypeSymbolContext, methodTypeSubstitution));
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, namedTypeSymbolContext, methodTypeSubstitution ?? namedTypeSymbolContext.TypeSubstitution));
             }
 
             return null;
@@ -1536,6 +1538,8 @@ namespace PEAssemblyReader
 
                 return typeSymbol.ToAdapter();
             }
+
+            Debug.Assert(false, string.Format("Type '{0}' can't be resolved", fullName));
 
             throw new KeyNotFoundException();
         }

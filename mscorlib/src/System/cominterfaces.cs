@@ -36,7 +36,7 @@ namespace System.Runtime.InteropServices
     [CLSCompliant(false)]
     [TypeLibImportClassAttribute(typeof(System.Attribute))]
 [System.Runtime.InteropServices.ComVisible(true)]
-    public interface _Attribute
+    internal interface _Attribute
     {
 #if !FEATURE_CORECLR
         void GetTypeInfoCount(out uint pcTInfo);

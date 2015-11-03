@@ -9,7 +9,7 @@ namespace System.Runtime.CompilerServices
     using System.Threading.Tasks;
 
     [Serializable]
-    public static class RuntimeHelpers
+    public static partial class RuntimeHelpers
     {
         
         public static void InitializeArray(Array array, RuntimeFieldHandle fldHandle)
@@ -77,6 +77,10 @@ namespace System.Runtime.CompilerServices
         {
             throw new NotImplementedException();
         }
+
+        public delegate void TryCode(Object userData);
+
+        public delegate void CleanupCode(Object userData, bool exceptionThrown);
     }
 }
 

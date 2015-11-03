@@ -1,6 +1,4 @@
-﻿// Licensed under the MIT license.
-
-namespace System.Threading
+﻿namespace System.Threading
 {
     partial class OverlappedData
     {

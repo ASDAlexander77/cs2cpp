@@ -23,7 +23,7 @@ namespace System
     
     [Serializable()]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public unsafe struct RuntimeTypeHandle
+    public unsafe partial struct RuntimeTypeHandle
     {
         // Returns handle for interop with EE. The handle is guaranteed to be non-null.
         internal RuntimeTypeHandle GetNativeHandle()
@@ -503,10 +503,6 @@ namespace System
         {
             return new Utf8String(_GetUtf8Name(type));
         }
-
-        [System.Security.SecuritySafeCritical]  // auto-generated
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static bool CanCastTo(RuntimeType type, RuntimeType target);
 
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]

@@ -43,7 +43,7 @@ namespace System.Globalization {
 
     [Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public class CultureInfo : ICloneable, IFormatProvider {
+    public partial class CultureInfo : ICloneable, IFormatProvider {
         //--------------------------------------------------------------------//
         //                        Internal Information                        //
         //--------------------------------------------------------------------//
@@ -1963,13 +1963,6 @@ namespace System.Globalization {
             return string.Empty;
         }
 
-        // Get the default locale name
-        [System.Security.SecurityCritical]  // auto-generated
-        [SuppressUnmanagedCodeSecurity]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool InternalGetDefaultLocaleName(int localetype, StringHandleOnStack localeString);
-
         [System.Security.SecuritySafeCritical] // auto-generated
         private static String GetUserDefaultUILanguage()
         {
@@ -1980,13 +1973,6 @@ namespace System.Globalization {
             }
             return String.Empty;
         }
-        
-        // Get the user's default UI language, return locale name
-        [System.Security.SecurityCritical]  // auto-generated
-        [SuppressUnmanagedCodeSecurity]
-        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool InternalGetUserDefaultUILanguage(StringHandleOnStack userDefaultUiLanguage);
 
         [System.Security.SecuritySafeCritical] // auto-generated
         private static String GetSystemDefaultUILanguage()

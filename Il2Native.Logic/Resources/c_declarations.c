@@ -52,7 +52,7 @@ extern "C" Double fmod (Double, Double);
 // misc
 extern "C" Void __pure_virtual();
 extern "C" Void* Memcpy(Byte* dst, Byte* src, Int32 size);
-extern "C" Void Exit(Int32 status);
+extern "C" Void __Memmove(Byte* dst, Byte* src, UInt32 size);
 extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
 inline Void* __alloc(UInt32 size)
@@ -83,6 +83,21 @@ template < typename T > struct __static_data
 	Byte* __cond;
 #endif
 	T data;
+};
+
+#if __MULTI_THREADING
+template < int N > struct __static_str
+#else
+template < int N > const struct __static_str
+#endif
+{
+#if __MULTI_THREADING
+	Byte* __mutex;
+	Byte* __cond;
+#endif
+    Void** __vtbl;
+    Int32 length;
+	wchar_t data[N];
 };
 
 struct __interface_data

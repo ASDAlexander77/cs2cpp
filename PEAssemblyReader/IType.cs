@@ -49,6 +49,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsInternal { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsArray { get; }
 
         /// <summary>
@@ -146,7 +150,7 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsStaticArrayInit { get; }
-
+        
         /// <summary>
         /// </summary>
         IModule Module { get; }

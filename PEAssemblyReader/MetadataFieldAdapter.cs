@@ -91,6 +91,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public string AssemblyFullyQualifiedName
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public IType DeclaringType
@@ -327,6 +335,17 @@ namespace PEAssemblyReader
             get
             {
                 return this.fieldDef.DeclaredAccessibility == Accessibility.Private;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsMerge
+        {
+            get
+            {
+                var attributes = this.fieldDef.GetAttributes();
+                return attributes != null && attributes.Any(a => a.AttributeClass.Name == "MergeCodeAttribute");
             }
         }
 

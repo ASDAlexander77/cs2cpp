@@ -45,7 +45,16 @@
     <Compile Include="Impl\ArgIterator.cs" />
     <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
+    <Compile Include="Impl\Decimal.cs" />
+    <Compile Include="Impl\Delegate.cs" />
+    <Compile Include="Impl\Environment.cs" />
+    <Compile Include="Impl\GC.cs" />
+    <Compile Include="Impl\Globalization\CultureInfo.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
+    <Compile Include="Impl\Math.cs" />
+    <Compile Include="Impl\Number.cs" />
+    <Compile Include="Impl\RuntimeTypeHandle.cs" />
+    <Compile Include="Impl\Runtime\CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
@@ -159,6 +168,7 @@
     <Compile Include="System\Reflection\__Filters.cs" />
     <Compile Include="System\RtType.cs" />
     <Compile Include="System\RuntimeHandles.cs" />
+    <Compile Include="System\Runtime\CompilerServices\CompilerGeneratedAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\ConditionalWeakTable.cs" />
     <Compile Include="System\Runtime\CompilerServices\CustomConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\jithelpers.cs" />

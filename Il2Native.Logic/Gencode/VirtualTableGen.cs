@@ -14,6 +14,7 @@ namespace Il2Native.Logic.Gencode
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using DebugInfo.DebugInfoSymbolWriter;
     using PEAssemblyReader;
 
     /// <summary>
@@ -228,7 +229,7 @@ namespace Il2Native.Logic.Gencode
                     " vtable ",
                     @interface.FullName,
                     implementation ? " interface_impl" : " interface",
-                    CWriter.IsAssemblyNamespaceRequired(type) ? cWriter.AssemblyQualifiedName.CleanUpName() : "").CleanUpName();
+                    type.IsAssemblyNamespaceRequired() ? type.GetAssemblyNamespace(cWriter.AssemblyQualifiedName) : "").CleanUpName();
         }
 
         [Obsolete("Reduce casting here when interfaces are done")]
@@ -375,7 +376,7 @@ namespace Il2Native.Logic.Gencode
             var name = string.Concat(
                 type.FullName,
                 implementation ? " vtable_impl" : " vtable",
-                CWriter.IsAssemblyNamespaceRequired(type) ? cWriter.AssemblyQualifiedName.CleanUpName() : "");
+                type.IsAssemblyNamespaceRequired() ? type.GetAssemblyNamespace(cWriter.AssemblyQualifiedName).CleanUpName() : "");
 
             return name.CleanUpName();
         }

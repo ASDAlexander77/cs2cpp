@@ -47,8 +47,35 @@
     <Compile Include="..\CoreLib\Impl\Console.cs">
       <Link>Impl\Console.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\Impl\Decimal.cs">
+      <Link>Impl\Decimal.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Delegate.cs">
+      <Link>Impl\Delegate.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Environment.cs">
+      <Link>Impl\Environment.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\GC.cs">
+      <Link>Impl\GC.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Globalization\CultureInfo.cs">
+      <Link>Impl\Globalization\CultureInfo.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\Impl\IO\__ConsoleStream.cs">
       <Link>Impl\IO\__ConsoleStream.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Math.cs">
+      <Link>Impl\Math.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Number.cs">
+      <Link>Impl\Number.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\RuntimeTypeHandle.cs">
+      <Link>Impl\RuntimeTypeHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\CoreLib\Impl\Runtime\CompilerServices\RuntimeHelpers.cs">
+      <Link>Impl\Runtime\CompilerServices\RuntimeHelpers.cs</Link>
     </Compile>
     <Compile Include="..\CoreLib\Impl\Runtime\InteropServices\CriticalHandle.cs">
       <Link>Impl\Runtime\InteropServices\CriticalHandle.cs</Link>

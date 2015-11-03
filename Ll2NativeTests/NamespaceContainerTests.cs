@@ -148,6 +148,8 @@ namespace Ll2NativeTests
 
             public string AssemblyQualifiedName { get; private set; }
 
+            public string AssemblyFullyQualifiedName { get; private set; }
+
             public IType DeclaringType { get; private set; }
 
             public string FullName { get; private set; }

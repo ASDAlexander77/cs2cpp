@@ -200,6 +200,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
             }
 
+#if RETURN_EMPTY
             writer.Write("return ");
 
             if (!method.ReturnType.IsVoid())
@@ -216,7 +217,10 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(")0");
                 }
             }
-
+#else
+            cWriter.WriteThrowException(cWriter.System.System_NotImplementedException.FullName);
+#endif
+            
             if (!disableCurlyBrakets)
             {
                 writer.WriteLine(";");
@@ -416,6 +420,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public string AssemblyFullyQualifiedName { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public CallingConventions CallingConvention
             {
                 get { return this.isStatic ? CallingConventions.Standard : CallingConventions.HasThis; }
@@ -535,6 +543,16 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// </summary>
             public bool IsAnonymousDelegate { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsMerge
+            {
+                get
+                {
+                    return false;
+                }
+            }
 
             /// <summary>
             /// </summary>

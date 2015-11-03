@@ -22,7 +22,7 @@ namespace System.Runtime.InteropServices {
     [InterfaceTypeAttribute(ComInterfaceType.InterfaceIsDual)]
     [CLSCompliant(false)]
 [System.Runtime.InteropServices.ComVisible(true)]
-    public interface _Exception
+    internal interface _Exception
     {
 #if !FEATURE_CORECLR
         // This contains all of our V1 Exception class's members.

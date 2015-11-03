@@ -644,13 +644,54 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.LoadField(field);
 
-            if (field.IsThreadStatic && field.FieldType.IsStructureType())
+            if (field.IsThreadStatic && field.FieldType.IsValueType())
             {
                 codeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
                 codeBuilder.Unbox(field.FieldType);
             }
 
             codeBuilder.Add(Code.Ret);
+        }
+
+        public static void GetGetStaticAddressMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        {
+            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            if (cctor != null)
+            {
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
+                codeBuilder.Call(cctor);
+                codeBuilder.Add(initializedJump);
+            }
+
+            codeBuilder.LoadFieldAddress(field);
+
+            codeBuilder.Add(Code.Ret);
+        }
+
+        public static void GetSetStaticMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        {
+            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            if (cctor != null)
+            {
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
+                codeBuilder.Call(cctor);
+                codeBuilder.Add(initializedJump);
+            }
+
+            codeBuilder.LoadArgument(0);
+
+            if (field.IsThreadStatic && field.FieldType.IsValueType())
+            {
+                codeBuilder.Box(field.FieldType);
+            }
+
+            codeBuilder.SaveField(field);
+
+            codeBuilder.Add(Code.Ret);
+
+            codeBuilder.Parameters.Add(field.FieldType.ToParameter("_value"));
         }
 
         /// <summary>

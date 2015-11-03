@@ -341,22 +341,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        [Ignore]
-        public void TestCompileWithMscorlib()
-        {
-            var skip = new List<int>(new[] { 100 });
-            CompilerHelper.Mscorlib = true;
-            CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";
-
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.CompileAndRun(string.Format("test-{0}", index), ignoreBadFiles: true);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
@@ -837,30 +821,133 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
+        /*
+# typical cmake to build libraries
+cmake_minimum_required(VERSION 2.8)
+
+project (test) 
+
+file(GLOB mscorlib_SRC
+    "M:/mscorlib*.cpp"
+)
+
+file(GLOB system_private_uri_SRC
+    "M:/System.Private.Uri*.cpp"
+)
+
+file(GLOB system_resources_resourceManager_SRC
+    "M:/System.Resources.ResourceManager*.cpp"
+)
+
+file(GLOB system_collections_SRC
+    "M:/System.Collections*.cpp"
+)
+
+file(GLOB system_diagnostics_debug_SRC
+    "M:/System.Diagnostics.Debug*.cpp"
+)
+
+file(GLOB system_runtime_SRC
+    "M:/System.Runtime*.cpp"
+)
+
+file(GLOB system_runtime_extensions_SRC
+    "M:/System.Runtime.Extensions*.cpp"
+)
+
+file(GLOB system_linq_SRC
+    "M:/System.Linq*.cpp"
+)
+
+file(GLOB test_SRC
+    "M:/test-*.cpp"
+)
+
+
+if(DEBUG)		
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti")
+else()
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti -O3")
+endif()
+
+include_directories("E:/Gits/bdwgc/include")
+link_directories("M:/")
+
+add_library(mscorlib ${mscorlib_SRC})
+add_library(system_private_uri ${system_private_uri_SRC})
+add_library(system_resources_resourceManager ${system_resources_resourceManager_SRC})
+add_library(system_collections ${system_collections_SRC})
+add_library(system_diagnostics_debug ${system_diagnostics_debug_SRC})
+add_library(system_runtime ${system_runtime_SRC})
+add_library(system_runtime_extensions ${system_runtime_extensions_SRC})
+add_library(system_linq ${system_linq_SRC})
+add_executable(test ${test_SRC})
+
+target_link_libraries (test mscorlib system_private_uri system_resources_resourceManager system_collections system_diagnostics_debug system_runtime system_runtime_extensions system_linq "stdc++" "gcmt-lib")
+
+         */
         [TestMethod]
         //[Ignore]
         public void TestMscolibCSNative()
         {
-            // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
-
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
+        }
 
-            ////if (CompilerHelper.CompileWithOptimization)
-            ////{
-            ////    CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-            ////    CompilerHelper.ExecCmd(
-            ////        "llc",
-            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.bc", CompilerHelper.Target));
-            ////}
-            ////else
-            ////{
-            ////    CompilerHelper.ExecCmd(
-            ////        "llc",
-            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.ll", CompilerHelper.Target));
-            ////}
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        //[Ignore]
+        public void TestMscolibCSNative_Type()
+        {            
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.MscorlibPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false, stubs: true, split: true),
+                new[] { "System.Delegate" });
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestSystemLinq()
+        {
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Private.Uri.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Resources.ResourceManager.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Collections.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Diagnostics.Debug.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Runtime.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Runtime.Extensions.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
+
+            Il2Converter.Convert(
+                            string.Format(@"{0}System.Linq.dll", CompilerHelper.CoreCLRDlls),
+                            CompilerHelper.OutputPath,
+                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
         }
 
         /// <summary>
@@ -869,23 +956,9 @@ namespace Ll2NativeTests
         public void TestCustomConvert()
         {
             //CompilerHelper.Mscorlib = true;
-            //CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";            
+            //CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
+            //CompilerHelper.AddSystemLinq = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        [Ignore]
-        public void TestGenCompileWithMscorlib()
-        {
-            var skip = new List<int>();
-            CompilerHelper.Mscorlib = true;
-            CompilerHelper.MscorlibPath = @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll";
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
-            }
         }
 
         /// <summary>
@@ -1305,9 +1378,9 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 28).Where(n => !skip.Contains(n)))
             {
-                CompilerHelper.AddSystemCore = true;
+                CompilerHelper.AddSystemLinq = true;
                 CompilerHelper.CompileAndRun(string.Format("gtest-linq-{0:00}", index));
-                CompilerHelper.AddSystemCore = false;
+                CompilerHelper.AddSystemLinq = false;
             }
         }
 
@@ -1364,16 +1437,32 @@ namespace Ll2NativeTests
         public void Test_Mono_Tests_Async()
         {
             // 2 - WaitAll not implemented
-            // 3 - throw NullReference exception because of safety check for 'this' which null but it not used. TODO: review it
             // 4 - WaitAll not implemented
-            // 6 - BUG: fix required, seems when you call GetResult "this" is null which causes throwing an NullReference exception
+            // 6 - TODO: it works if compiled in DEBUG, but crashes when compile in RELEASE
+            // 10 - WaitAll not implemented
+            // 11 - WaitAll not implemented
+            // 12 - WaitAll not implemented
+            // 13 - GetMethods not implemented
+            // 14 - WaitAll not implemented
+            // 15 - WaitAll not implemented
+            // 16 - GetMethods not implemented
+            // 17 - GetMethods not implemented
+            // 18 - WaitAll not implemented
 
             var skip = new List<int>(new[]
             {
                 2,
-                3,
                 4,
-                6
+                6,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
             });
 
             foreach (var index in Enumerable.Range(1, 48).Where(n => !skip.Contains(n)))
@@ -1399,41 +1488,6 @@ namespace Ll2NativeTests
             {
                 CompilerHelper.CompileAndRun(string.Format("dtest-{0:000}", index));
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        [Ignore]
-        public void TestMscorlibCompile()
-        {
-            // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
-
-            // Do not forget to set MSCORLIB variable
-
-            // WHAT TODO here
-            // adjust creating RuntimeType as MSCORLIB does
-
-            Il2Converter.Convert(
-                Path.GetFullPath(
-                    @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        [Ignore]
-        public void TestMscorlibCompile_TypeTest()
-        {
-            // Do not forget to set MSCORLIB variable
-            Il2Converter.Convert(
-                Path.GetFullPath(
-                    @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false),
-                new[] { "System.Delegate" });
         }
 
         #region Additional test attributes

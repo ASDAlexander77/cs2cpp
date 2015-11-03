@@ -111,6 +111,7 @@ namespace System.Threading
 
 #if SUPPORT_THREAD_CANCEL
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        [MergeCode]
         private static extern unsafe int pthread_setcancelstate(int state, int* oldstate);
 #endif
 
@@ -476,6 +477,7 @@ namespace System.Threading
 #if SUPPORT_THREAD_CANCEL
         /// <summary>
         /// </summary>
+        [MergeCode]
         private void CancelInternal()
         {
             this.state = ThreadState.AbortRequested;

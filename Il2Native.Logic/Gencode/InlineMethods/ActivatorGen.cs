@@ -66,9 +66,15 @@ namespace Il2Native.Logic.Gencode
 
                     // this is dummy function which is not used now as using Boxing before calling CreateInstance is enough for us
                     var type = method.GetGenericArguments().First();
-                    if (!type.IsValueType())
+                    opCodeMethodInfo.Result = 
+                        cWriter.WriteNewCallingDefaultConstructor(
+                            cWriter,
+                            opCodeMethodInfo,
+                            type,
+                            true);
+                    if (type.IsValueType())
                     {
-                        opCodeMethodInfo.Result = cWriter.WriteNewCallingDefaultConstructor(cWriter, opCodeMethodInfo, type, true);
+                        opCodeMethodInfo.Result = new FullyDefinedReference(string.Concat("*", opCodeMethodInfo.Result.ToString()), opCodeMethodInfo.Result.Type.ToNormal());
                     }
 
                     break;

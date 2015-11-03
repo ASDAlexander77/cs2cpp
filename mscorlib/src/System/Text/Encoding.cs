@@ -1353,6 +1353,7 @@ namespace System.Text
             }
         }
 
+#if NORMALIZATION_FORM
         // IsAlwaysNormalized
         // Returns true if the encoding is always normalized for the specified encoding form
         [Pure]
@@ -1373,6 +1374,7 @@ namespace System.Text
             // Assume false unless the encoding knows otherwise
             return false;
         }
+#endif
 
         // Returns a Decoder object for this encoding. The returned object
         // can be used to decode a sequence of bytes into a sequence of characters.

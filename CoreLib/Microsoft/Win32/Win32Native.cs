@@ -1064,18 +1064,6 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-        internal static int GetFileType(SafeFileHandle handle)
-        {
-            var stdId = handle.DangerousGetHandle().ToInt32();
-            if (stdId == STD_OUTPUT_HANDLE || stdId == STD_ERROR_HANDLE)
-            {
-                return FILE_TYPE_CHAR;
-            }
-
-            return FILE_TYPE_DISK;
-        }
-
-
         internal static bool SetEndOfFile(SafeFileHandle hFile)
         {
             throw new NotImplementedException();

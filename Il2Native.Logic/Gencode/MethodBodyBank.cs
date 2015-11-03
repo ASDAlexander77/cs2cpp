@@ -2,8 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Resources;
     using InternalMethods;
+    using InternalMethods.ModuleHandle;
     using InternalMethods.RuntimeTypeHandler;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -13,23 +16,32 @@
         private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
             new SortedDictionary<string, Func<IMethod, IMethod>>();
 
+        private static bool initialized = false;
+
         private static readonly object Locker = new object();
 
-        public static void Clear()
+        public static bool HasRegisteredMethod(string methodFullName)
         {
-            MethodsByFullName.Clear();
+            return MethodsByFullName.ContainsKey(methodFullName);
+        }
+
+        public static void Reset()
+        {
+            initialized = false;
         }
 
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
-            if (MethodsByFullName.Count == 0)
+            if (!initialized)
             {
                 lock (Locker)
                 {
                     // we double check to filter threads waiting on 'lock'
-                    if (MethodsByFullName.Count == 0)
+                    if (!initialized)
                     {
+                        MethodsByFullName.Clear();
                         RegisterAll(typeResolver);
+                        initialized = true;
                     }
                 }
             }
@@ -125,14 +137,17 @@
             byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
-            IList<IParameter> parameters)
+            IList<IParameter> parameters,
+            IExceptionHandlingClause[] exceptionHandlingClause = null)
         {
             Register(methodFullName, m => GetMethodDecorator(
-                m, code, tokenResolutions, locals, parameters, new IExceptionHandlingClause[0]));
+                m, code, tokenResolutions, locals, parameters, exceptionHandlingClause ?? new IExceptionHandlingClause[0]));
         }
 
-        private static void Register(string methodFullName, Func<IMethod, IMethod> func)
+        public static void Register(string methodFullName, Func<IMethod, IMethod> func)
         {
+            Debug.Assert(!MethodsByFullName.ContainsKey(methodFullName), "Method already registered");
+
             MethodsByFullName[methodFullName] = func;
         }
 
@@ -179,9 +194,20 @@
             // RuntimeTypeHandler
             IsInterfaceGen.Register(typeResolver);
             GetBaseTypeGen.Register(typeResolver);
+            GetElementTypeGen.Register(typeResolver);
             GetGCHandleGen.Register(typeResolver);
             GetModuleGen.Register(typeResolver);
+            GetAssemblyGen.Register(typeResolver);
             ConstructNameGen.Register(typeResolver);
+            IsGenericVariableGen.Register(typeResolver);
+            GetCorElementTypeGen.Register(typeResolver);
+            GetInterfacesGen.Register(typeResolver);
+            HasInstantiationGen.Register(typeResolver);
+            IsGenericTypeDefinitionGen.Register(typeResolver);
+            ContainsGenericVariablesGen.Register(typeResolver);
+
+            // ModuleHandle
+            GetModuleTypeGen.Register(typeResolver);
         }
 
         [Obsolete]

@@ -395,6 +395,12 @@ namespace Il2Native.Logic.Gencode
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
             }
+            else if ((estimatedOperandResultOf.Type.IsPointer || estimatedOperandResultOf.Type.IntTypeBitSize() >= CWriter.PointerSize * 8) && toType.IsIntPtrOrUIntPtr() && !toType.IsReference())
+            {
+                cWriter.Output.Write("System_{0}_System_{0}_op_ExplicitFVoidPN((Void*)", toType.Name);
+                cWriter.WriteResultOrActualWrite(opCodeOperand);
+                cWriter.Output.Write(")");
+            }
             else if (estimatedOperandResultOf.Type.IsArray
                      || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
                      || (estimatedOperandResultOf.Type.IsPointer && toType.UseAsClass)

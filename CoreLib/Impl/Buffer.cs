@@ -18,6 +18,13 @@
             Memcpy(dstBytes, dstOffsetBytes, srcBytes, srcOffsetBytes, byteCount);
         }
 
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+#if WIN64
+        extern private unsafe static void __Memmove(byte* dest, byte* src, ulong len);
+#else
+        extern private static unsafe void __Memmove(byte* dest, byte* src, uint len);
+#endif
+
         internal unsafe static void Memcpy(byte[] dest, int destIndex, byte[] src, int srcIndex, int len)
         {
             // If dest has 0 elements, the fixed statement will throw an 
