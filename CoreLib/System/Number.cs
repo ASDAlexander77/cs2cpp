@@ -1,11 +1,17 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 namespace System
 {
+
     using System;
     using System.Globalization;
+    using System.Runtime;
     using System.Runtime.CompilerServices;
+    using System.Runtime.Versioning;
+    using System.Security;
     using System.Text;
-    using Diagnostics.Contracts;
-    using Security;
+    using System.Diagnostics.Contracts;
 
     // The Number class implements methods for formatting and parsing
     // numeric values. To format and parse numeric values, applications should
@@ -28,7 +34,7 @@ namespace System
     // format parameter. If the format parameter is null or
     // an empty string, the number is formatted as if the string "G" (general
     // format) was specified. The info parameter specifies the
-    // NumberFormatInfo instance to use when formatting the number-> If the
+    // NumberFormatInfo instance to use when formatting the number. If the
     // info parameter is null or omitted, the numeric formatting information
     // is obtained from the current culture. The NumberFormatInfo supplies
     // such information as the characters to use for decimal and thousand
@@ -52,7 +58,7 @@ namespace System
     // C c - Currency format. The number is
     // converted to a string that represents a currency amount. The conversion is
     // controlled by the currency format information of the NumberFormatInfo
-    // used to format the number-> The precision specifier indicates the desired
+    // used to format the number. The precision specifier indicates the desired
     // number of decimal places. If the precision specifier is omitted, the default
     // currency precision given by the NumberFormatInfo is used.
     //
@@ -160,7 +166,7 @@ namespace System
     // in the format string determines the location of the decimal separator in the
     // formatted value; any additional '.' characters are ignored. The actual
     // character used as a the decimal separator in the output string is given by
-    // the NumberFormatInfo used to format the number->
+    // the NumberFormatInfo used to format the number.
     //
     // , - Thousand separator and number scaling.
     // The ',' character serves two purposes. First, if the format string contains
@@ -169,7 +175,7 @@ namespace System
     // separators inserted between each group of three digits to the left of the
     // decimal separator. The actual character used as a the decimal separator in
     // the output string is given by the NumberFormatInfo used to format the
-    // number-> Second, if the format string contains one or more ',' characters
+    // number. Second, if the format string contains one or more ',' characters
     // immediately to the left of the decimal point, or after the last digit
     // placeholder if there is no decimal point, then the number will be divided by
     // 1000 times the number of ',' characters before it is formatted. For example,
@@ -251,7 +257,7 @@ namespace System
     // a Number) or a positive or negative infinity, then regardless of the format
     // string, the resulting string is given by the NaNSymbol,
     // PositiveInfinitySymbol, or NegativeInfinitySymbol property of
-    // the NumberFormatInfo used to format the number->
+    // the NumberFormatInfo used to format the number.
     //
     // Parsing
     //
@@ -277,7 +283,7 @@ namespace System
     // NaNs or Infinities.
     //
     //This class contains only static members and does not need to be serializable 
-
+    [System.Runtime.CompilerServices.FriendAccessAllowed]
     internal partial class Number
     {
         private Number()
@@ -474,17 +480,17 @@ namespace System
             return (((ch) == 0x20) || ((ch) >= 0x09 && (ch) <= 0x0D));
         }
 
-        private unsafe static Boolean NumberToInt32(NUMBER* number, ref Int32 value)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        private unsafe static Boolean NumberToInt32(ref NumberBuffer number, ref Int32 value)
         {
 
-            Int32 i = number->scale;
-            if (i > Int32Precision || i < number->precision)
+            Int32 i = number.scale;
+            if (i > Int32Precision || i < number.precision)
             {
                 return false;
             }
-
-            char* digits = number->digits;
-            char* p = digits;
+            char* p = number.digits;
+            Contract.Assert(p != null, "");
             Int32 n = 0;
             while (--i >= 0)
             {
@@ -498,7 +504,7 @@ namespace System
                     n += (Int32)(*p++ - '0');
                 }
             }
-            if (number->sign)
+            if (number.sign)
             {
                 n = -n;
                 if (n > 0)
@@ -513,21 +519,21 @@ namespace System
                     return false;
                 }
             }
-
             value = n;
             return true;
         }
 
-        private unsafe static Boolean NumberToInt64(NUMBER* number, ref Int64 value)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        private unsafe static Boolean NumberToInt64(ref NumberBuffer number, ref Int64 value)
         {
-            Int32 i = number->scale;
-            if (i > Int64Precision || i < number->precision)
+
+            Int32 i = number.scale;
+            if (i > Int64Precision || i < number.precision)
             {
                 return false;
             }
-
-            char* digits = number->digits;
-            char* p = digits;
+            char* p = number.digits;
+            Contract.Assert(p != null, "");
             Int64 n = 0;
             while (--i >= 0)
             {
@@ -541,7 +547,7 @@ namespace System
                     n += (Int32)(*p++ - '0');
                 }
             }
-            if (number->sign)
+            if (number.sign)
             {
                 n = -n;
                 if (n > 0)
@@ -560,16 +566,17 @@ namespace System
             return true;
         }
 
-        private unsafe static Boolean NumberToUInt32(NUMBER* number, ref UInt32 value)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        private unsafe static Boolean NumberToUInt32(ref NumberBuffer number, ref UInt32 value)
         {
-            Int32 i = number->scale;
-            if (i > UInt32Precision || i < number->precision || number->sign)
+
+            Int32 i = number.scale;
+            if (i > UInt32Precision || i < number.precision || number.sign)
             {
                 return false;
             }
-
-            char* digits = number->digits;
-            char* p = digits;
+            char* p = number.digits;
+            Contract.Assert(p != null, "");
             UInt32 n = 0;
             while (--i >= 0)
             {
@@ -593,17 +600,17 @@ namespace System
             return true;
         }
 
-
-        private unsafe static bool NumberToUInt64(NUMBER* number, ref UInt64 value)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        private unsafe static Boolean NumberToUInt64(ref NumberBuffer number, ref UInt64 value)
         {
-            Int32 i = number->scale;
-            if (i > UInt64Precision || i < number->precision || number->sign)
+
+            Int32 i = number.scale;
+            if (i > UInt64Precision || i < number.precision || number.sign)
             {
                 return false;
             }
-
-            char* digits = number->digits;
-            char* p = digits;
+            char* p = number.digits;
+            Contract.Assert(p != null, "");
             UInt64 n = 0;
             while (--i >= 0)
             {
@@ -623,11 +630,11 @@ namespace System
                     n = newN;
                 }
             }
-
             value = n;
             return true;
         }
 
+        [System.Security.SecurityCritical]  // auto-generated
         private unsafe static char* MatchChars(char* p, string str)
         {
             fixed (char* stringPointer = str)
@@ -635,9 +642,11 @@ namespace System
                 return MatchChars(p, stringPointer);
             }
         }
-
+        [System.Security.SecurityCritical]  // auto-generated
         private unsafe static char* MatchChars(char* p, char* str)
         {
+            Contract.Assert(p != null && str != null, "");
+
             if (*str == '\0')
             {
                 return null;
@@ -657,24 +666,24 @@ namespace System
             return p;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Decimal ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
 
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             Decimal result = 0;
 
-            StringToNumber(value, options, &number, numfmt, true);
+            StringToNumber(value, options, ref number, numfmt, true);
 
-            if (!NumberBufferToDecimal((byte*)&number, ref result))
+            if (!NumberBufferToDecimal(number.PackForNative(), ref result))
             {
                 throw new OverflowException(Environment.GetResourceString("Overflow_Decimal"));
             }
             return result;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Double ParseDouble(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
             if (value == null)
@@ -682,11 +691,11 @@ namespace System
                 throw new ArgumentNullException("value");
             }
 
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             Double d = 0;
 
-            if (!TryStringToNumber(value, options, &number, numfmt, false))
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
             {
                 //If we failed TryStringToNumber, it may be from one of our special strings.
                 //Check the three with which we're concerned and rethrow if it's not one of
@@ -707,7 +716,7 @@ namespace System
                 throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
             }
 
-            if (!NumberBufferToDouble((byte*)&number, ref d))
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
             {
                 throw new OverflowException(Environment.GetResourceString("Overflow_Double"));
             }
@@ -715,27 +724,26 @@ namespace System
             return d;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Int32 ParseInt32(String s, NumberStyles style, NumberFormatInfo info)
         {
 
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             Int32 i = 0;
 
-            StringToNumber(s, style, &number, info, false);
+            StringToNumber(s, style, ref number, info, false);
 
             if ((style & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToInt32(ref numberBuffer, ref i))
+                if (!HexNumberToInt32(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_Int32"));
                 }
             }
             else
             {
-                if (!NumberToInt32(&number, ref i))
+                if (!NumberToInt32(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_Int32"));
                 }
@@ -743,26 +751,25 @@ namespace System
             return i;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Int64 ParseInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             Int64 i = 0;
 
-            StringToNumber(value, options, &number, numfmt, false);
+            StringToNumber(value, options, ref number, numfmt, false);
 
             if ((options & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToInt64(ref numberBuffer, ref i))
+                if (!HexNumberToInt64(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_Int64"));
                 }
             }
             else
             {
-                if (!NumberToInt64(&number, ref i))
+                if (!NumberToInt64(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_Int64"));
                 }
@@ -770,6 +777,7 @@ namespace System
             return i;
         }
 
+        [System.Security.SecurityCritical]  // auto-generated
         private unsafe static Boolean ParseNumber(ref char* str, NumberStyles options, ref NumberBuffer number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
         {
 
@@ -1017,7 +1025,7 @@ namespace System
             return false;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Single ParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
             if (value == null)
@@ -1025,11 +1033,11 @@ namespace System
                 throw new ArgumentNullException("value");
             }
 
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             Double d = 0;
 
-            if (!TryStringToNumber(value, options, &number, numfmt, false))
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
             {
                 //If we failed TryStringToNumber, it may be from one of our special strings.
                 //Check the three with which we're concerned and rethrow if it's not one of
@@ -1050,7 +1058,7 @@ namespace System
                 throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
             }
 
-            if (!NumberBufferToDouble((byte*)&number, ref d))
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
             {
                 throw new OverflowException(Environment.GetResourceString("Overflow_Single"));
             }
@@ -1062,27 +1070,26 @@ namespace System
             return castSingle;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static UInt32 ParseUInt32(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
 
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             UInt32 i = 0;
 
-            StringToNumber(value, options, &number, numfmt, false);
+            StringToNumber(value, options, ref number, numfmt, false);
 
             if ((options & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToUInt32(ref numberBuffer, ref i))
+                if (!HexNumberToUInt32(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_UInt32"));
                 }
             }
             else
             {
-                if (!NumberToUInt32(&number, ref i))
+                if (!NumberToUInt32(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_UInt32"));
                 }
@@ -1091,25 +1098,24 @@ namespace System
             return i;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static UInt64 ParseUInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
         {
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             UInt64 i = 0;
 
-            StringToNumber(value, options, &number, numfmt, false);
+            StringToNumber(value, options, ref number, numfmt, false);
             if ((options & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToUInt64(ref numberBuffer, ref i))
+                if (!HexNumberToUInt64(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_UInt64"));
                 }
             }
             else
             {
-                if (!NumberToUInt64(&number, ref i))
+                if (!NumberToUInt64(ref number, ref i))
                 {
                     throw new OverflowException(Environment.GetResourceString("Overflow_UInt64"));
                 }
@@ -1117,20 +1123,20 @@ namespace System
             return i;
         }
 
-
-        private unsafe static void StringToNumber(String str, NumberStyles options, NUMBER* number, NumberFormatInfo info, Boolean parseDecimal)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        private unsafe static void StringToNumber(String str, NumberStyles options, ref NumberBuffer number, NumberFormatInfo info, Boolean parseDecimal)
         {
 
             if (str == null)
             {
                 throw new ArgumentNullException("String");
             }
-
+            Contract.EndContractBlock();
+            Contract.Assert(info != null, "");
             fixed (char* stringPointer = str)
             {
                 char* p = stringPointer;
-                var numberBuffer = new NumberBuffer((byte*)number);
-                if (!ParseNumber(ref p, options, ref numberBuffer, null, info, parseDecimal)
+                if (!ParseNumber(ref p, options, ref number, null, info, parseDecimal)
                     || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
                 {
                     throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
@@ -1140,7 +1146,7 @@ namespace System
 
         private static Boolean TrailingZeros(String s, Int32 index)
         {
-            // For compatability, we need to allow trailing zeros at the end of a number string
+            // For compatibility, we need to allow trailing zeros at the end of a number string
             for (int i = index; i < s.Length; i++)
             {
                 if (s[i] != '\0')
@@ -1151,65 +1157,68 @@ namespace System
             return true;
         }
 
-
-        internal static unsafe Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        internal unsafe static Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
         {
-            NUMBER number = new NUMBER();
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
-            if (!TryStringToNumber(value, options, &number, numfmt, true))
+            if (!TryStringToNumber(value, options, ref number, numfmt, true))
             {
                 return false;
             }
 
-            if (!NumberBufferToDecimal((byte*)&number, ref result))
+            if (!NumberBufferToDecimal(number.PackForNative(), ref result))
             {
                 return false;
             }
             return true;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseDouble(String value, NumberStyles options, NumberFormatInfo numfmt, out Double result)
         {
-
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
 
-            if (!TryStringToNumber(value, options, &number, numfmt, false))
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
             {
                 return false;
             }
-            if (!NumberBufferToDouble((byte*)&number, ref result))
+            if (!NumberBufferToDouble(number.PackForNative(), ref result))
             {
                 return false;
             }
             return true;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseInt32(String s, NumberStyles style, NumberFormatInfo info, out Int32 result)
         {
-            NUMBER number = new NUMBER();
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
-            if (!TryStringToNumber(s, style, &number, info, false))
+            if (!TryStringToNumber(s, style, ref number, info, false))
             {
                 return false;
             }
 
             if ((style & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToInt32(ref numberBuffer, ref result))
+                if (!HexNumberToInt32(ref number, ref result))
                 {
                     return false;
                 }
             }
             else
             {
-                if (!NumberToInt32(&number, ref result))
+                if (!NumberToInt32(ref number, ref result))
                 {
                     return false;
                 }
@@ -1217,28 +1226,29 @@ namespace System
             return true;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseInt64(String s, NumberStyles style, NumberFormatInfo info, out Int64 result)
         {
-            NUMBER number = new NUMBER();
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
-            if (!TryStringToNumber(s, style, &number, info, false))
+            if (!TryStringToNumber(s, style, ref number, info, false))
             {
                 return false;
             }
 
             if ((style & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToInt64(ref numberBuffer, ref result))
+                if (!HexNumberToInt64(ref number, ref result))
                 {
                     return false;
                 }
             }
             else
             {
-                if (!NumberToInt64(&number, ref result))
+                if (!NumberToInt64(ref number, ref result))
                 {
                     return false;
                 }
@@ -1246,17 +1256,19 @@ namespace System
             return true;
         }
 
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt, out Single result)
         {
-            NUMBER number = new NUMBER();
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
             Double d = 0;
 
-            if (!TryStringToNumber(value, options, &number, numfmt, false))
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
             {
                 return false;
             }
-            if (!NumberBufferToDouble((byte*)&number, ref d))
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
             {
                 return false;
             }
@@ -1270,27 +1282,29 @@ namespace System
             return true;
         }
 
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseUInt32(String s, NumberStyles style, NumberFormatInfo info, out UInt32 result)
         {
-            NUMBER number = new NUMBER();
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
-            if (!TryStringToNumber(s, style, &number, info, false))
+            if (!TryStringToNumber(s, style, ref number, info, false))
             {
                 return false;
             }
 
             if ((style & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToUInt32(ref numberBuffer, ref result))
+                if (!HexNumberToUInt32(ref number, ref result))
                 {
                     return false;
                 }
             }
             else
             {
-                if (!NumberToUInt32(&number, ref result))
+                if (!NumberToUInt32(ref number, ref result))
                 {
                     return false;
                 }
@@ -1298,32 +1312,62 @@ namespace System
             return true;
         }
 
-
+        [System.Security.SecuritySafeCritical]  // auto-generated
         internal unsafe static Boolean TryParseUInt64(String s, NumberStyles style, NumberFormatInfo info, out UInt64 result)
         {
-            NUMBER number = new NUMBER();
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
             result = 0;
 
-            if (!TryStringToNumber(s, style, &number, info, false))
+            if (!TryStringToNumber(s, style, ref number, info, false))
             {
                 return false;
             }
 
             if ((style & NumberStyles.AllowHexSpecifier) != 0)
             {
-                var numberBuffer = new NumberBuffer((byte*)&number);
-                if (!HexNumberToUInt64(ref numberBuffer, ref result))
+                if (!HexNumberToUInt64(ref number, ref result))
                 {
                     return false;
                 }
             }
             else
             {
-                if (!NumberToUInt64(&number, ref result))
+                if (!NumberToUInt64(ref number, ref result))
                 {
                     return false;
                 }
             }
+            return true;
+        }
+
+        internal static Boolean TryStringToNumber(String str, NumberStyles options, ref NumberBuffer number, NumberFormatInfo numfmt, Boolean parseDecimal)
+        {
+            return TryStringToNumber(str, options, ref number, null, numfmt, parseDecimal);
+        }
+
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        [System.Runtime.CompilerServices.FriendAccessAllowed]
+        internal unsafe static Boolean TryStringToNumber(String str, NumberStyles options, ref NumberBuffer number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
+        {
+
+            if (str == null)
+            {
+                return false;
+            }
+            Contract.Assert(numfmt != null, "");
+
+            fixed (char* stringPointer = str)
+            {
+                char* p = stringPointer;
+                if (!ParseNumber(ref p, options, ref number, sb, numfmt, parseDecimal)
+                    || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }
