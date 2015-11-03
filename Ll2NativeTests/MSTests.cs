@@ -821,6 +821,71 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
+        /*
+# typical cmake to build libraries
+cmake_minimum_required(VERSION 2.8)
+
+project (test) 
+
+file(GLOB mscorlib_SRC
+    "M:/mscorlib*.cpp"
+)
+
+file(GLOB system_private_uri_SRC
+    "M:/System.Private.Uri*.cpp"
+)
+
+file(GLOB system_resources_resourceManager_SRC
+    "M:/System.Resources.ResourceManager*.cpp"
+)
+
+file(GLOB system_collections_SRC
+    "M:/System.Collections*.cpp"
+)
+
+file(GLOB system_diagnostics_debug_SRC
+    "M:/System.Diagnostics.Debug*.cpp"
+)
+
+file(GLOB system_runtime_SRC
+    "M:/System.Runtime*.cpp"
+)
+
+file(GLOB system_runtime_extensions_SRC
+    "M:/System.Runtime.Extensions*.cpp"
+)
+
+file(GLOB system_linq_SRC
+    "M:/System.Linq*.cpp"
+)
+
+file(GLOB test_SRC
+    "M:/test-*.cpp"
+)
+
+
+if(DEBUG)		
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti")
+else()
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti -O3")
+endif()
+
+include_directories("E:/Gits/bdwgc/include")
+link_directories("M:/")
+
+add_library(mscorlib ${mscorlib_SRC})
+add_library(system_private_uri ${system_private_uri_SRC})
+add_library(system_resources_resourceManager ${system_resources_resourceManager_SRC})
+add_library(system_collections ${system_collections_SRC})
+add_library(system_diagnostics_debug ${system_diagnostics_debug_SRC})
+add_library(system_runtime ${system_runtime_SRC})
+add_library(system_runtime_extensions ${system_runtime_extensions_SRC})
+add_library(system_linq ${system_linq_SRC})
+add_executable(test ${test_SRC})
+
+target_link_libraries (test mscorlib system_private_uri system_resources_resourceManager system_collections system_diagnostics_debug system_runtime system_runtime_extensions system_linq "stdc++" "gcmt-lib")
+
+         */
         [TestMethod]
         //[Ignore]
         public void TestMscolibCSNative()
