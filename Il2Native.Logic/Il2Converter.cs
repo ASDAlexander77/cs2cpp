@@ -1176,7 +1176,7 @@ namespace Il2Native.Logic
             do
             {
                 countBefore = readingTypesContext.CalledMethods.Count;
-                foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null))
+                foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null).ToArray())
                 {
                     methodKey.Tag = used;
                     methodKey.Method.DiscoverMethodsInMethodBody(readingTypesContext.CalledMethods, queue, typeResolver);
