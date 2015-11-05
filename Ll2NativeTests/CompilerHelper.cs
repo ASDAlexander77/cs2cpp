@@ -66,7 +66,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool GcDebugEnabled = true;
+        public const bool GcDebugEnabled = false;
 
         /// <summary>
         /// </summary>
@@ -95,7 +95,7 @@
 
         /// <summary>
         /// </summary>
-        public static bool Mscorlib = false;
+        public static bool Mscorlib = true;
 
         /// <summary>
         /// </summary>
@@ -129,7 +129,7 @@
                     if (AddSystemLinq)
                     {
                         //args.Add("ref:System.Core");
-                        args.Add(@"ref:E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Linq.dll");
+                        args.Add(string.Format(@"ref:{0}System.Linq.dll", CoreCLRDlls));
                     }
                 }
                 else

@@ -955,9 +955,9 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         [TestMethod]
         public void TestCustomConvert()
         {
-            //CompilerHelper.Mscorlib = true;
-            //CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
-            //CompilerHelper.AddSystemLinq = true;
+            CompilerHelper.Mscorlib = true;
+            CompilerHelper.MscorlibPath = string.Format(@"{0}mscorlib.dll", CompilerHelper.CoreCLRDlls);
+            CompilerHelper.AddSystemLinq = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
