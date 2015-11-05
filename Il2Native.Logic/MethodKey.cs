@@ -22,6 +22,8 @@
 
         public IType OwnerOfExplicitInterface { get; private set; }
 
+        public object Tag { get; set; }
+
         public override bool Equals(object obj)
         {
             var other = obj as MethodKey;

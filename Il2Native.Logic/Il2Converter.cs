@@ -1159,13 +1159,30 @@ namespace Il2Native.Logic
             return readTypesContext;
         }
 
-        private static void DiscoverAllCalledMethod(List<IType> types, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
+        private static void DiscoverAllCalledMethod(
+            List<IType> types,
+            ReadingTypesContext readingTypesContext,
+            ITypeResolver typeResolver)
         {
             var queue = new Queue<IMethod>();
+            var used = new object();
             foreach (var method in types.SelectMany(t => IlReader.Methods(t, typeResolver)))
             {
-                method.DiscoverMethodsInMethodBody(readingTypesContext.CalledMethods, queue, typeResolver);
+                readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
             }
+
+            // check all methods
+            var countBefore = 0;
+            do
+            {
+                countBefore = readingTypesContext.CalledMethods.Count;
+                foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null))
+                {
+                    methodKey.Tag = used;
+                    methodKey.Method.DiscoverMethodsInMethodBody(readingTypesContext.CalledMethods, queue, typeResolver);
+                }
+            } 
+            while (readingTypesContext.CalledMethods.Count != countBefore);
 
             Debug.Assert(false);
         }
