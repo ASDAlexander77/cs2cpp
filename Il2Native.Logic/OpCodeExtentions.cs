@@ -109,7 +109,7 @@ namespace Il2Native.Logic
         {
             var pos = fieldType.Name.IndexOf("=");
             Debug.Assert(pos >= 0, "Could not find size");
-            return int.Parse(fieldType.Name.Substring(pos + 1));
+            return Int32.Parse(fieldType.Name.Substring(pos + 1));
         }
 
         public static int Align(this int unalign, int alignSize)
@@ -249,6 +249,24 @@ namespace Il2Native.Logic
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
             foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>()))
+            {
+            }
+        }
+
+        public static void DiscoverMethodsInMethodBody(
+            this IMethod method,
+            ISet<MethodKey> calledMethods,
+            Queue<IMethod> stackCall,
+            ITypeResolver typeResolver)
+        {
+            // read method body to extract all types
+            var reader = new IlReader();
+
+            reader.CalledMethods = calledMethods;
+            reader.TypeResolver = typeResolver;
+
+            var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
+            foreach (var op in reader.OpCodes(method, genericContext, stackCall))
             {
             }
         }
@@ -497,7 +515,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                index = int.Parse(asString.Substring(asString.Length - 1));
+                index = Int32.Parse(asString.Substring(asString.Length - 1));
             }
 
             return index;
@@ -538,7 +556,7 @@ namespace Il2Native.Logic
             if (!searchInBase)
             {
                 var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
-                Debug.Assert(field != null, string.Format("Field {0} could not be found", fieldName));
+                Debug.Assert(field != null, String.Format("Field {0} could not be found", fieldName));
                 return field;
             }
 
@@ -553,7 +571,7 @@ namespace Il2Native.Logic
                 normalType = normalType.BaseType;
             }
 
-            Debug.Assert(false, string.Format("Field {0} could not be found", fieldName));
+            Debug.Assert(false, String.Format("Field {0} could not be found", fieldName));
 
             return null;
         }
@@ -562,7 +580,7 @@ namespace Il2Native.Logic
         {
             var normalType = classType.ToNormal();
             var method = IlReader.Methods(normalType, typeResolver).FirstOrDefault(f => f.Name == methodName);
-            Debug.Assert(method != null, string.Format("Method {0} could not be found", methodName));
+            Debug.Assert(method != null, String.Format("Method {0} could not be found", methodName));
             return method;
         }
 
@@ -653,7 +671,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                index = int.Parse(asString.Substring(asString.Length - 1));
+                index = Int32.Parse(asString.Substring(asString.Length - 1));
             }
 
             Debug.Assert(baseWriter.LocalInfo.Length > index);
@@ -998,7 +1016,7 @@ namespace Il2Native.Logic
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
 
-            if (method.IsExplicitInterfaceImplementation && method.MetadataName.EndsWith(string.Concat(".", overridingMethod.MetadataName)))
+            if (method.IsExplicitInterfaceImplementation && method.MetadataName.EndsWith(String.Concat(".", overridingMethod.MetadataName)))
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
@@ -1700,17 +1718,17 @@ namespace Il2Native.Logic
 
         public static IConstructor FindConstructor(this IType type, ITypeResolver typeResolver)
         {
-            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
+            return IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
         }
 
         public static IConstructor FindStaticConstructor(this IType type, ITypeResolver typeResolver)
         {
-            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => c.IsStatic);
+            return IlReader.Constructors(type, typeResolver).FirstOrDefault(c => c.IsStatic);
         }
 
         public static IConstructor FindConstructor(this IType type, IType firstParameterType, ITypeResolver typeResolver)
         {
-            return Logic.IlReader.Constructors(type, typeResolver)
+            return IlReader.Constructors(type, typeResolver)
                      .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
         }
 

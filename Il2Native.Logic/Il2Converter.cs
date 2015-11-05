@@ -960,53 +960,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void DiscoverTypesAndAdditionalTypes(
-            IMethod method,
-            ReadingTypesContext readingTypesContext)
-        {
-            if (!method.ReturnType.IsVoid())
-            {
-                AddTypeIfTypeOrAdditionalType(method.ReturnType, readingTypesContext);
-                ////DiscoverGenericSpecializedTypesAndAdditionalTypes(method.ReturnType, readingTypesContext);
-            }
-
-            var parameters = method.GetParameters();
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    AddTypeIfTypeOrAdditionalType(param.ParameterType, readingTypesContext);
-                    ////DiscoverGenericSpecializedTypesAndAdditionalTypes(param.ParameterType, readingTypesContext);
-                }
-            }
-
-            if (method.DeclaringType.IsInterface)
-            {
-                return;
-            }
-
-            var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
-            var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
-            if (methodBody != null)
-            {
-                foreach (var localVar in methodBody.LocalVariables)
-                {
-                    AddTypeIfTypeOrAdditionalType(localVar.LocalType, readingTypesContext);
-                }
-
-                methodWithCustomBodyOrDefault.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                    readingTypesContext.GenericTypeSpecializations,
-                    readingTypesContext.GenericMethodSpecializations,
-                    null,
-                    readingTypesContext.AdditionalTypesToProcess,
-                    readingTypesContext.UsedTypeTokens,
-                    readingTypesContext.UsedTypes,
-                    readingTypesContext.CalledMethods,
-                    new Queue<IMethod>(),
-                    _codeWriter);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="fileName">
@@ -1200,7 +1153,21 @@ namespace Il2Native.Logic
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsPointer), "Type is used with flag IsPointer");
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsGenericTypeDefinition), "Generic DefinitionType is used");
 
+            // to support compact mode
+            DiscoverAllCalledMethod(types, readingTypesContext, ilReader.TypeResolver);
+
             return readTypesContext;
+        }
+
+        private static void DiscoverAllCalledMethod(List<IType> types, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
+        {
+            var queue = new Queue<IMethod>();
+            foreach (var method in types.SelectMany(t => IlReader.Methods(t, typeResolver)))
+            {
+                method.DiscoverMethodsInMethodBody(readingTypesContext.CalledMethods, queue, typeResolver);
+            }
+
+            Debug.Assert(false);
         }
 
         ////private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
