@@ -121,8 +121,7 @@
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
             bool stubs = false,
-            bool split = false,
-            bool compactMode = CompactMode)
+            bool split = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -208,9 +207,9 @@
                 args.Add("split");
             }
 
-            if (compactMode)
+            if (CompactMode)
             {
-                args.Add("split");
+                args.Add("compact");
             }
 
             return args.ToArray();

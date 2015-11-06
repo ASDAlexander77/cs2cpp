@@ -50,10 +50,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private static IDictionary<IType, IEnumerable<IField>> mergeFields;
-
-        /// <summary>
-        /// </summary>
         private ISet<MethodKey> _calledMethods;
 
         /// <summary>
@@ -391,13 +387,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public static IDictionary<IType, IEnumerable<IField>> MergeFields
-        {
-            set { mergeFields = value; }
-        }
-
-        /// <summary>
-        /// </summary>
         public string AssemblyQualifiedName
         {
             get { return this.Assembly.Assembly.Identity.Name; }
@@ -702,16 +691,6 @@ namespace Il2Native.Logic
             var cctorCalled = typeResolver.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
             cctorCalled.ConstantValue = -1;
             yield return cctorCalled;
-
-            // merged fields
-            IEnumerable<IField> mergeFieldsForType;
-            if (mergeFields != null && mergeFields.TryGetValue(type, out mergeFieldsForType))
-            {
-                foreach (var mergeField in mergeFieldsForType)
-                {
-                    yield return mergeField;
-                }
-            }
         }
 
         /// <summary>
