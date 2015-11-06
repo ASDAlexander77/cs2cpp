@@ -958,7 +958,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             //CompilerHelper.Mscorlib = true;
             //CompilerHelper.MscorlibPath = string.Format(@"{0}mscorlib.dll", CompilerHelper.CoreCLRDlls);
             //CompilerHelper.AddSystemLinq = true;
-            CompilerHelper.CompactMode = true;
+            CompilerHelper.CompactMode = false;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
