@@ -18,6 +18,10 @@
 
         /// <summary>
         /// </summary>
+        bool CompactMode { get; }
+
+        /// <summary>
+        /// </summary>
         string ModuleName { get; }
 
         /// <summary>

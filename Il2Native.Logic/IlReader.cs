@@ -104,7 +104,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IField> usedStaticFieldsToRead;
+        private ISet<IField> _usedStaticFields;
 
         /// <summary>
         /// </summary>
@@ -376,6 +376,8 @@ namespace Il2Native.Logic
             this.ReferencesList = (refsValue ?? string.Empty).Split(
                 new[] { ';' },
                 StringSplitOptions.RemoveEmptyEntries);
+
+            this.CompactMode = args != null && args.Contains("compact");
         }
 
         /// <summary>
@@ -418,6 +420,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string DllFilePath { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool CompactMode { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -492,11 +498,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IField> UsedStaticFieldsToRead
+        public ISet<IField> UsedStaticFields
         {
-            get { return this.usedStaticFieldsToRead; }
+            get { return this._usedStaticFields; }
 
-            set { this.usedStaticFieldsToRead = value; }
+            set { this._usedStaticFields = value; }
         }
 
         /// <summary>
@@ -1197,9 +1203,9 @@ namespace Il2Native.Logic
                         this.AddArrayType(field.FieldType);
                         this.AddArrayType(field.DeclaringType);
 
-                        if (code == Code.Ldsfld || code == Code.Ldsflda)
+                        if (code == Code.Ldsfld || code == Code.Ldsflda || code == Code.Stsfld)
                         {
-                            this.AddUsedStaticFieldToRead(field);
+                            this.AddUsedStaticField(field);
                         }
 
                         switch (code)
@@ -1699,14 +1705,14 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="field">
         /// </param>
-        private void AddUsedStaticFieldToRead(IField field)
+        private void AddUsedStaticField(IField field)
         {
-            if (this.usedStaticFieldsToRead == null || field == null || !field.IsStatic)
+            if (this._usedStaticFields == null || field == null || !field.IsStatic)
             {
                 return;
             }
 
-            this.usedStaticFieldsToRead.Add(field);
+            this._usedStaticFields.Add(field);
         }
 
         /// <summary>
@@ -1988,6 +1994,7 @@ namespace Il2Native.Logic
                 this._usedTypeTokens,
                 this._usedTypes,
                 this._calledMethods,
+                this._usedStaticFields,
                 stackCall,
                 this.TypeResolver);
 

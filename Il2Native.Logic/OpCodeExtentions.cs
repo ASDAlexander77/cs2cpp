@@ -250,6 +250,7 @@ namespace Il2Native.Logic
             ISet<IType> usedTokenTypes,
             ISet<IType> usedTypes,
             ISet<MethodKey> calledMethods,
+            ISet<IField> usedStaticFields,
             Queue<IMethod> stackCall,
             ITypeResolver typeResolver)
         {
@@ -267,6 +268,7 @@ namespace Il2Native.Logic
             reader.UsedTypeTokens = usedTokenTypes;
             reader.UsedTypes = usedTypes;
             reader.CalledMethods = calledMethods;
+            reader.UsedStaticFields = usedStaticFields;
             reader.TypeResolver = typeResolver;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true

@@ -689,6 +689,7 @@ namespace Il2Native.Logic
                         readingTypesContext.UsedTypeTokens,
                         null,
                         null,
+                        null,
                         new Queue<IMethod>(),
                         _codeWriter);
                 }
@@ -741,6 +742,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     null,
                     null,
                     new Queue<IMethod>(),
@@ -915,6 +917,7 @@ namespace Il2Native.Logic
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     null,
                     null,
                     new Queue<IMethod>(),
@@ -1117,13 +1120,15 @@ namespace Il2Native.Logic
 
             if (compact)
             {
+                readTypesContext.AssemblyQualifiedName = readingTypesContext.AssemblyQualifiedName;
                 readTypesContext.CalledMethods = readingTypesContext.CalledMethods;
+                readTypesContext.UsedStaticFields = readingTypesContext.UsedStaticFields;
             }
 
             return readTypesContext;
         }
 
-        private static void DiscoverAllCalledMethod(
+        private static void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
             List<IType> types,
             ReadingTypesContext readingTypesContext,
             ITypeResolver typeResolver)
@@ -1151,11 +1156,14 @@ namespace Il2Native.Logic
                         readingTypesContext.UsedTypeTokens,
                         null,
                         readingTypesContext.CalledMethods,
+                        readingTypesContext.UsedStaticFields,
                         queue,
                         typeResolver);
                 }
             }
             while (readingTypesContext.CalledMethods.Count != countBefore);
+
+            Debug.Assert(false);
         }
 
         ////private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
@@ -1241,12 +1249,14 @@ namespace Il2Native.Logic
             if (compact)
             {
                 // to support compact mode
-                DiscoverAllCalledMethod(types, readingTypesContext, typeResolver);
+                DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
             }
 
             FindAllGenericVirtualMethodsAndGenericInterfaceMethods(allTypes, readingTypesContext, usedTypes);
 
-            var list = ReorderTypesByUsage(types, typeResolver, usedTypes);
+            readingTypesContext.AssemblyQualifiedName = types.First().AssemblyQualifiedName;
+
+            var list = ReorderTypesByUsage(typeResolver, usedTypes, types.First().AssemblyQualifiedName);
             return list;
         }
 
@@ -1278,10 +1288,8 @@ namespace Il2Native.Logic
             }
         }
 
-        private static List<IType> ReorderTypesByUsage(IEnumerable<IType> types, ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes)
+        private static List<IType> ReorderTypesByUsage(ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes, string assemblyQualifiedName)
         {
-            var assemblyQualifiedName = types.First().AssemblyQualifiedName;
-
             var list = new List<IType>();
             var usedTypesForOrder = new NamespaceContainer<IType>();
             foreach (var usedType in usedTypes)
@@ -1386,7 +1394,8 @@ namespace Il2Native.Logic
             else
             {
                 // we just need to write all called methods
-                WriteBulkOfMethod(codeWriter, readTypes);
+                WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
+                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
             }
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
@@ -1405,11 +1414,19 @@ namespace Il2Native.Logic
             codeWriter.Close();
         }
 
-        private static void WriteBulkOfMethod(ICodeWriter codeWriter, ReadTypesContext readTypes)
+        private static void WriteBulkOfMethod(ICodeWriter codeWriter, IEnumerable<IMethod> methods)
         {
-            foreach (var calledMethod in readTypes.CalledMethods)
+            foreach (var calledMethod in methods)
             {
-                WriteSinleMethodDefinition(codeWriter, calledMethod.Method);
+                WriteSinleMethodDefinition(codeWriter, calledMethod);
+            }
+        }
+
+        private static void WriteBulkOfStaticFields(ICodeWriter codeWriter, IEnumerable<IField> staticFields)
+        {
+            foreach (var staticField in staticFields)
+            {
+                codeWriter.WriteStaticField(staticField);
             }
         }
 
@@ -1500,7 +1517,10 @@ namespace Il2Native.Logic
             this.DiscoveredTypes = new NamespaceContainer<IType>();
             this.UsedTypes = new NamespaceContainer<IType>();
             this.CalledMethods = new NamespaceContainer<MethodKey>();
+            this.UsedStaticFields = new NamespaceContainer<IField>();
         }
+
+        public string AssemblyQualifiedName { get; set; }
 
         public ISet<IType> GenericTypeSpecializations { get; set; }
 
@@ -1516,6 +1536,8 @@ namespace Il2Native.Logic
 
         public ISet<MethodKey> CalledMethods { get; set; }
 
+        public ISet<IField> UsedStaticFields { get; set; }
+
         public static ReadingTypesContext New()
         {
             return new ReadingTypesContext();
@@ -1524,11 +1546,15 @@ namespace Il2Native.Logic
 
     public class ReadTypesContext
     {
+        public string AssemblyQualifiedName { get; set; }
+
         public IList<IType> UsedTypes { get; set; }
 
         public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
 
         public ISet<MethodKey> CalledMethods { get; set; }
+
+        public ISet<IField> UsedStaticFields { get; set; }
 
         public static ReadTypesContext New()
         {
