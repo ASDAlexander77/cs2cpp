@@ -233,30 +233,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        /// <param name="structTypes">
-        /// </param>
-        /// <param name="calledMethods">
-        /// </param>
-        /// <param name="readStaticFields">
-        /// </param>
-        public static void DiscoverCallsAndStaticFields(this IMethod method, ISet<IType> structTypes, ISet<MethodKey> calledMethods, ISet<IField> readStaticFields, ITypeResolver typeResolver)
-        {
-            // read method body to extract all types
-            var reader = new IlReader();
-            reader.CalledMethods = calledMethods;
-            reader.UsedStaticFieldsToRead = readStaticFields;
-            reader.TypeResolver = typeResolver;
-
-            var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>()))
-            {
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
         /// <param name="genericTypeSpecializations">
         /// </param>
         /// <param name="genericMethodSpecializations">
