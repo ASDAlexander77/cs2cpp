@@ -71,7 +71,7 @@ namespace Il2Native.Logic
         private void WalkMethod(IMethod method, ISet<MethodKey> allCalledMethods, ISet<IField> allReadStaticFields)
         {
             var calledMethods = new NamespaceContainer<MethodKey>();
-            method.DiscoverMethod(null, calledMethods, allReadStaticFields, typeResolver);
+            method.DiscoverCallsAndStaticFields(null, calledMethods, allReadStaticFields, typeResolver);
 
             foreach (var nextMethod in calledMethods)
             {

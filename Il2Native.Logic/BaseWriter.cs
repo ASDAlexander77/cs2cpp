@@ -35,10 +35,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, IType> GlobalResolvedTypes = new SortedDictionary<string, IType>();
-
-        /// <summary>
-        /// </summary>
         protected readonly StackBranches Stacks = new StackBranches();
 
         /// <summary>
@@ -281,19 +277,9 @@ namespace Il2Native.Logic
                 return result;
             }
 
-            if (GlobalResolvedTypes.Count > 0 && GlobalResolvedTypes.TryGetValue(fullTypeName, out result))
-            {
-                return result;
-            }
-
             result = this.Module.ResolveType(fullTypeName, null);
             this.ResolvedTypes[result.FullName] = result;
             return result;
-        }
-
-        public void RegisterType(IType type)
-        {
-            GlobalResolvedTypes[type.FullName] = type;
         }
 
         public string GetStaticFieldName(IField field)

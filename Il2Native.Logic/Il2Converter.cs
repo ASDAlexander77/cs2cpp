@@ -1117,8 +1117,6 @@ namespace Il2Native.Logic
 
             if (compact)
             {
-                // to support compact mode
-                DiscoverAllCalledMethod(types, readingTypesContext, ilReader.TypeResolver);
                 readTypesContext.CalledMethods = readingTypesContext.CalledMethods;
             }
 
@@ -1145,7 +1143,16 @@ namespace Il2Native.Logic
                 foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null).ToArray())
                 {
                     methodKey.Tag = used;
-                    methodKey.Method.DiscoverMethodsInMethodBody(readingTypesContext.CalledMethods, queue, typeResolver);
+                    methodKey.Method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
+                        readingTypesContext.GenericTypeSpecializations,
+                        readingTypesContext.GenericMethodSpecializations,
+                        null,
+                        readingTypesContext.AdditionalTypesToProcess,
+                        readingTypesContext.UsedTypeTokens,
+                        null,
+                        readingTypesContext.CalledMethods,
+                        queue,
+                        typeResolver);
                 }
             }
             while (readingTypesContext.CalledMethods.Count != countBefore);
@@ -1214,8 +1221,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> FindUsedTypes(IEnumerable<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
+        private static IList<IType> FindUsedTypes(IEnumerable<IType> typesIn, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
         {
+            var types = typesIn.ToList();
             var usedTypes = new NamespaceContainer<IType>();
 
             if (concurrent)
@@ -1230,6 +1238,21 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (compact)
+            {
+                // to support compact mode
+                DiscoverAllCalledMethod(types, readingTypesContext, typeResolver);
+            }
+
+            FindAllGenericVirtualMethodsAndGenericInterfaceMethods(allTypes, readingTypesContext, usedTypes);
+
+            var list = ReorderTypesByUsage(types, typeResolver, usedTypes);
+            return list;
+        }
+
+        private static void FindAllGenericVirtualMethodsAndGenericInterfaceMethods(
+            IList<IType> allTypes, ReadingTypesContext readingTypesContext, NamespaceContainer<IType> usedTypes)
+        {
             var genericMethodSpecializations = 0;
             var genericTypeSpecializations = 0;
             var additionalTypesToProcess = 0;
@@ -1253,7 +1276,10 @@ namespace Il2Native.Logic
 
                 ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(usedTypes, readingTypesContext, true);
             }
+        }
 
+        private static List<IType> ReorderTypesByUsage(IEnumerable<IType> types, ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes)
+        {
             var assemblyQualifiedName = types.First().AssemblyQualifiedName;
 
             var list = new List<IType>();
@@ -1262,7 +1288,6 @@ namespace Il2Native.Logic
             {
                 AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, assemblyQualifiedName, typeResolver);
             }
-
             return list;
         }
 

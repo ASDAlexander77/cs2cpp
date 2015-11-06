@@ -1202,6 +1202,19 @@ namespace Il2Native.Logic
                             this.AddUsedStaticFieldToRead(field);
                         }
 
+                        switch (code)
+                        {
+                            case Code.Ldsfld:
+                                this.AddCalledMethod(new SynthesizedGetStaticMethod(field.DeclaringType, field, this.TypeResolver));
+                                break;
+                            case Code.Ldsflda:
+                                this.AddCalledMethod(new SynthesizedGetStaticAddressMethod(field.DeclaringType, field, this.TypeResolver));
+                                break;
+                            case Code.Stsfld:
+                                this.AddCalledMethod(new SynthesizedSetStaticMethod(field.DeclaringType, field, this.TypeResolver));
+                                break;
+                        }
+
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?

@@ -239,7 +239,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="readStaticFields">
         /// </param>
-        public static void DiscoverMethod(this IMethod method, ISet<IType> structTypes, ISet<MethodKey> calledMethods, ISet<IField> readStaticFields, ITypeResolver typeResolver)
+        public static void DiscoverCallsAndStaticFields(this IMethod method, ISet<IType> structTypes, ISet<MethodKey> calledMethods, ISet<IField> readStaticFields, ITypeResolver typeResolver)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -249,24 +249,6 @@ namespace Il2Native.Logic
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
             foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>()))
-            {
-            }
-        }
-
-        public static void DiscoverMethodsInMethodBody(
-            this IMethod method,
-            ISet<MethodKey> calledMethods,
-            Queue<IMethod> stackCall,
-            ITypeResolver typeResolver)
-        {
-            // read method body to extract all types
-            var reader = new IlReader();
-
-            reader.CalledMethods = calledMethods;
-            reader.TypeResolver = typeResolver;
-
-            var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
-            foreach (var op in reader.OpCodes(method, genericContext, stackCall))
             {
             }
         }
