@@ -103,6 +103,10 @@
 
         /// <summary>
         /// </summary>
+        public static bool CompactMode = false;
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -117,7 +121,8 @@
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
             bool stubs = false,
-            bool split = false)
+            bool split = false,
+            bool compactMode = CompactMode)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -199,6 +204,11 @@
             }
 
             if (split)
+            {
+                args.Add("split");
+            }
+
+            if (compactMode)
             {
                 args.Add("split");
             }

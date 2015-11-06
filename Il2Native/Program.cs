@@ -53,8 +53,8 @@ namespace Il2Native
                 Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine("  /split                  Generate C files for each namespace");
+                Console.WriteLine("  /compact                Build one source file from all assemblies to reduce size");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
-                Console.WriteLine("  /emscripten             Set recommended settings for Emscripten platform");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
                 Console.WriteLine("  Il2C file1.cs          Compiles one C# file");

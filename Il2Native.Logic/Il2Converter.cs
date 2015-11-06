@@ -29,11 +29,13 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private static bool concurrent;
-
         private static ICodeWriter _codeWriter;
 
+        private static bool concurrent;
+
         private static bool split;
+
+        private static bool compact;
 
         /// <summary>
         /// </summary>
@@ -810,6 +812,7 @@ namespace Il2Native.Logic
         {
             concurrent = args != null && args.Any(a => a == "multi");
             split = args != null && args.Any(a => a == "split");
+            compact = args != null && args.Any(a => a == "compact");
             VerboseOutput = args != null && args.Any(a => a == "verbose");
 
             var settings = new Settings()
