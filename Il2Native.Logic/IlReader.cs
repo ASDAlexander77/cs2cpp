@@ -1368,7 +1368,6 @@ namespace Il2Native.Logic
                         if (code == Code.Isinst || code == Code.Castclass)
                         {
                             this.AddTypeToken(type);
-                            this.AddCalledMethod(new SynthesizedDynamicCastMethod(this.TypeResolver));
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);

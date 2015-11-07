@@ -1118,7 +1118,7 @@ namespace Il2Native.Logic
                 foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null).ToArray())
                 {
                     methodKey.Tag = used;
-                    DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, methodKey.Method, queue);
+                    DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, MethodBodyBank.GetMethodWithCustomBodyOrDefault(methodKey.Method, typeResolver), queue);
                 }
 
                 ProcessAllVirtualTableImplementations(readingTypesContext);
@@ -1243,6 +1243,10 @@ namespace Il2Native.Logic
             {
                 var mainFunc = _codeWriter.GenerateMainMethod(types.SelectMany(t => IlReader.Methods(t, typeResolver)).First(CWriter.IsMain));
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, mainFunc, new Queue<IMethod>());
+
+                // add methods for IS and AS
+                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedDynamicCastMethod(typeResolver), null));
+                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedCastMethod(typeResolver), null));
 
                 // to support compact mode
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
