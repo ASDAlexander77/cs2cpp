@@ -1623,7 +1623,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!this._usedTypeTokens.Add(type))
+            if (!this._usedTypeTokens.Add(type.ToNormal()))
             {
                 return;
             }

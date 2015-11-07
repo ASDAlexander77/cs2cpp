@@ -561,17 +561,12 @@ namespace Il2Native.Logic
 
         private static void AddUsedTokenType(ReadingTypesContext readingTypesContext, IType type)
         {
-            if (readingTypesContext == null)
+            if (readingTypesContext == null || readingTypesContext.UsedTypeTokens == null || type.SpecialUsage())
             {
                 return;
             }
 
-            if (readingTypesContext.UsedTypeTokens == null)
-            {
-                return;
-            }
-
-            if (!readingTypesContext.UsedTypeTokens.Add(type))
+            if (!readingTypesContext.UsedTypeTokens.Add(type.ToNormal()))
             {
                 return;
             }
@@ -1109,11 +1104,12 @@ namespace Il2Native.Logic
         {
             var queue = new Queue<IMethod>();
             var used = new object();
+
             foreach (var method in types.SelectMany(t => IlReader.Methods(t, typeResolver)))
             {
                 readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
             }
-
+            
             // check all methods
             var countBefore = 0;
             do
@@ -1125,20 +1121,23 @@ namespace Il2Native.Logic
                     DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, methodKey.Method, queue);
                 }
 
-                // add all virtual methods
+                ProcessAllVirtualTableImplementations(readingTypesContext);
+            }
+            while (readingTypesContext.CalledMethods.Count != countBefore);
+        }
+
+        private static void ProcessAllVirtualTableImplementations(ReadingTypesContext readingTypesContext)
+        {
+            // add all virtual methods
+            foreach (var virtualTableImplementationType in readingTypesContext.UsedVirtualTableImplementationTypes)
+            {
                 foreach (
                     var method in
-                        readingTypesContext.UsedVirtualTableImplementationTypes.SelectMany(
-                            usedVirtualTableImplementationType =>
-                                _codeWriter.VirtualTableImplementations(usedVirtualTableImplementationType)
-                                    .Where(method => method != null)))
+                        _codeWriter.VirtualTableImplementations(virtualTableImplementationType).Where(method => method != null))
                 {
                     readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
                 }
             }
-            while (readingTypesContext.CalledMethods.Count != countBefore);
-
-            Debug.Assert(false);
         }
 
         private static void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
