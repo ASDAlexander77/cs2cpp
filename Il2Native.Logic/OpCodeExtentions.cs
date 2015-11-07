@@ -1726,7 +1726,7 @@ namespace Il2Native.Logic
 
         public static bool IsAssemblyNamespaceRequired(this IType type)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
             {
                 return true;
             }
@@ -1739,9 +1739,14 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsGenericOrArray(this IType type)
+        {
+            return type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray;
+        }
+
         public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
             {
                 return currentAssemblyNamespace;
             }
@@ -1771,7 +1776,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            if (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericOrArray())
             {
                 return true;
             }

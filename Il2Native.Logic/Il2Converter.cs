@@ -509,32 +509,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void AddTypeIfTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
-        {
-            var effectiveType = type;
-            while (effectiveType.IsPointer || effectiveType.IsByRef)
-            {
-                effectiveType = effectiveType.GetElementType();
-            }
-
-            if (effectiveType.IsClass)
-            {
-                effectiveType = effectiveType.ToNormal();
-            }
-
-            if (effectiveType.IsArray)
-            {
-                readingTypesContext.AdditionalTypesToProcess.Add(effectiveType);
-            }
-
-            if (effectiveType.IsGenericType)
-            {
-                readingTypesContext.GenericTypeSpecializations.Add(effectiveType);
-            }
-
-            readingTypesContext.UsedTypes.Add(effectiveType);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -1271,6 +1245,7 @@ namespace Il2Native.Logic
             readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedNewMethod(exceptionType, typeResolver), null));
             readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedInitMethod(exceptionType, typeResolver), null));
             readingTypesContext.CalledMethods.Add(new MethodKey(exceptionType.FindConstructor(typeResolver), null));
+            readingTypesContext.UsedVirtualTableImplementationTypes.Add(exceptionType.ToVirtualTableImplementation());
         }
 
         private static void FindAllGenericVirtualMethodsAndGenericInterfaceMethods(
@@ -1314,7 +1289,7 @@ namespace Il2Native.Logic
 
         private static void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
         {
-            if (type == null || type.IsPointer || type.IsByRef || ((assemblyQualifiedName != null && type.AssemblyQualifiedName != assemblyQualifiedName) && !(type.IsArray || type.IsGenericType)) || usedTypes.Contains(type))
+            if (type == null || type.IsPointer || type.IsByRef || ((assemblyQualifiedName != null && type.AssemblyQualifiedName != assemblyQualifiedName) && !type.IsGenericOrArray()) || usedTypes.Contains(type))
             {
                 return;
             }
@@ -1407,9 +1382,9 @@ namespace Il2Native.Logic
             else
             {
                 // we just need to write all called methods
-                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
+                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericOrArray()));
                 WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
-                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.IsGenericOrArray()));
             }
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
@@ -1440,6 +1415,8 @@ namespace Il2Native.Logic
         {
             foreach (var virtualTableImplementation in virtualTableImplementations)
             {
+                Debug.Assert(!virtualTableImplementation.IsGenericTypeDefinition && !virtualTableImplementation.IsGenericType, "Generic not allowed here");
+
                 codeWriter.WriteVirtualTableImplementations(virtualTableImplementation);
             }
         }
