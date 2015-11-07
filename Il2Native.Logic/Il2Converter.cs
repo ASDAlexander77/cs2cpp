@@ -9,20 +9,16 @@
 
 namespace Il2Native.Logic
 {
-    using System;
     using System.Collections.Generic;
-    using System.ComponentModel.Design;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+
     using Gencode;
-
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-    using Il2Native.Logic.Properties;
-
+    using Gencode.SynthesizedMethods;
+ 
     using PEAssemblyReader;
 
     /// <summary>
@@ -1127,6 +1123,17 @@ namespace Il2Native.Logic
                 {
                     methodKey.Tag = used;
                     DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, methodKey.Method, queue);
+                }
+
+                // add all virtual methods
+                foreach (
+                    var method in
+                        readingTypesContext.UsedVirtualTableImplementationTypes.SelectMany(
+                            usedVirtualTableImplementationType =>
+                                _codeWriter.VirtualTableImplementations(usedVirtualTableImplementationType)
+                                    .Where(method => method != null)))
+                {
+                    readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
                 }
             }
             while (readingTypesContext.CalledMethods.Count != countBefore);

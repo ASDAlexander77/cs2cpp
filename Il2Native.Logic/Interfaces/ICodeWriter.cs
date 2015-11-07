@@ -161,5 +161,9 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         IMethod GenerateMainMethod(IMethod mainMethod);
+
+        /// <summary>
+        /// </summary>
+        IEnumerable<IMethod> VirtualTableImplementations(IType type);
     }
 }

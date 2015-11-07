@@ -4659,6 +4659,33 @@ namespace Il2Native.Logic
             }
         }
 
+        public IEnumerable<IMethod> VirtualTableImplementations(IType type)
+        {
+            // write VirtualTable
+            if (type.IsInterface)
+            {
+                yield break;
+            }
+
+            foreach (var @interface in type.HaveStaticVirtualTablesForInterfaces(this))
+            {
+                var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
+                foreach (var pair in virtualInterfaceTable.Where(p => p is CWriter.Pair<IMethod, IMethod>).Cast<Pair<IMethod, IMethod>>())
+                {
+                    yield return pair.Value;
+                }
+            }
+
+            if (type.HasAnyVirtualMethod(this))
+            {
+                var virtualTable = type.GetVirtualTable(this);
+                foreach (var pair in virtualTable.Where(p => p is CWriter.Pair<IMethod, IMethod>).Cast<Pair<IMethod, IMethod>>())
+                {
+                    yield return pair.Value;
+                }
+            }
+        }
+
         private void WriteVirtualTable(IType typeParam)
         {
             var table = typeParam.ToVirtualTable();
