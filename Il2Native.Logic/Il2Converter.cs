@@ -1409,7 +1409,7 @@ namespace Il2Native.Logic
                 // we just need to write all called methods
                 WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
                 WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
-                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
             }
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
