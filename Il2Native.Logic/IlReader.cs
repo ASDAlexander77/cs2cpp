@@ -1018,6 +1018,14 @@ namespace Il2Native.Logic
                 yield break;
             }
 
+            foreach (var exceptionHandlingClause in methodBody.ExceptionHandlingClauses)
+            {
+                var type = exceptionHandlingClause.CatchType;
+                this.AddGenericSpecializedTypeAndUsedType(type);
+                this.AddArrayType(type);
+                this.AddTypeToken(type);
+            }
+
             var extended = false;
             var startAddress = 0;
             var currentAddress = 0;
@@ -1132,12 +1140,21 @@ namespace Il2Native.Logic
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {
-                            this.AddGenericSpecializedTypeAndUsedType(constructor.DeclaringType);
-                            this.AddGenericSpecializedMethod(constructor, stackCall);
+                            if (!constructor.DeclaringType.IsString)
+                            {
+                                this.AddGenericSpecializedTypeAndUsedType(constructor.DeclaringType);
+                                this.AddGenericSpecializedMethod(constructor, stackCall);
 
-                            this.AddArrayType(constructor.DeclaringType);
-                            this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
-                            this.AddCalledMethod(constructor);
+                                this.AddArrayType(constructor.DeclaringType);
+                                this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
+                                this.AddCalledMethod(constructor);
+                            }
+                            else
+                            {
+                                this.AddCalledMethod(StringGen.GetCtorMethodByParameters(constructor.DeclaringType, constructor.GetParameters(), this.TypeResolver));
+                                // TODO: it should be discovered from FastStringAlloc method, investigate why it is not
+                                this.AddCalledMethod(new SynthesizedInitMethod(constructor.DeclaringType, this.TypeResolver));
+                            }
 
                             yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         }
@@ -1282,6 +1299,7 @@ namespace Il2Native.Logic
                         {
                             this.AddArrayType(methodMember.DeclaringType);
                             this.AddGenericSpecializedMethod(methodMember, stackCall);
+                            this.AddCalledMethod(methodMember);
 
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
@@ -1345,6 +1363,11 @@ namespace Il2Native.Logic
                                             && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
                                 this.AddCalledMethod(constructorInfo);
                             }
+                        }
+
+                        if (code == Code.Isinst || code == Code.Castclass)
+                        {
+                            this.AddTypeToken(type);
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
@@ -1599,12 +1622,19 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this._usedTypeTokens.Add(type);
-
-            if (type.BaseType != null && type.BaseType.IsGenericTypeDefinition)
+            if (!this._usedTypeTokens.Add(type))
             {
-                // when you use typeof(B<T>) you need to add token of base type which can be generic as well
-                AddTypeToken(type.BaseType);
+                return;
+            }
+
+            if (type.BaseType != null)
+            {
+                this.AddTypeToken(type.BaseType);
+            }
+
+            if (type.HasElementType)
+            {
+                this.AddTypeToken(type.GetElementType());
             }
         }
 

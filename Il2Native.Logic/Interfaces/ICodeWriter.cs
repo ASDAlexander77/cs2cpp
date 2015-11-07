@@ -157,5 +157,9 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         void WriteVirtualTableImplementations(IType type, bool declaration = false);
+
+        /// <summary>
+        /// </summary>
+        IMethod GenerateMainMethod(IMethod mainMethod);
     }
 }

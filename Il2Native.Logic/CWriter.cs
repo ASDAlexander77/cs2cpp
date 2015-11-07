@@ -2797,7 +2797,7 @@ namespace Il2Native.Logic
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
         }
 
-        private static bool IsMain(IMethod method)
+        public static bool IsMain(IMethod method)
         {
             return method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
         }
@@ -3964,20 +3964,26 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteMainFunction()
         {
+            var synthesizedMainMethod = this.GenerateMainMethod(this.MainMethod);
+            this.WriteMethod(synthesizedMainMethod, null, null);
+        }
+
+        public IMethod GenerateMainMethod(IMethod mainMethod)
+        {
             var ilCodeBuilder = new IlCodeBuilder();
 
             var gtors = !this.Gctors
-                            ? this.AllReferences.Distinct().Reverse().Select(
-                                      reference =>
-                                      new SynthesizedMethodStringAdapter(
-                                          this.GetGlobalConstructorsFunctionName(reference),
-                                          string.Empty,
-                                          System.System_Void))
-                            : null;
+                ? this.AllReferences.Distinct().Reverse().Select(
+                    reference =>
+                        new SynthesizedMethodStringAdapter(
+                            this.GetGlobalConstructorsFunctionName(reference),
+                            string.Empty,
+                            System.System_Void))
+                : null;
 
-            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, this.MainMethod, gtors, this);
-
-            this.WriteMethod(new SynthesizedMainMethod(mainSynthMethod, this.MainMethod, this), null, null);
+            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, mainMethod, gtors, this);
+            var synthesizedMainMethod = new SynthesizedMainMethod(mainSynthMethod, mainMethod, this);
+            return synthesizedMainMethod;
         }
 
         private void WriteMethodBeginning(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext)
