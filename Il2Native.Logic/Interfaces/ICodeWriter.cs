@@ -153,5 +153,9 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null);
+
+        /// <summary>
+        /// </summary>
+        void WriteVirtualTableImplementations(IType type, bool declaration = false);
     }
 }

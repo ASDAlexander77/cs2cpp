@@ -4630,7 +4630,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteVirtualTableImplementations(IType type, bool declaration = false)
+        public void WriteVirtualTableImplementations(IType type, bool declaration = false)
         {
             // write VirtualTable
             if (type.IsInterface)

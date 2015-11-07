@@ -684,9 +684,9 @@ namespace Il2Native.Logic
                     classMethodSpecialization.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                         readingTypesContext.GenericTypeSpecializations,
                         readingTypesContext.GenericMethodSpecializations,
-                        null,
                         readingTypesContext.AdditionalTypesToProcess,
                         readingTypesContext.UsedTypeTokens,
+                        null,
                         null,
                         null,
                         null,
@@ -739,9 +739,9 @@ namespace Il2Native.Logic
                 overrideSpecializedMethod.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                     readingTypesContext.GenericTypeSpecializations,
                     readingTypesContext.GenericMethodSpecializations,
-                    null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     null,
                     null,
                     null,
@@ -914,9 +914,9 @@ namespace Il2Native.Logic
                 methodWithCustomBodyOrDefault.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                     readingTypesContext.GenericTypeSpecializations,
                     readingTypesContext.GenericMethodSpecializations,
-                    null,
                     readingTypesContext.AdditionalTypesToProcess,
                     readingTypesContext.UsedTypeTokens,
+                    null,
                     null,
                     null,
                     null,
@@ -1123,6 +1123,7 @@ namespace Il2Native.Logic
                 readTypesContext.AssemblyQualifiedName = readingTypesContext.AssemblyQualifiedName;
                 readTypesContext.CalledMethods = readingTypesContext.CalledMethods;
                 readTypesContext.UsedStaticFields = readingTypesContext.UsedStaticFields;
+                readTypesContext.UsedVirtualTableImplementationTypes = readingTypesContext.UsedVirtualTableImplementationTypes;
             }
 
             return readTypesContext;
@@ -1151,12 +1152,12 @@ namespace Il2Native.Logic
                     methodKey.Method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                         readingTypesContext.GenericTypeSpecializations,
                         readingTypesContext.GenericMethodSpecializations,
-                        null,
                         readingTypesContext.AdditionalTypesToProcess,
                         readingTypesContext.UsedTypeTokens,
                         null,
                         readingTypesContext.CalledMethods,
                         readingTypesContext.UsedStaticFields,
+                        readingTypesContext.UsedVirtualTableImplementationTypes,
                         queue,
                         typeResolver);
                 }
@@ -1250,14 +1251,26 @@ namespace Il2Native.Logic
             {
                 // to support compact mode
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
+
+                AddUsedMethodsForException(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
+                AddUsedMethodsForException(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
+                AddUsedMethodsForException(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
+                AddUsedMethodsForException(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
             }
 
             FindAllGenericVirtualMethodsAndGenericInterfaceMethods(allTypes, readingTypesContext, usedTypes);
 
             readingTypesContext.AssemblyQualifiedName = types.First().AssemblyQualifiedName;
 
-            var list = ReorderTypesByUsage(typeResolver, usedTypes, types.First().AssemblyQualifiedName);
+            var list = ReorderTypesByUsage(typeResolver, usedTypes, readingTypesContext.AssemblyQualifiedName);
             return list;
+        }
+
+        private static void AddUsedMethodsForException(ReadingTypesContext readingTypesContext, ITypeResolver typeResolver, IType exceptionType)
+        {
+            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedNewMethod(exceptionType, typeResolver), null));
+            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedInitMethod(exceptionType, typeResolver), null));
+            readingTypesContext.CalledMethods.Add(new MethodKey(exceptionType.FindConstructor(typeResolver), null));
         }
 
         private static void FindAllGenericVirtualMethodsAndGenericInterfaceMethods(
@@ -1394,8 +1407,9 @@ namespace Il2Native.Logic
             else
             {
                 // we just need to write all called methods
-                WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
                 WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericType));
+                WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
             }
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
@@ -1419,6 +1433,14 @@ namespace Il2Native.Logic
             foreach (var calledMethod in methods)
             {
                 WriteSinleMethodDefinition(codeWriter, calledMethod);
+            }
+        }
+
+        private static void WriteBulkOfVirtualTableImplementation(ICodeWriter codeWriter, IEnumerable<IType> virtualTableImplementations)
+        {
+            foreach (var virtualTableImplementation in virtualTableImplementations)
+            {
+                codeWriter.WriteVirtualTableImplementations(virtualTableImplementation);
             }
         }
 
@@ -1518,6 +1540,7 @@ namespace Il2Native.Logic
             this.UsedTypes = new NamespaceContainer<IType>();
             this.CalledMethods = new NamespaceContainer<MethodKey>();
             this.UsedStaticFields = new NamespaceContainer<IField>();
+            this.UsedVirtualTableImplementationTypes = new NamespaceContainer<IType>();
         }
 
         public string AssemblyQualifiedName { get; set; }
@@ -1538,6 +1561,8 @@ namespace Il2Native.Logic
 
         public ISet<IField> UsedStaticFields { get; set; }
 
+        public ISet<IType> UsedVirtualTableImplementationTypes { get; set; }
+
         public static ReadingTypesContext New()
         {
             return new ReadingTypesContext();
@@ -1552,9 +1577,14 @@ namespace Il2Native.Logic
 
         public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
 
+        // to support compact mode
         public ISet<MethodKey> CalledMethods { get; set; }
 
+        // to support compact mode
         public ISet<IField> UsedStaticFields { get; set; }
+
+        // to support compact mode
+        public ISet<IType> UsedVirtualTableImplementationTypes { get; set; }
 
         public static ReadTypesContext New()
         {

@@ -237,20 +237,18 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        /// <param name="structTypes">
-        /// </param>
         /// <param name="stackCall">
         /// </param>
         public static void DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
             this IMethod method,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> structTypes,
             ISet<IType> arrayTypes,
             ISet<IType> usedTokenTypes,
             ISet<IType> usedTypes,
             ISet<MethodKey> calledMethods,
             ISet<IField> usedStaticFields,
+            ISet<IType> usedVirtualTableImplementationTypes,
             Queue<IMethod> stackCall,
             ITypeResolver typeResolver)
         {
@@ -269,6 +267,7 @@ namespace Il2Native.Logic
             reader.UsedTypes = usedTypes;
             reader.CalledMethods = calledMethods;
             reader.UsedStaticFields = usedStaticFields;
+            reader.UsedVirtualTableImplementationTypes = usedVirtualTableImplementationTypes;
             reader.TypeResolver = typeResolver;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true

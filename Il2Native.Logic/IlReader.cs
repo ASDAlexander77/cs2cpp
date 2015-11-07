@@ -66,6 +66,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IType> _usedVirtualTableImplementationTypes;
+
+        /// <summary>
+        /// </summary>
         private IDictionary<int, string> _usedStrings;
 
         /// <summary>
@@ -503,6 +507,15 @@ namespace Il2Native.Logic
             get { return this._usedStaticFields; }
 
             set { this._usedStaticFields = value; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedVirtualTableImplementationTypes
+        {
+            get { return this._usedVirtualTableImplementationTypes; }
+
+            set { this._usedVirtualTableImplementationTypes = value; }
         }
 
         /// <summary>
@@ -1236,6 +1249,11 @@ namespace Il2Native.Logic
                             this.AddArrayType(typeToken);
                             this.AddTypeToken(typeToken);
 
+                            if (typeToken.IsVirtualTableImplementation)
+                            {
+                                this.AddUsedVirtualTableImplementationTypes(typeToken);
+                            }
+
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
                         }
@@ -1609,6 +1627,21 @@ namespace Il2Native.Logic
                 AddUsedType(type.BaseType);
             }
         }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void AddUsedVirtualTableImplementationTypes(IType type)
+        {
+            if (this._usedVirtualTableImplementationTypes == null || type == null || !type.IsVirtualTableImplementation)
+            {
+                return;
+            }
+
+            this._usedVirtualTableImplementationTypes.Add(type);
+        }
+
 
         /// <summary>
         /// </summary>
@@ -1989,12 +2022,12 @@ namespace Il2Native.Logic
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                 this.usedGenericSpecialiazedTypes,
                 this.usedGenericSpecialiazedMethods,
-                null,
                 this._usedArrayTypes,
                 this._usedTypeTokens,
                 this._usedTypes,
                 this._calledMethods,
                 this._usedStaticFields,
+                this._usedVirtualTableImplementationTypes,
                 stackCall,
                 this.TypeResolver);
 
