@@ -2972,7 +2972,7 @@ namespace Il2Native.Logic
         public void WritePreDefinitions(IType type)
         {
             // we allow IsGenericTypeDefinition to support Generic "typeof"
-            if (!(type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            if (!(type.IsGenericOrArray()) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }

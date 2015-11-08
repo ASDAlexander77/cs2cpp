@@ -259,7 +259,7 @@ namespace Il2Native.Logic.Gencode
             if (typeBaseName.Length > 0 && typeBaseName[0] == '<')
             {
                 writer.Write("_");
-                writer.Write(cWriter.AssemblyQualifiedName.CleanUpName());
+                writer.Write(type.AssemblyQualifiedName.CleanUpName());
             }
         }
 

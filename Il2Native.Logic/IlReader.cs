@@ -1290,6 +1290,13 @@ namespace Il2Native.Logic
                                 this.AddArrayType(fieldMember.DeclaringType);
                             }
 
+                            this.AddGenericSpecializedTypeAndUsedType(fieldMember.DeclaringType);
+
+                            if (fieldMember.IsStatic)
+                            {
+                                this.AddUsedStaticField(fieldMember);
+                            }
+
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
                             continue;
                         }
