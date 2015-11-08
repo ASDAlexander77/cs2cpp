@@ -1377,6 +1377,16 @@ namespace Il2Native.Logic
                             this.AddTypeToken(type);
                         }
 
+                        if (code == Code.Box && type.IsValueType())
+                        {
+                            this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
+                        }
+
+                        if ((code == Code.Unbox || code == Code.Unbox_Any) && type.IsValueType())
+                        {
+                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.TypeResolver));
+                        }
+
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:

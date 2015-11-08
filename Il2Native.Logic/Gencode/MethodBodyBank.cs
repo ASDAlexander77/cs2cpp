@@ -32,6 +32,11 @@
 
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
+            if (method == null)
+            {
+                return null;
+            }
+
             if (!initialized)
             {
                 lock (Locker)

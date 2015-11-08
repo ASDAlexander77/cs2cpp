@@ -1481,7 +1481,11 @@ namespace Il2Native.Logic
 
         private static void WriteSinleMethodDefinition(ICodeWriter codeWriter, IMethod calledMethod)
         {
+            Debug.Assert(!calledMethod.IsGenericMethodDefinition, "Method Definition is not allowed here");
+
             var type = calledMethod.DeclaringType;
+
+            Debug.Assert(calledMethod.MetadataName != "CompareExchange`1");
 
             IType typeDefinition;
             IType typeSpecialization;
@@ -1494,14 +1498,19 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("writing method {0}", method));
             }
 
-            if (!method.IsGenericMethodDefinition)
+            if (method.IsGenericMethodDefinition)
             {
-                var genericMethodContext = method.IsGenericMethod
-                                               ? MetadataGenericContext.Create(typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
-                                               : genericTypeContext;
-
-                codeWriter.WriteMethod(method, type.IsGenericType ? method.GetMethodDefinition() : null, genericMethodContext);
+                return;
             }
+
+            var genericMethodContext = method.IsGenericMethod
+                ? MetadataGenericContext.Create(typeDefinition, typeSpecialization, method.GetMethodDefinition(), method)
+                : genericTypeContext;
+
+            codeWriter.WriteMethod(
+                method,
+                MethodBodyBank.GetMethodWithCustomBodyOrDefault(type.IsGenericType || method.IsGenericMethod ? method.GetMethodDefinition() : null, codeWriter),
+                genericMethodContext);
         }
 
         private static void WriteTypesWithGenericsStep(
