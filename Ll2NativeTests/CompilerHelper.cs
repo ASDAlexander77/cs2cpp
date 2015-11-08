@@ -107,6 +107,10 @@
 
         /// <summary>
         /// </summary>
+        public static bool Stubs = false;
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -187,7 +191,7 @@
                 args.Add("verbose");
             }
 
-            if (stubs)
+            if (stubs || Stubs)
             {
                 args.Add("stubs");
             }

@@ -1257,15 +1257,15 @@ namespace Il2Native.Logic
                 readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedDynamicCastMethod(typeResolver), null));
                 readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedCastMethod(typeResolver), null));
 
-                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
-                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
-                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
-                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotImplementedException"));
-                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
-                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.String"));
-                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeModule"));
-                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeAssembly"));
-                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.RuntimeType"));
+                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
+                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
+                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
+                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotImplementedException"));
+                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.String"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeModule"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeAssembly"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.RuntimeType"));
 
                 // to support compact mode
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
