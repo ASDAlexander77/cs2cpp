@@ -3856,7 +3856,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
-            if (this.GcSupport && this.IsCoreLib)
+            if (this.GcSupport && (this.IsCoreLib || this.IlReader.CompactMode))
             {
                 this.Output.WriteLine("GC_INIT();");
             }
@@ -3973,12 +3973,14 @@ namespace Il2Native.Logic
             var ilCodeBuilder = new IlCodeBuilder();
 
             var gtors = !this.Gctors
-                ? this.AllReferences.Distinct().Reverse().Select(
-                    reference =>
-                        new SynthesizedMethodStringAdapter(
-                            this.GetGlobalConstructorsFunctionName(reference),
-                            string.Empty,
-                            System.System_Void))
+                ? (!IlReader.CompactMode
+                    ? this.AllReferences.Distinct().Reverse()
+                    : new[] { this.AssemblyQualifiedName }).Select(
+                        reference =>
+                            new SynthesizedMethodStringAdapter(
+                                this.GetGlobalConstructorsFunctionName(reference),
+                                string.Empty,
+                                System.System_Void))
                 : null;
 
             var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, mainMethod, gtors, this);
