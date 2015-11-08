@@ -63,6 +63,8 @@ namespace Il2Native.Logic.Gencode
             codeList.LoadLocal(0);
             codeList.Add(Code.Ldelem_Ref);
 
+            codeList.Castclass(method.DeclaringType);
+
             var index = 1;
             foreach (var parameter in method.GetParameters())
             {
