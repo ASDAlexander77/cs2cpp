@@ -256,6 +256,7 @@ namespace Il2Native.Logic.Gencode
 
             var typeBaseName = type.TypeToCType(isPointer, enumAsName, shortName);
             writer.Write(typeBaseName.CleanUpName());
+
             if (typeBaseName.Length > 0 && typeBaseName[0] == '<')
             {
                 writer.Write("_");
