@@ -236,7 +236,7 @@ namespace Il2Native.Logic
                         genericMethodSpecializatonsForType,
                         processGenericMethodsOnly);
                 }
-                else if (mode == ConvertingMode.PostDefinition && !compact)
+                else if (mode == ConvertingMode.PostDefinition)
                 {
                     codeWriter.WritePostDefinitions(type);
                 }
@@ -1418,11 +1418,11 @@ namespace Il2Native.Logic
             // writing
             codeWriter.WriteStart();
 
-            WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PreDefinition);
-
             if (!compact)
             {
+                WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PreDefinition);
                 WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.Definition);
+                WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
             }
             else
             {
@@ -1432,7 +1432,6 @@ namespace Il2Native.Logic
                 WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
             }
 
-            WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
 
             if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
             {
