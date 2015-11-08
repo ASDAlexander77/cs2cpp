@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -18,7 +19,7 @@ namespace Il2Native.Logic
 
     using Gencode;
     using Gencode.SynthesizedMethods;
- 
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -235,7 +236,7 @@ namespace Il2Native.Logic
                         genericMethodSpecializatonsForType,
                         processGenericMethodsOnly);
                 }
-                else if (mode == ConvertingMode.PostDefinition)
+                else if (mode == ConvertingMode.PostDefinition && !compact)
                 {
                     codeWriter.WritePostDefinitions(type);
                 }
@@ -790,9 +791,7 @@ namespace Il2Native.Logic
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
 
-            var readTypes = ReadingTypes(
-                ilReader,
-                settings.Filter);
+            var readTypes = ReadingTypes(ilReader, settings.Filter);
 
             WritingDeclarations(ilReader, codeHeaderWriter, readTypes);
 
@@ -1109,13 +1108,13 @@ namespace Il2Native.Logic
             {
                 readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
             }
-            
+
             // check all methods
             var countBefore = 0;
             do
             {
                 countBefore = readingTypesContext.CalledMethods.Count;
-                foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => m.Tag == null).ToArray())
+                foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => !Object.ReferenceEquals(m.Tag, used)).ToArray())
                 {
                     methodKey.Tag = used;
                     DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, MethodBodyBank.GetMethodWithCustomBodyOrDefault(methodKey.Method, typeResolver), queue);
@@ -1229,18 +1228,28 @@ namespace Il2Native.Logic
 
             if (concurrent)
             {
-                Parallel.ForEach(types, type => AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(type, usedTypes, readingTypesContext));
+                Parallel.ForEach(
+                    types,
+                    type =>
+                        AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(
+                            type,
+                            usedTypes,
+                            readingTypesContext));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(type, usedTypes, readingTypesContext);
+                    AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(
+                        type,
+                        usedTypes,
+                        readingTypesContext);
                 }
             }
 
             if (compact)
             {
+
                 var mainFunc = _codeWriter.GenerateMainMethod(types.SelectMany(t => IlReader.Methods(t, typeResolver)).First(CWriter.IsMain));
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, mainFunc, new Queue<IMethod>());
 
@@ -1248,18 +1257,18 @@ namespace Il2Native.Logic
                 readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedDynamicCastMethod(typeResolver), null));
                 readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedCastMethod(typeResolver), null));
 
+                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
+                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
+                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
+                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotImplementedException"));
+                ////AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
+                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.String"));
+                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeModule"));
+                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeAssembly"));
+                ////AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.RuntimeType"));
+
                 // to support compact mode
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
-
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotImplementedException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.String"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeModule"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeAssembly"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.RuntimeType"));
             }
 
             FindAllGenericVirtualMethodsAndGenericInterfaceMethods(allTypes, readingTypesContext, usedTypes);
@@ -1319,6 +1328,7 @@ namespace Il2Native.Logic
             {
                 AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, assemblyQualifiedName, typeResolver);
             }
+
             return list;
         }
 
@@ -1417,9 +1427,9 @@ namespace Il2Native.Logic
             else
             {
                 // we just need to write all called methods
-                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericOrArray()));
+                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
                 WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
-                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.IsGenericOrArray()));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
             }
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
@@ -1455,7 +1465,7 @@ namespace Il2Native.Logic
         {
             foreach (var virtualTableImplementation in virtualTableImplementations)
             {
-                Debug.Assert(!virtualTableImplementation.IsGenericTypeDefinition && !virtualTableImplementation.IsGenericType, "Generic not allowed here");
+                Debug.Assert(!virtualTableImplementation.IsGenericTypeDefinition, "Generic Definition not allowed here");
 
                 codeWriter.WriteVirtualTableImplementations(virtualTableImplementation);
             }

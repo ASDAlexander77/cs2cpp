@@ -4670,7 +4670,7 @@ namespace Il2Native.Logic
             foreach (var @interface in type.HaveStaticVirtualTablesForInterfaces(this))
             {
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
-                foreach (var pair in virtualInterfaceTable.Where(p => p is CWriter.Pair<IMethod, IMethod>).Cast<Pair<IMethod, IMethod>>())
+                foreach (var pair in virtualInterfaceTable.Where(p => p.Kind == PairKind.Method).Cast<Pair<IMethod, IMethod>>())
                 {
                     yield return pair.Value;
                 }
@@ -4679,7 +4679,7 @@ namespace Il2Native.Logic
             if (type.HasAnyVirtualMethod(this))
             {
                 var virtualTable = type.GetVirtualTable(this);
-                foreach (var pair in virtualTable.Where(p => p is CWriter.Pair<IMethod, IMethod>).Cast<Pair<IMethod, IMethod>>())
+                foreach (var pair in virtualTable.Where(p => p.Kind == PairKind.Method).Cast<Pair<IMethod, IMethod>>())
                 {
                     yield return pair.Value;
                 }
