@@ -1235,6 +1235,28 @@ namespace Il2Native.Logic
 
                         if (code == Code.Ldsfld || code == Code.Ldsflda || code == Code.Stsfld)
                         {
+                            if (TypeResolver.MultiThreadingSupport)
+                            {
+                                if (field.IsThreadStatic)
+                                {
+                                    if (field.FieldType.IsValueType())
+                                    {
+                                        if (code == Code.Ldsfld)
+                                        {
+                                            this.AddCalledMethod(new SynthesizedUnboxMethod(field.FieldType, this.TypeResolver));
+                                        }
+                                        else if (code == Code.Stsfld)
+                                        {
+                                            this.AddCalledMethod(new SynthesizedBoxMethod(field.FieldType, this.TypeResolver));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        this.AddTypeToken(field.FieldType);
+                                    }
+                                }
+                            }
+
                             this.AddUsedStaticField(field);
                         }
 
@@ -1315,6 +1337,11 @@ namespace Il2Native.Logic
                         var fullyDefinedReference = resolvedToken as FullyDefinedReference;
                         if (fullyDefinedReference != null)
                         {
+                            if (fullyDefinedReference.UsedToken != null)
+                            {
+                                this.AddTypeToken(fullyDefinedReference.UsedToken);
+                            }
+
                             yield return new OpCodeFullyDefinedReferencePart(opCode, startAddress, currentAddress, fullyDefinedReference);
                             continue;
                         }

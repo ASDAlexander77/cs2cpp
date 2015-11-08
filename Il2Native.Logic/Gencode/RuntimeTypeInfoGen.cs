@@ -184,7 +184,7 @@
                     cWriter.Output.Write(".data");
                 });
 
-            return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type);
+            return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type, type);
         }
 
         public static FullyDefinedReference GetFullyDefinedRefereneForStaticClass(this IType type, string fieldName, ITypeResolver typeResolver)
