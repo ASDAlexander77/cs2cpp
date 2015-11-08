@@ -2954,7 +2954,7 @@ namespace Il2Native.Logic
 
         public void WritePostDefinitions(IType type)
         {
-            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            if (!type.IsGenericOrArray() && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }

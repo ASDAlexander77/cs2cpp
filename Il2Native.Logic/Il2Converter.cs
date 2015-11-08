@@ -1423,16 +1423,15 @@ namespace Il2Native.Logic
             if (!compact)
             {
                 WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.Definition);
+                WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
             }
             else
             {
                 // we just need to write all called methods
                 WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericOrArray()));
                 WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
-                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.IsGenericOrArray()));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName));
             }
-
-            WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
 
             if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
             {
@@ -1484,8 +1483,6 @@ namespace Il2Native.Logic
             Debug.Assert(!calledMethod.IsGenericMethodDefinition, "Method Definition is not allowed here");
 
             var type = calledMethod.DeclaringType;
-
-            Debug.Assert(calledMethod.MetadataName != "CompareExchange`1");
 
             IType typeDefinition;
             IType typeSpecialization;
