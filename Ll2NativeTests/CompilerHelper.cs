@@ -245,7 +245,7 @@
             Trace.WriteLine(string.Empty);
 
             // compile CoreLib
-            if (!CompilerHelper.Mscorlib)
+            if (!CompilerHelper.Mscorlib && !CompilerHelper.CompactMode)
             {
                 if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
                 {
@@ -281,7 +281,23 @@
                     }
                 }
 
-                if (CompilerHelper.Mscorlib)
+                if (CompilerHelper.CompactMode)
+                {
+                    // file exe
+                    ExecCmd(
+                        "g++",
+                        string.Format(
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=i686 -L .{2}",
+                            fileName,
+                            opt ? "-O3 " : string.Empty,
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
+                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
+
+                    Assert.IsTrue(
+                        File.Exists(
+                            Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, fileName))));                    
+                }
+                else if (CompilerHelper.Mscorlib)
                 {
                     if (!File.Exists(Path.Combine(OutputPath, "libmscorlib.a")))
                     {
