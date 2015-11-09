@@ -46,10 +46,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private static IDictionary<IType, IEnumerable<IMethod>> genMethodSpec;
-
-        /// <summary>
-        /// </summary>
         private ISet<MethodKey> _calledMethods;
 
         /// <summary>
@@ -386,10 +382,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
-        {
-            set { genMethodSpec = value; }
-        }
+        public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
 
         /// <summary>
         /// </summary>
@@ -850,7 +843,7 @@ namespace Il2Native.Logic
 
             // append specialized methods
             IEnumerable<IMethod> genMethodSpecializationForType = null;
-            if (genMethodSpec == null || !genMethodSpec.TryGetValue(normal, out genMethodSpecializationForType))
+            if (typeResolver.IlReader.GenericMethodSpecializations == null || !typeResolver.IlReader.GenericMethodSpecializations.TryGetValue(normal, out genMethodSpecializationForType))
             {
                 yield break;
             }

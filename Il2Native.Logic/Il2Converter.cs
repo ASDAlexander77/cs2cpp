@@ -1046,7 +1046,7 @@ namespace Il2Native.Logic
             string[] filter)
         {
             // clean it as you are using IlReader
-            IlReader.GenericMethodSpecializations = null;
+            ilReader.GenericMethodSpecializations = null;
 
             // types in current assembly
             var readTypesContext = ReadTypesContext.New();
@@ -1076,7 +1076,7 @@ namespace Il2Native.Logic
             readTypesContext.GenericMethodSpecializations = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
             var genericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
-            IlReader.GenericMethodSpecializations = genericMethodSpecializations;
+            ilReader.GenericMethodSpecializations = genericMethodSpecializations;
             ilReader.UsedTypeTokens = readingTypesContext.UsedTypeTokens;
 
             Debug.Assert(readTypesContext.UsedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");

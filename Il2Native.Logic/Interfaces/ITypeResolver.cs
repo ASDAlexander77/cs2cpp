@@ -6,6 +6,8 @@
     {
         SystemTypes System { get; }
 
+        IIlReader IlReader { get; }
+
         // TODO: should be in ICodeWriter
         bool GcSupport { get; }
 

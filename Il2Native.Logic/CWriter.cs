@@ -86,10 +86,6 @@ namespace Il2Native.Logic
         /// </summary>
         private string outputFile;
 
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<string, int> poisitionByFieldInfo = new SortedDictionary<string, int>();
-
         public DebugInfoGenerator debugInfoGenerator;
 
         private IList<IMethod> externDeclarations = new List<IMethod>();
@@ -1811,18 +1807,6 @@ namespace Il2Native.Logic
             return index;
         }
 
-        public int GetFieldPosition(IType type, IField fieldInfo)
-        {
-            // find index
-            int index;
-            if (!this.poisitionByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
-            {
-                index = this.CalculateFieldPosition(type, fieldInfo);
-            }
-
-            return index;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="index">
@@ -3259,38 +3243,6 @@ namespace Il2Native.Logic
             // no shift needed, it will be applied in WriteFieldAccess
             ////index += this.CalculateFirstFieldPositionInType(type);
             this.indexByFieldInfo[string.Concat(type.FullName, '.', fieldName)] = index;
-
-            return index;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="fieldInfo">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        private int CalculateFieldPosition(IType type, IField fieldInfo)
-        {
-            var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
-            var index = 0;
-
-            while (index < list.Count && list[index].NameNotEquals(fieldInfo))
-            {
-                index++;
-            }
-
-            if (index == list.Count)
-            {
-                throw new KeyNotFoundException();
-            }
-
-            index += this.CalculateFirstFieldPositionInType(type);
-
-            this.poisitionByFieldInfo[fieldInfo.GetFullName()] = index;
 
             return index;
         }

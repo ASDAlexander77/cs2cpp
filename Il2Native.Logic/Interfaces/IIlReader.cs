@@ -26,6 +26,10 @@
 
         /// <summary>
         /// </summary>
+        IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; }
+
+        /// <summary>
+        /// </summary>
         ISet<MethodKey> CalledMethods { get; set; }
 
         /// <summary>
