@@ -769,12 +769,11 @@ namespace Il2Native.Logic
         private static ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
         {
             var codeWriter = GetCWriter(settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
-            MethodBodyBank.Reset();
             codeWriter.IsHeader = isHeader;
             ilReader.TypeResolver = codeWriter;
             codeWriter.IlReader = ilReader;
             _codeWriter = codeWriter;
-            _codeWriter.Initialize(ilReader.Types().First());
+            _codeWriter.Initialize(ilReader.Types().First(t => t.IsModule && t.AssemblyQualifiedName == ilReader.AssemblyQualifiedName));
             return codeWriter;
         }
 

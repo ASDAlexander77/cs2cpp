@@ -158,10 +158,12 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null, "You should provide type here");
 
-            this.Module = type.Module;
-            this.System = new SystemTypes(this.Module);
+            MethodBodyBank.Reset();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
+
+            this.Module = type.Module;
+            this.System = new SystemTypes(this.Module);
         }
 
         public virtual string GetAllocator(bool isAtomic, bool isBigObj, bool debugOrigignalRequired)
