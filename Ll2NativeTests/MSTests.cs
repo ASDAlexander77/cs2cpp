@@ -762,7 +762,7 @@ namespace Ll2NativeTests
             CompilerHelper.CompactMode = true;
             CompilerHelper.Stubs = true;
 
-            foreach (var index in Enumerable.Range(2, 869).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
@@ -963,6 +963,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             ////CompilerHelper.AddSystemLinq = true;
             CompilerHelper.CompactMode = true;
             CompilerHelper.Stubs = true;
+            CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
