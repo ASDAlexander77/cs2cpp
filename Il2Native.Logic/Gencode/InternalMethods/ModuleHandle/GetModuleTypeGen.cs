@@ -12,7 +12,7 @@
             ilCodeBuilder.LoadNull();
             ilCodeBuilder.Return();
 
-            ilCodeBuilder.Register(Name);
+            ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

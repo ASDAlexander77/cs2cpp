@@ -73,7 +73,7 @@
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

@@ -36,7 +36,7 @@
             var locals = new List<IType>();
 
             // params will be taken from method
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, null);
+            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, null);
         }
     }
 }

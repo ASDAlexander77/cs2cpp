@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
 
     using Il2Native.Logic.CodeParts;
@@ -27,6 +28,10 @@
         /// <summary>
         /// </summary>
         IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; }
+
+        /// <summary>
+        /// </summary>
+        IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName { get; }
 
         /// <summary>
         /// </summary>

@@ -101,7 +101,7 @@
             var parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

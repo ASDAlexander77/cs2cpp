@@ -103,7 +103,7 @@
             parameters.Add(typeResolver.System.System_Int32.ToParameter("dstIndex"));
             parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

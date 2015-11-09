@@ -69,7 +69,7 @@
             var parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_Int32.ToParameter("array"));
 
-            MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

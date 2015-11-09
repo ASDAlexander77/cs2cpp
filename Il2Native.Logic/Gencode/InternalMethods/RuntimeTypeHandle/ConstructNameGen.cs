@@ -37,7 +37,7 @@
             ilCodeBuilder.SaveIndirect(typeResolver.System.System_String, typeResolver);
             ilCodeBuilder.Return();
 
-            ilCodeBuilder.Register(Name);
+            ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

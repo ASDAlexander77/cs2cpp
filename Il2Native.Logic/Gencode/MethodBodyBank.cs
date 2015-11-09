@@ -13,17 +13,9 @@
 
     public static class MethodBodyBank
     {
-        private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
-            new SortedDictionary<string, Func<IMethod, IMethod>>();
-
         private static bool initialized = false;
 
         private static readonly object Locker = new object();
-
-        public static bool HasRegisteredMethod(string methodFullName)
-        {
-            return MethodsByFullName.ContainsKey(methodFullName);
-        }
 
         public static void Reset()
         {
@@ -44,7 +36,7 @@
                     // we double check to filter threads waiting on 'lock'
                     if (!initialized)
                     {
-                        MethodsByFullName.Clear();
+                        typeResolver.IlReader.MethodsByFullName.Clear();
                         RegisterAll(typeResolver);
                         initialized = true;
                     }
@@ -52,7 +44,7 @@
             }
 
             Func<IMethod, IMethod> methodFactory;
-            if (MethodsByFullName.TryGetValue(method.ToString(), out methodFactory))
+            if (typeResolver.IlReader.MethodsByFullName.TryGetValue(method.ToString(), out methodFactory))
             {
                 var newMethod = methodFactory.Invoke(method);
                 if (newMethod != null)
@@ -129,31 +121,33 @@
         [Obsolete]
         public static void Register(
             string methodFullName,
+            ITypeResolver typeResolver,
             object[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
             IList<IParameter> parameters)
         {
-            Register(methodFullName, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
+            Register(methodFullName, typeResolver, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
         }
 
         public static void Register(
             string methodFullName,
+            ITypeResolver typeResolver,
             byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
             IList<IParameter> parameters,
             IExceptionHandlingClause[] exceptionHandlingClause = null)
         {
-            Register(methodFullName, m => GetMethodDecorator(
+            Register(methodFullName, typeResolver, m => GetMethodDecorator(
                 m, code, tokenResolutions, locals, parameters, exceptionHandlingClause ?? new IExceptionHandlingClause[0]));
         }
 
-        public static void Register(string methodFullName, Func<IMethod, IMethod> func)
+        public static void Register(string methodFullName, ITypeResolver typeResolver, Func<IMethod, IMethod> func)
         {
-            Debug.Assert(!MethodsByFullName.ContainsKey(methodFullName), "Method already registered");
+            Debug.Assert(!typeResolver.IlReader.MethodsByFullName.ContainsKey(methodFullName), "Method already registered");
 
-            MethodsByFullName[methodFullName] = func;
+            typeResolver.IlReader.MethodsByFullName[methodFullName] = func;
         }
 
         private static void RegisterAll(ITypeResolver typeResolver)

@@ -13,7 +13,7 @@
             ilCodeBuilder.LoadToken(runtimeModuleType.GetFullyDefinedRefereneForStaticClass(RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name);
+            ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

@@ -72,11 +72,11 @@
             locals.Add(typeResolver.System.System_Int32);
             locals.Add(typeResolver.System.System_Byte.ToPointerType());
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, new List<IParameter>());
+            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, new List<IParameter>());
 
             var parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_Object.ToParameter("o"));
-            MethodBodyBank.Register(CompilerServices_GetHashCodeName, ByteCode, tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(CompilerServices_GetHashCodeName, typeResolver, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

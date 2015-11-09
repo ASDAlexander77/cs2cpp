@@ -28,16 +28,16 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
-            GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32);
-            GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64);
-            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF);
-            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD);
-            GetCompareExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name);
-            GetCompareExchangeForIntPtrType(typeResolver).Register(NamePtr);
-            GetCompareExchangeForTypeWithBool(typeResolver.System.System_Int32, typeResolver).Register(Name32Bool);
+            GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
+            GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
+            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
+            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
+            GetCompareExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
+            GetCompareExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
+            GetCompareExchangeForTypeWithBool(typeResolver.System.System_Int32, typeResolver).Register(Name32Bool, typeResolver);
 
             var method = typeResolver.ResolveType("System.Threading.Interlocked").GetMethodsByMetadataName("CompareExchange`1", typeResolver).First();
-            GetCompareExchangeForType(method.ReturnType, typeResolver).Register(NameT);
+            GetCompareExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
         }
 
         public static IlCodeBuilder GetCompareExchangeForType(IType parameterType, ITypeResolver typeResolver)

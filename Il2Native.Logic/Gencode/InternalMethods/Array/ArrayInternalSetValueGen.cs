@@ -262,7 +262,7 @@
             parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("ref"));
             parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
 
-            MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

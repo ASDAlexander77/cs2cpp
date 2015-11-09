@@ -25,15 +25,15 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
-            GetExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32);
-            GetExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64);
-            GetExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF);
-            GetExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD);
-            GetExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name);
-            GetExchangeForIntPtrType(typeResolver).Register(NamePtr);
+            GetExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
+            GetExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
+            GetExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
+            GetExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
+            GetExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
+            GetExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
 
             var method = typeResolver.ResolveType("System.Threading.Interlocked").GetMethodsByMetadataName("Exchange`1", typeResolver).First();
-            GetExchangeForType(method.ReturnType, typeResolver).Register(NameT);
+            GetExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
         }
 
         public static IlCodeBuilder GetExchangeForType(IType parameterType, ITypeResolver typeResolver)

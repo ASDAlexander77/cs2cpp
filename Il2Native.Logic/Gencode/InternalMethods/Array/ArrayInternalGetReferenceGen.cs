@@ -249,7 +249,7 @@
             parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
             parameters.Add(typeResolver.System.System_Int32.ToPointerType().ToParameter("typeRef"));
 
-            MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
+            MethodBodyBank.Register(Name, typeResolver, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

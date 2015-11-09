@@ -60,9 +60,9 @@
             }
         }
 
-        public void Register(string fullMethodName)
+        public void Register(string fullMethodName, ITypeResolver typeResolver)
         {
-            MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
+            MethodBodyBank.Register(fullMethodName, typeResolver, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
         public IMethod GetMethod(IMethod originalMethod)

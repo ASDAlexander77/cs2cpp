@@ -13,7 +13,7 @@
 
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("type"));
 
-            ilCodeBuilder.Register(Name);
+            ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

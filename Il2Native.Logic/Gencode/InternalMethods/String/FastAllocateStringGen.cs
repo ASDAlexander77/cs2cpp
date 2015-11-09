@@ -17,7 +17,7 @@
             codeBuilder.SaveField(typeResolver.System.System_String.GetFieldByName("m_stringLength", typeResolver));
             codeBuilder.Add(Code.Ret);
 
-            codeBuilder.Register(Name);
+            codeBuilder.Register(Name, typeResolver);
         }
     }
 }

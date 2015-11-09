@@ -23,7 +23,7 @@
             codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
             codeBuilder.Add(Code.Ret);
 
-            codeBuilder.Register(Name);
+            codeBuilder.Register(Name, typeResolver);
         }
     }
 }
