@@ -4264,7 +4264,7 @@ namespace Il2Native.Logic
 
         private bool IsStubApplied(IMethod method)
         {
-            return this.Stubs && !method.IsUnmanaged;
+            return this.Stubs && !method.IsUnmanaged && !method.IsUnmanagedDllImport;
         }
 
         /// <summary>
