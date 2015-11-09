@@ -3240,64 +3240,6 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static int CalculateDynamicCastInterfaceIndex(IType fromType, IType toType)
-        {
-            if (!fromType.IsInterface && !toType.IsInterface)
-            {
-                if (toType.IsDerivedFrom(fromType))
-                {
-                    return 0;
-                }
-
-                return -2;
-            }
-
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                return -2;
-            }
-
-            var allInterfaces = toType.GetAllInterfaces();
-            if (fromType.IsInterface && !toType.IsInterface && !allInterfaces.Contains(fromType))
-            {
-                return -2;
-            }
-
-            if (fromType.IsInterface && !toType.IsInterface && allInterfaces.Contains(fromType))
-            {
-                // caluclate interfaceRouteIndex
-                var interfaceRouteIndex = 0;
-                var index = 1; // + BaseType
-                foreach (var @interface in toType.GetInterfaces())
-                {
-                    if (@interface.GetAllInterfaces().Contains(fromType))
-                    {
-                        interfaceRouteIndex = index;
-                        break;
-                    }
-
-                    index++;
-                }
-
-                if (interfaceRouteIndex >= 0 && toType.GetInterfaces().Contains(fromType))
-                {
-                    return -3;
-                }
-
-                return interfaceRouteIndex * PointerSize;
-            }
-
-            return 0;
-        }
-
         private int CalculateFieldIndex(IType type, string fieldName)
         {
             var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();

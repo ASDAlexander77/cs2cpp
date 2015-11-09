@@ -26,13 +26,13 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private static ICodeWriter _codeWriter;
+        private ICodeWriter _codeWriter;
 
-        private static bool concurrent;
+        private bool concurrent;
 
-        private static bool split;
+        private bool split;
 
-        private static bool compact;
+        private bool compact;
 
         /// <summary>
         /// </summary>
@@ -69,17 +69,14 @@ namespace Il2Native.Logic
 
         public static bool VerboseOutput { get; set; }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="source">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="args">
-        /// </param>
         public static void Convert(string source, string outputFolder, string[] args = null, string[] filter = null)
         {
-            Convert(new[] { source }, outputFolder, args, filter);
+            new Il2Converter().ConvertInternal(new[] { source }, outputFolder, args, filter);
+        }
+
+        public static void Convert(string[] sources, string outputFolder, string[] args = null, string[] filter = null)
+        {
+            new Il2Converter().ConvertInternal(sources, outputFolder, args, filter);
         }
 
         /// <summary>
@@ -90,8 +87,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public static void Convert(string[] sources, string outputFolder, string[] args = null, string[] filter = null)
+        protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null, string[] filter = null)
         {
+            _codeWriter = null;
+
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
 
             var ilReader = new IlReader(sources, args);
@@ -115,7 +114,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public static void WriteTypeFullDeclaration(
+        public void WriteTypeFullDeclaration(
             ICodeWriter codeWriter,
             IType type,
             IGenericContext genericContext,
@@ -145,7 +144,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
+        private void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
             codeWriter.WriteTypeStart(type, genericContext);
 
@@ -187,7 +186,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="processGenericMethodsOnly">
         /// </param>
-        private static void ConvertAllTypes(
+        private void ConvertAllTypes(
             ICodeWriter codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode mode,
@@ -243,7 +242,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void ConvertAllRuntimeTypesForwardDeclaration(
+        private void ConvertAllRuntimeTypesForwardDeclaration(
             ICodeWriter codeWriter,
             IEnumerable<IType> types)
         {
@@ -262,7 +261,7 @@ namespace Il2Native.Logic
         }
 
 
-        private static void ConvertAllRuntimeTypes(
+        private void ConvertAllRuntimeTypes(
             ICodeWriter codeWriter,
             IEnumerable<IType> types)
         {
@@ -280,7 +279,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void ConvertForwardTypeDeclaration(ICodeWriter codeWriter, IType type)
+        private void ConvertForwardTypeDeclaration(ICodeWriter codeWriter, IType type)
         {
             IType typeDefinition;
             IType typeSpecialization;
@@ -311,7 +310,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="processGenericMethodsOnly">
         /// </param>
-        private static void ConvertTypeDeclaration(
+        private void ConvertTypeDeclaration(
             ICodeWriter codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
@@ -329,7 +328,7 @@ namespace Il2Native.Logic
             WriteTypeFullDeclaration(codeWriter, type, genericTypeContext, genericMethodSpecializatons, processGenericMethodsOnly);
         }
 
-        private static void ConvertTypeDefinition(
+        private void ConvertTypeDefinition(
             ICodeWriter codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
@@ -444,7 +443,7 @@ namespace Il2Native.Logic
             ////codeWriter.WriteAfterMethods(type);
         }
 
-        private static IGenericContext GetGenericTypeContext(
+        private IGenericContext GetGenericTypeContext(
             IType type,
             out IType typeDefinition,
             out IType typeSpecialization)
@@ -457,7 +456,7 @@ namespace Il2Native.Logic
                 : null;
         }
 
-        private static void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
+        private void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
         {
             var fields = IlReader.Fields(type, codeWriter);
             // fields
@@ -470,7 +469,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// to support using RuntimeType info to Generic Definitions and Pointers
         /// </summary>
-        private static void ConvertRuntimeTypeInfo(ICodeWriter codeWriter, IType type)
+        private void ConvertRuntimeTypeInfo(ICodeWriter codeWriter, IType type)
         {
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer || compact, "This method is for Generic Definitions or pointers only as it should not be processed in normal way using ConvertType");
 
@@ -482,7 +481,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
+        private void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
         {
             var effectiveType = type;
             while (effectiveType.IsPointer || effectiveType.IsByRef)
@@ -514,7 +513,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        private static void DiscoverGenericSpecializedTypesAndAdditionalTypes(
+        private void DiscoverGenericSpecializedTypesAndAdditionalTypes(
             IType typeSource,
             ReadingTypesContext readingTypesContext)
         {
@@ -560,7 +559,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void AddUsedTokenType(ReadingTypesContext readingTypesContext, IType type)
+        private void AddUsedTokenType(ReadingTypesContext readingTypesContext, IType type)
         {
             if (readingTypesContext == null || readingTypesContext.UsedTypeTokens == null || type.SpecialUsage())
             {
@@ -589,7 +588,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        private static void DiscoverAllGenericMethodsOfInterfaces(
+        private void DiscoverAllGenericMethodsOfInterfaces(
             IEnumerable<IType> allTypes,
             ReadingTypesContext readingTypesContext)
         {
@@ -620,7 +619,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void DiscoverAllGenericMethodsOfInterfacesForMethod(
+        private void DiscoverAllGenericMethodsOfInterfacesForMethod(
             IEnumerable<IType> allTypes,
             IGrouping<IType, IMethod> specializedTypeMethods,
             ReadingTypesContext readingTypesContext)
@@ -671,7 +670,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        private static void DiscoverAllGenericVirtualMethods(
+        private void DiscoverAllGenericVirtualMethods(
             IEnumerable<IType> allTypes,
             ReadingTypesContext readingTypesContext)
         {
@@ -731,7 +730,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="filter">
         /// </param>
-        private static void GenerateC(
+        private void GenerateC(
             IlReader ilReader,
             string fileName,
             string sourceFilePath,
@@ -766,7 +765,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
+        private ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
         {
             var codeWriter = GetCWriter(settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
             codeWriter.IsHeader = isHeader;
@@ -785,7 +784,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="codeWriter">
         /// </param>
-        private static void GenerateSource(IlReader ilReader, Settings settings)
+        private void GenerateSource(IlReader ilReader, Settings settings)
         {
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
@@ -800,7 +799,7 @@ namespace Il2Native.Logic
             WritingDefinitions(ilReader, codeWriter, readTypes);
         }
 
-        private static void GenerateMultiSources(IlReader ilReader, IEnumerable<string> namespaces, Settings settings)
+        private void GenerateMultiSources(IlReader ilReader, IEnumerable<string> namespaces, Settings settings)
         {
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
@@ -825,7 +824,7 @@ namespace Il2Native.Logic
             GenerateSourceForNamespace(ilReader, settings, fileName, string.Empty, readTypes);
         }
 
-        private static void GenerateSourceForNamespace(
+        private void GenerateSourceForNamespace(
             IlReader ilReader, Settings settings, string fileName, string ns, ReadTypesContext readTypes)
         {
             settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
@@ -842,7 +841,7 @@ namespace Il2Native.Logic
             WritingDefinitions(ilReader, codeWriterForNameSpace, readTypesByNamespace);
         }
 
-        private static void DiscoverGenericSpecializedTypesAndAdditionalTypes(
+        private void DiscoverGenericSpecializedTypesAndAdditionalTypes(
             IMethod method,
             ReadingTypesContext readingTypesContext)
         {
@@ -901,7 +900,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static ICodeWriter GetCWriter(
+        private ICodeWriter GetCWriter(
             string fileName,
             string fileExt,
             string sourceFilePath,
@@ -918,7 +917,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static SortedDictionary<IType, IEnumerable<IMethod>> GroupGenericMethodsByType(
+        private SortedDictionary<IType, IEnumerable<IMethod>> GroupGenericMethodsByType(
             ISet<IMethod> genericMethodSpecializations)
         {
             // group generic methods by Type
@@ -938,7 +937,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredTypes">
         /// </param>
-        private static void ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(
+        private void ProcessGenericTypesAndAdditionalTypesToDiscoverGenericSpecializedTypesAndAdditionalTypes(
             IList<IType> requiredTypes,
             ReadingTypesContext readingTypesContext,
             bool applyConccurent = false)
@@ -1026,7 +1025,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(IType type, IList<IType> requiredTypesByType, ReadingTypesContext readingTypesContext)
+        private void AppendTypeAndDiscoverGenericSpecializedTypesAndAdditionalTypes(IType type, IList<IType> requiredTypesByType, ReadingTypesContext readingTypesContext)
         {
             if (VerboseOutput)
             {
@@ -1042,7 +1041,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static ReadTypesContext ReadingTypes(
+        private ReadTypesContext ReadingTypes(
             IlReader ilReader,
             string[] filter)
         {
@@ -1095,7 +1094,7 @@ namespace Il2Native.Logic
             return readTypesContext;
         }
 
-        private static void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
+        private void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
             List<IType> types,
             ReadingTypesContext readingTypesContext,
             ITypeResolver typeResolver)
@@ -1124,7 +1123,7 @@ namespace Il2Native.Logic
             while (readingTypesContext.CalledMethods.Count != countBefore);
         }
 
-        private static void ProcessAllVirtualTableImplementations(ReadingTypesContext readingTypesContext)
+        private void ProcessAllVirtualTableImplementations(ReadingTypesContext readingTypesContext)
         {
             // add all virtual methods
             foreach (var virtualTableImplementationType in readingTypesContext.UsedVirtualTableImplementationTypes)
@@ -1138,7 +1137,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
+        private void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
             ReadingTypesContext readingTypesContext,
             ITypeResolver typeResolver,
             IMethod method,
@@ -1157,12 +1156,12 @@ namespace Il2Native.Logic
                 typeResolver);
         }
 
-        ////private static IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
+        ////private IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
         ////{
         ////    return ilReader.CompileSourceWithRoslyn(assemblyName, Resources.NativeType).First(t => !t.IsModule);
         ////}
 
-        private static bool CheckFilter(string[] filters, IType type, IDictionary<string, IType> allTypes)
+        private bool CheckFilter(string[] filters, IType type, IDictionary<string, IType> allTypes)
         {
             if (allTypes != null && !type.IsModule && !type.IsPrivateImplementationDetails)
             {
@@ -1220,7 +1219,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> FindUsedTypes(IEnumerable<IType> typesIn, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
+        private IList<IType> FindUsedTypes(IEnumerable<IType> typesIn, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
         {
             var types = typesIn.ToList();
             var usedTypes = new NamespaceContainer<IType>();
@@ -1278,7 +1277,7 @@ namespace Il2Native.Logic
             return list;
         }
 
-        private static void AddUsedMethodsForType(ReadingTypesContext readingTypesContext, ITypeResolver typeResolver, IType type)
+        private void AddUsedMethodsForType(ReadingTypesContext readingTypesContext, ITypeResolver typeResolver, IType type)
         {
             readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedNewMethod(type, typeResolver), null));
             readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedInitMethod(type, typeResolver), null));
@@ -1286,12 +1285,12 @@ namespace Il2Native.Logic
             AddUsedVirtualTableImplementationForType(readingTypesContext, type);
         }
 
-        private static void AddUsedVirtualTableImplementationForType(ReadingTypesContext readingTypesContext, IType type)
+        private void AddUsedVirtualTableImplementationForType(ReadingTypesContext readingTypesContext, IType type)
         {
             readingTypesContext.UsedVirtualTableImplementationTypes.Add(type.ToVirtualTableImplementation());
         }
 
-        private static void FindAllGenericVirtualMethodsAndGenericInterfaceMethods(
+        private void FindAllGenericVirtualMethodsAndGenericInterfaceMethods(
             IList<IType> allTypes, ReadingTypesContext readingTypesContext, NamespaceContainer<IType> usedTypes)
         {
             var genericMethodSpecializations = 0;
@@ -1319,7 +1318,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static List<IType> ReorderTypesByUsage(ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes, string assemblyQualifiedName)
+        private List<IType> ReorderTypesByUsage(ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes, string assemblyQualifiedName)
         {
             var list = new List<IType>();
             var usedTypesForOrder = new NamespaceContainer<IType>();
@@ -1331,7 +1330,7 @@ namespace Il2Native.Logic
             return list;
         }
 
-        private static void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
+        private void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
         {
             if (type == null || type.IsPointer || type.IsByRef || ((assemblyQualifiedName != null && type.AssemblyQualifiedName != assemblyQualifiedName) && !type.IsGenericOrArray()) || usedTypes.Contains(type))
             {
@@ -1368,7 +1367,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WritingDeclarations(
+        private void WritingDeclarations(
             IlReader ilReader,
             ICodeWriter codeHeaderWriter,
             ReadTypesContext readTypes)
@@ -1409,7 +1408,7 @@ namespace Il2Native.Logic
             codeHeaderWriter.Close();
         }
 
-        private static void WritingDefinitions(
+        private void WritingDefinitions(
             IlReader ilReader,
             ICodeWriter codeWriter,
             ReadTypesContext readTypes)
@@ -1451,7 +1450,7 @@ namespace Il2Native.Logic
             codeWriter.Close();
         }
 
-        private static void WriteBulkOfMethod(ICodeWriter codeWriter, IEnumerable<IMethod> methods)
+        private void WriteBulkOfMethod(ICodeWriter codeWriter, IEnumerable<IMethod> methods)
         {
             foreach (var calledMethod in methods)
             {
@@ -1459,7 +1458,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteBulkOfVirtualTableImplementation(ICodeWriter codeWriter, IEnumerable<IType> virtualTableImplementations)
+        private void WriteBulkOfVirtualTableImplementation(ICodeWriter codeWriter, IEnumerable<IType> virtualTableImplementations)
         {
             foreach (var virtualTableImplementation in virtualTableImplementations)
             {
@@ -1469,7 +1468,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteBulkOfStaticFields(ICodeWriter codeWriter, IEnumerable<IField> staticFields)
+        private void WriteBulkOfStaticFields(ICodeWriter codeWriter, IEnumerable<IField> staticFields)
         {
             foreach (var staticField in staticFields)
             {
@@ -1477,7 +1476,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteSinleMethodDefinition(ICodeWriter codeWriter, IMethod calledMethod)
+        private void WriteSinleMethodDefinition(ICodeWriter codeWriter, IMethod calledMethod)
         {
             Debug.Assert(!calledMethod.IsGenericMethodDefinition, "Method Definition is not allowed here");
 
@@ -1509,7 +1508,7 @@ namespace Il2Native.Logic
                 genericMethodContext);
         }
 
-        private static void WriteTypesWithGenericsStep(
+        private void WriteTypesWithGenericsStep(
             ICodeWriter codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode step)
@@ -1525,7 +1524,7 @@ namespace Il2Native.Logic
                 step);
         }
 
-        private static void WriteLeftGenericMethodsStep(
+        private void WriteLeftGenericMethodsStep(
             ICodeWriter codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode step)
