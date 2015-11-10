@@ -25,7 +25,7 @@
         private const string Location = "location1";
         private const string Value = "_value";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             yield return GetExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
             yield return GetExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);

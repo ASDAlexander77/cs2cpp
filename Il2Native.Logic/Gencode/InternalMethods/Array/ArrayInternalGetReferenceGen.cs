@@ -11,7 +11,7 @@
     {
         public static readonly string Name = "Void System.Array.InternalGetReference(Void*, Int32, Int32*)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var codeList = new IlCodeBuilder();
 

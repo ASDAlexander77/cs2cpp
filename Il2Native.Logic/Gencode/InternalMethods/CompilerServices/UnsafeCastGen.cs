@@ -23,7 +23,7 @@
             Code.Ret
         };
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             // Registering UnsafeCastGen
             var tokenResolutions = new List<object>();

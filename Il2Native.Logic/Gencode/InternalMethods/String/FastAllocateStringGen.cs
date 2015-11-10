@@ -11,7 +11,7 @@
     {
         public static readonly string Name = "System.String System.String.FastAllocateString(Int32)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var codeBuilder = new IlCodeBuilder();
             typeResolver.GetNewMethod(codeBuilder, typeResolver.System.System_String, enableStringFastAllocation: true);

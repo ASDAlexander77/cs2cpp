@@ -11,7 +11,7 @@
     {
         public static readonly string Name = "System.Object System.TypedReference.InternalToObject(Void*)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var codeList = new IlCodeBuilder();
 

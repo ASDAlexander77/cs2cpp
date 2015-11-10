@@ -9,7 +9,7 @@
     {
         public static readonly string Name = "System.Type[] System.RuntimeTypeHandle.GetInterfaces(System.RuntimeType)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             // TODO: finish it
 

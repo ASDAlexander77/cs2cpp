@@ -12,7 +12,7 @@
     {
         public static readonly string Name = "System.AppDomain System.AppDomain.CreateDomain(System.String)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var codeBuilder = new IlCodeBuilder();
 

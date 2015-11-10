@@ -28,7 +28,7 @@
         private const string Value = "_value";
         private const string Comparand = "comparand";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             yield return GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
             yield return GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);

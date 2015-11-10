@@ -10,7 +10,7 @@
     {
         public static readonly string Name = "Boolean System.RuntimeTypeHandle.IsInterface(System.RuntimeType)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadArgument(0);

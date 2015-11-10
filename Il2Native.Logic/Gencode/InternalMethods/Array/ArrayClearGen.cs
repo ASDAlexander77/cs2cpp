@@ -49,7 +49,7 @@
             Code.Ret
         };
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
 

@@ -10,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.get_Length()";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
         {
             var codeList = new List<object>();
 
