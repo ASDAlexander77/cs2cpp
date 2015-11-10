@@ -1506,7 +1506,7 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes, IMethod method)
         {
             OpCodePart last = null;
-            if (method is IConstructor && method.IsStatic)
+            if ((method is IConstructor && method.IsStatic) || method.Name == ".cctor")
             {
                 var zeroOpCode = new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
                 last = BuildChain(last, zeroOpCode);
