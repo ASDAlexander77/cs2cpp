@@ -1340,7 +1340,8 @@ namespace Il2Native.Logic
             replace = false;
 
             // replvae Code.Ldsfld with calling method
-            if (opCode.ToCode() == Code.Ldsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            var name = method.Name;
+            if (opCode.ToCode() == Code.Ldsfld && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
                 if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
@@ -1357,10 +1358,13 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Ldsflda 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) 
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
@@ -1374,10 +1378,13 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Stsfld 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) 
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails 
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
