@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -23,17 +25,17 @@
         private const string Location = "location1";
         private const string Value = "_value";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
-            GetExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
-            GetExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
-            GetExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
-            GetExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
-            GetExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
-            GetExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
+            yield return GetExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
+            yield return GetExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
+            yield return GetExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
+            yield return GetExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
+            yield return GetExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
+            yield return GetExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
 
             var method = typeResolver.ResolveType("System.Threading.Interlocked").GetMethodsByMetadataName("Exchange`1", typeResolver).First();
-            GetExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
+            yield return GetExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
         }
 
         public static IlCodeBuilder GetExchangeForType(IType parameterType, ITypeResolver typeResolver)

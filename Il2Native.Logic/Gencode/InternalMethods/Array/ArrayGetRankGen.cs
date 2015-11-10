@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -9,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.get_Rank()";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var codeList = new List<object>();
 
@@ -33,7 +34,7 @@
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, typeResolver, codeList.ToArray(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.ToArray(), tokenResolutions, locals, parameters);
         }
     }
 }

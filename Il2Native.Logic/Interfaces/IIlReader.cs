@@ -31,10 +31,6 @@
 
         /// <summary>
         /// </summary>
-        IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName { get; }
-
-        /// <summary>
-        /// </summary>
         ISet<MethodKey> CalledMethods { get; set; }
 
         /// <summary>

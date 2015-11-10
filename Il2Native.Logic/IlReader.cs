@@ -44,8 +44,6 @@ namespace Il2Native.Logic
         /// </summary>
         private static readonly OpCode[] OpCodesMap = new OpCode[256];
 
-        public readonly IDictionary<string, Func<IMethod, IMethod>> methodsByFullName = new SortedDictionary<string, Func<IMethod, IMethod>>();
-
         /// <summary>
         /// </summary>
         private ISet<MethodKey> _calledMethods;
@@ -384,16 +382,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName
-        {
-            get
-            {
-                return this.methodsByFullName;
-            }
-        }
 
         /// <summary>
         /// </summary>

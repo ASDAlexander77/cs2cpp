@@ -1,10 +1,15 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.ModuleHandle
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     public static class GetModuleTypeGen
     {
         public static readonly string Name = "Void System.ModuleHandle.GetModuleType(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -12,7 +17,7 @@
             ilCodeBuilder.LoadNull();
             ilCodeBuilder.Return();
 
-            ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

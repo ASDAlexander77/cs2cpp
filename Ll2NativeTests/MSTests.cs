@@ -964,6 +964,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             CompilerHelper.CompactMode = true;
             CompilerHelper.Stubs = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
+            CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
         /// <summary>

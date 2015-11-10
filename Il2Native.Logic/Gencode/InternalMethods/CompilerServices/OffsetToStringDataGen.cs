@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -11,7 +12,7 @@
     {
         public static readonly string Name = "Int32 System.Runtime.CompilerServices.RuntimeHelpers.get_OffsetToStringData()";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var codeList = new List<object>();
             codeList.Add(Code.Ldnull);
@@ -29,7 +30,7 @@
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, typeResolver, codeList.ToArray(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.ToArray(), tokenResolutions, locals, parameters);
         }
     }
 }

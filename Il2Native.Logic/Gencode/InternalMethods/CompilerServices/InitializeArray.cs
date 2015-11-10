@@ -1,12 +1,17 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     public static class InitializeArrayGen
     {
         public static readonly string Name = "Void System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(System.Array, System.RuntimeFieldHandle)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -89,7 +94,7 @@
 
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

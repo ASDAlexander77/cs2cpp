@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
 
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -26,18 +28,18 @@
         private const string Value = "_value";
         private const string Comparand = "comparand";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
-            GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
-            GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
-            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
-            GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
-            GetCompareExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
-            GetCompareExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
-            GetCompareExchangeForTypeWithBool(typeResolver.System.System_Int32, typeResolver).Register(Name32Bool, typeResolver);
+            yield return GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
+            yield return GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
+            yield return GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
+            yield return GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
+            yield return GetCompareExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
+            yield return GetCompareExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
+            yield return GetCompareExchangeForTypeWithBool(typeResolver.System.System_Int32, typeResolver).Register(Name32Bool, typeResolver);
 
             var method = typeResolver.ResolveType("System.Threading.Interlocked").GetMethodsByMetadataName("CompareExchange`1", typeResolver).First();
-            GetCompareExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
+            yield return GetCompareExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
         }
 
         public static IlCodeBuilder GetCompareExchangeForType(IType parameterType, ITypeResolver typeResolver)

@@ -1,5 +1,10 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     using SynthesizedMethods;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
@@ -7,7 +12,7 @@
     {
         public static readonly string Name = "System.AppDomain System.AppDomain.CreateDomain(System.String)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -23,7 +28,7 @@
             codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
             codeBuilder.Add(Code.Ret);
 
-            codeBuilder.Register(Name, typeResolver);
+            yield return codeBuilder.Register(Name, typeResolver);
         }
     }
 }

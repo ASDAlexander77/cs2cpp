@@ -1,10 +1,15 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.RuntimeTypeHandler
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     public static class GetAssemblyGen
     {
         public static readonly string Name = "System.Reflection.RuntimeAssembly System.RuntimeTypeHandle.GetAssembly(System.RuntimeType)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -13,7 +18,7 @@
             ilCodeBuilder.LoadToken(runtimeModuleType.GetFullyDefinedRefereneForStaticClass(RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, typeResolver));
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

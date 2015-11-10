@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.RuntimeTypeHandler
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -7,8 +9,8 @@
     public static class GetGCHandleGen
     {
         public static readonly string Name = "System.IntPtr System.RuntimeTypeHandle.GetGCHandle(System.RuntimeTypeHandle, System.Runtime.InteropServices.GCHandleType)";
-        
-        public static void Register(ITypeResolver typeResolver)
+
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -25,7 +27,7 @@
 
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

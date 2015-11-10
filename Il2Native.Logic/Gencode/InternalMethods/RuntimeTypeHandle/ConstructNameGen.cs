@@ -1,12 +1,15 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.RuntimeTypeHandler
 {
+    using System;
+    using System.Collections.Generic;
+
     using PEAssemblyReader;
 
     public static class ConstructNameGen
     {
         public static readonly string Name = "Void System.RuntimeTypeHandle.ConstructName(System.RuntimeTypeHandle, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)";
-        
-        public static void Register(ITypeResolver typeResolver)
+
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var runtimeType = typeResolver.System.System_RuntimeType;
 
@@ -37,7 +40,7 @@
             ilCodeBuilder.SaveIndirect(typeResolver.System.System_String, typeResolver);
             ilCodeBuilder.Return();
 
-            ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, typeResolver);
         }
     }
 }

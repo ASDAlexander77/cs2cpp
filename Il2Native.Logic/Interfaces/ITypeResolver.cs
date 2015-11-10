@@ -1,5 +1,8 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
+    using System.Collections.Generic;
+
     using PEAssemblyReader;
 
     public interface ITypeResolver
@@ -7,6 +10,8 @@
         SystemTypes System { get; }
 
         IIlReader IlReader { get; }
+
+        IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName { get; }
 
         // TODO: should be in ICodeWriter
         bool GcSupport { get; }

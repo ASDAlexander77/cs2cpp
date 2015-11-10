@@ -13,15 +13,6 @@
 
     public static class MethodBodyBank
     {
-        private static bool initialized = false;
-
-        private static readonly object Locker = new object();
-
-        public static void Reset()
-        {
-            initialized = false;
-        }
-
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
             if (method == null)
@@ -29,22 +20,8 @@
                 return null;
             }
 
-            if (!initialized)
-            {
-                lock (Locker)
-                {
-                    // we double check to filter threads waiting on 'lock'
-                    if (!initialized)
-                    {
-                        typeResolver.IlReader.MethodsByFullName.Clear();
-                        RegisterAll(typeResolver);
-                        initialized = true;
-                    }
-                }
-            }
-
             Func<IMethod, IMethod> methodFactory;
-            if (typeResolver.IlReader.MethodsByFullName.TryGetValue(method.ToString(), out methodFactory))
+            if (typeResolver.MethodsByFullName.TryGetValue(method.ToString(), out methodFactory))
             {
                 var newMethod = methodFactory.Invoke(method);
                 if (newMethod != null)
@@ -119,94 +96,98 @@
         }
 
         [Obsolete]
-        public static void Register(
+        public static Tuple<string, Func<IMethod, IMethod>> Register(
             string methodFullName,
-            ITypeResolver typeResolver,
             object[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
             IList<IParameter> parameters)
         {
-            Register(methodFullName, typeResolver, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
+            return new Tuple<string, Func<IMethod, IMethod>>(methodFullName, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
         }
 
-        public static void Register(
+        public static Tuple<string, Func<IMethod, IMethod>> Register(
             string methodFullName,
-            ITypeResolver typeResolver,
             byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
             IList<IParameter> parameters,
             IExceptionHandlingClause[] exceptionHandlingClause = null)
         {
-            Register(methodFullName, typeResolver, m => GetMethodDecorator(
-                m, code, tokenResolutions, locals, parameters, exceptionHandlingClause ?? new IExceptionHandlingClause[0]));
+            return new Tuple<string, Func<IMethod, IMethod>>(
+                methodFullName,
+                m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters, exceptionHandlingClause ?? new IExceptionHandlingClause[0]));
         }
 
-        public static void Register(string methodFullName, ITypeResolver typeResolver, Func<IMethod, IMethod> func)
+        public static void RegisterAll(IDictionary<string, Func<IMethod, IMethod>> methodsByFullName)
         {
-            Debug.Assert(!typeResolver.IlReader.MethodsByFullName.ContainsKey(methodFullName), "Method already registered");
-
-            typeResolver.IlReader.MethodsByFullName[methodFullName] = func;
         }
 
-        private static void RegisterAll(ITypeResolver typeResolver)
+        public static void RegisterInto(this IEnumerable<Tuple<string, Func<IMethod, IMethod>>> methods, IDictionary<string, Func<IMethod, IMethod>> methodsByFullName)
+        {
+            foreach (var method in methods)
+            {
+                methodsByFullName[method.Item1] = method.Item2;
+            }    
+        }
+
+        public static void RegisterAll(ITypeResolver typeResolver, IDictionary<string, Func<IMethod, IMethod>> methodsByFullName)
         {
             // Object
-            GetHashCodeGen.Register(typeResolver);
-            EqualsGen.Register(typeResolver);
-            MemberwiseCloneGen.Register(typeResolver);
-            ObjectGetTypeGen.Register(typeResolver);
+            GetHashCodeGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            EqualsGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            MemberwiseCloneGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ObjectGetTypeGen.Register(typeResolver).RegisterInto(methodsByFullName);
             
             // Array
-            ArrayCopyGen.Register(typeResolver);
-            ArrayClearGen.Register(typeResolver);
-            ArrayGetLengthGen.Register(typeResolver);
-            ArrayGetRankGen.Register(typeResolver);
-            ArrayGetLowerBoundGen.Register(typeResolver);
-            ArrayGetUpperBoundGen.Register(typeResolver);
-            ArrayGetLengthDimGen.Register(typeResolver);
-            ArrayInternalGetReferenceGen.Register(typeResolver);
-            ArrayInternalSetValueGen.Register(typeResolver);
+            ArrayCopyGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayClearGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayGetLengthGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayGetRankGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayGetLowerBoundGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayGetUpperBoundGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayGetLengthDimGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayInternalGetReferenceGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ArrayInternalSetValueGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // String
-            FastAllocateStringGen.Register(typeResolver);
+            FastAllocateStringGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // TypedReference
-            TypedReferenceInternalToObjectGen.Register(typeResolver);
+            TypedReferenceInternalToObjectGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // Jit Helpers
-            UnsafeCastGen.Register(typeResolver);
-            UnsafeCastToStackPointerGen.Register(typeResolver);
+            UnsafeCastGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            UnsafeCastToStackPointerGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // Runtime helpers
-            OffsetToStringDataGen.Register(typeResolver);
-            InitializeArrayGen.Register(typeResolver);
+            OffsetToStringDataGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            InitializeArrayGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // Interlocked
-            ExchangeGen.Register(typeResolver);
-            CompareExchangeGen.Register(typeResolver);
+            ExchangeGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            CompareExchangeGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // AppDomain
-            CreateDomainGen.Register(typeResolver);
+            CreateDomainGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // RuntimeTypeHandler
-            IsInterfaceGen.Register(typeResolver);
-            GetBaseTypeGen.Register(typeResolver);
-            GetElementTypeGen.Register(typeResolver);
-            GetGCHandleGen.Register(typeResolver);
-            GetModuleGen.Register(typeResolver);
-            GetAssemblyGen.Register(typeResolver);
-            ConstructNameGen.Register(typeResolver);
-            IsGenericVariableGen.Register(typeResolver);
-            GetCorElementTypeGen.Register(typeResolver);
-            GetInterfacesGen.Register(typeResolver);
-            HasInstantiationGen.Register(typeResolver);
-            IsGenericTypeDefinitionGen.Register(typeResolver);
-            ContainsGenericVariablesGen.Register(typeResolver);
+            IsInterfaceGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetBaseTypeGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetElementTypeGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetGCHandleGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetModuleGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetAssemblyGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ConstructNameGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            IsGenericVariableGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetCorElementTypeGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            GetInterfacesGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            HasInstantiationGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            IsGenericTypeDefinitionGen.Register(typeResolver).RegisterInto(methodsByFullName);
+            ContainsGenericVariablesGen.Register(typeResolver).RegisterInto(methodsByFullName);
 
             // ModuleHandle
-            GetModuleTypeGen.Register(typeResolver);
+            GetModuleTypeGen.Register(typeResolver).RegisterInto(methodsByFullName);
         }
 
         [Obsolete]

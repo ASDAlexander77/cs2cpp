@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -9,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.GetLowerBound(Int32)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var codeList = new IlCodeBuilder();
 
@@ -61,7 +62,7 @@
             var parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_Int32.ToParameter("array"));
 
-            MethodBodyBank.Register(Name, typeResolver, codeList.GetCode(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

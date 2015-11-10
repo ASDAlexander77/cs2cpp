@@ -35,6 +35,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly Lazy<IDictionary<string, Func<IMethod, IMethod>>> lazyMethodsByFullName;
+
+        /// <summary>
+        /// </summary>
         protected readonly StackBranches Stacks = new StackBranches();
 
         /// <summary>
@@ -46,6 +50,12 @@ namespace Il2Native.Logic
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressEnd = new SortedDictionary<int, OpCodePart>();
+            this.lazyMethodsByFullName = new Lazy<IDictionary<string, Func<IMethod, IMethod>>>(() =>
+                {
+                    var d = new SortedDictionary<string, Func<IMethod, IMethod>>();
+                    MethodBodyBank.RegisterAll(this, d);
+                    return d;
+                });
         }
 
         /// <summary>
@@ -124,6 +134,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName
+        {
+            get
+            {
+                return this.lazyMethodsByFullName.Value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         protected IExceptionHandlingClause[] ExceptionHandlingClauses { get; private set; }
 
         /// <summary>
@@ -153,12 +173,11 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-        
+
         public void Initialize(IType type)
         {
             Debug.Assert(type != null, "You should provide type here");
 
-            MethodBodyBank.Reset();
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
 

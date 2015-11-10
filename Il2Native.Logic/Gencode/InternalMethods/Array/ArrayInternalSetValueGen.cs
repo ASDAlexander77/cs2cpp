@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -10,7 +11,7 @@
     {
         public static readonly string Name = "Void System.Array.InternalSetValue(Void*, System.Object)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             var codeList = new IlCodeBuilder();
 
@@ -262,7 +263,7 @@
             parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("ref"));
             parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
 
-            MethodBodyBank.Register(Name, typeResolver, codeList.GetCode(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

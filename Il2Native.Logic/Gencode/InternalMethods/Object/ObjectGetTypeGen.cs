@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -20,7 +21,7 @@
             Code.Ret
         };
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Register(ITypeResolver typeResolver)
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
@@ -35,7 +36,7 @@
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, typeResolver, ByteCode, tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

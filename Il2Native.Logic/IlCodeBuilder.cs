@@ -60,9 +60,9 @@
             }
         }
 
-        public void Register(string fullMethodName, ITypeResolver typeResolver)
+        public Tuple<string, Func<IMethod, IMethod>> Register(string fullMethodName, ITypeResolver typeResolver)
         {
-            MethodBodyBank.Register(fullMethodName, typeResolver, this.GetCode(), _tokenResolutions, _locals, _parameters);
+            return MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
         public IMethod GetMethod(IMethod originalMethod)
