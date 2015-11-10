@@ -1341,10 +1341,13 @@ namespace Il2Native.Logic
 
             // replvae Code.Ldsfld with calling method
             var name = method.Name;
-            if (opCode.ToCode() == Code.Ldsfld && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Ldsfld 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix)
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
