@@ -765,7 +765,8 @@ namespace Il2Native.Logic
 
         private ICodeWriterEx GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
         {
-            var codeWriter = GetCWriter(settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
+            var codeWriter = GetCWriter(
+                settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
             codeWriter.IsHeader = isHeader;
             ilReader.CodeWriter = codeWriter;
             codeWriter.IlReader = ilReader;
