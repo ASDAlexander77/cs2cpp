@@ -1357,7 +1357,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
                 if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
@@ -1374,7 +1374,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
                 if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)

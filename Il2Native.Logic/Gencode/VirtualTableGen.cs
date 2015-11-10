@@ -503,7 +503,7 @@ namespace Il2Native.Logic.Gencode
 #if DEBUG
             var interfaceMethods = IlReader.Methods(@interface, codeWriter).Where(m => !m.IsStatic).ToList();
 #else
-            var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
+            var interfaceMethods = IlReader.Methods(@interface, codeWriter).Where(m => !m.IsStatic);
 #endif
 
             ResolveAndAppendInterfaceMethods(virtualTable, type, allExplicit, allPublicAndInternal, interfaceMethods, ignoreAssert, codeWriter);
