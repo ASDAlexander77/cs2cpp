@@ -27,12 +27,8 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class BaseWriter : ITypeResolver
+    public class BaseWriter : ICodeWriter
     {
-        /// <summary>
-        /// </summary>
-        protected readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
-
         /// <summary>
         /// </summary>
         public readonly Lazy<IDictionary<string, Func<IMethod, IMethod>>> lazyMethodsByFullName;
@@ -126,10 +122,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public SystemTypes System { get; protected set; }
-
-        /// <summary>
-        /// </summary>
         public IIlReader IlReader { get; set; }
 
         /// <summary>
@@ -174,15 +166,31 @@ namespace Il2Native.Logic
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
 
-        public void Initialize(IType type)
+        public SystemTypes System
         {
-            Debug.Assert(type != null, "You should provide type here");
+            get
+            {
+                return this.IlReader.System;
+            }
+        }
 
+        public ICodeWriter codeWriter
+        {
+            get
+            {
+                return this;
+            }
+        }
+
+        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
+        {
+            return this.IlReader.ResolveType(fullTypeName, genericContext);
+        }
+
+        public void Initialize()
+        {
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
-
-            this.Module = type.Module;
-            this.System = new SystemTypes(this.Module);
         }
 
         public virtual string GetAllocator(bool isAtomic, bool isBigObj, bool debugOrigignalRequired)
@@ -277,30 +285,6 @@ namespace Il2Native.Logic
             }
 
             this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="fullTypeName">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
-        {
-            if (genericContext != null && !genericContext.IsEmpty)
-            {
-                return this.Module.ResolveType(fullTypeName, genericContext);
-            }
-
-            IType result;
-            if (this.ResolvedTypes.TryGetValue(fullTypeName, out result))
-            {
-                return result;
-            }
-
-            result = this.Module.ResolveType(fullTypeName, null);
-            this.ResolvedTypes[result.FullName] = result;
-            return result;
         }
 
         public string GetStaticFieldName(IField field)
@@ -3111,15 +3095,14 @@ namespace Il2Native.Logic
             }
 
             var intOpBitSize = this.IntOpBitSize(opCodePart);
-            var typeResolver = (ITypeResolver)this;
             if (intOpBitSize == 1 || intOpBitSize >= (CWriter.PointerSize * 8))
             {
-                return uintRequired ? typeResolver.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
+                return uintRequired ? this.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
             }
 
             return uintRequired
-                ? typeResolver.GetUIntTypeByByteSize(CWriter.PointerSize)
-                : typeResolver.GetIntTypeByByteSize(CWriter.PointerSize);
+                ? this.GetUIntTypeByByteSize(CWriter.PointerSize)
+                : this.GetIntTypeByByteSize(CWriter.PointerSize);
         }
 
         /// <summary>

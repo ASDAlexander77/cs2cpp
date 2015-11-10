@@ -17,19 +17,19 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedUnboxMethod : SynthesizedIlCodeBuilderThisMethod
     {
-        private ITypeResolver typeResolver;
+        private ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
-        public SynthesizedUnboxMethod(IType type, ITypeResolver typeResolver)
+        public SynthesizedUnboxMethod(IType type, ICodeWriter codeWriter)
             : base(null, ".unbox", type, type)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return typeResolver.GetUnboxMethod(Type);
+            return ObjectInfrastructure.GetUnboxMethod(this.codeWriter, Type);
         }
     }
 }

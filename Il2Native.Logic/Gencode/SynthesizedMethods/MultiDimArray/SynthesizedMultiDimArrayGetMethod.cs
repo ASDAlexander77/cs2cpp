@@ -18,16 +18,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedMultiDimArrayGetMethod(IType type, ITypeResolver typeResolver)
+        public SynthesizedMultiDimArrayGetMethod(IType type, ICodeWriter codeWriter)
             : base("Get", type, type.GetElementType())
         {
             object[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            ArrayMultiDimensionGen.GetMultiDimensionArrayGet(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            ArrayMultiDimensionGen.GetMultiDimensionArrayGet(type, codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

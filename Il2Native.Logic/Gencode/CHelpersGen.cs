@@ -26,25 +26,25 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class CHelpersGen
     {
-        public static IType GetIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        public static IType GetIntTypeByBitSize(this ICodeWriter codeWriter, int bitSize)
         {
             IType toType = null;
             switch (bitSize)
             {
                 case 1:
-                    toType = llvmWriter.System.System_Boolean;
+                    toType = codeWriter.System.System_Boolean;
                     break;
                 case 8:
-                    toType = llvmWriter.System.System_SByte;
+                    toType = codeWriter.System.System_SByte;
                     break;
                 case 16:
-                    toType = llvmWriter.System.System_Int16;
+                    toType = codeWriter.System.System_Int16;
                     break;
                 case 32:
-                    toType = llvmWriter.System.System_Int32;
+                    toType = codeWriter.System.System_Int32;
                     break;
                 case 64:
-                    toType = llvmWriter.System.System_Int64;
+                    toType = codeWriter.System.System_Int64;
                     break;
             }
 
@@ -53,53 +53,53 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
         /// <param name="byteSize">
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetIntTypeByByteSize(this ITypeResolver typeResolver, int byteSize)
+        public static IType GetIntTypeByByteSize(this ICodeWriter codeWriter, int byteSize)
         {
             IType toType = null;
             switch (byteSize)
             {
                 case 1:
-                    toType = typeResolver.System.System_SByte;
+                    toType = codeWriter.System.System_SByte;
                     break;
                 case 2:
-                    toType = typeResolver.System.System_Int16;
+                    toType = codeWriter.System.System_Int16;
                     break;
                 case 4:
-                    toType = typeResolver.System.System_Int32;
+                    toType = codeWriter.System.System_Int32;
                     break;
                 case 8:
-                    toType = typeResolver.System.System_Int64;
+                    toType = codeWriter.System.System_Int64;
                     break;
             }
 
             return toType;
         }
 
-        public static IType GetUIntTypeByBitSize(this ITypeResolver llvmWriter, int bitSize)
+        public static IType GetUIntTypeByBitSize(this ICodeWriter codeWriter, int bitSize)
         {
             IType toType = null;
             switch (bitSize)
             {
                 case 1:
-                    toType = llvmWriter.System.System_Boolean;
+                    toType = codeWriter.System.System_Boolean;
                     break;
                 case 8:
-                    toType = llvmWriter.System.System_Byte;
+                    toType = codeWriter.System.System_Byte;
                     break;
                 case 16:
-                    toType = llvmWriter.System.System_UInt16;
+                    toType = codeWriter.System.System_UInt16;
                     break;
                 case 32:
-                    toType = llvmWriter.System.System_UInt32;
+                    toType = codeWriter.System.System_UInt32;
                     break;
                 case 64:
-                    toType = llvmWriter.System.System_UInt64;
+                    toType = codeWriter.System.System_UInt64;
                     break;
             }
 
@@ -108,28 +108,28 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="codeWriterer">
         /// </param>
         /// <param name="byteSize">
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetUIntTypeByByteSize(this ITypeResolver llvmWriter, int byteSize)
+        public static IType GetUIntTypeByByteSize(this ICodeWriter codeWriter, int byteSize)
         {
             IType toType = null;
             switch (byteSize)
             {
                 case 1:
-                    toType = llvmWriter.System.System_Byte;
+                    toType = codeWriter.System.System_Byte;
                     break;
                 case 2:
-                    toType = llvmWriter.System.System_UInt16;
+                    toType = codeWriter.System.System_UInt16;
                     break;
                 case 4:
-                    toType = llvmWriter.System.System_UInt32;
+                    toType = codeWriter.System.System_UInt32;
                     break;
                 case 8:
-                    toType = llvmWriter.System.System_UInt64;
+                    toType = codeWriter.System.System_UInt64;
                     break;
             }
 

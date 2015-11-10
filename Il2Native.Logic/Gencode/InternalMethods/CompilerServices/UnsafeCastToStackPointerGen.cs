@@ -23,16 +23,16 @@
             Code.Ret
         };
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering UnsafeCastToStackPointerGen
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
-                IlReader.Constructors(typeResolver.System.System_IntPtr, typeResolver)
+                IlReader.Constructors(codeWriter.System.System_IntPtr, codeWriter)
                         .First(
                             c =>
                             c.GetParameters().Count() == 1
-                            && c.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_Void.ToPointerType())));
+                            && c.GetParameters().First().ParameterType.TypeEquals(codeWriter.System.System_Void.ToPointerType())));
 
             var locals = new List<IType>();
 

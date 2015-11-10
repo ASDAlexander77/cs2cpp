@@ -31,7 +31,7 @@ namespace Il2Native.Logic.Gencode
 
         public static void StringAllocationSizeMethodBody(
             IlCodeBuilder codeList,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             IType stringType,
             IType charType,
             bool increaseSizeByOne = false)
@@ -65,13 +65,13 @@ namespace Il2Native.Logic.Gencode
             codeList.Add(Code.And);
 
             // parameters
-            codeList.Parameters.AddRange(GetParameters(typeResolver));
+            codeList.Parameters.AddRange(GetParameters(codeWriter));
         }
 
-        public static IList<IParameter> GetParameters(ITypeResolver typeResolver)
+        public static IList<IParameter> GetParameters(ICodeWriter codeWriter)
         {
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("size"));
             return parameters;
         }
 
@@ -88,7 +88,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <returns>
         /// </returns>
-        public static string GetStringPrefixDataType(ITypeResolver typeResolver)
+        public static string GetStringPrefixDataType(ICodeWriter codeWriter)
         {
             if (_stringPrefixDataType != null)
             {
@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 sb.Append("Byte* cond; ");
                 sb.Append("Byte* lock; ");
@@ -121,13 +121,13 @@ namespace Il2Native.Logic.Gencode
                 return _stringPrefixConstData;
             }
 
-            ITypeResolver typeResolver = cWriter;
+            ICodeWriter codeWriter = cWriter;
 
-            var stringSystemType = typeResolver.System.System_String;
+            var stringSystemType = codeWriter.System.System_String;
 
             var sb = new StringBuilder();
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 sb.Append("(Byte*) -1, ");
                 sb.Append("(Byte*) -1, ");
@@ -177,11 +177,11 @@ namespace Il2Native.Logic.Gencode
             return GetStringPrefixConstData(cWriter) + ", " + storeLength + ", ";
         }
 
-        public static IMethod GetCtorMethodByParameters(IType stringType, IEnumerable<IParameter> getParameters, ITypeResolver typeResolver)
+        public static IMethod GetCtorMethodByParameters(IType stringType, IEnumerable<IParameter> getParameters, ICodeWriter codeWriter)
         {
             var parameters = getParameters.ToArray();
             var method =
-                IlReader.Methods(stringType, typeResolver)
+                IlReader.Methods(stringType, codeWriter)
                         .FirstOrDefault(m => m.Name.StartsWith("Ctor") && m.GetParameters().ToArray().IsMatchingParams(parameters));
 
             Debug.Assert(method != null, "String corresponding Ctor can't be found");
@@ -189,9 +189,9 @@ namespace Il2Native.Logic.Gencode
             return method;
         }
 
-        public static void GetCtorSBytePtrStartLengthEncoding(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtrStartLengthEncoding(ICodeWriter codeWriter, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
-            IType systemString = typeResolver.System.System_String;
+            IType systemString = codeWriter.System.System_String;
 
             var codeBuilder = new IlCodeBuilder();
 
@@ -210,18 +210,18 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", codeWriter));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
-            parameters.Add(typeResolver.ResolveType("System.Text.Encoding").ToParameter("enc"));
+            parameters.Add(codeWriter.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("index"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("size"));
+            parameters.Add(codeWriter.ResolveType("System.Text.Encoding").ToParameter("enc"));
         }
 
-        public static void GetCtorSBytePtrStartLength(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtrStartLength(ICodeWriter codeWriter, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
-            IType systemString = typeResolver.System.System_String;
+            IType systemString = codeWriter.System.System_String;
 
             var codeBuilder = new IlCodeBuilder();
 
@@ -240,18 +240,18 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFirstMethodByName(codeWriter.ResolveType("System.Text.Encoding"), "get_ASCII", codeWriter));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
+            parameters.Add(codeWriter.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("index"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("size"));
         }
 
-        public static void GetCtorSBytePtr(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtr(ICodeWriter codeWriter, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
-            IType systemString = typeResolver.System.System_String;
+            IType systemString = codeWriter.System.System_String;
 
             var codeBuilder = new IlCodeBuilder();
 
@@ -270,15 +270,15 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
-            tokenResolutions.Add(systemString.GetFirstMethodByName("strlen", typeResolver));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", codeWriter));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("strlen", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFirstMethodByName(codeWriter.ResolveType("System.Text.Encoding"), "get_ASCII", codeWriter));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(codeWriter.System.System_SByte.ToPointerType().ToParameter("str"));
         }
 
-        public static void GetStrLen(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetStrLen(ICodeWriter codeWriter, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -315,12 +315,12 @@ namespace Il2Native.Logic.Gencode
             code = codeBuilder.GetCode();
 
             locals = new List<IType>();
-            locals.Add(typeResolver.System.System_SByte.ToPointerType());
+            locals.Add(codeWriter.System.System_SByte.ToPointerType());
 
             tokenResolutions = new List<object>();
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(codeWriter.System.System_SByte.ToPointerType().ToParameter("str"));
         }
     }
 }

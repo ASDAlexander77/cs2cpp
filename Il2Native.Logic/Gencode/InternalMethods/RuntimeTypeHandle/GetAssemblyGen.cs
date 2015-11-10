@@ -9,16 +9,16 @@
     {
         public static readonly string Name = "System.Reflection.RuntimeAssembly System.RuntimeTypeHandle.GetAssembly(System.RuntimeType)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
-            var runtimeModuleType = typeResolver.ResolveType("<Module>");
+            var runtimeModuleType = codeWriter.ResolveType("<Module>");
 
-            ilCodeBuilder.LoadToken(runtimeModuleType.GetFullyDefinedRefereneForStaticClass(RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, typeResolver));
+            ilCodeBuilder.LoadToken(RuntimeTypeInfoGen.GetFullyDefinedRefereneForStaticClass(runtimeModuleType, RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, codeWriter));
             ilCodeBuilder.Add(Code.Ret);
 
-            yield return ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }

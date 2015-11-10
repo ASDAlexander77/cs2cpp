@@ -31,7 +31,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class CWriter : BaseWriter, ICodeWriter
+    public class CWriter : BaseWriter, ICodeWriterEx
     {
         /// <summary>
         /// </summary>
@@ -86,8 +86,12 @@ namespace Il2Native.Logic
         /// </summary>
         private string outputFile;
 
+        /// <summary>
+        /// </summary>
         public DebugInfoGenerator debugInfoGenerator;
 
+        /// <summary>
+        /// </summary>
         private IList<IMethod> externDeclarations = new List<IMethod>();
 
         /// <summary>
@@ -1737,7 +1741,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var unsignedType = this.GetUIntTypeByBitSize(bits);
+            var unsignedType = CHelpersGen.GetUIntTypeByBitSize(this, bits);
             this.Output.Write("(");
             unsignedType.WriteTypePrefix(this);
             this.Output.Write(")");

@@ -9,7 +9,7 @@
     {
         public static readonly string Name = "Void System.ModuleHandle.GetModuleType(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -17,7 +17,7 @@
             ilCodeBuilder.LoadNull();
             ilCodeBuilder.Return();
 
-            yield return ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }

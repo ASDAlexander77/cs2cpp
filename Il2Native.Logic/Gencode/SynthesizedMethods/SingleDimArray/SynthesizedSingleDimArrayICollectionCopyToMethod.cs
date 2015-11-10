@@ -19,10 +19,10 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedSingleDimArrayICollectionCopyToMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("CopyTo", arrayType, typeResolver.System.System_Void)
+        public SynthesizedSingleDimArrayICollectionCopyToMethod(IType arrayType, ICodeWriter codeWriter)
+            : base("CopyTo", arrayType, codeWriter.System.System_Void)
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);
@@ -31,11 +31,11 @@
             codeList.LoadArgument(2);
             codeList.LoadArgument(0);
             codeList.Add(Code.Ldlen);
-            codeList.Call(arrayType.BaseType.GetMethodsByName("Copy", typeResolver).First(m => m.GetParameters().Count() == 5));
+            codeList.Call(arrayType.BaseType.GetMethodsByName("Copy", codeWriter).First(m => m.GetParameters().Count() == 5));
             codeList.Add(Code.Ret);
 
             codeList.Parameters.Add(arrayType.ToParameter("_array"));
-            codeList.Parameters.Add(typeResolver.System.System_Int32.ToParameter("arrayIndex"));
+            codeList.Parameters.Add(codeWriter.System.System_Int32.ToParameter("arrayIndex"));
 
             this._methodBody = codeList.GetMethodBody(null);
             this._parameters = codeList.GetParameters();

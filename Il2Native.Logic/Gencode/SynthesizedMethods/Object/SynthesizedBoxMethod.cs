@@ -21,22 +21,22 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedBoxMethod : SynthesizedIlCodeBuilderStaticMethod
     {
-        private ITypeResolver typeResolver;
+        private ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        public SynthesizedBoxMethod(IType type, ITypeResolver typeResolver)
-            : base(null, ".box", type, ReturningType(type, typeResolver))
+        public SynthesizedBoxMethod(IType type, ICodeWriter codeWriter)
+            : base(null, ".box", type, ReturningType(type, codeWriter))
         {
             Debug.Assert(!type.UseAsClass, "Normal type should be used");
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
-        private static IType ReturningType(IType type, ITypeResolver typeResolver)
+        private static IType ReturningType(IType type, ICodeWriter codeWriter)
         {
-            var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
+            var isNullable = type.TypeEquals(codeWriter.System.System_Nullable_T);
             var returningType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
             return returningType;
         }
@@ -45,12 +45,12 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             var parameters = base.GetParameters();
 
-            if (typeResolver.GcDebug)
+            if (this.codeWriter.GcDebug)
             {
                 // add file name and file
                 var list = parameters != null ? parameters.ToList() : new List<IParameter>();
-                list.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("__file"));
-                list.Add(typeResolver.System.System_Int32.ToParameter("__line"));
+                list.Add(this.codeWriter.System.System_SByte.ToPointerType().ToParameter("__file"));
+                list.Add(this.codeWriter.System.System_Int32.ToParameter("__line"));
                 return list;
             }
 
@@ -59,7 +59,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return typeResolver.GetBoxMethod(Type, false);
+            return ObjectInfrastructure.GetBoxMethod(this.codeWriter, Type, false);
         }
     }
 }

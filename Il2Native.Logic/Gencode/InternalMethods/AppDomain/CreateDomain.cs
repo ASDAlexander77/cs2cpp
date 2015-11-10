@@ -12,23 +12,23 @@
     {
         public static readonly string Name = "System.AppDomain System.AppDomain.CreateDomain(System.String)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeBuilder = new IlCodeBuilder();
 
-            var nativeRuntimeType = typeResolver.ResolveType("System.AppDomain");
+            var nativeRuntimeType = codeWriter.ResolveType("System.AppDomain");
             codeBuilder.LoadArgument(0);
 
-            if (typeResolver.GcDebug)
+            if (codeWriter.GcDebug)
             {
-                codeBuilder.LoadToken(new FullyDefinedReference("(SByte*)__FILE__", typeResolver.System.System_SByte.ToPointerType()));
-                codeBuilder.LoadToken(new FullyDefinedReference("__LINE__", typeResolver.System.System_Int32));
+                codeBuilder.LoadToken(new FullyDefinedReference("(SByte*)__FILE__", codeWriter.System.System_SByte.ToPointerType()));
+                codeBuilder.LoadToken(new FullyDefinedReference("__LINE__", codeWriter.System.System_Int32));
             }
 
-            codeBuilder.Call(nativeRuntimeType.GetFirstMethodByName(SynthesizedNewMethod.Name, typeResolver));
+            codeBuilder.Call(OpCodeExtensions.GetFirstMethodByName(nativeRuntimeType, SynthesizedNewMethod.Name, codeWriter));
             codeBuilder.Add(Code.Ret);
 
-            yield return codeBuilder.Register(Name, typeResolver);
+            yield return codeBuilder.Register(Name, codeWriter);
         }
     }
 }

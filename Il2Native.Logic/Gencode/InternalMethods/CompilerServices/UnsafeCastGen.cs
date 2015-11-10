@@ -23,11 +23,11 @@
             Code.Ret
         };
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering UnsafeCastGen
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typeResolver.System.System_Void.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Void.ToPointerType());
 
             var locals = new List<IType>();
 

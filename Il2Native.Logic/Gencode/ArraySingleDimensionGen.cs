@@ -30,12 +30,12 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         private static string _singleDimArrayPrefixNullConstData;
 
-        public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
+        public static IEnumerable<IField> GetFields(IType arrayType, ICodeWriter codeWriter)
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var shortType = typeResolver.System.System_Int16;
-            var intType = typeResolver.System.System_Int32;
+            var shortType = codeWriter.System.System_Int16;
+            var intType = codeWriter.System.System_Int32;
 
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
@@ -51,7 +51,7 @@ namespace Il2Native.Logic.Gencode
 
         public static void SingleDimArrayAllocationSizeMethodBody(
             IlCodeBuilder codeList,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             IType arrayType)
         {
             // add element size
@@ -92,12 +92,12 @@ namespace Il2Native.Logic.Gencode
             }
 
             // parameters
-            codeList.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
+            codeList.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, codeWriter));
         }
 
         public static void GetSingleDimensionArrayCtor(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out IlCodeBuilder codeBuilder)
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
@@ -108,10 +108,10 @@ namespace Il2Native.Logic.Gencode
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
 
-            var token1 = arrayType.GetFieldByName("rank", typeResolver);
-            var token2 = arrayType.GetFieldByName("typeCode", typeResolver);
-            var token3 = arrayType.GetFieldByName("elementSize", typeResolver);
-            var token4 = arrayType.GetFieldByName("length", typeResolver);
+            var token1 = arrayType.GetFieldByName("rank", codeWriter);
+            var token2 = arrayType.GetFieldByName("typeCode", codeWriter);
+            var token3 = arrayType.GetFieldByName("elementSize", codeWriter);
+            var token4 = arrayType.GetFieldByName("length", codeWriter);
 
             codeBuilder.LoadArgument(0);
             codeBuilder.Duplicate();
@@ -131,11 +131,11 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Return();
 
             // locals
-            codeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-            codeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            codeBuilder.Locals.Add(codeWriter.System.System_Int32.ToArrayType(1));
+            codeBuilder.Locals.Add(codeWriter.System.System_Int32.ToArrayType(1));
 
             // parameters
-            codeBuilder.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
+            codeBuilder.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, codeWriter));
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace Il2Native.Logic.Gencode
             _singleDimArrayPrefixNullConstData = null;
         }
 
-        public static string GetSingleDimArrayPrefixDataType(ITypeResolver typeResolver)
+        public static string GetSingleDimArrayPrefixDataType(ICodeWriter codeWriter)
         {
             if (_singleDimArrayPrefixDataType != null)
             {
@@ -156,7 +156,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 sb.Append("Byte* cond; ");
                 sb.Append("Byte* lock; ");
@@ -179,13 +179,13 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixNullConstData;
             }
 
-            ITypeResolver typeResolver = cWriter;
+            ICodeWriter codeWriter = cWriter;
 
-            var bytesArrayType = typeResolver.System.System_Byte.ToArrayType(1);
+            var bytesArrayType = codeWriter.System.System_Byte.ToArrayType(1);
 
             var sb = new StringBuilder();
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 sb.Append("(Byte*) -1, ");
                 sb.Append("(Byte*) -1, ");

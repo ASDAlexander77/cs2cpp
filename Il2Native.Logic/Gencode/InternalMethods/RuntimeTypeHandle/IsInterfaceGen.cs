@@ -10,11 +10,11 @@
     {
         public static readonly string Name = "Boolean System.RuntimeTypeHandle.IsInterface(System.RuntimeType)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadArgument(0);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName(RuntimeTypeInfoGen.TypeAttributesField, typeResolver));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(codeWriter.System.System_RuntimeType, RuntimeTypeInfoGen.TypeAttributesField, codeWriter));
             ilCodeBuilder.LoadConstant((int)TypeAttributes.Interface);
             ilCodeBuilder.Duplicate();
             ilCodeBuilder.Add(Code.And);
@@ -25,9 +25,9 @@
             ilCodeBuilder.LoadConstant(1);
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("type"));
+            ilCodeBuilder.Parameters.Add(codeWriter.System.System_RuntimeType.ToParameter("type"));
 
-            yield return ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }

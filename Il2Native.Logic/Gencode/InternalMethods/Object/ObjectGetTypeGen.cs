@@ -21,15 +21,15 @@
             Code.Ret
         };
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     SynthesizedGetTypeMethod.Name,
-                    typeResolver.System.System_Object,
-                    typeResolver.System.System_Type,
+                    codeWriter.System.System_Object,
+                    codeWriter.System.System_Type,
                     true));
 
             var locals = new List<IType>();

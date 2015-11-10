@@ -7,7 +7,7 @@
 
     using PEAssemblyReader;
 
-    public interface IIlReader
+    public interface IIlReader : ITypeResolver
     {
         /// <summary>
         /// </summary>

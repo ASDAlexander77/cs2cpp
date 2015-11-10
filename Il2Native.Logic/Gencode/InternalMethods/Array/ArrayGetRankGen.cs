@@ -10,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.get_Rank()";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new List<object>();
 
@@ -24,11 +24,11 @@
             codeList.AppendInt(Code.Ldfld, 2);
             codeList.Add(Code.Ret);
 
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
+            var arrayType = codeWriter.System.System_Byte.ToArrayType(1);
 
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(arrayType);
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "rank", codeWriter));
 
             var locals = new List<IType>();
 

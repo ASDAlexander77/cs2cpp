@@ -14,27 +14,27 @@
     {
         /// <summary>
         /// </summary>
-        private readonly ITypeResolver typeResolver;
+        private readonly ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedSingleDimArrayCtorMethod(IType arrayType, ITypeResolver typeResolver)
-            : base(null, ".ctor", arrayType, typeResolver.System.System_Void)
+        public SynthesizedSingleDimArrayCtorMethod(IType arrayType, ICodeWriter codeWriter)
+            : base(null, ".ctor", arrayType, codeWriter.System.System_Void)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
 
             IlCodeBuilder code;
-            ArraySingleDimensionGen.GetSingleDimensionArrayCtor(arrayType, typeResolver, out code);
+            ArraySingleDimensionGen.GetSingleDimensionArrayCtor(arrayType, codeWriter, out code);
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             IlCodeBuilder code;
-            ArraySingleDimensionGen.GetSingleDimensionArrayCtor(Type, typeResolver, out code);
+            ArraySingleDimensionGen.GetSingleDimensionArrayCtor(Type, this.codeWriter, out code);
             return code;
         }
     }

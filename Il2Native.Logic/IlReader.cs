@@ -46,6 +46,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
+
+        /// <summary>
+        /// </summary>
         private ISet<MethodKey> _calledMethods;
 
         /// <summary>
@@ -104,6 +108,14 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private ISet<IField> _usedStaticFields;
+
+        /// <summary>
+        /// </summary>
+        private Lazy<IModule> lasyModule;
+
+        /// <summary>
+        /// </summary>
+        private Lazy<SystemTypes> lasySystem;
 
         /// <summary>
         /// </summary>
@@ -341,6 +353,8 @@ namespace Il2Native.Logic
             this.ThreadStaticFields = new List<IField>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes().ToList());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true).ToList());
+            this.lasyModule = new Lazy<IModule>(() => this.Types().First(t => t.IsModule).Module);
+            this.lasySystem = new Lazy<SystemTypes>(() => new SystemTypes(this.Module));
         }
 
         /// <summary>
@@ -377,6 +391,26 @@ namespace Il2Native.Logic
                 StringSplitOptions.RemoveEmptyEntries);
 
             this.CompactMode = args != null && args.Contains("compact");
+        }
+
+        /// <summary>
+        /// </summary>
+        public IModule Module
+        {
+            get
+            {
+                return this.lasyModule.Value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public SystemTypes System 
+        {
+            get
+            {
+                return this.lasySystem.Value;
+            }
         }
 
         /// <summary>
@@ -445,7 +479,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ITypeResolver TypeResolver { get; set; }
+        public ICodeWriter CodeWriter { get; set; }
 
         /// <summary>
         /// </summary>
@@ -562,9 +596,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IConstructor> Constructors(IType type, ITypeResolver typeResolver)
+        public static IEnumerable<IConstructor> Constructors(IType type, ICodeWriter codeWriter)
         {
-            return Constructors(type, DefaultFlags, typeResolver);
+            return Constructors(type, DefaultFlags, codeWriter);
         }
 
         /// <summary>
@@ -575,7 +609,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ICodeWriter codeWriter)
         {
             Debug.Assert(type != null);
 
@@ -586,11 +620,11 @@ namespace Il2Native.Logic
 
             if (type.IsMultiArray)
             {
-                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
+                yield return new SynthesizedMultiDimArrayCtorMethod(type, codeWriter);
             }
             else if (type.IsArray)
             {
-                yield return new SynthesizedSingleDimArrayCtorMethod(type, typeResolver);
+                yield return new SynthesizedSingleDimArrayCtorMethod(type, codeWriter);
             }
         }
 
@@ -600,9 +634,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IField> Fields(IType type, ITypeResolver typeResolver)
+        public static IEnumerable<IField> Fields(IType type, ICodeWriter codeWriter)
         {
-            return Fields(type, DefaultFlags, typeResolver);
+            return Fields(type, DefaultFlags, codeWriter);
         }
 
         /// <summary>
@@ -613,7 +647,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IField> Fields(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        public static IEnumerable<IField> Fields(IType type, BindingFlags flags, ICodeWriter codeWriter)
         {
             Debug.Assert(type != null);
 
@@ -626,7 +660,7 @@ namespace Il2Native.Logic
             var normal = type.ToNormal();
             if (normal.IsEnum)
             {
-                foreach (var field in EnumGen.GetFields(normal, typeResolver))
+                foreach (var field in EnumGen.GetFields(normal, codeWriter))
                 {
                     yield return field;
                 }
@@ -634,7 +668,7 @@ namespace Il2Native.Logic
             else if (type.IsMultiArray)
             {
                 // append methods or MultiArray
-                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver))
+                foreach (var field in ArrayMultiDimensionGen.GetFields(type, codeWriter))
                 {
                     yield return field;
                 }
@@ -642,24 +676,24 @@ namespace Il2Native.Logic
             else if (type.IsArray)
             {
                 // append methods or MultiArray
-                foreach (var field in ArraySingleDimensionGen.GetFields(type, typeResolver))
+                foreach (var field in ArraySingleDimensionGen.GetFields(type, codeWriter))
                 {
                     yield return field;
                 }
             }
             else if (type.IsObject)
             {
-                var field = typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
+                var field = codeWriter.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
             }
-            else if (normal.TypeEquals(typeResolver.System.System_RuntimeFieldHandle))
+            else if (normal.TypeEquals(codeWriter.System.System_RuntimeFieldHandle))
             {
-                yield return typeResolver.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
-                yield return typeResolver.System.System_Int32.ToField(type, "fieldSize");
+                yield return codeWriter.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
+                yield return codeWriter.System.System_Int32.ToField(type, "fieldSize");
             }
-            else if (normal.TypeEquals(typeResolver.System.System_RuntimeType))
+            else if (normal.TypeEquals(codeWriter.System.System_RuntimeType))
             {
-                foreach (var runtimeTypeField in type.GetRuntimeTypeFields(typeResolver))
+                foreach (var runtimeTypeField in type.GetRuntimeTypeFields(codeWriter))
                 {
                     yield return runtimeTypeField;
                 }
@@ -669,37 +703,37 @@ namespace Il2Native.Logic
             {
                 var field = type.ToVirtualTable().ToField(type, CWriter.VTable, isVirtualTable: true);
                 yield return field;
-                var thisField = typeResolver.System.System_Void.ToPointerType().ToField(type, "__this");
+                var thisField = codeWriter.System.System_Void.ToPointerType().ToField(type, "__this");
                 yield return thisField;
             }
 
             if (!type.IsPrivateImplementationDetails)
             {
                 // special static field to store RuntimeType for a current type
-                var runtimeTypeStoreField = typeResolver.System.System_RuntimeType.ToField(
+                var runtimeTypeStoreField = codeWriter.System.System_RuntimeType.ToField(
                     type, RuntimeTypeInfoGen.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
                 yield return runtimeTypeStoreField;
             }
             else if (type.IsModule)
             {
                 // special static field to store RuntimeType for a current type
-                var runtimeModuleStoreField = typeResolver.ResolveType("System.Reflection.RuntimeModule").ToField(
+                var runtimeModuleStoreField = codeWriter.ResolveType("System.Reflection.RuntimeModule").ToField(
                     type, RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, isStatic: true, isStaticClassInitialization: true);
                 yield return runtimeModuleStoreField;
 
                 // special static field to store RuntimeType for a current type
-                var runtimeAssemblyStoreField = typeResolver.ResolveType("System.Reflection.RuntimeAssembly").ToField(
+                var runtimeAssemblyStoreField = codeWriter.ResolveType("System.Reflection.RuntimeAssembly").ToField(
                     type, RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, isStatic: true, isStaticClassInitialization: true);
                 yield return runtimeAssemblyStoreField;
             }
 
             if (type.IsStaticArrayInit)
             {
-                yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
+                yield return codeWriter.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
             }
 
             // to store info about initialized
-            var cctorCalled = typeResolver.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
+            var cctorCalled = codeWriter.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
             cctorCalled.ConstantValue = -1;
             yield return cctorCalled;
         }
@@ -710,9 +744,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
+        public static IEnumerable<IMethod> Methods(IType type, ICodeWriter codeWriter, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
         {
-            return Methods(type, DefaultFlags, typeResolver, excludeSpecializations, structObjectAdaptersOnly);
+            return Methods(type, DefaultFlags, codeWriter, excludeSpecializations, structObjectAdaptersOnly);
         }
 
         /// <summary>
@@ -723,7 +757,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
+        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ICodeWriter codeWriter, bool excludeSpecializations = false, bool structObjectAdaptersOnly = false)
         {
             Debug.Assert(type != null);
 
@@ -752,68 +786,68 @@ namespace Il2Native.Logic
 
                 if (!type.IsInterface)
                 {
-                    yield return new SynthesizedNewMethod(type, typeResolver);
-                    yield return new SynthesizedInitMethod(type, typeResolver);
+                    yield return new SynthesizedNewMethod(type, codeWriter);
+                    yield return new SynthesizedInitMethod(type, codeWriter);
 
-                    if (type.FindFinalizer(typeResolver) != null)
+                    if (type.FindFinalizer(codeWriter) != null)
                     {
-                        yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
+                        yield return new SynthesizedFinalizerWrapperMethod(type, codeWriter);
                     }
 
-                    yield return new SynthesizedGetSizeMethod(type, typeResolver);
-                    yield return new SynthesizedGetTypeMethod(type, typeResolver);
+                    yield return new SynthesizedGetSizeMethod(type, codeWriter);
+                    yield return new SynthesizedGetTypeMethod(type, codeWriter);
                 }
 
                 // we return it to avoid using empty interfaces (because in C++ struct{} has size 1 not 0)
-                yield return new SynthesizedResolveInterfaceMethod(type, typeResolver);
+                yield return new SynthesizedResolveInterfaceMethod(type, codeWriter);
 
                 // append internal methods
                 if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
                 {
-                    yield return new SynthesizedBoxMethod(type, typeResolver);
-                    yield return new SynthesizedUnboxMethod(type, typeResolver);
+                    yield return new SynthesizedBoxMethod(type, codeWriter);
+                    yield return new SynthesizedUnboxMethod(type, codeWriter);
                 }
 
                 if (normal.IsEnum)
                 {
-                    yield return new SynthesizedEnumGetHashCodeMethod(type, typeResolver);
-                    yield return new SynthesizedEnumToStringMethod(type, typeResolver);
+                    yield return new SynthesizedEnumGetHashCodeMethod(type, codeWriter);
+                    yield return new SynthesizedEnumToStringMethod(type, codeWriter);
                 }
 
                 // append methods or MultiArray
                 if (type.IsMultiArray)
                 {
-                    yield return new SynthesizedMultiDimArrayGetMethod(type, typeResolver);
-                    yield return new SynthesizedMultiDimArraySetMethod(type, typeResolver);
-                    yield return new SynthesizedMultiDimArrayAddressMethod(type, typeResolver);
+                    yield return new SynthesizedMultiDimArrayGetMethod(type, codeWriter);
+                    yield return new SynthesizedMultiDimArraySetMethod(type, codeWriter);
+                    yield return new SynthesizedMultiDimArrayAddressMethod(type, codeWriter);
                 }
                 else if (type.IsArray)
                 {
-                    yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, typeResolver);
-                    yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
-                    yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
-                    yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
-                    yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, typeResolver);
+                    yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, codeWriter);
+                    yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, codeWriter);
+                    yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, codeWriter);
+                    yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, codeWriter);
+                    yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, codeWriter);
                 }
                 else if (type.IsString)
                 {
-                    yield return new SynthesizedStrLenMethod(typeResolver);
-                    yield return new SynthesizedCtorSBytePtrMethod(typeResolver);
-                    yield return new SynthesizedCtorSBytePtrStartLengthMethod(typeResolver);
-                    yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(typeResolver);
+                    yield return new SynthesizedStrLenMethod(codeWriter);
+                    yield return new SynthesizedCtorSBytePtrMethod(codeWriter);
+                    yield return new SynthesizedCtorSBytePtrStartLengthMethod(codeWriter);
+                    yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(codeWriter);
                 }
                 else if (type.IsObject)
                 {
-                    yield return new SynthesizedDynamicCastMethod(typeResolver);
-                    yield return new SynthesizedCastMethod(typeResolver);
+                    yield return new SynthesizedDynamicCastMethod(codeWriter);
+                    yield return new SynthesizedCastMethod(codeWriter);
                 }
 
                 // return all get methods for static fields which are not primitive value type
-                foreach (var staticField in IlReader.Fields(type, typeResolver).Where(f => RequiredGetStaticMethod(f, typeResolver)))
+                foreach (var staticField in IlReader.Fields(type, codeWriter).Where(f => RequiredGetStaticMethod(f, codeWriter)))
                 {
-                    yield return new SynthesizedGetStaticMethod(type, staticField, typeResolver);
-                    yield return new SynthesizedGetStaticAddressMethod(type, staticField, typeResolver);
-                    yield return new SynthesizedSetStaticMethod(type, staticField, typeResolver);
+                    yield return new SynthesizedGetStaticMethod(type, staticField, codeWriter);
+                    yield return new SynthesizedGetStaticAddressMethod(type, staticField, codeWriter);
+                    yield return new SynthesizedSetStaticMethod(type, staticField, codeWriter);
                 }
             }
 
@@ -823,14 +857,14 @@ namespace Il2Native.Logic
                 {
                     foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
                     }
                 }
                 else
                 {
                     foreach (var method in type.GetMethods(flags).Where(m => m.ShouldHaveStructToObjectAdapter()))
                     {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
+                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
                     }
                 }
             }
@@ -842,7 +876,7 @@ namespace Il2Native.Logic
 
             // append specialized methods
             IEnumerable<IMethod> genMethodSpecializationForType = null;
-            if (typeResolver.IlReader.GenericMethodSpecializations == null || !typeResolver.IlReader.GenericMethodSpecializations.TryGetValue(normal, out genMethodSpecializationForType))
+            if (codeWriter.IlReader.GenericMethodSpecializations == null || !codeWriter.IlReader.GenericMethodSpecializations.TryGetValue(normal, out genMethodSpecializationForType))
             {
                 yield break;
             }
@@ -860,12 +894,12 @@ namespace Il2Native.Logic
             {
                 foreach (var method in genMethodSpecializationForType.Where(m => m.ShouldHaveStructToObjectAdapter()))
                 {
-                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, typeResolver);
+                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
                 }
             }
         }
 
-        private static bool RequiredGetStaticMethod(IField f, ITypeResolver typeResolver)
+        private static bool RequiredGetStaticMethod(IField f, ICodeWriter codeWriter)
         {
             if (f.IsStaticClassInitialization)
             {
@@ -874,10 +908,35 @@ namespace Il2Native.Logic
 
             if (f.IsConst)
             {
-                return f.FieldType.TypeEquals(typeResolver.System.System_Decimal);
+                return f.FieldType.TypeEquals(codeWriter.System.System_Decimal);
             }
 
             return f.IsStatic;
+        }
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="fullTypeName">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
+        {
+            if (genericContext != null && !genericContext.IsEmpty)
+            {
+                return this.Module.ResolveType(fullTypeName, genericContext);
+            }
+
+            IType result;
+            if (this.ResolvedTypes.TryGetValue(fullTypeName, out result))
+            {
+                return result;
+            }
+
+            result = this.Module.ResolveType(fullTypeName, null);
+            this.ResolvedTypes[result.FullName] = result;
+            return result;
         }
 
         public IEnumerable<string> References()
@@ -1138,14 +1197,14 @@ namespace Il2Native.Logic
                                 this.AddGenericSpecializedMethod(constructor, stackCall);
 
                                 this.AddArrayType(constructor.DeclaringType);
-                                this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.CodeWriter));
                                 this.AddCalledMethod(constructor);
                             }
                             else
                             {
-                                this.AddCalledMethod(StringGen.GetCtorMethodByParameters(constructor.DeclaringType, constructor.GetParameters(), this.TypeResolver));
+                                this.AddCalledMethod(StringGen.GetCtorMethodByParameters(constructor.DeclaringType, constructor.GetParameters(), this.CodeWriter));
                                 // TODO: it should be discovered from FastStringAlloc method, investigate why it is not
-                                this.AddCalledMethod(new SynthesizedInitMethod(constructor.DeclaringType, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedInitMethod(constructor.DeclaringType, this.CodeWriter));
                             }
 
                             yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
@@ -1178,12 +1237,12 @@ namespace Il2Native.Logic
 
                         if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
                         {
-                            this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.TypeResolver));
+                            this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.CodeWriter));
                         }
 
                         if (method.DeclaringType.IsValueType() && method.IsConstructor)
                         {
-                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
+                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.CodeWriter));
                         }
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
@@ -1202,9 +1261,8 @@ namespace Il2Native.Logic
 
                         this.AddCalledMethod(method);
 
-                        var intPtrConstructor = this.TypeResolver.System.System_IntPtr.FindConstructor(
-                            this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
-                        this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.TypeResolver));
+                        var intPtrConstructor = OpCodeExtensions.FindConstructor(this.CodeWriter.System.System_IntPtr, this.CodeWriter.System.System_Void.ToPointerType(), this.CodeWriter);
+                        this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.CodeWriter));
                         this.AddCalledMethod(intPtrConstructor);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
@@ -1227,7 +1285,7 @@ namespace Il2Native.Logic
 
                         if (code == Code.Ldsfld || code == Code.Ldsflda || code == Code.Stsfld)
                         {
-                            if (TypeResolver.MultiThreadingSupport)
+                            if (this.CodeWriter.MultiThreadingSupport)
                             {
                                 if (field.IsThreadStatic)
                                 {
@@ -1235,11 +1293,11 @@ namespace Il2Native.Logic
                                     {
                                         if (code == Code.Ldsfld)
                                         {
-                                            this.AddCalledMethod(new SynthesizedUnboxMethod(field.FieldType, this.TypeResolver));
+                                            this.AddCalledMethod(new SynthesizedUnboxMethod(field.FieldType, this.CodeWriter));
                                         }
                                         else if (code == Code.Stsfld)
                                         {
-                                            this.AddCalledMethod(new SynthesizedBoxMethod(field.FieldType, this.TypeResolver));
+                                            this.AddCalledMethod(new SynthesizedBoxMethod(field.FieldType, this.CodeWriter));
                                         }
                                     }
                                     else
@@ -1255,13 +1313,13 @@ namespace Il2Native.Logic
                         switch (code)
                         {
                             case Code.Ldsfld:
-                                this.AddCalledMethod(new SynthesizedGetStaticMethod(field.DeclaringType, field, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedGetStaticMethod(field.DeclaringType, field, this.CodeWriter));
                                 break;
                             case Code.Ldsflda:
-                                this.AddCalledMethod(new SynthesizedGetStaticAddressMethod(field.DeclaringType, field, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedGetStaticAddressMethod(field.DeclaringType, field, this.CodeWriter));
                                 break;
                             case Code.Stsfld:
-                                this.AddCalledMethod(new SynthesizedSetStaticMethod(field.DeclaringType, field, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedSetStaticMethod(field.DeclaringType, field, this.CodeWriter));
                                 break;
                         }
 
@@ -1297,7 +1355,7 @@ namespace Il2Native.Logic
                             if (constBytes != null)
                             {
                                 this.AddConstBytes(constBytes);
-                                this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
+                                this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
                             }
                             else
                             {
@@ -1369,7 +1427,7 @@ namespace Il2Native.Logic
                         {
                             if (type.IsValueType())
                             {
-                                this.AddCalledMethod(new SynthesizedInitMethod(type, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedInitMethod(type, this.CodeWriter));
                             }
                         }
 
@@ -1380,13 +1438,13 @@ namespace Il2Native.Logic
 
                             if (code == Code.Newarr)
                             {
-                                this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.TypeResolver));
+                                this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.CodeWriter));
                                 var constructorInfo =
-                                    Constructors(arrayType, this.TypeResolver)
+                                    Constructors(arrayType, this.CodeWriter)
                                         .FirstOrDefault(
                                             c =>
                                             c.GetParameters().Count() == 1
-                                            && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
+                                            && c.GetParameters().First().ParameterType.TypeEquals(this.CodeWriter.System.System_Int32));
                                 this.AddCalledMethod(constructorInfo);
                             }
                         }
@@ -1398,12 +1456,12 @@ namespace Il2Native.Logic
 
                         if (code == Code.Box && type.IsValueType())
                         {
-                            this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
+                            this.AddCalledMethod(new SynthesizedBoxMethod(type, this.CodeWriter));
                         }
 
                         if ((code == Code.Unbox || code == Code.Unbox_Any) && type.IsValueType())
                         {
-                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.TypeResolver));
+                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.CodeWriter));
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
@@ -1421,86 +1479,86 @@ namespace Il2Native.Logic
                         continue;
                     case Code.Ldlen:
 
-                        this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
 
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I:
-                        this.AddArrayType(this.TypeResolver.System.System_IntPtr.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_IntPtr.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I1:
-                        this.AddArrayType(this.TypeResolver.System.System_SByte.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_SByte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I2:
-                        this.AddArrayType(this.TypeResolver.System.System_Int16.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Int16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I4:
-                        this.AddArrayType(this.TypeResolver.System.System_Int32.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Int32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U1:
-                        this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U2:
-                        this.AddArrayType(this.TypeResolver.System.System_UInt16.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_UInt16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U4:
-                        this.AddArrayType(this.TypeResolver.System.System_UInt32.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_UInt32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_R4:
-                        this.AddArrayType(this.TypeResolver.System.System_Single.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Single.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_R8:
-                        this.AddArrayType(this.TypeResolver.System.System_Double.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Double.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I:
-                        this.AddArrayType(this.TypeResolver.System.System_IntPtr.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_IntPtr.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I1:
-                        this.AddArrayType(this.TypeResolver.System.System_SByte.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_SByte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I2:
-                        this.AddArrayType(this.TypeResolver.System.System_Int16.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Int16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I4:
 
-                        this.AddArrayType(this.TypeResolver.System.System_Int32.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Int32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R4:
 
-                        this.AddArrayType(this.TypeResolver.System.System_Single.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Single.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R8:
 
-                        this.AddArrayType(this.TypeResolver.System.System_Double.ToArrayType(1));
+                        this.AddArrayType(this.CodeWriter.System.System_Double.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
@@ -2095,7 +2153,7 @@ namespace Il2Native.Logic
                 this._usedStaticFields,
                 this._usedVirtualTableImplementationTypes,
                 stackCall,
-                this.TypeResolver);
+                this.CodeWriter);
 
             stackCall.Dequeue();
         }

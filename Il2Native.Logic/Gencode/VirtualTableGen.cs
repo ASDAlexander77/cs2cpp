@@ -48,24 +48,24 @@ namespace Il2Native.Logic.Gencode
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             IType thisType,
             IType @interface,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             var allExplicit = IlReader.Methods(
                 thisType.FindInterfaceOwner(@interface),
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver)
+                codeWriter)
                 .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
                 .Where(m => m.IsExplicitInterfaceImplementation).ToList();
 
             var allPublicAndInternal = IlReader.Methods(
                 thisType,
                 BindingFlags.FlattenHierarchy | BindingFlags.Instance,
-                typeResolver)
+                codeWriter)
                 .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
                 .Where(m => m.IsPublic || m.IsInternal).Reverse().ToList();
 
             // we need to use reverse to be able to select first possible method from direved class first
-            virtualTable.AddMethodsToVirtualInterfaceTable(thisType, @interface, allExplicit, allPublicAndInternal, typeResolver, thisType.IsArray);
+            virtualTable.AddMethodsToVirtualInterfaceTable(thisType, @interface, allExplicit, allPublicAndInternal, codeWriter, thisType.IsArray);
         }
 
         /// <summary>
@@ -79,11 +79,11 @@ namespace Il2Native.Logic.Gencode
         public static void BuildVirtualTable(
             this List<CWriter.Pair> virtualTable,
             IType thisType,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             if (thisType.BaseType != null)
             {
-                virtualTable.BuildVirtualTable(thisType.BaseType, typeResolver);
+                virtualTable.BuildVirtualTable(thisType.BaseType, codeWriter);
             }
 
             // add all interfaces
@@ -93,7 +93,7 @@ namespace Il2Native.Logic.Gencode
 
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethodItem in
-                IlReader.Methods(thisType, typeResolver)
+                IlReader.Methods(thisType, codeWriter)
                         .Where(m => !(m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter))
                         .Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
@@ -123,7 +123,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     // replace virtual/interface method with adapter
                     var adapterMethod =
-                        IlReader.Methods(thisType, typeResolver, structObjectAdaptersOnly: true)
+                        IlReader.Methods(thisType, codeWriter, structObjectAdaptersOnly: true)
                                 .FirstOrDefault(
                                     m =>
                                     m is IMethodExtraAttributes && ((IMethodExtraAttributes)m).IsStructObjectAdapter
@@ -167,7 +167,7 @@ namespace Il2Native.Logic.Gencode
         public static IEnumerable<CWriter.Pair> GetVirtualInterfaceTable(
             this IType thisType,
             IType @interface,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             List<CWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
 
@@ -178,7 +178,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualInterfaceTable = new List<CWriter.Pair<IMethod, IMethod>>();
-            virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface, typeResolver);
+            virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface, codeWriter);
 
             VirtualInterfaceTableByType[key] = virtualInterfaceTable;
 
@@ -191,7 +191,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<IMethod> GetVirtualInterfaceTableLayout(this IType @interface, ITypeResolver typeResolver)
+        public static List<IMethod> GetVirtualInterfaceTableLayout(this IType @interface, ICodeWriter codeWriter)
         {
             Debug.Assert(!@interface.SpecialUsage(), "normalize type before using it");
 
@@ -204,7 +204,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualInterfaceTableLayout = new List<IMethod>();
-            virtualInterfaceTableLayout.AddMethodsToVirtualInterfaceTableLayout(@interface, typeResolver);
+            virtualInterfaceTableLayout.AddMethodsToVirtualInterfaceTableLayout(@interface, codeWriter);
 
             VirtualInterfaceTableLayoutByType[key] = virtualInterfaceTableLayout;
 
@@ -242,13 +242,13 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="thisType">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
         /// <returns>
         /// </returns>
         public static IEnumerable<CWriter.Pair> GetVirtualTable(
             this IType thisType,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             List<CWriter.Pair> virtualTable;
 
@@ -258,7 +258,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualTable = new List<CWriter.Pair>();
-            virtualTable.BuildVirtualTable(thisType, typeResolver);
+            virtualTable.BuildVirtualTable(thisType, codeWriter);
 
 #if DEBUG
             if (!thisType.IsAbstract)
@@ -447,27 +447,27 @@ namespace Il2Native.Logic.Gencode
             writer.Write("}");
         }
 
-        public static bool HasVirtualMethodOrExplicitMethod(IType type, IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
+        public static bool HasVirtualMethodOrExplicitMethod(IType type, IType interfaceOwner, IType @interface, ICodeWriter codeWriter)
         {
             Debug.Assert(!type.IsInterface);
             Debug.Assert(!interfaceOwner.IsInterface);
             Debug.Assert(@interface.IsInterface);
 
-            return HasVirtualMethodInInterface(interfaceOwner, @interface, typeResolver) || HasExplicitMethod(type, typeResolver);
+            return HasVirtualMethodInInterface(interfaceOwner, @interface, codeWriter) || HasExplicitMethod(type, codeWriter);
         }
 
-        private static bool HasExplicitMethod(IType type, ITypeResolver typeResolver)
+        private static bool HasExplicitMethod(IType type, ICodeWriter codeWriter)
         {
             Debug.Assert(!type.IsInterface);
-            return IlReader.Methods(type, typeResolver).Any(m => m.IsExplicitInterfaceImplementation);
+            return IlReader.Methods(type, codeWriter).Any(m => m.IsExplicitInterfaceImplementation);
         }
 
-        private static bool HasVirtualMethodInInterface(IType interfaceOwner, IType @interface, ITypeResolver typeResolver)
+        private static bool HasVirtualMethodInInterface(IType interfaceOwner, IType @interface, ICodeWriter codeWriter)
         {
             Debug.Assert(!interfaceOwner.IsInterface);
             Debug.Assert(@interface.IsInterface);
 
-            return interfaceOwner.GetVirtualInterfaceTable(@interface, typeResolver)
+            return interfaceOwner.GetVirtualInterfaceTable(@interface, codeWriter)
                 .Where(m => m.Kind == CWriter.PairKind.Method)
                 .OfType<CWriter.Pair<IMethod, IMethod>>()
                 .Any(m => m.Value.IsMethodVirtual() || m.Value.IsExplicitInterfaceImplementation);
@@ -487,7 +487,7 @@ namespace Il2Native.Logic.Gencode
             IType @interface,
             IEnumerable<IMethod> allExplicit,
             IEnumerable<IMethod> allPublicAndInternal,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             bool ignoreAssert)
         {
             Debug.Assert(!type.IsInterface, "Interface is not expected");
@@ -496,20 +496,20 @@ namespace Il2Native.Logic.Gencode
             foreach (var baseInterface in @interface.GetInterfaces())
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(type, baseInterface, allExplicit, allPublicAndInternal, typeResolver, ignoreAssert);
+                virtualTable.AddMethodsToVirtualInterfaceTable(type, baseInterface, allExplicit, allPublicAndInternal, codeWriter, ignoreAssert);
             }
 
             // get all virtual methods in current type and replace or append
 #if DEBUG
-            var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic).ToList();
+            var interfaceMethods = IlReader.Methods(@interface, codeWriter).Where(m => !m.IsStatic).ToList();
 #else
             var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
 #endif
 
-            ResolveAndAppendInterfaceMethods(virtualTable, type, allExplicit, allPublicAndInternal, interfaceMethods, ignoreAssert, typeResolver);
+            ResolveAndAppendInterfaceMethods(virtualTable, type, allExplicit, allPublicAndInternal, interfaceMethods, ignoreAssert, codeWriter);
         }
 
-        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, IEnumerable<IMethod> allExplicit, IEnumerable<IMethod> allPublicAndInternal, IEnumerable<IMethod> interfaceMethods, bool ignoreAssert, ITypeResolver typeResolver)
+        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, IEnumerable<IMethod> allExplicit, IEnumerable<IMethod> allPublicAndInternal, IEnumerable<IMethod> interfaceMethods, bool ignoreAssert, ICodeWriter codeWriter)
         {
             Debug.Assert(!type.IsInterface, "Interface is not expected");
 
@@ -540,7 +540,7 @@ namespace Il2Native.Logic.Gencode
                 foreach (var interfaceMethod in list)
                 {
                     // replace virtual/interface method with adapter
-                    var adapterMethod = IlReader.Methods(type, typeResolver, structObjectAdaptersOnly: true)
+                    var adapterMethod = IlReader.Methods(type, codeWriter, structObjectAdaptersOnly: true)
                         .FirstOrDefault(m => m is IMethodExtraAttributes &&
                                     ((IMethodExtraAttributes)m).Original.Equals(interfaceMethod.Value));
 
@@ -562,19 +562,19 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="interface">
         /// </param>
-        private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface, ITypeResolver typeResolver)
+        private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface, ICodeWriter codeWriter)
         {
             var baseInterfaces = @interface.GetInterfaces();
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface, typeResolver);
+                virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface, codeWriter);
             }
 
             // get all virtual methods in current type and replace or append
             // if you have internal methods or fields you need to bypass it so for code protection with need to filter all methods by IsAbstract
-            virtualTable.AddRange(IlReader.Methods(@interface, typeResolver).Where(m => m.IsAbstract));
+            virtualTable.AddRange(IlReader.Methods(@interface, codeWriter).Where(m => m.IsAbstract));
         }
     }
 }

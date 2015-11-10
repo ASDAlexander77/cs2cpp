@@ -18,16 +18,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedEnumGetHashCodeMethod(IType type, ITypeResolver typeResolver)
-            : base("GetHashCode", type, typeResolver.System.System_Int32, isOverride: true)
+        public SynthesizedEnumGetHashCodeMethod(IType type, ICodeWriter codeWriter)
+            : base("GetHashCode", type, codeWriter.System.System_Int32, isOverride: true)
         {
             object[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            EnumGen.GetEnumGetHashCodeMethod(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            EnumGen.GetEnumGetHashCodeMethod(type, codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

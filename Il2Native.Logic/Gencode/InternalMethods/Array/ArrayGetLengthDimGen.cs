@@ -10,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.GetLength(Int32)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new IlCodeBuilder();
 
@@ -54,21 +54,21 @@
 
             codeList.Add(Code.Ret);
 
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
-            var arrayTypeMulti = typeResolver.System.System_Byte.ToArrayType(2);
+            var arrayType = codeWriter.System.System_Byte.ToArrayType(1);
+            var arrayTypeMulti = codeWriter.System.System_Byte.ToArrayType(2);
 
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(arrayType);
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("length", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "rank", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "length", codeWriter));
             tokenResolutions.Add(arrayTypeMulti);
-            tokenResolutions.Add(arrayTypeMulti.GetFieldByName("lengths", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayTypeMulti, "lengths", codeWriter));
 
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("array"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("array"));
 
             yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

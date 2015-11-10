@@ -26,7 +26,7 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private ICodeWriter _codeWriter;
+        private ICodeWriterEx _codeWriter;
 
         private bool concurrent;
 
@@ -89,8 +89,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null, string[] filter = null)
         {
-            _codeWriter = null;
-
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
 
             var ilReader = new IlReader(sources, args);
@@ -115,7 +113,7 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         public void WriteTypeFullDeclaration(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             IType type,
             IGenericContext genericContext,
             IEnumerable<IMethod> genericMethodSpecializatons,
@@ -144,7 +142,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
+        private void WriteTypeDefinition(ICodeWriterEx codeWriter, IType type, IGenericContext genericContext)
         {
             codeWriter.WriteTypeStart(type, genericContext);
 
@@ -187,7 +185,7 @@ namespace Il2Native.Logic
         /// <param name="processGenericMethodsOnly">
         /// </param>
         private void ConvertAllTypes(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
@@ -243,7 +241,7 @@ namespace Il2Native.Logic
         }
 
         private void ConvertAllRuntimeTypesForwardDeclaration(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             IEnumerable<IType> types)
         {
             foreach (var type in types)
@@ -262,7 +260,7 @@ namespace Il2Native.Logic
 
 
         private void ConvertAllRuntimeTypes(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             IEnumerable<IType> types)
         {
             foreach (var type in types)
@@ -279,7 +277,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void ConvertForwardTypeDeclaration(ICodeWriter codeWriter, IType type)
+        private void ConvertForwardTypeDeclaration(ICodeWriterEx codeWriter, IType type)
         {
             IType typeDefinition;
             IType typeSpecialization;
@@ -311,7 +309,7 @@ namespace Il2Native.Logic
         /// <param name="processGenericMethodsOnly">
         /// </param>
         private void ConvertTypeDeclaration(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
             bool processGenericMethodsOnly = false)
@@ -329,7 +327,7 @@ namespace Il2Native.Logic
         }
 
         private void ConvertTypeDefinition(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
             bool processGenericMethodsOnly = false,
@@ -456,7 +454,7 @@ namespace Il2Native.Logic
                 : null;
         }
 
-        private void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriter codeWriter, IType type)
+        private void ConvertRuntimeTypeInfoForwardDeclaration(ICodeWriterEx codeWriter, IType type)
         {
             var fields = IlReader.Fields(type, codeWriter);
             // fields
@@ -469,7 +467,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// to support using RuntimeType info to Generic Definitions and Pointers
         /// </summary>
-        private void ConvertRuntimeTypeInfo(ICodeWriter codeWriter, IType type)
+        private void ConvertRuntimeTypeInfo(ICodeWriterEx codeWriter, IType type)
         {
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer || compact, "This method is for Generic Definitions or pointers only as it should not be processed in normal way using ConvertType");
 
@@ -765,14 +763,14 @@ namespace Il2Native.Logic
             }
         }
 
-        private ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
+        private ICodeWriterEx GetCodeWriter(IlReader ilReader, Settings settings, bool isHeader = false)
         {
             var codeWriter = GetCWriter(settings.FileName, settings.FileExt, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
             codeWriter.IsHeader = isHeader;
-            ilReader.TypeResolver = codeWriter;
+            ilReader.CodeWriter = codeWriter;
             codeWriter.IlReader = ilReader;
             _codeWriter = codeWriter;
-            _codeWriter.Initialize(ilReader.Types().First(t => t.IsModule && t.AssemblyQualifiedName == ilReader.AssemblyQualifiedName));
+            _codeWriter.Initialize();
             return codeWriter;
         }
 
@@ -900,7 +898,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private ICodeWriter GetCWriter(
+        private ICodeWriterEx GetCWriter(
             string fileName,
             string fileExt,
             string sourceFilePath,
@@ -1072,7 +1070,7 @@ namespace Il2Native.Logic
 
             var types = typesToGet.ToList();
 
-            readTypesContext.UsedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.TypeResolver);
+            readTypesContext.UsedTypes = FindUsedTypes(types, allTypes, readingTypesContext, ilReader.CodeWriter);
             readTypesContext.GenericMethodSpecializations = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
             var genericMethodSpecializations = readTypesContext.GenericMethodSpecializations;
@@ -1097,12 +1095,12 @@ namespace Il2Native.Logic
         private void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
             List<IType> types,
             ReadingTypesContext readingTypesContext,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             var queue = new Queue<IMethod>();
             var used = new object();
 
-            foreach (var method in types.SelectMany(t => IlReader.Methods(t, typeResolver)))
+            foreach (var method in types.SelectMany(t => IlReader.Methods(t, codeWriter)))
             {
                 readingTypesContext.CalledMethods.Add(new MethodKey(method, null));
             }
@@ -1115,7 +1113,7 @@ namespace Il2Native.Logic
                 foreach (var methodKey in readingTypesContext.CalledMethods.Where(m => !Object.ReferenceEquals(m.Tag, used)).ToArray())
                 {
                     methodKey.Tag = used;
-                    DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, MethodBodyBank.GetMethodWithCustomBodyOrDefault(methodKey.Method, typeResolver), queue);
+                    DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, codeWriter, MethodBodyBank.GetMethodWithCustomBodyOrDefault(methodKey.Method, codeWriter), queue);
                 }
 
                 ProcessAllVirtualTableImplementations(readingTypesContext);
@@ -1139,7 +1137,7 @@ namespace Il2Native.Logic
 
         private void DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(
             ReadingTypesContext readingTypesContext,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             IMethod method,
             Queue<IMethod> queue)
         {
@@ -1153,7 +1151,7 @@ namespace Il2Native.Logic
                 readingTypesContext.UsedStaticFields,
                 readingTypesContext.UsedVirtualTableImplementationTypes,
                 queue,
-                typeResolver);
+                codeWriter);
         }
 
         ////private IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
@@ -1219,7 +1217,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IList<IType> FindUsedTypes(IEnumerable<IType> typesIn, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ITypeResolver typeResolver)
+        private IList<IType> FindUsedTypes(IEnumerable<IType> typesIn, IList<IType> allTypes, ReadingTypesContext readingTypesContext, ICodeWriter codeWriter)
         {
             var types = typesIn.ToList();
             var usedTypes = new NamespaceContainer<IType>();
@@ -1248,40 +1246,40 @@ namespace Il2Native.Logic
             if (compact)
             {
 
-                var mainFunc = _codeWriter.GenerateMainMethod(types.SelectMany(t => IlReader.Methods(t, typeResolver)).First(CWriter.IsMain));
-                DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, typeResolver, mainFunc, new Queue<IMethod>());
+                var mainFunc = _codeWriter.GenerateMainMethod(types.SelectMany(t => IlReader.Methods(t, codeWriter)).First(CWriter.IsMain));
+                DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, codeWriter, mainFunc, new Queue<IMethod>());
 
                 // add methods for IS and AS
-                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedDynamicCastMethod(typeResolver), null));
-                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedCastMethod(typeResolver), null));
+                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedDynamicCastMethod(codeWriter), null));
+                readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedCastMethod(codeWriter), null));
 
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NullReferenceException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.DivideByZeroException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotSupportedException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.NotImplementedException"));
-                AddUsedMethodsForType(readingTypesContext, typeResolver, typeResolver.ResolveType("System.InvalidOperationException"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.String"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeModule"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.Reflection.RuntimeAssembly"));
-                AddUsedVirtualTableImplementationForType(readingTypesContext, typeResolver.ResolveType("System.RuntimeType"));
+                AddUsedMethodsForType(readingTypesContext, codeWriter, codeWriter.ResolveType("System.NullReferenceException"));
+                AddUsedMethodsForType(readingTypesContext, codeWriter, codeWriter.ResolveType("System.DivideByZeroException"));
+                AddUsedMethodsForType(readingTypesContext, codeWriter, codeWriter.ResolveType("System.NotSupportedException"));
+                AddUsedMethodsForType(readingTypesContext, codeWriter, codeWriter.ResolveType("System.NotImplementedException"));
+                AddUsedMethodsForType(readingTypesContext, codeWriter, codeWriter.ResolveType("System.InvalidOperationException"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, codeWriter.ResolveType("System.String"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, codeWriter.ResolveType("System.Reflection.RuntimeModule"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, codeWriter.ResolveType("System.Reflection.RuntimeAssembly"));
+                AddUsedVirtualTableImplementationForType(readingTypesContext, codeWriter.ResolveType("System.RuntimeType"));
 
                 // to support compact mode
-                DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, typeResolver);
+                DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(types, readingTypesContext, codeWriter);
             }
 
             FindAllGenericVirtualMethodsAndGenericInterfaceMethods(allTypes, readingTypesContext, usedTypes);
 
             readingTypesContext.AssemblyQualifiedName = types.First().AssemblyQualifiedName;
 
-            var list = ReorderTypesByUsage(typeResolver, usedTypes, readingTypesContext.AssemblyQualifiedName);
+            var list = ReorderTypesByUsage(codeWriter, usedTypes, readingTypesContext.AssemblyQualifiedName);
             return list;
         }
 
-        private void AddUsedMethodsForType(ReadingTypesContext readingTypesContext, ITypeResolver typeResolver, IType type)
+        private void AddUsedMethodsForType(ReadingTypesContext readingTypesContext, ICodeWriter codeWriter, IType type)
         {
-            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedNewMethod(type, typeResolver), null));
-            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedInitMethod(type, typeResolver), null));
-            readingTypesContext.CalledMethods.Add(new MethodKey(type.FindConstructor(typeResolver), null));
+            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedNewMethod(type, codeWriter), null));
+            readingTypesContext.CalledMethods.Add(new MethodKey(new SynthesizedInitMethod(type, codeWriter), null));
+            readingTypesContext.CalledMethods.Add(new MethodKey(type.FindConstructor(codeWriter), null));
             AddUsedVirtualTableImplementationForType(readingTypesContext, type);
         }
 
@@ -1318,19 +1316,19 @@ namespace Il2Native.Logic
             }
         }
 
-        private List<IType> ReorderTypesByUsage(ITypeResolver typeResolver, NamespaceContainer<IType> usedTypes, string assemblyQualifiedName)
+        private List<IType> ReorderTypesByUsage(ICodeWriter codeWriter, NamespaceContainer<IType> usedTypes, string assemblyQualifiedName)
         {
             var list = new List<IType>();
             var usedTypesForOrder = new NamespaceContainer<IType>();
             foreach (var usedType in usedTypes)
             {
-                AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, assemblyQualifiedName, typeResolver);
+                AddTypeInOrderOfUsage(list, usedTypesForOrder, usedType, assemblyQualifiedName, codeWriter);
             }
 
             return list;
         }
 
-        private void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ITypeResolver typeResolver)
+        private void AddTypeInOrderOfUsage(IList<IType> order, ISet<IType> usedTypes, IType type, string assemblyQualifiedName, ICodeWriter codeWriter)
         {
             if (type == null || type.IsPointer || type.IsByRef || ((assemblyQualifiedName != null && type.AssemblyQualifiedName != assemblyQualifiedName) && !type.IsGenericOrArray()) || usedTypes.Contains(type))
             {
@@ -1338,24 +1336,24 @@ namespace Il2Native.Logic
             }
 
             // add base type first
-            AddTypeInOrderOfUsage(order, usedTypes, type.BaseType, assemblyQualifiedName, typeResolver);
+            AddTypeInOrderOfUsage(order, usedTypes, type.BaseType, assemblyQualifiedName, codeWriter);
 
             // then all interfaces
             foreach (var @interface in type.GetInterfaces())
             {
-                AddTypeInOrderOfUsage(order, usedTypes, @interface, assemblyQualifiedName, typeResolver);
+                AddTypeInOrderOfUsage(order, usedTypes, @interface, assemblyQualifiedName, codeWriter);
             }
 
             // then all structures in fields
-            foreach (var field in IlReader.Fields(type, typeResolver).Where(f => !f.IsStatic && !f.IsConst && (f.FieldType.IsStructureType() || f.IsFixed)))
+            foreach (var field in IlReader.Fields(type, codeWriter).Where(f => !f.IsStatic && !f.IsConst && (f.FieldType.IsStructureType() || f.IsFixed)))
             {
                 if (field.IsFixed && field.FieldType.GetElementType().IsStructureType())
                 {
-                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType.GetElementType(), assemblyQualifiedName, typeResolver);
+                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType.GetElementType(), assemblyQualifiedName, codeWriter);
                 }
                 else
                 {
-                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType, assemblyQualifiedName, typeResolver);
+                    AddTypeInOrderOfUsage(order, usedTypes, field.FieldType, assemblyQualifiedName, codeWriter);
                 }
             }
 
@@ -1369,7 +1367,7 @@ namespace Il2Native.Logic
 
         private void WritingDeclarations(
             IlReader ilReader,
-            ICodeWriter codeHeaderWriter,
+            ICodeWriterEx codeHeaderWriter,
             ReadTypesContext readTypes)
         {
             var fullNames = readTypes.UsedTypes.Select(t => t.FullName).ToList();
@@ -1410,7 +1408,7 @@ namespace Il2Native.Logic
 
         private void WritingDefinitions(
             IlReader ilReader,
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             ReadTypesContext readTypes)
         {
             // writing
@@ -1450,7 +1448,7 @@ namespace Il2Native.Logic
             codeWriter.Close();
         }
 
-        private void WriteBulkOfMethod(ICodeWriter codeWriter, IEnumerable<IMethod> methods)
+        private void WriteBulkOfMethod(ICodeWriterEx codeWriter, IEnumerable<IMethod> methods)
         {
             foreach (var calledMethod in methods)
             {
@@ -1458,7 +1456,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteBulkOfVirtualTableImplementation(ICodeWriter codeWriter, IEnumerable<IType> virtualTableImplementations)
+        private void WriteBulkOfVirtualTableImplementation(ICodeWriterEx codeWriter, IEnumerable<IType> virtualTableImplementations)
         {
             foreach (var virtualTableImplementation in virtualTableImplementations)
             {
@@ -1468,7 +1466,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteBulkOfStaticFields(ICodeWriter codeWriter, IEnumerable<IField> staticFields)
+        private void WriteBulkOfStaticFields(ICodeWriterEx codeWriter, IEnumerable<IField> staticFields)
         {
             foreach (var staticField in staticFields)
             {
@@ -1476,7 +1474,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteSinleMethodDefinition(ICodeWriter codeWriter, IMethod calledMethod)
+        private void WriteSinleMethodDefinition(ICodeWriterEx codeWriter, IMethod calledMethod)
         {
             Debug.Assert(!calledMethod.IsGenericMethodDefinition, "Method Definition is not allowed here");
 
@@ -1509,7 +1507,7 @@ namespace Il2Native.Logic
         }
 
         private void WriteTypesWithGenericsStep(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode step)
         {
@@ -1525,7 +1523,7 @@ namespace Il2Native.Logic
         }
 
         private void WriteLeftGenericMethodsStep(
-            ICodeWriter codeWriter,
+            ICodeWriterEx codeWriter,
             ReadTypesContext readTypes,
             ConvertingMode step)
         {

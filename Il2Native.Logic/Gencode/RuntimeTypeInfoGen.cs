@@ -155,19 +155,19 @@
             return null;
         }
 
-        public static IEnumerable<IField> GetRuntimeTypeFields(this IType type, ITypeResolver typeResolver)
+        public static IEnumerable<IField> GetRuntimeTypeFields(this IType type, ICodeWriter codeWriter)
         {
-            yield return typeResolver.System.System_Int32.ToField(type, RuntimeTypeInfoGen.TypeAttributesField);
-            yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
-            yield return typeResolver.System.System_Type.ToField(type, RuntimeTypeInfoGen.ElementTypeField);
-            yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
-            yield return typeResolver.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
-            yield return typeResolver.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);
-            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.HasInstantiationField);
-            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericVariableField);
-            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericTypeDefinitionField);
-            yield return typeResolver.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.ContainsGenericVariablesField);
-            yield return typeResolver.System.System_RuntimeModule.ToField(type, RuntimeTypeInfoGen.RuntimeModuleField);
+            yield return codeWriter.System.System_Int32.ToField(type, RuntimeTypeInfoGen.TypeAttributesField);
+            yield return codeWriter.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
+            yield return codeWriter.System.System_Type.ToField(type, RuntimeTypeInfoGen.ElementTypeField);
+            yield return codeWriter.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
+            yield return codeWriter.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
+            yield return codeWriter.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);
+            yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.HasInstantiationField);
+            yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericVariableField);
+            yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericTypeDefinitionField);
+            yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.ContainsGenericVariablesField);
+            yield return codeWriter.System.System_RuntimeModule.ToField(type, RuntimeTypeInfoGen.RuntimeModuleField);
         }
 
         public static FullyDefinedReference GetFullyDefinedRefereneForRuntimeType(this IType type, CWriter cWriter)
@@ -187,10 +187,10 @@
             return new FullyDefinedReference(runtimeTypeReference, cWriter.System.System_Type, type);
         }
 
-        public static FullyDefinedReference GetFullyDefinedRefereneForStaticClass(this IType type, string fieldName, ITypeResolver typeResolver)
+        public static FullyDefinedReference GetFullyDefinedRefereneForStaticClass(this IType type, string fieldName, ICodeWriter codeWriter)
         {
-            var field = IlReader.Fields(type, typeResolver).First(f => f.Name == fieldName);
-            return new FullyDefinedReference("&" + typeResolver.GetStaticFieldName(field) + ".data", field.FieldType);
+            var field = IlReader.Fields(type, codeWriter).First(f => f.Name == fieldName);
+            return new FullyDefinedReference("&" + codeWriter.GetStaticFieldName(field) + ".data", field.FieldType);
         }
 
         // Keep this in sync with FormatFlags defined in typestring.h

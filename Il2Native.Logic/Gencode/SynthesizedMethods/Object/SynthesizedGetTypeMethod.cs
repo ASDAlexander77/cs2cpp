@@ -20,7 +20,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         public const string Name = ".gettype";
 
-        private ITypeResolver _typeResolver;
+        private ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
@@ -28,10 +28,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
-            : base(null, Name, type, typeResolver.System.System_Type)
+        public SynthesizedGetTypeMethod(IType type, ICodeWriter codeWriter)
+            : base(null, Name, type, codeWriter.System.System_Type)
         {
-            this._typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {
                 IsVirtual = true;
@@ -44,7 +44,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return this._typeResolver.GetGetTypeMethod(Type);
+            return ObjectInfrastructure.GetGetTypeMethod(this.codeWriter, Type);
         }
     }
 }

@@ -28,21 +28,21 @@
         private const string Value = "_value";
         private const string Comparand = "comparand";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
-            yield return GetCompareExchangeForType(typeResolver.System.System_Int32, typeResolver).Register(Name32, typeResolver);
-            yield return GetCompareExchangeForType(typeResolver.System.System_Int64, typeResolver).Register(Name64, typeResolver);
-            yield return GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Single, typeResolver.System.System_Int32, typeResolver).Register(NameF, typeResolver);
-            yield return GetCompareExchangeForTypeWithCastTo(typeResolver.System.System_Double, typeResolver.System.System_Int64, typeResolver).Register(NameD, typeResolver);
-            yield return GetCompareExchangeForType(typeResolver.System.System_Object, typeResolver).Register(Name, typeResolver);
-            yield return GetCompareExchangeForIntPtrType(typeResolver).Register(NamePtr, typeResolver);
-            yield return GetCompareExchangeForTypeWithBool(typeResolver.System.System_Int32, typeResolver).Register(Name32Bool, typeResolver);
+            yield return GetCompareExchangeForType(codeWriter.System.System_Int32, codeWriter).Register(Name32, codeWriter);
+            yield return GetCompareExchangeForType(codeWriter.System.System_Int64, codeWriter).Register(Name64, codeWriter);
+            yield return GetCompareExchangeForTypeWithCastTo(codeWriter.System.System_Single, codeWriter.System.System_Int32, codeWriter).Register(NameF, codeWriter);
+            yield return GetCompareExchangeForTypeWithCastTo(codeWriter.System.System_Double, codeWriter.System.System_Int64, codeWriter).Register(NameD, codeWriter);
+            yield return GetCompareExchangeForType(codeWriter.System.System_Object, codeWriter).Register(Name, codeWriter);
+            yield return GetCompareExchangeForIntPtrType(codeWriter).Register(NamePtr, codeWriter);
+            yield return GetCompareExchangeForTypeWithBool(codeWriter.System.System_Int32, codeWriter).Register(Name32Bool, codeWriter);
 
-            var method = typeResolver.ResolveType("System.Threading.Interlocked").GetMethodsByMetadataName("CompareExchange`1", typeResolver).First();
-            yield return GetCompareExchangeForType(method.ReturnType, typeResolver).Register(NameT, typeResolver);
+            var method = OpCodeExtensions.GetMethodsByMetadataName(codeWriter.ResolveType("System.Threading.Interlocked"), "CompareExchange`1", codeWriter).First();
+            yield return GetCompareExchangeForType(method.ReturnType, codeWriter).Register(NameT, codeWriter);
         }
 
-        public static IlCodeBuilder GetCompareExchangeForType(IType parameterType, ITypeResolver typeResolver)
+        public static IlCodeBuilder GetCompareExchangeForType(IType parameterType, ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -57,14 +57,14 @@
             return ilCodeBuilder;
         }
 
-        public static IlCodeBuilder GetCompareExchangeForTypeWithBool(IType parameterType, ITypeResolver typeResolver)
+        public static IlCodeBuilder GetCompareExchangeForTypeWithBool(IType parameterType, ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
             ilCodeBuilder.Locals.Add(parameterType);
 
             ilCodeBuilder.LoadArgument(0);
-            ilCodeBuilder.LoadIndirect(parameterType, typeResolver);
+            ilCodeBuilder.LoadIndirect(parameterType, codeWriter);
             ilCodeBuilder.SaveLocal(0);
 
             ilCodeBuilder.LoadArgument(3);
@@ -74,7 +74,7 @@
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
                     CompareAndSwapBool, null, parameterType, new[] { parameterType.ToPointerType().ToParameter(Location), parameterType.ToParameter(Value), parameterType.ToParameter(Comparand) }));
-            ilCodeBuilder.SaveIndirect(parameterType, typeResolver);
+            ilCodeBuilder.SaveIndirect(parameterType, codeWriter);
 
             ilCodeBuilder.LoadLocal(0);
             ilCodeBuilder.Add(Code.Ret);
@@ -82,7 +82,7 @@
             return ilCodeBuilder;
         }
 
-        public static IlCodeBuilder GetCompareExchangeForTypeWithCastTo(IType parameterType, IType castTo, ITypeResolver typeResolver)
+        public static IlCodeBuilder GetCompareExchangeForTypeWithCastTo(IType parameterType, IType castTo, ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
@@ -94,7 +94,7 @@
             ilCodeBuilder.Castclass(castTo.ToPointerType());
             ilCodeBuilder.LoadArgumentAddress(1);
             ilCodeBuilder.Castclass(castTo.ToPointerType());
-            if (castTo.TypeEquals(typeResolver.System.System_Int32))
+            if (castTo.TypeEquals(codeWriter.System.System_Int32))
             {
                 ilCodeBuilder.Add(Code.Ldind_I4);
             }
@@ -109,17 +109,17 @@
 
             ilCodeBuilder.SaveLocal(0);
             ilCodeBuilder.LoadLocalAddress(0);
-            ilCodeBuilder.LoadIndirect(parameterType, typeResolver);
+            ilCodeBuilder.LoadIndirect(parameterType, codeWriter);
 
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;
         }
 
-        public static IlCodeBuilder GetCompareExchangeForIntPtrType(ITypeResolver typeResolver)
+        public static IlCodeBuilder GetCompareExchangeForIntPtrType(ICodeWriter codeWriter)
         {
-            var parameterType = typeResolver.System.System_IntPtr;
-            var field = parameterType.GetFieldByFieldNumber(0, typeResolver);
+            var parameterType = codeWriter.System.System_IntPtr;
+            var field = OpCodeExtensions.GetFieldByFieldNumber(parameterType, 0, codeWriter);
 
             var ilCodeBuilder = new IlCodeBuilder();
 

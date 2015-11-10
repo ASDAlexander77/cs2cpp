@@ -11,7 +11,7 @@
     {
         public static readonly string Name = "Void System.Array.InternalGetReference(Void*, Int32, Int32*)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new IlCodeBuilder();
 
@@ -221,34 +221,34 @@
 
             codeList.Add(Code.Ret);
 
-            var typedReferenceType = typeResolver.System.System_TypedReference;
-            var intPtrType = typeResolver.System.System_IntPtr;
-            var byteType = typeResolver.System.System_Byte;
+            var typedReferenceType = codeWriter.System.System_TypedReference;
+            var intPtrType = codeWriter.System.System_IntPtr;
+            var byteType = codeWriter.System.System_Byte;
             var arrayType = byteType.ToArrayType(1);
             var multiArrayType = byteType.ToArrayType(2);
 
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
-            tokenResolutions.Add(typedReferenceType.GetFieldByName("Type", typeResolver));
-            tokenResolutions.Add(intPtrType.GetFieldByName("m_value", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Value", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Type", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(intPtrType, "m_value", codeWriter));
             tokenResolutions.Add(arrayType);
-            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "typeCode", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "elementSize", codeWriter));
             tokenResolutions.Add(byteType);
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "rank", codeWriter));
             tokenResolutions.Add(multiArrayType);
-            tokenResolutions.Add(multiArrayType.GetFieldByName("lowerBounds", typeResolver));
-            tokenResolutions.Add(multiArrayType.GetFieldByName("lengths", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(multiArrayType, "lowerBounds", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(multiArrayType, "lengths", codeWriter));
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32);
-            locals.Add(typeResolver.System.System_Int32);
-            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("array"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
-            parameters.Add(typeResolver.System.System_Int32.ToPointerType().ToParameter("typeRef"));
+            parameters.Add(codeWriter.System.System_Void.ToPointerType().ToParameter("array"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("len"));
+            parameters.Add(codeWriter.System.System_Int32.ToPointerType().ToParameter("typeRef"));
 
             yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

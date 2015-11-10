@@ -10,7 +10,7 @@
 
     public static class EnumGen
     {
-        public static IEnumerable<IField> GetFields(IType enumType, ITypeResolver typeResolver)
+        public static IEnumerable<IField> GetFields(IType enumType, ICodeWriter codeWriter)
         {
             Debug.Assert(enumType.IsEnum, "This is for enum arrays only");
             yield return enumType.GetEnumUnderlyingType().ToField(enumType, "Value");
@@ -18,7 +18,7 @@
 
         public static void GetEnumGetHashCodeMethod(
             IType enumType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -39,7 +39,7 @@
             // tokens
             tokenResolutions = new List<object>();
             // data
-            tokenResolutions.Add(enumType.GetFieldByName("Value", typeResolver));            
+            tokenResolutions.Add(enumType.GetFieldByName("Value", codeWriter));            
 
             // locals
             locals = new List<IType>();
@@ -53,7 +53,7 @@
 
         public static void GetEnumToStringMethod(
                     IType enumType,
-                    ITypeResolver typeResolver,
+                    ICodeWriter codeWriter,
                     out object[] code,
                     out IList<object> tokenResolutions,
                     out IList<IType> locals,
@@ -70,7 +70,7 @@
 
             // build cmp/jmp cases
             var stringValues = 1;
-            foreach (var enumConstValue in IlReader.Fields(enumType, typeResolver).Where(f => f.IsConst))
+            foreach (var enumConstValue in IlReader.Fields(enumType, codeWriter).Where(f => f.IsConst))
             {
                 codeList.Add(Code.Dup);
                 if (sizeOfEnum == 8)
@@ -97,8 +97,8 @@
             // tokens
             tokenResolutions = new List<object>();
             // data
-            tokenResolutions.Add(enumType.GetFieldByName("Value", typeResolver));
-            foreach (var enumConstValue in IlReader.Fields(enumType, typeResolver).Where(f => f.IsConst))
+            tokenResolutions.Add(enumType.GetFieldByName("Value", codeWriter));
+            foreach (var enumConstValue in IlReader.Fields(enumType, codeWriter).Where(f => f.IsConst))
             {
                 tokenResolutions.Add(enumConstValue.Name);
             }

@@ -9,16 +9,16 @@
     {
         public static readonly string Name = "Boolean System.RuntimeTypeHandle.ContainsGenericVariables(System.RuntimeType)";
 
-        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.LoadArgument(0);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeType.GetFieldByName(RuntimeTypeInfoGen.ContainsGenericVariablesField, typeResolver));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(codeWriter.System.System_RuntimeType, RuntimeTypeInfoGen.ContainsGenericVariablesField, codeWriter));
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_RuntimeType.ToParameter("type"));
+            ilCodeBuilder.Parameters.Add(codeWriter.System.System_RuntimeType.ToParameter("type"));
 
-            yield return ilCodeBuilder.Register(Name, typeResolver);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }
