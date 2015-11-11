@@ -34,6 +34,8 @@ namespace Il2Native.Logic
 
         private bool compact;
 
+        private bool headers;
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -741,6 +743,7 @@ namespace Il2Native.Logic
             split = args != null && args.Any(a => a == "split");
             compact = args != null && args.Any(a => a == "compact");
             VerboseOutput = args != null && args.Any(a => a == "verbose");
+            headers = args != null && args.Any(a => a == "headers");
 
             var settings = new Settings()
                                {
@@ -792,6 +795,11 @@ namespace Il2Native.Logic
 
             WritingDeclarations(ilReader, codeHeaderWriter, readTypes);
 
+            if (headers)
+            {
+                return;
+            }
+
             settings.FileExt = ".cpp";
             var codeWriter = GetCodeWriter(ilReader, settings);
             codeWriter.FileHeader = settings.FileName;
@@ -811,6 +819,11 @@ namespace Il2Native.Logic
                 ilReader,
                 codeHeaderWriter,
                 readTypes);
+
+            if (headers)
+            {
+                return;
+            }
 
             var fileName = settings.FileName;
 

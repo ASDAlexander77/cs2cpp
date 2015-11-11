@@ -54,6 +54,7 @@ namespace Il2Native
                 Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine("  /split                  Generate C files for each namespace");
                 Console.WriteLine("  /compact                Build one source file from all assemblies to reduce size");
+                Console.WriteLine("  /headers                Generate headers file only (useful for compact mode)");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
@@ -130,20 +131,17 @@ namespace Il2Native
             var findCoreLibSwitch = processedArgs.FirstOrDefault(arg => arg.StartsWith(corelibSwitch));
             if (findCoreLibSwitch == null)
             {
-                Console.WriteLine("It is needed to provide CoreLib using /corelib:<file.dll> switch");
+                Console.WriteLine("It is needed to provide the core library using /corelib:<file.dll> switch");
                 return;
             }
 
-            Console.Write("Generating C file for CoreLib...");
+            Console.Write("Generating C file for the core library...");
             var coreLib = findCoreLibSwitch.Substring(corelibSwitch.Length);
-            Il2Converter.Convert(
-                new[] { coreLib },
-                Environment.CurrentDirectory,
-                processedArgs.Where(p => !p.StartsWith(corelibSwitch)).ToArray());
+            Il2Converter.Convert(new[] { coreLib }, Environment.CurrentDirectory, processedArgs.Where(p => !p.StartsWith(corelibSwitch)).ToArray());
             Console.WriteLine("Done.");
 
             // next step compile CoreLib
-            Console.Write("Compiling C file for CoreLib...");
+            Console.Write("Compiling C file for the core library...");
             var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
             ExecCmd("g++", string.Format("-filetype=obj {0}.cpp", coreLibNameNoExt));
             Console.WriteLine("Done.");
@@ -165,7 +163,7 @@ namespace Il2Native
             Console.Write("Compiling target exe. file...");
             // finally generate EXE output
             var multiThreading = !processedArgs.Contains("mt-");
-            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -l{3} -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt, multiThreading ? "gcmt-lib" : "gc-lib"));
+            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -l{3} -march=native -L .", targetFileNameNoExt, coreLibNameNoExt, objExt, multiThreading ? "gcmt-lib" : "gc-lib"));
             Console.WriteLine("Done.");
         }
     }
