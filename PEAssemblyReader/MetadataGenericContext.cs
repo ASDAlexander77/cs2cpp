@@ -13,6 +13,7 @@ namespace PEAssemblyReader
     using System.Diagnostics;
     using System.Linq;
 
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
@@ -414,6 +415,7 @@ namespace PEAssemblyReader
 
                 var typeSymbolDef = typeDefAdapter.TypeDef;
                 var newType = map.SubstituteType(typeSymbolDef);
+                Debug.Assert(newType.TypeKind != TypeKind.TypeParameter, "Type is not resolved");
                 return new MetadataTypeAdapter(newType);
             }
 

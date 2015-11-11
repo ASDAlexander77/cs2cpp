@@ -19,16 +19,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedMultiDimArrayAddressMethod(IType type, ITypeResolver typeResolver)
+        public SynthesizedMultiDimArrayAddressMethod(IType type, ICodeWriter codeWriter)
             : base("Address", type, type.GetElementType().ToByRefType())
         {
             object[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            ArrayMultiDimensionGen.GetMultiDimensionArrayAddress(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            ArrayMultiDimensionGen.GetMultiDimensionArrayAddress(type, codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

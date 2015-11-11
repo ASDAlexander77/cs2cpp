@@ -18,7 +18,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         public const string Name = ".cast";
 
-        private readonly ITypeResolver typeResolver;
+        private readonly ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
@@ -26,15 +26,15 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedCastMethod(ITypeResolver typeResolver)
-            : base(null, Name, typeResolver.System.System_Object, typeResolver.System.System_Object.ToClass())
+        public SynthesizedCastMethod(ICodeWriter codeWriter)
+            : base(null, Name, codeWriter.System.System_Object, codeWriter.System.System_Object.ToClass())
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return typeResolver.GetDynamicCastMethod(Type, true);
+            return ObjectInfrastructure.GetDynamicCastMethod(this.codeWriter, Type, true);
         }
     }
 }

@@ -19,10 +19,10 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedSingleDimArrayIListGetCountMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("get_Count", arrayType, typeResolver.System.System_Int32)
+        public SynthesizedSingleDimArrayIListGetCountMethod(IType arrayType, ICodeWriter codeWriter)
+            : base("get_Count", arrayType, codeWriter.System.System_Int32)
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);

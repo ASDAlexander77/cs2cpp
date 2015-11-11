@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -63,24 +64,24 @@
             Code.Ret
         };
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
+            var arrayType = codeWriter.System.System_Byte.ToArrayType(1);
 
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
+            tokenResolutions.Add(codeWriter.System.System_Byte.ToPointerType());
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "elementSize", codeWriter));
             tokenResolutions.Add(
                 new SynthesizedInlinedTextMethod(
                     string.Empty,
-                    typeResolver.System.System_Array,
-                    typeResolver.System.System_Void,
+                    codeWriter.System.System_Array,
+                    codeWriter.System.System_Void,
                     new[]
                     {
-                        typeResolver.System.System_Byte.ToPointerType().ToParameter("src"),
-                        typeResolver.System.System_Byte.ToPointerType().ToParameter("dst"),
-                        typeResolver.System.System_Int32.ToParameter("len")
+                        codeWriter.System.System_Byte.ToPointerType().ToParameter("src"),
+                        codeWriter.System.System_Byte.ToPointerType().ToParameter("dst"),
+                        codeWriter.System.System_Int32.ToParameter("len")
                     },
                     (llvmWriter, opCode) =>
                     {
@@ -90,20 +91,20 @@
                         var len = opCode.OpCodeOperands[2];
                         llvmWriter.WriteMemCopy(firstByteOfSourceArray, firstByteOfDestArray, len);
                     }));
-            tokenResolutions.Add(typeResolver.System.System_Byte);
+            tokenResolutions.Add(codeWriter.System.System_Byte);
             tokenResolutions.Add(arrayType);
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Array.ToParameter("src"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("srcIndex"));
-            parameters.Add(typeResolver.System.System_Array.ToParameter("dst"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("dstIndex"));
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
+            parameters.Add(codeWriter.System.System_Array.ToParameter("src"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("srcIndex"));
+            parameters.Add(codeWriter.System.System_Array.ToParameter("dst"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("dstIndex"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("len"));
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

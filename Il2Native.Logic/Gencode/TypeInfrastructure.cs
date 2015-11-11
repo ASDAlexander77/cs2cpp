@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static byte[] GenerateTypeInfoBytes(this IType type, ITypeResolver typeResolver)
+        public static byte[] GenerateTypeInfoBytes(this IType type, ICodeWriter codeWriter)
         {
             var bytes = new List<byte>();
             bytes.AddRange(Encoding.ASCII.GetBytes(type.FullName));

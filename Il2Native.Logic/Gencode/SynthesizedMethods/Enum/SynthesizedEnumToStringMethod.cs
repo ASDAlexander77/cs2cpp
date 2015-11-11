@@ -18,16 +18,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedEnumToStringMethod(IType type, ITypeResolver typeResolver)
-            : base("ToString", type, typeResolver.System.System_String, isOverride: true)
+        public SynthesizedEnumToStringMethod(IType type, ICodeWriter codeWriter)
+            : base("ToString", type, codeWriter.System.System_String, isOverride: true)
         {
             object[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            EnumGen.GetEnumToStringMethod(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            EnumGen.GetEnumToStringMethod(type, codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

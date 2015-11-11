@@ -1,10 +1,15 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods.RuntimeTypeHandler
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     public static class GetInterfacesGen
     {
         public static readonly string Name = "System.Type[] System.RuntimeTypeHandle.GetInterfaces(System.RuntimeType)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // TODO: finish it
 
@@ -12,7 +17,7 @@
             ilCodeBuilder.LoadConstant(0);
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }

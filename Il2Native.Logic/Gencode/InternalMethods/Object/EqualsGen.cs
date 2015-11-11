@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -79,29 +80,29 @@
             Code.Ret
         };
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     SynthesizedGetSizeMethod.Name,
-                    typeResolver.System.System_Object,
-                    typeResolver.GetIntTypeByByteSize(CWriter.PointerSize),
+                    codeWriter.System.System_Object,
+                    CHelpersGen.GetIntTypeByByteSize(codeWriter, CWriter.PointerSize),
                     true));
-            tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Byte.ToPointerType());
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Byte.ToPointerType());
-            locals.Add(typeResolver.System.System_Int32);
-            locals.Add(typeResolver.System.System_Byte.ToPointerType());
-            locals.Add(typeResolver.System.System_Int32);
-            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(codeWriter.System.System_Byte.ToPointerType());
+            locals.Add(codeWriter.System.System_Int32);
+            locals.Add(codeWriter.System.System_Byte.ToPointerType());
+            locals.Add(codeWriter.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
+            parameters.Add(codeWriter.System.System_Object.ToParameter("obj"));
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

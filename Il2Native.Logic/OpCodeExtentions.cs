@@ -109,7 +109,7 @@ namespace Il2Native.Logic
         {
             var pos = fieldType.Name.IndexOf("=");
             Debug.Assert(pos >= 0, "Could not find size");
-            return int.Parse(fieldType.Name.Substring(pos + 1));
+            return Int32.Parse(fieldType.Name.Substring(pos + 1));
         }
 
         public static int Align(this int unalign, int alignSize)
@@ -233,35 +233,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        /// <param name="structTypes">
-        /// </param>
-        /// <param name="calledMethods">
-        /// </param>
-        /// <param name="readStaticFields">
-        /// </param>
-        public static void DiscoverMethod(this IMethod method, ISet<IType> structTypes, ISet<MethodKey> calledMethods, ISet<IField> readStaticFields, ITypeResolver typeResolver)
-        {
-            // read method body to extract all types
-            var reader = new IlReader();
-            reader.CalledMethods = calledMethods;
-            reader.UsedStaticFieldsToRead = readStaticFields;
-            reader.TypeResolver = typeResolver;
-
-            var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>()))
-            {
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
         /// <param name="genericTypeSpecializations">
         /// </param>
         /// <param name="genericMethodSpecializations">
-        /// </param>
-        /// <param name="structTypes">
         /// </param>
         /// <param name="stackCall">
         /// </param>
@@ -269,13 +243,14 @@ namespace Il2Native.Logic
             this IMethod method,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> structTypes,
             ISet<IType> arrayTypes,
             ISet<IType> usedTokenTypes,
             ISet<IType> usedTypes,
             ISet<MethodKey> calledMethods,
+            ISet<IField> usedStaticFields,
+            ISet<IType> usedVirtualTableImplementationTypes,
             Queue<IMethod> stackCall,
-            ITypeResolver typeResolver)
+            ICodeWriter codeWriter)
         {
             if (Il2Converter.VerboseOutput)
             {
@@ -291,7 +266,9 @@ namespace Il2Native.Logic
             reader.UsedTypeTokens = usedTokenTypes;
             reader.UsedTypes = usedTypes;
             reader.CalledMethods = calledMethods;
-            reader.TypeResolver = typeResolver;
+            reader.UsedStaticFields = usedStaticFields;
+            reader.UsedVirtualTableImplementationTypes = usedVirtualTableImplementationTypes;
+            reader.CodeWriter = codeWriter;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
@@ -497,7 +474,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                index = int.Parse(asString.Substring(asString.Length - 1));
+                index = Int32.Parse(asString.Substring(asString.Length - 1));
             }
 
             return index;
@@ -532,19 +509,19 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
-        public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver, bool searchInBase = false)
+        public static IField GetFieldByName(this IType classType, string fieldName, ICodeWriter codeWriter, bool searchInBase = false)
         {
             var normalType = classType.ToNormal();
             if (!searchInBase)
             {
-                var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
-                Debug.Assert(field != null, string.Format("Field {0} could not be found", fieldName));
+                var field = IlReader.Fields(normalType, codeWriter).FirstOrDefault(f => f.Name == fieldName);
+                Debug.Assert(field != null, String.Format("Field {0} could not be found", fieldName));
                 return field;
             }
 
             while (normalType != null)
             {
-                var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
+                var field = IlReader.Fields(normalType, codeWriter).FirstOrDefault(f => f.Name == fieldName);
                 if (field != null)
                 {
                     return field;
@@ -553,35 +530,35 @@ namespace Il2Native.Logic
                 normalType = normalType.BaseType;
             }
 
-            Debug.Assert(false, string.Format("Field {0} could not be found", fieldName));
+            Debug.Assert(false, String.Format("Field {0} could not be found", fieldName));
 
             return null;
         }
 
-        public static IMethod GetFirstMethodByName(this IType classType, string methodName, ITypeResolver typeResolver)
+        public static IMethod GetFirstMethodByName(this IType classType, string methodName, ICodeWriter codeWriter)
         {
             var normalType = classType.ToNormal();
-            var method = IlReader.Methods(normalType, typeResolver).FirstOrDefault(f => f.Name == methodName);
-            Debug.Assert(method != null, string.Format("Method {0} could not be found", methodName));
+            var method = IlReader.Methods(normalType, codeWriter).FirstOrDefault(f => f.Name == methodName);
+            Debug.Assert(method != null, String.Format("Method {0} could not be found", methodName));
             return method;
         }
 
-        public static IEnumerable<IMethod> GetMethodsByName(this IType classType, string methodName, ITypeResolver typeResolver)
+        public static IEnumerable<IMethod> GetMethodsByName(this IType classType, string methodName, ICodeWriter codeWriter)
         {
             var normalType = classType.ToNormal();
-            return IlReader.Methods(normalType, typeResolver).Where(f => f.Name == methodName);
+            return IlReader.Methods(normalType, codeWriter).Where(f => f.Name == methodName);
         }
 
-        public static IEnumerable<IMethod> GetMethodsByMetadataName(this IType classType, string methodName, ITypeResolver typeResolver)
+        public static IEnumerable<IMethod> GetMethodsByMetadataName(this IType classType, string methodName, ICodeWriter codeWriter)
         {
             var normalType = classType.ToNormal();
-            return IlReader.Methods(normalType, typeResolver, true).Where(f => f.MetadataName == methodName);
+            return IlReader.Methods(normalType, codeWriter, true).Where(f => f.MetadataName == methodName);
         }
 
-        public static IField GetFieldByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
+        public static IField GetFieldByFieldNumber(this IType classType, int number, ICodeWriter codeWriter)
         {
             var normalType = classType.ToNormal();
-            var field = IlReader.Fields(normalType, typeResolver).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
+            var field = IlReader.Fields(normalType, codeWriter).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
             if (field == null)
             {
                 return null;
@@ -653,7 +630,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                index = int.Parse(asString.Substring(asString.Length - 1));
+                index = Int32.Parse(asString.Substring(asString.Length - 1));
             }
 
             Debug.Assert(baseWriter.LocalInfo.Length > index);
@@ -668,14 +645,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasAnyVirtualMethod(this IType thisType, ITypeResolver typeResolver)
+        public static bool HasAnyVirtualMethod(this IType thisType, ICodeWriter codeWriter)
         {
-            if (thisType.HasAnyVirtualMethodInCurrentType(typeResolver))
+            if (thisType.HasAnyVirtualMethodInCurrentType(codeWriter))
             {
                 return true;
             }
 
-            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod(typeResolver);
+            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod(codeWriter);
         }
 
         /// <summary>
@@ -684,10 +661,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType, ITypeResolver typeResolver)
+        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType, ICodeWriter codeWriter)
         {
             if ((thisType.IsObject || thisType.IsInterface || thisType.BaseType != null)
-                && IlReader.Methods(thisType, typeResolver).Any(m => m.IsMethodVirtual()))
+                && IlReader.Methods(thisType, codeWriter).Any(m => m.IsMethodVirtual()))
             {
                 return true;
             }
@@ -998,7 +975,7 @@ namespace Il2Native.Logic
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
 
-            if (method.IsExplicitInterfaceImplementation && method.MetadataName.EndsWith(string.Concat(".", overridingMethod.MetadataName)))
+            if (method.IsExplicitInterfaceImplementation && method.MetadataName.EndsWith(String.Concat(".", overridingMethod.MetadataName)))
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
@@ -1068,10 +1045,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsRootOfVirtualTable(this IType type, ITypeResolver typeResolver)
+        public static bool IsRootOfVirtualTable(this IType type, ICodeWriter codeWriter)
         {
-            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType(typeResolver)
-                   && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod(typeResolver));
+            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType(codeWriter)
+                   && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod(codeWriter));
         }
 
         /// <summary>
@@ -1698,23 +1675,23 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public static IConstructor FindConstructor(this IType type, ITypeResolver typeResolver)
+        public static IConstructor FindConstructor(this IType type, ICodeWriter codeWriter)
         {
-            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
+            return IlReader.Constructors(type, codeWriter).FirstOrDefault(c => !c.GetParameters().Any());
         }
 
-        public static IConstructor FindStaticConstructor(this IType type, ITypeResolver typeResolver)
+        public static IConstructor FindStaticConstructor(this IType type, ICodeWriter codeWriter)
         {
-            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => c.IsStatic);
+            return IlReader.Constructors(type, codeWriter).FirstOrDefault(c => c.IsStatic);
         }
 
-        public static IConstructor FindConstructor(this IType type, IType firstParameterType, ITypeResolver typeResolver)
+        public static IConstructor FindConstructor(this IType type, IType firstParameterType, ICodeWriter codeWriter)
         {
-            return Logic.IlReader.Constructors(type, typeResolver)
+            return IlReader.Constructors(type, codeWriter)
                      .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
         }
 
-        public static IMethod FindFinalizer(this IType type, ITypeResolver typeResolver)
+        public static IMethod FindFinalizer(this IType type, ICodeWriter codeWriter)
         {
             return type.GetMethods(IlReader.DefaultFlags).FirstOrDefault(m => m.IsDestructor);
         }
@@ -1749,7 +1726,7 @@ namespace Il2Native.Logic
 
         public static bool IsAssemblyNamespaceRequired(this IType type)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
             {
                 return true;
             }
@@ -1762,9 +1739,14 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsGenericOrArray(this IType type)
+        {
+            return type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray;
+        }
+
         public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
         {
-            if (type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray || type.IsPointer || type.IsModule)
+            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
             {
                 return currentAssemblyNamespace;
             }
@@ -1794,7 +1776,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (ownerOfExplicitInterface != null && (ownerOfExplicitInterface.IsGenericType || ownerOfExplicitInterface.IsGenericTypeDefinition || ownerOfExplicitInterface.IsArray))
+            if (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericOrArray())
             {
                 return true;
             }

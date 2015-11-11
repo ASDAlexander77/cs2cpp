@@ -27,15 +27,11 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class BaseWriter : ITypeResolver
+    public class BaseWriter : ICodeWriter
     {
         /// <summary>
         /// </summary>
-        protected readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
-
-        /// <summary>
-        /// </summary>
-        private static readonly IDictionary<string, IType> GlobalResolvedTypes = new SortedDictionary<string, IType>();
+        public readonly Lazy<IDictionary<string, Func<IMethod, IMethod>>> lazyMethodsByFullName;
 
         /// <summary>
         /// </summary>
@@ -50,6 +46,12 @@ namespace Il2Native.Logic
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressEnd = new SortedDictionary<int, OpCodePart>();
+            this.lazyMethodsByFullName = new Lazy<IDictionary<string, Func<IMethod, IMethod>>>(() =>
+                {
+                    var d = new SortedDictionary<string, Func<IMethod, IMethod>>();
+                    MethodBodyBank.RegisterAll(this, d);
+                    return d;
+                });
         }
 
         /// <summary>
@@ -120,11 +122,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public SystemTypes System { get; protected set; }
+        public IIlReader IlReader { get; set; }
 
         /// <summary>
         /// </summary>
-        public IIlReader IlReader { get; set; }
+        public IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName
+        {
+            get
+            {
+                return this.lazyMethodsByFullName.Value;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -157,13 +165,30 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-        
-        public void Initialize(IType type)
-        {
-            Debug.Assert(type != null, "You should provide type here");
 
-            this.Module = type.Module;
-            this.System = new SystemTypes(this.Module);
+        public SystemTypes System
+        {
+            get
+            {
+                return this.IlReader.System;
+            }
+        }
+
+        public ICodeWriter codeWriter
+        {
+            get
+            {
+                return this;
+            }
+        }
+
+        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
+        {
+            return this.IlReader.ResolveType(fullTypeName, genericContext);
+        }
+
+        public void Initialize()
+        {
             StringGen.ResetClass();
             ArraySingleDimensionGen.ResetClass();
         }
@@ -260,40 +285,6 @@ namespace Il2Native.Logic
             }
 
             this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="fullTypeName">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
-        {
-            if (genericContext != null && !genericContext.IsEmpty)
-            {
-                return this.Module.ResolveType(fullTypeName, genericContext);
-            }
-
-            IType result;
-            if (this.ResolvedTypes.TryGetValue(fullTypeName, out result))
-            {
-                return result;
-            }
-
-            if (GlobalResolvedTypes.Count > 0 && GlobalResolvedTypes.TryGetValue(fullTypeName, out result))
-            {
-                return result;
-            }
-
-            result = this.Module.ResolveType(fullTypeName, null);
-            this.ResolvedTypes[result.FullName] = result;
-            return result;
-        }
-
-        public void RegisterType(IType type)
-        {
-            GlobalResolvedTypes[type.FullName] = type;
         }
 
         public string GetStaticFieldName(IField field)
@@ -1349,10 +1340,14 @@ namespace Il2Native.Logic
             replace = false;
 
             // replvae Code.Ldsfld with calling method
-            if (opCode.ToCode() == Code.Ldsfld && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            var name = method.Name;
+            if (opCode.ToCode() == Code.Ldsfld 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix)
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
@@ -1366,10 +1361,13 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Ldsflda && !method.Name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Ldsflda 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) 
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
@@ -1383,10 +1381,13 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.ToCode() == Code.Stsfld && !method.Name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
+            if (opCode.ToCode() == Code.Stsfld 
+                && !name.StartsWith(SynthesizedGetStaticMethod.GetStaticMethodPrefix) 
+                && !name.StartsWith(SynthesizedSetStaticMethod.SetStaticMethodPrefix))
             {
                 var opCodeFieldType = opCode as OpCodeFieldInfoPart;
-                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails)
+                if (!opCodeFieldType.Operand.DeclaringType.IsPrivateImplementationDetails 
+                    && !opCodeFieldType.Operand.Name.EndsWith(ObjectInfrastructure.CalledCctorFieldName))
                 {
                     replace = true;
                     return new OpCodeMethodInfoPart(
@@ -1505,7 +1506,7 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes, IMethod method)
         {
             OpCodePart last = null;
-            if (method is IConstructor && method.IsStatic)
+            if ((method is IConstructor && method.IsStatic) || method.Name == ".cctor")
             {
                 var zeroOpCode = new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
                 last = BuildChain(last, zeroOpCode);
@@ -3104,15 +3105,14 @@ namespace Il2Native.Logic
             }
 
             var intOpBitSize = this.IntOpBitSize(opCodePart);
-            var typeResolver = (ITypeResolver)this;
             if (intOpBitSize == 1 || intOpBitSize >= (CWriter.PointerSize * 8))
             {
-                return uintRequired ? typeResolver.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
+                return uintRequired ? this.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
             }
 
             return uintRequired
-                ? typeResolver.GetUIntTypeByByteSize(CWriter.PointerSize)
-                : typeResolver.GetIntTypeByByteSize(CWriter.PointerSize);
+                ? this.GetUIntTypeByByteSize(CWriter.PointerSize)
+                : this.GetIntTypeByByteSize(CWriter.PointerSize);
         }
 
         /// <summary>

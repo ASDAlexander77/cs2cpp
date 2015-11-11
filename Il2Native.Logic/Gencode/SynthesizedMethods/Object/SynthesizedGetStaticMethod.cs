@@ -9,7 +9,7 @@
     {
         public const string GetStaticMethodPrefix = "get_static_";
 
-        private readonly ITypeResolver typeResolver;
+        private readonly ICodeWriter codeWriter;
         
         private readonly IField field;
 
@@ -17,19 +17,19 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedGetStaticMethod(IType type, IField field, ITypeResolver typeResolver)
+        public SynthesizedGetStaticMethod(IType type, IField field, ICodeWriter codeWriter)
             : base(null, string.Concat(GetStaticMethodPrefix, field.Name), type, field.FieldType)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
             this.field = field;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             var codeBuilder = new IlCodeBuilder();
-            typeResolver.GetGetStaticMethod(codeBuilder, this.Type, field);
+            ObjectInfrastructure.GetGetStaticMethod(this.codeWriter, codeBuilder, this.Type, field);
             return codeBuilder;
         }
     }

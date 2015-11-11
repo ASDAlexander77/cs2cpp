@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -10,7 +11,7 @@
     {
         public static readonly string Name = "Void System.Array.InternalSetValue(Void*, System.Object)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new IlCodeBuilder();
 
@@ -230,39 +231,39 @@
 
             codeList.Add(Code.Ret);
 
-            var typedReferenceType = typeResolver.System.System_TypedReference;
-            var intPtrType = typeResolver.System.System_IntPtr;
+            var typedReferenceType = codeWriter.System.System_TypedReference;
+            var intPtrType = codeWriter.System.System_IntPtr;
 
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
-            tokenResolutions.Add(typedReferenceType.GetFieldByName("Type", typeResolver));
-            tokenResolutions.Add(intPtrType.GetFieldByName("m_value", typeResolver));
-            tokenResolutions.Add(typeResolver.System.System_Object.ToPointerType());
-            tokenResolutions.Add(typeResolver.System.System_Object);
-            tokenResolutions.Add(typeResolver.System.System_Boolean);
-            tokenResolutions.Add(typeResolver.System.System_Char);
-            tokenResolutions.Add(typeResolver.System.System_SByte);
-            tokenResolutions.Add(typeResolver.System.System_Byte);
-            tokenResolutions.Add(typeResolver.System.System_Int16);
-            tokenResolutions.Add(typeResolver.System.System_UInt16);
-            tokenResolutions.Add(typeResolver.System.System_Int32);
-            tokenResolutions.Add(typeResolver.System.System_UInt32);
-            tokenResolutions.Add(typeResolver.System.System_Int64);
-            tokenResolutions.Add(typeResolver.System.System_UInt64);
-            tokenResolutions.Add(typeResolver.System.System_Single);
-            tokenResolutions.Add(typeResolver.System.System_Double);
-            tokenResolutions.Add(typeResolver.System.System_Decimal);
-            tokenResolutions.Add(typeResolver.System.System_DateTime);
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Value", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Type", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(intPtrType, "m_value", codeWriter));
+            tokenResolutions.Add(codeWriter.System.System_Object.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Object);
+            tokenResolutions.Add(codeWriter.System.System_Boolean);
+            tokenResolutions.Add(codeWriter.System.System_Char);
+            tokenResolutions.Add(codeWriter.System.System_SByte);
+            tokenResolutions.Add(codeWriter.System.System_Byte);
+            tokenResolutions.Add(codeWriter.System.System_Int16);
+            tokenResolutions.Add(codeWriter.System.System_UInt16);
+            tokenResolutions.Add(codeWriter.System.System_Int32);
+            tokenResolutions.Add(codeWriter.System.System_UInt32);
+            tokenResolutions.Add(codeWriter.System.System_Int64);
+            tokenResolutions.Add(codeWriter.System.System_UInt64);
+            tokenResolutions.Add(codeWriter.System.System_Single);
+            tokenResolutions.Add(codeWriter.System.System_Double);
+            tokenResolutions.Add(codeWriter.System.System_Decimal);
+            tokenResolutions.Add(codeWriter.System.System_DateTime);
             tokenResolutions.Add(
-                IlReader.Constructors(typeResolver.System.System_NotSupportedException, typeResolver).First(c => !c.GetParameters().Any()));
+                IlReader.Constructors(codeWriter.System.System_NotSupportedException, codeWriter).First(c => !c.GetParameters().Any()));
 
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("ref"));
-            parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
+            parameters.Add(codeWriter.System.System_Void.ToPointerType().ToParameter("ref"));
+            parameters.Add(codeWriter.System.System_Object.ToParameter("obj"));
 
-            MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

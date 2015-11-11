@@ -31,7 +31,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class CWriter : BaseWriter, ICodeWriter
+    public class CWriter : BaseWriter, ICodeWriterEx
     {
         /// <summary>
         /// </summary>
@@ -88,10 +88,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<string, int> poisitionByFieldInfo = new SortedDictionary<string, int>();
-
         public DebugInfoGenerator debugInfoGenerator;
 
+        /// <summary>
+        /// </summary>
         private IList<IMethod> externDeclarations = new List<IMethod>();
 
         /// <summary>
@@ -1741,7 +1741,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var unsignedType = this.GetUIntTypeByBitSize(bits);
+            var unsignedType = CHelpersGen.GetUIntTypeByBitSize(this, bits);
             this.Output.Write("(");
             unsignedType.WriteTypePrefix(this);
             this.Output.Write(")");
@@ -1806,18 +1806,6 @@ namespace Il2Native.Logic
             if (!this.indexByFieldInfo.TryGetValue(string.Concat(type.FullName, '.', fieldName), out index))
             {
                 index = this.CalculateFieldIndex(type, fieldName);
-            }
-
-            return index;
-        }
-
-        public int GetFieldPosition(IType type, IField fieldInfo)
-        {
-            // find index
-            int index;
-            if (!this.poisitionByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
-            {
-                index = this.CalculateFieldPosition(type, fieldInfo);
             }
 
             return index;
@@ -2168,7 +2156,7 @@ namespace Il2Native.Logic
                 this.EndPreprocessorIf();
             }
 
-            if (!this.IsHeader && (this.IsCoreLib && !this.IsSplit || this.IsSplit && string.IsNullOrEmpty(this.SplitNamespace)))
+            if (!this.IsHeader && ((this.IsCoreLib || this.IlReader.CompactMode) && !this.IsSplit || this.IsSplit && string.IsNullOrEmpty(this.SplitNamespace)))
             {
                 // decimals implementation
                 this.Output.WriteLine(Resources.decimals);
@@ -2797,7 +2785,7 @@ namespace Il2Native.Logic
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
         }
 
-        private static bool IsMain(IMethod method)
+        public static bool IsMain(IMethod method)
         {
             return method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
         }
@@ -2954,7 +2942,7 @@ namespace Il2Native.Logic
 
         public void WritePostDefinitions(IType type)
         {
-            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            if (!type.IsGenericOrArray() && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }
@@ -2972,7 +2960,7 @@ namespace Il2Native.Logic
         public void WritePreDefinitions(IType type)
         {
             // we allow IsGenericTypeDefinition to support Generic "typeof"
-            if (!(type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            if (!(type.IsGenericOrArray()) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }
@@ -3097,7 +3085,7 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(string.Empty);
 
-            if (!this.IsHeader && this.IsCoreLib && (!this.IsSplit || this.IsSplit && string.IsNullOrWhiteSpace(this.SplitNamespace)))
+            if (!this.IsHeader && (this.IsCoreLib || this.IlReader.CompactMode) && (!this.IsSplit || this.IsSplit && string.IsNullOrWhiteSpace(this.SplitNamespace)))
             {
                 // definitions
                 this.Output.WriteLine(Resources.c_definitions);
@@ -3240,64 +3228,6 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static int CalculateDynamicCastInterfaceIndex(IType fromType, IType toType)
-        {
-            if (!fromType.IsInterface && !toType.IsInterface)
-            {
-                if (toType.IsDerivedFrom(fromType))
-                {
-                    return 0;
-                }
-
-                return -2;
-            }
-
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                return -2;
-            }
-
-            var allInterfaces = toType.GetAllInterfaces();
-            if (fromType.IsInterface && !toType.IsInterface && !allInterfaces.Contains(fromType))
-            {
-                return -2;
-            }
-
-            if (fromType.IsInterface && !toType.IsInterface && allInterfaces.Contains(fromType))
-            {
-                // caluclate interfaceRouteIndex
-                var interfaceRouteIndex = 0;
-                var index = 1; // + BaseType
-                foreach (var @interface in toType.GetInterfaces())
-                {
-                    if (@interface.GetAllInterfaces().Contains(fromType))
-                    {
-                        interfaceRouteIndex = index;
-                        break;
-                    }
-
-                    index++;
-                }
-
-                if (interfaceRouteIndex >= 0 && toType.GetInterfaces().Contains(fromType))
-                {
-                    return -3;
-                }
-
-                return interfaceRouteIndex * PointerSize;
-            }
-
-            return 0;
-        }
-
         private int CalculateFieldIndex(IType type, string fieldName)
         {
             var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
@@ -3317,38 +3247,6 @@ namespace Il2Native.Logic
             // no shift needed, it will be applied in WriteFieldAccess
             ////index += this.CalculateFirstFieldPositionInType(type);
             this.indexByFieldInfo[string.Concat(type.FullName, '.', fieldName)] = index;
-
-            return index;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="fieldInfo">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        private int CalculateFieldPosition(IType type, IField fieldInfo)
-        {
-            var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
-            var index = 0;
-
-            while (index < list.Count && list[index].NameNotEquals(fieldInfo))
-            {
-                index++;
-            }
-
-            if (index == list.Count)
-            {
-                throw new KeyNotFoundException();
-            }
-
-            index += this.CalculateFirstFieldPositionInType(type);
-
-            this.poisitionByFieldInfo[fieldInfo.GetFullName()] = index;
 
             return index;
         }
@@ -3856,7 +3754,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
-            if (this.GcSupport && this.IsCoreLib)
+            if (this.GcSupport && (this.IsCoreLib || this.IlReader.CompactMode))
             {
                 this.Output.WriteLine("GC_INIT();");
             }
@@ -3964,20 +3862,28 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteMainFunction()
         {
+            var synthesizedMainMethod = this.GenerateMainMethod(this.MainMethod);
+            this.WriteMethod(synthesizedMainMethod, null, null);
+        }
+
+        public IMethod GenerateMainMethod(IMethod mainMethod)
+        {
             var ilCodeBuilder = new IlCodeBuilder();
 
             var gtors = !this.Gctors
-                            ? this.AllReferences.Distinct().Reverse().Select(
-                                      reference =>
-                                      new SynthesizedMethodStringAdapter(
-                                          this.GetGlobalConstructorsFunctionName(reference),
-                                          string.Empty,
-                                          System.System_Void))
-                            : null;
+                ? (!IlReader.CompactMode
+                    ? this.AllReferences.Distinct().Reverse()
+                    : new[] { this.AssemblyQualifiedName }).Select(
+                        reference =>
+                            new SynthesizedMethodStringAdapter(
+                                this.GetGlobalConstructorsFunctionName(reference),
+                                string.Empty,
+                                System.System_Void))
+                : null;
 
-            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, this.MainMethod, gtors, this);
-
-            this.WriteMethod(new SynthesizedMainMethod(mainSynthMethod, this.MainMethod, this), null, null);
+            var mainSynthMethod = MainGen.GetMainMethodBody(ilCodeBuilder, mainMethod, gtors, this);
+            var synthesizedMainMethod = new SynthesizedMainMethod(mainSynthMethod, mainMethod, this);
+            return synthesizedMainMethod;
         }
 
         private void WriteMethodBeginning(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext)
@@ -4362,7 +4268,7 @@ namespace Il2Native.Logic
 
         private bool IsStubApplied(IMethod method)
         {
-            return this.Stubs && !method.IsUnmanaged;
+            return this.Stubs && !method.IsUnmanaged && !method.IsUnmanagedDllImport;
         }
 
         /// <summary>
@@ -4630,7 +4536,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteVirtualTableImplementations(IType type, bool declaration = false)
+        public void WriteVirtualTableImplementations(IType type, bool declaration = false)
         {
             // write VirtualTable
             if (type.IsInterface)
@@ -4650,6 +4556,33 @@ namespace Il2Native.Logic
                 var virtualTable = type.GetVirtualTable(this);
                 virtualTable.WriteTableOfMethodsWithImplementation(this, type, declaration: declaration);
                 this.Output.WriteLine(string.Empty);
+            }
+        }
+
+        public IEnumerable<IMethod> VirtualTableImplementations(IType type)
+        {
+            // write VirtualTable
+            if (type.IsInterface)
+            {
+                yield break;
+            }
+
+            foreach (var @interface in type.HaveStaticVirtualTablesForInterfaces(this))
+            {
+                var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
+                foreach (var pair in virtualInterfaceTable.Where(p => p.Kind == PairKind.Method).Cast<Pair<IMethod, IMethod>>())
+                {
+                    yield return pair.Value;
+                }
+            }
+
+            if (type.HasAnyVirtualMethod(this))
+            {
+                var virtualTable = type.GetVirtualTable(this);
+                foreach (var pair in virtualTable.Where(p => p.Kind == PairKind.Method).Cast<Pair<IMethod, IMethod>>())
+                {
+                    yield return pair.Value;
+                }
             }
         }
 

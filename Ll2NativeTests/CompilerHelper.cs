@@ -66,7 +66,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool GcDebugEnabled = true;
+        public const bool GcDebugEnabled = false;
 
         /// <summary>
         /// </summary>
@@ -103,6 +103,14 @@
 
         /// <summary>
         /// </summary>
+        public static bool CompactMode = false;
+
+        /// <summary>
+        /// </summary>
+        public static bool Stubs = false;
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -129,7 +137,7 @@
                     if (AddSystemLinq)
                     {
                         //args.Add("ref:System.Core");
-                        args.Add(@"ref:E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\System.Linq.dll");
+                        args.Add(string.Format(@"ref:{0}System.Linq.dll", CoreCLRDlls));
                     }
                 }
                 else
@@ -183,7 +191,7 @@
                 args.Add("verbose");
             }
 
-            if (stubs)
+            if (stubs || Stubs)
             {
                 args.Add("stubs");
             }
@@ -201,6 +209,11 @@
             if (split)
             {
                 args.Add("split");
+            }
+
+            if (CompactMode)
+            {
+                args.Add("compact");
             }
 
             return args.ToArray();
@@ -232,7 +245,7 @@
             Trace.WriteLine(string.Empty);
 
             // compile CoreLib
-            if (!CompilerHelper.Mscorlib)
+            if (!CompilerHelper.Mscorlib && !CompilerHelper.CompactMode)
             {
                 if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
                 {
@@ -268,7 +281,23 @@
                     }
                 }
 
-                if (CompilerHelper.Mscorlib)
+                if (CompilerHelper.CompactMode)
+                {
+                    // file exe
+                    ExecCmd(
+                        "g++",
+                        string.Format(
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=i686 -L .{2}",
+                            fileName,
+                            opt ? "-O3 " : string.Empty,
+                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
+                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
+
+                    Assert.IsTrue(
+                        File.Exists(
+                            Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, fileName))));                    
+                }
+                else if (CompilerHelper.Mscorlib)
                 {
                     if (!File.Exists(Path.Combine(OutputPath, "libmscorlib.a")))
                     {

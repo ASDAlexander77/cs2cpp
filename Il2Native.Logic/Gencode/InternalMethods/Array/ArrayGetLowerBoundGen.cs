@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -9,7 +10,7 @@
     {
         public static readonly string Name = "Int32 System.Array.GetLowerBound(Int32)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new IlCodeBuilder();
 
@@ -46,22 +47,22 @@
 
             codeList.Add(Code.Ret);
 
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
-            var arrayTypeMulti = typeResolver.System.System_Byte.ToArrayType(2);
+            var arrayType = codeWriter.System.System_Byte.ToArrayType(1);
+            var arrayTypeMulti = codeWriter.System.System_Byte.ToArrayType(2);
 
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(arrayType);
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayType, "rank", codeWriter));
             tokenResolutions.Add(arrayTypeMulti);
-            tokenResolutions.Add(arrayTypeMulti.GetFieldByName("lowerBounds", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(arrayTypeMulti, "lowerBounds", codeWriter));
 
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Int32.ToParameter("array"));
+            parameters.Add(codeWriter.System.System_Int32.ToParameter("array"));
 
-            MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -22,16 +23,16 @@
             Code.Ret
         };
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering UnsafeCastGen
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typeResolver.System.System_Void.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Void.ToPointerType());
 
             var locals = new List<IType>();
 
             // params will be taken from method
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, null);
+            yield return MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, null);
         }
     }
 }

@@ -85,18 +85,12 @@ namespace PEAssemblyReader
         /// </exception>
         public string AssemblyQualifiedName
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get { return this.DeclaringType.AssemblyQualifiedName; }
         }
 
         public string AssemblyFullyQualifiedName
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get { return this.DeclaringType.AssemblyFullyQualifiedName; }
         }
 
         /// <summary>

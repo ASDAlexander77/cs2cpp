@@ -19,10 +19,10 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedSingleDimArrayIListSetItemMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("set_Item", arrayType, typeResolver.System.System_Void)
+        public SynthesizedSingleDimArrayIListSetItemMethod(IType arrayType, ICodeWriter codeWriter)
+            : base("set_Item", arrayType, codeWriter.System.System_Void)
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);
@@ -41,7 +41,7 @@
                     codeList.GetCode());
 
             this._parameters = new List<IParameter>();
-            this._parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
+            this._parameters.Add(codeWriter.System.System_Int32.ToParameter("index"));
             this._parameters.Add(arrayType.GetElementType().ToParameter("_value"));
 
             this._tokenResolutions = new List<object>();

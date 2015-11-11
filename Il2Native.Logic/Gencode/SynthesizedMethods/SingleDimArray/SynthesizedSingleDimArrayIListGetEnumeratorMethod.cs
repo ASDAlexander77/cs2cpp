@@ -19,10 +19,10 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedSingleDimArrayIListGetEnumeratorMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("GetEnumerator", arrayType, typeResolver.System.System_Collections_Generic_IEnumerator_T.Construct(arrayType.GetElementType()))
+        public SynthesizedSingleDimArrayIListGetEnumeratorMethod(IType arrayType, ICodeWriter codeWriter)
+            : base("GetEnumerator", arrayType, codeWriter.System.System_Collections_Generic_IEnumerator_T.Construct(arrayType.GetElementType()))
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);
@@ -43,11 +43,11 @@
 
             this._tokenResolutions = new List<object>();
 
-            var arraySegmentType = typeResolver.System.System_ArraySegment_T1.Construct(arrayType.GetElementType());
+            var arraySegmentType = codeWriter.System.System_ArraySegment_T1.Construct(arrayType.GetElementType());
             this._tokenResolutions.Add(
-                IlReader.Constructors(arraySegmentType, typeResolver).First(c => c.GetParameters().Count() == 1));
+                IlReader.Constructors(arraySegmentType, codeWriter).First(c => c.GetParameters().Count() == 1));
             this._tokenResolutions.Add(
-                IlReader.Constructors(arraySegmentType.GetNestedTypes().First(), typeResolver).First(c => c.GetParameters().Count() == 1));
+                IlReader.Constructors(arraySegmentType.GetNestedTypes().First(), codeWriter).First(c => c.GetParameters().Count() == 1));
         }
 
         /// <summary>

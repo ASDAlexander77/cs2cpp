@@ -19,7 +19,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         public const string Name = ".dyniface";
 
-        private readonly ITypeResolver typeResolver;
+        private readonly ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
@@ -27,10 +27,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedResolveInterfaceMethod(IType type, ITypeResolver typeResolver)
-            : base(null, Name, type, typeResolver.System.System_Object)
+        public SynthesizedResolveInterfaceMethod(IType type, ICodeWriter codeWriter)
+            : base(null, Name, type, codeWriter.System.System_Object)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {
                 IsVirtual = true;
@@ -43,7 +43,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            return typeResolver.GetResolveInterfaceMethod(Type, true);
+            return ObjectInfrastructure.GetResolveInterfaceMethod(this.codeWriter, Type, true);
         }
     }
 }

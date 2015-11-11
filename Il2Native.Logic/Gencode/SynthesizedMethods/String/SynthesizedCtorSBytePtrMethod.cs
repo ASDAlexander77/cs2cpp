@@ -19,16 +19,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedCtorSBytePtrMethod(ITypeResolver typeResolver)
-            : base("CtorSBytePtr", typeResolver.System.System_String, typeResolver.System.System_String)
+        public SynthesizedCtorSBytePtrMethod(ICodeWriter codeWriter)
+            : base("CtorSBytePtr", codeWriter.System.System_String, codeWriter.System.System_String)
         {
             byte[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            StringGen.GetCtorSBytePtr(typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            StringGen.GetCtorSBytePtr(codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

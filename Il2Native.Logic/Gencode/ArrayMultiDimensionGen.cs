@@ -10,12 +10,12 @@
 
     public static class ArrayMultiDimensionGen
     {
-        public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
+        public static IEnumerable<IField> GetFields(IType arrayType, ICodeWriter codeWriter)
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var shortType = typeResolver.System.System_Int16;
-            var intType = typeResolver.System.System_Int32;
+            var shortType = codeWriter.System.System_Int16;
+            var intType = codeWriter.System.System_Int32;
 
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
@@ -28,7 +28,7 @@
 
         public static void GetMultiDimensionArrayCtor(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out IlCodeBuilder ilCodeBuilder)
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
@@ -39,16 +39,16 @@
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
 
-            var token1 = arrayType.GetFieldByName("rank", typeResolver);
-            var token2 = arrayType.GetFieldByName("typeCode", typeResolver);
-            var token3 = arrayType.GetFieldByName("elementSize", typeResolver);
+            var token1 = arrayType.GetFieldByName("rank", codeWriter);
+            var token2 = arrayType.GetFieldByName("typeCode", codeWriter);
+            var token3 = arrayType.GetFieldByName("elementSize", codeWriter);
             // lowerBounds
-            var token4 = typeResolver.System.System_Int32;
-            var token5 = arrayType.GetFieldByName("lowerBounds", typeResolver);
+            var token4 = codeWriter.System.System_Int32;
+            var token5 = arrayType.GetFieldByName("lowerBounds", codeWriter);
             // bounds
-            var token6 = typeResolver.System.System_Int32;
-            var token7 = arrayType.GetFieldByName("lengths", typeResolver);
-            var token8 = arrayType.GetFieldByName("length", typeResolver);
+            var token6 = codeWriter.System.System_Int32;
+            var token7 = arrayType.GetFieldByName("lengths", codeWriter);
+            var token8 = arrayType.GetFieldByName("length", codeWriter);
 
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.Duplicate();
@@ -118,16 +118,16 @@
             ilCodeBuilder.Return();
 
             // locals
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Int32.ToArrayType(1));
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Int32.ToArrayType(1));
 
             // parameters
-            ilCodeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));
+            ilCodeBuilder.Parameters.AddRange(GetParameters(arrayType, codeWriter));
         }
 
         public static void GetMultiDimensionArrayGet(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -140,7 +140,7 @@
             codeList.Add(Code.Ldarg_0);
 
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, codeWriter, out tokenResolutions, out locals));
 
             codeList.AppendInt(Code.Ldelem, 4);
 
@@ -151,12 +151,12 @@
             code = codeList.ToArray();
 
             // parameters
-            parameters = GetParameters(arrayType, typeResolver);
+            parameters = GetParameters(arrayType, codeWriter);
         }
 
         public static void GetMultiDimensionArraySet(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -169,7 +169,7 @@
             codeList.Add(Code.Ldarg_0);
 
             // element index
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, codeWriter, out tokenResolutions, out locals));
 
             // put value on stack (+ 'this' as first)
             codeList.AppendLoadArgument(arrayType.ArrayRank + 1);
@@ -183,14 +183,14 @@
             code = codeList.ToArray();
 
             // parameters
-            var list = GetParameters(arrayType, typeResolver);
+            var list = GetParameters(arrayType, codeWriter);
             list.Add(arrayType.GetElementType().ToParameter("arrayElement"));
             parameters = list;
         }
 
         public static void GetMultiDimensionArrayAddress(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -203,7 +203,7 @@
             codeList.Add(Code.Ldarg_0);
 
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, codeWriter, out tokenResolutions, out locals));
 
             codeList.AppendInt(Code.Ldelema, 4);
 
@@ -214,19 +214,19 @@
             code = codeList.ToArray();
 
             // parameters
-            parameters = GetParameters(arrayType, typeResolver);
+            parameters = GetParameters(arrayType, codeWriter);
         }
 
-        public static List<IParameter> GetParameters(IType type, ITypeResolver typeResolver)
+        public static List<IParameter> GetParameters(IType type, ICodeWriter codeWriter)
         {
-            var intType = typeResolver.System.System_Int32;
+            var intType = codeWriter.System.System_Int32;
             var index = 0;
             return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter("param" + index++)).ToList();
         }
 
         public static void MultiDimArrayAllocationSizeMethodBody(
             IlCodeBuilder codeBuilder,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             IType arrayType)
         {
             // add element size
@@ -271,12 +271,12 @@
             }
 
             // parameters
-            codeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));
+            codeBuilder.Parameters.AddRange(GetParameters(arrayType, codeWriter));
         }
 
         private static List<object> GetIndexPartMethodBody(
             IType arrayType,
-            ITypeResolver typeResolver,
+            ICodeWriter codeWriter,
             out IList<object> tokenResolutions,
             out IList<IType> locals)
         {
@@ -336,18 +336,18 @@
             // tokens
             tokenResolutions = new List<object>();
             // data
-            tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("data", codeWriter));
             // lowerBounds
-            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", codeWriter));
             // bounds
-            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", codeWriter));
             // element type
             tokenResolutions.Add(arrayType.GetElementType());
             // element type as pointer
             tokenResolutions.Add(arrayType.GetElementType().ToPointerType());
 
             locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(codeWriter.System.System_Int32);
 
             return codeList;
         }

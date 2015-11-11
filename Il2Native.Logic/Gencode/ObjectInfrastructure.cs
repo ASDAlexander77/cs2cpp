@@ -50,19 +50,19 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static void GetAllocateMemoryCodeForObject(
-            this ITypeResolver typeResolver, IlCodeBuilder newAlloc, IType declaringClassType, bool doNotTestNullValue, bool enableStringFastAllocation = false)
+            this ICodeWriter codeWriter, IlCodeBuilder newAlloc, IType declaringClassType, bool doNotTestNullValue, bool enableStringFastAllocation = false)
         {
             if (declaringClassType.IsMultiArray)
             {
-                ArrayMultiDimensionGen.MultiDimArrayAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType);
+                ArrayMultiDimensionGen.MultiDimArrayAllocationSizeMethodBody(newAlloc, codeWriter, declaringClassType);
             }
             else if (declaringClassType.IsArray)
             {
-                ArraySingleDimensionGen.SingleDimArrayAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType);
+                ArraySingleDimensionGen.SingleDimArrayAllocationSizeMethodBody(newAlloc, codeWriter, declaringClassType);
             }
             else if (enableStringFastAllocation && declaringClassType.IsString)
             {
-                StringGen.StringAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType, typeResolver.System.System_Char, true);
+                StringGen.StringAllocationSizeMethodBody(newAlloc, codeWriter, declaringClassType, codeWriter.System.System_Char, true);
             }
             else
             {
@@ -70,25 +70,25 @@ namespace Il2Native.Logic.Gencode
             }
 
             // TODO: to reduce usage of locks you can limit it to object types only
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 // Add area to save 'cond'
-                newAlloc.SizeOf(typeResolver.System.System_Object.ToPointerType());
+                newAlloc.SizeOf(codeWriter.System.System_Object.ToPointerType());
                 newAlloc.Add(Code.Add);
 
                 // Add area to save 'mutex'
-                newAlloc.SizeOf(typeResolver.System.System_Object.ToPointerType());
+                newAlloc.SizeOf(codeWriter.System.System_Object.ToPointerType());
                 newAlloc.Add(Code.Add);
             }
 
             // static is not part of class
-            var isAtomicAllocation = typeResolver.CanBeAllocatedAtomically(declaringClassType);
+            var isAtomicAllocation = CanBeAllocatedAtomically(codeWriter, declaringClassType);
 
             var localNumber = -1;
             if (isAtomicAllocation)
             {
                 localNumber = newAlloc.Locals.Count;
-                newAlloc.Locals.Add(typeResolver.System.System_Int32);
+                newAlloc.Locals.Add(codeWriter.System.System_Int32);
 
                 newAlloc.Add(Code.Dup);
                 newAlloc.SaveLocal(localNumber);
@@ -106,24 +106,24 @@ namespace Il2Native.Logic.Gencode
             newAlloc.LoadConstant(100 * 1024);
             var ifBigger100k = newAlloc.Branch(Code.Bge_Un, Code.Bge_Un_S);
 
-            var debugOriginalRequired = typeResolver.GcDebug && enableStringFastAllocation;
-            var allocator = typeResolver.GetAllocator(isAtomicAllocation, false, debugOriginalRequired);
+            var debugOriginalRequired = codeWriter.GcDebug && enableStringFastAllocation;
+            var allocator = codeWriter.GetAllocator(isAtomicAllocation, false, debugOriginalRequired);
             newAlloc.Call(
                 new SynthesizedMethod(
                     allocator,
-                    typeResolver.System.System_Void.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+                    codeWriter.System.System_Void.ToPointerType(),
+                    new[] { codeWriter.System.System_Int32.ToParameter("size") }));
 
             var leave = newAlloc.Branch(Code.Br, Code.Br_S);
 
             newAlloc.Add(ifBigger100k);
 
-            var allocatorBigObj = typeResolver.GetAllocator(isAtomicAllocation, true, debugOriginalRequired);
+            var allocatorBigObj = codeWriter.GetAllocator(isAtomicAllocation, true, debugOriginalRequired);
             newAlloc.Call(
                 new SynthesizedMethod(
                     allocatorBigObj,
-                    typeResolver.System.System_Void.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+                    codeWriter.System.System_Void.ToPointerType(),
+                    new[] { codeWriter.System.System_Int32.ToParameter("size") }));
 
             newAlloc.Add(leave);
 #endif
@@ -133,8 +133,8 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.Add(Code.Dup);
                 var jump = newAlloc.Branch(Code.Brtrue, Code.Brtrue_S);
 
-                var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
-                var defaultConstructor = throwType.FindConstructor(typeResolver);
+                var throwType = codeWriter.ResolveType("System.OutOfMemoryException");
+                var defaultConstructor = OpCodeExtensions.FindConstructor(throwType, codeWriter);
 
                 Debug.Assert(defaultConstructor != null, "default constructor is null");
 
@@ -153,73 +153,73 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.Add(Code.Initblk);
             }
 
-            if (typeResolver.GcSupport)
+            if (codeWriter.GcSupport)
             {
-                var finalizer = declaringClassType.FindFinalizer(typeResolver);
+                var finalizer = declaringClassType.FindFinalizer(codeWriter);
                 if (finalizer != null)
                 {
                     // obj
                     newAlloc.Add(Code.Dup);
                     // finalizer function address
-                    newAlloc.LoadToken(declaringClassType.GetMethodsByName(SynthesizedFinalizerWrapperMethod.Name, typeResolver).First());
+                    newAlloc.LoadToken(declaringClassType.GetMethodsByName(SynthesizedFinalizerWrapperMethod.Name, codeWriter).First());
                     // Dummy nulls
                     newAlloc.LoadNull();
                     newAlloc.LoadNull();
                     newAlloc.LoadNull();
 
-                    var voidPointer = typeResolver.System.System_Void.ToPointerType();
+                    var voidPointer = codeWriter.System.System_Void.ToPointerType();
                     var parameters = new[]
                                          {
                                              voidPointer.ToParameter("obj"), voidPointer.ToParameter("fn"), voidPointer.ToParameter("cd"),
                                              voidPointer.ToParameter("ofn"), voidPointer.ToPointerType().ToParameter("ocd")
                                          };
-                    newAlloc.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, typeResolver.System.System_Void, parameters));
+                    newAlloc.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, codeWriter.System.System_Void, parameters));
 
                 }
             }
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 // init cond area with -1 value and shift address
                 newAlloc.Add(Code.Dup);
-                newAlloc.Castclass(typeResolver.System.System_Int32.ToPointerType());
+                newAlloc.Castclass(codeWriter.System.System_Int32.ToPointerType());
 
                 newAlloc.LoadConstant(-1);
-                newAlloc.SaveObject(typeResolver.System.System_Int32);
+                newAlloc.SaveObject(codeWriter.System.System_Int32);
 
                 newAlloc.SizeOf(declaringClassType.ToPointerType());
                 newAlloc.Add(Code.Add);
 
                 // init mutex area with -1 value and shift address
                 newAlloc.Add(Code.Dup);
-                newAlloc.Castclass(typeResolver.System.System_Int32.ToPointerType());
+                newAlloc.Castclass(codeWriter.System.System_Int32.ToPointerType());
 
                 newAlloc.LoadConstant(-1);
-                newAlloc.SaveObject(typeResolver.System.System_Int32);
+                newAlloc.SaveObject(codeWriter.System.System_Int32);
 
                 newAlloc.SizeOf(declaringClassType.ToPointerType());
                 newAlloc.Add(Code.Add);
 
-                newAlloc.Castclass(typeResolver.System.System_Void.ToPointerType());
+                newAlloc.Castclass(codeWriter.System.System_Void.ToPointerType());
             }
 
             newAlloc.Castclass(declaringClassType);
         }
 
-        private static bool CanBeAllocatedAtomically(this ITypeResolver typeResolver, IType declaringClassType)
+        private static bool CanBeAllocatedAtomically(this ICodeWriter codeWriter, IType declaringClassType)
         {
             if (declaringClassType.IsInterface)
             {
                 return true;
             }
 
-            return Logic.IlReader.Fields(declaringClassType, IlReader.DefaultFlags | BindingFlags.FlattenHierarchy, typeResolver)
-                        .All(typeResolver.IsAtomicValue);
+            return Logic.IlReader.Fields(declaringClassType, IlReader.DefaultFlags | BindingFlags.FlattenHierarchy, codeWriter)
+                        .All(codeWriter.IsAtomicValue);
         }
 
-        private static bool IsAtomicValue(this ITypeResolver typeResolver, IField field)
+        private static bool IsAtomicValue(this ICodeWriter codeWriter, IField field)
         {
-            if (field.IsConst || field.IsVirtualTable || field.IsStatic || typeResolver.IsAtomicValue(field.FieldType))
+            if (field.IsConst || field.IsVirtualTable || field.IsStatic || IsAtomicValue(codeWriter, field.FieldType))
             {
                 return true;
             }
@@ -227,13 +227,13 @@ namespace Il2Native.Logic.Gencode
             if (field.IsFixed)
             {
                 var elementType = field.FieldType.GetElementType();
-                return typeResolver.IsAtomicValue(elementType);
+                return IsAtomicValue(codeWriter, elementType);
             }
 
             return false;
         }
 
-        private static bool IsAtomicValue(this ITypeResolver typeResolver, IType type)
+        private static bool IsAtomicValue(this ICodeWriter codeWriter, IType type)
         {
             if (!type.IsValueType || type.IsPointer)
             {
@@ -242,18 +242,18 @@ namespace Il2Native.Logic.Gencode
 
             if (type.IsStructureType())
             {
-                return typeResolver.CanBeAllocatedAtomically(type);
+                return CanBeAllocatedAtomically(codeWriter, type);
             }
 
             return true;
         }
 
         public static IlCodeBuilder GetBoxMethod(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IType type,
             bool doNotTestNullValue)
         {
-            var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
+            var isNullable = type.TypeEquals(codeWriter.System.System_Nullable_T);
             var declaringClassType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
             var normal = declaringClassType.ToNormal();
             var isValueType = normal.IsValueType();
@@ -264,14 +264,14 @@ namespace Il2Native.Logic.Gencode
             if (isNullable)
             {
                 ilCodeBuilder.LoadArgument(0);
-                ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(0, typeResolver));
+                ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(0, codeWriter));
                 var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
                 ilCodeBuilder.LoadNull();
                 ilCodeBuilder.Add(Code.Ret);
                 ilCodeBuilder.Add(jump);
             }
 
-            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
+            GetNewMethod(codeWriter, ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
 
             ilCodeBuilder.Parameters.Add(type.ToParameter("_value"));
 
@@ -284,23 +284,23 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.LoadArgument(0);
                 if (isNullable)
                 {
-                    ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                    ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, codeWriter));
                 }
 
-                ilCodeBuilder.SaveField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
+                ilCodeBuilder.SaveField(declaringClassType.GetFieldByFieldNumber(0, codeWriter));
             }
             else
             {
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
-                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                var firstField = declaringClassType.GetFieldByFieldNumber(0, codeWriter);
                 if (firstField != null)
                 {
                     ilCodeBuilder.LoadFieldAddress(firstField);
                     ilCodeBuilder.LoadArgument(0);
                     if (isNullable)
                     {
-                        ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                        ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, codeWriter));
                     }
 
                     ilCodeBuilder.CopyObject(normal);
@@ -308,16 +308,16 @@ namespace Il2Native.Logic.Gencode
             }
 
             ilCodeBuilder.Add(Code.Dup);
-            ilCodeBuilder.Call(declaringClassType.GetFirstMethodByName(SynthesizedInitMethod.Name, typeResolver));
+            ilCodeBuilder.Call(declaringClassType.GetFirstMethodByName(SynthesizedInitMethod.Name, codeWriter));
 
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;
         }
 
-        public static IlCodeBuilder GetUnboxMethod(this ITypeResolver typeResolver, IType type)
+        public static IlCodeBuilder GetUnboxMethod(this ICodeWriter codeWriter, IType type)
         {
-            var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
+            var isNullable = type.TypeEquals(codeWriter.System.System_Nullable_T);
             var isValueType = type.IsValueType();
 
             var ilCodeBuilder = new IlCodeBuilder();
@@ -325,7 +325,7 @@ namespace Il2Native.Logic.Gencode
             ilCodeBuilder.LoadArgument(0);
             var jumpIfNotNull = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
-            if (typeResolver.Unsafe || isNullable)
+            if (codeWriter.Unsafe || isNullable)
             {
                 ilCodeBuilder.Locals.Add(type);
                 ilCodeBuilder.LoadLocalAddress(0);
@@ -335,7 +335,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                ilCodeBuilder.New(typeResolver.System.System_NullReferenceException.FindConstructor(typeResolver));
+                ilCodeBuilder.New(OpCodeExtensions.FindConstructor(codeWriter.System.System_NullReferenceException, codeWriter));
                 ilCodeBuilder.Throw();
             }
 
@@ -343,7 +343,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!isValueType && !isNullable)
             {
-                var firstField = type.GetFieldByFieldNumber(0, typeResolver);
+                var firstField = type.GetFieldByFieldNumber(0, codeWriter);
                 if (firstField != null)
                 {
                     ilCodeBuilder.LoadArgument(0);
@@ -357,7 +357,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // copy structure
-                var firstField = type.GetFieldByFieldNumber(0, typeResolver);
+                var firstField = type.GetFieldByFieldNumber(0, codeWriter);
                 if (firstField != null)
                 {
                     if (!isNullable)
@@ -370,7 +370,7 @@ namespace Il2Native.Logic.Gencode
                     {
                         ilCodeBuilder.Locals.Add(type);
                         ilCodeBuilder.LoadLocalAddress(ilCodeBuilder.Locals.Count() - 1);
-                        var nullableValue = type.GetFieldByFieldNumber(1, typeResolver);
+                        var nullableValue = type.GetFieldByFieldNumber(1, codeWriter);
                         ilCodeBuilder.LoadFieldAddress(nullableValue);
 
                         ilCodeBuilder.LoadArgument(0);
@@ -604,16 +604,16 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IlCodeBuilder GetInitMethod(this ITypeResolver typeResolver, IType declaringType)
+        public static IlCodeBuilder GetInitMethod(this ICodeWriter codeWriter, IType declaringType)
         {
             var codeBuilder = new IlCodeBuilder();
 
-            if (declaringType.HasAnyVirtualMethod(typeResolver))
+            if (declaringType.HasAnyVirtualMethod(codeWriter))
             {
                 // set virtual table
                 codeBuilder.LoadArgument(0);
                 codeBuilder.LoadToken(declaringType.ToVirtualTableImplementation());
-                codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName(CWriter.VTable, typeResolver));
+                codeBuilder.SaveField(OpCodeExtensions.GetFieldByName(codeWriter.System.System_Object, CWriter.VTable, codeWriter));
             }
 
             codeBuilder.Add(Code.Ret);
@@ -621,22 +621,22 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
-        public static IlCodeBuilder GetGetTypeMethod(this ITypeResolver typeResolver, IType declaringType)
+        public static IlCodeBuilder GetGetTypeMethod(this ICodeWriter codeWriter, IType declaringType)
         {
             var codeBuilder = new IlCodeBuilder();
 
-            codeBuilder.LoadToken(declaringType.GetFullyDefinedRefereneForRuntimeType((CWriter)typeResolver));
+            codeBuilder.LoadToken(declaringType.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
         }
 
-        public static void GetGetStaticMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        public static void GetGetStaticMethod(this ICodeWriter codeWriter, IlCodeBuilder codeBuilder, IType declaringType, IField field)
         {
-            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            var cctor = declaringType.FindStaticConstructor(codeWriter);
             if (cctor != null)
             {
-                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, codeWriter));
                 var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
                 codeBuilder.Call(cctor);
                 codeBuilder.Add(initializedJump);
@@ -646,19 +646,19 @@ namespace Il2Native.Logic.Gencode
 
             if (field.IsThreadStatic && field.FieldType.IsValueType())
             {
-                codeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
+                codeBuilder.Castclass(codeWriter.System.System_Void.ToPointerType());
                 codeBuilder.Unbox(field.FieldType);
             }
 
             codeBuilder.Add(Code.Ret);
         }
 
-        public static void GetGetStaticAddressMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        public static void GetGetStaticAddressMethod(this ICodeWriter codeWriter, IlCodeBuilder codeBuilder, IType declaringType, IField field)
         {
-            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            var cctor = declaringType.FindStaticConstructor(codeWriter);
             if (cctor != null)
             {
-                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, codeWriter));
                 var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
                 codeBuilder.Call(cctor);
                 codeBuilder.Add(initializedJump);
@@ -669,12 +669,12 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Add(Code.Ret);
         }
 
-        public static void GetSetStaticMethod(this ITypeResolver typeResolver, IlCodeBuilder codeBuilder, IType declaringType, IField field)
+        public static void GetSetStaticMethod(this ICodeWriter codeWriter, IlCodeBuilder codeBuilder, IType declaringType, IField field)
         {
-            var cctor = declaringType.FindStaticConstructor(typeResolver);
+            var cctor = declaringType.FindStaticConstructor(codeWriter);
             if (cctor != null)
             {
-                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, typeResolver));
+                codeBuilder.LoadField(declaringType.GetFieldByName(ObjectInfrastructure.CalledCctorFieldName, codeWriter));
                 var initializedJump = codeBuilder.Branch(Code.Brfalse, Code.Brfalse_S);
                 codeBuilder.Call(cctor);
                 codeBuilder.Add(initializedJump);
@@ -791,7 +791,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
         /// <param name="ilCodeBuilder"></param>
         /// <param name="type">
@@ -803,14 +803,14 @@ namespace Il2Native.Logic.Gencode
         /// <param name="enableStringFastAllocation"></param>
         /// <param name="opCodePart">
         /// </param>
-        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false)
+        public static void GetNewMethod(this ICodeWriter codeWriter, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false)
         {
             var classType = type.ToClass();
-            typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, classType, doNotTestNullValue, enableStringFastAllocation);
+            GetAllocateMemoryCodeForObject(codeWriter, ilCodeBuilder, classType, doNotTestNullValue, enableStringFastAllocation);
             if (!doNotCallInit)
             {
                 ilCodeBuilder.Add(Code.Dup);
-                ilCodeBuilder.Call(new SynthesizedInitMethod(type, typeResolver));
+                ilCodeBuilder.Call(new SynthesizedInitMethod(type, codeWriter));
             }
 
             if (!enableStringFastAllocation)
@@ -820,7 +820,7 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static IlCodeBuilder GetSizeMethod(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IType type)
         {
             var ilCodeBuilder = new IlCodeBuilder();
@@ -830,17 +830,17 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static IlCodeBuilder GetFinalizerWrapperMethod(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IType type)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("obj"));
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("cd"));
+            ilCodeBuilder.Parameters.Add(codeWriter.System.System_Void.ToPointerType().ToParameter("obj"));
+            ilCodeBuilder.Parameters.Add(codeWriter.System.System_Void.ToPointerType().ToParameter("cd"));
 
             ilCodeBuilder.LoadArgument(0);
 
-            if (typeResolver.MultiThreadingSupport)
+            if (codeWriter.MultiThreadingSupport)
             {
                 // to adjust pointer to point VTable
                 // for mutex area
@@ -849,28 +849,28 @@ namespace Il2Native.Logic.Gencode
                 // for 'cond' area
                 ilCodeBuilder.SizeOf(type.ToPointerType());
                 ilCodeBuilder.Add(Code.Add);
-                ilCodeBuilder.Castclass(typeResolver.System.System_Void.ToPointerType());
+                ilCodeBuilder.Castclass(codeWriter.System.System_Void.ToPointerType());
             }
 
             // TODO: can be removed when InsertMissingTypes is finished
             ilCodeBuilder.Castclass(type);
-            ilCodeBuilder.Call(type.FindFinalizer(typeResolver));
+            ilCodeBuilder.Call(type.FindFinalizer(codeWriter));
 
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
         }
 
         public static IlCodeBuilder GetDynamicCastMethod(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IType type,
             bool throwInvalidCast = false)
         {
             var code = new IlCodeBuilder();
 
-            code.Parameters.Add(typeResolver.System.System_Object.ToParameter("_obj"));
-            code.Parameters.Add(typeResolver.System.System_Type.ToParameter("_type"));
+            code.Parameters.Add(codeWriter.System.System_Object.ToParameter("_obj"));
+            code.Parameters.Add(codeWriter.System.System_Type.ToParameter("_type"));
 
-            code.Locals.Add(typeResolver.System.System_Type);
+            code.Locals.Add(codeWriter.System.System_Type);
 
             code.LoadArgument(0);
             var jumpNull = code.Branch(Code.Brtrue, Code.Brtrue_S);
@@ -882,12 +882,12 @@ namespace Il2Native.Logic.Gencode
 
             // test if it is an interface
             code.LoadArgument(1);
-            code.Castclass(typeResolver.System.System_Void.ToPointerType());
-            code.Call(typeResolver.System.System_RuntimeTypeHandle.GetMethodsByName("IsInterface", typeResolver).First(p => p.GetParameters().Count() == 1));
+            code.Castclass(codeWriter.System.System_Void.ToPointerType());
+            code.Call(OpCodeExtensions.GetMethodsByName(codeWriter.System.System_RuntimeTypeHandle, "IsInterface", codeWriter).First(p => p.GetParameters().Count() == 1));
             var jumpInterace = code.Branch(Code.Brtrue, Code.Brtrue_S);
 
             code.LoadArgument(0);
-            code.Call(typeResolver.System.System_Object.GetMethodsByName("GetType", typeResolver).First(p => !p.GetParameters().Any()));
+            code.Call(OpCodeExtensions.GetMethodsByName(codeWriter.System.System_Object, "GetType", codeWriter).First(p => !p.GetParameters().Any()));
             code.SaveLocal(0);
             var jump = code.Branch(Code.Br, Code.Br_S);
 
@@ -904,7 +904,7 @@ namespace Il2Native.Logic.Gencode
             code.Add(jump_not_equal);
 
             code.LoadLocal(0);
-            code.Call(typeResolver.System.System_Type.GetMethodsByName("get_BaseType", typeResolver).First(p => !p.GetParameters().Any()));
+            code.Call(OpCodeExtensions.GetMethodsByName(codeWriter.System.System_Type, "get_BaseType", codeWriter).First(p => !p.GetParameters().Any()));
             code.SaveLocal(0);
 
             code.Add(jump);
@@ -919,7 +919,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                code.Throw(typeResolver.ResolveType("System.InvalidCastException").FindConstructor(typeResolver));
+                code.Throw(OpCodeExtensions.FindConstructor(codeWriter.ResolveType("System.InvalidCastException"), codeWriter));
             }
 
             // end of object branch
@@ -927,14 +927,14 @@ namespace Il2Native.Logic.Gencode
 
             code.LoadArgument(0);
             code.LoadArgument(1);
-            code.Call(typeResolver.System.System_Object.GetMethodsByName(SynthesizedResolveInterfaceMethod.Name, typeResolver).First());
+            code.Call(OpCodeExtensions.GetMethodsByName(codeWriter.System.System_Object, SynthesizedResolveInterfaceMethod.Name, codeWriter).First());
 
             if (throwInvalidCast)
             {
                 // if result is null, throw exception
                 code.Add(Code.Dup);
                 var jumpOverThrow = code.Branch(Code.Brtrue, Code.Brtrue_S);
-                code.Throw(typeResolver.ResolveType("System.InvalidCastException").FindConstructor(typeResolver));
+                code.Throw(OpCodeExtensions.FindConstructor(codeWriter.ResolveType("System.InvalidCastException"), codeWriter));
                 code.Add(jumpOverThrow);
             }
 
@@ -944,24 +944,24 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static IlCodeBuilder GetResolveInterfaceMethod(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IType type,
             bool throwInvalidCast = false)
         {
             var code = new IlCodeBuilder();
 
-            code.Parameters.Add(typeResolver.System.System_Type.ToParameter("_type"));
+            code.Parameters.Add(codeWriter.System.System_Type.ToParameter("_type"));
 
             foreach (var @interface in type.GetAllInterfaces())
             {
-                code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)typeResolver));
+                code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
                 code.LoadArgument(1);
 
                 var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
 
                 code.LoadArgument(0);
                 code.Castclass(@interface);
-                code.Castclass(typeResolver.System.System_Void.ToPointerType());
+                code.Castclass(codeWriter.System.System_Void.ToPointerType());
                 code.Add(Code.Ret);
 
                 code.Add(jump_not_equal);                
@@ -973,7 +973,7 @@ namespace Il2Native.Logic.Gencode
             return code;
         }
 
-        public static IEnumerable<IType> HaveStaticVirtualTablesForInterfaces(this IType type, ITypeResolver typeResolver)
+        public static IEnumerable<IType> HaveStaticVirtualTablesForInterfaces(this IType type, ICodeWriter codeWriter)
         {
             foreach (var @interface in type.GetInterfaces())
             {
@@ -982,19 +982,19 @@ namespace Il2Native.Logic.Gencode
 
             foreach (
                 var @interface in
-                    type.GetVirtualTable(typeResolver)
+                    type.GetVirtualTable(codeWriter)
                         .Where(p => p.Kind != CWriter.PairKind.Method)
                         .OfType<CWriter.Pair<IType, IType>>()
                         .Select(p => p.Value)
                         .Where(t => !type.GetInterfaces().Contains(t))
-                        .Where(@interface => VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, type.FindInterfaceOwner(@interface), @interface, typeResolver))
+                        .Where(@interface => VirtualTableGen.HasVirtualMethodOrExplicitMethod(type, type.FindInterfaceOwner(@interface), @interface, codeWriter))
                 )
             {
                 yield return @interface;
             }
         }
 
-        public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method, ITypeResolver typeResolver)
+        public static IMethod GetInvokeWrapperForStructUsedInObject(IMethod method, ICodeWriter codeWriter)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -1006,8 +1006,8 @@ namespace Il2Native.Logic.Gencode
                 // in case of 'this'
                 if (argNum == 0 && !method.IsStatic)
                 {
-                    codeBuilder.Castclass(typeResolver.System.System_Byte.ToPointerType());
-                    codeBuilder.SizeOf(typeResolver.System.System_Void.ToPointerType());
+                    codeBuilder.Castclass(codeWriter.System.System_Byte.ToPointerType());
+                    codeBuilder.SizeOf(codeWriter.System.System_Void.ToPointerType());
                     codeBuilder.Add(Code.Add);
                     codeBuilder.Castclass(method.DeclaringType.ToNormal().ToPointerType());
                 }

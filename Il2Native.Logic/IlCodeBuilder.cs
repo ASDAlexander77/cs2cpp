@@ -60,9 +60,9 @@
             }
         }
 
-        public void Register(string fullMethodName)
+        public Tuple<string, Func<IMethod, IMethod>> Register(string fullMethodName, ICodeWriter codeWriter)
         {
-            MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
+            return MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
         public IMethod GetMethod(IMethod originalMethod)
@@ -588,63 +588,63 @@
             }
         }
 
-        public void LoadIndirect(IType type, ITypeResolver typeResolver)
+        public void LoadIndirect(IType type, ICodeWriter codeWriter)
         {
-            if (type.TypeEquals(typeResolver.System.System_IntPtr))
+            if (type.TypeEquals(codeWriter.System.System_IntPtr))
             {
                 this.Add(Code.Ldind_I);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_SByte))
+            if (type.TypeEquals(codeWriter.System.System_SByte))
             {
                 this.Add(Code.Ldind_I1);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int16))
+            if (type.TypeEquals(codeWriter.System.System_Int16))
             {
                 this.Add(Code.Ldind_I2);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int32))
+            if (type.TypeEquals(codeWriter.System.System_Int32))
             {
                 this.Add(Code.Ldind_I4);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int64))
+            if (type.TypeEquals(codeWriter.System.System_Int64))
             {
                 this.Add(Code.Ldind_I8);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Byte))
+            if (type.TypeEquals(codeWriter.System.System_Byte))
             {
                 this.Add(Code.Ldind_U1);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_UInt16))
+            if (type.TypeEquals(codeWriter.System.System_UInt16))
             {
                 this.Add(Code.Ldind_U2);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_UInt32))
+            if (type.TypeEquals(codeWriter.System.System_UInt32))
             {
                 this.Add(Code.Ldind_U4);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Single))
+            if (type.TypeEquals(codeWriter.System.System_Single))
             {
                 this.Add(Code.Ldind_R4);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Double))
+            if (type.TypeEquals(codeWriter.System.System_Double))
             {
                 this.Add(Code.Ldind_R8);
                 return;
@@ -653,45 +653,45 @@
             this.Add(Code.Ldind_Ref);
         }
 
-        public void SaveIndirect(IType type, ITypeResolver typeResolver)
+        public void SaveIndirect(IType type, ICodeWriter codeWriter)
         {
-            if (type.TypeEquals(typeResolver.System.System_IntPtr))
+            if (type.TypeEquals(codeWriter.System.System_IntPtr))
             {
                 this.Add(Code.Stind_I);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_SByte))
+            if (type.TypeEquals(codeWriter.System.System_SByte))
             {
                 this.Add(Code.Stind_I1);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int16))
+            if (type.TypeEquals(codeWriter.System.System_Int16))
             {
                 this.Add(Code.Stind_I2);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int32))
+            if (type.TypeEquals(codeWriter.System.System_Int32))
             {
                 this.Add(Code.Stind_I4);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Int64))
+            if (type.TypeEquals(codeWriter.System.System_Int64))
             {
                 this.Add(Code.Stind_I8);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Single))
+            if (type.TypeEquals(codeWriter.System.System_Single))
             {
                 this.Add(Code.Stind_R4);
                 return;
             }
 
-            if (type.TypeEquals(typeResolver.System.System_Double))
+            if (type.TypeEquals(codeWriter.System.System_Double))
             {
                 this.Add(Code.Stind_R8);
                 return;

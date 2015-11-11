@@ -7,21 +7,21 @@
 
     public class MainGen
     {
-        public static IlCodeBuilder GetMainMethodBody(IlCodeBuilder ilCodeBuilder, IMethod main, IEnumerable<IMethod> gctors, ITypeResolver typeResolver)
+        public static IlCodeBuilder GetMainMethodBody(IlCodeBuilder ilCodeBuilder, IMethod main, IEnumerable<IMethod> gctors, ICodeWriter codeWriter)
         {
             var isVoid = main.ReturnType.IsVoid();
             var hasParameters = main.GetParameters().Any();
 
-            var stringType = typeResolver.System.System_String;
-            var bytePointerType = typeResolver.System.System_SByte.ToPointerType();
+            var stringType = codeWriter.System.System_String;
+            var bytePointerType = codeWriter.System.System_SByte.ToPointerType();
 
             // parameters
-            ilCodeBuilder.Parameters.Add(typeResolver.System.System_Int32.ToParameter("value_0"));
+            ilCodeBuilder.Parameters.Add(codeWriter.System.System_Int32.ToParameter("value_0"));
             ilCodeBuilder.Parameters.Add(bytePointerType.ToPointerType().ToParameter("value_1"));
 
             // code to call gctors
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Exception);
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Int32);
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Exception);
 
             const int localReturnCode = 0;
             const int localException = 1;
@@ -63,7 +63,7 @@
                 ilCodeBuilder.SaveArgument(1);
                 ilCodeBuilder.Add(Code.Ldind_I);
                 ilCodeBuilder.New(
-                    IlReader.Constructors(stringType, typeResolver)
+                    IlReader.Constructors(stringType, codeWriter)
                             .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(bytePointerType)));
                 ilCodeBuilder.Add(Code.Stelem_Ref);
                 ilCodeBuilder.LoadLocal(localReturnCode);
@@ -80,9 +80,9 @@
             }
 
             // array created
-            var environmentType = typeResolver.ResolveType("System.Environment");
-            var setExitCode = environmentType.GetFirstMethodByName("set_ExitCode", typeResolver);
-            var getExitCode = environmentType.GetFirstMethodByName("get_ExitCode", typeResolver);
+            var environmentType = codeWriter.ResolveType("System.Environment");
+            var setExitCode = OpCodeExtensions.GetFirstMethodByName(environmentType, "set_ExitCode", codeWriter);
+            var getExitCode = OpCodeExtensions.GetFirstMethodByName(environmentType, "get_ExitCode", codeWriter);
 
             if (isVoid)
             {
@@ -105,7 +105,7 @@
 
             ilCodeBuilder.TryEnd(tryMain);
 
-            var catchMain = ilCodeBuilder.Catch(typeResolver.System.System_Exception, tryMain);
+            var catchMain = ilCodeBuilder.Catch(codeWriter.System.System_Exception, tryMain);
 
             // catch handler
             ilCodeBuilder.LoadConstant(-1);
@@ -115,10 +115,10 @@
             ilCodeBuilder.SaveLocal(localException);
             ilCodeBuilder.LoadString("Unhandled exception: {0}: {1}");
             ilCodeBuilder.LoadLocal(localException);
-            ilCodeBuilder.Call(typeResolver.System.System_Object.GetFirstMethodByName("GetType", typeResolver));
-            ilCodeBuilder.Call(typeResolver.System.System_Type.GetFirstMethodByName("get_FullName", typeResolver));
+            ilCodeBuilder.Call(OpCodeExtensions.GetFirstMethodByName(codeWriter.System.System_Object, "GetType", codeWriter));
+            ilCodeBuilder.Call(OpCodeExtensions.GetFirstMethodByName(codeWriter.System.System_Type, "get_FullName", codeWriter));
             ilCodeBuilder.LoadLocal(localException);
-            ilCodeBuilder.Call(typeResolver.System.System_Exception.GetFirstMethodByName("get_Message", typeResolver));
+            ilCodeBuilder.Call(OpCodeExtensions.GetFirstMethodByName(codeWriter.System.System_Exception, "get_Message", codeWriter));
             ilCodeBuilder.Add(Code.Dup);
             var jumpCond = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
             ilCodeBuilder.Add(Code.Pop);
@@ -126,9 +126,8 @@
             ilCodeBuilder.Add(jumpCond);
 
             ilCodeBuilder.Call(
-                typeResolver.ResolveType("System.Console")
-                            .GetMethodsByName("WriteLine", typeResolver)
-                            .First(m => m.GetParameters().Count() == 3 && m.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_String)));
+                OpCodeExtensions.GetMethodsByName(codeWriter.ResolveType("System.Console"), "WriteLine", codeWriter)
+                            .First(m => m.GetParameters().Count() == 3 && m.GetParameters().First().ParameterType.TypeEquals(codeWriter.System.System_String)));
             
             ilCodeBuilder.Branch(Code.Leave, Code.Leave_S, leaveBlock);
 

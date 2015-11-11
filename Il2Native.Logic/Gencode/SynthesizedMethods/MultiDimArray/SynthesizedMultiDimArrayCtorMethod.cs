@@ -12,24 +12,24 @@
     /// </summary>
     public class SynthesizedMultiDimArrayCtorMethod : SynthesizedIlCodeBuilderThisMethod, IConstructor
     {
-        private ITypeResolver typeResolver;
+        private ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedMultiDimArrayCtorMethod(IType arrayType, ITypeResolver typeResolver)
-            : base(null, ".ctor", arrayType, typeResolver.System.System_Void)
+        public SynthesizedMultiDimArrayCtorMethod(IType arrayType, ICodeWriter codeWriter)
+            : base(null, ".ctor", arrayType, codeWriter.System.System_Void)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             IlCodeBuilder ilCodeBuilder;
-            ArrayMultiDimensionGen.GetMultiDimensionArrayCtor(Type, typeResolver, out ilCodeBuilder);
+            ArrayMultiDimensionGen.GetMultiDimensionArrayCtor(Type, this.codeWriter, out ilCodeBuilder);
             return ilCodeBuilder;
         }
     }

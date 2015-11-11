@@ -1,25 +1,30 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
+    using System.Collections.Generic;
+
+    using PEAssemblyReader;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     public static class InitializeArrayGen
     {
         public static readonly string Name = "Void System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(System.Array, System.RuntimeFieldHandle)";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
-            ilCodeBuilder.Locals.Add(typeResolver.System.System_Void.ToPointerType());
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Int32);
+            ilCodeBuilder.Locals.Add(codeWriter.System.System_Void.ToPointerType());
 
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
-            var multiArrayType = typeResolver.System.System_Byte.ToArrayType(2);
+            var arrayType = codeWriter.System.System_Byte.ToArrayType(1);
+            var multiArrayType = codeWriter.System.System_Byte.ToArrayType(2);
 
             // check rank
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.Castclass(arrayType);
-            ilCodeBuilder.LoadField(arrayType.GetFieldByName("rank", typeResolver));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(arrayType, "rank", codeWriter));
             ilCodeBuilder.LoadConstant(1);
             ilCodeBuilder.Add(Code.Sub);
 
@@ -28,7 +33,7 @@
             // single-dim array
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.Castclass(arrayType);
-            ilCodeBuilder.LoadFieldAddress(arrayType.GetFieldByName("data", typeResolver));
+            ilCodeBuilder.LoadFieldAddress(OpCodeExtensions.GetFieldByName(arrayType, "data", codeWriter));
             ilCodeBuilder.Add(Code.Conv_I);
             ilCodeBuilder.SaveLocal(1);
             
@@ -39,7 +44,7 @@
             // multi-dim array
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.Castclass(multiArrayType);
-            ilCodeBuilder.LoadFieldAddress(multiArrayType.GetFieldByName("data", typeResolver));
+            ilCodeBuilder.LoadFieldAddress(OpCodeExtensions.GetFieldByName(multiArrayType, "data", codeWriter));
             ilCodeBuilder.Add(Code.Conv_I);
             ilCodeBuilder.SaveLocal(1);
 
@@ -82,14 +87,14 @@
 
             // load field pointer and size
             ilCodeBuilder.LoadArgument(1);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeFieldHandle.GetFieldByName("fieldAddress", typeResolver));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(codeWriter.System.System_RuntimeFieldHandle, "fieldAddress", codeWriter));
             ilCodeBuilder.LoadArgument(1);
-            ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeFieldHandle.GetFieldByName("fieldSize", typeResolver));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(codeWriter.System.System_RuntimeFieldHandle, "fieldSize", codeWriter));
             ilCodeBuilder.Add(Code.Cpblk);
 
             ilCodeBuilder.Add(Code.Ret);
 
-            ilCodeBuilder.Register(Name);
+            yield return ilCodeBuilder.Register(Name, codeWriter);
         }
     }
 }

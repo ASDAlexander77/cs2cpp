@@ -25,10 +25,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedGetSizeMethod(IType type, ITypeResolver typeResolver)
-            : base(typeResolver.GetSizeMethod(type), Name, type, typeResolver.GetIntTypeByByteSize(CWriter.PointerSize))
+        public SynthesizedGetSizeMethod(IType type, ICodeWriter codeWriter)
+            : base(ObjectInfrastructure.GetSizeMethod(codeWriter, type), Name, type, CHelpersGen.GetIntTypeByByteSize(codeWriter, CWriter.PointerSize))
         {
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {

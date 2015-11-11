@@ -17,16 +17,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedStrLenMethod(ITypeResolver typeResolver)
-            : base("strlen", typeResolver.System.System_String, typeResolver.System.System_Int32)
+        public SynthesizedStrLenMethod(ICodeWriter codeWriter)
+            : base("strlen", codeWriter.System.System_String, codeWriter.System.System_Int32)
         {
             byte[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            StringGen.GetStrLen(typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            StringGen.GetStrLen(codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

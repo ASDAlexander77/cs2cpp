@@ -28,7 +28,7 @@ namespace Il2Native.Logic
         /// </exception>
         /// <exception cref="ArgumentNullException">
         /// </exception>
-        public FullyDefinedReference(string name, IType type)
+        public FullyDefinedReference(string name, IType type, IType usedToken = null)
             : this(type)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -37,6 +37,7 @@ namespace Il2Native.Logic
             }
 
             this.Name = name;
+            this.UsedToken = usedToken;
         }
 
         /// <summary>
@@ -55,6 +56,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public IType UsedToken { get; private set; }
 
         /// <summary>
         /// </summary>

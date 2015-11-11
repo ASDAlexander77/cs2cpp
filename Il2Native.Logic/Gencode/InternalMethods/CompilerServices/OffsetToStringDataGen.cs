@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -11,7 +12,7 @@
     {
         public static readonly string Name = "Int32 System.Runtime.CompilerServices.RuntimeHelpers.get_OffsetToStringData()";
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var codeList = new List<object>();
             codeList.Add(Code.Ldnull);
@@ -21,15 +22,15 @@
 
             // Registering UnsafeCastToStackPointerGen
             var tokenResolutions = new List<object>();
-            var stringType = typeResolver.System.System_String;
+            var stringType = codeWriter.System.System_String;
             tokenResolutions.Add(stringType);
-            tokenResolutions.Add(stringType.GetFieldByName("m_firstChar", typeResolver));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(stringType, "m_firstChar", codeWriter));
 
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, codeList.ToArray(), tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.ToArray(), tokenResolutions, locals, parameters);
         }
     }
 }

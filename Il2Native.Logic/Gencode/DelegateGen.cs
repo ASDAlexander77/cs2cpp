@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode
     public static class DelegateGen
     {
         public static IlCodeBuilder GetMulticastDelegateInvoke(
-            this ITypeResolver typeResolver,
+            this ICodeWriter codeWriter,
             IMethod method)
         {
             var codeList = new IlCodeBuilder();
@@ -32,16 +32,16 @@ namespace Il2Native.Logic.Gencode
             codeList.Parameters.AddRange(method.GetParameters());
 
             codeList.LoadArgument(0);
-            var invocationCountField = method.DeclaringType.BaseType.GetFieldByName("_invocationCount", typeResolver);
+            var invocationCountField = method.DeclaringType.BaseType.GetFieldByName("_invocationCount", codeWriter);
 
             codeList.LoadFieldAddress(invocationCountField);
             // to load value from IntPtr
-            codeList.LoadField(typeResolver.System.System_IntPtr.GetFieldByFieldNumber(0, typeResolver));
+            codeList.LoadField(OpCodeExtensions.GetFieldByFieldNumber(codeWriter.System.System_IntPtr, 0, codeWriter));
             codeList.Add(Code.Conv_I4);
 
             var jumpForBrtrue_S = codeList.Branch(Code.Brtrue, Code.Brtrue_S);
 
-            AddDelegateInvokeBody(codeList, method, typeResolver);
+            AddDelegateInvokeBody(codeList, method, codeWriter);
 
             codeList.Add(Code.Ret);
 
@@ -56,12 +56,14 @@ namespace Il2Native.Logic.Gencode
             var labelForConditionLoop = codeList.CreateLabel();
 
             codeList.LoadArgument(0);
-            codeList.LoadField(method.DeclaringType.BaseType.GetFieldByName("_invocationList", typeResolver));
+            codeList.LoadField(method.DeclaringType.BaseType.GetFieldByName("_invocationList", codeWriter));
 
-            codeList.Castclass(typeResolver.System.System_Object.ToArrayType(1));
+            codeList.Castclass(codeWriter.System.System_Object.ToArrayType(1));
 
             codeList.LoadLocal(0);
             codeList.Add(Code.Ldelem_Ref);
+
+            codeList.Castclass(method.DeclaringType);
 
             var index = 1;
             foreach (var parameter in method.GetParameters())
@@ -70,7 +72,7 @@ namespace Il2Native.Logic.Gencode
                 index++;
             }
 
-            codeList.Call(IlReader.Methods(method.DeclaringType, typeResolver).First(m => m.Name == "Invoke"));
+            codeList.Call(IlReader.Methods(method.DeclaringType, codeWriter).First(m => m.Name == "Invoke"));
 
             if (!method.ReturnType.IsVoid())
             {
@@ -91,7 +93,7 @@ namespace Il2Native.Logic.Gencode
 
             codeList.LoadFieldAddress(invocationCountField);
             // to load value from IntPtr
-            codeList.LoadField(typeResolver.System.System_IntPtr.GetFieldByFieldNumber(0, typeResolver));
+            codeList.LoadField(OpCodeExtensions.GetFieldByFieldNumber(codeWriter.System.System_IntPtr, 0, codeWriter));
             codeList.Add(Code.Conv_I4);
 
             codeList.Branch(Code.Blt, Code.Blt_S, labelForConditionLoop);
@@ -104,7 +106,7 @@ namespace Il2Native.Logic.Gencode
             codeList.Add(Code.Ret);
 
             // Locals
-            codeList.Locals.Add(typeResolver.System.System_Int32);
+            codeList.Locals.Add(codeWriter.System.System_Int32);
             if (!method.ReturnType.IsVoid())
             {
                 codeList.Locals.Add(method.ReturnType);
@@ -229,39 +231,39 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IlCodeBuilder GetDelegateConstructorMethod(this ITypeResolver typeResolver, IType declaringType)
+        public static IlCodeBuilder GetDelegateConstructorMethod(this ICodeWriter codeWriter, IType declaringType)
         {
             var codeBuilder = new IlCodeBuilder();
 
-            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
-            codeBuilder.Parameters.Add(typeResolver.System.System_IntPtr.ToParameter(name: "method"));
+            codeBuilder.Parameters.Add(codeWriter.System.System_Object.ToParameter(name: "object"));
+            codeBuilder.Parameters.Add(codeWriter.System.System_IntPtr.ToParameter(name: "method"));
 
             codeBuilder.LoadArgument(0);
             codeBuilder.LoadArgument(1);
-            codeBuilder.SaveField(declaringType.GetFieldByName("_target", typeResolver, true));
+            codeBuilder.SaveField(declaringType.GetFieldByName("_target", codeWriter, true));
             codeBuilder.LoadArgument(0);
             codeBuilder.LoadArgument(2);
-            codeBuilder.SaveField(declaringType.GetFieldByName("_methodPtr", typeResolver, true));
+            codeBuilder.SaveField(declaringType.GetFieldByName("_methodPtr", codeWriter, true));
 
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
         }
 
-        public static IlCodeBuilder GetDelegateInvokeMethod(this ITypeResolver typeResolver, IMethod method)
+        public static IlCodeBuilder GetDelegateInvokeMethod(this ICodeWriter codeWriter, IMethod method)
         {
             var codeBuilder = new IlCodeBuilder();
             
             codeBuilder.Parameters.AddRange(method.GetParameters());
             
-            AddDelegateInvokeBody(codeBuilder, method, typeResolver);
+            AddDelegateInvokeBody(codeBuilder, method, codeWriter);
            
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;
         }
 
-        public static IlCodeBuilder GetDelegateBeginInvokeMethod(this ITypeResolver typeResolver, IMethod method)
+        public static IlCodeBuilder GetDelegateBeginInvokeMethod(this ICodeWriter codeWriter, IMethod method)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -273,7 +275,7 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
-        public static IlCodeBuilder GetDelegateEndInvokeMethod(this ITypeResolver typeResolver, IMethod method)
+        public static IlCodeBuilder GetDelegateEndInvokeMethod(this ICodeWriter codeWriter, IMethod method)
         {
             var codeBuilder = new IlCodeBuilder();
 
@@ -296,31 +298,31 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
-        private static void AddDelegateInvokeBody(IlCodeBuilder codeBuilder, IMethod method, ITypeResolver typeResolver)
+        private static void AddDelegateInvokeBody(IlCodeBuilder codeBuilder, IMethod method, ICodeWriter codeWriter)
         {
-            var delegateType = typeResolver.System.System_Delegate;
+            var delegateType = codeWriter.System.System_Delegate;
 
             codeBuilder.LoadArgument(0);
-            var targetField = delegateType.GetFieldByName("_target", typeResolver, true);
+            var targetField = OpCodeExtensions.GetFieldByName(delegateType, "_target", codeWriter, true);
             codeBuilder.LoadField(targetField);
 
             var jumpToThisCall = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
-            codeBuilder.Call(GetInvokeCallMethod(method, typeResolver, true));
+            codeBuilder.Call(GetInvokeCallMethod(method, codeWriter, true));
 
             var jumpToSkipThisCall = codeBuilder.Branch(Code.Br, Code.Br_S);
 
             codeBuilder.Add(jumpToThisCall);
 
-            codeBuilder.Call(GetInvokeCallMethod(method, typeResolver, false));
+            codeBuilder.Call(GetInvokeCallMethod(method, codeWriter, false));
 
             codeBuilder.Add(jumpToSkipThisCall);
         }
 
-        private static SynthesizedInlinedTextMethod GetInvokeCallMethod(IMethod method, ITypeResolver typeResolver, bool isStatic)
+        private static SynthesizedInlinedTextMethod GetInvokeCallMethod(IMethod method, ICodeWriter codeWriter, bool isStatic)
         {
-            var delegateType = typeResolver.System.System_Delegate;
-            var intPtrType = typeResolver.System.System_IntPtr;
+            var delegateType = codeWriter.System.System_Delegate;
+            var intPtrType = codeWriter.System.System_IntPtr;
 
             return new SynthesizedInlinedTextMethod(
                 string.Empty,
@@ -332,11 +334,11 @@ namespace Il2Native.Logic.Gencode
                     var opCodeTarget = OpCodePart.CreateNop;
                     opCodeTarget.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-                    var field = delegateType.GetFieldByName("_methodPtr", typeResolver, true);
+                    var field = OpCodeExtensions.GetFieldByName(delegateType, "_methodPtr", codeWriter, true);
                     var opCodeMethodPtr = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
                     opCodeMethodPtr.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-                    var fieldIntPtrValue = intPtrType.GetFieldByFieldNumber(0, typeResolver);
+                    var fieldIntPtrValue = OpCodeExtensions.GetFieldByFieldNumber(intPtrType, 0, codeWriter);
                     var opCodeFieldIntPtrValue = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, fieldIntPtrValue);
                     opCodeFieldIntPtrValue.OpCodeOperands = new[] { opCodeMethodPtr };
 
@@ -345,7 +347,7 @@ namespace Il2Native.Logic.Gencode
                             () =>
                             {
                                 cWriter.WriteCCastOnly(method.DeclaringType);
-                                cWriter.WriteFieldAccess(opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
+                                cWriter.WriteFieldAccess(opCodeTarget, OpCodeExtensions.GetFieldByName(delegateType, "_target", codeWriter, true));
                             });
 
                     var methodRef = cWriter.WriteToString(
@@ -360,7 +362,7 @@ namespace Il2Native.Logic.Gencode
 
                     WriteCallInvokeMethod(
                         cWriter,
-                        new FullyDefinedReference(objRef, typeResolver.System.System_Object),
+                        new FullyDefinedReference(objRef, codeWriter.System.System_Object),
                         new FullyDefinedReference(methodRef, null),
                         method,
                         isStatic);

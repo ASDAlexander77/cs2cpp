@@ -1,12 +1,13 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
 
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
 
-    public interface IIlReader
+    public interface IIlReader : ITypeResolver
     {
         /// <summary>
         /// </summary>
@@ -18,7 +19,15 @@
 
         /// <summary>
         /// </summary>
+        bool CompactMode { get; }
+
+        /// <summary>
+        /// </summary>
         string ModuleName { get; }
+
+        /// <summary>
+        /// </summary>
+        IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; }
 
         /// <summary>
         /// </summary>

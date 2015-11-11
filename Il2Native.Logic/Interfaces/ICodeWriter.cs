@@ -14,9 +14,28 @@ namespace Il2Native.Logic
     using CodeParts;
     using PEAssemblyReader;
 
+    public interface ICodeWriter : ITypeResolver
+    {
+        IIlReader IlReader { get; set; }
+
+        IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName { get; }
+
+        bool GcSupport { get; }
+
+        bool GcDebug { get; }
+
+        bool MultiThreadingSupport { get; }
+
+        bool Unsafe { get; }
+
+        string GetAllocator(bool isAtomicAllocation, bool isBigObj, bool debugOrigignalRequired);
+
+        string GetStaticFieldName(IField field);
+    }
+
     /// <summary>
     /// </summary>
-    public interface ICodeWriter : ITypeResolver
+    public interface ICodeWriterEx : ICodeWriter
     {
         bool IsHeader { get; set; }
 
@@ -26,11 +45,9 @@ namespace Il2Native.Logic
 
         string FileHeader { get; set; }
 
-        IIlReader IlReader { get; set; }
-
         /// <summary>
         /// </summary>
-        void Initialize(IType type);
+        void Initialize();
 
         /// <summary>
         /// </summary>
@@ -153,5 +170,17 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         void WriteStaticField(IField field, bool definition = true, IType typeForRuntimeTypeInfo = null);
+
+        /// <summary>
+        /// </summary>
+        void WriteVirtualTableImplementations(IType type, bool declaration = false);
+
+        /// <summary>
+        /// </summary>
+        IMethod GenerateMainMethod(IMethod mainMethod);
+
+        /// <summary>
+        /// </summary>
+        IEnumerable<IMethod> VirtualTableImplementations(IType type);
     }
 }

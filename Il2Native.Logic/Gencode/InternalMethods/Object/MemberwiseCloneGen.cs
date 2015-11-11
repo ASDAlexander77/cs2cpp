@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
+    using System;
     using System.Collections.Generic;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -46,34 +47,34 @@
             Code.Ret
         };
 
-        public static void Register(ITypeResolver typeResolver)
+        public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     SynthesizedGetSizeMethod.Name,
-                    typeResolver.System.System_Object,
-                    typeResolver.GetIntTypeByByteSize(CWriter.PointerSize),
+                    codeWriter.System.System_Object,
+                    CHelpersGen.GetIntTypeByByteSize(codeWriter, CWriter.PointerSize),
                     true));
-            tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Byte.ToPointerType());
             tokenResolutions.Add(
                 new SynthesizedInlinedTextMethod(
                     string.Empty,
-                    typeResolver.System.System_Object,
-                    typeResolver.System.System_Byte.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter("obj") },
+                    codeWriter.System.System_Object,
+                    codeWriter.System.System_Byte.ToPointerType(),
+                    new[] { codeWriter.System.System_Int32.ToParameter("obj") },
                     (llvmWriter, opCode) => llvmWriter.WriteAllocateMemory(opCode, opCode.OpCodeOperands[0].Result)));
             
-            tokenResolutions.Add(typeResolver.System.System_Object);
+            tokenResolutions.Add(codeWriter.System.System_Object);
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Byte.ToPointerType());
-            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(codeWriter.System.System_Byte.ToPointerType());
+            locals.Add(codeWriter.System.System_Int32);
 
             var parameters = new List<IParameter>();
 
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }
     }
 }

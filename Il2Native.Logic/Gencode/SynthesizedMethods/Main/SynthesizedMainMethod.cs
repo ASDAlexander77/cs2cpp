@@ -19,7 +19,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedMainMethod : SynthesizedIlCodeBuilderStaticMethod
     {
-        private ITypeResolver typeResolver;
+        private ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
@@ -27,10 +27,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedMainMethod(IlCodeBuilder mainCodeBuilder, IMethod main, ITypeResolver typeResolver)
+        public SynthesizedMainMethod(IlCodeBuilder mainCodeBuilder, IMethod main, ICodeWriter codeWriter)
             : base(mainCodeBuilder, "main", main.DeclaringType, null)
         {
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
         public override IType DeclaringType
@@ -45,7 +45,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             get
             {
-                return this.typeResolver.System.System_Int32;
+                return this.codeWriter.System.System_Int32;
             }
         }
 
@@ -56,8 +56,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
                 yield break;
             }
 
-            yield return this.typeResolver.System.System_Int32.ToParameter("count");
-            yield return this.typeResolver.System.System_SByte.ToPointerType().ToPointerType().ToParameter("parameters");
+            yield return this.codeWriter.System.System_Int32.ToParameter("count");
+            yield return this.codeWriter.System.System_SByte.ToPointerType().ToPointerType().ToParameter("parameters");
         }
     }
 }

@@ -19,16 +19,16 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="codeWriterer">
         /// </param>
-        public SynthesizedCtorSBytePtrStartLengthEncodingMethod(ITypeResolver typeResolver)
-            : base("CtorSBytePtrStartLengthEncoding", typeResolver.System.System_String, typeResolver.System.System_String)
+        public SynthesizedCtorSBytePtrStartLengthEncodingMethod(ICodeWriter codeWriter)
+            : base("CtorSBytePtrStartLengthEncoding", codeWriter.System.System_String, codeWriter.System.System_String)
         {
             byte[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            StringGen.GetCtorSBytePtrStartLengthEncoding(typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            StringGen.GetCtorSBytePtrStartLengthEncoding(codeWriter, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

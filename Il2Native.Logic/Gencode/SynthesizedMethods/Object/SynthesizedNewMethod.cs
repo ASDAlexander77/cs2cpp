@@ -20,7 +20,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         public const string Name = ".new";
 
-        private readonly ITypeResolver typeResolver;
+        private readonly ICodeWriter codeWriter;
 
         /// <summary>
         /// </summary>
@@ -28,23 +28,23 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedNewMethod(IType type, ITypeResolver typeResolver)
+        public SynthesizedNewMethod(IType type, ICodeWriter codeWriter)
             : base(null, Name, type, type.ToClass())
         {
             Type = type.ToClass();
-            this.typeResolver = typeResolver;
+            this.codeWriter = codeWriter;
         }
 
         public override IEnumerable<IParameter> GetParameters()
         {
-            var parameters = this.Type.IsArray ? ArrayMultiDimensionGen.GetParameters(this.Type, this.typeResolver) : base.GetParameters();
+            var parameters = this.Type.IsArray ? ArrayMultiDimensionGen.GetParameters(this.Type, this.codeWriter) : base.GetParameters();
 
-            if (typeResolver.GcDebug)
+            if (this.codeWriter.GcDebug)
             {
                 // add file name and file
                 var list = parameters != null ? parameters.ToList() : new List<IParameter>();
-                list.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("__file"));
-                list.Add(typeResolver.System.System_Int32.ToParameter("__line"));
+                list.Add(this.codeWriter.System.System_SByte.ToPointerType().ToParameter("__file"));
+                list.Add(this.codeWriter.System.System_Int32.ToParameter("__line"));
                 return list;
             }
 
@@ -54,7 +54,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             var codeBuilder = new IlCodeBuilder();
-            typeResolver.GetNewMethod(codeBuilder, this.Type);
+            ObjectInfrastructure.GetNewMethod(this.codeWriter, codeBuilder, this.Type);
             return codeBuilder;
         }
     }

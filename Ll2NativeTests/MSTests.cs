@@ -759,6 +759,9 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 643 });
 
+            CompilerHelper.CompactMode = true;
+            CompilerHelper.Stubs = true;
+
             foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
@@ -956,8 +959,11 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         public void TestCustomConvert()
         {
             //CompilerHelper.Mscorlib = true;
-            //CompilerHelper.MscorlibPath = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\mscorlib.dll";
-            //CompilerHelper.AddSystemLinq = true;
+            ////CompilerHelper.MscorlibPath = string.Format(@"{0}mscorlib.dll", CompilerHelper.CoreCLRDlls);
+            //CompilerHelper.MscorlibPath = CompilerHelper.MscorlibPath;
+            ////CompilerHelper.AddSystemLinq = true;
+            //CompilerHelper.CompactMode = true;
+            //CompilerHelper.Stubs = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 

@@ -256,10 +256,11 @@ namespace Il2Native.Logic.Gencode
 
             var typeBaseName = type.TypeToCType(isPointer, enumAsName, shortName);
             writer.Write(typeBaseName.CleanUpName());
+
             if (typeBaseName.Length > 0 && typeBaseName[0] == '<')
             {
                 writer.Write("_");
-                writer.Write(cWriter.AssemblyQualifiedName.CleanUpName());
+                writer.Write(type.AssemblyQualifiedName.CleanUpName());
             }
         }
 
