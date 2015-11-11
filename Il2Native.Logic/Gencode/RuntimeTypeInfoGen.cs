@@ -17,7 +17,7 @@
         public const string BaseTypeField = "baseType";
         public const string ElementTypeField = "elementType";
         public const string NameField = "name";
-        public const string FullNameField = "fullName";
+        public const string NamespaceField = "_namespace";
         public const string CorElementTypeField = "corElementType";
         public const string HasInstantiationField = "hasInstantiation";
         public const string IsGenericVariableField = "isGenericVariable";
@@ -77,8 +77,8 @@
                     return type.HasElementType ? type.GetElementType().GetFullyDefinedRefereneForRuntimeType(cWriter) : null;
                 case NameField:
                     return type.Name;
-                case FullNameField:
-                    return type.FullName;
+                case NamespaceField:
+                    return type.Namespace;
                 case CorElementTypeField:
 
                     switch (type.FullName)
@@ -161,7 +161,7 @@
             yield return codeWriter.System.System_Type.ToField(type, RuntimeTypeInfoGen.BaseTypeField);
             yield return codeWriter.System.System_Type.ToField(type, RuntimeTypeInfoGen.ElementTypeField);
             yield return codeWriter.System.System_String.ToField(type, RuntimeTypeInfoGen.NameField);
-            yield return codeWriter.System.System_String.ToField(type, RuntimeTypeInfoGen.FullNameField);
+            yield return codeWriter.System.System_String.ToField(type, RuntimeTypeInfoGen.NamespaceField);
             yield return codeWriter.System.System_Byte.ToField(type, RuntimeTypeInfoGen.CorElementTypeField);
             yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.HasInstantiationField);
             yield return codeWriter.System.System_Boolean.ToField(type, RuntimeTypeInfoGen.IsGenericVariableField);

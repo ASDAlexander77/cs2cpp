@@ -2,7 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-
+    using System.Linq;
     using PEAssemblyReader;
 
     public static class ConstructNameGen
@@ -36,7 +36,12 @@
             // load FullName
             ilCodeBuilder.LoadArgumentAddress(0);
             ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByFieldNumber(codeWriter.System.System_RuntimeTypeHandle, 0, codeWriter));
-            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(runtimeType, RuntimeTypeInfoGen.FullNameField, codeWriter));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(runtimeType, RuntimeTypeInfoGen.NamespaceField, codeWriter));
+            ilCodeBuilder.LoadString(".");
+            ilCodeBuilder.LoadArgumentAddress(0);
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByFieldNumber(codeWriter.System.System_RuntimeTypeHandle, 0, codeWriter));
+            ilCodeBuilder.LoadField(OpCodeExtensions.GetFieldByName(runtimeType, RuntimeTypeInfoGen.NameField, codeWriter));
+            ilCodeBuilder.Call(codeWriter.System.System_String.GetMethodsByName("Concat", codeWriter).First(m => m.GetParameters().Count() == 3 && m.GetParameters().First().ParameterType.TypeEquals(codeWriter.System.System_String)));
             ilCodeBuilder.SaveIndirect(codeWriter.System.System_String, codeWriter);
             ilCodeBuilder.Return();
 
