@@ -453,7 +453,7 @@ namespace Il2Native.Logic.Gencode
 
             cWriter.WriteResult(destination);
             writer.Write(" = ");
-            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            cWriter.WritePop();
         }
 
         public static void WriteSaveVolatile(
