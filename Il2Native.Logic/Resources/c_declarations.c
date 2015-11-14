@@ -85,7 +85,7 @@ template < typename T > struct __static_data
 	T data;
 };
 
-#if __MULTI_THREADING
+#if __MULTI_THREADING || __ANDROID__
 template < int N > struct __static_str
 #else
 template < int N > const struct __static_str

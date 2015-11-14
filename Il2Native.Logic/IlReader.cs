@@ -393,6 +393,8 @@ namespace Il2Native.Logic
             this.CompactMode = args != null && args.Contains("compact");
         }
 
+        public bool DoNotAddInternalArrays { get; set; }
+
         /// <summary>
         /// </summary>
         public IModule Module
@@ -1702,6 +1704,11 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsGenericTypeDefinition);
 
+            if (DoNotAddInternalArrays && type.IsArrayInternal())
+            {
+                return;
+            }
+
             this._usedArrayTypes.Add(type);
         }
 
@@ -2153,7 +2160,8 @@ namespace Il2Native.Logic
                 this._usedStaticFields,
                 this._usedVirtualTableImplementationTypes,
                 stackCall,
-                this.CodeWriter);
+                this.CodeWriter,
+                this.DoNotAddInternalArrays);
 
             stackCall.Dequeue();
         }

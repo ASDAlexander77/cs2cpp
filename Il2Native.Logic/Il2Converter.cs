@@ -36,6 +36,8 @@ namespace Il2Native.Logic
 
         private bool headers;
 
+        private bool isCoreLib;
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -95,6 +97,7 @@ namespace Il2Native.Logic
 
             var ilReader = new IlReader(sources, args);
             ilReader.Load();
+            isCoreLib = ilReader.IsCoreLib;
 
             GenerateC(
                 ilReader,
@@ -494,7 +497,7 @@ namespace Il2Native.Logic
                 effectiveType = effectiveType.ToNormal();
             }
 
-            if (effectiveType.IsArray)
+            if (effectiveType.IsArray && !(!compact && !isCoreLib && effectiveType.IsArrayInternal()))
             {
                 readingTypesContext.AdditionalTypesToProcess.Add(effectiveType);
             }
@@ -659,7 +662,8 @@ namespace Il2Native.Logic
                         null,
                         null,
                         new Queue<IMethod>(),
-                        _codeWriter);
+                        _codeWriter,
+                        !compact && !isCoreLib);
                 }
             }
         }
@@ -714,7 +718,8 @@ namespace Il2Native.Logic
                     null,
                     null,
                     new Queue<IMethod>(),
-                    _codeWriter);
+                    _codeWriter,
+                    !compact && !isCoreLib);
             }
         }
 
@@ -898,7 +903,8 @@ namespace Il2Native.Logic
                     null,
                     null,
                     new Queue<IMethod>(),
-                    _codeWriter);
+                    _codeWriter,
+                    !compact && !isCoreLib);
             }
         }
 
@@ -1165,7 +1171,8 @@ namespace Il2Native.Logic
                 readingTypesContext.UsedStaticFields,
                 readingTypesContext.UsedVirtualTableImplementationTypes,
                 queue,
-                codeWriter);
+                codeWriter,
+                !compact && !isCoreLib);
         }
 
         ////private IType LoadNativeTypeFromSource(IIlReader ilReader, string assemblyName = null)
