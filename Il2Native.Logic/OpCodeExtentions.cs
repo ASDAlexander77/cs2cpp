@@ -250,7 +250,8 @@ namespace Il2Native.Logic
             ISet<IField> usedStaticFields,
             ISet<IType> usedVirtualTableImplementationTypes,
             Queue<IMethod> stackCall,
-            ICodeWriter codeWriter)
+            ICodeWriter codeWriter,
+            bool doNotAddInternalArrays)
         {
             if (Il2Converter.VerboseOutput)
             {
@@ -269,6 +270,7 @@ namespace Il2Native.Logic
             reader.UsedStaticFields = usedStaticFields;
             reader.UsedVirtualTableImplementationTypes = usedVirtualTableImplementationTypes;
             reader.CodeWriter = codeWriter;
+            reader.DoNotAddInternalArrays = doNotAddInternalArrays;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
@@ -368,50 +370,6 @@ namespace Il2Native.Logic
             }
 
             return indexes;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <param name="nextCurrentType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        private static int FindInterfaceIndexForOneStep(this IType type, IType @interface, out IType nextCurrentType)
-        {
-            nextCurrentType = type;
-            var found = false;
-            var interfaceIndex = -1;
-            foreach (var subInterface in type.GetInterfaces().ToList())
-            {
-                interfaceIndex++;
-
-                if (subInterface.TypeEquals(@interface))
-                {
-                    nextCurrentType = null;
-                    found = true;
-                    break;
-                }
-
-                if (subInterface.GetAllInterfaces().Contains(@interface))
-                {
-                    nextCurrentType = subInterface;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                throw new KeyNotFoundException("type can't be found");
-            }
-
-            return interfaceIndex;
         }
 
         private static IType FindInterfacePathForOneStep(this IType type, IType @interface, out IType nextCurrentType)
@@ -1726,7 +1684,7 @@ namespace Il2Native.Logic
 
         public static bool IsAssemblyNamespaceRequired(this IType type)
         {
-            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
+            if ((type.IsGenericOrArray() && !type.IsArrayInternal()) || type.IsPointer || type.IsModule)
             {
                 return true;
             }
@@ -1744,9 +1702,25 @@ namespace Il2Native.Logic
             return type.IsGenericType || type.IsGenericTypeDefinition || type.IsArray;
         }
 
+        public static bool IsArrayInternal(this IType type)
+        {
+            if (!type.IsArray)
+            {
+                return false;
+            }
+
+            if (type.IsMultiArray)
+            {
+                return false;
+            }
+
+            var elementType = type.GetElementType();
+            return elementType.IsPrimitiveType() || elementType.IsString || elementType.IsObject;
+        }
+
         public static string GetAssemblyNamespace(this IType type, string currentAssemblyNamespace)
         {
-            if (type.IsGenericOrArray() || type.IsPointer || type.IsModule)
+            if ((type.IsGenericOrArray() && !type.IsArrayInternal()) || type.IsPointer || type.IsModule)
             {
                 return currentAssemblyNamespace;
             }
