@@ -362,22 +362,22 @@ namespace Il2Native.Logic
 
         public void WritePushPtr()
         {
-            this.Output.Write("*((Void**)p)++ = ");
+            this.Output.Write("*((Void**)p++) = ");
         }
 
         public void WritePush64()
         {
-            this.Output.Write("*((Int64*)p)++ = ");
+            this.Output.Write("*((Int64*)p++) = ");
         }
 
         public void WritePushR4()
         {
-            this.Output.Write("*((Single*)p)++ = ");
+            this.Output.Write("*((Single*)p++) = ");
         }
 
         public void WritePushR8()
         {
-            this.Output.Write("*((Double*)p)++ = ");
+            this.Output.Write("*((Double*)p++) = ");
         }
 
         public void WriteSecondSave()
@@ -551,6 +551,8 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldtoken:
+
+                    WritePushPtr();
 
                     // TODO: finish loading Token  
                     var opCodeTypePart = opCode as OpCodeTypePart;
@@ -1040,7 +1042,7 @@ namespace Il2Native.Logic
                     //}
                     else if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
-                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+                        this.WritePop();
                     }
 
                     break;
@@ -1510,7 +1512,7 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
-                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+                        this.WritePop();
                     }
 
                     break;
@@ -1522,7 +1524,7 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     if (!this.WriteDynamicCast(writer, opCode, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass()))
                     {
-                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+                        this.WritePop();
                     }
 
                     break;
@@ -1639,7 +1641,7 @@ namespace Il2Native.Logic
                             this.WriteVariableDeclare(opCode, operandType.ToPointerType(), "_constr");
                             var constrVar = this.WriteVariable(opCode, "_constr");
 
-                            this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+                            this.WritePop();
 
                             opCode.Result = new FullyDefinedReference(constrVar, operandType.ToPointerType());
                         }
@@ -2041,7 +2043,7 @@ namespace Il2Native.Logic
                 writer.Write("((");
                 type.ToPointerType().WriteTypePrefix(this);
                 writer.Write(")");
-                this.WriteResultOrActualWrite(opCode.OpCodeOperands[0]);
+                this.WritePop();
                 writer.Write(")->");
                 this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
             }
@@ -2226,7 +2228,7 @@ namespace Il2Native.Logic
                 method,
                 this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
-            ////this.WriteResultOrActualWrite(writer, opCodeOperand);
+            ////this.WritePop(writer, opCodeOperand);
 
             writer.Write(")");
 
@@ -2279,7 +2281,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(";");
                 this.Output.Write("_phi{0} = ", addressStart);
-                this.WriteResultOrActualWrite(opCode);
+                this.WritePop();
             }
 
             opCode.Result = new FullyDefinedReference(
@@ -2338,7 +2340,7 @@ namespace Il2Native.Logic
                 effectiveType = declaringType;
             }
 
-            this.WriteResultOrActualWrite(opCodeFieldInfoPart.OpCodeOperands[0]);
+            this.WritePop();
 
             writer.Write(")");
 
@@ -2376,7 +2378,7 @@ namespace Il2Native.Logic
 
             writer.Write("(");
 
-            this.WriteResultOrActualWrite(opCodePart.OpCodeOperands[0]);
+            this.WritePop();
 
             writer.Write(")");
 
@@ -2391,7 +2393,7 @@ namespace Il2Native.Logic
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
-                this.WriteResultOrActualWrite(fixedArrayElementIndex);
+                this.WritePop();
                 writer.Write("]");
             }
         }
@@ -2410,7 +2412,7 @@ namespace Il2Native.Logic
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
-                this.WriteResultOrActualWrite(fixedArrayElementIndex);
+                this.WritePop();
                 writer.Write("]");
             }
         }
@@ -2570,7 +2572,7 @@ namespace Il2Native.Logic
                 this.WriteCCastOnly(classType);
             }
 
-            this.WriteResultOrActualWrite(operand);
+            this.WritePop();
 
             writer.Write(")");
 
@@ -2934,7 +2936,7 @@ namespace Il2Native.Logic
             {
                 // we just need to create object without calling consturctor on it
                 opCodeNewInstance = OpCodePart.CreateNop;
-                this.WriteNewObject(opCodeNewInstance, typeToCreate);
+                this.WriteNew(opCodeNewInstance, typeToCreate);
             }
 
             if (!noNewLines)
@@ -2994,7 +2996,7 @@ namespace Il2Native.Logic
             }
 
             var operand = opCode.OpCodeOperands[index];
-            this.WriteResultOrActualWrite(operand);
+            this.WritePop();
         }
 
         public void WritePreDeclarations(IType type)
@@ -3096,18 +3098,6 @@ namespace Il2Native.Logic
                 // write number of method
                 this.Output.Write(reference);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="operand">
-        /// </param>
-        public void WriteResultOrActualWrite(OpCodePart operand)
-        {
-            this.ActualWrite(this.Output, operand);
-            this.WriteResult(operand.Result);
         }
 
         /// <summary>
@@ -3221,7 +3211,7 @@ namespace Il2Native.Logic
         {
             this.WriteCCastOnly(toType);
             writer.Write("__this_from_interface(");
-            this.WriteResultOrActualWrite(opCode);
+            this.WritePop();
             writer.Write(")");
         }
 
@@ -3819,7 +3809,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteResultOrActualWrite(opCode.OpCodeOperands[0]);
+                this.WritePop();
             }
         }
 
@@ -4284,15 +4274,9 @@ namespace Il2Native.Logic
             this.WriteNew(opCodeConstructorInfoPart, declaringType);
         }
 
-        private void WriteNewObject(OpCodePart opCodePart, IType declaringType)
-        {
-            this.WriteNew(opCodePart, declaringType);
-        }
-
         private void WriteNewSingleArray(OpCodeTypePart opCodeTypePart)
         {
             var arrayType = opCodeTypePart.Operand.ToArrayType(1);
-            var objectReference = this.WriteVariableForNew(opCodeTypePart, arrayType, "_newarr");
 
             // find constructor
             var constructorInfo =
@@ -4303,35 +4287,7 @@ namespace Il2Native.Logic
 
             var opConsturctorInfo = new OpCodeConstructorInfoPart(OpCodesEmit.Newarr, 0, 0, constructorInfo);
             opConsturctorInfo.OpCodeOperands = opCodeTypePart.OpCodeOperands;
-            this.WriteNew(opConsturctorInfo, arrayType, objectReference);
-        }
-
-        public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")
-        {
-            var normalType = type.ToNormal();
-            var isValueType = normalType.IsValueType();
-            if (isValueType)
-            {
-                // temp var
-                normalType.WriteTypePrefix(this);
-            }
-            else
-            {
-                // temp var
-                type.WriteTypePrefix(this);
-            }
-
-            var newVar = string.Format("{1}{0}", opCodePart.AddressStart, name);
-            this.Output.WriteLine(" {0};", newVar);
-
-            if (!isValueType)
-            {
-                this.Output.Write("{0} = ", newVar);
-            }
-
-            var objectReference = new FullyDefinedReference(isValueType ? string.Concat("&", newVar) : newVar, type);
-            opCodePart.Result = objectReference;
-            return objectReference;
+            this.WriteNew(opConsturctorInfo, arrayType);
         }
 
         /// <summary>

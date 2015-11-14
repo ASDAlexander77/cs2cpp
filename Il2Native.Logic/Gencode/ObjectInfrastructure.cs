@@ -694,27 +694,18 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Parameters.Add(field.FieldType.ToParameter("_value"));
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCodeConstructorInfoPart">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        public static void WriteNew(
-            this CWriter cWriter,
-            OpCodeConstructorInfoPart opCodeConstructorInfoPart,
-            IType declaringType)
+        public static void WriteNew(this CWriter cWriter, OpCodePart opCodePart, IType declaringType)
         {
             var @class = declaringType.ToClass();
-            var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, @class);
-            WriteNew(cWriter, opCodeConstructorInfoPart, declaringType, objectReference);
+            @class.WriteCallNewObjectMethod(cWriter, opCodePart);
         }
 
         public static void WriteNew(
-            this CWriter cWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType, FullyDefinedReference objectReference)
+            this CWriter cWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType type)
         {
+            var declaringType = type.ToClass();
+            var objectReference = new FullyDefinedReference("*p", declaringType);
+
             var @class = declaringType.ToClass();
             if (!declaringType.IsString)
             {
@@ -744,8 +735,6 @@ namespace Il2Native.Logic.Gencode
 
                 // call
                 cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
-
-                opCodeConstructorInfoPart.Result = objectReference;
             }
             else
             {
@@ -772,21 +761,7 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 cWriter.WriteCall(opCodeNope, stringCtorMethodBase, cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-
-                opCodeConstructorInfoPart.Result = objectReference;
             }
-        }
-
-        public static void WriteNew(
-            this CWriter cWriter,
-            OpCodePart opCodePart,
-            IType declaringType)
-        {
-            var @class = declaringType.ToClass();
-            var objectReference = cWriter.WriteVariableForNew(opCodePart, @class);
-            @class.WriteCallNewObjectMethod(cWriter, opCodePart);
-
-            opCodePart.Result = objectReference;
         }
 
         /// <summary>

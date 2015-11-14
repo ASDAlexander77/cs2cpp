@@ -151,7 +151,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCCastOnly(toType);
 
             writer.Write("(");
-            cWriter.WriteResultOrActualWrite(opCode);
+            cWriter.WritePop();
             writer.Write(")");
         }
 
@@ -338,13 +338,15 @@ namespace Il2Native.Logic.Gencode
                     var mainOperand = opCodeOperand;
                     if (bareType.IsInterface)
                     {
+                        // TODO: finish it
+
                         var opCodeLoadField = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, bareType.GetFieldByName("__this", cWriter));
                         opCodeLoadField.OpCodeOperands = new OpCodePart[] { opCodeOperand };
                         mainOperand = opCodeLoadField;
                     }
 
                     // actual call box
-                    cWriter.WriteResultOrActualWrite(mainOperand);
+                    cWriter.WritePop();
 
                     writer.Write(", (Void**)");
 
@@ -361,9 +363,10 @@ namespace Il2Native.Logic.Gencode
                             writer.Write("&");
                         }
 
-                        writer.Write("(");
+                        writer.Write("((");
                         cWriter.WriteCCastOnly(bareType.ToVirtualTable());
-                        cWriter.WriteResultOrActualWrite(mainOperand);
+                        cWriter.WritePop();
+                        writer.Write(")");
                         cWriter.WriteFieldAccess(bareType, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
                         writer.Write(")->");
                         cWriter.WriteInterfacePath(bareType, toType, false);
@@ -398,7 +401,7 @@ namespace Il2Native.Logic.Gencode
             else if ((estimatedOperandResultOf.Type.IsPointer || estimatedOperandResultOf.Type.IntTypeBitSize() >= CWriter.PointerSize * 8) && toType.IsIntPtrOrUIntPtr() && !toType.IsReference())
             {
                 cWriter.Output.Write("System_{0}_System_{0}_op_ExplicitFVoidPN((Void*)", toType.Name);
-                cWriter.WriteResultOrActualWrite(opCodeOperand);
+                cWriter.WritePop();
                 cWriter.Output.Write(")");
             }
             else if (estimatedOperandResultOf.Type.IsArray
@@ -530,11 +533,11 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memcpy(");
-            cWriter.WriteResultOrActualWrite(op1);
+            cWriter.WritePop();
             writer.Write(", ");
-            cWriter.WriteResultOrActualWrite(op2);
+            cWriter.WritePop();
             writer.Write(", ");
-            cWriter.WriteResultOrActualWrite(size);
+            cWriter.WritePop();
             writer.Write(")");
         }
 
@@ -551,7 +554,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(op1);
+            cWriter.WritePop();
             writer.Write("), 0, sizeof(");
             type.WriteTypePrefix(cWriter);
             writer.Write("))");
@@ -562,9 +565,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(op1);
+            cWriter.WritePop();
             writer.Write("), 0, (");
-            cWriter.WriteResultOrActualWrite(size);
+            cWriter.WritePop();
             writer.Write("))");
         }
 
@@ -576,11 +579,11 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(reference);
+            cWriter.WritePop();
             writer.Write("), ");
-            cWriter.WriteResultOrActualWrite(init);
+            cWriter.WritePop();
             writer.Write(", (");
-            cWriter.WriteResultOrActualWrite(size);
+            cWriter.WritePop();
             writer.Write("))");
         }
 
