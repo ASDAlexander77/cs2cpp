@@ -71,7 +71,7 @@ namespace Il2Native.Logic.Gencode
             // virtual call
             writer.Write("(");
             cWriter.WriteCCastOnly(methodInfo.DeclaringType.ToClass().ToVirtualTable());
-            cWriter.WritePop();
+            cWriter.WriteFieldAccess(opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             writer.Write(")");
             writer.Write("->");
             cWriter.WriteFunctionNameExpression(methodInfo, true);
@@ -200,7 +200,7 @@ namespace Il2Native.Logic.Gencode
                     }
 
                     // operand write
-                    cWriter.WritePop();
+                    cWriter.WriteResultOrActualWrite(usedItem);
 
                     if (first && interfaceThisAccess)
                     {
