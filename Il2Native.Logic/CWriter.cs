@@ -2339,6 +2339,10 @@ namespace Il2Native.Logic
 
                 effectiveType = declaringType;
             }
+            else
+            {
+                this.WriteCCastOnly(effectiveType);
+            }
 
             this.WritePop();
 
