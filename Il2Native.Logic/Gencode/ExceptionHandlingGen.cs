@@ -164,31 +164,25 @@ namespace Il2Native.Logic.Gencode
             var exceptionType = exceptionHandlingClause.Catch ?? cWriter.System.System_Exception;
 
             var variable = GetExceptionCaseVariable(exceptionHandlingClause);
-
-            exceptionType.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            writer.Write(variable);
-            writer.WriteLine(";");
+            var exceptionVariable = "_ex" + exceptionHandlingClause.OwnerTry.Offset;
 
             if (!exceptionType.IsObject)
             {
+                cWriter.Push();
+                writer.Write(exceptionVariable);
+
+                writer.WriteLine(";");
+
                 writer.Write("if ((");
-                writer.Write(variable);
-                writer.Write(" = ");
+
+                cWriter.Push();
 
                 var opCode = OpCodePart.CreateNop;
                 var opCodeOperand = OpCodePart.CreateNop;
-                opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object);
+                opCodeOperand.Result = new ConstValue(exceptionVariable, cWriter.System.System_Object);
                 cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, exceptionType, forceCast: true);
 
                 writer.Write(") == 0) goto eh{0}_{1}", exceptionHandlingClause.Offset, exceptionHandlingClause.Length);
-            }
-            else
-            {
-                writer.Write(variable);
-                writer.Write(" = (");
-                cWriter.System.System_Object.WriteTypePrefix(cWriter);
-                writer.Write(") _ex{0}", exceptionHandlingClause.OwnerTry.Offset);
             }
         }
 

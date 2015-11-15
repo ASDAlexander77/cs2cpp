@@ -370,7 +370,6 @@ namespace Il2Native.Logic
         public bool ActualWriteOpCode(CIndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
-            var firstOpCodeOperand = opCode != null && opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? opCode.OpCodeOperands[0] : null;
             switch (code)
             {
                 case Code.Ldc_I4_0:
@@ -519,6 +518,8 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldtoken:
+
+                    Push();
 
                     // TODO: finish loading Token  
                     var opCodeTypePart = opCode as OpCodeTypePart;
@@ -1430,14 +1431,12 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     if (!this.WriteDynamicCast(writer, opCode, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass()))
                     {
-                        this.WriteResultOrActualWrite(opCodeTypePart.OpCodeOperands[0]);
+                        this.Pop();
                     }
 
                     break;
 
                 case Code.Newobj:
-
-                    Push();
 
                     // to support settings exceptions
                     if (opCode.ReadExceptionFromStack)
@@ -1449,6 +1448,8 @@ namespace Il2Native.Logic
                                 catchOfFinallyClause.Catch ?? System.System_Exception);
                         break;
                     }
+
+                    Push();
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     Debug.Assert(opCodeConstructorInfoPart != null, "Not supported");
@@ -2028,7 +2029,7 @@ namespace Il2Native.Logic
                 writer.Write("((");
                 type.ToPointerType().WriteTypePrefix(this);
                 writer.Write(")");
-                this.WriteResultOrActualWrite(opCode.OpCodeOperands[0]);
+                this.Pop();
                 writer.Write(")->");
                 this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
             }
@@ -2037,7 +2038,7 @@ namespace Il2Native.Logic
                 writer.Write("(*((");
                 type.ToPointerType().WriteTypePrefix(this);
                 writer.Write(")");
-                this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                this.Pop();
                 writer.Write("))");
             }
         }
@@ -2278,42 +2279,12 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            var operand = opCodeFieldInfoPart.OpCodeOperands[0];
-            var operandEstimatedResultOf = this.EstimatedResultOf(operand);
-            var operandType = operandEstimatedResultOf.Type;
-            var effectiveType = operandType;
-
             writer.Write("(");
-
-            if (effectiveType.IsValueType)
-            {
-                if (operandEstimatedResultOf.Type.IntTypeBitSize() == PointerSize * 8)
-                {
-                    effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                    this.WriteCCastOnly(effectiveType.ToPointerType());
-                }
-                else if (!effectiveType.IsByRef)
-                {
-                    effectiveType = effectiveType.ToClass();
-                }
-            }
-            else if (effectiveType.IsPointer)
-            {
-                var declaringType = opCodeFieldInfoPart.Operand.DeclaringType;
-                var declaringTypePointer = declaringType.ToPointerType();
-                if (declaringTypePointer.TypeNotEquals(effectiveType))
-                {
-                    this.WriteCCastOnly(declaringTypePointer);
-                }
-
-                effectiveType = declaringType;
-            }
-
-            this.WriteResultOrActualWrite(opCodeFieldInfoPart.OpCodeOperands[0]);
-
+            this.WriteCCastOnly(opCodeFieldInfoPart.Operand.DeclaringType);
+            this.Pop();
             writer.Write(")");
 
-            this.WriteFieldAccess(effectiveType, opCodeFieldInfoPart.Operand, operandEstimatedResultOf.Type);
+            this.WriteFieldAccess(opCodeFieldInfoPart.Operand.DeclaringType, opCodeFieldInfoPart.Operand, opCodeFieldInfoPart.Operand.DeclaringType);
         }
 
         public void WriteFieldAccess(IType type, IField fieldInfo, IType originalType = null)
@@ -2347,13 +2318,15 @@ namespace Il2Native.Logic
 
             writer.Write("(");
 
-            this.WriteResultOrActualWrite(opCodePart.OpCodeOperands[0]);
+            this.WriteCCastOnly(field.DeclaringType);
+
+            this.Pop();
 
             writer.Write(")");
 
             writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
-            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex);
+            this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, fixedArrayElementIndex);
         }
 
         public void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex)
@@ -2362,7 +2335,7 @@ namespace Il2Native.Logic
             if (fixedArrayElementIndex != null)
             {
                 writer.Write("[");
-                this.WriteResultOrActualWrite(fixedArrayElementIndex);
+                this.Pop();
                 writer.Write("]");
             }
         }
@@ -3565,7 +3538,7 @@ namespace Il2Native.Logic
 
             writer.Write(" = ");
 
-            this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            this.Pop();
         }
 
         /// <summary>
