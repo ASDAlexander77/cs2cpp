@@ -242,125 +242,6 @@ namespace Il2Native.Logic
             this.Output.Write(" = ");
         }
 
-        private bool ProcessAsSeparateStatement(OpCodePart opCode)
-        {
-            if (opCode.UsedBy == null)
-            {
-                return true;
-            }
-
-            if (opCode.UsedByAlternativeValues != null)
-            {
-                return true;
-            }
-
-            if (this.OpCodeWithVariableDeclaration(opCode))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private static int GetAddressLabelPart(OpCodePart opCode)
-        {
-            var address = opCode.AddressStart;
-            if (address == 0)
-            {
-                address = opCode.GetHashCode();
-                if (opCode.UsedBy != null)
-                {
-                    address += opCode.UsedBy.OpCode.AddressStart;
-                }
-
-                if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
-                {
-                    address += opCode.OpCodeOperands[0].AddressStart;
-                }
-            }
-
-            return address;
-        }
-
-        private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
-        {
-            if (this.IsSafeForMultilineCode(opCode))
-            {
-                return false;
-            }
-
-            switch (opCode.ToCode())
-            {
-                case Code.Dup:
-                case Code.Newobj:
-                case Code.Newarr:
-                case Code.Ldftn:
-                case Code.Ldvirtftn:
-                case Code.Localloc:
-                case Code.Mkrefany:
-                case Code.Constrained:
-                case Code.Refanytype:
-                    return true;
-                case Code.Ldtoken:
-                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    if (opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
-                        (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
-                         opCodeFieldInfoPart.Operand.GetFieldRVAData() != null))
-                    {
-                        return true;
-                    }
-
-                    break;
-                case Code.Call:
-                case Code.Callvirt:
-
-                    var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-                    if (ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand))
-                    {
-                        return true;
-                    }
-
-                    if ((opCode.UsedBy != null || opCode.UsedByAlternativeValues != null) && (opCode.UsedBy == null || !opCode.UsedBy.Any(Code.Pop)))
-                    {
-                        var estimatedResultOf = this.EstimatedResultOf(opCode);
-                        var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
-                        opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
-                        return true;
-                    }
-
-                    break;
-            }
-
-            // when you use '__this' for virtual call
-            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Call, Code.Callvirt) && opCode.UsedBy.OperandPosition == 0)
-            {
-                var methodInfoOpCode = opCode.UsedBy.OpCode as OpCodeMethodInfoPart;
-                if (methodInfoOpCode != null && methodInfoOpCode.Operand.IsMethodVirtual())
-                {
-                    var estimatedResultOf = this.EstimatedResultOf(opCode);
-                    var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
-                    opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
-                    return true;
-                }
-            }
-
-            // to support casting interface to interface which is not directly inherited
-            if (opCode.UsedBy != null && opCode.UsedBy.Any(Code.Castclass))
-            {
-                var opCodeType = opCode.UsedBy.OpCode as OpCodeTypePart;
-                var estimatedResultOf = this.EstimatedResultOf(opCode);
-                if (opCodeType != null && opCode.UsedByAlternativeValues == null && opCodeType.Operand.IsInterface)
-                {
-                    // this is interface to interface cast which is not directly inherited
-                    var name = string.Format("__expr{0}", GetAddressLabelPart(opCode));
-                    opCode.Result = new FullyDefinedReference(name, estimatedResultOf.Type);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -1667,6 +1548,7 @@ namespace Il2Native.Logic
             this.Output.Write("*++p = (Int32)");
         }
 
+        [Obsolete]
         public void Pop()
         {
             this.Output.Write("*p--");
@@ -1700,6 +1582,18 @@ namespace Il2Native.Logic
         public void PushR8()
         {
             this.Output.Write("p += 2; *(Double*)p = ");
+        }
+
+        public void Pop(OpCodePart opCodePart)
+        {
+            if (opCodePart.StackBehaviour == StackBehaviour.Pop0)
+            {
+                this.Peek();
+            }
+            else
+            {
+                this.Output.Write("*p--");
+            }
         }
 
         private bool IsStructSave(IType localType, ReturnResult estResult)
@@ -3142,28 +3036,6 @@ namespace Il2Native.Logic
             VirtualTableGen.Clear();
         }
 
-        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
-        {
-            var usedByAlternativeValues = opCode.UsedByAlternativeValues;
-            while (usedByAlternativeValues.UsedByAlternativeValues != null)
-            {
-                usedByAlternativeValues = usedByAlternativeValues.UsedByAlternativeValues;
-            }
-
-            var firstOpCode = usedByAlternativeValues.Values[0];
-            var addressStart = GetPhiValuesAddressStart(usedByAlternativeValues);
-            if (opCode == firstOpCode)
-            {
-                usedByAlternativeValues.RequiredOutgoingType.WriteTypePrefix(this);
-                this.Output.WriteLine(" _phi{0};", addressStart);
-            }
-
-            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode))
-            {
-                this.Output.Write("_phi{0} = ", addressStart);
-            }
-        }
-
         public void WriteInterfaceToObjectCast(CIndentedTextWriter writer, OpCodePart opCode, IType toType)
         {
             this.WriteCCastOnly(toType);
@@ -4164,11 +4036,6 @@ namespace Il2Native.Logic
             foreach (var opCodeOperand in item.OpCodeOperands.Where(opCodeOperand => opCodeOperand.IsVirtual()))
             {
                 ActualWriteForVirtualOpCodes(opCodeOperand);
-
-                if (this.OpCodeWithVariableDeclaration(opCodeOperand))
-                {
-                    this.ActualWrite(this.Output, opCodeOperand, true);
-                }
             }
         }
 

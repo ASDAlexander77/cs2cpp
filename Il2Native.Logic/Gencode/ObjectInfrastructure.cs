@@ -484,6 +484,7 @@ namespace Il2Native.Logic.Gencode
             if (type.IsArray)
             {
                 opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
+                opCodeNope.OpCodeOperands[0].StackBehaviour = StackBehaviour.Pop0;
             }
 
             AppendDebugParemeters(cWriter, opCodeNope);
@@ -492,6 +493,11 @@ namespace Il2Native.Logic.Gencode
                 opCodeNope,
                 method,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
+
+            if (type.IsArray)
+            {
+                opCodeNope.OpCodeOperands[0].StackBehaviour = null;
+            }
 
             cWriter.Output.WriteLine(";");
         }

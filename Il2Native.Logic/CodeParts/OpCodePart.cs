@@ -177,6 +177,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public StackBehaviour? StackBehaviour { get; set; }
+
+        /// <summary>
+        /// </summary>
         public List<TryClause> TryBegin { get; set; }
 
         /// <summary>
