@@ -66,14 +66,15 @@ namespace Il2Native.Logic.Gencode
 
                     if (cWriter.MultiThreadingSupport)
                     {
-                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_mutex_address((Void*)", estimatedResult.Type);
+                        writer.Write("__get_mutex_address((Void*)");
+                        cWriter.Pop();
                         writer.Write(")");
                     }
                     else
                     {
                         var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__null_address((Void*)", estimatedResult.Type);
+                        writer.Write("__null_address((Void*)");
+                        cWriter.Pop();
                         writer.Write(")");
                     }
 
@@ -83,14 +84,14 @@ namespace Il2Native.Logic.Gencode
 
                     if (cWriter.MultiThreadingSupport)
                     {
-                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__get_cond_address((Void*)", estimatedResult.Type);
+                        writer.Write("__get_cond_address((Void*)");
+                        cWriter.Pop();
                         writer.Write(")");
                     }
                     else
                     {
-                        var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-                        cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "__null_address((Void*)", estimatedResult.Type);
+                        writer.Write("__null_address((Void*)");
+                        cWriter.Pop();
                         writer.Write(")");                        
                     }
 

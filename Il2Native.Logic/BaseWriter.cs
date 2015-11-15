@@ -249,7 +249,7 @@ namespace Il2Native.Logic
             this.ProcessAll(ops);
             this.AssignExceptionsToOpCodes();
             this.SanitizePointerOperations(ops);
-            this.InsertMissingTypeCasts(ops);
+            //this.InsertMissingTypeCasts(ops);
             return ops;
         }
 
@@ -498,6 +498,7 @@ namespace Il2Native.Logic
             CCast
         }
 
+        [Obsolete]
         protected void InsertMissingTypeCasts(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)

@@ -446,14 +446,13 @@ namespace Il2Native.Logic.Gencode
             this CWriter cWriter,
             OpCodePart opCode,
             IType typeToSave,
-            int operandIndex,
             FullyDefinedReference destination)
         {
             var writer = cWriter.Output;
 
             cWriter.WriteResult(destination);
             writer.Write(" = ");
-            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            cWriter.Pop();
         }
 
         public static void WriteSaveVolatile(
@@ -500,6 +499,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(")");
         }
 
+        [Obsolete]
         public static void WriteSavePrimitiveIntoStructure(
             this CWriter cWriter,
             OpCodePart opCode,
@@ -551,9 +551,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(op1);
+            cWriter.Pop();
             writer.Write("), 0, sizeof(");
-            type.WriteTypePrefix(cWriter);
+            cWriter.Pop();
             writer.Write("))");
         }
 
@@ -562,9 +562,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(op1);
+            cWriter.Pop();
             writer.Write("), 0, (");
-            cWriter.WriteResultOrActualWrite(size);
+            cWriter.Pop();
             writer.Write("))");
         }
 
@@ -576,11 +576,11 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("Memset((Byte*) (");
-            cWriter.WriteResultOrActualWrite(reference);
+            cWriter.Pop();
             writer.Write("), ");
-            cWriter.WriteResultOrActualWrite(init);
+            cWriter.Pop();
             writer.Write(", (");
-            cWriter.WriteResultOrActualWrite(size);
+            cWriter.Pop();
             writer.Write("))");
         }
 

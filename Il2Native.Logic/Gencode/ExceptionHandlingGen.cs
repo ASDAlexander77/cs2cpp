@@ -231,7 +231,8 @@ namespace Il2Native.Logic.Gencode
             CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            cWriter.UnaryOper(writer, opCode, "throw (Void*) ");
+            writer.Write("throw (Void*) ");
+            cWriter.Pop();
         }
 
         /// <summary>
