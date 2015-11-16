@@ -759,8 +759,8 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 643 });
 
-            CompilerHelper.CompactMode = true;
-            CompilerHelper.Stubs = true;
+            //CompilerHelper.CompactMode = true;
+            //CompilerHelper.Stubs = true;
 
             foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {

@@ -200,7 +200,7 @@ namespace Il2Native.Logic.Gencode
                     }
 
                     // operand write
-                    cWriter.Pop(usedItem);
+                    cWriter.Peek(usedItem);
 
                     if (first && interfaceThisAccess)
                     {

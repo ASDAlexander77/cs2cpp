@@ -67,14 +67,14 @@ namespace Il2Native.Logic.Gencode
                     if (cWriter.MultiThreadingSupport)
                     {
                         writer.Write("__get_mutex_address((Void*)");
-                        cWriter.Pop();
+                        cWriter.Peek();
                         writer.Write(")");
                     }
                     else
                     {
                         var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
                         writer.Write("__null_address((Void*)");
-                        cWriter.Pop();
+                        cWriter.Peek();
                         writer.Write(")");
                     }
 
@@ -85,13 +85,13 @@ namespace Il2Native.Logic.Gencode
                     if (cWriter.MultiThreadingSupport)
                     {
                         writer.Write("__get_cond_address((Void*)");
-                        cWriter.Pop();
+                        cWriter.Peek();
                         writer.Write(")");
                     }
                     else
                     {
                         writer.Write("__null_address((Void*)");
-                        cWriter.Pop();
+                        cWriter.Peek();
                         writer.Write(")");                        
                     }
 

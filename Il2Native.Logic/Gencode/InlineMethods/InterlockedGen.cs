@@ -36,7 +36,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("fetch_and_{0}(", op);
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write(", 1)");
         }
 
@@ -57,9 +57,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("fetch_and_{0}(", op);
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write(", ");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write(")");
         }
 

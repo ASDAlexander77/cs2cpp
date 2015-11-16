@@ -1813,6 +1813,14 @@ namespace Il2Native.Logic
             }
         }
 
+        public static void SetStackIndexesInvert(this OpCodePart[] operands)
+        {
+            for (var index = 0; index < operands.Length; index++)
+            {
+                operands[index].StackIndex = operands.Length - index - 1;
+            }
+        }
+
         public static void ClearStackIndexes(this OpCodePart[] operands)
         {
             foreach (var operand in operands)

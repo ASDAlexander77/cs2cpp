@@ -452,7 +452,7 @@ namespace Il2Native.Logic.Gencode
 
             cWriter.WriteResult(destination);
             writer.Write(" = ");
-            cWriter.Pop();
+            cWriter.Peek();
         }
 
         public static void WriteSaveVolatile(
@@ -551,9 +551,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("), 0, sizeof(");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("))");
         }
 
@@ -562,9 +562,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("Memset((Byte*) (");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("), 0, (");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("))");
         }
 
@@ -576,11 +576,11 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("Memset((Byte*) (");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("), ");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write(", (");
-            cWriter.Pop();
+            cWriter.Peek();
             writer.Write("))");
         }
 

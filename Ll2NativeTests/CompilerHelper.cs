@@ -257,7 +257,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-c {0}-o CoreLib.{1} CoreLib.cpp{2}",
+                            "-c {0}-o CoreLib.{1} CoreLib.cpp{2} -fpermissive -fno-rtti",
                             opt ? "-O3 " : string.Empty,
                             OutputObjectFileExt,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
@@ -287,7 +287,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=i686 -L .{2}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=i686 -L .{2} -fprmissive -fno-rtti",
                             fileName,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
@@ -308,7 +308,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2} -fpermissive -fno-rtti",
                             fileName,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
@@ -324,7 +324,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -l{4} -march=i686 -L .{3}",
+                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -l{4} -march=i686 -L .{3} -fpermissive -fno-rtti",
                             fileName,
                             OutputObjectFileExt,
                             opt ? "-O3 " : string.Empty,

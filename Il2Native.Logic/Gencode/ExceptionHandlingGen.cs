@@ -168,14 +168,11 @@ namespace Il2Native.Logic.Gencode
 
             if (!exceptionType.IsObject)
             {
-                cWriter.Push();
                 writer.Write(exceptionVariable);
 
                 writer.WriteLine(";");
 
                 writer.Write("if ((");
-
-                cWriter.Push();
 
                 var opCode = OpCodePart.CreateNop;
                 var opCodeOperand = OpCodePart.CreateNop;
@@ -226,7 +223,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Write("throw (Void*) ");
-            cWriter.Pop();
+            cWriter.Peek();
         }
 
         /// <summary>
