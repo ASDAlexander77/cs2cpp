@@ -1584,11 +1584,23 @@ namespace Il2Native.Logic
             this.Output.Write("p += 2; *(Double*)p = ");
         }
 
+        public void ShiftTopBy(int shirt)
+        {
+            this.Output.Write("*(p - {0}) = *p; p -= {0}", shirt);
+        }
+
         public void Pop(OpCodePart opCodePart)
         {
-            if (opCodePart.StackBehaviour == StackBehaviour.Pop0)
+            if (opCodePart.StackIndex.HasValue)
             {
-                this.Peek();
+                if (opCodePart.StackIndex == 0)
+                {
+                    this.Peek();
+                }
+                else
+                {
+                    this.Output.Write("*(p-{0})", opCodePart.StackIndex);
+                }
             }
             else
             {

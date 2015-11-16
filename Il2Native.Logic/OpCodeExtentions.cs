@@ -1799,9 +1799,26 @@ namespace Il2Native.Logic
                 }
 
                 effectiveType = effectiveType.DeclaringType;
-            } while (effectiveType != null);
+            } 
+            while (effectiveType != null);
              
             return false;
+        }
+
+        public static void SetStackIndexes(this OpCodePart[] operands)
+        {
+            for (var index = 0; index < operands.Length; index++)
+            {
+                operands[index].StackIndex = index;
+            }
+        }
+
+        public static void ClearStackIndexes(this OpCodePart[] operands)
+        {
+            foreach (var operand in operands)
+            {
+                operand.StackIndex = null;
+            }
         }
     }
 }

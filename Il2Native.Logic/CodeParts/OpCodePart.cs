@@ -177,7 +177,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public StackBehaviour? StackBehaviour { get; set; }
+        public int? StackIndex { get; set; }
 
         /// <summary>
         /// </summary>

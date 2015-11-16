@@ -484,7 +484,7 @@ namespace Il2Native.Logic.Gencode
             if (type.IsArray)
             {
                 opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
-                opCodeNope.OpCodeOperands[0].StackBehaviour = StackBehaviour.Pop0;
+                opCodeNope.OpCodeOperands.SetStackIndexes();
             }
 
             AppendDebugParemeters(cWriter, opCodeNope);
@@ -496,7 +496,7 @@ namespace Il2Native.Logic.Gencode
 
             if (type.IsArray)
             {
-                opCodeNope.OpCodeOperands[0].StackBehaviour = null;
+                opCodeNope.OpCodeOperands.ClearStackIndexes();
             }
 
             cWriter.Output.WriteLine(";");
@@ -747,9 +747,16 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 opCodeConstructorInfoPart.OpCodeOperands = callOps.ToArray();
+                opCodeConstructorInfoPart.OpCodeOperands.SetStackIndexes();
 
                 // call
                 cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+
+                opCodeConstructorInfoPart.OpCodeOperands.ClearStackIndexes();
+
+                cWriter.Output.WriteLine(";");
+
+                cWriter.ShiftTopBy(opCodeConstructorInfoPart.OpCodeOperands.Length - 1);
 
                 opCodeConstructorInfoPart.Result = objectReference;
             }
