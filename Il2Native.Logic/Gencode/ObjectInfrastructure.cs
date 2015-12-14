@@ -970,6 +970,7 @@ namespace Il2Native.Logic.Gencode
 
                     code.LoadArgument(0);
                     code.Castclass(@interface);
+                    code.Castclass(codeWriter.System.System_Void.ToPointerType());
                     code.Add(Code.Ret);
 
                     code.Add(jump_not_equal);
@@ -1009,6 +1010,7 @@ namespace Il2Native.Logic.Gencode
 
                         code.LoadArgument(0);
                         code.Castclass(@interface);
+                        code.Castclass(codeWriter.System.System_Void.ToPointerType());
                         code.Add(Code.Ret);
 
                         code.Add(jump_not_equal);
