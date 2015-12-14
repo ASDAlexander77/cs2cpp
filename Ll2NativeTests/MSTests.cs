@@ -344,6 +344,8 @@ namespace Ll2NativeTests
         [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
+            // TODO: think about using IntPtr as "native int" when it is used as struct type to speed up execution and reduce some code
+
             // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
 
             // TODO: gtest-named-04: calling function with incorrect order of passed arguments (right-to-left but should be left-to-right) (BUG: needs to be fixed)
@@ -746,6 +748,12 @@ namespace Ll2NativeTests
                         868
                     });
 
+            // MISSING ARRAY IN CORELIB
+            // TODO: remove it
+            skip.Add(45);
+            // TODO: full namespace not correct
+            skip.Add(126);
+            
             if (CompilerHelper.UsingRoslyn)
             {
                 // object o = -(2147483648); type is "int", not "long" in Roslyn
@@ -759,8 +767,8 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 643 });
 
-            CompilerHelper.CompactMode = true;
-            CompilerHelper.Stubs = true;
+            //CompilerHelper.CompactMode = true;
+            //CompilerHelper.Stubs = true;
 
             foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
@@ -812,15 +820,27 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
+                CompilerHelper.GetConverterArgs(false, stubs: true, split:true));
 
-            CompilerHelper.ExecCmd(
-                "g++",
-                string.Format(
-                    "-fno-rtti {0}-o CoreLib.obj -c CoreLib.cpp{1}",
-                    CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
-                    CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
+            ////CompilerHelper.ExecCmd(
+            ////    "g++",
+            ////    string.Format(
+            ////        "-fno-rtti {0}-o CoreLib.obj -c CoreLib.cpp{1}",
+            ////        CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
+            ////        CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }
+
+        [TestMethod]
+        public void TestBabylonGlut()
+        {
+            CompilerHelper.CompactMode = true;
+
+            Il2Converter.Convert(
+                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
+        }
+
 
         /// <summary>
         /// </summary>
@@ -964,6 +984,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             ////CompilerHelper.AddSystemLinq = true;
             //CompilerHelper.CompactMode = true;
             //CompilerHelper.Stubs = true;
+            //CompilerHelper.Split = true;
             CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 

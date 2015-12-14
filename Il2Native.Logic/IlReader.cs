@@ -1190,6 +1190,12 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var resolveMember = module.ResolveMember(token, genericContext);
                         var constructor = resolveMember as IConstructor;
+                        if (constructor == null)
+                        {
+                            var resolveType = module.ResolveType(token, genericContext);
+                            constructor = resolveType.FindConstructor(this.CodeWriter);
+                        }
+
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {

@@ -13,38 +13,13 @@
 
         public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
-
-            var typedReferenceType = codeWriter.System.System_TypedReference;
-            var intPtrType = codeWriter.System.System_IntPtr;
-
-            var t1 =OpCodeExtensions.GetFieldByName(typedReferenceType, "Value", codeWriter);
-            var t2 =OpCodeExtensions.GetFieldByName(typedReferenceType, "Type", codeWriter);
-            var t3 =OpCodeExtensions.GetFieldByName(intPtrType, "m_value", codeWriter);
-            var t4 =codeWriter.System.System_Object.ToPointerType();
-            var t5 =codeWriter.System.System_Object;
-            var t6 =codeWriter.System.System_Boolean;
-            var t7 =codeWriter.System.System_Char;
-            var t8 =codeWriter.System.System_SByte;
-            var t9 =codeWriter.System.System_Byte;
-            var t10 =codeWriter.System.System_Int16;
-            var t11 =codeWriter.System.System_UInt16;
-            var t12 =codeWriter.System.System_Int32;
-            var t13 =codeWriter.System.System_UInt32;
-            var t14 =codeWriter.System.System_Int64;
-            var t15 =codeWriter.System.System_UInt64;
-            var t16 =codeWriter.System.System_Single;
-            var t17 =codeWriter.System.System_Double;
-            var t18 =codeWriter.System.System_Decimal;
-            var t19 =codeWriter.System.System_DateTime;
-            var t20 = IlReader.Constructors(codeWriter.System.System_NotSupportedException, codeWriter).First(c => !c.GetParameters().Any());
-
             var codeList = new IlCodeBuilder();
 
             // get TypeCode of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t2);
+            codeList.Add(Code.Ldflda, 2);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.Add(Code.Conv_I4);
 
             // switch
@@ -55,7 +30,7 @@
 
             // TODO: do not support Structs for now
             var defaultCaseLabel1 = codeList.CreateLabel();
-            codeList.New(t20);
+            codeList.Add(Code.Newobj, 20);
             codeList.Add(Code.Throw);
 
             // case 0(TypeCode.Empty) -> Default
@@ -71,11 +46,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t6);
+            codeList.Add(Code.Unbox, 6);
             codeList.Add(Code.Stind_I1);
             codeList.Add(Code.Ret);
 
@@ -83,11 +58,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t7);
+            codeList.Add(Code.Unbox, 7);
             codeList.Add(Code.Stind_I2);
             codeList.Add(Code.Ret);
 
@@ -95,11 +70,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t8);
+            codeList.Add(Code.Unbox, 8);
             codeList.Add(Code.Stind_I1);
             codeList.Add(Code.Ret);
 
@@ -107,11 +82,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t9);
+            codeList.Add(Code.Unbox, 9);
             codeList.Add(Code.Stind_I1);
             codeList.Add(Code.Ret);
 
@@ -119,11 +94,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t10);
+            codeList.Add(Code.Unbox, 10);
             codeList.Add(Code.Stind_I2);
             codeList.Add(Code.Ret);
 
@@ -131,11 +106,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t11);
+            codeList.Add(Code.Unbox, 11);
             codeList.Add(Code.Stind_I2);
             codeList.Add(Code.Ret);
 
@@ -143,11 +118,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t12);
+            codeList.Add(Code.Unbox, 12);
             codeList.Add(Code.Stind_I4);
             codeList.Add(Code.Ret);
 
@@ -155,11 +130,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t13);
+            codeList.Add(Code.Unbox, 13);
             codeList.Add(Code.Stind_I4);
             codeList.Add(Code.Ret);
 
@@ -167,11 +142,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t14);
+            codeList.Add(Code.Unbox, 14);
             codeList.Add(Code.Stind_I8);
             codeList.Add(Code.Ret);
 
@@ -179,11 +154,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t15);
+            codeList.Add(Code.Unbox, 15);
             codeList.Add(Code.Stind_I8);
             codeList.Add(Code.Ret);
 
@@ -191,11 +166,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t16);
+            codeList.Add(Code.Unbox, 16);
             codeList.Add(Code.Stind_R4);
             codeList.Add(Code.Ret);
 
@@ -203,11 +178,11 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t17);
+            codeList.Add(Code.Unbox, 17);
             codeList.Add(Code.Stind_R8);
             codeList.Add(Code.Ret);
 
@@ -215,30 +190,28 @@
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t18);
-            codeList.SaveObject(codeWriter.System.System_Decimal);
+            codeList.Add(Code.Unbox, 18);
             codeList.Add(Code.Ret);
 
             // case 16(TypeCode.DateTime)
             @switch.Labels.Add(codeList.CreateLabel());
             // get Value of TypedReference
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
+            codeList.Add(Code.Ldfld, 3);
             codeList.LoadArgument(1);
-            codeList.Unbox(t19);
-            codeList.SaveObject(codeWriter.System.System_DateTime);
+            codeList.Add(Code.Unbox, 19);
             codeList.Add(Code.Ret);
 
             // case 17 -> Default
             @switch.Labels.Add(codeList.CreateLabel());
             // throw NotSupportedException
-            codeList.New(t20);
+            codeList.Add(Code.Newobj, 20);
             codeList.Add(Code.Throw);
 
             // case 18(TypeCode.String) -> Default
@@ -249,13 +222,40 @@
 
             // get Value of TypedReference (default case)
             codeList.LoadArgument(0);
-            codeList.LoadFieldAddress(t1);
+            codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.LoadField(t3);
-            codeList.Castclass(t4);
+            codeList.Add(Code.Ldfld, 3);
+            codeList.Add(Code.Castclass, 4);
             codeList.LoadArgument(1);
             codeList.Add(Code.Stind_Ref);
+
             codeList.Add(Code.Ret);
+
+            var typedReferenceType = codeWriter.System.System_TypedReference;
+            var intPtrType = codeWriter.System.System_IntPtr;
+
+            var tokenResolutions = new List<object>();
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Value", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(typedReferenceType, "Type", codeWriter));
+            tokenResolutions.Add(OpCodeExtensions.GetFieldByName(intPtrType, "m_value", codeWriter));
+            tokenResolutions.Add(codeWriter.System.System_Object.ToPointerType());
+            tokenResolutions.Add(codeWriter.System.System_Object);
+            tokenResolutions.Add(codeWriter.System.System_Boolean);
+            tokenResolutions.Add(codeWriter.System.System_Char);
+            tokenResolutions.Add(codeWriter.System.System_SByte);
+            tokenResolutions.Add(codeWriter.System.System_Byte);
+            tokenResolutions.Add(codeWriter.System.System_Int16);
+            tokenResolutions.Add(codeWriter.System.System_UInt16);
+            tokenResolutions.Add(codeWriter.System.System_Int32);
+            tokenResolutions.Add(codeWriter.System.System_UInt32);
+            tokenResolutions.Add(codeWriter.System.System_Int64);
+            tokenResolutions.Add(codeWriter.System.System_UInt64);
+            tokenResolutions.Add(codeWriter.System.System_Single);
+            tokenResolutions.Add(codeWriter.System.System_Double);
+            tokenResolutions.Add(codeWriter.System.System_Decimal);
+            tokenResolutions.Add(codeWriter.System.System_DateTime);
+            tokenResolutions.Add(
+                IlReader.Constructors(codeWriter.System.System_NotSupportedException, codeWriter).First(c => !c.GetParameters().Any()));
 
             var locals = new List<IType>();
 
@@ -263,7 +263,7 @@
             parameters.Add(codeWriter.System.System_Void.ToPointerType().ToParameter("ref"));
             parameters.Add(codeWriter.System.System_Object.ToParameter("obj"));
 
-            yield return MethodBodyBank.Register(Name, codeList.GetCode(), codeList.TokenResolutions, locals, parameters);
+            yield return MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }
     }
 }

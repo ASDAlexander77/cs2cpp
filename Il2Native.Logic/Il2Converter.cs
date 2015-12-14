@@ -276,9 +276,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                ConvertRuntimeTypeInfo(
-                    codeWriter,
-                    type);
+                ConvertRuntimeTypeInfo(codeWriter, type);
             }
         }
 
@@ -766,7 +764,7 @@ namespace Il2Native.Logic
             else
             {
                 // generate file for each namespace
-                var namespaces = ilReader.Types().Where(t => !string.IsNullOrEmpty(t.Namespace)).Select(t => t.Namespace).Distinct().ToList();
+                var namespaces = (!compact ? ilReader.Types() : ilReader.AllTypes()).Where(t => !string.IsNullOrEmpty(t.Namespace)).Select(t => t.Namespace).Distinct().ToList();
                 GenerateMultiSources(ilReader, namespaces, settings);
             }
         }
@@ -795,11 +793,8 @@ namespace Il2Native.Logic
         {
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
-
             var readTypes = ReadingTypes(ilReader, settings.Filter);
-
             WritingDeclarations(ilReader, codeHeaderWriter, readTypes);
-
             if (headers)
             {
                 return;
@@ -815,36 +810,37 @@ namespace Il2Native.Logic
         {
             settings.FileExt = ".h";
             var codeHeaderWriter = GetCodeWriter(ilReader, settings, true);
-
-            var readTypes = ReadingTypes(
-                ilReader,
-                settings.Filter);
-
-            WritingDeclarations(
-                ilReader,
-                codeHeaderWriter,
-                readTypes);
-
+            var readTypes = ReadingTypes(ilReader, settings.Filter);
+            WritingDeclarations(ilReader, codeHeaderWriter, readTypes);
             if (headers)
             {
                 return;
             }
 
             var fileName = settings.FileName;
-
             foreach (var ns in namespaces)
             {
-                GenerateSourceForNamespace(ilReader, settings, fileName, ns, readTypes);
+                this.GenerateSourceForNamespace(
+                    ilReader,
+                    settings,
+                    fileName,
+                    ns,
+                    namespaces.Any(n => n != ns && string.Compare(n, ns, StringComparison.OrdinalIgnoreCase) == 0),
+                    readTypes);
             }
 
             // very important step to generate code for empty space
-            GenerateSourceForNamespace(ilReader, settings, fileName, string.Empty, readTypes);
+            this.GenerateSourceForNamespace(ilReader, settings, fileName, string.Empty, false, readTypes);
         }
 
         private void GenerateSourceForNamespace(
-            IlReader ilReader, Settings settings, string fileName, string ns, ReadTypesContext readTypes)
+            IlReader ilReader, Settings settings, string fileName, string ns, bool notUnique, ReadTypesContext readTypes)
         {
-            settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
+            settings.FileName = string.Concat(
+                fileName,
+                "_",
+                string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName(),
+                notUnique ? string.Concat("_", Math.Abs(ns.GetHashCode())) : string.Empty);
             settings.FileExt = ".cpp";
 
             var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
@@ -1161,6 +1157,11 @@ namespace Il2Native.Logic
             IMethod method,
             Queue<IMethod> queue)
         {
+            if (method.DeclaringType != null && method.DeclaringType.IsInterface)
+            {
+                return;
+            }
+
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                 readingTypesContext.GenericTypeSpecializations,
                 readingTypesContext.GenericMethodSpecializations,
@@ -1266,7 +1267,6 @@ namespace Il2Native.Logic
 
             if (compact)
             {
-
                 var mainFunc = _codeWriter.GenerateMainMethod(types.SelectMany(t => IlReader.Methods(t, codeWriter)).First(CWriter.IsMain));
                 DiscoverAllCalledMethodUsedStaticsAndUsedVirtualTables(readingTypesContext, codeWriter, mainFunc, new Queue<IMethod>());
 
@@ -1437,31 +1437,39 @@ namespace Il2Native.Logic
 
             WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PreDefinition);
 
+            // Append not generated sgettypes
+            var fullNames = readTypes.UsedTypes.Select(t => t.FullName).ToList();
             if (!compact)
             {
                 WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.Definition);
                 WriteTypesWithGenericsStep(codeWriter, readTypes, ConvertingMode.PostDefinition);
             }
-            else
+            else if (!split)
             {
                 // we just need to write all called methods
                 WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.AssemblyQualifiedName != readTypes.AssemblyQualifiedName && !f.DeclaringType.IsGenericOrArray()));
                 WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Select(m => m.Method));
                 WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes);
             }
-
-            if (!codeWriter.IsSplit || codeWriter.IsSplit && string.IsNullOrWhiteSpace(codeWriter.SplitNamespace))
+            else
             {
-                // Append not generated sgettypes
-                var fullNames = readTypes.UsedTypes.Select(t => t.FullName).ToList();
-                var runtimeTypes =
-                    (!compact
-                        ? ilReader.UsedTypeTokens.Where(
-                            k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName))
-                        : ilReader.UsedTypeTokens.Where(
-                            k => !fullNames.Contains(k.FullName))).ToList();
+                // split & compact
+                // we just need to write all called methods
+                WriteBulkOfStaticFields(codeWriter, readTypes.UsedStaticFields.Where(f => f.DeclaringType.Namespace == codeWriter.SplitNamespace).Where(f => !fullNames.Contains(f.DeclaringType.FullName)));
+                WriteBulkOfMethod(codeWriter, readTypes.CalledMethods.Where(m => m.Method.Namespace == codeWriter.SplitNamespace).Select(m => m.Method));
+                WriteBulkOfVirtualTableImplementation(codeWriter, readTypes.UsedVirtualTableImplementationTypes.Where(t => t.Namespace == codeWriter.SplitNamespace));
+            }
 
-                ConvertAllRuntimeTypes(codeWriter, runtimeTypes);
+            if (!codeWriter.IsSplit || codeWriter.IsSplit && (string.IsNullOrWhiteSpace(codeWriter.SplitNamespace) || this.compact))
+            {
+                var runtimeTypes = !this.compact
+                    ? ilReader.UsedTypeTokens.Where(
+                        k => (k.IsGenericTypeDefinition || k.IsPointer) && !fullNames.Contains(k.FullName))
+                    : codeWriter.IsSplit
+                        ? ilReader.UsedTypeTokens.Where(t => t.Namespace == codeWriter.SplitNamespace).Where(k => !fullNames.Contains(k.FullName))
+                        : ilReader.UsedTypeTokens.Where(k => !fullNames.Contains(k.FullName));
+
+                ConvertAllRuntimeTypes(codeWriter, runtimeTypes.ToList());
             }
 
             codeWriter.WriteEnd();
@@ -1523,7 +1531,7 @@ namespace Il2Native.Logic
 
             codeWriter.WriteMethod(
                 method,
-                MethodBodyBank.GetMethodWithCustomBodyOrDefault(type.IsGenericType || method.IsGenericMethod ? method.GetMethodDefinition() : null, codeWriter),
+                MethodBodyBank.GetMethodWithCustomBodyOrDefault(type.IsGenericType || method.IsGenericMethod ? method.GetMethodDefinition() : method, codeWriter),
                 genericMethodContext);
         }
 

@@ -271,6 +271,11 @@
             this.Add(Code.Dup);
         }
 
+        public void Pop()
+        {
+            this.Add(Code.Pop);
+        }
+
         public void LoadArgument(int argIndex)
         {
             switch (argIndex)
@@ -316,6 +321,13 @@
         {
             Debug.Assert(@constructor != null, "@constructor is null");
             TokenResolutions.Add(@constructor);
+            this.Add(Code.Newobj, (int)TokenResolutions.Count);
+        }
+
+        public void New(IType @type)
+        {
+            Debug.Assert(@type != null, "@type is null");
+            TokenResolutions.Add(@type);
             this.Add(Code.Newobj, (int)TokenResolutions.Count);
         }
 

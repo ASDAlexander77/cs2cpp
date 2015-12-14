@@ -17,8 +17,6 @@
             codeList.LoadArgument(0);
             codeList.Add(Code.Castclass, 1);
             codeList.Add(Code.Ldfld, 2);
-            codeList.LoadConstant(1);
-            codeList.Add(Code.Sub);
 
             var label1 = codeList.Branch(Code.Brtrue, Code.Brtrue_S);
 

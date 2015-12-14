@@ -952,23 +952,76 @@ namespace Il2Native.Logic.Gencode
 
             code.Parameters.Add(codeWriter.System.System_Type.ToParameter("_type"));
 
-            foreach (var @interface in type.GetAllInterfaces())
+            if (!type.IsInterface)
             {
-                code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
-                code.LoadArgument(1);
+                var interfaces = type.GetAllInterfaces();
+                if (!codeWriter.IlReader.CompactMode)
+                {
+                    interfaces = interfaces.Where(i => !i.IsGenericType);
+                }
 
-                var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
+                // simple reference compare
+                foreach (var @interface in interfaces)
+                {
+                    code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
+                    code.LoadArgument(1);
 
-                code.LoadArgument(0);
-                code.Castclass(@interface);
-                code.Castclass(codeWriter.System.System_Void.ToPointerType());
+                    var jump_not_equal = code.Branch(Code.Bne_Un, Code.Bne_Un_S);
+
+                    code.LoadArgument(0);
+                    code.Castclass(@interface);
+                    code.Add(Code.Ret);
+
+                    code.Add(jump_not_equal);
+                }
+
+                if (!codeWriter.IlReader.CompactMode)
+                {
+                    // TODO: do not carry on if you do not use generic interface
+
+                    var nameField =
+                        IlReader.Fields(codeWriter.System.System_RuntimeType, codeWriter)
+                            .First(f => f.Name == RuntimeTypeInfoGen.NameField);
+                    var namespaceField =
+                        IlReader.Fields(codeWriter.System.System_RuntimeType, codeWriter)
+                            .First(f => f.Name == RuntimeTypeInfoGen.NamespaceField);
+                    var compareMethod =
+                        codeWriter.System.System_String.GetMethodsByName("CompareOrdinalHelper", codeWriter).First();
+
+                    // compare by name & namespace
+                    foreach (var @interface in type.GetAllInterfaces().Where(i => i.IsGenericType))
+                    {
+                        code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
+                        code.LoadField(nameField);
+                        code.LoadArgument(1);
+                        code.LoadField(nameField);
+                        code.Call(compareMethod);
+
+                        var jump_not_equal = code.Branch(Code.Brtrue, Code.Brtrue_S);
+
+                        code.LoadToken(@interface.GetFullyDefinedRefereneForRuntimeType((CWriter)codeWriter));
+                        code.LoadField(namespaceField);
+                        code.LoadArgument(1);
+                        code.LoadField(namespaceField);
+                        code.Call(compareMethod);
+
+                        code.Branch(Code.Brtrue, Code.Brtrue_S, jump_not_equal);
+
+                        code.LoadArgument(0);
+                        code.Castclass(@interface);
+                        code.Add(Code.Ret);
+
+                        code.Add(jump_not_equal);
+                    }
+                }
+
+                code.LoadNull();
                 code.Add(Code.Ret);
-
-                code.Add(jump_not_equal);                
             }
-
-            code.LoadNull();
-            code.Add(Code.Ret);
+            else
+            {
+                code.Throw(codeWriter.System.System_NotSupportedException.FindConstructor(codeWriter));
+            }
 
             return code;
         }

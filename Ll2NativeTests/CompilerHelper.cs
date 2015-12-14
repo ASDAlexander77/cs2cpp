@@ -111,6 +111,10 @@
 
         /// <summary>
         /// </summary>
+        public static bool Split = false;
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -206,7 +210,7 @@
                 args.Add("line-");
             }
 
-            if (split)
+            if (split || Split)
             {
                 args.Add("split");
             }
@@ -244,26 +248,6 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-            // compile CoreLib
-            if (!CompilerHelper.Mscorlib && !CompilerHelper.CompactMode)
-            {
-                if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
-                {
-                    if (!File.Exists(Path.Combine(OutputPath, "CoreLib.cpp")))
-                    {
-                        Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
-                    }
-
-                    ExecCmd(
-                        "g++",
-                        string.Format(
-                            "-c {0}-o CoreLib.{1} CoreLib.cpp{2}",
-                            opt ? "-O3 " : string.Empty,
-                            OutputObjectFileExt,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
-                }
-            }
-
             if (!justCompile)
             {
                 if (MultiThreadingEnabled)
@@ -287,7 +271,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=i686 -L .{2}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=native -L .{2} -fprmissive -fno-rtti",
                             fileName,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
@@ -308,7 +292,7 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2} -fpermissive -fno-rtti",
                             fileName,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
@@ -324,12 +308,12 @@
                     ExecCmd(
                         "g++",
                         string.Format(
-                            "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -l{4} -march=i686 -L .{3}",
+                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -lCoreLib{4} -march=native -L .{2} -fpermissive -fno-rtti",
                             fileName,
-                            OutputObjectFileExt,
                             opt ? "-O3 " : string.Empty,
                             GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
+                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib",
+                            DebugInfo ? "_d" : string.Empty));
 
                     // test execution
                     ExecCmd(string.Format("{0}.exe", fileName), readOutput: true, returnCode: returnCode);
