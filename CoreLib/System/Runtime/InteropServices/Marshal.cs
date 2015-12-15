@@ -62,6 +62,11 @@ namespace System.Runtime.InteropServices
         {
             throw new NotImplementedException();
         }
+
+        // hack
+        public static void Copy(float[] source, int startIndex, IntPtr destination, int length)
+        {
+        }
     }
 }
 
