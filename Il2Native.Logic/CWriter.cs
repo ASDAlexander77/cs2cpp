@@ -1577,7 +1577,8 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCodeTypePart.Operand.WriteTypePrefix(this);
+                        opCodeTypePart.Operand.GetElementType().WriteTypeWithoutModifiers(this);
+                        this.Output.Write("*");
                     }
 
                     this.Output.Write(")");

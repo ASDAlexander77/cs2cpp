@@ -56,6 +56,11 @@ namespace Il2Native.Logic.Gencode
         {
             // add element size
             var elementType = arrayType.GetElementType();
+            if (!elementType.IsValueType)
+            {
+                elementType = elementType.ToPointerType();
+            }
+
             codeList.SizeOf(elementType);
 
             // load length
@@ -107,6 +112,11 @@ namespace Il2Native.Logic.Gencode
             var arrayRank = arrayType.ArrayRank;
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
+
+            if (!elementType.IsValueType)
+            {
+                elementType = elementType.ToPointerType();
+            }
 
             var token1 = arrayType.GetFieldByName("rank", codeWriter);
             var token2 = arrayType.GetFieldByName("typeCode", codeWriter);

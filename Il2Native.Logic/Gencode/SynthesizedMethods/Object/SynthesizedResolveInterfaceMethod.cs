@@ -28,7 +28,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedResolveInterfaceMethod(IType type, ICodeWriter codeWriter)
-            : base(null, Name, type, codeWriter.System.System_Object)
+            : base(null, Name, type, codeWriter.System.System_Void.ToPointerType())
         {
             this.codeWriter = codeWriter;
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))

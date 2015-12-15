@@ -1882,6 +1882,7 @@ namespace Il2Native.Logic
                 case Code.Ldc_I8:
                 case Code.Ldc_R4:
                 case Code.Ldc_R8:
+                case Code.Ldnull:
                     return true;
             }
 

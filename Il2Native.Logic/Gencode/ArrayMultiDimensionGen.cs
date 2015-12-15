@@ -39,6 +39,11 @@
             var elementType = arrayType.GetElementType();
             var typeCode = elementType.GetTypeCode();
 
+            if (!elementType.IsValueType)
+            {
+                elementType = elementType.ToPointerType();
+            }
+
             var token1 = arrayType.GetFieldByName("rank", codeWriter);
             var token2 = arrayType.GetFieldByName("typeCode", codeWriter);
             var token3 = arrayType.GetFieldByName("elementSize", codeWriter);
@@ -231,6 +236,11 @@
         {
             // add element size
             var elementType = arrayType.GetElementType();
+            if (!elementType.IsValueType)
+            {
+                elementType = elementType.ToPointerType();
+            }
+
             codeBuilder.SizeOf(elementType);
 
             // init each item in lowerBounds
