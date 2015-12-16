@@ -1059,10 +1059,16 @@ namespace Il2Native.Logic.Gencode
                 // in case of 'this'
                 if (argNum == 0 && !method.IsStatic)
                 {
-                    codeBuilder.Castclass(codeWriter.System.System_Byte.ToPointerType());
-                    codeBuilder.SizeOf(codeWriter.System.System_Void.ToPointerType());
-                    codeBuilder.Add(Code.Add);
-                    codeBuilder.Castclass(method.DeclaringType.ToNormal().ToPointerType());
+                    var fieldByFieldNumber = method.DeclaringType.GetFieldByFieldNumber(0, codeWriter);
+                    // sometimes we have structs without fields
+                    if (fieldByFieldNumber != null)
+                    {
+                        codeBuilder.LoadFieldAddress(fieldByFieldNumber);
+                    }
+                    else
+                    {
+                        codeBuilder.Castclass(method.DeclaringType.ToNormal().ToPointerType());
+                    }
                 }
             }
 
