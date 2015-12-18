@@ -4,6 +4,8 @@
 
     public partial class String
     {
+        public static readonly String Empty = "";
+
         public int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

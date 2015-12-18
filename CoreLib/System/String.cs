@@ -14,8 +14,6 @@ namespace System
     [Serializable]
     public sealed partial class String : IComparable, IEnumerable<char>, IEnumerable
     {
-        public static readonly String Empty = "";
-
         private const int TrimHead = 0;
         private const int TrimTail = 1;
         private const int TrimBoth = 2;

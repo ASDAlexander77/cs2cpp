@@ -329,7 +329,7 @@ namespace Ll2NativeTests
                     Path.GetFileName(file) + @""");");
                 Debug.WriteLine(@"var testfolder = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""Common\CoreCLRTestLibrary"");");
                 Debug.WriteLine(
-                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, true, returnCode: 100, additionalFilesFolder:testfolder, additionalFilesPattern: new[] { ""TestFramework.cs"", ""Logging.cs"" });");
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, true, returnCode: 100, additionalFilesFolder:testfolder, additionalFilesPattern: new[] { ""*.cs"" });");
                 Debug.WriteLine(@"}");
                 Debug.WriteLine(@"");
             }
@@ -979,7 +979,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         [TestMethod]
         public void TestCustomConvert()
         {
-            //CompilerHelper.Mscorlib = true;
+            CompilerHelper.Mscorlib = true;
             ////CompilerHelper.MscorlibPath = string.Format(@"{0}mscorlib.dll", CompilerHelper.CoreCLRDlls);
             //CompilerHelper.MscorlibPath = CompilerHelper.MscorlibPath;
             ////CompilerHelper.AddSystemLinq = true;

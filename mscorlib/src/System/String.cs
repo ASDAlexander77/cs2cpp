@@ -60,15 +60,6 @@ namespace System {
         private const int TrimHead = 0;
         private const int TrimTail = 1;
         private const int TrimBoth = 2;
-    
-        // The Empty constant holds the empty string value. It is initialized by the EE during startup.
-        // It is treated as intrinsic by the JIT as so the static constructor would never run.
-        // Leaving it uninitialized would confuse debuggers.
-        //
-        //We need to call the String constructor so that the compiler doesn't mark this as a literal.
-        //Marking this as a literal would mean that it doesn't show up as a field which we can access 
-        //from native.
-        public static readonly String Empty;
 
         //
         //Native Static Methods
