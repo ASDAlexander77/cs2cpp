@@ -327,8 +327,9 @@ namespace Ll2NativeTests
                 Debug.WriteLine(
                     @"var file = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""" + subfoldersEffective + @""", """ +
                     Path.GetFileName(file) + @""");");
+                Debug.WriteLine(@"var testfolder = Path.Combine(CompilerHelper.CoreCLRSourcePath, @""Common\CoreCLRTestLibrary"");");
                 Debug.WriteLine(
-                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, false, returnCode: 100);");
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, true, returnCode: 100, additionalFilesFolder:testfolder, additionalFilesPattern: new[] { ""TestFramework.cs"", ""Logging.cs"" });");
                 Debug.WriteLine(@"}");
                 Debug.WriteLine(@"");
             }

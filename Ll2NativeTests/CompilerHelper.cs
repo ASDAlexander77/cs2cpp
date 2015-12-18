@@ -398,15 +398,13 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="index">
-        /// </param>
-        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true, int returnCode = 0)
+        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true, int returnCode = 0, string additionalFilesFolder = "", string[] additionalFilesPattern = null)
         {
             try
             {
                 if (includeAll)
                 {
-                    if (!ConvertAll(fileName, source))
+                    if (!ConvertAll(fileName, source, additionalFilesFolder, additionalFilesPattern))
                     {
                         return;
                     }
@@ -474,7 +472,7 @@
                 GetConverterArgs(true));
         }
 
-        public static bool ConvertAll(string fileName, string source = SourcePath)
+        public static bool ConvertAll(string fileName, string source = SourcePath, string additionalFilesFolder = "", string[] additionalFilesPattern = null)
         {
             Trace.WriteLine(string.Empty);
             Trace.WriteLine("==========================================================================");
@@ -487,6 +485,14 @@
             if (File.Exists(filePath))
             {
                 sources.Insert(0, filePath);
+            }
+
+            if (!string.IsNullOrEmpty(additionalFilesFolder))
+            {
+                foreach (var pattern in additionalFilesPattern)
+                {
+                    sources = Directory.GetFiles(additionalFilesFolder, pattern).Union(sources).ToList();
+                }
             }
 
             if (!sources.Any())
