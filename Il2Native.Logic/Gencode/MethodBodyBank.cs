@@ -7,6 +7,7 @@
     using System.Resources;
     using InternalMethods;
     using InternalMethods.ModuleHandle;
+    using InternalMethods.RuntimeAssembly;
     using InternalMethods.RuntimeTypeHandler;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -185,9 +186,15 @@
             HasInstantiationGen.Generate(codeWriter).RegisterInto(methodsByFullName);
             IsGenericTypeDefinitionGen.Generate(codeWriter).RegisterInto(methodsByFullName);
             ContainsGenericVariablesGen.Generate(codeWriter).RegisterInto(methodsByFullName);
+            GetTokenGen.Generate(codeWriter).RegisterInto(methodsByFullName);
+            IsSecurityTransparentGen.Generate(codeWriter).RegisterInto(methodsByFullName);
 
             // ModuleHandle
             GetModuleTypeGen.Generate(codeWriter).RegisterInto(methodsByFullName);
+            _GetMetadataImportGen.Generate(codeWriter).RegisterInto(methodsByFullName);
+
+            // RuntimeAssembly
+            IsReflectionOnlyGen.Generate(codeWriter).RegisterInto(methodsByFullName);
         }
 
         [Obsolete]

@@ -115,6 +115,7 @@
     </Compile>
     <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Common\Preprocessed\AssemblyRefs.g.cs" />
+    <Compile Include="Impl\Reflection\MetadataImport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\GlobalSuppressions.cs" />
     <Compile Include="src\Microsoft\Win32\OAVariantLib.cs" />
@@ -1192,6 +1193,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\System\Globalization\Tables\CharInfo.nlp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

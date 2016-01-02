@@ -69,6 +69,8 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\InternalMethods\ModuleHandle\GetModuleTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ModuleHandle\_GetMetadataImportGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeAssembly\IsReflectionOnlyGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ConstructNameGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\ContainsGenericVariablesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetAssemblyGen.cs" />
@@ -77,9 +79,11 @@
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetInterfacesGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetModuleGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetGCHandleGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\GetTokenGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\HasInstantiationGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericTypeDefinitionGen.cs" />
     <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsGenericVariableGen.cs" />
+    <Compile Include="Gencode\InternalMethods\RuntimeTypeHandle\IsSecurityTransparentGen.cs" />
     <Compile Include="Gencode\RuntimeTypeInfoGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InlineMethods\MonitorGen.cs" />

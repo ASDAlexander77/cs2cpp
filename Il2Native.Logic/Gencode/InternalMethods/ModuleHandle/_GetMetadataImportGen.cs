@@ -5,15 +5,16 @@
 
     using PEAssemblyReader;
 
-    public static class GetModuleTypeGen
+    public static class _GetMetadataImportGen
     {
-        public static readonly string Name = "Void System.ModuleHandle.GetModuleType(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)";
+        public static readonly string Name = "System.IntPtr System.ModuleHandle._GetMetadataImport(System.Reflection.RuntimeModule)";
 
         public static IEnumerable<Tuple<string, Func<IMethod, IMethod>>> Generate(ICodeWriter codeWriter)
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
             // TODO: finish it
+            ilCodeBuilder.LoadNull();
             ilCodeBuilder.Return();
 
             yield return ilCodeBuilder.Register(Name, codeWriter);
