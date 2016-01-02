@@ -171,6 +171,7 @@ namespace Il2Native.Logic.Gencode
         private static void WriteClassInitializationInternal(this CWriter cWriter, IType type, IType instanceType, object valueInstance, bool withBase = true)
         {
             var isRuntimeTypeInfo = instanceType.TypeEquals(cWriter.System.System_RuntimeType);
+            var isRuntimeModuleInfo = instanceType.TypeEquals(cWriter.System.System_RuntimeModule);
 
             var comma = false;
 
@@ -195,6 +196,25 @@ namespace Il2Native.Logic.Gencode
                 if (isRuntimeTypeInfo)
                 {
                     var value = RuntimeTypeInfoGen.GetRuntimeTypeInfo(field, valueInstance as IType, cWriter);
+                    if (value != null)
+                    {
+                        if (value is string)
+                        {
+                            cWriter.WriteUnicodeStringReference(Math.Abs(field.GetHashCode()), (uint)value.GetHashCode());
+                        }
+                        else
+                        {
+                            writer.Write(value);
+                        }
+
+                        continue;
+                    }
+                }
+
+                // to support runtimeModule info
+                if (isRuntimeModuleInfo)
+                {
+                    var value = RuntimeTypeInfoGen.GetRuntimeModuleInfo(field, cWriter);
                     if (value != null)
                     {
                         if (value is string)

@@ -25,6 +25,8 @@
         public const string ContainsGenericVariablesField = "containsGenericVariables";
         public const string RuntimeModuleField = "runtimeModule";
 
+        public const string RuntimeAssemblyField = "m_runtimeAssembly";
+
         internal enum CorElementType : byte
         {
             End = 0,
@@ -149,6 +151,21 @@
                         cWriter.ResolveType("<Module>")
                             .GetFullyDefinedRefereneForStaticClass(
                                 RuntimeTypeInfoGen.RuntimeModuleHolderFieldName,
+                                cWriter);
+            }
+
+            return null;
+        }
+
+        public static object GetRuntimeModuleInfo(IField field, CWriter cWriter)
+        {
+            switch (field.Name)
+            {
+                case RuntimeAssemblyField:
+                    return
+                        cWriter.ResolveType("<Module>")
+                            .GetFullyDefinedRefereneForStaticClass(
+                                RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName,
                                 cWriter);
             }
 
