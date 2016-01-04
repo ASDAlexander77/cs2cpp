@@ -246,18 +246,12 @@ inline System_Object* __get_thread_static(Int32 key)
 	return (System_Object*)0;
 }
 
-inline Void* __get_thread_static_addr(Int32 key)
-{
-	return (Void*) pthread_getspecific(key);
-}
-
-inline Void __set_thread_static(Int32 key, System_Object* _object)
+inline System_Object** __get_thread_static_addr(Int32 key)
 {
 	System_Object** memoryBox = (System_Object**) pthread_getspecific(key);
 	if (memoryBox)
 	{
-		*memoryBox = _object;
-		return;
+		return memoryBox;
 	}
 
 	memoryBox = (System_Object**) GC_MALLOC(sizeof(System_Object**));
@@ -274,8 +268,14 @@ inline Void __set_thread_static(Int32 key, System_Object* _object)
 		throw (Void*) _new;
 	}
 
-	*memoryBox = _object;
 	pthread_setspecific(key, (System_Object*)memoryBox);
+
+	return memoryBox;
+}
+
+inline Void __set_thread_static(Int32 key, System_Object* _object)
+{
+	*__get_thread_static_addr(key) = _object;
 }
 
 extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
