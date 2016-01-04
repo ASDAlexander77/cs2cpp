@@ -719,8 +719,19 @@ namespace Il2Native.Logic
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.Output.Write("&");
-                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+
+                    if (this.MultiThreadingSupport && opCodeFieldInfoPart.Operand.IsThreadStatic)
+                    {
+                        this.WriteCCastOnly(opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
+                        this.Output.Write("__get_thread_static_addr((Int32)&");
+                        this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                        this.Output.Write(")");
+                    }
+                    else
+                    {
+                        this.Output.Write("&");
+                        this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
+                    }
 
                     break;
                 case Code.Stfld:

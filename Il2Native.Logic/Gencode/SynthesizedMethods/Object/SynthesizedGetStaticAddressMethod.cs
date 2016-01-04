@@ -29,7 +29,7 @@
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             var codeBuilder = new IlCodeBuilder();
-            ObjectInfrastructure.GetGetStaticAddressMethod(this.codeWriter, codeBuilder, this.Type, field);
+            this.codeWriter.GetGetStaticAddressMethod(codeBuilder, this.Type, this.field);
             return codeBuilder;
         }
     }

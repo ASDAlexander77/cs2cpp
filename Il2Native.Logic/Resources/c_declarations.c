@@ -119,28 +119,6 @@ extern "C" Int32 pthread_key_delete(Int32 key);
 extern "C" System_Object* pthread_getspecific(Int32 key);
 extern "C" Int32 pthread_setspecific(Int32 key, System_Object* value);
 
-inline Int32 __create_thread_static(Int32* key, Void* destructor)
-{
-	return pthread_key_create(key, destructor);
-}
-
-inline Int32 __delete_thread_static(Int32 key)
-{
-	return pthread_key_delete(key);
-}
-
-inline System_Object* __get_thread_static(Int32 key)
-{
-	return pthread_getspecific(key);
-}
-
-inline Void __set_thread_static(Int32 key, System_Object* _object)
-{
-	pthread_setspecific(key, _object);
-}
-
-extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
-
 struct System_DivideByZeroException;
 Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
 #ifdef __GC_MEMORY_DEBUG
@@ -246,6 +224,61 @@ inline Void* __throw_overflow()
 	Void_System_OverflowException__ctorFN(_new);
 	throw (Void*) _new;
 }
+
+inline Int32 __create_thread_static(Int32* key, Void* destructor)
+{
+	return pthread_key_create(key, destructor);
+}
+
+inline Int32 __delete_thread_static(Int32 key)
+{
+	return pthread_key_delete(key);
+}
+
+inline System_Object* __get_thread_static(Int32 key)
+{
+	System_Object** memoryBox = (System_Object**) pthread_getspecific(key);
+	if (memoryBox)
+	{
+		return *memoryBox;
+	}
+
+	return (System_Object*)0;
+}
+
+inline Void* __get_thread_static_addr(Int32 key)
+{
+	return (Void*) pthread_getspecific(key);
+}
+
+inline Void __set_thread_static(Int32 key, System_Object* _object)
+{
+	System_Object** memoryBox = (System_Object**) pthread_getspecific(key);
+	if (memoryBox)
+	{
+		*memoryBox = _object;
+		return;
+	}
+
+	memoryBox = (System_Object**) GC_MALLOC(sizeof(System_Object**));
+	if (!memoryBox)
+	{
+		System_NullReferenceException* _new;
+#ifdef __GC_MEMORY_DEBUG
+		_new = System_NullReferenceException_System_NullReferenceException__newFSByteP__Int32N((SByte*)__FILE__, __LINE__);
+#else
+		_new = System_NullReferenceException_System_NullReferenceException__newFN();
+#endif
+
+		Void_System_NullReferenceException__ctorFN(_new);
+		throw (Void*) _new;
+	}
+
+	*memoryBox = _object;
+	pthread_setspecific(key, (System_Object*)memoryBox);
+}
+
+extern "C" Byte* __get_full_path(Byte* partial, Byte* full);
 
 inline SByte __add_ovf(SByte a, SByte b)
 {
