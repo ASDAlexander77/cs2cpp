@@ -36,7 +36,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("fetch_and_{0}(", op), estimatedResult.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("{0}_and_fetch(", op), estimatedResult.Type);
             writer.Write(", 1)");
         }
 
@@ -57,7 +57,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("fetch_and_{0}(", op), estimatedResult.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("{0}_and_fetch(", op), estimatedResult.Type);
             writer.Write(", ");
             cWriter.UnaryOper(writer, opCodeMethodInfo, 1, string.Empty, estimatedResult.Type);
             writer.Write(")");

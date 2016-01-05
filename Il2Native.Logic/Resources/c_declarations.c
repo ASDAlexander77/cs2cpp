@@ -19,8 +19,8 @@ typedef double Double;
 #define compare_and_swap __sync_val_compare_and_swap 
 #define compare_and_swap_bool __sync_bool_compare_and_swap 
 #define sync_synchronize __sync_synchronize
-#define fetch_and_add __sync_fetch_and_add
-#define fetch_and_sub __sync_fetch_and_sub
+#define add_and_fetch __sync_add_and_fetch
+#define sub_and_fetch __sync_sub_and_fetch
 #define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
