@@ -96,6 +96,9 @@ namespace System.Threading.Tasks
         [SecurityCritical]
         protected internal override bool TryDequeue(Task task)
         {
+            // TODO: return true as we run LongRunning threads
+            return true;
+
             // just delegate to TP
             return ThreadPool.TryPopCustomWorkItem(task);
         }
