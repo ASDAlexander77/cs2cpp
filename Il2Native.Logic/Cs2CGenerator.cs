@@ -127,7 +127,7 @@ namespace Il2Native.Logic
 
         public void Emit()
         {
-            CompileWithRoslynInMemory(this.Sources);
+            this.Assembly = CompileWithRoslynInMemory(this.Sources);
         }
 
         /// <summary>
