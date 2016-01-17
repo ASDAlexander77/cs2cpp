@@ -4,6 +4,6 @@
 
     public interface IMethodBodyCustomAction
     {
-        void Execute(CWriter writer, OpCodePart opCode);
+        void Execute(ICodeWriterEx writer, OpCodePart opCode);
     }
 }

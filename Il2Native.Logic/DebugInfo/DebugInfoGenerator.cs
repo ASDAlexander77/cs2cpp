@@ -68,7 +68,7 @@
                 }
             }
 
-            this.nameBySlot[slot] = currentName.CleanUpName();
+            this.nameBySlot[slot] = currentName;
         }
 
         public void GenerateFunction(int token)

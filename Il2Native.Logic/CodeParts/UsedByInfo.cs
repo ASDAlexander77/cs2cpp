@@ -43,17 +43,5 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public int OperandPosition { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="codes">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool Any(params Code[] codes)
-        {
-            var code = this.OpCode.ToCode();
-            return codes.Any(item => item == code);
-        }
     }
 }

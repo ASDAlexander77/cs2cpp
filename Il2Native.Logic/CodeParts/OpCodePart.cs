@@ -108,7 +108,7 @@ namespace Il2Native.Logic.CodeParts
             get
             {
                 // todo: fix for 2 bytes command
-                if (this.ToCode() == Code.Dup)
+                if ((Code)this.OpCode.Value == Code.Dup)
                 {
                     return true;
                 }

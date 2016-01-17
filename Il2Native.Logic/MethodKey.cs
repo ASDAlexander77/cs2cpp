@@ -14,7 +14,7 @@
             this.Method = method;
             if (ownerOfExplicitInterface != null)
             {
-                this.OwnerOfExplicitInterface = ownerOfExplicitInterface.NormalizeType();
+                this.OwnerOfExplicitInterface = ownerOfExplicitInterface;
             }
         }
 

@@ -6,9 +6,6 @@
     using System.Linq;
     using System.Reflection;
 
-    using Il2Native.Logic.Gencode;
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-
     using PEAssemblyReader;
 
     public class IlCodeBuilder
@@ -58,42 +55,6 @@
             {
                 _locals = value;
             }
-        }
-
-        public Tuple<string, Func<IMethod, IMethod>> Register(string fullMethodName, ICodeWriter codeWriter)
-        {
-            return MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
-        }
-
-        public IMethod GetMethod(IMethod originalMethod)
-        {
-            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(
-                originalMethod,
-                this.GetCode(),
-                this._tokenResolutions,
-                this._locals,
-                this._parameters,
-                this.GetExceptions());
-
-            return synthesizedMethodDecorator;
-        }
-
-        public SynthesizedMethodDecorator GetMethodDecorator(IMethod originalMethod)
-        {
-            var synthesizedMethodDecorator = MethodBodyBank.GetMethodDecorator(
-                originalMethod,
-                this.GetCode(),
-                this._tokenResolutions,
-                this._locals,
-                this._parameters,
-                this.GetExceptions());
-            
-            return synthesizedMethodDecorator;
-        }
-
-        public IMethodBody GetMethodBody(IMethodBody originalOpt = null)
-        {
-            return new SynthesizedMethodBodyDecorator(originalOpt, _locals, this.GetExceptions(), this.GetCode());
         }
 
         public IList<IParameter> GetParameters()
@@ -349,7 +310,7 @@
         {
             Debug.Assert(method != null, "@method is null");
             TokenResolutions.Add(method);
-            this.Add(method.IsMethodVirtual() ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
+            this.Add(method.IsVirtual ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
         }
 
         public void CallDirect(IMethod method)

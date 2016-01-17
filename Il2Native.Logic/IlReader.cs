@@ -18,14 +18,7 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Reflection.Emit;
     using System.Text;
-    using Gencode.SynthesizedMethods.Object;
     using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Gencode;
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-    using Il2Native.Logic.Gencode.SynthesizedMethods.Enum;
-    using Il2Native.Logic.Gencode.SynthesizedMethods.MultiDimArray;
-    using Il2Native.Logic.Gencode.SynthesizedMethods.SingleDimArray;
-    using Il2Native.Logic.Gencode.SynthesizedMethods.String;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -375,10 +368,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; set; }
-
-        /// <summary>
-        /// </summary>
         public string AssemblyQualifiedName
         {
             get { return this.Assembly.Assembly.Identity.Name; }
@@ -479,15 +468,6 @@ namespace Il2Native.Logic
             {
                 yield return constructor;
             }
-
-            if (type.IsMultiArray)
-            {
-                yield return new SynthesizedMultiDimArrayCtorMethod(type, codeWriter);
-            }
-            else if (type.IsArray)
-            {
-                yield return new SynthesizedSingleDimArrayCtorMethod(type, codeWriter);
-            }
         }
 
         /// <summary>
@@ -517,87 +497,6 @@ namespace Il2Native.Logic
             {
                 yield return field;
             }
-
-            // extra fields
-            var normal = type.ToNormal();
-            if (normal.IsEnum)
-            {
-                foreach (var field in EnumGen.GetFields(normal, codeWriter))
-                {
-                    yield return field;
-                }
-            }
-            else if (type.IsMultiArray)
-            {
-                // append methods or MultiArray
-                foreach (var field in ArrayMultiDimensionGen.GetFields(type, codeWriter))
-                {
-                    yield return field;
-                }
-            }
-            else if (type.IsArray)
-            {
-                // append methods or MultiArray
-                foreach (var field in ArraySingleDimensionGen.GetFields(type, codeWriter))
-                {
-                    yield return field;
-                }
-            }
-            else if (type.IsObject)
-            {
-                var field = codeWriter.System.System_Void.ToPointerType().ToPointerType().ToField(type, CWriter.VTable, isVirtualTable: true);
-                yield return field;
-            }
-            else if (normal.TypeEquals(codeWriter.System.System_RuntimeFieldHandle))
-            {
-                yield return codeWriter.System.System_Byte.ToPointerType().ToField(type, "fieldAddress");
-                yield return codeWriter.System.System_Int32.ToField(type, "fieldSize");
-            }
-            else if (normal.TypeEquals(codeWriter.System.System_RuntimeType))
-            {
-                foreach (var runtimeTypeField in type.GetRuntimeTypeFields(codeWriter))
-                {
-                    yield return runtimeTypeField;
-                }
-            }
-
-            if (type.IsInterface && !type.SpecialUsage())
-            {
-                var field = type.ToVirtualTable().ToField(type, CWriter.VTable, isVirtualTable: true);
-                yield return field;
-                var thisField = codeWriter.System.System_Void.ToPointerType().ToField(type, "__this");
-                yield return thisField;
-            }
-
-            if (!type.IsPrivateImplementationDetails)
-            {
-                // special static field to store RuntimeType for a current type
-                var runtimeTypeStoreField = codeWriter.System.System_RuntimeType.ToField(
-                    type, RuntimeTypeInfoGen.RuntimeTypeHolderFieldName, isStatic: true, isStaticClassInitialization: true);
-                yield return runtimeTypeStoreField;
-            }
-            else if (type.IsModule)
-            {
-                // special static field to store RuntimeType for a current type
-                var runtimeModuleStoreField = codeWriter.ResolveType("System.Reflection.RuntimeModule").ToField(
-                    type, RuntimeTypeInfoGen.RuntimeModuleHolderFieldName, isStatic: true, isStaticClassInitialization: true);
-                yield return runtimeModuleStoreField;
-
-                // special static field to store RuntimeType for a current type
-                var runtimeAssemblyStoreField = codeWriter.ResolveType("System.Reflection.RuntimeAssembly").ToField(
-                    type, RuntimeTypeInfoGen.RuntimeAssemblyHolderFieldName, isStatic: true, isStaticClassInitialization: true);
-                yield return runtimeAssemblyStoreField;
-            }
-
-            if (type.IsStaticArrayInit)
-            {
-                yield return codeWriter.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
-            }
-
-            // to store info about initialized
-            var cctorCalled = codeWriter.System.System_Int32.ToField(type, ObjectInfrastructure.CalledCctorFieldName, isStatic: true);
-            cctorCalled.ConstantValue = -1;
-            yield return cctorCalled;
         }
 
         /// <summary>
@@ -645,113 +544,8 @@ namespace Il2Native.Logic
                 {
                     yield break;
                 }
-
-                if (!type.IsInterface)
-                {
-                    yield return new SynthesizedNewMethod(type, codeWriter);
-                    yield return new SynthesizedInitMethod(type, codeWriter);
-
-                    if (type.FindFinalizer(codeWriter) != null)
-                    {
-                        yield return new SynthesizedFinalizerWrapperMethod(type, codeWriter);
-                    }
-
-                    yield return new SynthesizedGetSizeMethod(type, codeWriter);
-                    yield return new SynthesizedGetTypeMethod(type, codeWriter);
-                }
-
-                // we return it to avoid using empty interfaces (because in C++ struct{} has size 1 not 0)
-                yield return new SynthesizedResolveInterfaceMethod(type, codeWriter);
-
-                // append internal methods
-                if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
-                {
-                    yield return new SynthesizedBoxMethod(type, codeWriter);
-                    yield return new SynthesizedUnboxMethod(type, codeWriter);
-                }
-
-                if (normal.IsEnum)
-                {
-                    yield return new SynthesizedEnumGetHashCodeMethod(type, codeWriter);
-                    yield return new SynthesizedEnumToStringMethod(type, codeWriter);
-                }
-
-                // append methods or MultiArray
-                if (type.IsMultiArray)
-                {
-                    yield return new SynthesizedMultiDimArrayGetMethod(type, codeWriter);
-                    yield return new SynthesizedMultiDimArraySetMethod(type, codeWriter);
-                    yield return new SynthesizedMultiDimArrayAddressMethod(type, codeWriter);
-                }
-                else if (type.IsArray)
-                {
-                    yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, codeWriter);
-                    yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, codeWriter);
-                    yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, codeWriter);
-                    yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, codeWriter);
-                    yield return new SynthesizedSingleDimArrayICollectionCopyToMethod(type, codeWriter);
-                }
-                else if (type.IsString)
-                {
-                    yield return new SynthesizedStrLenMethod(codeWriter);
-                    yield return new SynthesizedCtorSBytePtrMethod(codeWriter);
-                    yield return new SynthesizedCtorSBytePtrStartLengthMethod(codeWriter);
-                    yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(codeWriter);
-                }
-                else if (type.IsObject)
-                {
-                    yield return new SynthesizedDynamicCastMethod(codeWriter);
-                    yield return new SynthesizedCastMethod(codeWriter);
-                }
-
-                // return all get methods for static fields which are not primitive value type
-                foreach (var staticField in IlReader.Fields(type, codeWriter).Where(f => RequiredGetStaticMethod(f, codeWriter)))
-                {
-                    yield return new SynthesizedGetStaticMethod(type, staticField, codeWriter);
-                    yield return new SynthesizedGetStaticAddressMethod(type, staticField, codeWriter);
-                    yield return new SynthesizedSetStaticMethod(type, staticField, codeWriter);
-                }
-            }
-
-            if (type.IsValueType())
-            {
-                if (!excludeSpecializations)
-                {
-                    foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition).Where(m => m.ShouldHaveStructToObjectAdapter()))
-                    {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
-                    }
-                }
-                else
-                {
-                    foreach (var method in type.GetMethods(flags).Where(m => m.ShouldHaveStructToObjectAdapter()))
-                    {
-                        yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
-                    }
-                }
-            }
-
-            if (excludeSpecializations)
-            {
-                yield break;
             }
         }
-
-        private static bool RequiredGetStaticMethod(IField f, ICodeWriter codeWriter)
-        {
-            if (f.IsStaticClassInitialization)
-            {
-                return false;
-            }
-
-            if (f.IsConst)
-            {
-                return f.FieldType.TypeEquals(codeWriter.System.System_Decimal);
-            }
-
-            return f.IsStatic;
-        }
-
 
         /// <summary>
         /// </summary>
@@ -1017,12 +811,6 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var resolveMember = module.ResolveMember(token, genericContext);
                         var constructor = resolveMember as IConstructor;
-                        if (constructor == null)
-                        {
-                            var resolveType = module.ResolveType(token, genericContext);
-                            constructor = resolveType.FindConstructor(this.CodeWriter);
-                        }
-
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {
