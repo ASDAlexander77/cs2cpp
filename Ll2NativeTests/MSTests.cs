@@ -923,60 +923,6 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         /// <summary>
         /// </summary>
         [TestMethod]
-        //[Ignore]
-        public void TestMscolibCSNative_Type()
-        {            
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.MscorlibPath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true),
-                new[] { "System.Delegate" });
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestSystemLinq()
-        {
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Private.Uri.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Resources.ResourceManager.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Collections.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Diagnostics.Debug.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Runtime.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Runtime.Extensions.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-
-            Il2Converter.Convert(
-                            string.Format(@"{0}System.Linq.dll", CompilerHelper.CoreCLRDlls),
-                            CompilerHelper.OutputPath,
-                            CompilerHelper.GetConverterArgs(false, stubs: true, split: false));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         public void TestCustomConvert()
         {
             //CompilerHelper.Mscorlib = true;

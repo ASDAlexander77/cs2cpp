@@ -38,61 +38,16 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Code.cs" />
-    <Compile Include="CodeEnum.cs" />
-    <Compile Include="CodeParts\OpCodeFullyDefinedReferencePart.cs" />
-    <Compile Include="CodeParts\OpCodeConstructorInfoPart.cs" />
-    <Compile Include="CodeParts\OpCodeDoublePart.cs" />
-    <Compile Include="CodeParts\OpCodeFieldInfoPart.cs" />
-    <Compile Include="CodeParts\OpCodeInt16Part.cs" />
-    <Compile Include="CodeParts\OpCodeInt32Part.cs" />
-    <Compile Include="CodeParts\OpCodeInt64Part.cs" />
-    <Compile Include="CodeParts\OpCodeLabelPart.cs" />
-    <Compile Include="CodeParts\OpCodeLabelsPart.cs" />
-    <Compile Include="CodeParts\OpCodeLocalBuilderPart.cs" />
-    <Compile Include="CodeParts\OpCodeMethodInfoPart.cs" />
-    <Compile Include="CodeParts\OpCodeParamPart.cs" />
-    <Compile Include="CodeParts\OpCodePart.cs" />
-    <Compile Include="CodeParts\OpCodeSBytePart.cs" />
-    <Compile Include="CodeParts\OpCodeSinglePart.cs" />
-    <Compile Include="CodeParts\OpCodeStringPart.cs" />
-    <Compile Include="CodeParts\OpCodeTypePart.cs" />
-    <Compile Include="CodeParts\PhiNodes.cs" />
-    <Compile Include="CodeParts\RequiredIncomingTypes.cs" />
-    <Compile Include="CodeParts\UsedByInfo.cs" />
-    <Compile Include="DebugInfo\DebugInfoGenerator.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoCompileUnitEntry.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceFile.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceFileEntry.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
-    <Compile Include="Interfaces\IConstBytes.cs" />
-    <Compile Include="Interfaces\IIlReader.cs" />
-    <Compile Include="IlCodeBuilder.cs" />
-    <Compile Include="Interfaces\IMethodBodyCustomAction.cs" />
-    <Compile Include="Interfaces\IMethodExtraAttributes.cs" />
-    <Compile Include="Interfaces\ITypeResolver.cs" />
-    <Compile Include="MethodKey.cs" />
-    <Compile Include="NamespaceContainer.cs" />
-    <Compile Include="OpResults\ConstValue.cs" />
-    <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
-    <Compile Include="Exceptions\TryClause.cs" />
-    <Compile Include="OpResults\FullyDefinedReference.cs" />
-    <Compile Include="Interfaces\ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="IlReader.cs" />
-    <Compile Include="CIndentedTextWriter.cs" />
-    <Compile Include="OpResults\IncrementalResult.cs" />
+    <Compile Include="Cs2CGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="NamespaceContainerAssoc.cs" />
-    <Compile Include="SystemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -124,7 +79,7 @@
     <None Include="Resources\gc_declarations.c" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Instructions\Base\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\gc_declarations_debug.c" />

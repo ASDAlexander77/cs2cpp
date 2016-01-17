@@ -29,20 +29,18 @@ namespace Il2Native
             if (args.Length == 0)
             {
                 Console.WriteLine("C# Native, https://csnative.codeplex.com/");
-                Console.WriteLine("MSIL to C transpiler");
+                Console.WriteLine("C# to C transpiler");
                 Console.WriteLine(string.Empty);
-                Console.WriteLine("Usage: Il2C [options] file");
+                Console.WriteLine("Usage: CS2C [options] file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("file:                     Specifies the file or files to be compiled");
                 Console.WriteLine("  .cs                     C# source file");
-                Console.WriteLine("  .dll                    MSIL dll file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /exe                    Output file");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
                 Console.WriteLine("                          Reference assembly by name or file");
-                Console.WriteLine("  /roslyn-                Compile C# source file with .NET Framework (default: Roslyn Compiler)");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /mt-                    Disable Multithreading support");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
@@ -52,16 +50,11 @@ namespace Il2Native
                 Console.WriteLine("  /gcdebug                Enable debug mode for Boehm garbage collector");
                 Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");
-                Console.WriteLine("  /split                  Generate C files for each namespace");
-                Console.WriteLine("  /compact                Build one source file from all assemblies to reduce size");
-                Console.WriteLine("  /headers                Generate headers file only (useful for compact mode)");
-                Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
                 Console.WriteLine("  Il2C file1.cs          Compiles one C# file");
-                Console.WriteLine("  Il2C /roslyn /ref:System.Core file1.cs file2.cs");
+                Console.WriteLine("  Il2C /ref:System.Core file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
-                Console.WriteLine("  Il2C file1.dll         Converts one DLL file");
                 return 0;
             }
 
