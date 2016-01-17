@@ -229,55 +229,6 @@ namespace Il2Native.Logic
             codeList.AppendInt(Code.Ldc_I4, value);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="genericTypeSpecializations">
-        /// </param>
-        /// <param name="genericMethodSpecializations">
-        /// </param>
-        /// <param name="stackCall">
-        /// </param>
-        public static void DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-            this IMethod method,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> arrayTypes,
-            ISet<IType> usedTokenTypes,
-            ISet<IType> usedTypes,
-            ISet<MethodKey> calledMethods,
-            ISet<IField> usedStaticFields,
-            ISet<IType> usedVirtualTableImplementationTypes,
-            Queue<IMethod> stackCall,
-            ICodeWriter codeWriter,
-            bool doNotAddInternalArrays)
-        {
-            if (Il2Converter.VerboseOutput)
-            {
-                Debug.WriteLine("Scanning method for types: {0}", method);
-            }
-
-            // read method body to extract all types
-            var reader = new IlReader();
-
-            reader.UsedArrayTypes = arrayTypes;
-            reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
-            reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
-            reader.UsedTypeTokens = usedTokenTypes;
-            reader.UsedTypes = usedTypes;
-            reader.CalledMethods = calledMethods;
-            reader.UsedStaticFields = usedStaticFields;
-            reader.UsedVirtualTableImplementationTypes = usedVirtualTableImplementationTypes;
-            reader.CodeWriter = codeWriter;
-            reader.DoNotAddInternalArrays = doNotAddInternalArrays;
-
-            var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
-            foreach (var op in reader.OpCodes(method, genericContext, stackCall))
-            {
-            }
-        }
-
         public static int? FindBeginOfBasicBlock(this OpCodePart popCodePart)
         {
             // add alternative stack value to and address

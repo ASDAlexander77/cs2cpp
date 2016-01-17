@@ -50,34 +50,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<MethodKey> _calledMethods;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedArrayTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedTypeTokens;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedVirtualTableImplementationTypes;
-
-        /// <summary>
-        /// </summary>
-        private IDictionary<int, string> _usedStrings;
-
-        /// <summary>
-        /// </summary>
-        private IList<IConstBytes> _usedConstBytes;
-
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         /// <summary>
@@ -96,18 +68,6 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies =
             new List<UnifiedAssembly<AssemblySymbol>>();
-
-        /// <summary>
-        /// </summary>
-        private ISet<IMethod> usedGenericSpecialiazedMethods;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> usedGenericSpecialiazedTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IField> _usedStaticFields;
 
         /// <summary>
         /// </summary>
@@ -349,8 +309,6 @@ namespace Il2Native.Logic
         {
             this.CompileInMemory = true;
 
-            this.StaticConstructors = new List<IMethod>();
-            this.ThreadStaticFields = new List<IField>();
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes().ToList());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true).ToList());
             this.lasyModule = new Lazy<IModule>(() => this.Types().First(t => t.IsModule).Module);
@@ -428,15 +386,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<MethodKey> CalledMethods
-        {
-            get { return this._calledMethods; }
-
-            set { this._calledMethods = value; }
-        }
-
-        /// <summary>
-        /// </summary>
         public string CoreLibPath { get; set; }
 
         public bool DebugInfo { get; private set; }
@@ -482,95 +431,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public ICodeWriter CodeWriter { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedArrayTypes
-        {
-            get { return this._usedArrayTypes; }
-
-            set { this._usedArrayTypes = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedTypeTokens
-        {
-            get { return this._usedTypeTokens; }
-
-            set { this._usedTypeTokens = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedTypes
-        {
-            get { return this._usedTypes; }
-
-            set { this._usedTypes = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IMethod> UsedGenericSpecialiazedMethods
-        {
-            get { return this.usedGenericSpecialiazedMethods; }
-
-            set { this.usedGenericSpecialiazedMethods = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedGenericSpecialiazedTypes
-        {
-            get { return this.usedGenericSpecialiazedTypes; }
-
-            set { this.usedGenericSpecialiazedTypes = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IField> UsedStaticFields
-        {
-            get { return this._usedStaticFields; }
-
-            set { this._usedStaticFields = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IType> UsedVirtualTableImplementationTypes
-        {
-            get { return this._usedVirtualTableImplementationTypes; }
-
-            set { this._usedVirtualTableImplementationTypes = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public IDictionary<int, string> UsedStrings
-        {
-            get { return this._usedStrings; }
-
-            set { this._usedStrings = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public IList<IConstBytes> UsedConstBytes
-        {
-            get { return this._usedConstBytes; }
-
-            set { this._usedConstBytes = value; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public IList<IMethod> StaticConstructors { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public IList<IField> ThreadStaticFields { get; set; }
 
         /// <summary>
         /// </summary>
@@ -875,30 +735,6 @@ namespace Il2Native.Logic
             {
                 yield break;
             }
-
-            // append specialized methods
-            IEnumerable<IMethod> genMethodSpecializationForType = null;
-            if (codeWriter.IlReader.GenericMethodSpecializations == null || !codeWriter.IlReader.GenericMethodSpecializations.TryGetValue(normal, out genMethodSpecializationForType))
-            {
-                yield break;
-            }
-
-            if (!structObjectAdaptersOnly)
-            {
-                // return Generic Method Specializations for a type
-                foreach (var method in genMethodSpecializationForType)
-                {
-                    yield return method;
-                }
-            }
-
-            if (type.IsValueType())
-            {
-                foreach (var method in genMethodSpecializationForType.Where(m => m.ShouldHaveStructToObjectAdapter()))
-                {
-                    yield return ObjectInfrastructure.GetInvokeWrapperForStructUsedInObject(method, codeWriter);
-                }
-            }
         }
 
         private static bool RequiredGetStaticMethod(IField f, ICodeWriter codeWriter)
@@ -1071,14 +907,6 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            foreach (var exceptionHandlingClause in methodBody.ExceptionHandlingClauses)
-            {
-                var type = exceptionHandlingClause.CatchType;
-                this.AddGenericSpecializedTypeAndUsedType(type);
-                this.AddArrayType(type);
-                this.AddTypeToken(type);
-            }
-
             var extended = false;
             var startAddress = 0;
             var currentAddress = 0;
@@ -1181,7 +1009,6 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var @string = module.ResolveString(token);
-                        this.AddString(token, @string);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, new KeyValuePair<int, string>(token, @string));
                         continue;
                     case Code.Newobj:
@@ -1199,22 +1026,6 @@ namespace Il2Native.Logic
                         Debug.Assert(constructor != null, "Not Supported Newobj");
                         if (constructor != null)
                         {
-                            if (!constructor.DeclaringType.IsString)
-                            {
-                                this.AddGenericSpecializedTypeAndUsedType(constructor.DeclaringType);
-                                this.AddGenericSpecializedMethod(constructor, stackCall);
-
-                                this.AddArrayType(constructor.DeclaringType);
-                                this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.CodeWriter));
-                                this.AddCalledMethod(constructor);
-                            }
-                            else
-                            {
-                                this.AddCalledMethod(StringGen.GetCtorMethodByParameters(constructor.DeclaringType, constructor.GetParameters(), this.CodeWriter));
-                                // TODO: it should be discovered from FastStringAlloc method, investigate why it is not
-                                this.AddCalledMethod(new SynthesizedInitMethod(constructor.DeclaringType, this.CodeWriter));
-                            }
-
                             yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         }
 
@@ -1225,34 +1036,6 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var method = module.ResolveMethod(token, genericContext);
-
-                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
-                        this.AddGenericSpecializedMethod(method, stackCall);
-                        this.AddArrayType(method.DeclaringType);
-
-                        this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
-
-                        var methodParameters = method.GetParameters();
-                        if (methodParameters != null)
-                        {
-                            foreach (var methodParameter in methodParameters)
-                            {
-                                this.AddGenericSpecializedTypeAndUsedType(methodParameter.ParameterType);
-                            }
-                        }
-
-                        this.AddCalledMethod(method);
-
-                        if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
-                        {
-                            this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.CodeWriter));
-                        }
-
-                        if (method.DeclaringType.IsValueType() && method.IsConstructor)
-                        {
-                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.CodeWriter));
-                        }
-
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
 
@@ -1262,17 +1045,6 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         method = module.ResolveMethod(token, genericContext);
-                        this.AddGenericSpecializedTypeAndUsedType(method.DeclaringType);
-                        this.AddGenericSpecializedMethod(method, stackCall);
-
-                        this.AddArrayType(method.DeclaringType);
-
-                        this.AddCalledMethod(method);
-
-                        var intPtrConstructor = OpCodeExtensions.FindConstructor(this.CodeWriter.System.System_IntPtr, this.CodeWriter.System.System_Void.ToPointerType(), this.CodeWriter);
-                        this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.CodeWriter));
-                        this.AddCalledMethod(intPtrConstructor);
-
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
                     case Code.Stfld:
@@ -1286,51 +1058,6 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericContext);
                         Debug.Assert(field != null);
-                        this.AddGenericSpecializedTypeAndUsedType(field.FieldType);
-                        this.AddGenericSpecializedTypeAndUsedType(field.DeclaringType);
-                        this.AddArrayType(field.FieldType);
-                        this.AddArrayType(field.DeclaringType);
-
-                        if (code == Code.Ldsfld || code == Code.Ldsflda || code == Code.Stsfld)
-                        {
-                            if (this.CodeWriter.MultiThreadingSupport)
-                            {
-                                if (field.IsThreadStatic)
-                                {
-                                    if (field.FieldType.IsValueType())
-                                    {
-                                        if (code == Code.Ldsfld)
-                                        {
-                                            this.AddCalledMethod(new SynthesizedUnboxMethod(field.FieldType, this.CodeWriter));
-                                        }
-                                        else if (code == Code.Stsfld)
-                                        {
-                                            this.AddCalledMethod(new SynthesizedBoxMethod(field.FieldType, this.CodeWriter));
-                                        }
-                                    }
-                                    else
-                                    {
-                                        this.AddTypeToken(field.FieldType);
-                                    }
-                                }
-                            }
-
-                            this.AddUsedStaticField(field);
-                        }
-
-                        switch (code)
-                        {
-                            case Code.Ldsfld:
-                                this.AddCalledMethod(new SynthesizedGetStaticMethod(field.DeclaringType, field, this.CodeWriter));
-                                break;
-                            case Code.Ldsflda:
-                                this.AddCalledMethod(new SynthesizedGetStaticAddressMethod(field.DeclaringType, field, this.CodeWriter));
-                                break;
-                            case Code.Stsfld:
-                                this.AddCalledMethod(new SynthesizedSetStaticMethod(field.DeclaringType, field, this.CodeWriter));
-                                break;
-                        }
-
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
@@ -1342,15 +1069,6 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
-                            this.AddGenericSpecializedTypeAndUsedType(typeToken);
-                            this.AddArrayType(typeToken);
-                            this.AddTypeToken(typeToken);
-
-                            if (typeToken.IsVirtualTableImplementation)
-                            {
-                                this.AddUsedVirtualTableImplementationTypes(typeToken);
-                            }
-
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
                         }
@@ -1359,24 +1077,6 @@ namespace Il2Native.Logic
                         if (fieldMember != null)
                         {
                             // special case
-                            var constBytes = fieldMember.ConstantValue as IConstBytes;
-                            if (constBytes != null)
-                            {
-                                this.AddConstBytes(constBytes);
-                                this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
-                            }
-                            else
-                            {
-                                this.AddArrayType(fieldMember.DeclaringType);
-                            }
-
-                            this.AddGenericSpecializedTypeAndUsedType(fieldMember.DeclaringType);
-
-                            if (fieldMember.IsStatic)
-                            {
-                                this.AddUsedStaticField(fieldMember);
-                            }
-
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
                             continue;
                         }
@@ -1384,10 +1084,6 @@ namespace Il2Native.Logic
                         var methodMember = resolvedToken as IMethod;
                         if (methodMember != null)
                         {
-                            this.AddArrayType(methodMember.DeclaringType);
-                            this.AddGenericSpecializedMethod(methodMember, stackCall);
-                            this.AddCalledMethod(methodMember);
-
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
                         }
@@ -1395,11 +1091,6 @@ namespace Il2Native.Logic
                         var fullyDefinedReference = resolvedToken as FullyDefinedReference;
                         if (fullyDefinedReference != null)
                         {
-                            if (fullyDefinedReference.UsedToken != null)
-                            {
-                                this.AddTypeToken(fullyDefinedReference.UsedToken);
-                            }
-
                             yield return new OpCodeFullyDefinedReferencePart(opCode, startAddress, currentAddress, fullyDefinedReference);
                             continue;
                         }
@@ -1427,51 +1118,6 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
-
-                        this.AddGenericSpecializedTypeAndUsedType(type);
-                        this.AddArrayType(type);
-
-                        if (code == Code.Initobj)
-                        {
-                            if (type.IsValueType())
-                            {
-                                this.AddCalledMethod(new SynthesizedInitMethod(type, this.CodeWriter));
-                            }
-                        }
-
-                        if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem || code == Code.Ldelema)
-                        {
-                            var arrayType = type.ToArrayType(1);
-                            this.AddArrayType(arrayType);
-
-                            if (code == Code.Newarr)
-                            {
-                                this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.CodeWriter));
-                                var constructorInfo =
-                                    Constructors(arrayType, this.CodeWriter)
-                                        .FirstOrDefault(
-                                            c =>
-                                            c.GetParameters().Count() == 1
-                                            && c.GetParameters().First().ParameterType.TypeEquals(this.CodeWriter.System.System_Int32));
-                                this.AddCalledMethod(constructorInfo);
-                            }
-                        }
-
-                        if (code == Code.Isinst || code == Code.Castclass)
-                        {
-                            this.AddTypeToken(type);
-                        }
-
-                        if (code == Code.Box && type.IsValueType())
-                        {
-                            this.AddCalledMethod(new SynthesizedBoxMethod(type, this.CodeWriter));
-                        }
-
-                        if ((code == Code.Unbox || code == Code.Unbox_Any) && type.IsValueType())
-                        {
-                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.CodeWriter));
-                        }
-
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
@@ -1486,87 +1132,66 @@ namespace Il2Native.Logic
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
                     case Code.Ldlen:
-
-                        this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
-
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I:
-                        this.AddArrayType(this.CodeWriter.System.System_IntPtr.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I1:
-                        this.AddArrayType(this.CodeWriter.System.System_SByte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I2:
-                        this.AddArrayType(this.CodeWriter.System.System_Int16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_I4:
-                        this.AddArrayType(this.CodeWriter.System.System_Int32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U1:
-                        this.AddArrayType(this.CodeWriter.System.System_Byte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U2:
-                        this.AddArrayType(this.CodeWriter.System.System_UInt16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_U4:
-                        this.AddArrayType(this.CodeWriter.System.System_UInt32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_R4:
-                        this.AddArrayType(this.CodeWriter.System.System_Single.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Ldelem_R8:
-                        this.AddArrayType(this.CodeWriter.System.System_Double.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I:
-                        this.AddArrayType(this.CodeWriter.System.System_IntPtr.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I1:
-                        this.AddArrayType(this.CodeWriter.System.System_SByte.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I2:
-                        this.AddArrayType(this.CodeWriter.System.System_Int16.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_I4:
-
-                        this.AddArrayType(this.CodeWriter.System.System_Int32.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R4:
-
-                        this.AddArrayType(this.CodeWriter.System.System_Single.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
                     case Code.Stelem_R8:
-
-                        this.AddArrayType(this.CodeWriter.System.System_Double.ToArrayType(1));
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
 
@@ -1695,194 +1320,6 @@ namespace Il2Native.Logic
             }
 
             throw new InvalidOperationException("Could not read a short for of int32");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void AddArrayType(IType type)
-        {
-            if (this._usedArrayTypes == null || type == null || !type.IsArray || type.SpecialUsage())
-            {
-                return;
-            }
-
-            Debug.Assert(!type.IsGenericTypeDefinition);
-
-            if (DoNotAddInternalArrays && type.IsArrayInternal())
-            {
-                return;
-            }
-
-            this._usedArrayTypes.Add(type);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void AddTypeToken(IType type)
-        {
-            if (this._usedTypeTokens == null || type == null || type.SpecialUsage())
-            {
-                return;
-            }
-
-            if (!this._usedTypeTokens.Add(type.ToNormal()))
-            {
-                return;
-            }
-
-            if (type.BaseType != null)
-            {
-                this.AddTypeToken(type.BaseType);
-            }
-
-            if (type.HasElementType)
-            {
-                this.AddTypeToken(type.GetElementType());
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void AddUsedType(IType type)
-        {
-            if (this._usedTypes == null || type == null || type.SpecialUsage())
-            {
-                return;
-            }
-
-            this._usedTypes.Add(type);
-
-            if (type.BaseType != null && type.BaseType.IsGenericTypeDefinition)
-            {
-                // when you use typeof(B<T>) you need to add token of base type which can be generic as well
-                AddUsedType(type.BaseType);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void AddUsedVirtualTableImplementationTypes(IType type)
-        {
-            if (this._usedVirtualTableImplementationTypes == null || type == null || !type.IsVirtualTableImplementation)
-            {
-                return;
-            }
-
-            this._usedVirtualTableImplementationTypes.Add(type);
-        }
-
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        public void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null)
-        {
-            if (this._calledMethods == null || method == null || method.DeclaringType == null || string.IsNullOrEmpty(method.Name))
-            {
-                return;
-            }
-
-            this._calledMethods.Add(new MethodKey(method, ownerOfExplicitInterface));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="stackCall">
-        /// </param>
-        private void AddGenericSpecializedMethod(IMethod method, Queue<IMethod> stackCall)
-        {
-            if (this.usedGenericSpecialiazedMethods == null || method == null || method.DeclaringType == null)
-            {
-                return;
-            }
-
-            if (!method.IsGenericMethod)
-            {
-                if (method.DeclaringType.IsGenericType && !stackCall.Contains(method))
-                {
-                    this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);
-                }
-
-                return;
-            }
-
-            if (method.IsGenericMethodDefinition || method.DeclaringType.IsGenericTypeDefinition || this.usedGenericSpecialiazedMethods.Contains(method))
-            {
-                return;
-            }
-
-            Debug.Assert(!method.IsGenericMethodDefinition, "Generic Method Definition can't be used here");
-            Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition, "Generic Type Definition can't be used here");
-
-            this.usedGenericSpecialiazedMethods.Add(method);
-
-            this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void AddGenericSpecializedTypeAndUsedType(IType type)
-        {
-            this.AddUsedType(type);
-
-            if (this.usedGenericSpecialiazedTypes == null || type == null)
-            {
-                return;
-            }
-
-            if (type.IsArray || type.IsPointer || type.IsGenericTypeDefinition || !type.IsGenericType)
-            {
-                return;
-            }
-
-            this.usedGenericSpecialiazedTypes.Add(type.NormalizeType());
-        }
-
-        private void AddString(int token, string usedString)
-        {
-            if (this._usedStrings == null || usedString == null)
-            {
-                return;
-            }
-
-            this._usedStrings[token] = usedString;
-        }
-
-        private void AddConstBytes(IConstBytes constByteField)
-        {
-            if (this._usedConstBytes == null || constByteField == null)
-            {
-                return;
-            }
-
-            this._usedConstBytes.Add(constByteField);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="field">
-        /// </param>
-        private void AddUsedStaticField(IField field)
-        {
-            if (this._usedStaticFields == null || field == null || !field.IsStatic)
-            {
-                return;
-            }
-
-            this._usedStaticFields.Add(field);
         }
 
         /// <summary>
@@ -2128,48 +1565,6 @@ namespace Il2Native.Logic
                     AddAsseblyReference(assemblies, added, refAssemblyIdentity);
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="stackCall">
-        /// </param>
-        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
-        {
-            Debug.Assert(!method.IsGenericMethodDefinition, "Generic Method is not fully resolved");
-
-            stackCall.Enqueue(method);
-
-            // add all generic types in parameters
-            var parameters = method.GetParameters();
-            if (parameters != null)
-            {
-                foreach (var parameter in parameters)
-                {
-                    this.AddGenericSpecializedTypeAndUsedType(parameter.ParameterType);
-                }
-            }
-
-            // add return type
-            this.AddGenericSpecializedTypeAndUsedType(method.ReturnType);
-
-            // disover it again in specialized method
-            method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes,
-                this.usedGenericSpecialiazedMethods,
-                this._usedArrayTypes,
-                this._usedTypeTokens,
-                this._usedTypes,
-                this._calledMethods,
-                this._usedStaticFields,
-                this._usedVirtualTableImplementationTypes,
-                stackCall,
-                this.CodeWriter,
-                this.DoNotAddInternalArrays);
-
-            stackCall.Dequeue();
         }
 
         /// <summary>

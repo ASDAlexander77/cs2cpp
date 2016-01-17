@@ -2742,11 +2742,6 @@ namespace Il2Native.Logic
 
         public void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericMethodContext)
         {
-            if (method is IConstructor && method.IsStatic)
-            {
-                this.IlReader.StaticConstructors.Add(method);
-            }
-
             this.WriteMethodStart(method, methodOpCodeHolder, genericMethodContext);
 
             foreach (var ilCode in IlReader.OpCodes(methodOpCodeHolder ?? method, genericMethodContext))
@@ -2789,12 +2784,6 @@ namespace Il2Native.Logic
             {
                 return;
             }
-
-            // to gather all info about method which we need
-            this.IlReader.UsedStrings = new SortedDictionary<int, string>();
-            this.IlReader.UsedConstBytes = new List<IConstBytes>();
-            this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
-            this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
         }
 
         public static bool IsMain(IMethod method)
@@ -3773,13 +3762,13 @@ namespace Il2Native.Logic
 
             if (this.MultiThreadingSupport)
             {
-                // initialize of Thread Statics
-                foreach (var threadStaticField in this.IlReader.ThreadStaticFields)
-                {
-                    this.Output.Write("__create_thread_static((Int32*)&");
-                    this.WriteStaticFieldName(threadStaticField);
-                    this.Output.WriteLine(", (Void*)0);");
-                }
+                ////// initialize of Thread Statics
+                ////foreach (var threadStaticField in this.IlReader.ThreadStaticFields)
+                ////{
+                ////    this.Output.Write("__create_thread_static((Int32*)&");
+                ////    this.WriteStaticFieldName(threadStaticField);
+                ////    this.Output.WriteLine(", (Void*)0);");
+                ////}
             }
 
             ////foreach (var staticCtor in this.IlReader.StaticConstructors)
@@ -3904,8 +3893,6 @@ namespace Il2Native.Logic
             {
                 return;
             }
-
-            this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             this.ReadMethodInfo(method, methodOpCodeHolder, genericContext);
@@ -4163,31 +4150,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredStringsAndConstArraysDefinitions()
-        {
-            // const strings
-            foreach (var usedString in this.IlReader.UsedStrings)
-            {
-                this.WriteUnicodeString(usedString);
-            }
-
-            if (this.IlReader.UsedStrings.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-            }
-
-            // const bytes
-            foreach (var usedConstBytes in this.IlReader.UsedConstBytes)
-            {
-                this.WriteConstBytes(usedConstBytes);
-            }
-
-            if (this.IlReader.UsedConstBytes.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="opCodeConstructorInfoPart">
@@ -4328,7 +4290,7 @@ namespace Il2Native.Logic
 
                 if (field.IsThreadStatic)
                 {
-                    this.IlReader.ThreadStaticFields.Add(field);
+                    ////this.IlReader.ThreadStaticFields.Add(field);
                 }
             }
 

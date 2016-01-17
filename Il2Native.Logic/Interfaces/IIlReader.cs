@@ -27,38 +27,6 @@
 
         /// <summary>
         /// </summary>
-        IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations { get; }
-
-        /// <summary>
-        /// </summary>
-        ISet<MethodKey> CalledMethods { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedArrayTypes { get; set; }
-
-        /// <summary>
-        /// </summary>
-        ISet<IType> UsedTypeTokens { get; set; }
-
-        /// <summary>
-        /// </summary>
-        IDictionary<int, string> UsedStrings { get; set; }
-
-        /// <summary>
-        /// </summary>
-        IList<IConstBytes> UsedConstBytes { get; set; }
-
-        /// <summary>
-        /// </summary>
-        IList<IMethod> StaticConstructors { get; set; }
-
-        /// <summary>
-        /// </summary>
-        IList<IField> ThreadStaticFields { get; set; }
-
-        /// <summary>
-        /// </summary>
         /// <returns>
         /// </returns>
         IEnumerable<string> References();
