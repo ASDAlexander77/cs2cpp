@@ -6,7 +6,7 @@
 
     public static class CodeAnalysisHelpers
     {
-        public static IEnumerable<INamespaceOrTypeSymbol> EnumAllTypes(this IModuleSymbol module)
+        public static IEnumerable<ITypeSymbol> EnumAllTypes(this IModuleSymbol module)
         {
             foreach (var metadataTypeAdapter in module.GlobalNamespace.EnumAllNamespaces().SelectMany(n => n.GetTypeMembers()))
             {
@@ -27,7 +27,7 @@
             }
         }
 
-        public static IEnumerable<INamespaceOrTypeSymbol> EnumAllNestedTypes(this INamespaceOrTypeSymbol source)
+        public static IEnumerable<ITypeSymbol> EnumAllNestedTypes(this INamespaceOrTypeSymbol source)
         {
             foreach (var nestedType in source.GetTypeMembers())
             {

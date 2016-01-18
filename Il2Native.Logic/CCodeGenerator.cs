@@ -27,7 +27,7 @@
             return this._cunits;
         }
 
-        private static CCodeUnit BuildUnit(INamespaceOrTypeSymbol type)
+        private static CCodeUnit BuildUnit(ITypeSymbol type)
         {
             var unit = new CCodeUnit(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())

@@ -1,7 +1,10 @@
 ﻿namespace Il2Native.Logic.DOM
 {
     using System.CodeDom.Compiler;
+    using System.Diagnostics;
+    using System.Reflection.Metadata.Ecma335;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     public class CCodeMethodDefinition : CCodeDefinition
     {
@@ -12,7 +15,7 @@
 
         public IMethodSymbol Method { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
         {
             itw.WriteLine();
 
@@ -29,13 +32,31 @@
             }
             else
             {
-                new CCodeType(this.Method.ReturnType).WriteTo(itw);
+                new CCodeType(this.Method.ReturnType).WriteTo(itw, settings);
             }
 
             itw.Write(" ");
 
-            // name
-            itw.Write(this.Method.MetadataName.CleanUpName());
+            if (settings == WriteSettings.Token)
+            {
+                // Token
+                var peMethodSymbol = this.Method as PEMethodSymbol;
+                Debug.Assert(peMethodSymbol != null);
+                if (peMethodSymbol != null)
+                {
+                    var token = MetadataTokens.GetToken(peMethodSymbol.Handle);
+                    itw.Write("T{0:X}", token);
+                }
+            }
+            else
+            {
+                WriteNamespace(itw, this.Method.ContainingNamespace);
+                itw.Write("::");
+                WriteName(itw, this.Method.ReceiverType);
+                itw.Write("::");
+                WriteName(itw, this.Method);
+            }
+
             itw.Write("(");
             // parameters
             itw.Write(")");

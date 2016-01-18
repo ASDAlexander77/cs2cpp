@@ -7,20 +7,20 @@
     {
         public static IEnumerable<INamespaceSymbol> EnumNamespaces(this INamespaceSymbol namespaceSymbol)
         {
-            if (namespaceSymbol == null)
+            if (namespaceSymbol == null || namespaceSymbol.IsGlobalNamespace)
             {
                 yield break;
             }
 
-            if (namespaceSymbol.ContainingNamespace != null)
+            foreach (var enumNamespace in namespaceSymbol.ConstituentNamespaces)
             {
-                foreach (var enumNamespace in namespaceSymbol.ContainingNamespace.EnumNamespaces())
+                if (enumNamespace.IsGlobalNamespace)
                 {
-                    yield return enumNamespace;
+                    continue;
                 }
-            }
 
-            yield return namespaceSymbol;
+                yield return enumNamespace;
+            }
         }
     }
 }

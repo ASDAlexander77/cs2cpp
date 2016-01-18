@@ -12,7 +12,7 @@
 
         public IMethodSymbol MetadataName { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
         {
             throw new System.NotImplementedException();
         }

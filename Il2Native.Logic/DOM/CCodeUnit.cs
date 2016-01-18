@@ -5,14 +5,14 @@
 
     public class CCodeUnit
     {
-        public CCodeUnit(INamespaceOrTypeSymbol type)
+        public CCodeUnit(ITypeSymbol type)
         {
             this.Declarations = new List<CCodeDeclaration>();
             this.Definitions = new List<CCodeDefinition>();
             this.Type = type;
         }
 
-        public INamespaceOrTypeSymbol Type { get; set; }
+        public ITypeSymbol Type { get; set; }
 
         public IList<CCodeDeclaration> Declarations { get; private set; }
 

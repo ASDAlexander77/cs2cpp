@@ -11,7 +11,7 @@
     {
         private string currentFolder;
 
-        public void WriteTo(AssemblyIdentity identity, IList<CCodeUnit> units, string outputFolder)
+        public void WriteTo(AssemblyIdentity identity, IList<CCodeUnit> units, string outputFolder, WriteSettings settings)
         {
             if (!Directory.Exists(identity.Name))
             {
@@ -27,7 +27,7 @@
                 {
                     foreach (var definition in unit.Definitions)
                     {
-                        definition.WriteTo(itw);
+                        definition.WriteTo(itw, settings);
                     }
 
                     itw.Close();

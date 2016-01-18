@@ -9,6 +9,8 @@
 
 namespace Il2Native.Logic
 {
+    using DOM;
+
     /// <summary>
     /// </summary>
     public class Il2Converter
@@ -75,7 +77,7 @@ namespace Il2Native.Logic
             var units = cgenerator.Build();
 
             var codeSerializer = new CCodeSerializer();
-            codeSerializer.WriteTo(assemblySymbol.Identity, units, outputFolder);
+            codeSerializer.WriteTo(assemblySymbol.Identity, units, outputFolder, WriteSettings.Name);
         }
     }
 }
