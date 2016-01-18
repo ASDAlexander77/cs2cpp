@@ -72,24 +72,10 @@ namespace Il2Native.Logic
             cs2CGenerator.Load();
             
             var cgenerator = new CCodeGenerator(cs2CGenerator.Assembly);
-            cgenerator.Build();
+            var units = cgenerator.Build();
+
+            var codeSerializer = new CCodeSerializer();
+            codeSerializer.WriteTo(cs2CGenerator.Assembly.Assembly.Identity, units, outputFolder);
         }
-    }
-
-    public class Settings
-    {
-        public string FileName { get; set; }
-
-        public string FileExt { get; set; }
-
-        public string SourceFilePath { get; set; }
-
-        public string PdbFilePath { get; set; }
-
-        public string OutputFolder { get; set; }
-
-        public string[] Args { get; set; }
-
-        public string[] Filter { get; set; }
     }
 }

@@ -10,7 +10,7 @@
 
     public class CCodeGenerator
     {
-        private Stack<CCodeUnit> cunits = new Stack<CCodeUnit>();  
+        private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();  
 
         public CCodeGenerator(AssemblyMetadata assembly)
         {
@@ -19,12 +19,16 @@
 
         protected AssemblyMetadata Assembly { get; set; }
 
-        public void Build()
+        public IList<CCodeUnit>  Build()
         {
-            foreach (var enumAllType in this.EnumAllTypes())
+            foreach (var type in this.EnumAllTypes())
             {
-                
+                var codeUnit = new CCodeUnit();
+                codeUnit.Name = type.Name;
+                this._cunits.Add(codeUnit);
             }
+
+            return this._cunits;
         }
 
         private static IEnumerable<NamespaceSymbol> GetAllNamespaces(NamespaceSymbol source)
