@@ -29,6 +29,8 @@
                     {
                         definition.WriteTo(itw);
                     }
+
+                    itw.Close();
                 }
             }
         }

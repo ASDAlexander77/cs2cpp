@@ -110,18 +110,7 @@ namespace Il2Native.Logic
                 this.PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
             }
 
-            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="assemblyMetadata">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static PEAssemblySymbol GetAssemblySymbol(AssemblyMetadata assemblyMetadata)
-        {
-            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+            return LoadAssemblySymbol(assemblyMetadata);
         }
 
         private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
@@ -293,7 +282,7 @@ namespace Il2Native.Logic
                 return symbol;
             }
 
-            var assemblySymbol = GetAssemblySymbol(assemblyMetadata);
+            var assemblySymbol = new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
             this.cache[assemblyMetadata.Assembly.Identity] = assemblySymbol;
             this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.Assembly.Identity));

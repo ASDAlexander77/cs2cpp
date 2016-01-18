@@ -1,9 +1,8 @@
 ﻿namespace Il2Native.Logic
 {
-    using System.CodeDom.Compiler;
+    using DOM;
 
-    public abstract class CCodeDefinition
+    public abstract class CCodeDefinition : CCodeBase
     {
-        public abstract void WriteTo(IndentedTextWriter itw);
     }
 }

@@ -1,6 +1,8 @@
 ﻿namespace Il2Native.Logic
 {
-    public abstract class CCodeDeclaration
+    using DOM;
+
+    public abstract class CCodeDeclaration : CCodeBase
     {
     }
 }

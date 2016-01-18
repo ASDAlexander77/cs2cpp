@@ -40,11 +40,13 @@
   <ItemGroup>
     <Compile Include="CCodeSerializer.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
+    <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeGenerator.cs" />
     <Compile Include="DOM\CCodeMethodDefinition.cs" />
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />
+    <Compile Include="DOM\CCodeType.cs" />
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="Helpers.cs" />
