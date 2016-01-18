@@ -25,53 +25,9 @@
             // TODO:
             itw.Write("static ");
 
-            // type
-            if (this.Method.ReturnsVoid)
-            {
-                itw.Write("void");
-            }
-            else
-            {
-                new CCodeType(this.Method.ReturnType).WriteTo(itw, settings);
-            }
+            CCodeSerializer.WriteMethodDeclaration(itw, settings, this.Method, false);
 
-            itw.Write(" ");
-
-            if (settings == WriteSettings.Token)
-            {
-                // Token
-                var peMethodSymbol = this.Method as PEMethodSymbol;
-                Debug.Assert(peMethodSymbol != null);
-                if (peMethodSymbol != null)
-                {
-                    var token = MetadataTokens.GetToken(peMethodSymbol.Handle);
-                    itw.Write("T{0:X}", token);
-                }
-            }
-            else
-            {
-                WriteNamespace(itw, this.Method.ContainingNamespace);
-                itw.Write("::");
-                WriteName(itw, this.Method.ReceiverType);
-                itw.Write("::");
-                WriteName(itw, this.Method);
-            }
-
-            itw.Write("(");
-            // parameters
-            itw.Write(")");
-
-            // post attributes
-            // TODO:
-
-            itw.WriteLine();
-            itw.WriteLine("{");
-            itw.Indent++;
-
-            itw.WriteLine("// Body");
-
-            itw.Indent--;
-            itw.WriteLine("}");
+            CCodeSerializer.WriteMethodBody(itw);
         }
     }
 }

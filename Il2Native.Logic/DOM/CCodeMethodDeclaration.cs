@@ -5,16 +5,17 @@
 
     public class CCodeMethodDeclaration : CCodeDeclaration
     {
-        public CCodeMethodDeclaration(IMethodSymbol metadataName)
+        public CCodeMethodDeclaration(IMethodSymbol method)
         {
-            this.MetadataName = metadataName;
+            this.Method = method;
         }
 
-        public IMethodSymbol MetadataName { get; set; }
+        public IMethodSymbol Method { get; set; }
 
         public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
         {
-            throw new System.NotImplementedException();
+            CCodeSerializer.WriteMethodDeclaration(itw, settings, this.Method, true);
+            itw.WriteLine(";");
         }
     }
 }
