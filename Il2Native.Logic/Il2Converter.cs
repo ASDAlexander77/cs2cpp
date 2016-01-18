@@ -69,7 +69,10 @@ namespace Il2Native.Logic
         protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null)
         {
             var cs2CGenerator = new Cs2CGenerator(sources, args);
-            cs2CGenerator.Emit();
+            cs2CGenerator.Load();
+            
+            var cgenerator = new CCodeGenerator(cs2CGenerator.Assembly);
+            cgenerator.Build();
         }
     }
 

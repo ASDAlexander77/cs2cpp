@@ -38,6 +38,10 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DOM\CCodeDeclaration.cs" />
+    <Compile Include="DOM\CCodeDefinition.cs" />
+    <Compile Include="CCodeGenerator.cs" />
+    <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
@@ -68,10 +72,6 @@
     <ProjectReference Include="..\PdbReader\PdbReader.csproj">
       <Project>{68d11523-23ec-405f-adb0-c2f2c0538589}</Project>
       <Name>PdbReader</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PEAssemblyReader\PEAssemblyReader.csproj">
-      <Project>{278b563a-a934-489c-8dfc-39b021816c25}</Project>
-      <Name>PEAssemblyReader</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -52,25 +52,14 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
+            this.isDll = this.FirstSource.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
+            this.DefaultDllLocations = this.isDll ? Path.GetDirectoryName(Path.GetFullPath(this.FirstSource)) : null;
             this.DebugInfo = args != null && args.Contains("debug");
-            this.SourceFilePath = Path.GetFullPath(this.FirstSource);
-            if (this.DefaultDllLocations == null && !string.IsNullOrWhiteSpace(this.CoreLibPath))
+            if (!this.isDll)
             {
-                this.DefaultDllLocations = Path.GetDirectoryName(this.CoreLibPath);
+                this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
 
-            var refs = args != null ? args.FirstOrDefault(a => a.StartsWith("ref:")) : null;
-            var refsValue = refs != null ? refs.Substring("ref:".Length) : null;
-            this.ReferencesList = (refsValue ?? string.Empty).Split(
-                new[] { ';' },
-                StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        /// <summary>
-        /// </summary>
-        public string AssemblyQualifiedName
-        {
-            get { return this.Assembly.Assembly.Identity.Name; }
         }
 
         /// <summary>
@@ -78,6 +67,8 @@ namespace Il2Native.Logic
         public string CoreLibPath { get; set; }
 
         public bool DebugInfo { get; private set; }
+
+        public bool isDll { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -93,20 +84,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool IsCoreLib
-        {
-            get { return !this.Assembly.Assembly.AssemblyReferences.Any(); }
-        }
-
-        /// <summary>
-        /// </summary>
-        public string ModuleName
-        {
-            get { return this.Assembly.ManifestModule.Name; }
-        }
-
-        /// <summary>
-        /// </summary>
         public string PdbFilePath { get; private set; }
 
         /// <summary>
@@ -115,7 +92,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected AssemblyMetadata Assembly { get; private set; }
+        public AssemblyMetadata Assembly { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -125,9 +102,17 @@ namespace Il2Native.Logic
         /// </summary>
         protected string[] Sources { get; private set; }
 
-        public void Emit()
+        public void Load()
         {
-            this.Assembly = CompileWithRoslynInMemory(this.Sources);
+            this.Assembly = !this.isDll
+                                ? this.CompileWithRoslynInMemory(this.Sources)
+                                : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
+
+            if (this.isDll)
+            {
+                this.DllFilePath = this.FirstSource;
+                this.PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
+            }
         }
 
         /// <summary>

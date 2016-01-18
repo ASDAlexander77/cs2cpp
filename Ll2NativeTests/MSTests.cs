@@ -14,14 +14,9 @@ namespace Ll2NativeTests
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Threading.Tasks;
 
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    using PEAssemblyReader;
-
-    using PdbReader;
 
     using TestContext = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
 

@@ -45,31 +45,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extentions.cs" />
-    <Compile Include="IConstructor.cs" />
-    <Compile Include="IExceptionHandlingClause.cs" />
-    <Compile Include="IField.cs" />
-    <Compile Include="IGenericContext.cs" />
-    <Compile Include="ILocalVariable.cs" />
-    <Compile Include="IMember.cs" />
-    <Compile Include="IMethod.cs" />
-    <Compile Include="IMethodBody.cs" />
-    <Compile Include="IModule.cs" />
-    <Compile Include="IName.cs" />
-    <Compile Include="IParameter.cs" />
-    <Compile Include="IType.cs" />
-    <Compile Include="Keywords.cs" />
-    <Compile Include="MetadataConstructorAdapter.cs" />
-    <Compile Include="MetadataExceptionHandlingClauseAdapter.cs" />
-    <Compile Include="MetadataFieldAdapter.cs" />
-    <Compile Include="MetadataGenericContext.cs" />
-    <Compile Include="MetadataLocalVariableAdapter.cs" />
-    <Compile Include="MetadataMethodAdapter.cs" />
-    <Compile Include="MetadataMethodBodyAdapter.cs" />
-    <Compile Include="MetadataModuleAdapter.cs" />
-    <Compile Include="MetadataParameterAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MetadataTypeAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
