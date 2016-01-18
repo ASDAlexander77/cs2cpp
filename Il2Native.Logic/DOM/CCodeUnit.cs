@@ -5,17 +5,14 @@
 
     public class CCodeUnit
     {
-        public CCodeUnit(string name, INamespaceSymbol @namespace)
+        public CCodeUnit(INamespaceOrTypeSymbol type)
         {
             this.Declarations = new List<CCodeDeclaration>();
             this.Definitions = new List<CCodeDefinition>();
-            this.Name = name;
-            this.Namespace = @namespace;
+            this.Type = type;
         }
 
-        public string Name { get; set; }
-
-        public INamespaceSymbol Namespace { get; set; }
+        public INamespaceOrTypeSymbol Type { get; set; }
 
         public IList<CCodeDeclaration> Declarations { get; private set; }
 

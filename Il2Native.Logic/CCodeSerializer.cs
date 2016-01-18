@@ -35,10 +35,10 @@
 
         private string GetUnitPath(CCodeUnit unit, out int nestedLevel)
         {
-            var enumNamespaces = unit.Namespace.EnumNamespaces().ToList();
+            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().ToList();
             nestedLevel = enumNamespaces.Count();
             var fullDirPath = Path.Combine(this.currentFolder, string.Join("\\", enumNamespaces.Select(n => n.ToString().CleanUpNameAllUnderscore())));
-            var fullPath = Path.Combine(fullDirPath, string.Concat(unit.Name.CleanUpNameAllUnderscore(), ".cpp"));
+            var fullPath = Path.Combine(fullDirPath, string.Concat(unit.Type.MetadataName.CleanUpNameAllUnderscore(), ".cpp"));
             if (!Directory.Exists(fullDirPath))
             {
                 Directory.CreateDirectory(fullDirPath);
