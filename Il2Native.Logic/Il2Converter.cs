@@ -69,13 +69,13 @@ namespace Il2Native.Logic
         protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null)
         {
             var cs2CGenerator = new Cs2CGenerator(sources, args);
-            var peAssemblySymbol = cs2CGenerator.Load();
+            var assemblySymbol = cs2CGenerator.Load();
 
-            var cgenerator = new CCodeGenerator(peAssemblySymbol);
+            var cgenerator = new CCodeGenerator(assemblySymbol);
             var units = cgenerator.Build();
 
             var codeSerializer = new CCodeSerializer();
-            codeSerializer.WriteTo(peAssemblySymbol.Assembly.Identity, units, outputFolder);
+            codeSerializer.WriteTo(assemblySymbol.Identity, units, outputFolder);
         }
     }
 }

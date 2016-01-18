@@ -1,13 +1,11 @@
 ﻿namespace Il2Native.Logic
 {
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
-
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis;
 
     public class CCodeUnit
     {
-        internal CCodeUnit(string name, NamespaceSymbol @namespace)
+        public CCodeUnit(string name, INamespaceSymbol @namespace)
         {
             this.Declarations = new List<CCodeDeclaration>();
             this.Definitions = new List<CCodeDefinition>();
@@ -17,7 +15,7 @@
 
         public string Name { get; set; }
 
-        internal NamespaceSymbol Namespace { get; set; }
+        public INamespaceSymbol Namespace { get; set; }
 
         public IList<CCodeDeclaration> Declarations { get; private set; }
 

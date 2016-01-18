@@ -98,7 +98,7 @@ namespace Il2Native.Logic
         /// </summary>
         protected string[] Sources { get; private set; }
 
-        internal PEAssemblySymbol Load()
+        public IAssemblySymbol Load()
         {
             var assemblyMetadata = !this.isDll
                                 ? this.CompileWithRoslynInMemory(this.Sources)
