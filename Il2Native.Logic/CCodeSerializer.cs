@@ -3,8 +3,7 @@
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.IO;
-
-    using Il2Native.Logic.DOM;
+    using System.Linq;
 
     using Microsoft.CodeAnalysis;
 
@@ -23,16 +22,22 @@
 
             foreach (var unit in units)
             {
-                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetUnitPath(unit))))
+                int nestedLevel;
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetUnitPath(unit, out nestedLevel))))
                 {
-                    unit.WriteTo(itw);
+                    foreach (var definition in unit.Definitions)
+                    {
+                        definition.WriteTo(itw);
+                    }
                 }
             }
         }
 
-        private string GetUnitPath(CCodeUnit unit)
+        private string GetUnitPath(CCodeUnit unit, out int nestedLevel)
         {
-            return Path.Combine(this.currentFolder, unit.Namespace.Replace(".", "\\"), string.Concat(unit.Name, ".cpp"));
+            var ns = unit.Namespace;
+            nestedLevel = ns.Count(c => c == '.');
+            return Path.Combine(this.currentFolder, ns.Replace(".", "\\"), string.Concat(unit.Name, ".cpp"));
         }
     }
 }
