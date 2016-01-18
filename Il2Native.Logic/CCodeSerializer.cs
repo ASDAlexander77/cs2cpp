@@ -35,9 +35,34 @@
 
         private string GetUnitPath(CCodeUnit unit, out int nestedLevel)
         {
-            var ns = unit.Namespace;
-            nestedLevel = ns.Count(c => c == '.');
-            return Path.Combine(this.currentFolder, ns.Replace(".", "\\"), string.Concat(unit.Name, ".cpp"));
+            var enumNamespaces = this.EnumNamespaces(unit.Namespace).ToList();
+            nestedLevel = enumNamespaces.Count();
+            var fullDirPath = Path.Combine(this.currentFolder, string.Join("\\", enumNamespaces.Select(n => n.CleanUpNameAllUnderscore())));
+            var fullPath = Path.Combine(fullDirPath, string.Concat(unit.Name.CleanUpNameAllUnderscore(), ".cpp"));
+            if (!Directory.Exists(fullDirPath))
+            {
+                Directory.CreateDirectory(fullDirPath);
+            }
+
+            return fullPath;
+        }
+
+        private IEnumerable<string> EnumNamespaces(INamespaceSymbol namespaceSymbol)
+        {
+            if (namespaceSymbol == null)
+            {
+                yield break;
+            }
+
+            if (namespaceSymbol.ContainingNamespace != null)
+            {
+                foreach (var enumNamespace in this.EnumNamespaces(namespaceSymbol.ContainingNamespace))
+                {
+                    yield return enumNamespace;
+                }
+            }
+
+            yield return namespaceSymbol.ToString();
         }
     }
 }

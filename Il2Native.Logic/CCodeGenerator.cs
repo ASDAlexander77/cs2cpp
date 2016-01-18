@@ -8,22 +8,22 @@
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
-    public class CCodeGenerator
+    internal class CCodeGenerator
     {
-        private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();  
+        private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();
 
-        public CCodeGenerator(AssemblyMetadata assembly)
+        internal CCodeGenerator(PEAssemblySymbol assembly)
         {
             this.Assembly = assembly;
         }
 
-        protected AssemblyMetadata Assembly { get; set; }
+        protected PEAssemblySymbol Assembly { get; set; }
 
-        public IList<CCodeUnit>  Build()
+        public IList<CCodeUnit> Build()
         {
             foreach (var type in this.EnumAllTypes())
             {
-                var codeUnit = new CCodeUnit();
+                var codeUnit = new CCodeUnit(type.Name, type.ContainingNamespace);
                 codeUnit.Name = type.Name;
                 this._cunits.Add(codeUnit);
             }

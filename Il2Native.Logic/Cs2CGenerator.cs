@@ -92,19 +92,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public AssemblyMetadata Assembly { get; private set; }
-
-        /// <summary>
-        /// </summary>
         protected string FirstSource { get; private set; }
 
         /// <summary>
         /// </summary>
         protected string[] Sources { get; private set; }
 
-        public void Load()
+        internal PEAssemblySymbol Load()
         {
-            this.Assembly = !this.isDll
+            var assemblyMetadata = !this.isDll
                                 ? this.CompileWithRoslynInMemory(this.Sources)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
 
@@ -113,6 +109,8 @@ namespace Il2Native.Logic
                 this.DllFilePath = this.FirstSource;
                 this.PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
             }
+
+            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
         }
 
         /// <summary>

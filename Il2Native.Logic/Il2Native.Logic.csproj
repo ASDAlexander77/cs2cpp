@@ -43,6 +43,7 @@
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeGenerator.cs" />
     <Compile Include="DOM\CCodeUnit.cs" />
+    <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
