@@ -29,7 +29,7 @@ namespace Il2Native.Logic
 
         private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
-        private readonly IDictionary<IMethodSymbol, BoundStatementList> boundBodyByMethodSymbol = new ConcurrentDictionary<IMethodSymbol, BoundStatementList>();
+        private readonly IDictionary<string, BoundStatementList> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatementList>();
 
         /// <summary>
         /// </summary>
@@ -89,7 +89,7 @@ namespace Il2Native.Logic
         /// </summary>
         public string SourceFilePath { get; private set; }
 
-        internal IDictionary<IMethodSymbol, BoundStatementList> BoundBodyByMethodSymbol
+        internal IDictionary<string, BoundStatementList> BoundBodyByMethodSymbol
         {
             get { return this.boundBodyByMethodSymbol; }
         }
@@ -146,7 +146,7 @@ namespace Il2Native.Logic
 
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
-                boundBodyByMethodSymbol[symbol] = body;
+                boundBodyByMethodSymbol[symbol.ToString()] = body;
             };
 
             PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;

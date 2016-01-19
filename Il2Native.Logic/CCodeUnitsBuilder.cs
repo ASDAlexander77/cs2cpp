@@ -11,13 +11,13 @@
     {
         private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();
 
-        internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<IMethodSymbol, BoundStatementList> boundBodyByMethodSymbol)
+        internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<string, BoundStatementList> boundBodyByMethodSymbol)
         {
             this.Assembly = assembly;
             this.BoundBodyByMethodSymbol = boundBodyByMethodSymbol;
         }
 
-        internal IDictionary<IMethodSymbol, BoundStatementList> BoundBodyByMethodSymbol { get; set; }
+        internal IDictionary<string, BoundStatementList> BoundBodyByMethodSymbol { get; set; }
 
         protected IAssemblySymbol Assembly { get; set; }
        
@@ -37,7 +37,7 @@
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
                 unit.Declarations.Add(new CCodeMethodDeclaration(method));
-                unit.Definitions.Add(new CCodeMethodDefinition(method, this.BoundBodyByMethodSymbol[method]));
+                unit.Definitions.Add(new CCodeMethodDefinition(method, this.BoundBodyByMethodSymbol[method.ToString()]));
             }
 
             return unit;
