@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
+    using System.CodeDom.Compiler;
     using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeGen;
@@ -11,11 +12,23 @@
 
     public class CCodeMethodSerializer
     {
+        private IndentedTextWriter itw;
+
         private enum CallKind
         {
             Call,
             CallVirt,
             ConstrainedCallVirt,
+        }
+
+        public CCodeMethodSerializer(IndentedTextWriter itw)
+        {
+            this.itw = itw;
+        }
+
+        internal void Serialize(BoundStatementList boundBody)
+        {
+            this.EmitStatement(boundBody);
         }
 
         private void EmitStatement(BoundStatement statement)
@@ -39,11 +52,11 @@
                     break;
 
                 case BoundKind.StatementList:
-                    ////EmitStatementList((BoundStatementList)statement);
+                    EmitStatementList((BoundStatementList)statement);
                     break;
 
                 case BoundKind.ReturnStatement:
-                    ////EmitReturnStatement((BoundReturnStatement)statement);
+                    EmitReturnStatement((BoundReturnStatement)statement);
                     break;
 
                 case BoundKind.GotoStatement:
@@ -81,6 +94,28 @@
                 default:
                     // Code gen should not be invoked if there are errors.
                     throw ExceptionUtilities.UnexpectedValue(statement.Kind);
+            }
+        }
+
+        private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
+        {
+            this.itw.Write("return");
+            if (boundReturnStatement.ExpressionOpt != null)
+            {
+                this.itw.Write(" ");
+            }
+
+            // TODO: investigate about indirect return
+            this.EmitExpression(boundReturnStatement.ExpressionOpt, true);
+
+            this.itw.WriteLine(";");
+        }
+
+        private void EmitStatementList(BoundStatementList list)
+        {
+            for (int i = 0, n = list.Statements.Length; i < n; i++)
+            {
+                EmitStatement(list.Statements[i]);
             }
         }
 
@@ -125,6 +160,75 @@
             }
         }
 
+        private void EmitConstantExpression(TypeSymbol type, ConstantValue constantValue, bool used, CSharpSyntaxNode syntaxNode)
+        {
+            if (used)  // unused constant has no sideeffects
+            {
+                // Null type parameter values must be emitted as 'initobj' rather than 'ldnull'.
+                if (((object)type != null) && (type.TypeKind == TypeKind.TypeParameter) && constantValue.IsNull)
+                {
+                    ////EmitInitObj(type, used, syntaxNode);
+                }
+                else
+                {
+                    EmitConstantValue(constantValue);
+                }
+            }
+        }
+
+        internal void EmitConstantValue(ConstantValue value)
+        {
+            ConstantValueTypeDiscriminator discriminator = value.Discriminator;
+
+            switch (discriminator)
+            {
+                case ConstantValueTypeDiscriminator.Null:
+                    itw.Write("nullptr");
+                    break;
+                case ConstantValueTypeDiscriminator.SByte:
+                    itw.Write(value.SByteValue);
+                    break;
+                case ConstantValueTypeDiscriminator.Byte:
+                    itw.Write(value.ByteValue);
+                    break;
+                case ConstantValueTypeDiscriminator.UInt16:
+                    itw.Write(value.UInt16Value);
+                    break;
+                case ConstantValueTypeDiscriminator.Char:
+                    itw.Write("L'{0}'", value.CharValue);
+                    break;
+                case ConstantValueTypeDiscriminator.Int16:
+                    itw.Write(value.Int16Value);
+                    break;
+                case ConstantValueTypeDiscriminator.Int32:
+                case ConstantValueTypeDiscriminator.UInt32:
+                    itw.Write(value.Int32Value);
+                    break;
+                case ConstantValueTypeDiscriminator.Int64:
+                    itw.Write(value.Int64Value);
+                    itw.Write("L");
+                    break;
+                case ConstantValueTypeDiscriminator.UInt64:
+                    itw.Write(value.Int64Value);
+                    itw.Write("UL");
+                    break;
+                case ConstantValueTypeDiscriminator.Single:
+                    itw.Write(value.SingleValue);
+                    break;
+                case ConstantValueTypeDiscriminator.Double:
+                    itw.Write(value.DoubleValue);
+                    break;
+                case ConstantValueTypeDiscriminator.String:
+                    itw.Write("L\"{0}\"", value.StringValue);
+                    break;
+                case ConstantValueTypeDiscriminator.Boolean:
+                    itw.Write(value.BooleanValue.ToString().ToLowerInvariant());
+                    break;
+                default:
+                    throw ExceptionUtilities.UnexpectedValue(discriminator);
+            }
+        }
+
         private void EmitExpression(BoundExpression expression, bool used)
         {
             if (expression == null)
@@ -143,7 +247,7 @@
 
                 if ((object)expression.Type == null || expression.Type.SpecialType != SpecialType.System_Decimal)
                 {
-                    ////EmitConstantExpression(expression.Type, constantValue, used, expression.Syntax);
+                    EmitConstantExpression(expression.Type, constantValue, used, expression.Syntax);
                     return;
                 }
             }

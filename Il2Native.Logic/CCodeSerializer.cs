@@ -84,10 +84,7 @@
 
             itw.WriteLine("// Body");
 
-            foreach (var node in boundBody.Statements)
-            {
-                
-            }
+            new CCodeMethodSerializer(itw).Serialize(boundBody);
 
             itw.Indent--;
             itw.WriteLine("}");
