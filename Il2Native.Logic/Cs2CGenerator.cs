@@ -7,6 +7,7 @@
 namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -16,6 +17,7 @@ namespace Il2Native.Logic
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Emit;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
@@ -23,14 +25,11 @@ namespace Il2Native.Logic
     /// </summary>
     public class Cs2CGenerator
     {
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
-        /// <summary>
-        /// </summary>
-        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies =
-            new List<UnifiedAssembly<AssemblySymbol>>();
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+
+        private readonly IDictionary<IMethodSymbol, BoundStatementList> boundBodyByMethodSymbol = new ConcurrentDictionary<IMethodSymbol, BoundStatementList>();
 
         /// <summary>
         /// </summary>
@@ -90,6 +89,11 @@ namespace Il2Native.Logic
         /// </summary>
         public string SourceFilePath { get; private set; }
 
+        internal IDictionary<IMethodSymbol, BoundStatementList> BoundBodyByMethodSymbol
+        {
+            get { return this.boundBodyByMethodSymbol; }
+        }
+
         /// <summary>
         /// </summary>
         protected string FirstSource { get; private set; }
@@ -97,6 +101,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected string[] Sources { get; private set; }
+
 
         public IAssemblySymbol Load()
         {
@@ -139,7 +144,16 @@ namespace Il2Native.Logic
             var dllStream = new MemoryStream();
             var pdbStream = new MemoryStream();
 
+            PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
+            {
+                boundBodyByMethodSymbol[symbol] = body;
+            };
+
+            PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;
+            
             var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
+            
+            PEModuleBuilder.OnMethodBoundBodySynthesized -= peModuleBuilderOnOnMethodBoundBodySynthesized;
 
             if (result.Diagnostics.Length > 0)
             {

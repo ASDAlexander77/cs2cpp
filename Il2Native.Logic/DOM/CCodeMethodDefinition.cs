@@ -4,16 +4,20 @@
     using System.Diagnostics;
     using System.Reflection.Metadata.Ecma335;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     public class CCodeMethodDefinition : CCodeDefinition
     {
-        public CCodeMethodDefinition(IMethodSymbol method)
+        internal CCodeMethodDefinition(IMethodSymbol method, BoundStatementList boundBody)
         {
             this.Method = method;
+            this.BoundBody = boundBody;
         }
 
         public IMethodSymbol Method { get; set; }
+
+        internal BoundStatementList BoundBody { get; set; }
 
         public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
         {
@@ -27,7 +31,7 @@
 
             CCodeSerializer.WriteMethodDeclaration(itw, settings, this.Method, false);
 
-            CCodeSerializer.WriteMethodBody(itw);
+            CCodeSerializer.WriteMethodBody(itw, this.BoundBody);
         }
     }
 }

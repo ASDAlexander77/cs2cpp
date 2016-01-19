@@ -1424,5 +1424,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
         }
 
         #endregion
+
+        public delegate void OnMethodBoundBodySynthesizedDelegate(MethodSymbol methodSymbol, BoundStatementList boundBody);
+
+        public static event OnMethodBoundBodySynthesizedDelegate OnMethodBoundBodySynthesized;
+
+        public void RaiseOnMethodBoundBodySynthesized(MethodSymbol methodSymbol, BoundStatementList boundBody)
+        {
+            if (OnMethodBoundBodySynthesized != null)
+            {
+                OnMethodBoundBodySynthesized(methodSymbol, boundBody);
+            }
+        }
     }
 }

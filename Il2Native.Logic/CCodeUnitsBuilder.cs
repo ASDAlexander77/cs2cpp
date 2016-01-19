@@ -5,18 +5,22 @@
     using System.Linq;
     using DOM;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
 
-    public class CCodeGenerator
+    public class CCodeUnitsBuilder
     {
         private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();
 
-        public CCodeGenerator(IAssemblySymbol assembly)
+        internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<IMethodSymbol, BoundStatementList> boundBodyByMethodSymbol)
         {
             this.Assembly = assembly;
+            this.BoundBodyByMethodSymbol = boundBodyByMethodSymbol;
         }
 
-        protected IAssemblySymbol Assembly { get; set; }
+        internal IDictionary<IMethodSymbol, BoundStatementList> BoundBodyByMethodSymbol { get; set; }
 
+        protected IAssemblySymbol Assembly { get; set; }
+       
         public IList<CCodeUnit> Build()
         {
             foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()))
@@ -27,13 +31,13 @@
             return this._cunits;
         }
 
-        private static CCodeUnit BuildUnit(ITypeSymbol type)
+        private CCodeUnit BuildUnit(ITypeSymbol type)
         {
             var unit = new CCodeUnit(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
                 unit.Declarations.Add(new CCodeMethodDeclaration(method));
-                unit.Definitions.Add(new CCodeMethodDefinition(method));
+                unit.Definitions.Add(new CCodeMethodDefinition(method, this.BoundBodyByMethodSymbol[method]));
             }
 
             return unit;

@@ -73,7 +73,7 @@ namespace Il2Native.Logic
             var cs2CGenerator = new Cs2CGenerator(sources, args);
             var assemblySymbol = cs2CGenerator.Load();
 
-            var cgenerator = new CCodeGenerator(assemblySymbol);
+            var cgenerator = new CCodeUnitsBuilder(assemblySymbol, cs2CGenerator.BoundBodyByMethodSymbol);
             var units = cgenerator.Build();
 
             var codeSerializer = new CCodeSerializer();

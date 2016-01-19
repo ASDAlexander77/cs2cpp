@@ -9,6 +9,7 @@
     using System.Reflection.Metadata.Ecma335;
     using DOM;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     public class CCodeSerializer
@@ -75,13 +76,18 @@
             // TODO:
         }
 
-        public static void WriteMethodBody(IndentedTextWriter itw)
+        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatementList boundBody)
         {
             itw.WriteLine();
             itw.WriteLine("{");
             itw.Indent++;
 
             itw.WriteLine("// Body");
+
+            foreach (var node in boundBody.Statements)
+            {
+                
+            }
 
             itw.Indent--;
             itw.WriteLine("}");

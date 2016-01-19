@@ -1068,6 +1068,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     var boundBody = BoundStatementList.Synthesized(syntax, boundStatements);
 
+                    moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(methodSymbol.PartialDefinitionPart ?? methodSymbol, boundBody);
+
                     var emittedBody = GenerateMethodBody(
                         compilationState,
                         methodSymbol,

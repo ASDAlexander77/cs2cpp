@@ -41,14 +41,17 @@
       <HintPath>..\packages\Microsoft.Bcl.Metadata.1.0.11-alpha\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CCodeMethodSerializer.cs" />
     <Compile Include="CCodeSerializer.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
-    <Compile Include="CCodeGenerator.cs" />
+    <Compile Include="CCodeUnitsBuilder.cs" />
     <Compile Include="DOM\CCodeMethodDefinition.cs" />
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />
     <Compile Include="DOM\CCodeType.cs" />
