@@ -12,7 +12,7 @@
                 yield break;
             }
 
-            foreach (var enumNamespace in namespaceSymbol.ConstituentNamespaces)
+            foreach (var enumNamespace in namespaceSymbol.ContainingNamespace.EnumNamespaces())
             {
                 if (enumNamespace.IsGlobalNamespace)
                 {
@@ -21,6 +21,8 @@
 
                 yield return enumNamespace;
             }
+
+            yield return namespaceSymbol;
         }
     }
 }

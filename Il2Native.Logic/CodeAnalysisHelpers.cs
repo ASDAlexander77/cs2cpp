@@ -21,7 +21,7 @@
         public static IEnumerable<INamespaceOrTypeSymbol> EnumAllNamespaces(this INamespaceOrTypeSymbol source)
         {
             yield return source;
-            foreach (var namespaceSymbolSub in source.GetTypeMembers().OfType<INamespaceOrTypeSymbol>().SelectMany(EnumAllNamespaces))
+            foreach (var namespaceSymbolSub in source.GetMembers().OfType<INamespaceOrTypeSymbol>().SelectMany(EnumAllNamespaces))
             {
                 yield return namespaceSymbolSub;
             }

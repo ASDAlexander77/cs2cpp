@@ -33,16 +33,19 @@
         public static void WriteMethodDeclaration(IndentedTextWriter itw, WriteSettings settings, IMethodSymbol methodSymbol, bool nameOnly)
         {
             // type
-            if (methodSymbol.ReturnsVoid)
+            if (methodSymbol.MethodKind != MethodKind.Constructor)
             {
-                itw.Write("void");
-            }
-            else
-            {
-                new CCodeType(methodSymbol.ReturnType).WriteTo(itw, settings);
-            }
+                if (methodSymbol.ReturnsVoid)
+                {
+                    itw.Write("void");
+                }
+                else
+                {
+                    new CCodeType(methodSymbol.ReturnType).WriteTo(itw, settings);
+                }
 
-            itw.Write(" ");
+                itw.Write(" ");
+            }
 
             if (settings == WriteSettings.Token)
             {
@@ -65,7 +68,14 @@
                     itw.Write("::");
                 }
 
-                WriteName(itw, methodSymbol);
+                if (methodSymbol.MethodKind == MethodKind.Constructor)
+                {
+                    WriteName(itw, methodSymbol.ReceiverType);
+                }
+                else
+                {
+                    WriteName(itw, methodSymbol);
+                }
             }
 
             itw.Write("(");
@@ -100,9 +110,9 @@
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
 
             // write header
-            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name))))
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder:"src"))))
             {
-                itw.WriteLine("#include <cinttypes>");
+                itw.WriteLine("#include <cstdint>");
                 itw.WriteLine();
 
                 foreach (var unit in units)
@@ -122,21 +132,28 @@
                         itw.WriteLine();
                     }
 
+                    itw.Write(unit.Type.IsValueType ? "struct" : "class");
+                    itw.Write(" ");
+                    itw.WriteLine(unit.Type.MetadataName.CleanUpName());
+                    itw.WriteLine("{");
+                    itw.WriteLine("public:");
+                    itw.Indent++;
+
                     foreach (var declaration in unit.Declarations)
                     {
                         declaration.WriteTo(itw, settings);
                     }
 
-                    if (any)
-                    {
-                        itw.Indent--;
-                        itw.WriteLine();
-                    }
+                    itw.Indent--;
+                    itw.WriteLine("};");
 
                     foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
                     {
+                        itw.Indent--;
                         itw.Write("}");
                     }
+
+                    itw.WriteLine();
                 }
 
                 itw.Close();
@@ -164,12 +181,61 @@
                     itw.Close();
                 }
             }
+
+            // CMake file helper
+            var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+
+file(GLOB_RECURSE <%name%>_SRC
+    ""./src/*.cpp""
+)
+
+include_directories(""./"")
+link_directories(""./"")
+
+if (MSVC)
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /GR- /Zi"")
+else()
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti"")
+endif()
+
+add_library (<%name%> ""${<%name%>_SRC}"")";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists", ".txt"))))
+            {
+                itw.Write(cmake.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()));
+                itw.Close();
+            }
+
+            // build mingw32 DEBUG .bat
+            var buildMinGw32 = @"md __build_mingw32_debug
+cd __build_mingw32_debug
+cmake -f .. -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=Debug -Wno-dev
+mingw32-make";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_debug", ".bat"))))
+            {
+                itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()));
+                itw.Close();
+            }
+
+            // build Visual Studio .bat
+            var buildVS2015 = @"md __build_win32_debug
+cd __build_win32_debug
+cmake -f .. -G ""Visual Studio 14"" -Wno-dev
+call ""C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"" x86
+MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))
+            {
+                itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()));
+                itw.Close();
+            }
         }
 
-        private string GetPath(string name)
+        private string GetPath(string name, string ext = ".h", string subFolder = "")
         {
-            var fullDirPath = this.currentFolder;
-            var fullPath = Path.Combine(fullDirPath, String.Concat(name, ".h"));
+            var fullDirPath = Path.Combine(this.currentFolder, subFolder);
+            var fullPath = Path.Combine(fullDirPath, String.Concat(name, ext));
             if (!Directory.Exists(fullDirPath))
             {
                 Directory.CreateDirectory(fullDirPath);
@@ -182,7 +248,12 @@
         {
             var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().ToList();
             nestedLevel = enumNamespaces.Count();
-            var fullDirPath = Path.Combine(this.currentFolder, String.Join("\\", enumNamespaces.Select(n => n.ToString().CleanUpNameAllUnderscore())));
+            var fullDirPath = Path.Combine(this.currentFolder, "src", String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore())));
+            if (!Directory.Exists(fullDirPath))
+            {
+                Directory.CreateDirectory(fullDirPath);
+            }
+
             var fullPath = Path.Combine(fullDirPath, String.Concat(unit.Type.MetadataName.CleanUpNameAllUnderscore(), ".cpp"));
             return fullPath;
         }

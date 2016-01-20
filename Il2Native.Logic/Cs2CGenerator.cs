@@ -51,14 +51,12 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
-            this.isDll = this.FirstSource.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
             this.DefaultDllLocations = this.isDll ? Path.GetDirectoryName(Path.GetFullPath(this.FirstSource)) : null;
             this.DebugInfo = args != null && args.Contains("debug");
             if (!this.isDll)
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
-
         }
 
         /// <summary>
@@ -105,16 +103,7 @@ namespace Il2Native.Logic
 
         public IAssemblySymbol Load()
         {
-            var assemblyMetadata = !this.isDll
-                                ? this.CompileWithRoslynInMemory(this.Sources)
-                                : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
-
-            if (this.isDll)
-            {
-                this.DllFilePath = this.FirstSource;
-                this.PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
-            }
-
+            var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
             return LoadAssemblySymbol(assemblyMetadata);
         }
 

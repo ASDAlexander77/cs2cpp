@@ -27,7 +27,6 @@
 
             // pre attributes
             // TODO:
-            itw.Write("static ");
 
             CCodeSerializer.WriteMethodDeclaration(itw, settings, this.Method, false);
 
