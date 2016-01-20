@@ -62,8 +62,12 @@
             {
                 if (!nameOnly)
                 {
-                    WriteNamespace(itw, methodSymbol.ContainingNamespace);
-                    itw.Write("::");
+                    if (methodSymbol.ContainingNamespace != null && !methodSymbol.ContainingNamespace.IsGlobalNamespace)
+                    {
+                        WriteNamespace(itw, methodSymbol.ContainingNamespace);
+                        itw.Write("::");
+                    }
+
                     WriteName(itw, methodSymbol.ReceiverType);
                     itw.Write("::");
                 }
