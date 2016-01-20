@@ -13,7 +13,7 @@
 
         public ITypeSymbol Type { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
+        public override void WriteTo(IndentedTextWriter itw)
         {
             if (this.Type.IsReferenceType)
             {

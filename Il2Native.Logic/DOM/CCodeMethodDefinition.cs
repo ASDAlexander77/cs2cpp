@@ -19,7 +19,7 @@
 
         internal BoundStatement BoundBody { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
+        public override void WriteTo(IndentedTextWriter itw)
         {
             itw.WriteLine();
 
@@ -28,7 +28,7 @@
             // pre attributes
             // TODO:
 
-            CCodeSerializer.WriteMethodDeclaration(itw, settings, this.Method, false);
+            CCodeSerializer.WriteMethodDeclaration(itw, this.Method, false);
 
             CCodeSerializer.WriteMethodBody(itw, this.BoundBody);
         }

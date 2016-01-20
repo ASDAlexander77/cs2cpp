@@ -3,14 +3,11 @@
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Reflection.Metadata.Ecma335;
     using DOM;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     public class CCodeSerializer
     {
@@ -18,9 +15,28 @@
 
         public static void WriteNamespace(IndentedTextWriter itw, INamespaceSymbol namespaceSymbol)
         {
+            var any = false;
             foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
             {
-                itw.Write("::");
+                if (any)
+                {
+                    itw.Write("::");
+                }
+
+                any = true;
+
+                WriteNamespaceName(itw, namespaceNode);
+            }
+        }
+
+        public static void WriteNamespaceName(IndentedTextWriter itw, INamespaceSymbol namespaceNode)
+        {
+            if (namespaceNode.IsGlobalNamespace)
+            {
+                itw.Write(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+            }
+            else
+            {
                 itw.Write(namespaceNode.MetadataName);
             }
         }
@@ -30,7 +46,7 @@
             itw.Write(symbol.MetadataName.CleanUpName());
         }
 
-        public static void WriteMethodDeclaration(IndentedTextWriter itw, WriteSettings settings, IMethodSymbol methodSymbol, bool nameOnly)
+        public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool nameOnly)
         {
             // type
             if (methodSymbol.MethodKind != MethodKind.Constructor)
@@ -41,45 +57,33 @@
                 }
                 else
                 {
-                    new CCodeType(methodSymbol.ReturnType).WriteTo(itw, settings);
+                    new CCodeType(methodSymbol.ReturnType).WriteTo(itw);
                 }
 
                 itw.Write(" ");
             }
 
-            if (settings == WriteSettings.Token)
+            // namespace
+            if (!nameOnly)
             {
-                // Token
-                var peMethodSymbol = methodSymbol as PEMethodSymbol;
-                Debug.Assert(peMethodSymbol != null);
-                if (peMethodSymbol != null)
+                if (methodSymbol.ContainingNamespace != null)
                 {
-                    var token = MetadataTokens.GetToken(peMethodSymbol.Handle);
-                    itw.Write("T{0:X}", token);
-                }
-            }
-            else
-            {
-                if (!nameOnly)
-                {
-                    if (methodSymbol.ContainingNamespace != null && !methodSymbol.ContainingNamespace.IsGlobalNamespace)
-                    {
-                        WriteNamespace(itw, methodSymbol.ContainingNamespace);
-                        itw.Write("::");
-                    }
-
-                    WriteName(itw, methodSymbol.ReceiverType);
+                    WriteNamespace(itw, methodSymbol.ContainingNamespace);
                     itw.Write("::");
                 }
 
-                if (methodSymbol.MethodKind == MethodKind.Constructor)
-                {
-                    WriteName(itw, methodSymbol.ReceiverType);
-                }
-                else
-                {
-                    WriteName(itw, methodSymbol);
-                }
+                WriteName(itw, methodSymbol.ReceiverType);
+                itw.Write("::");
+            }
+
+            // name
+            if (methodSymbol.MethodKind == MethodKind.Constructor)
+            {
+                WriteName(itw, methodSymbol.ReceiverType);
+            }
+            else
+            {
+                WriteName(itw, methodSymbol);
             }
 
             itw.Write("(");
@@ -104,7 +108,7 @@
             itw.WriteLine("}");
         }
 
-        public void WriteTo(AssemblyIdentity identity, IList<CCodeUnit> units, string outputFolder, WriteSettings settings)
+        public void WriteTo(AssemblyIdentity identity, IList<CCodeUnit> units, string outputFolder)
         {
             if (!Directory.Exists(identity.Name))
             {
@@ -114,18 +118,44 @@
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
 
             // write header
-            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder:"src"))))
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
                 itw.WriteLine("#include <cstdint>");
                 itw.WriteLine();
 
+                // write forward declaration
+                foreach (var unit in units)
+                {
+                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Write("namespace ");
+                        WriteNamespaceName(itw, namespaceNode);
+                        itw.Write(" { ");
+                    }
+
+                    itw.Write(unit.Type.IsValueType ? "struct" : "class");
+                    itw.Write(" ");
+                    itw.Write(unit.Type.MetadataName.CleanUpName());
+                    itw.Write("; ");
+
+                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Write("}");
+                    }
+
+                    itw.WriteLine();
+                }
+
+                itw.WriteLine();
+
+                // write full declaration
                 foreach (var unit in units)
                 {
                     var any = false;
                     foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
                     {
                         itw.Write("namespace ");
-                        itw.Write(namespaceNode.MetadataName);
+                        WriteNamespaceName(itw, namespaceNode);
                         itw.Write(" { ");
                         any = true;
                     }
@@ -145,7 +175,7 @@
 
                     foreach (var declaration in unit.Declarations)
                     {
-                        declaration.WriteTo(itw, settings);
+                        declaration.WriteTo(itw);
                     }
 
                     itw.Indent--;
@@ -170,7 +200,7 @@
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(unit, out nestedLevel))))
                 {
                     itw.Write("#include \"");
-                    for (int i = 0; i < nestedLevel; i++)
+                    for (var i = 0; i < nestedLevel; i++)
                     {
                         itw.Write("..\\");
                     }
@@ -179,7 +209,7 @@
 
                     foreach (var definition in unit.Definitions)
                     {
-                        definition.WriteTo(itw, settings);
+                        definition.WriteTo(itw);
                     }
 
                     itw.Close();
@@ -250,7 +280,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
         private string GetPath(CCodeUnit unit, out int nestedLevel)
         {
-            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().ToList();
+            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
             nestedLevel = enumNamespaces.Count();
             var fullDirPath = Path.Combine(this.currentFolder, "src", String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore())));
             if (!Directory.Exists(fullDirPath))
