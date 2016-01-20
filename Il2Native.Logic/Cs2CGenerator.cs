@@ -14,12 +14,15 @@ namespace Il2Native.Logic
     using System.IO;
     using System.Linq;
     using System.Text;
-
+    using System.Xml;
+    using System.Xml.Linq;
+    using System.Xml.XPath;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Emit;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -48,11 +51,37 @@ namespace Il2Native.Logic
         {
             this.Sources = source;
             this.FirstSource = this.Sources.First();
+            if (this.FirstSource.EndsWith(".csproj"))
+            {
+                this.LoadProject(this.FirstSource);
+            }
+            else
+            {
+                var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
+                this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
+                this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
+                this.DebugInfo = args != null && args.Contains("debug");
+                this.Options = new ProjectProperties();
+            }
+        }
 
-            var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
-            this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
-            this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
-            this.DebugInfo = args != null && args.Contains("debug");
+        private void LoadProject(string firstSource)
+        {
+            var folder = Path.GetDirectoryName(firstSource);
+            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+            var project = XDocument.Load(firstSource);
+            this.Sources =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
+                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
+                    .ToArray();
+
+            var options = new ProjectProperties();
+            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
+            {
+                options[property.Name.LocalName] = property.Value;
+            }
+
+            this.Options = options;
         }
 
         /// <summary>
@@ -86,6 +115,9 @@ namespace Il2Native.Logic
         /// </summary>
         protected string[] Sources { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        protected IDictionary<string, string> Options { get; private set; }
 
         public IAssemblySymbol Load()
         {
@@ -103,7 +135,7 @@ namespace Il2Native.Logic
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 
             var syntaxTrees =
-                source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
+                source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)).WithFilePath(s));
 
             var assemblies = new List<MetadataImageReference>();
 
@@ -125,9 +157,9 @@ namespace Il2Native.Logic
             };
 
             PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;
-            
+
             var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
-            
+
             PEModuleBuilder.OnMethodBoundBodySynthesized -= peModuleBuilderOnOnMethodBoundBodySynthesized;
 
             if (result.Diagnostics.Length > 0)
@@ -153,13 +185,12 @@ namespace Il2Native.Logic
         {
             var added = new HashSet<AssemblyIdentity>();
 
-            if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
+            if (this.Options["NoStdLib"] != "true")
             {
-                AddAsseblyReference(assemblies, added, this.CoreLibPath);
-            }
-            else
-            {
-                AddAsseblyReference(assemblies, added, typeof(int).Assembly.Location);
+                this.AddAsseblyReference(
+                    assemblies,
+                    added,
+                    !string.IsNullOrWhiteSpace(this.CoreLibPath) ? this.CoreLibPath : typeof(int).Assembly.Location);
             }
 
             if (this.ReferencesList != null)

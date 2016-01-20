@@ -816,7 +816,7 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split:true));
+                CompilerHelper.GetConverterArgs(false, stubs: true));
 
             ////CompilerHelper.ExecCmd(
             ////    "g++",
@@ -834,7 +834,7 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll"),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
+                CompilerHelper.GetConverterArgs(false, stubs: true));
         }
 
 
@@ -912,7 +912,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true, split: true));
+                CompilerHelper.GetConverterArgs(false, stubs: true));
         }
 
         /// <summary>

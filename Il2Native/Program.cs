@@ -29,15 +29,15 @@ namespace Il2Native
             if (args.Length == 0)
             {
                 Console.WriteLine("C# Native, https://csnative.codeplex.com/");
-                Console.WriteLine("C# to C transpiler");
+                Console.WriteLine("C# to C++ transpiler");
                 Console.WriteLine(string.Empty);
-                Console.WriteLine("Usage: CS2C [options] file");
+                Console.WriteLine("Usage: CS2CPP [options] file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("file:                     Specifies the file or files to be compiled");
                 Console.WriteLine("  .cs                     C# source file");
+                Console.WriteLine("  .csproj                 C# project file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Options:");
-                Console.WriteLine("  /exe                    Output file");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
                 Console.WriteLine("                          Reference assembly by name or file");
@@ -61,7 +61,6 @@ namespace Il2Native
             var processedArgs =
                 args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
             var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
-            var isCompilingTargetExe = processedArgs.Any(s => s == "exe");
 
             var fileExtension = Path.GetExtension(sources.First());
             if (!sources.All(f => Path.GetExtension(f).Equals(fileExtension, StringComparison.InvariantCultureIgnoreCase)))
@@ -71,22 +70,17 @@ namespace Il2Native
                 return 1;
             }
 
-            if (fileExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) &&
+            if (fileExtension.Equals("csproj", StringComparison.InvariantCultureIgnoreCase) &&
                 sources.Count() > 1)
             {
                 Console.WriteLine("WARNING!");
-                Console.WriteLine("You can use only one DLL file at a time.");
+                Console.WriteLine("You can use only one CSPROJ file at a time.");
                 return 1;
             }
 
-            Console.Write("Generating C file...");
+            Console.Write("Generating CPP files...");
             Il2Converter.Convert(sources, Environment.CurrentDirectory, processedArgs);
             Console.WriteLine("Done.");
-
-            if (isCompilingTargetExe)
-            {
-                CompileExeTarget(sources, processedArgs);
-            }
 
             return 0;
         }
@@ -116,48 +110,6 @@ namespace Il2Native
             processCoreLibObj.WaitForExit();
 
             return output;
-        }
-
-        private static void CompileExeTarget(string[] sources, string[] processedArgs)
-        {
-            var corelibSwitch = "corelib:";
-            var findCoreLibSwitch = processedArgs.FirstOrDefault(arg => arg.StartsWith(corelibSwitch));
-            if (findCoreLibSwitch == null)
-            {
-                Console.WriteLine("It is needed to provide the core library using /corelib:<file.dll> switch");
-                return;
-            }
-
-            Console.Write("Generating C file for the core library...");
-            var coreLib = findCoreLibSwitch.Substring(corelibSwitch.Length);
-            Il2Converter.Convert(new[] { coreLib }, Environment.CurrentDirectory, processedArgs.Where(p => !p.StartsWith(corelibSwitch)).ToArray());
-            Console.WriteLine("Done.");
-
-            // next step compile CoreLib
-            Console.Write("Compiling C file for the core library...");
-            var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
-            ExecCmd("g++", string.Format("-filetype=obj {0}.cpp", coreLibNameNoExt));
-            Console.WriteLine("Done.");
-            
-            // compile generated dll
-            Console.Write("Compiling C file...");
-            var targetFileNameNoExt = Path.GetFileNameWithoutExtension(sources.First());
-            ExecCmd("g++", string.Format("-filetype=obj {0}.cpp", targetFileNameNoExt));
-            Console.WriteLine("Done.");
-
-            // detect OBJ extention
-            var objExt = ".obj";
-            var targetObjFile = Directory.GetFiles(Environment.CurrentDirectory, targetFileNameNoExt + ".o*").FirstOrDefault();
-            if (targetObjFile != null)
-            {
-                objExt = Path.GetExtension(targetObjFile);
-            }
-
-            Console.Write("Compiling target exe. file...");
-            // finally generate EXE output
-            var multiThreading = !processedArgs.Contains("mt-");
-            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -l{3} -march=native -L .", targetFileNameNoExt, coreLibNameNoExt, objExt, multiThreading ? "gcmt-lib" : "gc-lib"));
-            Console.WriteLine("Done.");
         }
     }
 }

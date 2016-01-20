@@ -15,7 +15,7 @@
         public const string SourcePath = @"C:\Dev\Gits\Mono-Class-Libraries\mcs\tests\";
         public const string SourcePathCustom = @"C:\Temp\tests\";
         public const string OutputPath = @"C:\Temp\IlCTests\";
-        public const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        public const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\CoreLib.csproj";
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
@@ -31,7 +31,7 @@
         public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
         public const string SourcePathCustom = @"D:\Temp\tests\";
         public const string OutputPath = @"M:\";
-        public const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
+        public const string CoreLibPath = @"..\..\..\CoreLib\CoreLib.csproj";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
@@ -111,10 +111,6 @@
 
         /// <summary>
         /// </summary>
-        public static bool Split = false;
-
-        /// <summary>
-        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -128,8 +124,7 @@
             bool mt = MultiThreadingEnabled,
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
-            bool stubs = false,
-            bool split = false)
+            bool stubs = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -185,11 +180,6 @@
                 args.Add("android");
             }
 
-            if (Emscripten)
-            {
-                args.Add("emscripten");
-            }
-
             if (VerboseOutput)
             {
                 args.Add("verbose");
@@ -208,11 +198,6 @@
             if (NoLineDebugInfo)
             {
                 args.Add("line-");
-            }
-
-            if (split || Split)
-            {
-                args.Add("split");
             }
 
             if (CompactMode)
