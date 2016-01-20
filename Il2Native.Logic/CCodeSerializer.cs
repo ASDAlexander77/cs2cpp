@@ -107,7 +107,7 @@
             {
                 if (methodSymbol.IsOverride)
                 {
-                    itw.Write("override");
+                    itw.Write(" override");
                 }
             }
         }
