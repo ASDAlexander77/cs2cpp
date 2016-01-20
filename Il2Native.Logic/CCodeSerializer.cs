@@ -46,8 +46,21 @@
             itw.Write(symbol.MetadataName.CleanUpName());
         }
 
-        public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool nameOnly)
+        public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
+            if (declarationWithingClass)
+            {
+                if (methodSymbol.IsStatic)
+                {
+                    itw.Write("static ");
+                }
+
+                if (methodSymbol.IsVirtual || methodSymbol.IsOverride)
+                {
+                    itw.Write("virtual ");
+                }
+            }
+
             // type
             if (methodSymbol.MethodKind != MethodKind.Constructor)
             {
@@ -64,7 +77,7 @@
             }
 
             // namespace
-            if (!nameOnly)
+            if (!declarationWithingClass)
             {
                 if (methodSymbol.ContainingNamespace != null)
                 {
@@ -90,8 +103,13 @@
             // parameters
             itw.Write(")");
 
-            // post attributes
-            // TODO:
+            if (declarationWithingClass)
+            {
+                if (methodSymbol.IsOverride)
+                {
+                    itw.Write("override");
+                }
+            }
         }
 
         internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody)

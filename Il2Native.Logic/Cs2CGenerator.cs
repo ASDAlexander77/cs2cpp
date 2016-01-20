@@ -51,12 +51,8 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
-            this.DefaultDllLocations = this.isDll ? Path.GetDirectoryName(Path.GetFullPath(this.FirstSource)) : null;
+            this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
             this.DebugInfo = args != null && args.Contains("debug");
-            if (!this.isDll)
-            {
-                this.SourceFilePath = Path.GetFullPath(this.FirstSource);
-            }
         }
 
         /// <summary>
@@ -65,8 +61,6 @@ namespace Il2Native.Logic
 
         public bool DebugInfo { get; private set; }
 
-        public bool isDll { get; private set; }
-
         /// <summary>
         /// </summary>
         public string[] ReferencesList { get; set; }
@@ -74,14 +68,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string DefaultDllLocations { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public string DllFilePath { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public string PdbFilePath { get; private set; }
 
         /// <summary>
         /// </summary>
