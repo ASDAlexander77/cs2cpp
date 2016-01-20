@@ -23,6 +23,7 @@ namespace Il2Native.Logic
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using Microsoft.CodeAnalysis.Text;
 
     /// <summary>
     /// </summary>
@@ -135,7 +136,17 @@ namespace Il2Native.Logic
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 
             var syntaxTrees =
-                source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)).WithFilePath(s));
+                source.Select(
+                    s =>
+                        CSharpSyntaxTree.ParseText(
+                        SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
+                            new CSharpParseOptions(
+                                LanguageVersion.Experimental,
+                                preprocessorSymbols:
+                                    Options["DefineConstants"].Split(
+                                        new[] { ';', ' ' },
+                                        StringSplitOptions.RemoveEmptyEntries)),
+                            s));
 
             var assemblies = new List<MetadataImageReference>();
 
@@ -163,9 +174,17 @@ namespace Il2Native.Logic
             PEModuleBuilder.OnMethodBoundBodySynthesized -= peModuleBuilderOnOnMethodBoundBodySynthesized;
 
             if (result.Diagnostics.Length > 0)
-            {
-                Console.WriteLine(@"Errors/Warnings:");
-                foreach (var diagnostic in result.Diagnostics)
+            {                
+                var errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
+                Console.WriteLine(@"Errors: {0}", errors.Count);
+                foreach (var diagnostic in errors)
+                {
+                    Console.WriteLine(diagnostic);
+                }
+
+                var diagnostics = result.Diagnostics.Where(d => d.Severity != DiagnosticSeverity.Error);
+                Console.WriteLine(@"Warnings/Info: {0}", diagnostics.Count());
+                foreach (var diagnostic in diagnostics)
                 {
                     Console.WriteLine(diagnostic);
                 }
