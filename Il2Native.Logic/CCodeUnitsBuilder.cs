@@ -23,7 +23,7 @@
        
         public IList<CCodeUnit> Build()
         {
-            foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()))
+            foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(t => t.ContainingType == null || !t.ContainingType.Name.Contains("<PrivateImplementationDetails>")))
             {
                 this._cunits.Add(BuildUnit(type));
             }
