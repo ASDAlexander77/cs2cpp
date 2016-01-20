@@ -76,7 +76,7 @@
             // TODO:
         }
 
-        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatementList boundBody)
+        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody)
         {
             itw.WriteLine();
             itw.WriteLine("{");

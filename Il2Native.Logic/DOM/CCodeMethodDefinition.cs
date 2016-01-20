@@ -9,7 +9,7 @@
 
     public class CCodeMethodDefinition : CCodeDefinition
     {
-        internal CCodeMethodDefinition(IMethodSymbol method, BoundStatementList boundBody)
+        internal CCodeMethodDefinition(IMethodSymbol method, BoundStatement boundBody)
         {
             this.Method = method;
             this.BoundBody = boundBody;
@@ -17,7 +17,7 @@
 
         public IMethodSymbol Method { get; set; }
 
-        internal BoundStatementList BoundBody { get; set; }
+        internal BoundStatement BoundBody { get; set; }
 
         public override void WriteTo(IndentedTextWriter itw, WriteSettings settings)
         {

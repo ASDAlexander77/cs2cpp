@@ -26,7 +26,7 @@
             this.itw = itw;
         }
 
-        internal void Serialize(BoundStatementList boundBody)
+        internal void Serialize(BoundStatement boundBody)
         {
             this.EmitStatement(boundBody);
         }

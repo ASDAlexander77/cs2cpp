@@ -29,7 +29,7 @@ namespace Il2Native.Logic
 
         private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
-        private readonly IDictionary<string, BoundStatementList> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatementList>();
+        private readonly IDictionary<string, BoundStatement> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatement>();
 
         /// <summary>
         /// </summary>
@@ -89,7 +89,7 @@ namespace Il2Native.Logic
         /// </summary>
         public string SourceFilePath { get; private set; }
 
-        internal IDictionary<string, BoundStatementList> BoundBodyByMethodSymbol
+        internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol
         {
             get { return this.boundBodyByMethodSymbol; }
         }

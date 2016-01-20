@@ -228,6 +228,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var compilationState = new TypeCompilationState(compilation.ScriptClass, compilation, moduleBeingBuilt);
                 var body = scriptEntryPoint.CreateBody();
 
+                moduleBeingBuilt.RaiseOnMethodBoundBodySynthesized(scriptEntryPoint.PartialDefinitionPart ?? scriptEntryPoint, body);
+
                 var emittedBody = GenerateMethodBody(
                     compilationState,
                     scriptEntryPoint,
@@ -596,6 +598,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 AsyncStateMachine stateMachineType;
                 BoundStatement bodyWithoutAsync = AsyncRewriter.Rewrite(methodWithBody.Body, method, compilationState, diagnosticsThisMethod, generateDebugInfo, out stateMachineType);
 
+                moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(method.PartialDefinitionPart ?? method, bodyWithoutAsync);
+
                 MethodBody emittedBody = null;
 
                 if (!diagnosticsThisMethod.HasAnyErrors() && !globalHasErrors)
@@ -696,6 +700,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // or if had declaration errors - we will fail anyways, but if some types are bad enough, generating may produce duplicate errors about that.
                 if (!hasErrors && !hasDeclarationErrors)
                 {
+                    moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(accessor.PartialDefinitionPart ?? accessor, boundBody);
+
                     MethodBody emittedBody = GenerateMethodBody(
                         compilationState,
                         accessor,

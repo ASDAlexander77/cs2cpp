@@ -11,13 +11,13 @@
     {
         private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();
 
-        internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<string, BoundStatementList> boundBodyByMethodSymbol)
+        internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<string, BoundStatement> boundBodyByMethodSymbol)
         {
             this.Assembly = assembly;
             this.BoundBodyByMethodSymbol = boundBodyByMethodSymbol;
         }
 
-        internal IDictionary<string, BoundStatementList> BoundBodyByMethodSymbol { get; set; }
+        internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol { get; set; }
 
         protected IAssemblySymbol Assembly { get; set; }
        
