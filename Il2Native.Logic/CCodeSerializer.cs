@@ -8,6 +8,7 @@
     using DOM;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class CCodeSerializer
     {
@@ -46,6 +47,120 @@
             itw.Write(symbol.MetadataName.CleanUpName());
         }
 
+        public static void WriteFullName(IndentedTextWriter itw, ITypeSymbol type)
+        {
+            if (type.ContainingNamespace != null)
+            {
+                WriteNamespaceName(itw, type.ContainingNamespace);
+                itw.Write("::");
+            }
+
+            WriteName(itw, type);
+        }
+
+        public static void WriteType(IndentedTextWriter itw, ITypeSymbol type)
+        {
+            if (type.IsValueType)
+            {
+                switch (type.SpecialType)
+                {
+                    case SpecialType.System_Void:
+                        itw.Write("void");
+                        return;
+                    case SpecialType.System_Boolean:
+                        itw.Write("bool");
+                        return;
+                    case SpecialType.System_Char:
+                        itw.Write("uint16_t");
+                        return;
+                    case SpecialType.System_SByte:
+                        itw.Write("int8_t");
+                        return;
+                    case SpecialType.System_Byte:
+                        itw.Write("uint8_t");
+                        return;
+                    case SpecialType.System_Int16:
+                        itw.Write("int16_t");
+                        return;
+                    case SpecialType.System_UInt16:
+                        itw.Write("uint16_t");
+                        return;
+                    case SpecialType.System_Int32:
+                        itw.Write("int32_t");
+                        return;
+                    case SpecialType.System_UInt32:
+                        itw.Write("uint32_t");
+                        return;
+                    case SpecialType.System_Int64:
+                        itw.Write("int64_t");
+                        return;
+                    case SpecialType.System_UInt64:
+                        itw.Write("uint64_t");
+                        return;
+                    case SpecialType.System_Single:
+                        itw.Write("float");
+                        return;
+                    case SpecialType.System_Double:
+                        itw.Write("double");
+                        return;
+                    case SpecialType.System_IntPtr:
+                        itw.Write("intptr_t");
+                        return;
+                    case SpecialType.System_UIntPtr:
+                        itw.Write("uintptr_t");
+                        return;
+                }
+            }
+
+            switch (type.TypeKind)
+            {
+                case TypeKind.Unknown:
+                    break;
+                case TypeKind.ArrayType:
+                    var elementType = ((ArrayTypeSymbol)type).ElementType;
+                    WriteType(itw, elementType);
+                    itw.Write("[]");
+                    return;
+                case TypeKind.Delegate:
+                case TypeKind.Interface:
+                case TypeKind.Class:
+                    WriteFullName(itw, type);
+                    if (type.IsReferenceType)
+                    {
+                        itw.Write("*");
+                    }
+
+                    return;
+                case TypeKind.DynamicType:
+                    break;
+                case TypeKind.Enum:
+                    var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
+                    WriteType(itw, enumUnderlyingType);
+                    return;
+                case TypeKind.Error:
+                    break;
+                case TypeKind.Module:
+                    break;
+                case TypeKind.PointerType:
+                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
+                    WriteType(itw, pointedAtType);
+                    itw.Write("*");
+                    return;
+                case TypeKind.Struct:
+                    WriteFullName(itw, type);
+                    return;
+                case TypeKind.TypeParameter:
+                    WriteName(itw, type);
+                    return;
+                case TypeKind.Submission:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            throw new NotImplementedException();
+        }
+
         public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
             if (declarationWithingClass)
@@ -70,7 +185,7 @@
                 }
                 else
                 {
-                    new CCodeType(methodSymbol.ReturnType).WriteTo(itw);
+                    WriteType(itw, methodSymbol.ReturnType);
                 }
 
                 itw.Write(" ");
@@ -188,7 +303,14 @@
 
                     itw.Write(unit.Type.IsValueType ? "struct" : "class");
                     itw.Write(" ");
-                    itw.WriteLine(unit.Type.MetadataName.CleanUpName());
+                    itw.Write(unit.Type.MetadataName.CleanUpName());
+                    if (unit.Type.BaseType != null)
+                    {
+                        itw.Write(" : public ");
+                        WriteFullName(itw, unit.Type.BaseType);
+                    }
+
+                    itw.WriteLine();
                     itw.WriteLine("{");
                     itw.WriteLine("public:");
                     itw.Indent++;

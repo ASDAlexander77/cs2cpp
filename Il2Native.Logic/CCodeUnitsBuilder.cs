@@ -29,12 +29,41 @@
        
         public IList<CCodeUnit> Build()
         {
-            foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(TypesFilter))
+            var processedTypes = new HashSet<string>();
+            var typeSymbols = this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(TypesFilter).ToArray();
+
+            var typesByNames = new SortedDictionary<string, ITypeSymbol>();
+            foreach (var typeSymbol in typeSymbols)
+            {
+                typesByNames.Add(((TypeSymbol)typeSymbol).ToKeyString(), typeSymbol);
+            }
+
+            var reordered = new List<ITypeSymbol>();
+            foreach (var typeSymbol in typeSymbols)
+            {
+                AddTypeIntoOrder(reordered, typeSymbol, typesByNames, processedTypes);
+            }
+
+            foreach (var type in reordered)
             {
                 this._cunits.Add(BuildUnit(type));
             }
 
             return this._cunits;
+        }
+
+        private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
+        {
+            var key = ((TypeSymbol)typeSymbol).ToKeyString();
+            if (added.Add(key))
+            {
+                if (typeSymbol.BaseType != null)
+                {
+                    AddTypeIntoOrder(reordered, typeSymbol.BaseType, bankOfTypes, added);
+                }
+   
+                reordered.Add(bankOfTypes[key]);
+            }
         }
 
         private static bool TypesFilter(ITypeSymbol t)

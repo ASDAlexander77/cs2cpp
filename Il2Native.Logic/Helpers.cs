@@ -117,6 +117,9 @@
                     case '=':
                         n = 'E';
                         break;
+                    case '`':
+                        n = 'T';
+                        break;
                     default:
                         n = c;
                         break;
@@ -161,6 +164,29 @@
             }
 
             sb.Append(")");
+
+            return sb.ToString();
+        }
+
+        internal static string ToKeyString(this TypeSymbol typeSymbol)
+        {
+            var sb = new StringBuilder();
+
+            var containingNamespaceOrType = typeSymbol.ContainingNamespaceOrType();
+            if (containingNamespaceOrType != null)
+            {
+                if (containingNamespaceOrType.IsType)
+                {
+                    sb.Append(((TypeSymbol)containingNamespaceOrType).ToKeyString());
+                }
+                else
+                {
+                    sb.Append(containingNamespaceOrType);
+                    sb.Append(".");
+                }
+            }
+
+            sb.Append(typeSymbol.MetadataName);
 
             return sb.ToString();
         }
