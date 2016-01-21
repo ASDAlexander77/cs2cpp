@@ -35,6 +35,8 @@ namespace Il2Native.Logic
 
         private readonly IDictionary<string, BoundStatement> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatement>();
 
+        private readonly IDictionary<string, SourceMethodSymbol> sourceMethodByMethodSymbol = new ConcurrentDictionary<string, SourceMethodSymbol>();
+
         /// <summary>
         /// </summary>
         public Cs2CGenerator()
@@ -108,6 +110,11 @@ namespace Il2Native.Logic
             get { return this.boundBodyByMethodSymbol; }
         }
 
+        internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol
+        {
+            get { return this.sourceMethodByMethodSymbol; }
+        }
+
         /// <summary>
         /// </summary>
         protected string FirstSource { get; private set; }
@@ -142,10 +149,7 @@ namespace Il2Native.Logic
                         SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
                             new CSharpParseOptions(
                                 LanguageVersion.Experimental,
-                                preprocessorSymbols:
-                                    Options["DefineConstants"].Split(
-                                        new[] { ';', ' ' },
-                                        StringSplitOptions.RemoveEmptyEntries)),
+                                preprocessorSymbols: Options["DefineConstants"].Split(new[] { ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)),
                             s));
 
             var assemblies = new List<MetadataImageReference>();
@@ -164,17 +168,28 @@ namespace Il2Native.Logic
 
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
-                boundBodyByMethodSymbol[symbol.ToString()] = body;
+                var key = symbol.ToDisplayString(SymbolDisplayFormat.TestFormat);
+                Debug.Assert(!boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
+                boundBodyByMethodSymbol[key] = body;
+            };
+
+            PEModuleBuilder.OnSourceMethodDelegate peModuleBuilderOnSourceMethod = (symbol, sourceMethod) =>
+            {
+                var key = symbol.ToDisplayString(SymbolDisplayFormat.TestFormat);
+                Debug.Assert(!sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
+                sourceMethodByMethodSymbol[key] = sourceMethod;
             };
 
             PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;
+            PEModuleBuilder.OnSourceMethod += peModuleBuilderOnSourceMethod;
 
             var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
 
             PEModuleBuilder.OnMethodBoundBodySynthesized -= peModuleBuilderOnOnMethodBoundBodySynthesized;
+            PEModuleBuilder.OnSourceMethod -= peModuleBuilderOnSourceMethod;
 
             if (result.Diagnostics.Length > 0)
-            {                
+            {
                 var errors = result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
                 Console.WriteLine(@"Errors: {0}", errors.Count);
                 foreach (var diagnostic in errors)

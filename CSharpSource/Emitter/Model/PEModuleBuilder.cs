@@ -1436,5 +1436,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 OnMethodBoundBodySynthesized(methodSymbol, boundBody);
             }
         }
+
+        public delegate void OnSourceMethodDelegate(MethodSymbol methodSymbol, SourceMethodSymbol sourceMethod);
+
+        public static event OnSourceMethodDelegate OnSourceMethod;
+
+        public void RaiseOnSourceMethod(MethodSymbol methodSymbol, SourceMethodSymbol sourceMethod)
+        {
+            if (OnSourceMethod != null && sourceMethod != null)
+            {
+                OnSourceMethod(methodSymbol, sourceMethod);
+            }
+        }
     }
 }

@@ -752,6 +752,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             cancellationToken.ThrowIfCancellationRequested();
             SourceMethodSymbol sourceMethod = methodSymbol as SourceMethodSymbol;
 
+            moduleBeingBuiltOpt.RaiseOnSourceMethod(methodSymbol.PartialDefinitionPart ?? methodSymbol, sourceMethod);
+
             if (methodSymbol.IsAbstract)
             {
                 if ((object)sourceMethod != null)
