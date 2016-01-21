@@ -80,6 +80,13 @@
                 BoundStatement boundStatement;
                 var boundStatementFound = this.BoundBodyByMethodSymbol.TryGetValue(key, out boundStatement);
 
+                if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
+                {
+                    // TODO: review it
+                    // ignore empty constructor as they should call Object.ctor() only which is empty
+                    continue;
+                }
+
                 Debug.Assert(sourceMethodFound || boundStatementFound, "Method information can't be found");
 
                 unit.Declarations.Add(new CCodeMethodDeclaration(sourceMethodFound ? sourceMethod : method));
