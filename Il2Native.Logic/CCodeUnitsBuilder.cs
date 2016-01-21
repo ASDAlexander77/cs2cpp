@@ -74,30 +74,35 @@
             var unit = new CCodeUnit(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
-                var key = ((MethodSymbol)method).ToKeyString();
-                SourceMethodSymbol sourceMethod;
-                var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
-                BoundStatement boundStatement;
-                var boundStatementFound = this.BoundBodyByMethodSymbol.TryGetValue(key, out boundStatement);
-
-                if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
-                {
-                    // ignore empty constructor as they should call Object.ctor() only which is empty
-                    unit.Declarations.Add(new CCodeMethodDeclaration(method));
-                    unit.Definitions.Add(new CCodeMethodDefinition(method, null));
-                    continue;
-                }
-
-                Debug.Assert(sourceMethodFound || boundStatementFound, "Method information can't be found");
-
-                unit.Declarations.Add(new CCodeMethodDeclaration(sourceMethodFound ? sourceMethod : method));
-                if (boundStatement != null)
-                {
-                    unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
-                }
+                this.BuildMethod(method, unit);
             }
 
             return unit;
+        }
+
+        private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
+        {
+            var key = ((MethodSymbol)method).ToKeyString();
+            SourceMethodSymbol sourceMethod;
+            var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
+            BoundStatement boundStatement;
+            var boundStatementFound = this.BoundBodyByMethodSymbol.TryGetValue(key, out boundStatement);
+
+            if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
+            {
+                // ignore empty constructor as they should call Object.ctor() only which is empty
+                unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                unit.Definitions.Add(new CCodeMethodDefinition(method, null));
+                return;
+            }
+
+            Debug.Assert(sourceMethodFound || boundStatementFound, "Method information can't be found");
+
+            unit.Declarations.Add(new CCodeMethodDeclaration(sourceMethodFound ? sourceMethod : method));
+            if (boundStatement != null)
+            {
+                unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
+            }
         }
     }
 }

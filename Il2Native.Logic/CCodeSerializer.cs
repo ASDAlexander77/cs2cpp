@@ -276,7 +276,7 @@ mingw32-make";
             var buildVS2015 = @"md __build_win32_debug
 cd __build_win32_debug
 cmake -f .. -G ""Visual Studio 14"" -Wno-dev
-call ""C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"" x86
+call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" x86
 MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))

@@ -74,7 +74,8 @@
                         itw.Write("uintptr_t");
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        itw.Write("void*");
+                        break;
                 }
             }
         }
