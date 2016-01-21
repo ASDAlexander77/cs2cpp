@@ -41,7 +41,7 @@
             var unit = new CCodeUnit(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
-                var key = method.ToDisplayString(SymbolDisplayFormat.TestFormat);
+                var key = method.ToDisplayString(Cs2CGenerator.KeyStringFormat);
                 SourceMethodSymbol sourceMethod;
                 var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
                 BoundStatement boundStatement;

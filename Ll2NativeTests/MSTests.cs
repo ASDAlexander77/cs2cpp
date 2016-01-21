@@ -814,7 +814,7 @@ namespace Ll2NativeTests
             // read Readme.win32 how to compile it for MinGW
 
             Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.CoreLibPath),
+                Path.GetFullPath(CompilerHelper.CoreLibCSProjPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true));
 
@@ -910,7 +910,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         public void TestMscolibCSNative()
         {
             Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.MscorlibPath),
+                Path.GetFullPath(CompilerHelper.MscorlibDllPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true));
         }

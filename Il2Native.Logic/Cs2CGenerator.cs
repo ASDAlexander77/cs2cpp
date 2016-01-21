@@ -127,6 +127,38 @@ namespace Il2Native.Logic
         /// </summary>
         protected IDictionary<string, string> Options { get; private set; }
 
+        /// <summary>
+        /// A verbose format for displaying symbols (useful for testing).
+        /// </summary>
+        internal static readonly SymbolDisplayFormat KeyStringFormat =
+            new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                propertyStyle: SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
+                localOptions: SymbolDisplayLocalOptions.IncludeType,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+                memberOptions:
+                    SymbolDisplayMemberOptions.IncludeParameters |
+                    SymbolDisplayMemberOptions.IncludeContainingType |
+                    SymbolDisplayMemberOptions.IncludeType |
+                    SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                kindOptions:
+                    SymbolDisplayKindOptions.IncludeMemberKeyword,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeOptionalBrackets |
+                    SymbolDisplayParameterOptions.IncludeDefaultValue |
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeExtensionThis |
+                    SymbolDisplayParameterOptions.IncludeType,
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName,
+                compilerInternalOptions:
+                    SymbolDisplayCompilerInternalOptions.IncludeScriptType |
+                    SymbolDisplayCompilerInternalOptions.UseMetadataMethodNames |
+                    SymbolDisplayCompilerInternalOptions.FlagMissingMetadataTypes |
+                    SymbolDisplayCompilerInternalOptions.IncludeCustomModifiers);
+
         public IAssemblySymbol Load()
         {
             var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
@@ -136,20 +168,17 @@ namespace Il2Native.Logic
         private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
         {
             var srcFileName = Path.GetFileNameWithoutExtension(this.FirstSource);
-            var baseName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
-            var nameDll = srcFileName + "_" + baseName + ".dll";
-            var namePdb = srcFileName + "_" + baseName + ".pdb";
-            var outDll = Path.Combine(Path.GetTempPath(), nameDll);
-            var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
+            var assemblyName = srcFileName;
 
+            var defineSeparators = new[] { ';', ' ' };
             var syntaxTrees =
                 source.Select(
                     s =>
                         CSharpSyntaxTree.ParseText(
                         SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
                             new CSharpParseOptions(
-                                LanguageVersion.Experimental,
-                                preprocessorSymbols: Options["DefineConstants"].Split(new[] { ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)),
+                            LanguageVersion.Experimental,
+                            preprocessorSymbols: Options["DefineConstants"].Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
                             s));
 
             var assemblies = new List<MetadataImageReference>();
@@ -161,21 +190,21 @@ namespace Il2Native.Logic
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, assemblies.ToArray(), options);
+            var compilation = CSharpCompilation.Create(assemblyName, syntaxTrees, assemblies.ToArray(), options);
 
             var dllStream = new MemoryStream();
             var pdbStream = new MemoryStream();
 
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
-                var key = symbol.ToDisplayString(SymbolDisplayFormat.TestFormat);
+                var key = symbol.ToDisplayString(KeyStringFormat);
                 Debug.Assert(!boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 boundBodyByMethodSymbol[key] = body;
             };
 
             PEModuleBuilder.OnSourceMethodDelegate peModuleBuilderOnSourceMethod = (symbol, sourceMethod) =>
             {
-                var key = symbol.ToDisplayString(SymbolDisplayFormat.TestFormat);
+                var key = symbol.ToDisplayString(KeyStringFormat);
                 Debug.Assert(!sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 sourceMethodByMethodSymbol[key] = sourceMethod;
             };
@@ -183,7 +212,7 @@ namespace Il2Native.Logic
             PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;
             PEModuleBuilder.OnSourceMethod += peModuleBuilderOnSourceMethod;
 
-            var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
+            var result = compilation.Emit(peStream: dllStream, pdbStream: pdbStream);
 
             PEModuleBuilder.OnMethodBoundBodySynthesized -= peModuleBuilderOnOnMethodBoundBodySynthesized;
             PEModuleBuilder.OnSourceMethod -= peModuleBuilderOnSourceMethod;

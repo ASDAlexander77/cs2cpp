@@ -15,9 +15,10 @@
         public const string SourcePath = @"C:\Dev\Gits\Mono-Class-Libraries\mcs\tests\";
         public const string SourcePathCustom = @"C:\Temp\tests\";
         public const string OutputPath = @"C:\Temp\IlCTests\";
-        public const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\CoreLib.csproj";
+        public const string CoreLibCSProjPath = @"C:\Dev\Temp\Il2Native\CoreLib\CoreLib.csproj";
+        public const string CoreLibDllPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
-        public static string MscorlibPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
+        public static string MscorlibDllPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
@@ -31,7 +32,8 @@
         public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
         public const string SourcePathCustom = @"D:\Temp\tests\";
         public const string OutputPath = @"M:\";
-        public const string CoreLibPath = @"..\..\..\CoreLib\CoreLib.csproj";
+        public const string CoreLibCSProjPath = @"..\..\..\CoreLib\CoreLib.csproj";
+        public const string CoreLibDllPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
@@ -131,7 +133,7 @@
             {
                 if (Mscorlib)
                 {
-                    args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
+                    args.Add("corelib:" + Path.GetFullPath(MscorlibDllPath));
                     
                     if (AddSystemLinq)
                     {
@@ -141,7 +143,7 @@
                 }
                 else
                 {
-                    args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
+                    args.Add("corelib:" + Path.GetFullPath(CoreLibDllPath));
                 }
             }
 
