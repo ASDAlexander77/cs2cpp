@@ -74,7 +74,7 @@
             var unit = new CCodeUnit(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
-                var key = method.ToDisplayString(Cs2CGenerator.KeyStringFormat);
+                var key = ((MethodSymbol)method).ToKeyString();
                 SourceMethodSymbol sourceMethod;
                 var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
                 BoundStatement boundStatement;

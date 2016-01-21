@@ -1,5 +1,10 @@
 ﻿namespace Il2Native.Logic
 {
+    using System.Text;
+
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
+
     public static class Helpers
     {
         public static string CleanUpNameAllUnderscore(this string name)
@@ -121,6 +126,31 @@
             }
 
             return new string(s);
+        }
+
+        internal static string ToKeyString(this MethodSymbol methodSymbol)
+        {
+            var sb = new StringBuilder();
+            var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
+            if (containingNamespaceOrType != null)
+            {
+                sb.Append(containingNamespaceOrType);
+                sb.Append(".");
+            }
+
+            sb.Append(methodSymbol.Name);
+            sb.Append("(");
+            if (methodSymbol.ParameterCount > 0)
+            {
+                foreach (var parameter in methodSymbol.ParameterTypes)
+                {
+                    sb.Append(parameter);
+                }
+            }
+
+            sb.Append(")");
+
+            return sb.ToString();
         }
     }
 }

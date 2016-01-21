@@ -127,38 +127,6 @@ namespace Il2Native.Logic
         /// </summary>
         protected IDictionary<string, string> Options { get; private set; }
 
-        /// <summary>
-        /// A verbose format for displaying symbols (useful for testing).
-        /// </summary>
-        internal static readonly SymbolDisplayFormat KeyStringFormat =
-            new SymbolDisplayFormat(
-                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-                propertyStyle: SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
-                localOptions: SymbolDisplayLocalOptions.IncludeType,
-                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
-                memberOptions:
-                    SymbolDisplayMemberOptions.IncludeParameters |
-                    SymbolDisplayMemberOptions.IncludeContainingType |
-                    SymbolDisplayMemberOptions.IncludeType |
-                    SymbolDisplayMemberOptions.IncludeExplicitInterface,
-                kindOptions:
-                    SymbolDisplayKindOptions.IncludeMemberKeyword,
-                parameterOptions:
-                    SymbolDisplayParameterOptions.IncludeOptionalBrackets |
-                    SymbolDisplayParameterOptions.IncludeDefaultValue |
-                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
-                    SymbolDisplayParameterOptions.IncludeExtensionThis |
-                    SymbolDisplayParameterOptions.IncludeType,
-                miscellaneousOptions:
-                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
-                    SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName,
-                compilerInternalOptions:
-                    SymbolDisplayCompilerInternalOptions.IncludeScriptType |
-                    SymbolDisplayCompilerInternalOptions.UseMetadataMethodNames |
-                    SymbolDisplayCompilerInternalOptions.FlagMissingMetadataTypes |
-                    SymbolDisplayCompilerInternalOptions.IncludeCustomModifiers);
-
         public IAssemblySymbol Load()
         {
             var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
@@ -197,14 +165,14 @@ namespace Il2Native.Logic
 
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
-                var key = symbol.ToDisplayString(KeyStringFormat);
+                var key = symbol.ToKeyString();
                 Debug.Assert(!boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 boundBodyByMethodSymbol[key] = body;
             };
 
             PEModuleBuilder.OnSourceMethodDelegate peModuleBuilderOnSourceMethod = (symbol, sourceMethod) =>
             {
-                var key = symbol.ToDisplayString(KeyStringFormat);
+                var key = symbol.ToKeyString();
                 Debug.Assert(!sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 sourceMethodByMethodSymbol[key] = sourceMethod;
             };
