@@ -131,6 +131,11 @@
         internal static string ToKeyString(this MethodSymbol methodSymbol)
         {
             var sb = new StringBuilder();
+
+            // return
+            sb.Append(methodSymbol.ReturnType);
+            sb.Append(" ");                
+
             var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
             if (containingNamespaceOrType != null)
             {
@@ -139,6 +144,13 @@
             }
 
             sb.Append(methodSymbol.Name);
+            if (methodSymbol.IsGenericMethod)
+            {
+                sb.Append("<");
+                sb.Append(string.Join(",", methodSymbol.TypeParameters));
+                sb.Append(">");
+            }
+
             sb.Append("(");
             if (methodSymbol.ParameterCount > 0)
             {
