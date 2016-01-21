@@ -82,8 +82,9 @@
 
                 if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
                 {
-                    // TODO: review it
                     // ignore empty constructor as they should call Object.ctor() only which is empty
+                    unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                    unit.Definitions.Add(new CCodeMethodDefinition(method, null));
                     continue;
                 }
 

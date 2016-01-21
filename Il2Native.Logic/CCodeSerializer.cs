@@ -118,9 +118,11 @@
             itw.WriteLine("{");
             itw.Indent++;
 
-            itw.WriteLine("// Body");
-
-            new CCodeMethodSerializer(itw).Serialize(boundBody);
+            if (boundBody != null)
+            {
+                itw.WriteLine("// Body");
+                new CCodeMethodSerializer(itw).Serialize(boundBody);
+            }
 
             itw.Indent--;
             itw.WriteLine("}");
