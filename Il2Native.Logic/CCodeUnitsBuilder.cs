@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
     using System.CodeDom;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -28,12 +29,44 @@
        
         public IList<CCodeUnit> Build()
         {
-            foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(t => t.ContainingType == null || !t.ContainingType.Name.Contains("<PrivateImplementationDetails>")))
+            foreach (var type in this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(TypesFilter))
             {
                 this._cunits.Add(BuildUnit(type));
             }
 
             return this._cunits;
+        }
+
+        private static bool TypesFilter(ITypeSymbol t)
+        {
+            var namedTypeSymbol = t.ContainingType;
+            if (namedTypeSymbol != null && !TypesFilterBase(namedTypeSymbol))
+            {
+                return false;
+            }
+
+            return TypesFilterBase(t);
+        }
+
+        private static bool TypesFilterBase(ITypeSymbol namedTypeSymbol)
+        {
+            if (namedTypeSymbol == null)
+            {
+                throw new ArgumentNullException("namedTypeSymbol");
+            }
+
+            var name = namedTypeSymbol.Name;
+            if (name.Contains("<PrivateImplementationDetails>"))
+            {
+                return false;
+            }
+
+            if (name.Contains(">e__FixedBuffer"))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private CCodeUnit BuildUnit(ITypeSymbol type)

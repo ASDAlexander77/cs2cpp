@@ -29,14 +29,7 @@
 
         public static IEnumerable<ITypeSymbol> EnumAllNestedTypes(this INamespaceOrTypeSymbol source)
         {
-            foreach (var nestedType in source.GetTypeMembers())
-            {
-                yield return nestedType;
-                foreach (var subNestedType in EnumAllNestedTypes(nestedType))
-                {
-                    yield return subNestedType;
-                }
-            }
+            return source.GetTypeMembers().SelectMany(nestedType => EnumAllNestedTypes(nestedType));
         }
     }
 }
