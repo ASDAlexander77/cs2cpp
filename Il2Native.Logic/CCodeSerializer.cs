@@ -350,9 +350,12 @@
                 WriteMethodName(itw, methodSymbol);
             }
 
-            itw.Write("(");
             // parameters
             var anyParameter = false;
+            var notUniqueParametersNames = !declarationWithingClass && methodSymbol.Parameters.Select(p => p.Name).Distinct().Count() != methodSymbol.Parameters.Length;
+            var parameterIndex = 0;
+            
+            itw.Write("(");
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
                 if (anyParameter)
@@ -366,8 +369,17 @@
                 if (!declarationWithingClass)
                 {
                     itw.Write(" ");
-                    WriteNameEnsureCompatible(itw, parameterSymbol);
+                    if (!notUniqueParametersNames)
+                    {
+                        WriteNameEnsureCompatible(itw, parameterSymbol);
+                    }
+                    else
+                    {
+                        itw.Write("__arg{0}", parameterIndex);
+                    }
                 }
+
+                parameterIndex++;
             }
 
             itw.Write(")");
