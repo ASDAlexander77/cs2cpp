@@ -46,9 +46,14 @@
             }
         }
 
-        public static void WriteName(IndentedTextWriter itw, ISymbol symbol)
+        public static void WriteName(IndentedTextWriter itw, ISymbol symbol, bool ensureCompatible = false)
         {
             itw.Write(symbol.MetadataName.CleanUpName());
+        }
+
+        public static void WriteNameEnsureCompatible(IndentedTextWriter itw, ISymbol symbol)
+        {
+            itw.Write(symbol.MetadataName.CleanUpName().EnsureCompatible());
         }
 
         public static void WriteMethodName(IndentedTextWriter itw, IMethodSymbol symbol)
@@ -325,7 +330,13 @@
                     itw.Write("::");
                 }
 
-                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType);
+                var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
+                WriteTypeName(itw, receiverType);
+                if (receiverType.IsGenericType)
+                {
+                    WriteTemplateDefinition(itw, methodSymbol.ContainingType);
+                }
+
                 itw.Write("::");
             }
 
@@ -355,7 +366,7 @@
                 if (!declarationWithingClass)
                 {
                     itw.Write(" ");
-                    WriteName(itw, parameterSymbol);
+                    WriteNameEnsureCompatible(itw, parameterSymbol);
                 }
             }
 
