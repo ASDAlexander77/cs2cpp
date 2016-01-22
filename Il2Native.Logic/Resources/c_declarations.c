@@ -1,3 +1,3 @@
-template <typename T> class __array_t : public <<%assemblyName%>>::System::Array
+template <typename T> class __array : public <<%assemblyName%>>::System::Array
 {
 };
