@@ -111,6 +111,11 @@
 
         private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
         {
+            if (method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0)
+            {
+                unit.HasDefaultConstructor = true;
+            }
+
             var key = ((MethodSymbol)method).ToKeyString();
             SourceMethodSymbol sourceMethod;
             var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);

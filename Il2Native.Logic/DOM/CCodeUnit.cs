@@ -14,6 +14,8 @@
 
         public ITypeSymbol Type { get; set; }
 
+        public bool HasDefaultConstructor { get; set; }
+
         public IList<CCodeDeclaration> Declarations { get; private set; }
 
         public IList<CCodeDefinition> Definitions { get; private set; }

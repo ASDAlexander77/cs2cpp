@@ -1,4 +1,5 @@
-﻿namespace Il2Native.Logic
+﻿#define EMPTY_SKELETON
+namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -499,11 +500,11 @@
             if (boundBody != null)
             {
                 itw.WriteLine("// Body");
-                //new CCodeMethodSerializer(itw).Serialize(boundBody);
-                if (!methodSymbol.ReturnsVoid)
-                {
-                    itw.WriteLine("return 0;");
-                }
+#if EMPTY_SKELETON
+                itw.WriteLine("throw 0xC000C000;");
+#else
+                new CCodeMethodSerializer(itw).Serialize(boundBody);
+#endif
             }
 
             itw.Indent--;
@@ -737,6 +738,12 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     itw.WriteLine("{");
                     itw.WriteLine("public:");
                     itw.Indent++;
+
+                    if (!unit.HasDefaultConstructor)
+                    {
+                        WriteTypeName(itw, namedTypeSymbol);
+                        itw.WriteLine("() = default;");
+                    }
 
                     foreach (var declaration in unit.Declarations)
                     {

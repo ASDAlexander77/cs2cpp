@@ -12,7 +12,7 @@
 
     public class CCodeMethodSerializer
     {
-        private IndentedTextWriter itw;
+        private readonly IndentedTextWriter itw;
 
         private enum CallKind
         {
