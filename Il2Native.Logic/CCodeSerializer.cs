@@ -169,22 +169,7 @@
         {
             if (methodSymbol.IsGenericMethod)
             {
-                itw.Write("template <");
-                var anyTypeParam = false;
-                foreach (var typeParam in methodSymbol.TypeParameters)
-                {
-                    if (anyTypeParam)
-                    {
-                        itw.Write(", ");
-                    }
-
-                    anyTypeParam = true;
-
-                    itw.Write("typename ");
-                    WriteName(itw, typeParam);
-                }
-
-                itw.Write("> ");
+                WriteTemplateDeclaration(itw, methodSymbol);
             }
 
             if (declarationWithingClass)
@@ -273,6 +258,46 @@
             }
         }
 
+        private static void WriteTemplateDeclaration(IndentedTextWriter itw, INamedTypeSymbol methodSymbol)
+        {
+            itw.Write("template <");
+            var anyTypeParam = false;
+            foreach (var typeParam in methodSymbol.TypeParameters)
+            {
+                if (anyTypeParam)
+                {
+                    itw.Write(", ");
+                }
+
+                anyTypeParam = true;
+
+                itw.Write("typename ");
+                WriteName(itw, typeParam);
+            }
+
+            itw.Write("> ");
+        }
+
+        private static void WriteTemplateDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol)
+        {
+            itw.Write("template <");
+            var anyTypeParam = false;
+            foreach (var typeParam in methodSymbol.TypeParameters)
+            {
+                if (anyTypeParam)
+                {
+                    itw.Write(", ");
+                }
+
+                anyTypeParam = true;
+
+                itw.Write("typename ");
+                WriteName(itw, typeParam);
+            }
+
+            itw.Write("> ");
+        }
+
         internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody)
         {
             itw.WriteLine();
@@ -291,129 +316,21 @@
 
         public void WriteTo(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
         {
-            if (!Directory.Exists(identity.Name))
-            {
-                Directory.CreateDirectory(identity.Name);
-            }
-
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
-
-            // write header
-            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
+            if (!Directory.Exists(this.currentFolder))
             {
-                if (isCoreLib)
-                {
-                    itw.Write(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
-                    itw.WriteLine();
-                }
-
-                // write forward declaration
-                foreach (var unit in units)
-                {
-                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Write("namespace ");
-                        WriteNamespaceName(itw, namespaceNode);
-                        itw.Write(" { ");
-                    }
-
-                    itw.Write(unit.Type.IsValueType ? "struct" : "class");
-                    itw.Write(" ");
-                    itw.Write(unit.Type.MetadataName.CleanUpName());
-                    itw.Write("; ");
-
-                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Write("}");
-                    }
-
-                    itw.WriteLine();
-                }
-
-                itw.WriteLine();
-
-                // write full declaration
-                foreach (var unit in units)
-                {
-                    var any = false;
-                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Write("namespace ");
-                        WriteNamespaceName(itw, namespaceNode);
-                        itw.Write(" { ");
-                        any = true;
-                    }
-
-                    if (any)
-                    {
-                        itw.Indent++;
-                        itw.WriteLine();
-                    }
-
-                    itw.Write(unit.Type.IsValueType ? "struct" : "class");
-                    itw.Write(" ");
-                    itw.Write(unit.Type.MetadataName.CleanUpName());
-                    if (unit.Type.BaseType != null)
-                    {
-                        itw.Write(" : public ");
-                        WriteFullName(itw, unit.Type.BaseType);
-                    }
-
-                    itw.WriteLine();
-                    itw.WriteLine("{");
-                    itw.WriteLine("public:");
-                    itw.Indent++;
-
-                    foreach (var declaration in unit.Declarations)
-                    {
-                        declaration.WriteTo(itw);
-                    }
-
-                    itw.Indent--;
-                    itw.WriteLine("};");
-
-                    foreach (var namespaceNode in unit.Type.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Indent--;
-                        itw.Write("}");
-                    }
-
-                    itw.WriteLine();
-                }
-
-                if (isCoreLib)
-                {
-                    itw.WriteLine();
-                    itw.Write(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
-                    itw.WriteLine();
-                }
-
-                itw.Close();
+                Directory.CreateDirectory(this.currentFolder);
             }
 
-            // write all sources
-            foreach (var unit in units)
-            {
-                int nestedLevel;
-                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(unit, out nestedLevel))))
-                {
-                    itw.Write("#include \"");
-                    for (var i = 0; i < nestedLevel; i++)
-                    {
-                        itw.Write("..\\");
-                    }
+            this.WriteHeader(identity, isCoreLib, units);
 
-                    itw.WriteLine("{0}.h\"", identity.Name);
+            this.WriteSources(identity, units);
 
-                    foreach (var definition in unit.Definitions)
-                    {
-                        definition.WriteTo(itw);
-                    }
+            this.WriteBuildFiles(identity);
+        }
 
-                    itw.Close();
-                }
-            }
-
+        private void WriteBuildFiles(AssemblyIdentity identity)
+        {
             // CMake file helper
             var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
 
@@ -460,6 +377,140 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))
             {
                 itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()));
+                itw.Close();
+            }
+        }
+
+        private void WriteSources(AssemblyIdentity identity, IList<CCodeUnit> units)
+        {
+            // write all sources
+            foreach (var unit in units)
+            {
+                int nestedLevel;
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(unit, out nestedLevel))))
+                {
+                    itw.Write("#include \"");
+                    for (var i = 0; i < nestedLevel; i++)
+                    {
+                        itw.Write("..\\");
+                    }
+
+                    itw.WriteLine("{0}.h\"", identity.Name);
+
+                    foreach (var definition in unit.Definitions)
+                    {
+                        definition.WriteTo(itw);
+                    }
+
+                    itw.Close();
+                }
+            }
+        }
+
+        private void WriteHeader(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units)
+        {
+            // write header
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
+            {
+                if (isCoreLib)
+                {
+                    itw.Write(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine();
+                }
+
+                // write forward declaration
+                foreach (var unit in units)
+                {
+                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Write("namespace ");
+                        WriteNamespaceName(itw, namespaceNode);
+                        itw.Write(" { ");
+                    }
+
+                    if (namedTypeSymbol.IsGenericType)
+                    {
+                        WriteTemplateDeclaration(itw, namedTypeSymbol);
+                    }
+
+                    itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
+                    itw.Write(" ");
+                    itw.Write(namedTypeSymbol.MetadataName.CleanUpName());
+                    itw.Write("; ");
+
+                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Write("}");
+                    }
+
+                    itw.WriteLine();
+                }
+
+                itw.WriteLine();
+
+                // write full declaration
+                foreach (var unit in units)
+                {
+                    var any = false;
+                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Write("namespace ");
+                        WriteNamespaceName(itw, namespaceNode);
+                        itw.Write(" { ");
+                        any = true;
+                    }
+
+                    if (any)
+                    {
+                        itw.Indent++;
+                        itw.WriteLine();
+                    }
+
+                    if (namedTypeSymbol.IsGenericType)
+                    {
+                        WriteTemplateDeclaration(itw, namedTypeSymbol);
+                    }
+
+                    itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
+                    itw.Write(" ");
+                    itw.Write(namedTypeSymbol.MetadataName.CleanUpName());
+                    if (namedTypeSymbol.BaseType != null)
+                    {
+                        itw.Write(" : public ");
+                        WriteFullName(itw, namedTypeSymbol.BaseType);
+                    }
+
+                    itw.WriteLine();
+                    itw.WriteLine("{");
+                    itw.WriteLine("public:");
+                    itw.Indent++;
+
+                    foreach (var declaration in unit.Declarations)
+                    {
+                        declaration.WriteTo(itw);
+                    }
+
+                    itw.Indent--;
+                    itw.WriteLine("};");
+
+                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+                    {
+                        itw.Indent--;
+                        itw.Write("}");
+                    }
+
+                    itw.WriteLine();
+                }
+
+                if (isCoreLib)
+                {
+                    itw.WriteLine();
+                    itw.Write(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine();
+                }
+
                 itw.Close();
             }
         }
