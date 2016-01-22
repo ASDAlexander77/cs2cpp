@@ -68,23 +68,12 @@ namespace Il2Native.Logic
             }
         }
 
-        private void LoadProject(string firstSource)
+        public bool IsCoreLib
         {
-            var folder = Path.GetDirectoryName(firstSource);
-            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(firstSource);
-            this.Sources =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
-                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
-                    .ToArray();
-
-            var options = new ProjectProperties();
-            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
+            get
             {
-                options[property.Name.LocalName] = property.Value;
+                return this.Options["NoStdLib"] == "true";
             }
-
-            this.Options = options;
         }
 
         /// <summary>
@@ -216,7 +205,7 @@ namespace Il2Native.Logic
         {
             var added = new HashSet<AssemblyIdentity>();
 
-            if (this.Options["NoStdLib"] != "true")
+            if (!this.IsCoreLib)
             {
                 this.AddAsseblyReference(
                     assemblies,
@@ -514,6 +503,25 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        private void LoadProject(string firstSource)
+        {
+            var folder = Path.GetDirectoryName(firstSource);
+            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+            var project = XDocument.Load(firstSource);
+            this.Sources =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
+                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
+                    .ToArray();
+
+            var options = new ProjectProperties();
+            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
+            {
+                options[property.Name.LocalName] = property.Value;
+            }
+
+            this.Options = options;
         }
     }
 }

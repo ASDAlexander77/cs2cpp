@@ -93,19 +93,18 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Resources\c_declarations.c" />
-    <None Include="Resources\gc_declarations.c" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\gc_declarations_debug.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\decimals.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_definitions.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\c_forward_declarations.c" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

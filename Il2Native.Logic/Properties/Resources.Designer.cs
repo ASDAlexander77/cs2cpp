@@ -61,26 +61,9 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #ifdef _MSC_VER
-        ///#error Not supported yet
-        ///#elif __GNUC__ &gt;= 3
-        ///
-        ///typedef void Void;
-        ///typedef bool Boolean;
-        ///typedef signed char SByte;
-        ///typedef short Int16;
-        ///typedef int Int32;
-        ///typedef long long Int64;
-        ///typedef unsigned char Byte;
-        ///typedef unsigned short Char;
-        ///typedef unsigned short UInt16;
-        ///typedef unsigned int UInt32;
-        ///typedef unsigned long long UInt64;
-        ///typedef float Single;
-        ///typedef double Double;
-        ///
-        ///#define compare_and_swap __sync_val_compare_and_swap 
-        ///#define compare_and_swap_bool __sync_bool_comp [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to template &lt;typename T&gt; class __array_t : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
+        ///{
+        ///};.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -89,22 +72,22 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #ifdef __GC_MEMORY_DEBUG
-        ///Void* __new_interface_debug(Void* _object, Void** _vtbl, SByte* __file, Int32 __line) 
-        ///{
-        ///	__interface_data* __ret_interface;
-        ///	__ret_interface = (__interface_data*) GC_MALLOC(sizeof(__interface_data));
-        ///	if (__ret_interface) goto _continue;
-        ///	System_OutOfMemoryException* _new;
-        ///	_new = System_OutOfMemoryException_System_OutOfMemoryException__newFSByteP__Int32N(__file, __line);
-        ///	Void_System_OutOfMemoryException__ctorFN(_new);
-        ///	throw (Void*) _new;
-        ///_continue:
-        ///	__ret_interface-&gt;_ [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to .
         /// </summary>
         internal static string c_definitions {
             get {
                 return ResourceManager.GetString("c_definitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #include &lt;cstdint&gt;
+        ///
+        ///template &lt;typename T&gt; class __array_t;.
+        /// </summary>
+        internal static string c_forward_declarations {
+            get {
+                return ResourceManager.GetString("c_forward_declarations", resourceCulture);
             }
         }
         
@@ -143,57 +126,6 @@ namespace Il2Native.Logic.Properties {
         internal static string decimals {
             get {
                 return ResourceManager.GetString("decimals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to extern &quot;C&quot; Void GC_init();
-        ///extern &quot;C&quot; Void* GC_malloc(UInt32);
-        ///extern &quot;C&quot; Void* GC_malloc_atomic(UInt32);
-        ///extern &quot;C&quot; Void* GC_malloc_ignore_off_page(UInt32);
-        ///extern &quot;C&quot; Void* GC_malloc_atomic_ignore_off_page(UInt32);
-        ///typedef void (* __finalization_proc__)(Void* /* obj */, Void* /* client_data */);
-        ///extern &quot;C&quot; Void GC_register_finalizer(Void*, __finalization_proc__, Void*, Void*, Void**);
-        ///
-        ///#undef GC_MALLOC
-        ///#define GC_MALLOC GC_malloc
-        ///
-        ///#undef GC_MALLOC_ATOMIC
-        ///#define GC_MALLOC_ATOMIC GC_malloc_atom [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string gc_declarations {
-            get {
-                return ResourceManager.GetString("gc_declarations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to #undef GC_MALLOC
-        ///#undef GC_MALLOC_ATOMIC
-        ///#undef GC_MALLOC_IGNORE_OFF_PAGE
-        ///#undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
-        ///#undef GC_REGISTER_FINALIZER
-        ///
-        ///#undef GC_PTHREAD_CREATE
-        ///#define GC_PTHREAD_CREATE GC_pthread_create
-        ///
-        ///#undef GC_PTHREAD_SIGMASK
-        ///#define GC_PTHREAD_SIGMASK GC_pthread_sigmask
-        ///
-        ///#undef GC_PTHREAD_JOIN
-        ///#define GC_PTHREAD_JOIN GC_pthread_join
-        ///
-        ///#undef GC_PTHREAD_DETACH
-        ///#define GC_PTHREAD_DETACH GC_pthread_detach
-        ///
-        ///#undef GC_PTHREAD_CANCEL
-        ///#define GC_PTHREAD_CANCEL pthread_cancel
-        ///
-        ///#un [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string gc_declarations_debug {
-            get {
-                return ResourceManager.GetString("gc_declarations_debug", resourceCulture);
             }
         }
     }

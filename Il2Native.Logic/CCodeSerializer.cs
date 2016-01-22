@@ -6,6 +6,9 @@
     using System.IO;
     using System.Linq;
     using DOM;
+
+    using Il2Native.Logic.Properties;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -51,7 +54,7 @@
         {
             if (type.ContainingNamespace != null)
             {
-                WriteNamespaceName(itw, type.ContainingNamespace);
+                WriteNamespace(itw, type.ContainingNamespace);
                 itw.Write("::");
             }
 
@@ -118,8 +121,9 @@
                     break;
                 case TypeKind.ArrayType:
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
+                    itw.Write("__array_t<");
                     WriteType(itw, elementType);
-                    itw.Write("[]");
+                    itw.Write(">*");
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
@@ -163,6 +167,26 @@
 
         public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
+            if (methodSymbol.IsGenericMethod)
+            {
+                itw.Write("template <");
+                var anyTypeParam = false;
+                foreach (var typeParam in methodSymbol.TypeParameters)
+                {
+                    if (anyTypeParam)
+                    {
+                        itw.Write(", ");
+                    }
+
+                    anyTypeParam = true;
+
+                    itw.Write("typename ");
+                    WriteName(itw, typeParam);
+                }
+
+                itw.Write("> ");
+            }
+
             if (declarationWithingClass)
             {
                 if (methodSymbol.IsStatic)
@@ -170,7 +194,7 @@
                     itw.Write("static ");
                 }
 
-                if (methodSymbol.IsVirtual || methodSymbol.IsOverride)
+                if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
                 {
                     itw.Write("virtual ");
                 }
@@ -216,6 +240,24 @@
 
             itw.Write("(");
             // parameters
+            var anyParameter = false;
+            foreach (var parameterSymbol in methodSymbol.Parameters)
+            {
+                if (anyParameter)
+                {
+                    itw.Write(", ");
+                }
+
+                anyParameter = true;
+
+                WriteType(itw, parameterSymbol.Type);
+                if (!declarationWithingClass)
+                {
+                    itw.Write(" ");
+                    WriteName(itw, parameterSymbol);
+                }
+            }
+
             itw.Write(")");
 
             if (declarationWithingClass)
@@ -223,6 +265,10 @@
                 if (methodSymbol.IsOverride)
                 {
                     itw.Write(" override");
+                }
+                else if (methodSymbol.IsAbstract)
+                {
+                    itw.Write(" = 0");
                 }
             }
         }
@@ -243,7 +289,7 @@
             itw.WriteLine("}");
         }
 
-        public void WriteTo(AssemblyIdentity identity, IList<CCodeUnit> units, string outputFolder)
+        public void WriteTo(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
         {
             if (!Directory.Exists(identity.Name))
             {
@@ -255,8 +301,11 @@
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
-                itw.WriteLine("#include <cstdint>");
-                itw.WriteLine();
+                if (isCoreLib)
+                {
+                    itw.Write(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine();
+                }
 
                 // write forward declaration
                 foreach (var unit in units)
@@ -329,6 +378,13 @@
                         itw.Write("}");
                     }
 
+                    itw.WriteLine();
+                }
+
+                if (isCoreLib)
+                {
+                    itw.WriteLine();
+                    itw.Write(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
                     itw.WriteLine();
                 }
 

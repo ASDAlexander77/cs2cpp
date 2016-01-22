@@ -21,12 +21,12 @@
             this.SourceMethodByMethodSymbol = sourceMethodByMethodSymbol;
         }
 
-        internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol { get; set; }
+        internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol { get; private set; }
 
-        internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; set; }
+        internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; private set; }
 
-        protected IAssemblySymbol Assembly { get; set; }
-       
+        protected IAssemblySymbol Assembly { get; private set; }
+
         public IList<CCodeUnit> Build()
         {
             var processedTypes = new HashSet<string>();
