@@ -30,7 +30,7 @@
 
             CCodeSerializer.WriteMethodDeclaration(itw, this.Method, false);
 
-            CCodeSerializer.WriteMethodBody(itw, this.BoundBody);
+            CCodeSerializer.WriteMethodBody(itw, this.BoundBody, this.Method);
         }
     }
 }

@@ -3,6 +3,7 @@
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using DOM;
@@ -113,6 +114,16 @@
             }
 
             WriteName(itw, type);
+        }
+
+        public static string GetTypeName(INamedTypeSymbol type)
+        {
+            if (type.ContainingType != null)
+            {
+                return GetTypeName(type.ContainingType) + "_" + type.MetadataName;
+            }
+
+            return type.MetadataName;
         }
 
         public static void WriteType(IndentedTextWriter itw, ITypeSymbol type)
@@ -248,9 +259,22 @@
 
         public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
+            if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
+            {
+                WriteTemplateDeclaration(itw, methodSymbol.ContainingType);
+                if (!declarationWithingClass)
+                {
+                    itw.WriteLine();
+                }
+            }
+
             if (methodSymbol.IsGenericMethod)
             {
                 WriteTemplateDeclaration(itw, methodSymbol);
+                if (!declarationWithingClass)
+                {
+                    itw.WriteLine();
+                }
             }
 
             if (declarationWithingClass)
@@ -276,7 +300,7 @@
                     }
                 }
             }
-
+            
             // type
             if (methodSymbol.MethodKind != MethodKind.Constructor)
             {
@@ -443,7 +467,7 @@
             itw.Write("> ");
         }
 
-        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody)
+        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
             itw.WriteLine();
             itw.WriteLine("{");
@@ -452,7 +476,11 @@
             if (boundBody != null)
             {
                 itw.WriteLine("// Body");
-                new CCodeMethodSerializer(itw).Serialize(boundBody);
+                //new CCodeMethodSerializer(itw).Serialize(boundBody);
+                if (!methodSymbol.ReturnsVoid)
+                {
+                    itw.WriteLine("return 0;");
+                }
             }
 
             itw.Indent--;
@@ -467,7 +495,9 @@
                 Directory.CreateDirectory(this.currentFolder);
             }
 
-            this.WriteHeader(identity, isCoreLib, units);
+            var includeHeaders = this.WriteTemplateSources(units);
+
+            this.WriteHeader(identity, isCoreLib, units, includeHeaders);
 
             this.WriteSources(identity, units);
 
@@ -526,13 +556,56 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        private void WriteSources(AssemblyIdentity identity, IList<CCodeUnit> units)
+        private IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units)
         {
+            var headersToInclude = new List<string>();
+
             // write all sources
             foreach (var unit in units)
             {
+                var isGenericType = ((INamedTypeSymbol)unit.Type).IsGenericType;
+
                 int nestedLevel;
-                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(unit, out nestedLevel))))
+                var path = this.GetPath(unit, out nestedLevel, ".h");
+                var anyRecord = false;
+                using (var itw = new IndentedTextWriter(new StreamWriter(path)))
+                {
+                    foreach (var definition in unit.Definitions)
+                    {
+                        var codeMethodDefinition = definition as CCodeMethodDefinition;
+                        if (isGenericType || codeMethodDefinition != null && codeMethodDefinition.Method.IsGenericMethod)
+                        {
+                            anyRecord = true;
+                            definition.WriteTo(itw);
+                        }
+                    }
+
+                    itw.Close();
+                }
+
+                if (!anyRecord)
+                {
+                    File.Delete(path);
+                }
+                else
+                {
+                    headersToInclude.Add(path.Substring("src\\".Length + this.currentFolder.Length + 1));
+                }
+            }
+
+            return headersToInclude;
+        }
+
+        private void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
+        {
+            // write all sources
+            foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
+            {
+                int nestedLevel;
+                var path = this.GetPath(unit, out nestedLevel);
+
+                var anyRecord = false;
+                using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
                     itw.Write("#include \"");
                     for (var i = 0; i < nestedLevel; i++)
@@ -544,15 +617,25 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     foreach (var definition in unit.Definitions)
                     {
-                        definition.WriteTo(itw);
+                        var codeMethodDefinition = definition as CCodeMethodDefinition;
+                        if (codeMethodDefinition == null || !codeMethodDefinition.Method.IsGenericMethod)
+                        {
+                            anyRecord = true;
+                            definition.WriteTo(itw);
+                        }
                     }
 
                     itw.Close();
                 }
+
+                if (!anyRecord)
+                {
+                    File.Delete(path);
+                }
             }
         }
 
-        private void WriteHeader(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units)
+        private void WriteHeader(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
@@ -652,8 +735,14 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 if (isCoreLib)
                 {
                     itw.WriteLine();
-                    itw.Write(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
-                    itw.WriteLine();
+                    itw.WriteLine(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                }
+
+                itw.WriteLine();
+
+                foreach (var includeHeader in includeHeaders)
+                {
+                    itw.WriteLine("#include \"{0}\"", includeHeader);
                 }
 
                 itw.Close();
@@ -672,18 +761,24 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             return fullPath;
         }
 
-        private string GetPath(CCodeUnit unit, out int nestedLevel)
+        private string GetPath(CCodeUnit unit, out int nestedLevel, string ext = ".cpp")
         {
-            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
-            nestedLevel = enumNamespaces.Count();
-            var fullDirPath = Path.Combine(this.currentFolder, "src", String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore())));
+            var fileRelativePath = GetRelativePath(unit, out nestedLevel);
+            var fullDirPath = Path.Combine(this.currentFolder, "src", fileRelativePath);
             if (!Directory.Exists(fullDirPath))
             {
                 Directory.CreateDirectory(fullDirPath);
             }
 
-            var fullPath = Path.Combine(fullDirPath, String.Concat(unit.Type.MetadataName.CleanUpNameAllUnderscore(), ".cpp"));
+            var fullPath = Path.Combine(fullDirPath, String.Concat(GetTypeName((INamedTypeSymbol)unit.Type).CleanUpNameAllUnderscore(), ext));
             return fullPath;
+        }
+
+        private static string GetRelativePath(CCodeUnit unit, out int nestedLevel)
+        {
+            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
+            nestedLevel = enumNamespaces.Count();
+            return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
         }
     }
 }
