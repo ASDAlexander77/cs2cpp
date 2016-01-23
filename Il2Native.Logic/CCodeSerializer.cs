@@ -278,7 +278,7 @@ namespace Il2Native.Logic
                 itw.Write("static ");
             }
 
-            WriteType(itw, fieldSymbol.Type);
+            WriteType(itw, fieldSymbol.Type, true);
             itw.Write(" ");
             WriteName(itw, fieldSymbol);
         }

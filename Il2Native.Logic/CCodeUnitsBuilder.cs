@@ -61,7 +61,15 @@
                 {
                     AddTypeIntoOrder(reordered, typeSymbol.BaseType, bankOfTypes, added);
                 }
-   
+
+                foreach (var field in typeSymbol.GetMembers().OfType<IFieldSymbol>())
+                {
+                    if (field.Type.TypeKind == TypeKind.Struct)
+                    {
+                        AddTypeIntoOrder(reordered, field.Type, bankOfTypes, added);
+                    }
+                }
+
                 reordered.Add(bankOfTypes[key]);
             }
         }
