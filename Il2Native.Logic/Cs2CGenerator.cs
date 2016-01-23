@@ -80,6 +80,8 @@ namespace Il2Native.Logic
         /// </summary>
         public string CoreLibPath { get; set; }
 
+        /// <summary>
+        /// </summary>
         public bool DebugInfo { get; private set; }
 
         /// <summary>
@@ -103,6 +105,8 @@ namespace Il2Native.Logic
         {
             get { return this.sourceMethodByMethodSymbol; }
         }
+
+        public ISet<AssemblyIdentity> Assemblies { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -140,7 +144,7 @@ namespace Il2Native.Logic
 
             var assemblies = new List<MetadataImageReference>();
 
-            this.LoadReferencesForCompiling(assemblies);
+            this.Assemblies = this.LoadReferencesForCompiling(assemblies);
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
@@ -201,7 +205,7 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromImageStream(dllStream);
         }
 
-        private void LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
+        private HashSet<AssemblyIdentity> LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
         {
             var added = new HashSet<AssemblyIdentity>();
 
@@ -227,6 +231,8 @@ namespace Il2Native.Logic
                     }
                 }
             }
+
+            return added;
         }
 
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)

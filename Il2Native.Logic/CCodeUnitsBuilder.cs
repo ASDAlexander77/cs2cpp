@@ -41,7 +41,7 @@
             var reordered = new List<ITypeSymbol>();
             foreach (var typeSymbol in typeSymbols)
             {
-                AddTypeIntoOrder(reordered, typeSymbol, typesByNames, processedTypes);
+                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
             }
 
             foreach (var type in reordered)
@@ -52,21 +52,26 @@
             return this._cunits;
         }
 
-        private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
+        private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, AssemblyIdentity assembly, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
         {
+            if (!typeSymbol.ContainingAssembly.Identity.Equals(assembly))
+            {
+                return;
+            }
+
             var key = ((TypeSymbol)typeSymbol).ToKeyString();
             if (added.Add(key))
             {
                 if (typeSymbol.BaseType != null)
                 {
-                    AddTypeIntoOrder(reordered, typeSymbol.BaseType, bankOfTypes, added);
+                    AddTypeIntoOrder(reordered, typeSymbol.BaseType, assembly, bankOfTypes, added);
                 }
 
                 foreach (var field in typeSymbol.GetMembers().OfType<IFieldSymbol>())
                 {
                     if (field.Type.TypeKind == TypeKind.Struct)
                     {
-                        AddTypeIntoOrder(reordered, field.Type, bankOfTypes, added);
+                        AddTypeIntoOrder(reordered, field.Type, assembly, bankOfTypes, added);
                     }
                 }
 

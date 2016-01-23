@@ -12,41 +12,6 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        /// <summary>
-        /// </summary>
-        public enum ConvertingMode
-        {
-            /// <summary>
-            /// </summary>
-            ForwardDeclaration,
-
-            /// <summary>
-            /// </summary>
-            PreDeclaration,
-
-            /// <summary>
-            /// </summary>
-            Declaration,
-
-            /// <summary>
-            /// </summary>
-            PostDeclaration,
-
-            /// <summary>
-            /// </summary>
-            PreDefinition,
-
-            /// <summary>
-            /// </summary>
-            Definition,
-
-            /// <summary>
-            /// </summary>
-            PostDefinition
-        }
-
-        public static bool VerboseOutput { get; set; }
-
         public static void Convert(string source, string outputFolder, string[] args = null)
         {
             new Il2Converter().ConvertInternal(new[] { source }, outputFolder, args);
@@ -68,13 +33,13 @@ namespace Il2Native.Logic
         protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null)
         {
             var cs2CGenerator = new Cs2CGenerator(sources, args);
-            var assemblySymbol = cs2CGenerator.Load();
+            var assemblySymbol = cs2CGenerator.Load();            
 
             var cgenerator = new CCodeUnitsBuilder(assemblySymbol, cs2CGenerator.BoundBodyByMethodSymbol, cs2CGenerator.SourceMethodByMethodSymbol);
             var units = cgenerator.Build();
 
             var codeSerializer = new CCodeSerializer();
-            codeSerializer.WriteTo(assemblySymbol.Identity, cs2CGenerator.IsCoreLib, units, outputFolder);
+            codeSerializer.WriteTo(assemblySymbol.Identity, cs2CGenerator.Assemblies, cs2CGenerator.IsCoreLib, units, outputFolder);
         }
     }
 }

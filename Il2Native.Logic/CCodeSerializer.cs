@@ -561,7 +561,7 @@ namespace Il2Native.Logic
             itw.WriteLine("}");
         }
 
-        public void WriteTo(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
         {
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
             if (!Directory.Exists(this.currentFolder))
@@ -571,14 +571,14 @@ namespace Il2Native.Logic
 
             var includeHeaders = this.WriteTemplateSources(units);
 
-            this.WriteHeader(identity, isCoreLib, units, includeHeaders);
+            this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
 
             this.WriteSources(identity, units);
 
-            this.WriteBuildFiles(identity);
+            this.WriteBuildFiles(identity, references, !isCoreLib);
         }
 
-        private void WriteBuildFiles(AssemblyIdentity identity)
+        private void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
         {
             // CMake file helper
             var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
@@ -587,20 +587,42 @@ file(GLOB_RECURSE <%name%>_SRC
     ""./src/*.cpp""
 )
 
-include_directories(""./"")
-link_directories(""./"")
+include_directories(""./""<%include%>)
 
 if (MSVC)
+link_directories(""./""<%link_msvc%>)
 SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /GR- /Zi"")
 else()
+link_directories(""./""<%link_other%>)
 SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti"")
 endif()
 
-add_library (<%name%> ""${<%name%>_SRC}"")";
+add_<%type%> (<%name%> ""${<%name%>_SRC}"")
+
+<%libraries%>";
+
+            var targetLinkLibraries = @"
+if (MSVC)
+target_link_libraries (<%name%> {0})
+else()
+target_link_libraries (<%name%> {0} ""stdc++"")
+endif()";
+
+            var type = executable ? "executable" : "library";
+            var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists", ".txt"))))
             {
-                itw.Write(cmake.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()));
+                itw.Write(
+                    cmake.Replace("<%libraries%>", executable ? libraries : string.Empty)
+                         .Replace("<%type%>", type)
+                         .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())
+                         .Replace("<%include%>", include)
+                         .Replace("<%link_msvc%>", link_msvc)
+                         .Replace("<%link_other%>", link_other));
                 itw.Close();
             }
 
@@ -699,15 +721,19 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        private void WriteHeader(AssemblyIdentity identity, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
+        private void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
                 if (isCoreLib)
                 {
-                    itw.Write(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
-                    itw.WriteLine();
+                    itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                }
+
+                foreach (var reference in references)
+                {
+                    itw.WriteLine("#include \"{0}.h\"", reference.Name);
                 }
 
                 // write forward declaration
