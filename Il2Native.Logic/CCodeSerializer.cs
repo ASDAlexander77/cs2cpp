@@ -57,13 +57,20 @@ namespace Il2Native.Logic
             itw.Write(symbol.MetadataName.CleanUpName().EnsureCompatible());
         }
 
-        public static void WriteMethodName(IndentedTextWriter itw, IMethodSymbol symbol)
+        public static void WriteMethodName(IndentedTextWriter itw, IMethodSymbol methodSymbol)
         {
-            WriteName(itw, symbol);
-            if (symbol.MetadataName == "op_Explicit")
+            // name
+            if (methodSymbol.MethodKind == MethodKind.Constructor)
+            {
+                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType, false);
+                return;
+            }
+
+            WriteName(itw, methodSymbol);
+            if (methodSymbol.MetadataName == "op_Explicit")
             {
                 itw.Write("_");
-                WriteTypeSuffix(itw, symbol.ReturnType);
+                WriteTypeSuffix(itw, methodSymbol.ReturnType);
             }
         }
 
@@ -392,29 +399,9 @@ namespace Il2Native.Logic
                 itw.Write(" ");
             }
 
-            // namespace
             if (!declarationWithingClass)
             {
-                if (methodSymbol.ContainingNamespace != null)
-                {
-                    WriteNamespace(itw, methodSymbol.ContainingNamespace);
-                    itw.Write("::");
-                }
-
-                var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-                WriteTypeName(itw, receiverType, false);
-                if (receiverType.IsGenericType)
-                {
-                    WriteTemplateDefinition(itw, methodSymbol.ContainingType);
-                }
-
-                itw.Write("::");
-            }
-
-            // name
-            if (methodSymbol.MethodKind == MethodKind.Constructor)
-            {
-                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType, false);
+                WriteMethodFullName(itw, methodSymbol);
             }
             else
             {
@@ -480,7 +467,28 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTemplateDeclaration(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol)
+        public static void WriteMethodFullName(IndentedTextWriter itw, IMethodSymbol methodSymbol)
+        {
+            // namespace
+            if (methodSymbol.ContainingNamespace != null)
+            {
+                WriteNamespace(itw, methodSymbol.ContainingNamespace);
+                itw.Write("::");
+            }
+
+            var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
+            WriteTypeName(itw, receiverType, false);
+            if (receiverType.IsGenericType)
+            {
+                WriteTemplateDefinition(itw, methodSymbol.ContainingType);
+            }
+
+            itw.Write("::");
+
+            WriteMethodName(itw, methodSymbol);
+        }
+
+        public static void WriteTemplateDeclaration(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol)
         {
             itw.Write("template <");
 
@@ -490,7 +498,7 @@ namespace Il2Native.Logic
             itw.Write("> ");
         }
 
-        private static void WriteTemplateDeclarationRecusive(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
+        public static void WriteTemplateDeclarationRecusive(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
         {
             if (namedTypeSymbol.ContainingType != null)
             {
@@ -511,7 +519,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTemplateDefinition(IndentedTextWriter itw, INamedTypeSymbol typeSymbol)
+        public static void WriteTemplateDefinition(IndentedTextWriter itw, INamedTypeSymbol typeSymbol)
         {
             itw.Write("<");
 
@@ -521,7 +529,7 @@ namespace Il2Native.Logic
             itw.Write(">");
         }
 
-        private static void WriteTemplateDefinitionRecusive(IndentedTextWriter itw, INamedTypeSymbol typeSymbol, ref bool anyTypeParam)
+        public static void WriteTemplateDefinitionRecusive(IndentedTextWriter itw, INamedTypeSymbol typeSymbol, ref bool anyTypeParam)
         {
             if (typeSymbol.ContainingType != null)
             {
@@ -541,7 +549,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTemplateDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol)
+        public static void WriteTemplateDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol)
         {
             itw.Write("template <");
             var anyTypeParam = false;
@@ -599,7 +607,7 @@ namespace Il2Native.Logic
             this.WriteBuildFiles(identity, references, !isCoreLib);
         }
 
-        private void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
+        public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
         {
             // CMake file helper
             var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
@@ -673,7 +681,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        private IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units)
+        public IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units)
         {
             var headersToInclude = new List<string>();
 
@@ -707,7 +715,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             return headersToInclude;
         }
 
-        private void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
+        public void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
         {
             // write all sources
             foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
@@ -718,18 +726,17 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
-                    itw.Write("#include \"");
-                    for (var i = 0; i < nestedLevel; i++)
-                    {
-                        itw.Write("..\\");
-                    }
-
-                    itw.WriteLine("{0}.h\"", identity.Name);
+                    WriteSourceInclude(itw, identity, nestedLevel);
 
                     foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
                     {
                         anyRecord = true;
                         definition.WriteTo(itw);
+                    }
+
+                    if (unit.MainMethod != null)
+                    {
+                        WriteSourceMainEntry(itw, unit.MainMethod);
                     }
 
                     itw.Close();
@@ -742,7 +749,37 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        private void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
+        public static void WriteSourceMainEntry(IndentedTextWriter itw, IMethodSymbol mainMethod)
+        {
+            itw.WriteLine();
+            itw.WriteLine("int main()");
+            itw.WriteLine("{");
+            itw.Indent++;
+            WriteMethodFullName(itw, mainMethod);
+            itw.Write("(");
+            if (mainMethod.Parameters.Length > 0)
+            {
+                itw.Write("nullptr");
+            }
+
+            itw.WriteLine(");");
+            itw.WriteLine("return 0;");
+            itw.Indent--;
+            itw.WriteLine("}");
+        }
+
+        public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity, int nestedLevel)
+        {
+            itw.Write("#include \"");
+            for (var i = 0; i < nestedLevel; i++)
+            {
+                itw.Write("..\\");
+            }
+
+            itw.WriteLine("{0}.h\"", identity.Name);
+        }
+
+        public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))

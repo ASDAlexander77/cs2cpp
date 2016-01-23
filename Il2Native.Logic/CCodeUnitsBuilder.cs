@@ -149,6 +149,11 @@
                 unit.HasDefaultConstructor = true;
             }
 
+            if (method.MethodKind == MethodKind.Ordinary && method.IsStatic && method.Name == "Main")
+            {
+                unit.MainMethod = method;
+            }
+
             var key = ((MethodSymbol)method).ToKeyString();
             SourceMethodSymbol sourceMethod;
             var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
