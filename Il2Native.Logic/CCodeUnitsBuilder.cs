@@ -101,12 +101,26 @@
         private CCodeUnit BuildUnit(ITypeSymbol type)
         {
             var unit = new CCodeUnit(type);
+
+            foreach (var field in type.GetMembers().OfType<IFieldSymbol>())
+            {
+                this.BuildField(field, unit);
+            }
+
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
                 this.BuildMethod(method, unit);
             }
 
             return unit;
+        }
+
+        private void BuildField(IFieldSymbol field, CCodeUnit unit)
+        {
+            if (!field.IsConst)
+            {
+                unit.Declarations.Add(new CCodeFieldDeclaration(field));
+            }
         }
 
         private void BuildMethod(IMethodSymbol method, CCodeUnit unit)

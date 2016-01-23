@@ -132,9 +132,9 @@ namespace Il2Native.Logic
             return type.MetadataName;
         }
 
-        public static void WriteType(IndentedTextWriter itw, ITypeSymbol type)
+        public static void WriteType(IndentedTextWriter itw, ITypeSymbol type, bool cleanName = false)
         {
-            if (type.IsValueType && WriteSpecialType(itw, type))
+            if (type.IsValueType && WriteSpecialType(itw, type, cleanName))
             {
                 return;
             }
@@ -146,7 +146,7 @@ namespace Il2Native.Logic
                 case TypeKind.ArrayType:
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
                     itw.Write("__array<");
-                    WriteType(itw, elementType);
+                    WriteType(itw, elementType, cleanName);
                     itw.Write(">*");
                     return;
                 case TypeKind.Delegate:
@@ -163,11 +163,19 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.Enum:
                     var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
-                    itw.Write("__enum<");
-                    WriteTypeFullName(itw, (INamedTypeSymbol)type);
-                    itw.Write(", ");
-                    WriteType(itw, enumUnderlyingType);
-                    itw.Write(">");
+                    if (!cleanName)
+                    {
+                        itw.Write("__enum<");
+                        WriteTypeFullName(itw, (INamedTypeSymbol)type);
+                        itw.Write(", ");
+                        WriteType(itw, enumUnderlyingType);
+                        itw.Write(">");
+                    }
+                    else
+                    {
+                        WriteType(itw, enumUnderlyingType);
+                    }
+
                     return;
                 case TypeKind.Error:
                     break;
@@ -175,7 +183,7 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.PointerType:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteType(itw, pointedAtType);
+                    WriteType(itw, pointedAtType, cleanName);
                     itw.Write("*");
                     return;
                 case TypeKind.Struct:
@@ -261,6 +269,18 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        public static void WriteFieldDeclaration(IndentedTextWriter itw, IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.IsStatic)
+            {
+                itw.Write("static ");
+            }
+
+            WriteType(itw, fieldSymbol.Type);
+            itw.Write(" ");
+            WriteName(itw, fieldSymbol);
         }
 
         public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
@@ -499,6 +519,7 @@ namespace Il2Native.Logic
 
             if (boundBody != null)
             {
+
                 itw.WriteLine("// Body");
 #if EMPTY_SKELETON
                 itw.WriteLine("throw 0xC000C000;");

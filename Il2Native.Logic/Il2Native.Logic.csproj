@@ -52,6 +52,7 @@
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeUnitsBuilder.cs" />
+    <Compile Include="DOM\CCodeFieldDeclaration.cs" />
     <Compile Include="DOM\CCodeMethodDefinition.cs" />
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />
     <Compile Include="DOM\CCodeUnit.cs" />
