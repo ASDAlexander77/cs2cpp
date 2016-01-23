@@ -125,9 +125,15 @@
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit)
         {
-            if (!field.IsConst)
+            if (field.IsConst)
             {
-                unit.Declarations.Add(new CCodeFieldDeclaration(field));
+                return;
+            }
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(field));
+            if (field.IsStatic)
+            {
+                unit.Definitions.Add(new CCodeFieldDefinition(field));
             }
         }
 

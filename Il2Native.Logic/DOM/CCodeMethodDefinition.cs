@@ -19,6 +19,11 @@
 
         internal BoundStatement BoundBody { get; set; }
 
+        public override bool IsGeneric
+        {
+            get { return this.Method.ContainingType.IsGenericType || this.Method.IsGenericMethod; }
+        }
+
         public override void WriteTo(IndentedTextWriter itw)
         {
             itw.WriteLine();

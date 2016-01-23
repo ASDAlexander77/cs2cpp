@@ -283,6 +283,35 @@ namespace Il2Native.Logic
             WriteName(itw, fieldSymbol);
         }
 
+        public static void WriteFieldDefinition(IndentedTextWriter itw, IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.ContainingType.IsGenericType)
+            {
+                WriteTemplateDeclaration(itw, fieldSymbol.ContainingType);
+                itw.WriteLine();
+            }
+
+            WriteType(itw, fieldSymbol.Type, true);
+            itw.Write(" ");
+
+            if (fieldSymbol.ContainingNamespace != null)
+            {
+                WriteNamespace(itw, fieldSymbol.ContainingNamespace);
+                itw.Write("::");
+            }
+
+            var receiverType = (INamedTypeSymbol)fieldSymbol.ContainingType;
+            WriteTypeName(itw, receiverType);
+            if (receiverType.IsGenericType)
+            {
+                WriteTemplateDefinition(itw, fieldSymbol.ContainingType);
+            }
+
+            itw.Write("::");
+
+            WriteName(itw, fieldSymbol);
+        }
+
         public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
             if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
@@ -608,21 +637,15 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             // write all sources
             foreach (var unit in units)
             {
-                var isGenericType = ((INamedTypeSymbol)unit.Type).IsGenericType;
-
                 int nestedLevel;
                 var path = this.GetPath(unit, out nestedLevel, ".h");
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
-                    foreach (var definition in unit.Definitions)
+                    foreach (var definition in unit.Definitions.Where(d => d.IsGeneric))
                     {
-                        var codeMethodDefinition = definition as CCodeMethodDefinition;
-                        if (isGenericType || codeMethodDefinition != null && codeMethodDefinition.Method.IsGenericMethod)
-                        {
-                            anyRecord = true;
-                            definition.WriteTo(itw);
-                        }
+                        anyRecord = true;
+                        definition.WriteTo(itw);
                     }
 
                     itw.Close();
@@ -660,14 +683,10 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     itw.WriteLine("{0}.h\"", identity.Name);
 
-                    foreach (var definition in unit.Definitions)
+                    foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
                     {
-                        var codeMethodDefinition = definition as CCodeMethodDefinition;
-                        if (codeMethodDefinition == null || !codeMethodDefinition.Method.IsGenericMethod)
-                        {
-                            anyRecord = true;
-                            definition.WriteTo(itw);
-                        }
+                        anyRecord = true;
+                        definition.WriteTo(itw);
                     }
 
                     itw.Close();
