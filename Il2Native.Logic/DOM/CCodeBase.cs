@@ -4,6 +4,6 @@
 
     public abstract class CCodeBase
     {
-        public abstract void WriteTo(IndentedTextWriter itw);
+        public abstract void WriteTo(CCodeWriter c);
     }
 }

@@ -12,10 +12,10 @@
 
         public IFieldSymbol Field { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(CCodeWriter c)
         {
-            CCodeSerializer.WriteFieldDeclaration(itw, this.Field);
-            itw.WriteLine(";");
+            c.WriteFieldDeclaration(this.Field);
+            c.WriteLine(";");
         }
     }
 }

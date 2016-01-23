@@ -24,18 +24,13 @@
             get { return this.Method.ContainingType.IsGenericType || this.Method.IsGenericMethod; }
         }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(CCodeWriter c)
         {
-            itw.WriteLine();
+            c.WriteLine();
+            c.WriteLine(string.Format("// Method: {0}", this.Method.ToDisplayString()));
 
-            itw.WriteLine("// Method: {0}", this.Method.ToDisplayString());
-
-            // pre attributes
-            // TODO:
-
-            CCodeSerializer.WriteMethodDeclaration(itw, this.Method, false);
-
-            CCodeSerializer.WriteMethodBody(itw, this.BoundBody, this.Method);
+            c.WriteMethodDeclaration(this.Method, false);
+            c.WriteMethodBody(this.BoundBody, this.Method);
         }
     }
 }

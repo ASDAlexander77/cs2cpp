@@ -12,10 +12,10 @@
 
         public IMethodSymbol Method { get; set; }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(CCodeWriter c)
         {
-            CCodeSerializer.WriteMethodDeclaration(itw, this.Method, true);
-            itw.WriteLine(";");
+            c.WriteMethodDeclaration(this.Method, true);
+            c.WriteLine(";");
         }
     }
 }

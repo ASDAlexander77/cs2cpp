@@ -17,10 +17,10 @@
             get { return this.Field.ContainingType.IsGenericType; }
         }
 
-        public override void WriteTo(IndentedTextWriter itw)
+        public override void WriteTo(CCodeWriter c)
         {
-            CCodeSerializer.WriteFieldDefinition(itw, this.Field);
-            itw.WriteLine(";");
+            c.WriteFieldDefinition(this.Field);
+            c.WriteLine(";");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿#define EMPTY_SKELETON
-namespace Il2Native.Logic
+﻿namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -18,577 +17,6 @@ namespace Il2Native.Logic
     public class CCodeSerializer
     {
         private string currentFolder;
-
-        public static void WriteNamespace(IndentedTextWriter itw, INamespaceSymbol namespaceSymbol)
-        {
-            var any = false;
-            foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
-            {
-                if (any)
-                {
-                    itw.Write("::");
-                }
-
-                any = true;
-
-                WriteNamespaceName(itw, namespaceNode);
-            }
-        }
-
-        public static void WriteNamespaceName(IndentedTextWriter itw, INamespaceSymbol namespaceNode)
-        {
-            if (namespaceNode.IsGlobalNamespace)
-            {
-                itw.Write(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
-            }
-            else
-            {
-                itw.Write(namespaceNode.MetadataName);
-            }
-        }
-
-        public static void WriteName(IndentedTextWriter itw, ISymbol symbol, bool ensureCompatible = false)
-        {
-            itw.Write(symbol.MetadataName.CleanUpName());
-        }
-
-        public static void WriteNameEnsureCompatible(IndentedTextWriter itw, ISymbol symbol)
-        {
-            itw.Write(symbol.MetadataName.CleanUpName().EnsureCompatible());
-        }
-
-        public static void WriteMethodName(IndentedTextWriter itw, IMethodSymbol methodSymbol)
-        {
-            // name
-            if (methodSymbol.MethodKind == MethodKind.Constructor)
-            {
-                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType, false);
-                return;
-            }
-
-            WriteName(itw, methodSymbol);
-            if (methodSymbol.MetadataName == "op_Explicit")
-            {
-                itw.Write("_");
-                WriteTypeSuffix(itw, methodSymbol.ReturnType);
-            }
-        }
-
-        public static void WriteTypeSuffix(IndentedTextWriter itw, ITypeSymbol type)
-        {
-            if (type.IsValueType && WriteSpecialType(itw, type, true))
-            {
-                return;
-            }
-
-            switch (type.TypeKind)
-            {
-                case TypeKind.ArrayType:
-                    var elementType = ((ArrayTypeSymbol)type).ElementType;
-                    WriteTypeSuffix(itw, elementType);
-                    itw.Write("Array");
-                    return;
-                case TypeKind.PointerType:
-                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteTypeSuffix(itw, pointedAtType);
-                    itw.Write("Ptr");
-                    return;
-                case TypeKind.TypeParameter:
-                    WriteName(itw, type);
-                    return;
-                default:
-                    WriteTypeName(itw, (INamedTypeSymbol)type);
-                    break;
-            }
-        }
-
-        public static void WriteTypeFullName(IndentedTextWriter itw, INamedTypeSymbol type, bool allowKeyword = true)
-        {
-            if (allowKeyword && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
-            {
-                WriteTypeName(itw, type, allowKeyword);
-                return;
-            }
-
-            if (type.ContainingNamespace != null)
-            {
-                WriteNamespace(itw, type.ContainingNamespace);
-                itw.Write("::");
-            }
-
-            WriteTypeName(itw, type, allowKeyword);
-
-            if (type.IsGenericType)
-            {
-                WriteTemplateDefinition(itw, type);
-            }
-        }
-
-        private static void WriteTypeName(IndentedTextWriter itw, INamedTypeSymbol type, bool allowKeyword = true)
-        {
-            if (allowKeyword)
-            {
-                if (type.SpecialType == SpecialType.System_Object)
-                {
-                    itw.Write("object");
-                    return;
-                }
-
-                if (type.SpecialType == SpecialType.System_String)
-                {
-                    itw.Write("string");
-                    return;
-                }
-            }
-
-            if (type.ContainingType != null)
-            {
-                WriteTypeName(itw, type.ContainingType);
-                itw.Write("_");
-            }
-
-            WriteName(itw, type);
-        }
-
-        public static string GetTypeName(INamedTypeSymbol type)
-        {
-            if (type.ContainingType != null)
-            {
-                return GetTypeName(type.ContainingType) + "_" + type.MetadataName;
-            }
-
-            return type.MetadataName;
-        }
-
-        public static void WriteType(IndentedTextWriter itw, ITypeSymbol type, bool cleanName = false)
-        {
-            if (type.IsValueType && WriteSpecialType(itw, type, cleanName))
-            {
-                return;
-            }
-
-            switch (type.TypeKind)
-            {
-                case TypeKind.Unknown:
-                    break;
-                case TypeKind.ArrayType:
-                    var elementType = ((ArrayTypeSymbol)type).ElementType;
-                    itw.Write("__array<");
-                    WriteType(itw, elementType, cleanName);
-                    itw.Write(">*");
-                    return;
-                case TypeKind.Delegate:
-                case TypeKind.Interface:
-                case TypeKind.Class:
-                    WriteTypeFullName(itw, (INamedTypeSymbol)type);
-                    if (type.IsReferenceType)
-                    {
-                        itw.Write("*");
-                    }
-
-                    return;
-                case TypeKind.DynamicType:
-                    break;
-                case TypeKind.Enum:
-                    var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
-                    if (!cleanName)
-                    {
-                        itw.Write("__enum<");
-                        WriteTypeFullName(itw, (INamedTypeSymbol)type);
-                        itw.Write(", ");
-                        WriteType(itw, enumUnderlyingType);
-                        itw.Write(">");
-                    }
-                    else
-                    {
-                        WriteType(itw, enumUnderlyingType);
-                    }
-
-                    return;
-                case TypeKind.Error:
-                    break;
-                case TypeKind.Module:
-                    break;
-                case TypeKind.PointerType:
-                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteType(itw, pointedAtType, cleanName);
-                    itw.Write("*");
-                    return;
-                case TypeKind.Struct:
-                    WriteTypeFullName(itw, (INamedTypeSymbol)type);
-                    return;
-                case TypeKind.TypeParameter:
-                    WriteName(itw, type);
-                    return;
-                case TypeKind.Submission:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public static bool WriteSpecialType(IndentedTextWriter itw, ITypeSymbol type, bool cleanName = false)
-        {
-            switch (type.SpecialType)
-            {
-                case SpecialType.System_Void:
-                    itw.Write("void");
-                    return true;
-                case SpecialType.System_Boolean:
-                    itw.Write("bool");
-                    return true;
-                case SpecialType.System_Char:
-                    itw.Write("wchar_t");
-                    return true;
-                case SpecialType.System_SByte:
-                    itw.Write("int8_t");
-                    return true;
-                case SpecialType.System_Byte:
-                    itw.Write("uint8_t");
-                    return true;
-                case SpecialType.System_Int16:
-                    itw.Write("int16_t");
-                    return true;
-                case SpecialType.System_UInt16:
-                    itw.Write("uint16_t");
-                    return true;
-                case SpecialType.System_Int32:
-                    itw.Write("int32_t");
-                    return true;
-                case SpecialType.System_UInt32:
-                    itw.Write("uint32_t");
-                    return true;
-                case SpecialType.System_Int64:
-                    itw.Write("int64_t");
-                    return true;
-                case SpecialType.System_UInt64:
-                    itw.Write("uint64_t");
-                    return true;
-                case SpecialType.System_Single:
-                    itw.Write("float");
-                    return true;
-                case SpecialType.System_Double:
-                    itw.Write("double");
-                    return true;
-                case SpecialType.System_IntPtr:
-                    if (cleanName)
-                    {
-                        itw.Write("intptr_t");
-                    }
-                    else
-                    {
-                        itw.Write("__val<intptr_t>");
-                    }
-
-                    return true;
-                case SpecialType.System_UIntPtr:
-                    if (cleanName)
-                    {
-                        itw.Write("uintptr_t");
-                    }
-                    else
-                    {
-                        itw.Write("__val<uintptr_t>");
-                    }
-
-                    return true;
-            }
-
-            return false;
-        }
-
-        public static void WriteFieldDeclaration(IndentedTextWriter itw, IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol.IsStatic)
-            {
-                itw.Write("static ");
-            }
-
-            WriteType(itw, fieldSymbol.Type, true);
-            itw.Write(" ");
-            WriteName(itw, fieldSymbol);
-        }
-
-        public static void WriteFieldDefinition(IndentedTextWriter itw, IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol.ContainingType.IsGenericType)
-            {
-                WriteTemplateDeclaration(itw, fieldSymbol.ContainingType);
-                itw.WriteLine();
-            }
-
-            WriteType(itw, fieldSymbol.Type, true);
-            itw.Write(" ");
-
-            if (fieldSymbol.ContainingNamespace != null)
-            {
-                WriteNamespace(itw, fieldSymbol.ContainingNamespace);
-                itw.Write("::");
-            }
-
-            var receiverType = fieldSymbol.ContainingType;
-            WriteTypeName(itw, receiverType, false);
-            if (receiverType.IsGenericType)
-            {
-                WriteTemplateDefinition(itw, fieldSymbol.ContainingType);
-            }
-
-            itw.Write("::");
-
-            WriteName(itw, fieldSymbol);
-        }
-
-        public static void WriteMethodDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol, bool declarationWithingClass)
-        {
-            if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
-            {
-                WriteTemplateDeclaration(itw, methodSymbol.ContainingType);
-                if (!declarationWithingClass)
-                {
-                    itw.WriteLine();
-                }
-            }
-
-            if (methodSymbol.IsGenericMethod)
-            {
-                WriteTemplateDeclaration(itw, methodSymbol);
-                if (!declarationWithingClass)
-                {
-                    itw.WriteLine();
-                }
-            }
-
-            if (declarationWithingClass)
-            {
-                if (methodSymbol.IsStatic)
-                {
-                    itw.Write("static ");
-                }
-
-                if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
-                {
-                    if (methodSymbol.IsGenericMethod)
-                    {
-                        // TODO: finish it
-                        itw.Write("/*");
-                    }
-
-                    itw.Write("virtual ");
-                    if (methodSymbol.IsGenericMethod)
-                    {
-                        // TODO: finish it
-                        itw.Write("*/");
-                    }
-                }
-            }
-            
-            // type
-            if (methodSymbol.MethodKind != MethodKind.Constructor)
-            {
-                if (methodSymbol.ReturnsVoid)
-                {
-                    itw.Write("void");
-                }
-                else
-                {
-                    WriteType(itw, methodSymbol.ReturnType);
-                }
-
-                itw.Write(" ");
-            }
-
-            if (!declarationWithingClass)
-            {
-                WriteMethodFullName(itw, methodSymbol);
-            }
-            else
-            {
-                WriteMethodName(itw, methodSymbol);
-            }
-
-            // parameters
-            var anyParameter = false;
-            var notUniqueParametersNames = !declarationWithingClass && methodSymbol.Parameters.Select(p => p.Name).Distinct().Count() != methodSymbol.Parameters.Length;
-            var parameterIndex = 0;
-            
-            itw.Write("(");
-            foreach (var parameterSymbol in methodSymbol.Parameters)
-            {
-                if (anyParameter)
-                {
-                    itw.Write(", ");
-                }
-
-                anyParameter = true;
-
-                WriteType(itw, parameterSymbol.Type);
-                if (!declarationWithingClass)
-                {
-                    itw.Write(" ");
-                    if (!notUniqueParametersNames)
-                    {
-                        WriteNameEnsureCompatible(itw, parameterSymbol);
-                    }
-                    else
-                    {
-                        itw.Write("__arg{0}", parameterIndex);
-                    }
-                }
-
-                parameterIndex++;
-            }
-
-            itw.Write(")");
-
-            if (declarationWithingClass)
-            {
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    itw.Write("/*");
-                }
-
-                if (methodSymbol.IsOverride)
-                {
-                    itw.Write(" override");
-                }
-                else if (methodSymbol.IsAbstract)
-                {
-                    itw.Write(" = 0");
-                }
-
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    itw.Write("*/");
-                }
-            }
-        }
-
-        public static void WriteMethodFullName(IndentedTextWriter itw, IMethodSymbol methodSymbol)
-        {
-            // namespace
-            if (methodSymbol.ContainingNamespace != null)
-            {
-                WriteNamespace(itw, methodSymbol.ContainingNamespace);
-                itw.Write("::");
-            }
-
-            var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-            WriteTypeName(itw, receiverType, false);
-            if (receiverType.IsGenericType)
-            {
-                WriteTemplateDefinition(itw, methodSymbol.ContainingType);
-            }
-
-            itw.Write("::");
-
-            WriteMethodName(itw, methodSymbol);
-        }
-
-        public static void WriteTemplateDeclaration(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol)
-        {
-            itw.Write("template <");
-
-            var anyTypeParam = false;
-            WriteTemplateDeclarationRecusive(itw, namedTypeSymbol, ref anyTypeParam);
-
-            itw.Write("> ");
-        }
-
-        public static void WriteTemplateDeclarationRecusive(IndentedTextWriter itw, INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
-        {
-            if (namedTypeSymbol.ContainingType != null)
-            {
-                WriteTemplateDeclarationRecusive(itw, namedTypeSymbol.ContainingType, ref anyTypeParam);
-            }
-
-            foreach (var typeParam in namedTypeSymbol.TypeParameters)
-            {
-                if (anyTypeParam)
-                {
-                    itw.Write(", ");
-                }
-
-                anyTypeParam = true;
-
-                itw.Write("typename ");
-                WriteName(itw, typeParam);
-            }
-        }
-
-        public static void WriteTemplateDefinition(IndentedTextWriter itw, INamedTypeSymbol typeSymbol)
-        {
-            itw.Write("<");
-
-            var anyTypeParam = false;
-            WriteTemplateDefinitionRecusive(itw, typeSymbol, ref anyTypeParam);
-
-            itw.Write(">");
-        }
-
-        public static void WriteTemplateDefinitionRecusive(IndentedTextWriter itw, INamedTypeSymbol typeSymbol, ref bool anyTypeParam)
-        {
-            if (typeSymbol.ContainingType != null)
-            {
-                WriteTemplateDefinitionRecusive(itw, typeSymbol.ContainingType, ref anyTypeParam);
-            }
-
-            foreach (var typeParam in typeSymbol.TypeArguments)
-            {
-                if (anyTypeParam)
-                {
-                    itw.Write(", ");
-                }
-
-                anyTypeParam = true;
-
-                WriteType(itw, typeParam);
-            }
-        }
-
-        public static void WriteTemplateDeclaration(IndentedTextWriter itw, IMethodSymbol methodSymbol)
-        {
-            itw.Write("template <");
-            var anyTypeParam = false;
-            foreach (var typeParam in methodSymbol.TypeParameters)
-            {
-                if (anyTypeParam)
-                {
-                    itw.Write(", ");
-                }
-
-                anyTypeParam = true;
-
-                itw.Write("typename ");
-                WriteName(itw, typeParam);
-            }
-
-            itw.Write("> ");
-        }
-
-        internal static void WriteMethodBody(IndentedTextWriter itw, BoundStatement boundBody, IMethodSymbol methodSymbol)
-        {
-            itw.WriteLine();
-            itw.WriteLine("{");
-            itw.Indent++;
-
-            if (boundBody != null)
-            {
-
-                itw.WriteLine("// Body");
-#if EMPTY_SKELETON
-                itw.WriteLine("throw 0xC000C000;");
-#else
-                new CCodeMethodSerializer(itw).Serialize(boundBody);
-#endif
-            }
-
-            itw.Indent--;
-            itw.WriteLine("}");
-        }
 
         public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
         {
@@ -693,10 +121,11 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
+                    var c = new CCodeWriter(itw);
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric))
                     {
                         anyRecord = true;
-                        definition.WriteTo(itw);
+                        definition.WriteTo(c);
                     }
 
                     itw.Close();
@@ -726,17 +155,19 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
+                    var c = new CCodeWriter(itw);
+
                     WriteSourceInclude(itw, identity, nestedLevel);
 
                     foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
                     {
                         anyRecord = true;
-                        definition.WriteTo(itw);
+                        definition.WriteTo(c);
                     }
 
                     if (unit.MainMethod != null)
                     {
-                        WriteSourceMainEntry(itw, unit.MainMethod);
+                        WriteSourceMainEntry(c, itw, unit.MainMethod);
                     }
 
                     itw.Close();
@@ -749,13 +180,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        public static void WriteSourceMainEntry(IndentedTextWriter itw, IMethodSymbol mainMethod)
+        public static void WriteSourceMainEntry(CCodeWriter c, IndentedTextWriter itw, IMethodSymbol mainMethod)
         {
             itw.WriteLine();
             itw.WriteLine("int main()");
             itw.WriteLine("{");
             itw.Indent++;
-            WriteMethodFullName(itw, mainMethod);
+            c.WriteMethodFullName(mainMethod);
             itw.Write("(");
             if (mainMethod.Parameters.Length > 0)
             {
@@ -784,6 +215,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
+                var c = new CCodeWriter(itw);
                 if (isCoreLib)
                 {
                     itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
@@ -801,18 +233,18 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
                     {
                         itw.Write("namespace ");
-                        WriteNamespaceName(itw, namespaceNode);
+                        c.WriteNamespaceName(namespaceNode);
                         itw.Write(" { ");
                     }
 
                     if (namedTypeSymbol.IsGenericType)
                     {
-                        WriteTemplateDeclaration(itw, namedTypeSymbol);
+                        c.WriteTemplateDeclaration(namedTypeSymbol);
                     }
 
                     itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
                     itw.Write(" ");
-                    WriteTypeName(itw, namedTypeSymbol, false);
+                    c.WriteTypeName(namedTypeSymbol, false);
                     itw.Write("; ");
 
                     foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -826,9 +258,9 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         namedTypeSymbol.SpecialType == SpecialType.System_String)
                     {
                         itw.Write("typedef ");
-                        WriteTypeFullName(itw, namedTypeSymbol, false);
+                        c.WriteTypeFullName(namedTypeSymbol, false);
                         itw.Write(" ");
-                        WriteTypeName(itw, namedTypeSymbol);
+                        c.WriteTypeName(namedTypeSymbol);
                         itw.WriteLine(";");
                     }
                 }
@@ -843,7 +275,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
                     {
                         itw.Write("namespace ");
-                        WriteNamespaceName(itw, namespaceNode);
+                        c.WriteNamespaceName(namespaceNode);
                         itw.Write(" { ");
                         any = true;
                     }
@@ -856,16 +288,16 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     if (namedTypeSymbol.IsGenericType)
                     {
-                        WriteTemplateDeclaration(itw, namedTypeSymbol);
+                        c.WriteTemplateDeclaration(namedTypeSymbol);
                     }
 
                     itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
                     itw.Write(" ");
-                    WriteTypeName(itw, namedTypeSymbol, false);
+                    c.WriteTypeName(namedTypeSymbol, false);
                     if (namedTypeSymbol.BaseType != null)
                     {
                         itw.Write(" : public ");
-                        WriteTypeFullName(itw, namedTypeSymbol.BaseType, false);
+                        c.WriteTypeFullName(namedTypeSymbol.BaseType, false);
                     }
 
                     itw.WriteLine();
@@ -875,13 +307,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     if (!unit.HasDefaultConstructor)
                     {
-                        WriteTypeName(itw, namedTypeSymbol, false);
+                        c.WriteTypeName(namedTypeSymbol, false);
                         itw.WriteLine("() = default;");
                     }
 
                     foreach (var declaration in unit.Declarations)
                     {
-                        declaration.WriteTo(itw);
+                        declaration.WriteTo(c);
                     }
 
                     itw.Indent--;
@@ -943,6 +375,16 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
             nestedLevel = enumNamespaces.Count();
             return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
+        }
+
+        private static string GetTypeName(INamedTypeSymbol type)
+        {
+            if (type.ContainingType != null)
+            {
+                return GetTypeName(type.ContainingType) + "_" + type.MetadataName;
+            }
+
+            return type.MetadataName;
         }
     }
 }

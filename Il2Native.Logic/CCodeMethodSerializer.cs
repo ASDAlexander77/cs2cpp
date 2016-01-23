@@ -2,6 +2,7 @@
 {
     using System.CodeDom.Compiler;
     using System.Diagnostics;
+    using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeGen;
     using Microsoft.CodeAnalysis.CSharp;
@@ -12,18 +13,11 @@
 
     public class CCodeMethodSerializer
     {
-        private readonly IndentedTextWriter itw;
+        private readonly CCodeWriter c;
 
-        private enum CallKind
+        public CCodeMethodSerializer(CCodeWriter c)
         {
-            Call,
-            CallVirt,
-            ConstrainedCallVirt,
-        }
-
-        public CCodeMethodSerializer(IndentedTextWriter itw)
-        {
-            this.itw = itw;
+            this.c = c;
         }
 
         internal void Serialize(BoundStatement boundBody)
@@ -99,16 +93,14 @@
 
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
-            this.itw.Write("return");
+            this.c.Write("return");
             if (boundReturnStatement.ExpressionOpt != null)
             {
-                this.itw.Write(" ");
+                this.c.Write(" ");
             }
 
             // TODO: investigate about indirect return
             this.EmitExpression(boundReturnStatement.ExpressionOpt, true);
-
-            this.itw.WriteLine(";");
         }
 
         private void EmitStatementList(BoundStatementList list)
@@ -121,6 +113,8 @@
 
         private void EmitBlock(BoundBlock block)
         {
+            this.c.OpenBlock();
+
             var hasLocals = !block.Locals.IsEmpty;
 
             if (hasLocals)
@@ -135,7 +129,10 @@
             foreach (var statement in block.Statements)
             {
                 EmitStatement(statement);
+                this.c.WriteLine(";");
             }
+
+            this.c.EndBlock();
         }
 
         private void EmitSequencePointStatement(BoundSequencePoint node)
@@ -183,46 +180,46 @@
             switch (discriminator)
             {
                 case ConstantValueTypeDiscriminator.Null:
-                    itw.Write("nullptr");
+                    c.Write("nullptr");
                     break;
                 case ConstantValueTypeDiscriminator.SByte:
-                    itw.Write(value.SByteValue);
+                    c.Write(value.SByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Byte:
-                    itw.Write(value.ByteValue);
+                    c.Write(value.ByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.UInt16:
-                    itw.Write(value.UInt16Value);
+                    c.Write(value.UInt16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Char:
-                    itw.Write("L'{0}'", value.CharValue);
+                    c.Write(string.Format("L'{0}'", value.CharValue));
                     break;
                 case ConstantValueTypeDiscriminator.Int16:
-                    itw.Write(value.Int16Value);
+                    c.Write(value.Int16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int32:
                 case ConstantValueTypeDiscriminator.UInt32:
-                    itw.Write(value.Int32Value);
+                    c.Write(value.Int32Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
-                    itw.Write(value.Int64Value);
-                    itw.Write("L");
+                    c.Write(value.Int64Value.ToString());
+                    c.Write("L");
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
-                    itw.Write(value.Int64Value);
-                    itw.Write("UL");
+                    c.Write(value.Int64Value.ToString());
+                    c.Write("UL");
                     break;
                 case ConstantValueTypeDiscriminator.Single:
-                    itw.Write(value.SingleValue);
+                    c.Write(value.SingleValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Double:
-                    itw.Write(value.DoubleValue);
+                    c.Write(value.DoubleValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    itw.Write("L\"{0}\"", value.StringValue);
+                    c.Write(string.Format("L\"{0}\"", value.StringValue));
                     break;
                 case ConstantValueTypeDiscriminator.Boolean:
-                    itw.Write(value.BooleanValue.ToString().ToLowerInvariant());
+                    c.Write(value.BooleanValue.ToString().ToLowerInvariant());
                     break;
                 default:
                     throw ExceptionUtilities.UnexpectedValue(discriminator);
@@ -448,169 +445,41 @@
         {
             var method = call.Method;
             var receiver = call.ReceiverOpt;
-            LocalDefinition tempOpt = null;
 
-            // Calls to the default struct constructor are emitted as initobj, rather than call.
-            // NOTE: constructor invocations are usually represented as BoundObjectCreationExpressions,
-            // rather than BoundCalls.  This is why we can be confident that if we see a call to a
-            // constructor, it has this very specific form.
-            if (method.IsParameterlessValueTypeConstructor())
+            c.WriteMethodFullName(method);
+            this.c.Write("(");
+            var anyArgs = false;
+            foreach (var boundExpression in call.Arguments)
             {
-                Debug.Assert(method.IsImplicitlyDeclared);
-                Debug.Assert(method.ContainingType == receiver.Type);
-                Debug.Assert(receiver.Kind == BoundKind.ThisReference);
-
-                //tempOpt = EmitReceiverRef(receiver);
-                //builder.EmitOpCode(ILOpCode.Initobj);    //  initobj  <MyStruct>
-                //EmitSymbolToken(method.ContainingType, call.Syntax);
-
-                return;
-            }
-
-            var arguments = call.Arguments;
-
-            CallKind callKind = CallKind.Call;
-
-            if (method.IsStatic)
-            {
-                callKind = CallKind.Call;
-            }
-            else
-            {
-                var receiverType = receiver.Type;
-
-                if (receiverType.IsVerifierReference())
+                if (anyArgs)
                 {
-                    ////tempOpt = EmitReceiverRef(receiver, isAccessConstrained: false);
-
-                    ////// In some cases CanUseCallOnRefTypeReceiver returns true which means that 
-                    ////// null check is unnecessary and we can use "call"
-                    ////if (receiver.SuppressVirtualCalls ||
-                    ////    (!method.IsMetadataVirtual() && CanUseCallOnRefTypeReceiver(receiver)))
-                    ////{
-                    ////    callKind = CallKind.Call;
-                    ////}
-                    ////else
-                    ////{
-                    ////    callKind = CallKind.CallVirt;
-                    ////}
-                }
-                else if (receiverType.IsVerifierValue())
-                {
-                    NamedTypeSymbol methodContainingType = method.ContainingType;
-                    ////if (methodContainingType.IsVerifierValue() && MayUseCallForStructMethod(method))
-                    ////{
-                    ////    // NOTE: this should be either a method which overrides some abstract method or 
-                    ////    //       does not override anything (with few exceptions, see MayUseCallForStructMethod); 
-                    ////    //       otherwise we should not use direct 'call' and must use constrained call;
-
-                    ////    // calling a method defined in a value type
-                    ////    Debug.Assert(receiverType == methodContainingType);
-                    ////    tempOpt = EmitReceiverRef(receiver);
-                    ////    callKind = CallKind.Call;
-                    ////}
-                    ////else
-                    ////{
-                    ////    if (method.IsMetadataVirtual())
-                    ////    {
-                    ////        // When calling a method that is virtual in metadata on a struct receiver, 
-                    ////        // we use a constrained virtual call. If possible, it will skip boxing.
-                    ////        tempOpt = EmitReceiverRef(receiver, isAccessConstrained: true);
-                    ////        callKind = CallKind.ConstrainedCallVirt;
-                    ////    }
-                    ////    else
-                    ////    {
-                    ////        // calling a method defined in a base class.
-                    ////        EmitExpression(receiver, used: true);
-                    ////        EmitBox(receiverType, receiver.Syntax);
-                    ////        callKind = CallKind.Call;
-                    ////    }
-                    ////}
-                }
-                else
-                {
-                    // receiver is generic and method must come from the base or an interface or a generic constraint
-                    // if the receiver is actually a value type it would need to be boxed.
-                    // let .constrained sort this out. 
-                    callKind = receiverType.IsReferenceType ?
-                                CallKind.CallVirt :
-                                CallKind.ConstrainedCallVirt;
-
-                    ////tempOpt = EmitReceiverRef(receiver, isAccessConstrained: callKind == CallKind.ConstrainedCallVirt);
-                }
-            }
-
-            // When emitting a callvirt to a virtual method we always emit the method info of the
-            // method that first declared the virtual method, not the method info of an
-            // overriding method. It would be a subtle breaking change to change that rule;
-            // see bug 6156 for details.
-
-            MethodSymbol actualMethodTargetedByTheCall = method;
-            if (method.IsOverride && callKind != CallKind.Call)
-            {
-                ////actualMethodTargetedByTheCall = method.GetConstructedLeastOverriddenMethod(this.method.ContainingType);
-            }
-
-            if (callKind == CallKind.ConstrainedCallVirt && actualMethodTargetedByTheCall.ContainingType.IsValueType)
-            {
-                // special case for overriden methods like ToString(...) called on
-                // value types: if the original method used in emit cannot use callvirt in this
-                // case, change it to Call.
-                callKind = CallKind.Call;
-            }
-
-            /*
-            // Devirtualizing of calls to effectively sealed methods.
-            if (callKind == CallKind.CallVirt)
-            {
-                // NOTE: we check that we call method in same module just to be sure
-                // that it cannot be recompiled as not final and make our call not verfiable. 
-                // such change by adversarial user would arguably be a compat break, but better be safe...
-                // In reality we would typically have one method calling another method in the same class (one GetEnumerator calling another).
-                // Other scenarios are uncommon since base class cannot be sealed and 
-                // referring to a derived type in a different module is not an easy thing to do.
-                if (IsThisReceiver(receiver) && actualMethodTargetedByTheCall.ContainingType.IsSealed &&
-                        (object)actualMethodTargetedByTheCall.ContainingModule == (object)this.method.ContainingModule)
-                {
-                    // special case for target is in a sealed class and "this" receiver.
-                    Debug.Assert(receiver.Type.IsVerifierReference());
-                    callKind = CallKind.Call;
+                    this.c.Write(", ");
                 }
 
-                // NOTE: we do not check that we call method in same module.
-                // Because of the "GetOriginalConstructedOverriddenMethod" above, the actual target
-                // can only be final when it is "newslot virtual final".
-                // In such case Dev11 emits "call" and we will just replicate the behavior. (see DevDiv: 546853 )
-                else if (actualMethodTargetedByTheCall.IsMetadataFinal() && CanUseCallOnRefTypeReceiver(receiver))
-                {
-                    // special case for calling 'final' virtual method on reference receiver
-                    Debug.Assert(receiver.Type.IsVerifierReference());
-                    callKind = CallKind.Call;
-                }
+                EmitExpression(boundExpression, false);
+
+                anyArgs = true;
             }
-            */
 
-            ////EmitArguments(arguments, method.Parameters);
-            ////int stackBehavior = GetCallStackBehavior(call);
-            ////switch (callKind)
-            ////{
-            ////    case CallKind.Call:
-            ////        builder.EmitOpCode(ILOpCode.Call, stackBehavior);
-            ////        break;
+            this.c.Write(")");
+        }
 
-            ////    case CallKind.CallVirt:
-            ////        builder.EmitOpCode(ILOpCode.Callvirt, stackBehavior);
-            ////        break;
+        /// <summary>
+        /// checks if receiver is effectively ldarg.0
+        /// </summary>
+        private bool IsThisReceiver(BoundExpression receiver)
+        {
+            switch (receiver.Kind)
+            {
+                case BoundKind.ThisReference:
+                    return true;
 
-            ////    case CallKind.ConstrainedCallVirt:
-            ////        builder.EmitOpCode(ILOpCode.Constrained);
-            ////        EmitSymbolToken(receiver.Type, receiver.Syntax);
-            ////        builder.EmitOpCode(ILOpCode.Callvirt, stackBehavior);
-            ////        break;
-            ////}
+                case BoundKind.Sequence:
+                    var seqValue = ((BoundSequence)(receiver)).Value;
+                    return IsThisReceiver(seqValue);
+            }
 
-            ////EmitSymbolToken(actualMethodTargetedByTheCall, call.Syntax,
-            ////                actualMethodTargetedByTheCall.IsVararg ? (BoundArgListOperator)call.Arguments[call.Arguments.Length - 1] : null);
+            return false;
         }
     }
 }
