@@ -95,15 +95,21 @@ namespace Il2Native.Logic
             }
         }
 
-        public static void WriteTypeFullName(IndentedTextWriter itw, INamedTypeSymbol type)
+        public static void WriteTypeFullName(IndentedTextWriter itw, INamedTypeSymbol type, bool allowKeyword = true)
         {
+            if (allowKeyword && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
+            {
+                WriteTypeName(itw, type, allowKeyword);
+                return;
+            }
+
             if (type.ContainingNamespace != null)
             {
                 WriteNamespace(itw, type.ContainingNamespace);
                 itw.Write("::");
             }
 
-            WriteTypeName(itw, type);
+            WriteTypeName(itw, type, allowKeyword);
 
             if (type.IsGenericType)
             {
@@ -111,8 +117,23 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void WriteTypeName(IndentedTextWriter itw, INamedTypeSymbol type)
+        private static void WriteTypeName(IndentedTextWriter itw, INamedTypeSymbol type, bool allowKeyword = true)
         {
+            if (allowKeyword)
+            {
+                if (type.SpecialType == SpecialType.System_Object)
+                {
+                    itw.Write("object");
+                    return;
+                }
+
+                if (type.SpecialType == SpecialType.System_String)
+                {
+                    itw.Write("string");
+                    return;
+                }
+            }
+
             if (type.ContainingType != null)
             {
                 WriteTypeName(itw, type.ContainingType);
@@ -300,8 +321,8 @@ namespace Il2Native.Logic
                 itw.Write("::");
             }
 
-            var receiverType = (INamedTypeSymbol)fieldSymbol.ContainingType;
-            WriteTypeName(itw, receiverType);
+            var receiverType = fieldSymbol.ContainingType;
+            WriteTypeName(itw, receiverType, false);
             if (receiverType.IsGenericType)
             {
                 WriteTemplateDefinition(itw, fieldSymbol.ContainingType);
@@ -381,7 +402,7 @@ namespace Il2Native.Logic
                 }
 
                 var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-                WriteTypeName(itw, receiverType);
+                WriteTypeName(itw, receiverType, false);
                 if (receiverType.IsGenericType)
                 {
                     WriteTemplateDefinition(itw, methodSymbol.ContainingType);
@@ -393,7 +414,7 @@ namespace Il2Native.Logic
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
             {
-                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType);
+                WriteTypeName(itw, (INamedTypeSymbol)methodSymbol.ReceiverType, false);
             }
             else
             {
@@ -754,7 +775,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
                     itw.Write(" ");
-                    WriteTypeName(itw, namedTypeSymbol);
+                    WriteTypeName(itw, namedTypeSymbol, false);
                     itw.Write("; ");
 
                     foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -763,6 +784,16 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     }
 
                     itw.WriteLine();
+
+                    if (namedTypeSymbol.SpecialType == SpecialType.System_Object ||
+                        namedTypeSymbol.SpecialType == SpecialType.System_String)
+                    {
+                        itw.Write("typedef ");
+                        WriteTypeFullName(itw, namedTypeSymbol, false);
+                        itw.Write(" ");
+                        WriteTypeName(itw, namedTypeSymbol);
+                        itw.WriteLine(";");
+                    }
                 }
 
                 itw.WriteLine();
@@ -793,11 +824,11 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
                     itw.Write(" ");
-                    WriteTypeName(itw, namedTypeSymbol);
+                    WriteTypeName(itw, namedTypeSymbol, false);
                     if (namedTypeSymbol.BaseType != null)
                     {
                         itw.Write(" : public ");
-                        WriteTypeFullName(itw, namedTypeSymbol.BaseType);
+                        WriteTypeFullName(itw, namedTypeSymbol.BaseType, false);
                     }
 
                     itw.WriteLine();
@@ -807,7 +838,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     if (!unit.HasDefaultConstructor)
                     {
-                        WriteTypeName(itw, namedTypeSymbol);
+                        WriteTypeName(itw, namedTypeSymbol, false);
                         itw.WriteLine("() = default;");
                     }
 
