@@ -362,9 +362,9 @@ namespace Ll2NativeTests
 
 		            var d = b++ + ++a;
 
-		            Console.WriteLine(a);		
-		            Console.WriteLine(b);		
-		            Console.WriteLine(d);		
+		            Console.NewLine(a);		
+		            Console.NewLine(b);		
+		            Console.NewLine(d);		
 
 		            return 0;
 	            }

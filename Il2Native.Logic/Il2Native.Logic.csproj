@@ -49,6 +49,7 @@
     <Compile Include="CCodeSerializer.cs" />
     <Compile Include="CCodeWriter.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
+    <Compile Include="CCodeWriterSyntax.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />

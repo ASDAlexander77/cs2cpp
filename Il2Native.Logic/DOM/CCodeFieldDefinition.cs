@@ -20,7 +20,7 @@
         public override void WriteTo(CCodeWriter c)
         {
             c.WriteFieldDefinition(this.Field);
-            c.WriteLine(";");
+            c.EndStatement();
         }
     }
 }

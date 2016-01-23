@@ -15,7 +15,7 @@
         public override void WriteTo(CCodeWriter c)
         {
             c.WriteMethodDeclaration(this.Method, true);
-            c.WriteLine(";");
+            c.EndStatement();
         }
     }
 }

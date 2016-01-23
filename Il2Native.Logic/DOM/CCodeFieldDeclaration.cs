@@ -15,7 +15,7 @@
         public override void WriteTo(CCodeWriter c)
         {
             c.WriteFieldDeclaration(this.Field);
-            c.WriteLine(";");
+            c.EndStatement();
         }
     }
 }

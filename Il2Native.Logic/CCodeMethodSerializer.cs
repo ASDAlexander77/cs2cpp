@@ -93,10 +93,10 @@
 
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
-            this.c.Write("return");
+            this.c.TextSpan("return");
             if (boundReturnStatement.ExpressionOpt != null)
             {
-                this.c.Write(" ");
+                this.c.TextSpan(" ");
             }
 
             // TODO: investigate about indirect return
@@ -129,7 +129,7 @@
             foreach (var statement in block.Statements)
             {
                 EmitStatement(statement);
-                this.c.WriteLine(";");
+                this.c.EndStatement();
             }
 
             this.c.EndBlock();
@@ -180,46 +180,46 @@
             switch (discriminator)
             {
                 case ConstantValueTypeDiscriminator.Null:
-                    c.Write("nullptr");
+                    c.TextSpan("nullptr");
                     break;
                 case ConstantValueTypeDiscriminator.SByte:
-                    c.Write(value.SByteValue.ToString());
+                    c.TextSpan(value.SByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Byte:
-                    c.Write(value.ByteValue.ToString());
+                    c.TextSpan(value.ByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.UInt16:
-                    c.Write(value.UInt16Value.ToString());
+                    c.TextSpan(value.UInt16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Char:
-                    c.Write(string.Format("L'{0}'", value.CharValue));
+                    c.TextSpan(string.Format("L'{0}'", value.CharValue));
                     break;
                 case ConstantValueTypeDiscriminator.Int16:
-                    c.Write(value.Int16Value.ToString());
+                    c.TextSpan(value.Int16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int32:
                 case ConstantValueTypeDiscriminator.UInt32:
-                    c.Write(value.Int32Value.ToString());
+                    c.TextSpan(value.Int32Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
-                    c.Write(value.Int64Value.ToString());
-                    c.Write("L");
+                    c.TextSpan(value.Int64Value.ToString());
+                    c.TextSpan("L");
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
-                    c.Write(value.Int64Value.ToString());
-                    c.Write("UL");
+                    c.TextSpan(value.Int64Value.ToString());
+                    c.TextSpan("UL");
                     break;
                 case ConstantValueTypeDiscriminator.Single:
-                    c.Write(value.SingleValue.ToString());
+                    c.TextSpan(value.SingleValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Double:
-                    c.Write(value.DoubleValue.ToString());
+                    c.TextSpan(value.DoubleValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    c.Write(string.Format("L\"{0}\"", value.StringValue));
+                    c.TextSpan(string.Format("L\"{0}\"", value.StringValue));
                     break;
                 case ConstantValueTypeDiscriminator.Boolean:
-                    c.Write(value.BooleanValue.ToString().ToLowerInvariant());
+                    c.TextSpan(value.BooleanValue.ToString().ToLowerInvariant());
                     break;
                 default:
                     throw ExceptionUtilities.UnexpectedValue(discriminator);
@@ -447,13 +447,13 @@
             var receiver = call.ReceiverOpt;
 
             c.WriteMethodFullName(method);
-            this.c.Write("(");
+            this.c.TextSpan("(");
             var anyArgs = false;
             foreach (var boundExpression in call.Arguments)
             {
                 if (anyArgs)
                 {
-                    this.c.Write(", ");
+                    this.c.TextSpan(", ");
                 }
 
                 EmitExpression(boundExpression, false);
@@ -461,7 +461,7 @@
                 anyArgs = true;
             }
 
-            this.c.Write(")");
+            this.c.TextSpan(")");
         }
 
         /// <summary>

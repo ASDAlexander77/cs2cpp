@@ -8,7 +8,7 @@
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
-    public class CCodeWriter
+    public partial class CCodeWriter
     {
         private IndentedTextWriter itw;
 
@@ -17,46 +17,19 @@
             this.itw = itw;
         }
 
-        public void OpenBlock()
-        {
-            this.itw.WriteLine("{");
-            this.itw.Indent++;            
-        }
-
-        public void EndBlock()
-        {
-            this.itw.Indent--;
-            this.itw.WriteLine("}");
-        }
-
-        public void Write(string line)
-        {
-            this.itw.Write(line);
-        }
-
-        public void WriteLine(string line)
-        {
-            this.itw.WriteLine(line);
-        }
-
-        public void WriteLine()
-        {
-            this.itw.WriteLine();
-        }
-
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
-            this.WriteLine();
+            this.NewLine();
 
             if (boundBody != null)
             {
 
 #if EMPTY_SKELETON
-                itw.WriteLine("{");
+                itw.NewLine("{");
                 itw.Indent++;
-                itw.WriteLine("throw 0xC000C000;");
+                itw.NewLine("throw 0xC000C000;");
                 itw.Indent--;
-                itw.WriteLine("}");
+                itw.NewLine("}");
 #else
                 new CCodeMethodSerializer(this).Serialize(boundBody);
 #endif
