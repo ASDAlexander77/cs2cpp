@@ -1,7 +1,11 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
+    using System.CodeDom.Compiler;
+
     public enum State
     {
+        NotSet,
         Open,
         End
     }
@@ -15,12 +19,19 @@
         ConditionalWhitespace,
     }
 
-    public partial class CCodeWriter
+    [Obsolete]
+    public class CCodeWriterText : CCodeWriterBase
     {
+        private IndentedTextWriter _itw;
         private State block = State.End;
         private TextState text = TextState.Empty;
 
-        public void OpenBlock()
+        public CCodeWriterText(IndentedTextWriter itw)
+        {
+            _itw = itw;
+        }
+
+        public override void OpenBlock()
         {
             if (this.block == State.Open)
             {
@@ -33,7 +44,7 @@
             _itw.Indent++;       
         }
 
-        public void EndBlock()
+        public override void EndBlock()
         {
             if (this.block == State.End)
             {
@@ -46,7 +57,11 @@
             this.NewLine();
         }
 
-        public void EndStatement()
+        public override void OpenStatement()
+        {
+        }
+
+        public override void EndStatement()
         {
             if (this.text == TextState.Empty || this.text == TextState.Separated)
             {
@@ -54,10 +69,10 @@
             }
 
             this.text = TextState.Any;
-            this.TextDiv(";");
+            this.TextSpanNewLine(";");
         }
 
-        public void TextSpan(string line)
+        public override void TextSpan(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
@@ -73,7 +88,7 @@
             _itw.Write(line);
         }
 
-        public void TextDiv(string line)
+        public override void TextSpanNewLine(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
@@ -84,7 +99,7 @@
             NewLine();
         }
 
-        public void WhiteSpace()
+        public override void WhiteSpace()
         {
             if (this.text == TextState.Whitespace)
             {
@@ -95,12 +110,12 @@
             this.text = TextState.Whitespace;
         }
 
-        public void WhiteSpaceConditional()
+        public override void WhiteSpaceConditional()
         {
             this.text = TextState.ConditionalWhitespace;
         }
 
-        public void NewLine()
+        public override void NewLine()
         {
             if (this.text == TextState.Empty || this.text == TextState.Separated)
             {
@@ -112,7 +127,7 @@
             this.text = TextState.Empty;
         }
 
-        public void Separate()
+        public override void Separate()
         {
             if (this.text == TextState.Separated)
             {

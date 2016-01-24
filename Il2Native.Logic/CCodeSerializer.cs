@@ -121,7 +121,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
-                    var c = new CCodeWriter(itw);
+                    var c = new CCodeWriterText(itw);
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric))
                     {
                         anyRecord = true;
@@ -155,7 +155,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
-                    var c = new CCodeWriter(itw);
+                    var c = new CCodeWriterText(itw);
 
                     WriteSourceInclude(itw, identity, nestedLevel);
 
@@ -180,7 +180,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        public static void WriteSourceMainEntry(CCodeWriter c, IndentedTextWriter itw, IMethodSymbol mainMethod)
+        public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
         {
             itw.WriteLine();
             itw.WriteLine("int main()");
@@ -215,7 +215,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
-                var c = new CCodeWriter(itw);
+                var c = new CCodeWriterText(itw);
                 if (isCoreLib)
                 {
                     itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));

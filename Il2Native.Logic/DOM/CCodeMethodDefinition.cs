@@ -24,11 +24,11 @@
             get { return this.Method.ContainingType.IsGenericType || this.Method.IsGenericMethod; }
         }
 
-        public override void WriteTo(CCodeWriter c)
+        public override void WriteTo(CCodeWriterBase c)
         {
             c.NewLine();
             c.Separate();
-            c.TextDiv(string.Format("// Method: {0}", this.Method.ToDisplayString()));
+            c.TextSpanNewLine(string.Format("// Method: {0}", this.Method.ToDisplayString()));
 
             c.WriteMethodDeclaration(this.Method, false);
             c.WriteMethodBody(this.BoundBody, this.Method);

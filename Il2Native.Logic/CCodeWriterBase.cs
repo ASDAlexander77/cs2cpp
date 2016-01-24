@@ -2,20 +2,35 @@
 {
     using System;
     using System.CodeDom.Compiler;
+    using System.IO;
     using System.Linq;
+    using System.Text;
     using DOM;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
-    public partial class CCodeWriter
+    public abstract class CCodeWriterBase
     {
-        private IndentedTextWriter _itw;
+        public abstract void OpenBlock();
 
-        public CCodeWriter(IndentedTextWriter itw)
-        {
-            _itw = itw;
-        }
+        public abstract void EndBlock();
+
+        public abstract void OpenStatement();
+
+        public abstract void EndStatement();
+
+        public abstract void TextSpan(string line);
+
+        public abstract void TextSpanNewLine(string line);
+
+        public abstract void WhiteSpace();
+
+        public abstract void WhiteSpaceConditional();
+
+        public abstract void NewLine();
+
+        public abstract void Separate();
 
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
@@ -30,7 +45,17 @@
                 itw.Indent--;
                 itw.NewLine("}");
 #else
-                new CCodeMethodSerializer(this).Serialize(boundBody);
+                var cCodeWriterDom = new CCodeWriterDOM();
+                new CCodeMethodSerializer(cCodeWriterDom).Serialize(boundBody);
+
+                var sb = new StringBuilder();
+                using (var itx = new IndentedTextWriter(new StringWriter(sb)))
+                {
+                    cCodeWriterDom.WriteTo(itx);
+                    itx.Close();
+                }
+
+                this.TextSpan(sb.ToString());
 #endif
             }
         }

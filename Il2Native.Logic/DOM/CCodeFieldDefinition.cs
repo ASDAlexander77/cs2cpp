@@ -17,7 +17,7 @@
             get { return this.Field.ContainingType.IsGenericType; }
         }
 
-        public override void WriteTo(CCodeWriter c)
+        public override void WriteTo(CCodeWriterBase c)
         {
             c.WriteFieldDefinition(this.Field);
             c.EndStatement();

@@ -47,9 +47,18 @@
   <ItemGroup>
     <Compile Include="CCodeMethodSerializer.cs" />
     <Compile Include="CCodeSerializer.cs" />
-    <Compile Include="CCodeWriter.cs" />
+    <Compile Include="CCodeWriterBase.cs" />
+    <Compile Include="CCodeWriterDOM.cs" />
+    <Compile Include="CDOM\CBlockNode.cs" />
+    <Compile Include="CDOM\CNewLineNode.cs" />
+    <Compile Include="CDOM\CNode.cs" />
+    <Compile Include="CDOM\CNodes.cs" />
+    <Compile Include="CDOM\CSeparatorNode.cs" />
+    <Compile Include="CDOM\CStatementNode.cs" />
+    <Compile Include="CDOM\CTextNode.cs" />
+    <Compile Include="CDOM\CWhiteSpaceNode.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
-    <Compile Include="CCodeWriterSyntax.cs" />
+    <Compile Include="CCodeWriterText.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />

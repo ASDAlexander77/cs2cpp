@@ -13,9 +13,9 @@
 
     public class CCodeMethodSerializer
     {
-        private readonly CCodeWriter c;
+        private readonly CCodeWriterDOM c;
 
-        public CCodeMethodSerializer(CCodeWriter c)
+        public CCodeMethodSerializer(CCodeWriterDOM c)
         {
             this.c = c;
         }
@@ -125,6 +125,7 @@
 
             foreach (var statement in block.Statements)
             {
+                this.c.OpenStatement();
                 EmitStatement(statement);
                 this.c.EndStatement();
             }

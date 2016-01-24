@@ -12,7 +12,7 @@
 
         public IFieldSymbol Field { get; set; }
 
-        public override void WriteTo(CCodeWriter c)
+        public override void WriteTo(CCodeWriterBase c)
         {
             c.WriteFieldDeclaration(this.Field);
             c.EndStatement();
