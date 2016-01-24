@@ -9,6 +9,16 @@
             this.Text = text;
         }
 
+        public override bool IsEmpty
+        {
+            get { return string.IsNullOrWhiteSpace(this.Text); }
+        }
+
+        public override CNodeType Type
+        {
+            get { return CNodeType.Text; }
+        }
+
         public string Text { get; set; }
 
         public override void WriteTo(IndentedTextWriter itw)
