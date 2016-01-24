@@ -38,7 +38,7 @@
                 return;
             }
 
-            foreach (var cNode in this.Nodes)
+            foreach (var cNode in Nodes)
             {
                 cNode.WriteTo(itw);
             }

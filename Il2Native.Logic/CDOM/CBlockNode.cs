@@ -39,9 +39,22 @@
 
             if (!IsEmpty)
             {
-                foreach (var cNode in this.Nodes.Skip(countUsed))
+                var newLineAfterBlockRequired = false;
+                foreach (var cNode in Nodes.Skip(countUsed))
                 {
+                    if (newLineAfterBlockRequired)
+                    {
+                        itw.WriteLine();
+                        newLineAfterBlockRequired = false;
+                    }
+
                     cNode.WriteTo(itw);
+
+                    var statement = cNode as CStatementNode;
+                    if (statement != null)
+                    {
+                        newLineAfterBlockRequired = statement.FinishedByBlock;
+                    }
                 }
             }
 

@@ -60,7 +60,7 @@
                     break;
 
                 case BoundKind.ConditionalGoto:
-                    ////EmitConditionalGoto((BoundConditionalGoto)statement);
+                    EmitConditionalGoto((BoundConditionalGoto)statement);
                     break;
 
                 case BoundKind.ThrowStatement:
@@ -88,6 +88,21 @@
                     throw ExceptionUtilities.UnexpectedValue(statement.Kind);
             }
         }
+
+        private void EmitConditionalGoto(BoundConditionalGoto boundConditionalGoto)
+        {
+            //object label = boundConditionalGoto.Label;
+            //jumpIfTrue = boundConditionalGoto.JumpIfTrue;
+            //Debug.Assert(label != null);
+
+            c.TextSpan("if");
+            c.WhiteSpace();
+            c.TextSpan("(");
+            EmitExpression(boundConditionalGoto.Condition);
+            c.TextSpan(")");
+            c.WhiteSpace();
+        }
+
 
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
@@ -242,7 +257,7 @@
             switch (expression.Kind)
             {
                 case BoundKind.AssignmentOperator:
-                    ////EmitAssignmentExpression((BoundAssignmentOperator)expression, used);
+                    EmitAssignmentExpression((BoundAssignmentOperator)expression);
                     break;
 
                 case BoundKind.Call:
@@ -270,7 +285,7 @@
                     break;
 
                 case BoundKind.Local:
-                    ////EmitLocalLoad((BoundLocal)expression, used);
+                    EmitLocalLoad((BoundLocal)expression);
                     break;
 
                 case BoundKind.Dup:
@@ -406,6 +421,22 @@
                     // node should have been lowered:
                     throw ExceptionUtilities.UnexpectedValue(expression.Kind);
             }
+        }
+
+        private void EmitAssignmentExpression(BoundAssignmentOperator assignmentOperator)
+        {
+            EmitExpression(assignmentOperator.Left);
+            this.c.WhiteSpace();
+            this.c.TextSpan("=");
+            this.c.WhiteSpace();
+            EmitExpression(assignmentOperator.Right);
+        }
+
+        private void EmitLocalLoad(BoundLocal local)
+        {
+            local is LocalWithInitializer
+
+            this.c.WriteName(local.LocalSymbol);
         }
 
         private void EmitParameterLoad(BoundParameter expression)

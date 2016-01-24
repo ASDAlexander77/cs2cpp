@@ -7,6 +7,8 @@
     {
         public bool Header;
 
+        public bool FinishedByBlock;
+
         public override void WriteTo(IndentedTextWriter itw)
         {
             if (IsEmpty)
@@ -26,12 +28,29 @@
                 break;
             }
 
+            var lastNodeIsBlock = false;
             foreach (var cNode in Nodes.Take(count - empty))
             {
+                if (lastNodeIsBlock)
+                {
+                    itw.WriteLine();
+                }
+
+                lastNodeIsBlock = cNode is CBlockNode;
+                var nestedBlock = lastNodeIsBlock;
+                if (nestedBlock)
+                {
+                    itw.WriteLine();
+                }
+
                 cNode.WriteTo(itw);
             }
 
-            itw.WriteLine(!Header ? ";" : string.Empty);
+            FinishedByBlock = lastNodeIsBlock;
+            if (!lastNodeIsBlock)
+            {
+                itw.WriteLine(!Header ? ";" : string.Empty);
+            }
         }
     }
 }
