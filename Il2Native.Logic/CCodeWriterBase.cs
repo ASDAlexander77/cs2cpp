@@ -46,7 +46,7 @@
                 itw.NewLine("}");
 #else
                 var cCodeWriterDom = new CCodeWriterDOM();
-                new CCodeMethodSerializer(cCodeWriterDom).Serialize(boundBody);
+                new CCodeMethodSerializer(cCodeWriterDom) { Method = methodSymbol }.Serialize(boundBody);
 
                 var sb = new StringBuilder();
                 using (var itx = new IndentedTextWriter(new StringWriter(sb)))

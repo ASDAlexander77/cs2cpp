@@ -20,6 +20,8 @@
             this.c = c;
         }
 
+        public IMethodSymbol Method { get; set; }
+
         internal void Serialize(BoundStatement boundBody)
         {
             this.EmitStatement(boundBody);
@@ -444,6 +446,12 @@
             var method = call.Method;
             var receiver = call.ReceiverOpt;
 
+            if (Method.MethodKind == MethodKind.Constructor && method.MethodKind == MethodKind.Constructor
+                && receiver.Type.ToKeyString().Equals(((TypeSymbol)Method.ContainingType).ToKeyString()))
+            {
+                c.MarkHeader();
+            }
+
             c.WriteMethodFullName(method);
             this.c.TextSpan("(");
             var anyArgs = false;
@@ -451,7 +459,8 @@
             {
                 if (anyArgs)
                 {
-                    this.c.TextSpan(", ");
+                    c.TextSpan(",");
+                    c.WhiteSpace();
                 }
 
                 EmitExpression(boundExpression, false);

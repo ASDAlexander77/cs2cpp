@@ -26,7 +26,6 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.NewLine();
             c.Separate();
             c.TextSpanNewLine(string.Format("// Method: {0}", this.Method.ToDisplayString()));
 

@@ -1,14 +1,12 @@
 ﻿namespace Il2Native.Logic
 {
-    using System;
     using System.CodeDom.Compiler;
-    using System.Collections;
     using System.Collections.Generic;
     using CDOM;
 
     public class CCodeWriterDOM : CCodeWriterBase
     {
-        private Stack<CNodes> stack = new Stack<CNodes>();
+        private Stack<CNodes> _stack = new Stack<CNodes>();
 
         private CNodes _current;
 
@@ -17,26 +15,35 @@
             _current = new CNodes();
         }
 
+        public void MarkHeader()
+        {
+            var statement = this._current as CStatementNode;
+            if (statement != null)
+            {
+                statement.Header = true;
+            }
+        }
+
         public override void OpenBlock()
         {
-            stack.Push(_current);
+            this._stack.Push(_current);
             _current.Nodes.Add(_current = new CBlockNode());
         }
 
         public override void EndBlock()
         {
-            _current = stack.Pop();
+            _current = this._stack.Pop();
         }
 
         public override void OpenStatement()
         {
-            stack.Push(_current);
+            this._stack.Push(_current);
             _current.Nodes.Add(_current = new CStatementNode());
         }
 
         public override void EndStatement()
         {
-            _current = stack.Pop();
+            _current = this._stack.Pop();
         }
 
         public override void TextSpan(string line)
@@ -62,22 +69,37 @@
 
         public override void NewLine()
         {
+            if (this.IsLastOne(CNode.CNodeType.NewLine))
+            {
+                return;
+            }
+
             _current.Nodes.Add(new CNewLineNode());
         }
 
         public override void Separate()
         {
+            if (this.IsLastOne(CNode.CNodeType.Separator))
+            {
+                return;
+            }
+
             _current.Nodes.Add(new CSeparatorNode());
         }
 
         public void WriteTo(IndentedTextWriter itw)
         {
-            while (this.stack.Count > 0)
+            while (this._stack.Count > 0)
             {
-                this._current = this.stack.Pop();
+                this._current = this._stack.Pop();
             }
 
             this._current.WriteTo(itw);
+        }
+
+        private bool IsLastOne(CNode.CNodeType type)
+        {
+            return this._current.Nodes.Count > 0 && this._current.Nodes[this._current.Nodes.Count - 1].Type == type;
         }
     }
 }
