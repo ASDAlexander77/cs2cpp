@@ -10,11 +10,11 @@
 
     public partial class CCodeWriter
     {
-        private IndentedTextWriter itw;
+        private IndentedTextWriter _itw;
 
         public CCodeWriter(IndentedTextWriter itw)
         {
-            this.itw = itw;
+            _itw = itw;
         }
 
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
@@ -23,7 +23,6 @@
 
             if (boundBody != null)
             {
-
 #if EMPTY_SKELETON
                 itw.NewLine("{");
                 itw.Indent++;
@@ -43,7 +42,7 @@
             {
                 if (any)
                 {
-                    itw.Write("::");
+                    TextSpan("::");
                 }
 
                 any = true;
@@ -56,22 +55,22 @@
         {
             if (namespaceNode.IsGlobalNamespace)
             {
-                itw.Write(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
             }
             else
             {
-                itw.Write(namespaceNode.MetadataName);
+                TextSpan(namespaceNode.MetadataName);
             }
         }
 
         public void WriteName(ISymbol symbol, bool ensureCompatible = false)
         {
-            itw.Write(symbol.MetadataName.CleanUpName());
+            TextSpan(symbol.MetadataName.CleanUpName());
         }
 
         public void WriteNameEnsureCompatible(ISymbol symbol)
         {
-            itw.Write(symbol.MetadataName.CleanUpName().EnsureCompatible());
+            TextSpan(symbol.MetadataName.CleanUpName().EnsureCompatible());
         }
 
         public void WriteMethodName(IMethodSymbol methodSymbol)
@@ -86,7 +85,7 @@
             WriteName(methodSymbol);
             if (methodSymbol.MetadataName == "op_Explicit")
             {
-                itw.Write("_");
+                TextSpan("_");
                 WriteTypeSuffix(methodSymbol.ReturnType);
             }
         }
@@ -103,12 +102,12 @@
                 case TypeKind.ArrayType:
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
                     WriteTypeSuffix(elementType);
-                    itw.Write("Array");
+                    TextSpan("Array");
                     return;
                 case TypeKind.PointerType:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
                     WriteTypeSuffix(pointedAtType);
-                    itw.Write("Ptr");
+                    TextSpan("Ptr");
                     return;
                 case TypeKind.TypeParameter:
                     WriteName(type);
@@ -130,7 +129,7 @@
             if (type.ContainingNamespace != null)
             {
                 WriteNamespace(type.ContainingNamespace);
-                itw.Write("::");
+                TextSpan("::");
             }
 
             WriteTypeName(type, allowKeyword);
@@ -147,13 +146,13 @@
             {
                 if (type.SpecialType == SpecialType.System_Object)
                 {
-                    itw.Write("object");
+                    TextSpan("object");
                     return;
                 }
 
                 if (type.SpecialType == SpecialType.System_String)
                 {
-                    itw.Write("string");
+                    TextSpan("string");
                     return;
                 }
             }
@@ -161,7 +160,7 @@
             if (type.ContainingType != null)
             {
                 WriteTypeName(type.ContainingType);
-                itw.Write("_");
+                TextSpan("_");
             }
 
             WriteName(type);
@@ -180,9 +179,9 @@
                     break;
                 case TypeKind.ArrayType:
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
-                    itw.Write("__array<");
+                    TextSpan("__array<");
                     WriteType(elementType, cleanName);
-                    itw.Write(">*");
+                    TextSpan(">*");
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
@@ -190,7 +189,7 @@
                     WriteTypeFullName((INamedTypeSymbol)type);
                     if (type.IsReferenceType)
                     {
-                        itw.Write("*");
+                        TextSpan("*");
                     }
 
                     return;
@@ -200,11 +199,11 @@
                     var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
                     if (!cleanName)
                     {
-                        itw.Write("__enum<");
+                        TextSpan("__enum<");
                         WriteTypeFullName((INamedTypeSymbol)type);
-                        itw.Write(", ");
+                        TextSpan(", ");
                         WriteType(enumUnderlyingType);
-                        itw.Write(">");
+                        TextSpan(">");
                     }
                     else
                     {
@@ -219,7 +218,7 @@
                 case TypeKind.PointerType:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
                     WriteType(pointedAtType, cleanName);
-                    itw.Write("*");
+                    TextSpan("*");
                     return;
                 case TypeKind.Struct:
                     WriteTypeFullName((INamedTypeSymbol)type);
@@ -241,63 +240,63 @@
             switch (type.SpecialType)
             {
                 case SpecialType.System_Void:
-                    itw.Write("void");
+                    TextSpan("void");
                     return true;
                 case SpecialType.System_Boolean:
-                    itw.Write("bool");
+                    TextSpan("bool");
                     return true;
                 case SpecialType.System_Char:
-                    itw.Write("wchar_t");
+                    TextSpan("wchar_t");
                     return true;
                 case SpecialType.System_SByte:
-                    itw.Write("int8_t");
+                    TextSpan("int8_t");
                     return true;
                 case SpecialType.System_Byte:
-                    itw.Write("uint8_t");
+                    TextSpan("uint8_t");
                     return true;
                 case SpecialType.System_Int16:
-                    itw.Write("int16_t");
+                    TextSpan("int16_t");
                     return true;
                 case SpecialType.System_UInt16:
-                    itw.Write("uint16_t");
+                    TextSpan("uint16_t");
                     return true;
                 case SpecialType.System_Int32:
-                    itw.Write("int32_t");
+                    TextSpan("int32_t");
                     return true;
                 case SpecialType.System_UInt32:
-                    itw.Write("uint32_t");
+                    TextSpan("uint32_t");
                     return true;
                 case SpecialType.System_Int64:
-                    itw.Write("int64_t");
+                    TextSpan("int64_t");
                     return true;
                 case SpecialType.System_UInt64:
-                    itw.Write("uint64_t");
+                    TextSpan("uint64_t");
                     return true;
                 case SpecialType.System_Single:
-                    itw.Write("float");
+                    TextSpan("float");
                     return true;
                 case SpecialType.System_Double:
-                    itw.Write("double");
+                    TextSpan("double");
                     return true;
                 case SpecialType.System_IntPtr:
                     if (cleanName)
                     {
-                        itw.Write("intptr_t");
+                        TextSpan("intptr_t");
                     }
                     else
                     {
-                        itw.Write("__val<intptr_t>");
+                        TextSpan("__val<intptr_t>");
                     }
 
                     return true;
                 case SpecialType.System_UIntPtr:
                     if (cleanName)
                     {
-                        itw.Write("uintptr_t");
+                        TextSpan("uintptr_t");
                     }
                     else
                     {
-                        itw.Write("__val<uintptr_t>");
+                        TextSpan("__val<uintptr_t>");
                     }
 
                     return true;
@@ -310,11 +309,12 @@
         {
             if (fieldSymbol.IsStatic)
             {
-                itw.Write("static ");
+                TextSpan("static");
+                WhiteSpace();
             }
 
             WriteType(fieldSymbol.Type, true);
-            itw.Write(" ");
+            WhiteSpace();
             WriteName(fieldSymbol);
         }
 
@@ -323,16 +323,16 @@
             if (fieldSymbol.ContainingType.IsGenericType)
             {
                 WriteTemplateDeclaration(fieldSymbol.ContainingType);
-                itw.WriteLine();
+                NewLine();
             }
 
             WriteType(fieldSymbol.Type, true);
-            itw.Write(" ");
+            WhiteSpace();
 
             if (fieldSymbol.ContainingNamespace != null)
             {
                 WriteNamespace(fieldSymbol.ContainingNamespace);
-                itw.Write("::");
+                TextSpan("::");
             }
 
             var receiverType = fieldSymbol.ContainingType;
@@ -342,7 +342,7 @@
                 WriteTemplateDefinition(fieldSymbol.ContainingType);
             }
 
-            itw.Write("::");
+            TextSpan("::");
 
             WriteName(fieldSymbol);
         }
@@ -354,7 +354,7 @@
                 WriteTemplateDeclaration(methodSymbol.ContainingType);
                 if (!declarationWithingClass)
                 {
-                    itw.WriteLine();
+                    NewLine();
                 }
             }
 
@@ -363,7 +363,7 @@
                 WriteTemplateDeclaration(methodSymbol);
                 if (!declarationWithingClass)
                 {
-                    itw.WriteLine();
+                    NewLine();
                 }
             }
 
@@ -371,7 +371,7 @@
             {
                 if (methodSymbol.IsStatic)
                 {
-                    itw.Write("static ");
+                    TextSpan("static ");
                 }
 
                 if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
@@ -379,14 +379,14 @@
                     if (methodSymbol.IsGenericMethod)
                     {
                         // TODO: finish it
-                        itw.Write("/*");
+                        TextSpan("/*");
                     }
 
-                    itw.Write("virtual ");
+                    TextSpan("virtual ");
                     if (methodSymbol.IsGenericMethod)
                     {
                         // TODO: finish it
-                        itw.Write("*/");
+                        TextSpan("*/");
                     }
                 }
             }
@@ -396,14 +396,14 @@
             {
                 if (methodSymbol.ReturnsVoid)
                 {
-                    itw.Write("void");
+                    TextSpan("void");
                 }
                 else
                 {
                     WriteType(methodSymbol.ReturnType);
                 }
 
-                itw.Write(" ");
+                WhiteSpace();
             }
 
             if (!declarationWithingClass)
@@ -420,12 +420,12 @@
             var notUniqueParametersNames = !declarationWithingClass && methodSymbol.Parameters.Select(p => p.Name).Distinct().Count() != methodSymbol.Parameters.Length;
             var parameterIndex = 0;
 
-            itw.Write("(");
+            TextSpan("(");
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
                 if (anyParameter)
                 {
-                    itw.Write(", ");
+                    TextSpan(", ");
                 }
 
                 anyParameter = true;
@@ -433,43 +433,43 @@
                 WriteType(parameterSymbol.Type);
                 if (!declarationWithingClass)
                 {
-                    itw.Write(" ");
+                    WhiteSpace();
                     if (!notUniqueParametersNames)
                     {
                         WriteNameEnsureCompatible(parameterSymbol);
                     }
                     else
                     {
-                        itw.Write("__arg{0}", parameterIndex);
+                        TextSpan(string.Format("__arg{0}", parameterIndex));
                     }
                 }
 
                 parameterIndex++;
             }
 
-            itw.Write(")");
+            TextSpan(")");
 
             if (declarationWithingClass)
             {
                 if (methodSymbol.IsGenericMethod)
                 {
                     // TODO: finish it
-                    itw.Write("/*");
+                    TextSpan("/*");
                 }
 
                 if (methodSymbol.IsOverride)
                 {
-                    itw.Write(" override");
+                    TextSpan(" override");
                 }
                 else if (methodSymbol.IsAbstract)
                 {
-                    itw.Write(" = 0");
+                    TextSpan(" = 0");
                 }
 
                 if (methodSymbol.IsGenericMethod)
                 {
                     // TODO: finish it
-                    itw.Write("*/");
+                    TextSpan("*/");
                 }
             }
         }
@@ -480,7 +480,7 @@
             if (methodSymbol.ContainingNamespace != null)
             {
                 WriteNamespace(methodSymbol.ContainingNamespace);
-                itw.Write("::");
+                TextSpan("::");
             }
 
             var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
@@ -490,19 +490,19 @@
                 WriteTemplateDefinition(methodSymbol.ContainingType);
             }
 
-            itw.Write("::");
+            TextSpan("::");
 
             WriteMethodName(methodSymbol);
         }
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
         {
-            itw.Write("template <");
+            TextSpan("template <");
 
             var anyTypeParam = false;
             WriteTemplateDeclarationRecusive(namedTypeSymbol, ref anyTypeParam);
 
-            itw.Write("> ");
+            TextSpan("> ");
         }
 
         public void WriteTemplateDeclarationRecusive(INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
@@ -516,24 +516,24 @@
             {
                 if (anyTypeParam)
                 {
-                    itw.Write(", ");
+                    TextSpan(", ");
                 }
 
                 anyTypeParam = true;
 
-                itw.Write("typename ");
+                TextSpan("typename ");
                 WriteName(typeParam);
             }
         }
 
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol)
         {
-            itw.Write("<");
+            TextSpan("<");
 
             var anyTypeParam = false;
             WriteTemplateDefinitionRecusive(typeSymbol, ref anyTypeParam);
 
-            itw.Write(">");
+            TextSpan(">");
         }
 
         public void WriteTemplateDefinitionRecusive(INamedTypeSymbol typeSymbol, ref bool anyTypeParam)
@@ -547,7 +547,7 @@
             {
                 if (anyTypeParam)
                 {
-                    itw.Write(", ");
+                    TextSpan(", ");
                 }
 
                 anyTypeParam = true;
@@ -558,22 +558,22 @@
 
         public void WriteTemplateDeclaration(IMethodSymbol methodSymbol)
         {
-            itw.Write("template <");
+            TextSpan("template <");
             var anyTypeParam = false;
             foreach (var typeParam in methodSymbol.TypeParameters)
             {
                 if (anyTypeParam)
                 {
-                    itw.Write(", ");
+                    TextSpan(", ");
                 }
 
                 anyTypeParam = true;
 
-                itw.Write("typename ");
+                TextSpan("typename ");
                 WriteName(typeParam);
             }
 
-            itw.Write("> ");
+            TextSpan("> ");
         }
     }
 }

@@ -94,10 +94,7 @@
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
             this.c.TextSpan("return");
-            if (boundReturnStatement.ExpressionOpt != null)
-            {
-                this.c.TextSpan(" ");
-            }
+            this.c.WhiteSpaceConditional();
 
             // TODO: investigate about indirect return
             this.EmitExpression(boundReturnStatement.ExpressionOpt, true);

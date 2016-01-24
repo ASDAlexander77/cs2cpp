@@ -27,6 +27,7 @@
         public override void WriteTo(CCodeWriter c)
         {
             c.NewLine();
+            c.Separate();
             c.TextDiv(string.Format("// Method: {0}", this.Method.ToDisplayString()));
 
             c.WriteMethodDeclaration(this.Method, false);
