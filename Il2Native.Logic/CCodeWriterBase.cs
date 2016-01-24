@@ -34,8 +34,6 @@
 
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
-            this.NewLine();
-
             if (boundBody != null)
             {
 #if EMPTY_SKELETON

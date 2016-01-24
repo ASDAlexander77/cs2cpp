@@ -2,6 +2,7 @@
 {
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
+    using System.Linq;
     using CDOM;
 
     public class CCodeWriterDOM : CCodeWriterBase
@@ -92,6 +93,18 @@
             while (this._stack.Count > 0)
             {
                 this._current = this._stack.Pop();
+            }
+
+            if (this._current.IsEmpty)
+            {
+                return;
+            }
+
+            // mark firsat node as MethodBlock node to fix issue with spacing
+            var block = this._current.Nodes.First() as CBlockNode;
+            if (block != null)
+            {
+                block.MethodBlock = true;
             }
 
             this._current.WriteTo(itw);

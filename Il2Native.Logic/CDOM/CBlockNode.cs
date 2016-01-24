@@ -5,12 +5,14 @@
 
     public class CBlockNode : CNodes
     {
+        public bool MethodBlock { get; set; }
+
         public override void WriteTo(IndentedTextWriter itw)
         {
             var header = this.Nodes.OfType<CStatementNode>().Where(s => s.Header).ToArray();
             if (header.Length > 0)
             {
-                itw.Write(": ");
+                itw.Write(" : ");
             }
 
             var countUsed = 0;
@@ -25,6 +27,11 @@
                 cNode.WriteTo(itw);
                 any = true;
                 countUsed++;
+            }
+
+            if (MethodBlock && !any)
+            {
+                itw.WriteLine();
             }
 
             itw.WriteLine("{");
