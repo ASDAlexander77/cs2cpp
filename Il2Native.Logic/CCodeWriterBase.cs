@@ -26,8 +26,6 @@
 
         public abstract void WhiteSpace();
 
-        public abstract void WhiteSpaceConditional();
-
         public abstract void NewLine();
 
         public abstract void Separate();

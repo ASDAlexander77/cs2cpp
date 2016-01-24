@@ -1,14 +1,9 @@
 ﻿namespace Il2Native.Logic
 {
-    using System.CodeDom.Compiler;
     using System.Diagnostics;
-    using System.Linq;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CodeGen;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.CodeGen;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using Microsoft.CodeAnalysis.Text;
     using Roslyn.Utilities;
 
     public class CCodeMethodSerializer
@@ -44,7 +39,7 @@
                     break;
 
                 case BoundKind.ExpressionStatement:
-                    EmitExpression(((BoundExpressionStatement)statement).Expression, false);
+                    EmitExpression(((BoundExpressionStatement)statement).Expression);
                     break;
 
                 case BoundKind.StatementList:
@@ -96,10 +91,13 @@
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
             this.c.TextSpan("return");
-            this.c.WhiteSpaceConditional();
+            if (boundReturnStatement.ExpressionOpt != null)
+            {
+                this.c.WhiteSpace();
 
-            // TODO: investigate about indirect return
-            this.EmitExpression(boundReturnStatement.ExpressionOpt, true);
+                // TODO: investigate about indirect return
+                this.EmitExpression(boundReturnStatement.ExpressionOpt);
+            }
         }
 
         private void EmitStatementList(BoundStatementList list)
@@ -157,19 +155,16 @@
             }
         }
 
-        private void EmitConstantExpression(TypeSymbol type, ConstantValue constantValue, bool used, CSharpSyntaxNode syntaxNode)
+        private void EmitConstantExpression(TypeSymbol type, ConstantValue constantValue, CSharpSyntaxNode syntaxNode)
         {
-            if (used)  // unused constant has no sideeffects
+            // Null type parameter values must be emitted as 'initobj' rather than 'ldnull'.
+            if (((object)type != null) && (type.TypeKind == TypeKind.TypeParameter) && constantValue.IsNull)
             {
-                // Null type parameter values must be emitted as 'initobj' rather than 'ldnull'.
-                if (((object)type != null) && (type.TypeKind == TypeKind.TypeParameter) && constantValue.IsNull)
-                {
-                    ////EmitInitObj(type, used, syntaxNode);
-                }
-                else
-                {
-                    EmitConstantValue(constantValue);
-                }
+                ////EmitInitObj(type, used, syntaxNode);
+            }
+            else
+            {
+                EmitConstantValue(constantValue);
             }
         }
 
@@ -216,7 +211,7 @@
                     c.TextSpan(value.DoubleValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    c.TextSpan(string.Format("L\"{0}\"", value.StringValue));
+                    c.TextSpan(string.Format("L\"{0}\"_s", value.StringValue));
                     break;
                 case ConstantValueTypeDiscriminator.Boolean:
                     c.TextSpan(value.BooleanValue.ToString().ToLowerInvariant());
@@ -226,7 +221,7 @@
             }
         }
 
-        private void EmitExpression(BoundExpression expression, bool used)
+        private void EmitExpression(BoundExpression expression)
         {
             if (expression == null)
             {
@@ -236,15 +231,9 @@
             var constantValue = expression.ConstantValue;
             if (constantValue != null)
             {
-                if (!used)
-                {
-                    // unused constants have no sideeffects.
-                    return;
-                }
-
                 if ((object)expression.Type == null || expression.Type.SpecialType != SpecialType.System_Decimal)
                 {
-                    EmitConstantExpression(expression.Type, constantValue, used, expression.Syntax);
+                    EmitConstantExpression(expression.Type, constantValue, expression.Syntax);
                     return;
                 }
             }
@@ -256,7 +245,7 @@
                     break;
 
                 case BoundKind.Call:
-                    EmitCallExpression((BoundCall)expression, used);
+                    EmitCallExpression((BoundCall)expression);
                     break;
 
                 case BoundKind.ObjectCreationExpression:
@@ -288,10 +277,7 @@
                     break;
 
                 case BoundKind.Parameter:
-                    if (used)  // unused parameter has no sideeffects
-                    {
-                        ////EmitParameterLoad((BoundParameter)expression);
-                    }
+                    ////EmitParameterLoad((BoundParameter)expression);
                     break;
 
                 case BoundKind.FieldAccess:
@@ -307,11 +293,7 @@
                     break;
 
                 case BoundKind.ThisReference:
-                    if (used) // unused this has no sideeffects
-                    {
-                        ////EmitThisReferenceExpression((BoundThisReference)expression);
-                    }
-
+                    ////EmitThisReferenceExpression((BoundThisReference)expression);
                     break;
 
                 case BoundKind.PreviousSubmissionReference:
@@ -319,16 +301,13 @@
                     throw ExceptionUtilities.UnexpectedValue(expression.Kind);
 
                 case BoundKind.BaseReference:
-                    if (used) // unused base has no sideeffects
-                    {
-                        ////var thisType = this.method.ContainingType;
-                        ////builder.EmitOpCode(ILOpCode.Ldarg_0);
-                        ////if (thisType.IsValueType)
-                        ////{
-                        ////    EmitLoadIndirect(thisType, expression.Syntax);
-                        ////    EmitBox(thisType, expression.Syntax);
-                        ////}
-                    }
+                    ////var thisType = this.method.ContainingType;
+                    ////builder.EmitOpCode(ILOpCode.Ldarg_0);
+                    ////if (thisType.IsValueType)
+                    ////{
+                    ////    EmitLoadIndirect(thisType, expression.Syntax);
+                    ////    EmitBox(thisType, expression.Syntax);
+                    ////}
                     break;
 
                 case BoundKind.Sequence:
@@ -364,31 +343,19 @@
                     break;
 
                 case BoundKind.TypeOfOperator:
-                    if (used) // unused typeof has no sideeffects
-                    {
-                        ////EmitTypeOfExpression((BoundTypeOfOperator)expression);
-                    }
+                    ////EmitTypeOfExpression((BoundTypeOfOperator)expression);
                     break;
 
                 case BoundKind.SizeOfOperator:
-                    if (used) // unused sizeof has no sideeffects
-                    {
-                        ////EmitSizeOfExpression((BoundSizeOfOperator)expression);
-                    }
+                    ////EmitSizeOfExpression((BoundSizeOfOperator)expression);
                     break;
 
                 case BoundKind.MethodInfo:
-                    if (used)
-                    {
-                        ////EmitMethodInfoExpression((BoundMethodInfo)expression);
-                    }
+                    ////EmitMethodInfoExpression((BoundMethodInfo)expression);
                     break;
 
                 case BoundKind.FieldInfo:
-                    if (used)
-                    {
-                        ////EmitFieldInfoExpression((BoundFieldInfo)expression);
-                    }
+                    ////EmitFieldInfoExpression((BoundFieldInfo)expression);
                     break;
 
                 case BoundKind.ConditionalOperator:
@@ -408,7 +375,6 @@
                     break;
 
                 case BoundKind.ArgListOperator:
-                    Debug.Assert(used);
                     ////EmitArgListOperator((BoundArgListOperator)expression);
                     break;
 
@@ -441,7 +407,7 @@
             }
         }
 
-        private void EmitCallExpression(BoundCall call, bool used)
+        private void EmitCallExpression(BoundCall call)
         {
             var method = call.Method;
             var receiver = call.ReceiverOpt;
@@ -463,7 +429,7 @@
                     c.WhiteSpace();
                 }
 
-                EmitExpression(boundExpression, false);
+                EmitExpression(boundExpression);
 
                 anyArgs = true;
             }

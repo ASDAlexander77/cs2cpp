@@ -214,104 +214,48 @@
         /// </summary>
         /// <param name="index">
         /// </param>
-        /// <param name="fileName">
+        /// <param name="assemblyName">
         /// </param>
         /// <param name="format">
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        public static void ExecCompile(string fileName, bool justCompile = false, bool opt = false, int returnCode = 0)
+        public static void ExecCompile(string assemblyName, bool justCompile = false, bool opt = false, int returnCode = 0)
         {
             Trace.WriteLine("==========================================================================");
             if (justCompile)
             {
-                Trace.WriteLine("Compiling " + fileName);
+                Trace.WriteLine("Compiling " + assemblyName);
             }
             else
             {
-                Trace.WriteLine("Compiling/Executing " + fileName);
+                Trace.WriteLine("Compiling/Executing " + assemblyName);
             }
 
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
+            // file exe
+            ExecCmd("g++", string.Format("-o {0}.exe {1} -lstdc++ -std=gnu++14 -lCoreLib -march=native -I {0}/src -I CoreLib/src -L CoreLib/__build_mingw32_debug -fno-rtti", assemblyName, GetAllSourceFiles(assemblyName)));
+
             if (!justCompile)
             {
-                if (MultiThreadingEnabled)
-                {
-                    if (!File.Exists(Path.Combine(OutputPath, "libgcmt-lib.a")))
-                    {
-                        throw new FileNotFoundException("libgcmt-lib.a could not be found");
-                    }
-                }
-                else
-                {
-                    if (!File.Exists(Path.Combine(OutputPath, "libgc-lib.a")))
-                    {
-                        throw new FileNotFoundException("libgc-lib.a could not be found");
-                    }
-                }
-
-                if (CompilerHelper.CompactMode)
-                {
-                    // file exe
-                    ExecCmd(
-                        "g++",
-                        string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -march=native -L .{2} -fprmissive -fno-rtti",
-                            fileName,
-                            opt ? "-O3 " : string.Empty,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
-
-                    Assert.IsTrue(
-                        File.Exists(
-                            Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, fileName))));                    
-                }
-                else if (CompilerHelper.Mscorlib)
-                {
-                    if (!File.Exists(Path.Combine(OutputPath, "libmscorlib.a")))
-                    {
-                        throw new FileNotFoundException("libmscorlib.a could not be found");
-                    }
-
-                    // file exe
-                    ExecCmd(
-                        "g++",
-                        string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -lmscorlib -l{3} -march=i686 -L .{2} -fpermissive -fno-rtti",
-                            fileName,
-                            opt ? "-O3 " : string.Empty,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib"));
-
-                    Assert.IsTrue(
-                        File.Exists(
-                            Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, fileName))));
-                }
-                else
-                {
-                    // file exe
-                    ExecCmd(
-                        "g++",
-                        string.Format(
-                            "-o {0}.exe {0}.cpp {1} -lstdc++ -l{3} -lCoreLib{4} -march=native -L .{2} -fpermissive -fno-rtti",
-                            fileName,
-                            opt ? "-O3 " : string.Empty,
-                            GcDebugEnabled ? " -I " + GcHeaders : string.Empty,
-                            MultiThreadingEnabled ? "gcmt-lib" : "gc-lib",
-                            DebugInfo ? "_d" : string.Empty));
-
-                    // test execution
-                    ExecCmd(string.Format("{0}.exe", fileName), readOutput: true, returnCode: returnCode);
-                }
+                // test execution
+                ExecCmd(string.Format("{0}.exe", assemblyName), readOutput: true, returnCode: returnCode);
             }
             else
             {
                 Assert.IsTrue(
                     File.Exists(
-                        Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
+                        Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, assemblyName))));
             }
+        }
+
+        private static string GetAllSourceFiles(string assemblyName)
+        {
+            var path = Path.Combine(OutputPath, assemblyName, "src");
+            var allSources = string.Join(" ", Directory.GetFiles(path, "*.cpp", SearchOption.AllDirectories));
+            return allSources;
         }
 
         public static void ExecCmd(
@@ -349,38 +293,46 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="index">
-        /// </param>
-        public static void Compile(string fileName, string source = SourcePath)
+        public static void Compile(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true, int returnCode = 0, string additionalFilesFolder = "", string[] additionalFilesPattern = null)
         {
-            Trace.WriteLine(string.Empty);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating C for " + fileName);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine(string.Empty);
-
             try
             {
-                Convert(fileName, source);
+                if (includeAll)
+                {
+                    if (!ConvertAll(fileName, source, additionalFilesFolder, additionalFilesPattern))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Convert(fileName, source);
+                }
             }
             catch (BadImageFormatException ex)
             {
                 Trace.WriteLine(ex);
+
+                if (!ignoreBadFiles)
+                {
+                    Assert.Inconclusive("Could not compile it");
+                }
+
                 return;
             }
             catch (FileNotFoundException ex)
             {
                 Trace.WriteLine(ex);
+
+                if (!ignoreBadFiles)
+                {
+                    Assert.Inconclusive("File not found");
+                }
+
                 return;
             }
 
-            Trace.WriteLine(string.Empty);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Compiling LLVM for " + fileName);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine(string.Empty);
-
-            ExecCompile(fileName, true);
+            ExecCompile(fileName, true, opt: CompileWithOptimization, returnCode: returnCode);
         }
 
         /// <summary>
@@ -426,7 +378,7 @@
 
             ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
 
-            Thread.Sleep(1000);
+            Thread.Sleep(400);
 
             // cleanup if success
             foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())

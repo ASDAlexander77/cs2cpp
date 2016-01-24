@@ -110,11 +110,6 @@
             this.text = TextState.Whitespace;
         }
 
-        public override void WhiteSpaceConditional()
-        {
-            this.text = TextState.ConditionalWhitespace;
-        }
-
         public override void NewLine()
         {
             if (this.text == TextState.Empty || this.text == TextState.Separated)

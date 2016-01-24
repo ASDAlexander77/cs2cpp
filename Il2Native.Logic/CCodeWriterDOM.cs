@@ -60,11 +60,11 @@
 
         public override void WhiteSpace()
         {
-            _current.Nodes.Add(new CWhiteSpaceNode());
-        }
+            if (this.IsLastOne(CNode.CNodeType.WhiteSpace))
+            {
+                return;
+            }
 
-        public override void WhiteSpaceConditional()
-        {
             _current.Nodes.Add(new CWhiteSpaceNode());
         }
 
