@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
     using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -265,7 +266,7 @@
                     break;
 
                 case BoundKind.Conversion:
-                    ////EmitConversionExpression((BoundConversion)expression, used);
+                    EmitConversionExpression((BoundConversion)expression);
                     break;
 
                 case BoundKind.Local:
@@ -277,7 +278,7 @@
                     break;
 
                 case BoundKind.Parameter:
-                    ////EmitParameterLoad((BoundParameter)expression);
+                    EmitParameterLoad((BoundParameter)expression);
                     break;
 
                 case BoundKind.FieldAccess:
@@ -323,7 +324,7 @@
                     break;
 
                 case BoundKind.BinaryOperator:
-                    ////EmitBinaryOperatorExpression((BoundBinaryOperator)expression, used);
+                    EmitBinaryOperatorExpression((BoundBinaryOperator)expression);
                     break;
 
                 case BoundKind.NullCoalescingOperator:
@@ -407,13 +408,104 @@
             }
         }
 
+        private void EmitParameterLoad(BoundParameter expression)
+        {
+            c.WriteName(expression.ParameterSymbol);
+        }
+
+        private void EmitConversionExpression(BoundConversion conversion)
+        {
+            switch (conversion.ConversionKind)
+            {
+                case ConversionKind.MethodGroup:
+                    throw new NotImplementedException();
+                    ////EmitMethodGroupConversion(conversion, used);
+                    return;
+                case ConversionKind.NullToPointer:
+                    // The null pointer is represented as 0u.
+                    c.TextSpan("(uintptr_t)0");
+                    return;
+            }
+
+            c.TextSpan("(");
+            this.c.WriteType(conversion.Type);
+            c.TextSpan(")");
+            c.TextSpan("(");
+            EmitExpression(conversion.Operand);
+            c.TextSpan(")");
+        }
+
+        private void EmitBinaryOperatorExpression(BoundBinaryOperator expression)
+        {
+            EmitExpression(expression.Left);
+
+            this.c.WhiteSpace();
+
+            switch (expression.OperatorKind & BinaryOperatorKind.OpMask)
+            {
+                case BinaryOperatorKind.Multiplication:
+                    this.c.TextSpan("*");
+                    break;
+                case BinaryOperatorKind.Addition:
+                    this.c.TextSpan("+");
+                    break;
+                case BinaryOperatorKind.Subtraction:
+                    this.c.TextSpan("-");
+                    break;
+                case BinaryOperatorKind.Division:
+                    this.c.TextSpan("/");
+                    break;
+                case BinaryOperatorKind.Remainder:
+                    this.c.TextSpan("%");
+                    break;
+                case BinaryOperatorKind.LeftShift:
+                    this.c.TextSpan("<<");
+                    break;
+                case BinaryOperatorKind.RightShift:
+                    this.c.TextSpan(">>");
+                    break;
+                case BinaryOperatorKind.Equal:
+                    this.c.TextSpan("==");
+                    break;
+                case BinaryOperatorKind.NotEqual:
+                    this.c.TextSpan("!=");
+                    break;
+                case BinaryOperatorKind.GreaterThan:
+                    this.c.TextSpan(">");
+                    break;
+                case BinaryOperatorKind.LessThan:
+                    this.c.TextSpan("<");
+                    break;
+                case BinaryOperatorKind.GreaterThanOrEqual:
+                    this.c.TextSpan(">=");
+                    break;
+                case BinaryOperatorKind.LessThanOrEqual:
+                    this.c.TextSpan("<=");
+                    break;
+                case BinaryOperatorKind.And:
+                    this.c.TextSpan("&&");
+                    break;
+                case BinaryOperatorKind.Xor:
+                    this.c.TextSpan("^");
+                    break;
+                case BinaryOperatorKind.Or:
+                    this.c.TextSpan("||");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            this.c.WhiteSpace();
+
+            EmitExpression(expression.Right);
+        }
+
         private void EmitCallExpression(BoundCall call)
         {
             var method = call.Method;
             var receiver = call.ReceiverOpt;
 
-            if (Method.MethodKind == MethodKind.Constructor && method.MethodKind == MethodKind.Constructor
-                && receiver.Type.ToKeyString().Equals(((TypeSymbol)Method.ContainingType).ToKeyString()))
+            if (Method.MethodKind == MethodKind.Constructor && method.MethodKind == MethodKind.Constructor && receiver.Type.ToKeyString().Equals(((TypeSymbol)Method.ContainingType).ToKeyString()))
             {
                 c.MarkHeader();
             }
