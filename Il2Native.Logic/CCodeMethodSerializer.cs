@@ -5,7 +5,11 @@
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
+
     using Roslyn.Utilities;
+
+    using CSharpSyntaxNode = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxNode;
 
     public class CCodeMethodSerializer
     {
@@ -285,7 +289,7 @@
                     break;
 
                 case BoundKind.Local:
-                    EmitLocalLoad((BoundLocal)expression);
+                    this.EmitLocal((BoundLocal)expression);
                     break;
 
                 case BoundKind.Dup:
@@ -425,6 +429,13 @@
 
         private void EmitAssignmentExpression(BoundAssignmentOperator assignmentOperator)
         {
+            var variableDeclaratorSyntax = assignmentOperator.Left.Syntax.Green as Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax.VariableDeclaratorSyntax;
+            if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
+            {
+                c.WriteType(assignmentOperator.Left.Type);
+                this.c.WhiteSpace();                
+            }
+
             EmitExpression(assignmentOperator.Left);
             this.c.WhiteSpace();
             this.c.TextSpan("=");
@@ -432,7 +443,7 @@
             EmitExpression(assignmentOperator.Right);
         }
 
-        private void EmitLocalLoad(BoundLocal local)
+        private void EmitLocal(BoundLocal local)
         {
             this.c.WriteName(local.LocalSymbol);
         }
