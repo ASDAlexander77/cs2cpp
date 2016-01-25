@@ -498,7 +498,7 @@
                     // TODO: finish it
                 }
                 else
-                {                    
+                {
                     if (field.IsVolatile)
                     {
                         // TODO: finish it
@@ -520,7 +520,8 @@
                 c.WhiteSpace();
             }
 
-            this.EmitStaticCall(expression.Constructor, expression.Arguments);
+            this.c.WriteTypeFullName(expression.Constructor.ContainingType);
+            this.EmitMethodCallArgument(expression.Arguments);
         }
 
         private void EmitAssignmentExpression(BoundAssignmentOperator assignmentOperator)
@@ -529,7 +530,7 @@
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {
                 c.WriteType(assignmentOperator.Left.Type);
-                this.c.WhiteSpace();                
+                this.c.WhiteSpace();
             }
 
             EmitExpression(assignmentOperator.Left);
@@ -644,22 +645,26 @@
             if (Method.MethodKind == MethodKind.Constructor && method.MethodKind == MethodKind.Constructor && receiver.Type.ToKeyString().Equals(((TypeSymbol)Method.ContainingType).ToKeyString()))
             {
                 c.MarkHeader();
+                this.c.WriteTypeFullName(method.ContainingType);
             }
-
-            this.EmitStaticCall(method, call.Arguments);
-        }
-
-        private void EmitStaticCall(MethodSymbol method, ImmutableArray<BoundExpression> arguments)
-        {
-            if (method.MethodKind == MethodKind.Constructor)
+            else if (method.IsStatic)
             {
                 this.c.WriteTypeFullName(method.ContainingType);
+                c.TextSpan("::");
+                this.c.WriteName(method);
             }
             else
             {
-                this.c.WriteMethodFullName(method);
+                EmitExpression(receiver);
+                c.TextSpan("->");
+                this.c.WriteName(method);
             }
 
+            this.EmitMethodCallArgument(call.Arguments);
+        }
+
+        private void EmitMethodCallArgument(ImmutableArray<BoundExpression> arguments)
+        {
             this.c.TextSpan("(");
             var anyArgs = false;
             foreach (var boundExpression in arguments)
