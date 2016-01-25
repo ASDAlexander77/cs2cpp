@@ -21,7 +21,13 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            throw new NotImplementedException();
+            c.OpenBlock();
+            foreach (var statement in this.statements)
+            {
+                statement.WriteTo(c);
+            }
+
+            c.EndBlock();
         }
 
         internal IEnumerable<Statement> DigStatements(BoundNode boundNode)

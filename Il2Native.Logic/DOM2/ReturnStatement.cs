@@ -23,7 +23,12 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            throw new System.NotImplementedException();
+            c.TextSpan("return");
+            if (expressionOpt != null)
+            {
+                c.WhiteSpace();
+                this.expressionOpt.WriteTo(c);
+            }
         }
     }
 }

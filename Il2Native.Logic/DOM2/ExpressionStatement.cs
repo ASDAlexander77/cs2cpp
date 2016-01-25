@@ -20,7 +20,8 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            throw new System.NotImplementedException();
+            this.expression.WriteTo(c);
+            c.EndStatement();
         }
     }
 }

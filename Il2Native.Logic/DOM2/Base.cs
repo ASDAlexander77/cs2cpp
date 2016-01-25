@@ -10,7 +10,16 @@
 
         internal static Base Deserialize(BoundNode boundBody)
         {
+            // method
             if (boundBody.Syntax is MethodDeclarationSyntax)
+            {
+                var methodBody = new MethodBody();
+                methodBody.Parse(boundBody);
+                return methodBody;
+            }
+
+            // ctor
+            if (boundBody.Syntax is ClassDeclarationSyntax)
             {
                 var methodBody = new MethodBody();
                 methodBody.Parse(boundBody);
