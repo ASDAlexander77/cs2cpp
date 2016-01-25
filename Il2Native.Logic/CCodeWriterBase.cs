@@ -7,6 +7,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Text;
     using DOM;
+    using DOM2;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -39,17 +40,8 @@ namespace Il2Native.Logic
                 this.TextSpanNewLine("throw 0xC000C000;");
                 this.EndBlock();
 #else
-                var cCodeWriterDom = new CCodeWriterDOM();
-                new CCodeMethodSerializer(cCodeWriterDom) { Method = methodSymbol }.Serialize(boundBody);
-
-                var sb = new StringBuilder();
-                using (var itx = new IndentedTextWriter(new StringWriter(sb)))
-                {
-                    cCodeWriterDom.WriteTo(itx);
-                    itx.Close();
-                }
-
-                this.TextSpan(sb.ToString());
+                var methodBase = Base.Deserialize(boundBody);
+                methodBase.WriteTo(this);
 #endif
             }
             else

@@ -168,7 +168,7 @@
                 return;
             }
 
-            Debug.Assert(sourceMethodFound || boundStatementFound, "Method information can't be found");
+            Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBody information can't be found");
 
             unit.Declarations.Add(new CCodeMethodDeclaration(sourceMethodFound ? sourceMethod : method));
             if (boundStatement != null)

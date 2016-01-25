@@ -45,20 +45,20 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CCodeMethodSerializer.cs" />
+    <None Include="CCodeMethodSerializer_TO_DELETE.cs" />
     <Compile Include="CCodeSerializer.cs" />
     <Compile Include="CCodeWriterBase.cs" />
-    <Compile Include="CCodeWriterDOM.cs" />
-    <Compile Include="CDOM\CBlockNode.cs" />
-    <Compile Include="CDOM\CNewLineNode.cs" />
-    <Compile Include="CDOM\CNode.cs" />
-    <Compile Include="CDOM\CNodes.cs" />
-    <Compile Include="CDOM\CSeparatorNode.cs" />
-    <Compile Include="CDOM\CStatementNode.cs" />
-    <Compile Include="CDOM\CTextNode.cs" />
-    <Compile Include="CDOM\CWhiteSpaceNode.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
     <Compile Include="CCodeWriterText.cs" />
+    <Compile Include="DOM2\Base.cs" />
+    <Compile Include="DOM2\Call.cs" />
+    <Compile Include="DOM2\Expression.cs" />
+    <Compile Include="DOM2\ExpressionStatement.cs" />
+    <Compile Include="DOM2\Literal.cs" />
+    <Compile Include="DOM2\MethodBody.cs" />
+    <Compile Include="DOM2\ReturnStatement.cs" />
+    <Compile Include="DOM2\Statement.cs" />
+    <Compile Include="DOM2\TypeExpression.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
