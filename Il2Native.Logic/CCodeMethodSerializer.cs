@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Immutable;
     using System.Diagnostics;
+    using System.Linq;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -120,7 +122,7 @@
             {
                 this.c.TextSpan("goto");
                 this.c.WhiteSpace();
-                this.c.TextSpan(gotoStatement.Label.Name);
+                this.c.TextSpan(gotoStatement.Label.Name.CleanUpNameAllUnderscore());
             }
         }
 
@@ -188,6 +190,84 @@
             if (statement != null)
             {
                 this.EmitStatement(statement);
+            }
+        }
+
+        private void EmitSequenceExpression(BoundSequence sequence)
+        {
+            var hasLocals = !sequence.Locals.IsEmpty;
+
+            if (hasLocals)
+            {
+                foreach (var local in sequence.Locals)
+                {
+                    // TODO: finish it
+                    ////DefineLocal(local, sequence.Syntax);
+                }
+            }
+
+            // detect ++,--, +=, -= etc
+            var sideEffects = sequence.SideEffects;
+            if (!sideEffects.IsDefaultOrEmpty)
+            {
+                var prefixUnaryExpressionSyntax = sequence.Syntax.Green as PrefixUnaryExpressionSyntax;
+                if (prefixUnaryExpressionSyntax != null)
+                {
+                    switch (prefixUnaryExpressionSyntax.OperatorToken.Kind)
+                    {
+                        case SyntaxKind.PlusPlusToken:
+                            this.c.TextSpan("++");
+                            break;
+                        case SyntaxKind.MinusMinusToken:
+                            this.c.TextSpan("--");
+                            break;
+                    }
+
+                    EmitExpression((sideEffects.First() as BoundAssignmentOperator).Left);
+                }
+
+                var postfixUnaryExpressionSyntax = sequence.Syntax.Green as PostfixUnaryExpressionSyntax;
+                if (postfixUnaryExpressionSyntax != null)
+                {
+                    EmitExpression((sideEffects.Skip(1).First() as BoundAssignmentOperator).Left);
+                    switch (postfixUnaryExpressionSyntax.OperatorToken.Kind)
+                    {
+                        case SyntaxKind.PlusPlusToken:
+                            this.c.TextSpan("++");
+                            break;
+                        case SyntaxKind.MinusMinusToken:
+                            this.c.TextSpan("--");
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                ////EmitSideEffects(sequence);
+
+                Debug.Assert(sequence.Value.Kind != BoundKind.TypeExpression);
+                if (sequence.Value.Kind != BoundKind.TypeExpression)
+                {
+                    EmitExpression(sequence.Value);
+                }
+            }
+
+            if (hasLocals)
+            {
+                // TODO: finish it
+                // remove locals
+            }
+        }
+
+        private void EmitSideEffects(BoundSequence sequence)
+        {
+            var sideEffects = sequence.SideEffects;
+            if (!sideEffects.IsDefaultOrEmpty)
+            {
+                foreach (var se in sideEffects)
+                {
+                    EmitExpression(se);
+                }
             }
         }
 
@@ -313,7 +393,7 @@
                     break;
 
                 case BoundKind.Parameter:
-                    EmitParameterLoad((BoundParameter)expression);
+                    this.EmitParameter((BoundParameter)expression);
                     break;
 
                 case BoundKind.FieldAccess:
@@ -347,7 +427,7 @@
                     break;
 
                 case BoundKind.Sequence:
-                    /////EmitSequenceExpression((BoundSequence)expression, used);
+                    EmitSequenceExpression((BoundSequence)expression);
                     break;
 
                 case BoundKind.SequencePointExpression:
@@ -545,7 +625,7 @@
             this.c.WriteName(local.LocalSymbol);
         }
 
-        private void EmitParameterLoad(BoundParameter expression)
+        private void EmitParameter(BoundParameter expression)
         {
             c.WriteName(expression.ParameterSymbol);
         }
