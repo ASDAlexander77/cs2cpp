@@ -1,4 +1,5 @@
-﻿namespace Il2Native.Logic
+﻿////#define EMPTY_SKELETON
+namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -35,11 +36,10 @@
             if (boundBody != null)
             {
 #if EMPTY_SKELETON
-                itw.NewLine("{");
-                itw.Indent++;
-                itw.NewLine("throw 0xC000C000;");
-                itw.Indent--;
-                itw.NewLine("}");
+                this.NewLine();
+                this.OpenBlock();
+                this.TextSpanNewLine("throw 0xC000C000;");
+                this.EndBlock();
 #else
                 var cCodeWriterDom = new CCodeWriterDOM();
                 new CCodeMethodSerializer(cCodeWriterDom) { Method = methodSymbol }.Serialize(boundBody);
@@ -53,6 +53,12 @@
 
                 this.TextSpan(sb.ToString());
 #endif
+            }
+            else
+            {
+                this.NewLine();
+                this.OpenBlock();
+                this.EndBlock();                
             }
         }
 

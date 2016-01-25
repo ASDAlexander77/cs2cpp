@@ -434,8 +434,6 @@
 
         private void EmitLocalLoad(BoundLocal local)
         {
-            local is LocalWithInitializer
-
             this.c.WriteName(local.LocalSymbol);
         }
 
