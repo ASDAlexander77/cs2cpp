@@ -9,6 +9,8 @@
 
         public bool FinishedByBlock;
 
+        public bool ContinuationOfStatement;
+
         public override void WriteTo(IndentedTextWriter itw)
         {
             if (IsEmpty)

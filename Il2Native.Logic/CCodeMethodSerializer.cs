@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Immutable;
     using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -56,7 +57,7 @@
                     break;
 
                 case BoundKind.GotoStatement:
-                    ////EmitGotoStatement((BoundGotoStatement)statement);
+                    EmitGotoStatement((BoundGotoStatement)statement);
                     break;
 
                 case BoundKind.LabelStatement:
@@ -107,6 +108,22 @@
             c.WhiteSpace();
         }
 
+        private void EmitGotoStatement(BoundGotoStatement gotoStatement)
+        {
+            // check if it is "else" for "if-else"
+            var ifStatementSyntax = gotoStatement.Syntax.Green as Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax.IfStatementSyntax;
+            if (ifStatementSyntax != null)
+            {
+                this.c.MarkAsContinuationOfStatement();
+                this.c.TextSpan("else");
+            }
+            else
+            {
+                this.c.TextSpan("goto");
+                this.c.WhiteSpace();
+                this.c.TextSpan(gotoStatement.Label.Name);
+            }
+        }
 
         private void EmitReturnStatement(BoundReturnStatement boundReturnStatement)
         {
@@ -269,7 +286,7 @@
                     break;
 
                 case BoundKind.ObjectCreationExpression:
-                    ////EmitObjectCreationExpression((BoundObjectCreationExpression)expression, used);
+                    EmitObjectCreationExpression((BoundObjectCreationExpression)expression);
                     break;
 
                 case BoundKind.DelegateCreationExpression:
@@ -301,7 +318,7 @@
                     break;
 
                 case BoundKind.FieldAccess:
-                    ////EmitFieldLoad((BoundFieldAccess)expression, used);
+                    EmitField((BoundFieldAccess)expression);
                     break;
 
                 case BoundKind.ArrayAccess:
@@ -313,7 +330,7 @@
                     break;
 
                 case BoundKind.ThisReference:
-                    ////EmitThisReferenceExpression((BoundThisReference)expression);
+                    EmitThisReferenceExpression((BoundThisReference)expression);
                     break;
 
                 case BoundKind.PreviousSubmissionReference:
@@ -425,6 +442,86 @@
                     // node should have been lowered:
                     throw ExceptionUtilities.UnexpectedValue(expression.Kind);
             }
+        }
+
+        private void EmitThisReferenceExpression(BoundThisReference thisRef)
+        {
+            var thisType = thisRef.Type;
+            Debug.Assert(thisType.TypeKind != TypeKind.TypeParameter);
+
+            if (thisType.IsValueType)
+            {
+                // TODO: finish it
+                ////EmitLoadIndirect(thisType, thisRef.Syntax);
+            }
+            else
+            {
+                c.TextSpan("this");
+            }
+        }
+        private void EmitField(BoundFieldAccess fieldAccess)
+        {
+            var field = fieldAccess.FieldSymbol;
+
+            //TODO: For static field access this may require ..ctor to run. Is this a sideeffect?
+            // Accessing unused instance field on a struct is a noop. Just emit the receiver.
+            if (!field.IsVolatile && !field.IsStatic && fieldAccess.ReceiverOpt.Type.IsVerifierValue())
+            {
+                // TODO: finish it
+                ////EmitExpression(fieldAccess.ReceiverOpt, used: false);
+                return;
+            }
+
+            Debug.Assert(!field.IsConst || field.ContainingType.SpecialType == SpecialType.System_Decimal,
+                "rewriter should lower constant fields into constant expressions");
+
+            if (field.IsStatic)
+            {
+                if (field.IsVolatile)
+                {
+                    // TODO: finish it
+                }
+
+                c.WriteType(field.ContainingType);
+                c.TextSpan("::");
+                c.WriteName(field);
+            }
+            else
+            {
+                var receiver = fieldAccess.ReceiverOpt;
+                var fieldType = field.Type;
+                if (fieldType.IsValueType && (object)fieldType == (object)receiver.Type)
+                {
+                    //Handle emitting a field of a self-containing struct (only possible in mscorlib)
+                    //since "val.field" is the same as val, we only need to emit val.
+                    EmitExpression(receiver);
+
+                    // TODO: finish it
+                }
+                else
+                {                    
+                    if (field.IsVolatile)
+                    {
+                        // TODO: finish it
+                    }
+
+                    EmitExpression(receiver);
+                    c.TextSpan("->");
+                }
+
+                c.WriteName(field);
+            }
+        }
+
+        private void EmitObjectCreationExpression(BoundObjectCreationExpression expression)
+        {
+            if (!expression.Type.IsValueType)
+            {
+                c.TextSpan("new");
+                c.WhiteSpace();
+            }
+
+            this.EmitStaticCall(expression.Constructor, expression.Arguments);
         }
 
         private void EmitAssignmentExpression(BoundAssignmentOperator assignmentOperator)
@@ -550,18 +647,31 @@
                 c.MarkHeader();
             }
 
-            c.WriteMethodFullName(method);
+            this.EmitStaticCall(method, call.Arguments);
+        }
+
+        private void EmitStaticCall(MethodSymbol method, ImmutableArray<BoundExpression> arguments)
+        {
+            if (method.MethodKind == MethodKind.Constructor)
+            {
+                this.c.WriteTypeFullName(method.ContainingType);
+            }
+            else
+            {
+                this.c.WriteMethodFullName(method);
+            }
+
             this.c.TextSpan("(");
             var anyArgs = false;
-            foreach (var boundExpression in call.Arguments)
+            foreach (var boundExpression in arguments)
             {
                 if (anyArgs)
                 {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
+                    this.c.TextSpan(",");
+                    this.c.WhiteSpace();
                 }
 
-                EmitExpression(boundExpression);
+                this.EmitExpression(boundExpression);
 
                 anyArgs = true;
             }

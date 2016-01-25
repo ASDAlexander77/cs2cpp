@@ -53,7 +53,7 @@
                     var statement = cNode as CStatementNode;
                     if (statement != null)
                     {
-                        newLineAfterBlockRequired = statement.FinishedByBlock;
+                        newLineAfterBlockRequired = statement.FinishedByBlock && !statement.ContinuationOfStatement;
                     }
                 }
             }
