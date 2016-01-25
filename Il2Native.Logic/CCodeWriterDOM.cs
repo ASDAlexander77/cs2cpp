@@ -25,15 +25,6 @@
             }
         }
 
-        public void MarkAsContinuationOfStatement()
-        {
-            var statement = this._current as CStatementNode;
-            if (statement != null)
-            {
-                statement.ContinuationOfStatement = true;
-            }
-        }
-
         public override void OpenBlock()
         {
             this._stack.Push(_current);

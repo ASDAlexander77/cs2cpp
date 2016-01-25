@@ -9,8 +9,6 @@
 
         public bool FinishedByBlock;
 
-        public bool ContinuationOfStatement;
-
         public override void WriteTo(IndentedTextWriter itw)
         {
             if (IsEmpty)
@@ -33,11 +31,6 @@
             var lastNodeIsBlock = false;
             foreach (var cNode in Nodes.Take(count - empty))
             {
-                if (lastNodeIsBlock)
-                {
-                    itw.WriteLine();
-                }
-
                 lastNodeIsBlock = cNode is CBlockNode;
                 var nestedBlock = lastNodeIsBlock;
                 if (nestedBlock)

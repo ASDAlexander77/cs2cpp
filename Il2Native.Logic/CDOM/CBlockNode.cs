@@ -42,18 +42,19 @@
                 var newLineAfterBlockRequired = false;
                 foreach (var cNode in Nodes.Skip(countUsed))
                 {
+                    var statement = cNode as CStatementNode;
                     if (newLineAfterBlockRequired)
                     {
                         itw.WriteLine();
-                        newLineAfterBlockRequired = false;
                     }
+
+                    newLineAfterBlockRequired = false;
 
                     cNode.WriteTo(itw);
 
-                    var statement = cNode as CStatementNode;
                     if (statement != null)
                     {
-                        newLineAfterBlockRequired = statement.FinishedByBlock && !statement.ContinuationOfStatement;
+                        newLineAfterBlockRequired = statement.FinishedByBlock;
                     }
                 }
             }

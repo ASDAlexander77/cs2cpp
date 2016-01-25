@@ -114,7 +114,6 @@
             var ifStatementSyntax = gotoStatement.Syntax.Green as Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax.IfStatementSyntax;
             if (ifStatementSyntax != null)
             {
-                this.c.MarkAsContinuationOfStatement();
                 this.c.TextSpan("else");
             }
             else
