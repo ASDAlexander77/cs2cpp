@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -21,7 +22,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            throw new System.NotImplementedException();
+            c.WriteType(type);
         }
     }
 }

@@ -11,25 +11,19 @@
         internal static Base Deserialize(BoundNode boundBody)
         {
             // method
-            if (boundBody.Syntax is MethodDeclarationSyntax)
+            var boundStatementList = boundBody as BoundStatementList;
+            if (boundStatementList != null && (boundBody.Syntax is MethodDeclarationSyntax || boundBody.Syntax is ClassDeclarationSyntax))
             {
                 var methodBody = new MethodBody();
                 methodBody.Parse(boundBody);
                 return methodBody;
             }
 
-            // ctor
-            if (boundBody.Syntax is ClassDeclarationSyntax)
-            {
-                var methodBody = new MethodBody();
-                methodBody.Parse(boundBody);
-                return methodBody;
-            }
-
-            if (boundBody.Syntax is ReturnStatementSyntax)
+            var boundReturnStatement = boundBody as BoundReturnStatement;
+            if (boundReturnStatement != null)
             {
                 var returnStatement = new ReturnStatement();
-                returnStatement.Parse(boundBody as BoundReturnStatement);
+                returnStatement.Parse(boundReturnStatement);
                 return returnStatement;
             }
 
@@ -55,6 +49,14 @@
                 var typeExpression = new TypeExpression();
                 typeExpression.Parse(boundTypeExpression);
                 return typeExpression;
+            }
+
+            var boundThisReference = boundBody as BoundThisReference;
+            if (boundThisReference != null)
+            {
+                var thisReference = new ThisReference();
+                thisReference.Parse(boundThisReference);
+                return thisReference;
             }
 
             var boundLiteral = boundBody as BoundLiteral;
