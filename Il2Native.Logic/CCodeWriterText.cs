@@ -23,7 +23,6 @@
     public class CCodeWriterText : CCodeWriterBase
     {
         private IndentedTextWriter _itw;
-        private State block = State.End;
         private TextState text = TextState.Empty;
 
         public CCodeWriterText(IndentedTextWriter itw)
@@ -33,43 +32,19 @@
 
         public override void OpenBlock()
         {
-            if (this.block == State.Open)
-            {
-                return;
-            }
-
-            this.block = State.Open;
-            this.TextSpan("{");
-            this.NewLine();
-            _itw.Indent++;       
+            _itw.Indent++;
+            _itw.WriteLine("{");
         }
 
         public override void EndBlock()
         {
-            if (this.block == State.End)
-            {
-                return;
-            }
-
-            this.block = State.End;
             _itw.Indent--;
-            this.TextSpan("}");
-            this.NewLine();
-        }
-
-        public override void OpenStatement()
-        {
+            _itw.WriteLine("}");
         }
 
         public override void EndStatement()
         {
-            if (this.text == TextState.Empty || this.text == TextState.Separated)
-            {
-                return;
-            }
-
-            this.text = TextState.Any;
-            this.TextSpanNewLine(";");
+            _itw.WriteLine(";");
         }
 
         public override void TextSpan(string line)

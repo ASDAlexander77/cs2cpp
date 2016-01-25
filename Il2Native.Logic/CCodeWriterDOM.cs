@@ -5,6 +5,8 @@
     using System.Linq;
     using CDOM;
 
+    using Microsoft.CodeAnalysis.CSharp;
+
     public class CCodeWriterDOM : CCodeWriterBase
     {
         private Stack<CNodes> _stack = new Stack<CNodes>();
@@ -25,26 +27,41 @@
             }
         }
 
-        public override void OpenBlock()
+        internal void OpenBlock(BoundBlock boundBlock)
         {
             this._stack.Push(_current);
             _current.Nodes.Add(_current = new CBlockNode());
         }
 
-        public override void EndBlock()
+        public override void OpenBlock()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal void EndBlock(BoundBlock boundBlock)
         {
             _current = this._stack.Pop();
         }
 
-        public override void OpenStatement()
+        public override void EndBlock()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal void OpenStatement(BoundStatement boundStatement)
         {
             this._stack.Push(_current);
             _current.Nodes.Add(_current = new CStatementNode());
         }
 
-        public override void EndStatement()
+        internal void EndStatement(BoundStatement boundStatement)
         {
             _current = this._stack.Pop();
+        }
+
+        public override void EndStatement()
+        {
+            throw new System.NotImplementedException();
         }
 
         public override void TextSpan(string line)

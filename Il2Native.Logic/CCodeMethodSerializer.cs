@@ -148,7 +148,7 @@
 
         private void EmitBlock(BoundBlock block)
         {
-            this.c.OpenBlock();
+            this.c.OpenBlock(block);
 
             var hasLocals = !block.Locals.IsEmpty;
 
@@ -163,12 +163,12 @@
 
             foreach (var statement in block.Statements)
             {
-                this.c.OpenStatement();
+                this.c.OpenStatement(statement);
                 EmitStatement(statement);
-                this.c.EndStatement();
+                this.c.EndStatement(statement);
             }
 
-            this.c.EndBlock();
+            this.c.EndBlock(block);
         }
 
         private void EmitSequencePointStatement(BoundSequencePoint node)
