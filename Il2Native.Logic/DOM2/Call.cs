@@ -11,16 +11,9 @@
     {
         private readonly IList<Expression> arguments = new List<Expression>();
         private MethodSymbol method;
-        private BoundExpression receiverOpt;
-        private Expression receiverOptExpression;
+        private Expression receiverOpt;
 
-        public bool IsCallingBaseConstructor
-        {
-            get
-            {
-                return this.method.MethodKind == MethodKind.Constructor && this.receiverOpt is BoundThisReference;
-            }
-        }
+        public bool IsCallingBaseConstructor { get; private set; }
 
         internal void Parse(BoundCall boundCall)
         {
@@ -30,8 +23,9 @@
             }
 
             this.method = boundCall.Method;
-            this.receiverOpt = boundCall.ReceiverOpt;
-            this.receiverOptExpression = Deserialize(boundCall.ReceiverOpt) as Expression;
+            this.IsCallingBaseConstructor = this.method.MethodKind == MethodKind.Constructor && boundCall.ReceiverOpt is BoundThisReference;
+            this.receiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+
             foreach (var expression in boundCall.Arguments)
             {
                 var argument = Deserialize(expression) as Expression;
@@ -56,7 +50,7 @@
             }
             else
             {
-                this.receiverOptExpression.WriteTo(c);
+                this.receiverOpt.WriteTo(c);
                 c.TextSpan("->");
                 c.WriteName(method);
             }

@@ -48,6 +48,30 @@
                 return call;
             }
 
+            var boundBinaryOperator = boundBody as BoundBinaryOperator;
+            if (boundBinaryOperator != null)
+            {
+                var binaryOperator = new BinaryOperator();
+                binaryOperator.Parse(boundBinaryOperator);
+                return binaryOperator;
+            }
+
+            var boundAssignmentOperator = boundBody as BoundAssignmentOperator;
+            if (boundAssignmentOperator != null)
+            {
+                var assignmentOperator = new AssignmentOperator();
+                assignmentOperator.Parse(boundAssignmentOperator);
+                return assignmentOperator;
+            }
+
+            var boundConversion = boundBody as BoundConversion;
+            if (boundConversion != null)
+            {
+                var conversion = new Conversion();
+                conversion.Parse(boundConversion);
+                return conversion;
+            }
+
             var boundTypeExpression = boundBody as BoundTypeExpression;
             if (boundTypeExpression != null)
             {
@@ -62,6 +86,30 @@
                 var thisReference = new ThisReference();
                 thisReference.Parse(boundThisReference);
                 return thisReference;
+            }
+
+            var boundFieldAccess = boundBody as BoundFieldAccess;
+            if (boundFieldAccess != null)
+            {
+                var fieldAccess = new FieldAccess();
+                fieldAccess.Parse(boundFieldAccess);
+                return fieldAccess;
+            }
+
+            var boundParameter = boundBody as BoundParameter;
+            if (boundParameter != null)
+            {
+                var parameter = new Parameter();
+                parameter.Parse(boundParameter);
+                return parameter;
+            }
+
+            var boundLocal = boundBody as BoundLocal;
+            if (boundLocal != null)
+            {
+                var local = new Local();
+                local.Parse(boundLocal);
+                return local;
             }
 
             var boundLiteral = boundBody as BoundLiteral;
