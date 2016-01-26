@@ -20,7 +20,14 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteName(this.local);
+            if (this.local.SynthesizedLocalKind != SynthesizedLocalKind.None)
+            {
+                c.TextSpan(this.local.SynthesizedLocalKind.ToString());
+            }
+            else
+            {
+                c.WriteName(this.local);
+            }
         }
     }
 }

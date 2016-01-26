@@ -1,24 +1,33 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Collections.Generic;
+
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public abstract class Base
     {
-        internal static Base Deserialize(BoundNode boundBody)
+        internal static Base Deserialize(BoundNode boundBody, bool root = false)
         {
             // method
             var boundStatementList = boundBody as BoundStatementList;
             if (boundStatementList != null)
             {
-                var methodBody = new MethodBody();
-                methodBody.Parse(boundBody);
-                return methodBody;
-            }
+                if (root || boundStatementList.Syntax.Green is MethodDeclarationSyntax)
+                {
+                    var methodBody = new MethodBody();
+                    methodBody.Parse(boundBody);
+                    return methodBody;
+                }
 
-            var boundBlock = boundBody as BoundBlock;
-            if (boundBlock != null)
-            {
+                if (boundStatementList.Syntax.Green is IfStatementSyntax)
+                {
+                    var ifStatement = new IfStatement();
+                    ifStatement.Parse(boundStatementList);
+                    return ifStatement;
+                }
+
                 var block = new Block();
                 block.Parse(boundBody);
                 return block;
@@ -38,6 +47,14 @@
                 var expressionStatement = new ExpressionStatement();
                 expressionStatement.Parse(boundExpressionStatement);
                 return expressionStatement;                
+            }
+
+            var boundSequence = boundBody as BoundSequence;
+            if (boundSequence != null)
+            {
+                var lambdaCallExpression = new LambdaCallExpression();
+                lambdaCallExpression.Parse(boundSequence);
+                return lambdaCallExpression;   
             }
 
             var boundCall = boundBody as BoundCall;

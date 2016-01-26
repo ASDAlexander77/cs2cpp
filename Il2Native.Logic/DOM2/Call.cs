@@ -23,8 +23,11 @@
             }
 
             this.method = boundCall.Method;
-            this.IsCallingBaseConstructor = this.method.MethodKind == MethodKind.Constructor && boundCall.ReceiverOpt is BoundThisReference;
-            this.receiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+            if (boundCall.ReceiverOpt != null)
+            {
+                this.IsCallingBaseConstructor = this.method.MethodKind == MethodKind.Constructor && boundCall.ReceiverOpt is BoundThisReference;
+                this.receiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+            }
 
             foreach (var expression in boundCall.Arguments)
             {

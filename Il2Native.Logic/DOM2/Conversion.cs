@@ -7,6 +7,7 @@
     public class Conversion : Expression
     {
         private TypeSymbol type;
+        private Expression operand;
 
         internal void Parse(BoundConversion boundConversion)
         {
@@ -16,6 +17,7 @@
             }
 
             this.type = boundConversion.Type;
+            this.operand = Deserialize(boundConversion.Operand) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -23,6 +25,7 @@
             c.TextSpan("(");
             c.WriteType(type);
             c.TextSpan(")");
+            this.operand.WriteTo(c);
         }
     }
 }

@@ -4,6 +4,8 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
+
     using Microsoft.CodeAnalysis.CSharp;
 
     public class Block : Base
@@ -20,8 +22,10 @@
 
         internal void Parse(BoundNode boundNode)
         {
-            foreach (var statement in this.DigStatements(boundNode))
+            foreach (var boundStatement in DigStatements(boundNode))
             {
+                Debug.Assert(boundStatement != null);
+                var statement = Deserialize(boundStatement) as Statement;
                 Debug.Assert(statement != null);
                 this.statements.Add(statement);
             }
@@ -38,14 +42,14 @@
             c.EndBlock();
         }
 
-        internal IEnumerable<Statement> DigStatements(BoundNode boundNode)
+        internal static IEnumerable<BoundStatement> DigStatements(BoundNode boundNode)
         {
             var boundStatementList = boundNode as BoundStatementList;
             if (boundStatementList != null)
             {
                 foreach (var boundStatement in boundStatementList.Statements)
                 {
-                    foreach (var statement in this.DigStatements(boundStatement))
+                    foreach (var statement in DigStatements(boundStatement))
                     {
                         yield return statement;
                     }
@@ -59,7 +63,7 @@
             {
                 if (boundSequencePointWithSpan.StatementOpt != null)
                 {
-                    yield return Deserialize(boundSequencePointWithSpan.StatementOpt) as Statement;
+                    yield return boundSequencePointWithSpan.StatementOpt;
                 }
 
                 yield break;
@@ -70,13 +74,13 @@
             {
                 if (boundSequencePoint.StatementOpt != null)
                 {
-                    yield return Deserialize(boundSequencePoint.StatementOpt) as Statement;
+                    yield return boundSequencePoint.StatementOpt;
                 }
 
                 yield break;
             }
 
-            yield return Deserialize(boundNode) as Statement;
+            yield return boundNode as BoundStatement;
         }
     }
 }
