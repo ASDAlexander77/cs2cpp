@@ -29,6 +29,8 @@
                 c.WhiteSpace();
                 this.expressionOpt.WriteTo(c);
             }
+
+            base.WriteTo(c);
         }
     }
 }

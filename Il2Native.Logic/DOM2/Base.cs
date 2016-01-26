@@ -2,21 +2,26 @@
 {
     using System;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     public abstract class Base
     {
-        internal abstract void WriteTo(CCodeWriterBase c);
-
         internal static Base Deserialize(BoundNode boundBody)
         {
             // method
             var boundStatementList = boundBody as BoundStatementList;
-            if (boundStatementList != null && (boundBody.Syntax is MethodDeclarationSyntax || boundBody.Syntax is ClassDeclarationSyntax))
+            if (boundStatementList != null)
             {
                 var methodBody = new MethodBody();
                 methodBody.Parse(boundBody);
                 return methodBody;
+            }
+
+            var boundBlock = boundBody as BoundBlock;
+            if (boundBlock != null)
+            {
+                var block = new Block();
+                block.Parse(boundBody);
+                return block;
             }
 
             var boundReturnStatement = boundBody as BoundReturnStatement;
@@ -69,5 +74,7 @@
 
             throw new NotImplementedException();
         }
+
+        internal abstract void WriteTo(CCodeWriterBase c);
     }
 }

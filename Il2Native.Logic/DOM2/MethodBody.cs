@@ -1,74 +1,44 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using Microsoft.CodeAnalysis.CSharp;
+    using System.Linq;
 
-    public class MethodBody : Base
+    public class MethodBody : Block
     {
-        private readonly IList<Statement> statements = new List<Statement>();
-
-        internal void Parse(BoundNode boundNode)
-        {
-            foreach (var statement in this.DigStatements(boundNode))
-            {
-                Debug.Assert(statement != null);
-                this.statements.Add(statement);
-            }
-        }
-
         internal override void WriteTo(CCodeWriterBase c)
         {
+            // call constructors
+            var constructors =
+                this.Statements.TakeWhile(
+                    s =>
+                    s is ExpressionStatement && ((ExpressionStatement)s).Expression is Call
+                    && ((Call)(((ExpressionStatement)s).Expression)).IsCallingBaseConstructor)
+                    .Select(s => ((ExpressionStatement)s).Expression as Call)
+                    .ToArray();
+
+            if (constructors.Length > 0)
+            {
+                c.TextSpan(":");
+
+                var any = false;
+                foreach (var constructorCall in constructors)
+                {
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                    }
+
+                    constructorCall.WriteTo(c);
+                    any = true;
+                }
+            }
+
             c.OpenBlock();
-            foreach (var statement in this.statements)
+            foreach (var statement in this.Statements.Skip(constructors.Length))
             {
                 statement.WriteTo(c);
             }
 
             c.EndBlock();
-        }
-
-        internal IEnumerable<Statement> DigStatements(BoundNode boundNode)
-        {
-            var boundStatementList = boundNode as BoundStatementList;
-            if (boundStatementList != null)
-            {
-                foreach (var boundStatement in boundStatementList.Statements)
-                {
-                    foreach (var statement in this.DigStatements(boundStatement))
-                    {
-                        yield return statement;
-                    }
-                }
-
-                yield break;
-            }
-
-            var boundSequencePointWithSpan = boundNode as BoundSequencePointWithSpan;
-            if (boundSequencePointWithSpan != null)
-            {
-                if (boundSequencePointWithSpan.StatementOpt != null)
-                {
-                    yield return Deserialize(boundSequencePointWithSpan.StatementOpt) as Statement;
-                }
-
-                yield break;
-            }
-
-            var boundSequencePoint = boundNode as BoundSequencePoint;
-            if (boundSequencePoint != null)
-            {
-                if (boundSequencePoint.StatementOpt != null)
-                {
-                    yield return Deserialize(boundSequencePoint.StatementOpt) as Statement;
-                }
-
-                yield break;
-            }
-
-            yield return Deserialize(boundNode) as Statement;
         }
     }
 }

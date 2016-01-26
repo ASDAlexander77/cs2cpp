@@ -6,7 +6,7 @@
 
     public class ExpressionStatement : Statement
     {
-        private Expression expression;
+        public Expression Expression { get; private set; }
 
         internal void Parse(BoundExpressionStatement expressionStatement)
         {
@@ -15,13 +15,13 @@
                 throw new ArgumentNullException();
             }
 
-            this.expression = Deserialize(expressionStatement.Expression) as Expression;
+            this.Expression = Deserialize(expressionStatement.Expression) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.expression.WriteTo(c);
-            c.EndStatement();
+            this.Expression.WriteTo(c);
+            base.WriteTo(c);
         }
     }
 }

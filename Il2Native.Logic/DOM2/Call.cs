@@ -14,6 +14,14 @@
         private BoundExpression receiverOpt;
         private Expression receiverOptExpression;
 
+        public bool IsCallingBaseConstructor
+        {
+            get
+            {
+                return this.method.MethodKind == MethodKind.Constructor && this.receiverOpt is BoundThisReference;
+            }
+        }
+
         internal void Parse(BoundCall boundCall)
         {
             if (boundCall == null)
@@ -34,8 +42,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.method.MethodKind == MethodKind.Constructor && method.MethodKind == MethodKind.Constructor &&
-                this.receiverOpt.Type.ToKeyString().Equals(this.method.ContainingType.ToKeyString()))
+            if (this.IsCallingBaseConstructor)
             {
                 // TODO: finish it to show properly
                 ////c.MarkHeader();

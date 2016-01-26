@@ -2,5 +2,9 @@
 {
     public abstract class Statement : Base
     {
+        internal override void WriteTo(CCodeWriterBase c)
+        {
+            c.EndStatement();
+        }
     }
 }
