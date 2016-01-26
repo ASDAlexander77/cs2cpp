@@ -32,8 +32,8 @@
 
         public override void OpenBlock()
         {
-            _itw.Indent++;
             _itw.WriteLine("{");
+            _itw.Indent++;
         }
 
         public override void EndBlock()

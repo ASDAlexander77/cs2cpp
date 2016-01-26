@@ -17,7 +17,9 @@
 
             if (constructors.Length > 0)
             {
+                c.WhiteSpace();
                 c.TextSpan(":");
+                c.WhiteSpace();
 
                 var any = false;
                 foreach (var constructorCall in constructors)
@@ -25,12 +27,15 @@
                     if (any)
                     {
                         c.TextSpan(",");
+                        c.WhiteSpace();
                     }
 
                     constructorCall.WriteTo(c);
                     any = true;
                 }
             }
+
+            c.NewLine();
 
             c.OpenBlock();
             foreach (var statement in this.Statements.Skip(constructors.Length))
