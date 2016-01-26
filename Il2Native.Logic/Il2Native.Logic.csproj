@@ -64,6 +64,7 @@
     <Compile Include="DOM2\LambdaCallExpression.cs" />
     <Compile Include="DOM2\Literal.cs" />
     <Compile Include="DOM2\Local.cs" />
+    <Compile Include="DOM2\LocalVariableDeclaration.cs" />
     <Compile Include="DOM2\MethodBody.cs" />
     <Compile Include="DOM2\ObjectCreationExpression.cs" />
     <Compile Include="DOM2\Parameter.cs" />

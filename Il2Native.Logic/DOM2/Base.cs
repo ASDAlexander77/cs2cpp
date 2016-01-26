@@ -11,6 +11,23 @@
     {
         internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements)
         {
+            // process locals when not used with assignment operator
+            var boundBlock = boundStatementList as BoundBlock;
+            if (boundBlock != null)
+            {
+                foreach (var local in boundBlock.Locals)
+                {
+                    var reference = local.DeclaringSyntaxReferences[0];
+                    var variableDeclaratorSyntax = reference.GetSyntax().Green as VariableDeclaratorSyntax;
+                    if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer == null)
+                    {
+                        var localVariableDeclaration = new LocalVariableDeclaration();
+                        localVariableDeclaration.Parse(local);
+                        statements.Add(localVariableDeclaration);
+                    }
+                }
+            }
+
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
                 var deserialize = Deserialize(boundStatement);

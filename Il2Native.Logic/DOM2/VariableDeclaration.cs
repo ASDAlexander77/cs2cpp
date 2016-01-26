@@ -4,11 +4,13 @@
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     internal class VariableDeclaration : Statement
     {
         private readonly IList<Statement> statements = new List<Statement>();
+        private LocalSymbol localSymbolOpt;
 
         public void Parse(BoundStatementList boundStatementList)
         {
@@ -26,8 +28,20 @@
             }
         }
 
+        public void Parse(LocalSymbol localSymbol)
+        {
+            this.localSymbolOpt = localSymbol;
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.localSymbolOpt != null)
+            {
+                c.WriteType(this.localSymbolOpt.Type);
+                c.WhiteSpace();
+                c.WriteName(this.localSymbolOpt);
+            }
+
             var any = false;
             foreach (var statement in this.statements)
             {
