@@ -10,10 +10,25 @@
     public class Call : Expression
     {
         private readonly IList<Expression> arguments = new List<Expression>();
-        private MethodSymbol method;
         private Expression receiverOpt;
 
-        public bool IsCallingBaseConstructor { get; private set; }
+        public bool IsCallingConstructor
+        {
+            get
+            {
+                return this.Method.MethodKind == MethodKind.Constructor;
+            }
+        }
+
+        internal MethodSymbol Method { get; set; }
+
+        protected IList<Expression> Arguments
+        {
+            get
+            {
+                return arguments;
+            }
+        }
 
         internal void Parse(BoundCall boundCall)
         {
@@ -22,10 +37,9 @@
                 throw new ArgumentNullException();
             }
 
-            this.method = boundCall.Method;
+            this.Method = boundCall.Method;
             if (boundCall.ReceiverOpt != null)
             {
-                this.IsCallingBaseConstructor = this.method.MethodKind == MethodKind.Constructor && boundCall.ReceiverOpt is BoundThisReference;
                 this.receiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
             }
 
@@ -39,23 +53,21 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.IsCallingBaseConstructor)
+            if (this.IsCallingConstructor)
             {
-                // TODO: finish it to show properly
-                ////c.MarkHeader();
-                c.WriteTypeFullName(method.ContainingType);
+                c.WriteTypeFullName(this.Method.ContainingType);
             }
-            else if (method.IsStatic)
+            else if (this.Method.IsStatic)
             {
-                c.WriteTypeFullName(method.ContainingType);
+                c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
-                c.WriteName(method);
+                c.WriteName(this.Method);
             }
             else
             {
                 this.receiverOpt.WriteTo(c);
                 c.TextSpan("->");
-                c.WriteName(method);
+                c.WriteName(this.Method);
             }
 
             this.WriteCallArguments(c);

@@ -40,7 +40,7 @@ namespace Il2Native.Logic
                 this.TextSpanNewLine("throw 0xC000C000;");
                 this.EndBlock();
 #else
-                var methodBase = Base.Deserialize(boundBody);
+                var methodBase = Base.Deserialize(boundBody, methodSymbol.MethodKind == MethodKind.Constructor);
                 methodBase.WriteTo(this);
 #endif
             }

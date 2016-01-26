@@ -95,6 +95,14 @@
                 return assignmentOperator;
             }
 
+            var boundObjectCreationExpression = boundBody as BoundObjectCreationExpression;
+            if (boundObjectCreationExpression != null)
+            {
+                var objectCreationExpression = new ObjectCreationExpression();
+                objectCreationExpression.Parse(boundObjectCreationExpression);
+                return objectCreationExpression;
+            }
+
             var boundConversion = boundBody as BoundConversion;
             if (boundConversion != null)
             {

@@ -11,7 +11,7 @@
                 this.Statements.TakeWhile(
                     s =>
                     s is ExpressionStatement && ((ExpressionStatement)s).Expression is Call
-                    && ((Call)(((ExpressionStatement)s).Expression)).IsCallingBaseConstructor)
+                    && ((Call)(((ExpressionStatement)s).Expression)).IsCallingConstructor)
                     .Select(s => ((ExpressionStatement)s).Expression as Call)
                     .ToArray();
 

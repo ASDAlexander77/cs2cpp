@@ -11,15 +11,9 @@
     {
         private Expression condition;
 
-        private readonly IList<Statement> statements = new List<Statement>();
+        private readonly IList<Statement> ifStatements = new List<Statement>();
 
-        protected IList<Statement> Statements
-        {
-            get
-            {
-                return this.statements;
-            }
-        }
+        private readonly IList<Statement> elseStatements = new List<Statement>();
 
         internal void Parse(BoundStatementList boundStatementList)
         {
@@ -29,6 +23,7 @@
             }
 
             LabelSymbol endIfLabel = null;
+            var elsePart = false;
             foreach (var boundStatement in Block.DigStatements(boundStatementList))
             {
                 var boundConditionalGoto = boundStatement as BoundConditionalGoto;
@@ -41,15 +36,30 @@
                 }
 
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
-                if (boundLabelStatement != null && boundLabelStatement.Label.Name.Equals(endIfLabel.Name))
+                if (boundLabelStatement != null)
                 {
-                    break;
+                    continue;
+                }
+
+                var boundGotoStatement = boundStatement as BoundGotoStatement;
+                if (boundGotoStatement != null)
+                {
+                    elsePart = true;
+                    continue;
                 }
 
                 Debug.Assert(boundStatement != null);
                 var statement = Deserialize(boundStatement) as Statement;
+                
                 Debug.Assert(statement != null);
-                this.statements.Add(statement);
+                if (!elsePart)
+                {
+                    this.ifStatements.Add(statement);
+                }
+                else
+                {
+                    this.elseStatements.Add(statement);
+                }
             }
         }
 
@@ -63,12 +73,27 @@
             
             c.NewLine();
             c.OpenBlock();
-            foreach (var statement in this.statements)
+            foreach (var statement in this.ifStatements)
             {
                 statement.WriteTo(c);
             }
 
             c.EndBlock();
+
+            if (this.elseStatements.Count > 0)
+            {
+                c.TextSpan("else");
+
+                c.NewLine();
+                c.OpenBlock();
+                foreach (var statement in this.ifStatements)
+                {
+                    statement.WriteTo(c);
+                }
+
+                c.EndBlock();                
+            }
+
             c.NewLine();
 
             // No normal ending of Statement as we do not need extra ;
