@@ -15,6 +15,13 @@
         private Expression condition;
         private Expression incrementing;
 
+        private enum Stages
+        {
+            Initialization,
+            Body,
+            Incrementing
+        }
+
         internal void Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
@@ -22,8 +29,23 @@
                 throw new ArgumentNullException();
             }
 
+            var stage = Stages.Initialization;
             foreach (var boundStatement in boundStatementList.Statements)
             {
+                var boundConditionalGoto = boundStatement as BoundConditionalGoto;
+                if (boundConditionalGoto != null)
+                {
+                    condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+                    Debug.Assert(condition != null);
+                    continue;
+                }
+
+                var boundLabelStatement = boundStatement as BoundLabelStatement;
+                if (boundLabelStatement != null)
+                {
+                    continue;
+                }
+
                 var statement = Deserialize(boundStatement) as Statement;
                 if (statement != null)
                 {
