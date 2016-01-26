@@ -1,27 +1,27 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
 
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
-    public class Block : Base
+    public class ForStatement : Statement
     {
         private readonly IList<Statement> statements = new List<Statement>();
 
-        protected IList<Statement> Statements 
-        {
-            get
-            {
-                return this.statements;
-            }
-        }
+        private Expression initialization;
+        private Expression condition;
+        private Expression incrementing;
 
         internal void Parse(BoundStatementList boundStatementList)
         {
+            if (boundStatementList == null)
+            {
+                throw new ArgumentNullException();
+            }
+
             foreach (var boundStatement in boundStatementList.Statements)
             {
                 var statement = Deserialize(boundStatement) as Statement;
@@ -34,6 +34,19 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            c.TextSpan("for");
+            c.WhiteSpace();
+            c.TextSpan("(");
+            this.initialization.WriteTo(c);
+            c.TextSpan(";");
+            c.WhiteSpace();
+            this.condition.WriteTo(c);
+            c.TextSpan(";");
+            c.WhiteSpace();
+            this.incrementing.WriteTo(c);
+            c.TextSpan(")");
+
+            c.NewLine();
             c.OpenBlock();
             foreach (var statement in this.statements)
             {
@@ -41,6 +54,10 @@
             }
 
             c.EndBlock();
+
+            c.NewLine();
+
+            // No normal ending of Statement as we do not need extra ;
         }
     }
 }

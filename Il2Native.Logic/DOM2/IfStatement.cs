@@ -24,7 +24,7 @@
 
             LabelSymbol endIfLabel = null;
             var elsePart = false;
-            foreach (var boundStatement in Block.DigStatements(boundStatementList))
+            foreach (var boundStatement in boundStatementList.Statements)
             {
                 var boundConditionalGoto = boundStatement as BoundConditionalGoto;
                 if (boundConditionalGoto != null)
@@ -50,15 +50,16 @@
 
                 Debug.Assert(boundStatement != null);
                 var statement = Deserialize(boundStatement) as Statement;
-                
-                Debug.Assert(statement != null);
-                if (!elsePart)
+                if (statement != null)
                 {
-                    this.ifStatements.Add(statement);
-                }
-                else
-                {
-                    this.elseStatements.Add(statement);
+                    if (!elsePart)
+                    {
+                        this.ifStatements.Add(statement);
+                    }
+                    else
+                    {
+                        this.elseStatements.Add(statement);
+                    }
                 }
             }
         }

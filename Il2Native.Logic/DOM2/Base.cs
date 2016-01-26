@@ -17,7 +17,7 @@
                 if (root || boundStatementList.Syntax.Green is MethodDeclarationSyntax)
                 {
                     var methodBody = new MethodBody();
-                    methodBody.Parse(boundBody);
+                    methodBody.Parse(boundStatementList);
                     return methodBody;
                 }
 
@@ -28,8 +28,15 @@
                     return ifStatement;
                 }
 
+                if (boundStatementList.Syntax.Green is ForStatementSyntax)
+                {
+                    var forStatement = new ForStatement();
+                    forStatement.Parse(boundStatementList);
+                    return forStatement;
+                }
+
                 var block = new Block();
-                block.Parse(boundBody);
+                block.Parse(boundStatementList);
                 return block;
             }
 
@@ -157,6 +164,28 @@
                 var literal = new Literal();
                 literal.Parse(boundLiteral);
                 return literal;
+            }
+
+            var boundSequencePoint = boundBody as BoundSequencePoint;
+            if (boundSequencePoint != null)
+            {
+                if (boundSequencePoint.StatementOpt != null)
+                {
+                    return Deserialize(boundSequencePoint.StatementOpt);
+                }
+
+                return null;
+            }
+
+            var boundSequencePointWithSpan = boundBody as BoundSequencePointWithSpan;
+            if (boundSequencePointWithSpan != null)
+            {
+                if (boundSequencePointWithSpan.StatementOpt != null)
+                {
+                    return Deserialize(boundSequencePointWithSpan.StatementOpt);
+                }
+
+                return null;
             }
 
             throw new NotImplementedException();
