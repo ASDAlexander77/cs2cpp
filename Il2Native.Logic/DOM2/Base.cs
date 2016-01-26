@@ -52,6 +52,20 @@
             var boundSequence = boundBody as BoundSequence;
             if (boundSequence != null)
             {
+                if (boundSequence.Syntax.Green is PrefixUnaryExpressionSyntax)
+                {
+                    var prefixUnaryExpression = new PrefixUnaryExpression();
+                    prefixUnaryExpression.Parse(boundSequence);
+                    return prefixUnaryExpression;
+                }
+
+                if (boundSequence.Syntax.Green is PostfixUnaryExpressionSyntax)
+                {
+                    var postfixUnaryExpression = new PostfixUnaryExpression();
+                    postfixUnaryExpression.Parse(boundSequence);
+                    return postfixUnaryExpression;
+                }
+
                 var lambdaCallExpression = new LambdaCallExpression();
                 lambdaCallExpression.Parse(boundSequence);
                 return lambdaCallExpression;   

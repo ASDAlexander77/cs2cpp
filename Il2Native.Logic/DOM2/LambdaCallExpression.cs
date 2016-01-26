@@ -8,7 +8,7 @@
 
     public class LambdaCallExpression : Expression
     {
-        private IList<Expression> sideEffects = new List<Expression>();
+        private readonly IList<Expression> sideEffects = new List<Expression>();
 
         private Expression value;
 
