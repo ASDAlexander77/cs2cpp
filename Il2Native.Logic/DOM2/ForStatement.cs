@@ -1,25 +1,22 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ForStatement : Statement
     {
-        private readonly IList<Statement> statements = new List<Statement>();
-
-        private Expression initialization;
+        private Base statements;
+        private Base initialization;
+        private Base incrementing;
         private Expression condition;
-        private Expression incrementing;
 
         private enum Stages
         {
             Initialization,
             Body,
-            Incrementing
+            Incrementing,
+            End
         }
 
         internal void Parse(BoundStatementList boundStatementList)
@@ -30,26 +27,75 @@
             }
 
             var stage = Stages.Initialization;
-            foreach (var boundStatement in boundStatementList.Statements)
+            foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
-                var boundConditionalGoto = boundStatement as BoundConditionalGoto;
-                if (boundConditionalGoto != null)
-                {
-                    condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-                    Debug.Assert(condition != null);
-                    continue;
-                }
-
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null)
                 {
-                    continue;
+                    if (boundLabelStatement.Label.Name.StartsWith("<start") && stage == Stages.Initialization)
+                    {
+                        stage = Stages.Body;
+                        continue;
+                    }
+
+                    if (boundLabelStatement.Label.Name.StartsWith("<continue") && stage == Stages.Body)
+                    {
+                        stage = Stages.Incrementing;
+                        continue;
+                    }
+
+                    if (boundLabelStatement.Label.Name.StartsWith("<end") && stage == Stages.Incrementing)
+                    {
+                        stage = Stages.End;
+                        continue;
+                    }
+
+                    if (boundLabelStatement.Label.Name.StartsWith("<break") && stage == Stages.End)
+                    {
+                        continue;
+                    }
                 }
 
-                var statement = Deserialize(boundStatement) as Statement;
+                if (stage == Stages.Initialization)
+                {
+                    var boundGotoStatement = boundStatement as BoundGotoStatement;
+                    if (boundGotoStatement != null)
+                    {
+                        continue;
+                    }
+                }
+
+                if (stage == Stages.End)
+                {
+                    var boundConditionalGoto = boundStatement as BoundConditionalGoto;
+                    if (boundConditionalGoto != null)
+                    {
+                        condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+                        Debug.Assert(condition != null);
+                        continue;
+                    }
+                }
+
+                var statement = Deserialize(boundStatement);
                 if (statement != null)
                 {
-                    this.statements.Add(statement);
+                    switch (stage)
+                    {
+                        case Stages.Initialization:
+                            Debug.Assert(this.initialization == null);
+                            this.initialization = statement;
+                            break;
+                        case Stages.Body:
+                            Debug.Assert(this.statements == null);
+                            this.statements = statement;
+                            break;
+                        case Stages.Incrementing:
+                            Debug.Assert(this.incrementing == null);
+                            this.incrementing = statement;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                 }
             }
         }
@@ -59,24 +105,23 @@
             c.TextSpan("for");
             c.WhiteSpace();
             c.TextSpan("(");
-            this.initialization.WriteTo(c);
+
+            PrintStatementAsExpression(c, this.initialization);
+            
             c.TextSpan(";");
             c.WhiteSpace();
+
             this.condition.WriteTo(c);
+
             c.TextSpan(";");
             c.WhiteSpace();
-            this.incrementing.WriteTo(c);
+
+            PrintStatementAsExpression(c, this.incrementing);
+
             c.TextSpan(")");
 
             c.NewLine();
-            c.OpenBlock();
-            foreach (var statement in this.statements)
-            {
-                statement.WriteTo(c);
-            }
-
-            c.EndBlock();
-
+            PrintBlockOrStatementsAsBlock(c, this.statements);
             c.NewLine();
 
             // No normal ending of Statement as we do not need extra ;

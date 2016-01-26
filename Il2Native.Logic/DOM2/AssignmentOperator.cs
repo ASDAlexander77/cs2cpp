@@ -12,7 +12,8 @@
         private BinaryOperatorKind operatorKind;
         private Expression left;
         private Expression right;
-        private bool applyAutoType;
+
+        public bool ApplyAutoType { get; set; }
 
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
@@ -24,13 +25,13 @@
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {
-                applyAutoType = true;
+                this.ApplyAutoType = true;
             }
 
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
             if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind != SynthesizedLocalKind.None)
             {
-                applyAutoType = true;
+                this.ApplyAutoType = true;
             }
 
             this.left = Deserialize(boundAssignmentOperator.Left) as Expression;
@@ -41,7 +42,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.applyAutoType)
+            if (this.ApplyAutoType)
             {
                 c.TextSpan("auto");
                 c.WhiteSpace();

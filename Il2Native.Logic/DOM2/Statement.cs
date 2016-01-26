@@ -2,9 +2,14 @@
 {
     public abstract class Statement : Base
     {
+        public bool SuppressEnding { get; set; }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.EndStatement();
+            if (!this.SuppressEnding)
+            {
+                c.EndStatement();
+            }
         }
     }
 }

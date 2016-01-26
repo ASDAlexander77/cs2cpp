@@ -2,12 +2,95 @@
 {
     using System;
     using System.Collections.Generic;
-
+    using System.Linq;
+    using System.Security;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public abstract class Base
     {
+        internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements)
+        {
+            foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
+            {
+                var deserialize = Deserialize(boundStatement);
+                var block = deserialize as Block;
+                if (block != null)
+                {
+                    foreach (var statement2 in block.Statements.Where(s => s != null))
+                    {
+                        statements.Add(statement2);
+                    }
+
+                    continue;
+                }
+
+                var statement = deserialize as Statement;
+                if (statement != null)
+                {
+                    statements.Add(statement);
+                }
+            }
+        }
+
+        internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
+        {
+            return boundStatementList.Statements.Select(UnwrapStatement).Where(s => s != null);
+        }
+
+        internal static BoundStatement UnwrapStatement(BoundNode boundNode)
+        {
+            var boundSequencePoint = boundNode as BoundSequencePoint;
+            if (boundSequencePoint != null)
+            {
+                return boundSequencePoint.StatementOpt;
+            }
+
+            var boundSequencePointWithSpan = boundNode as BoundSequencePointWithSpan;
+            if (boundSequencePointWithSpan != null)
+            {
+                return boundSequencePointWithSpan.StatementOpt;
+            }
+
+            return boundNode as BoundStatement;
+        }
+
+        internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)
+        {
+            var expr = blockOfExpression as ExpressionStatement;
+            if (expr != null)
+            {
+                expr.Expression.WriteTo(c);
+                return;
+            }
+
+            var statement = blockOfExpression as Statement;
+            if (statement != null)
+            {
+                statement.SuppressEnding = true;
+                statement.WriteTo(c);
+                return;
+            }
+
+            throw new NotSupportedException();
+        }
+
+        internal static void PrintBlockOrStatementsAsBlock(CCodeWriterBase c, Base node)
+        {
+            var block = node as Block;
+            if (block != null)
+            {
+                block.WriteTo(c);
+                return;
+            }
+
+            c.OpenBlock();
+
+            node.WriteTo(c);
+
+            c.EndBlock();
+        }
+
         internal static Base Deserialize(BoundNode boundBody, bool root = false)
         {
             // method
@@ -19,6 +102,13 @@
                     var methodBody = new MethodBody();
                     methodBody.Parse(boundStatementList);
                     return methodBody;
+                }
+
+                if (boundStatementList.Syntax.Green is VariableDeclarationSyntax)
+                {
+                    var variableDeclaration = new VariableDeclaration();
+                    variableDeclaration.Parse(boundStatementList);
+                    return variableDeclaration;
                 }
 
                 if (boundStatementList.Syntax.Green is IfStatementSyntax)
@@ -166,29 +256,18 @@
                 return literal;
             }
 
-            var boundSequencePoint = boundBody as BoundSequencePoint;
-            if (boundSequencePoint != null)
+            var statemnent = UnwrapStatement(boundBody);
+            if (statemnent != null)
             {
-                if (boundSequencePoint.StatementOpt != null)
-                {
-                    return Deserialize(boundSequencePoint.StatementOpt);
-                }
-
-                return null;
+                throw new InvalidOperationException("Unwrap statement in foreach cycle in block class");
             }
 
-            var boundSequencePointWithSpan = boundBody as BoundSequencePointWithSpan;
-            if (boundSequencePointWithSpan != null)
+            if (statemnent == null)
             {
-                if (boundSequencePointWithSpan.StatementOpt != null)
-                {
-                    return Deserialize(boundSequencePointWithSpan.StatementOpt);
-                }
-
-                return null;
+                throw new NotImplementedException();
             }
 
-            throw new NotImplementedException();
+            return Deserialize(statemnent);
         }
 
         internal abstract void WriteTo(CCodeWriterBase c);

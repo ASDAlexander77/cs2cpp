@@ -10,10 +10,8 @@
     public class IfStatement : Statement
     {
         private Expression condition;
-
-        private readonly IList<Statement> ifStatements = new List<Statement>();
-
-        private readonly IList<Statement> elseStatements = new List<Statement>();
+        private Base ifStatements;
+        private Base elseStatements;
 
         internal void Parse(BoundStatementList boundStatementList)
         {
@@ -24,7 +22,7 @@
 
             LabelSymbol endIfLabel = null;
             var elsePart = false;
-            foreach (var boundStatement in boundStatementList.Statements)
+            foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
                 var boundConditionalGoto = boundStatement as BoundConditionalGoto;
                 if (boundConditionalGoto != null)
@@ -49,16 +47,18 @@
                 }
 
                 Debug.Assert(boundStatement != null);
-                var statement = Deserialize(boundStatement) as Statement;
+                var statement = Deserialize(boundStatement);
                 if (statement != null)
                 {
                     if (!elsePart)
                     {
-                        this.ifStatements.Add(statement);
+                        Debug.Assert(this.ifStatements == null);
+                        this.ifStatements = statement;
                     }
                     else
                     {
-                        this.elseStatements.Add(statement);
+                        Debug.Assert(this.elseStatements == null);
+                        this.elseStatements = statement;
                     }
                 }
             }
@@ -73,26 +73,14 @@
             c.TextSpan(")");
             
             c.NewLine();
-            c.OpenBlock();
-            foreach (var statement in this.ifStatements)
-            {
-                statement.WriteTo(c);
-            }
+            PrintBlockOrStatementsAsBlock(c, this.ifStatements);
 
-            c.EndBlock();
-
-            if (this.elseStatements.Count > 0)
+            if (this.elseStatements != null)
             {
                 c.TextSpan("else");
 
                 c.NewLine();
-                c.OpenBlock();
-                foreach (var statement in this.ifStatements)
-                {
-                    statement.WriteTo(c);
-                }
-
-                c.EndBlock();                
+                PrintBlockOrStatementsAsBlock(c, this.elseStatements);
             }
 
             c.NewLine();

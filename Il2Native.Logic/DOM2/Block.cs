@@ -12,7 +12,7 @@
     {
         private readonly IList<Statement> statements = new List<Statement>();
 
-        protected IList<Statement> Statements 
+        public IList<Statement> Statements 
         {
             get
             {
@@ -22,14 +22,7 @@
 
         internal void Parse(BoundStatementList boundStatementList)
         {
-            foreach (var boundStatement in boundStatementList.Statements)
-            {
-                var statement = Deserialize(boundStatement) as Statement;
-                if (statement != null)
-                {
-                    this.statements.Add(statement);
-                }
-            }
+            ParseBoundStatementList(boundStatementList, this.statements);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
