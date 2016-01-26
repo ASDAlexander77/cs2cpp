@@ -20,14 +20,12 @@
                 throw new ArgumentNullException();
             }
 
-            LabelSymbol endIfLabel = null;
             var elsePart = false;
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
                 var boundConditionalGoto = boundStatement as BoundConditionalGoto;
                 if (boundConditionalGoto != null)
                 {
-                    endIfLabel = boundConditionalGoto.Label;
                     condition = Deserialize(boundConditionalGoto.Condition) as Expression;
                     Debug.Assert(condition != null);
                     continue;
