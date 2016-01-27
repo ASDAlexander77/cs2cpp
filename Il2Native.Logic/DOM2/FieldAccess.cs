@@ -11,11 +11,7 @@
 
         internal void Parse(BoundFieldAccess boundFieldAccess)
         {
-            if (boundFieldAccess == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundFieldAccess);
             this.field = boundFieldAccess.FieldSymbol;
             if (boundFieldAccess.ReceiverOpt != null)
             {
@@ -34,7 +30,7 @@
             else
             {
                 this.receiverOpt.WriteTo(c);
-                c.TextSpan("->");
+                c.WriteAccess(this.receiverOpt);
                 c.WriteName(field);
             }
         }

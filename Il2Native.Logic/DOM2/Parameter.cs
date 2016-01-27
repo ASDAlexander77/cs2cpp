@@ -10,11 +10,7 @@
 
         internal void Parse(BoundParameter boundParameter)
         {
-            if (boundParameter == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundParameter);
             this.parameter = boundParameter.ParameterSymbol;
         }
 

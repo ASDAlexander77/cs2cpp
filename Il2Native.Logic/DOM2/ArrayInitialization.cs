@@ -19,11 +19,7 @@
 
         internal void Parse(BoundArrayInitialization boundArrayInitialization)
         {
-            if (boundArrayInitialization == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundArrayInitialization);
             foreach (var boundExpression in boundArrayInitialization.Initializers)
             {
                 var item = Deserialize(boundExpression) as Expression;

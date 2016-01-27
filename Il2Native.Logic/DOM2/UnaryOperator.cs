@@ -12,13 +12,8 @@
 
         internal void Parse(BoundUnaryOperator boundUnaryOperator)
         {
-            if (boundUnaryOperator == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundUnaryOperator);
             this.operatorKind = boundUnaryOperator.OperatorKind;
-
             this.operand = Deserialize(boundUnaryOperator.Operand) as Expression;
             Debug.Assert(this.operand != null);
         }

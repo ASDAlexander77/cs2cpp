@@ -13,11 +13,7 @@
 
         internal void Parse(BoundLiteral boundLiteral)
         {
-            if (boundLiteral == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundLiteral);
             this.constantValue = boundLiteral.ConstantValue;
         }
 

@@ -14,11 +14,7 @@
 
         internal bool Parse(BoundSequence boundSequence)
         {
-            if (boundSequence == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundSequence);
             var boundAssignmentOperator = boundSequence.SideEffects.Skip(1).First() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {

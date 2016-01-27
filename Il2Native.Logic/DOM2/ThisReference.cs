@@ -5,12 +5,9 @@
 
     public class ThisReference : Expression
     {
-        internal void Parse(BoundThisReference boundLiteral)
+        internal void Parse(BoundThisReference boundThisReference)
         {
-            if (boundLiteral == null)
-            {
-                throw new ArgumentNullException();
-            }
+            base.Parse(boundThisReference);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

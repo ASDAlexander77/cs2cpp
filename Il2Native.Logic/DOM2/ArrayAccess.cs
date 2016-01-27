@@ -14,11 +14,7 @@
 
         internal void Parse(BoundArrayAccess boundArrayAccess)
         {
-            if (boundArrayAccess == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundArrayAccess);
             this.expression = Deserialize(boundArrayAccess.Expression) as Expression;
             foreach (var boundExpression in boundArrayAccess.Indices)
             {

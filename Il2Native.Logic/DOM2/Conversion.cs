@@ -18,11 +18,7 @@
 
         internal void Parse(BoundConversion boundConversion)
         {
-            if (boundConversion == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundConversion);
             this.typeSource = boundConversion.Operand.Type;
             this.typeDestination = boundConversion.Type;
             this.operand = Deserialize(boundConversion.Operand) as Expression;

@@ -12,11 +12,7 @@
 
         internal void Parse(BoundTypeExpression boundTypeExpression)
         {
-            if (boundTypeExpression == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundTypeExpression);
             this.type = boundTypeExpression.Type;
         }
 

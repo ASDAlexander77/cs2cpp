@@ -14,13 +14,8 @@
 
         internal void Parse(BoundBinaryOperator boundBinaryOperator)
         {
-            if (boundBinaryOperator == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundBinaryOperator);
             this.operatorKind = boundBinaryOperator.OperatorKind;
-
             this.left = Deserialize(boundBinaryOperator.Left) as Expression;
             Debug.Assert(this.left != null);
             this.right = Deserialize(boundBinaryOperator.Right) as Expression;

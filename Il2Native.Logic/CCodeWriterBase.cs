@@ -605,5 +605,10 @@ namespace Il2Native.Logic
 
             TextSpan("> ");
         }
+
+        public void WriteAccess(Expression receiverOpt)
+        {
+            TextSpan("->");
+        }
     }
 }

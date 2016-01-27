@@ -10,11 +10,7 @@
 
         internal void Parse(BoundLocal boundLocal)
         {
-            if (boundLocal == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundLocal);
             this.local = boundLocal.LocalSymbol;
         }
 

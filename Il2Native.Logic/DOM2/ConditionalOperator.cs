@@ -14,11 +14,7 @@
 
         internal void Parse(BoundConditionalOperator boundConditionalOperator)
         {
-            if (boundConditionalOperator == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundConditionalOperator);
             this.condition = Deserialize(boundConditionalOperator.Condition) as Expression;
             Debug.Assert(this.condition != null);
             this.consequence = Deserialize(boundConditionalOperator.Consequence) as Expression;

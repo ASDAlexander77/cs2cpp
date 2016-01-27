@@ -17,11 +17,7 @@
 
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
-            if (boundAssignmentOperator == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundAssignmentOperator); 
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {

@@ -14,11 +14,7 @@
 
         internal void Parse(BoundSequence boundSequence)
         {
-            if (boundSequence == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundSequence);
             foreach (var sideEffect in boundSequence.SideEffects)
             {
                 var expression = Deserialize(sideEffect) as Expression;

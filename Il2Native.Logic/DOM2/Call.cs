@@ -32,11 +32,7 @@
 
         internal void Parse(BoundCall boundCall)
         {
-            if (boundCall == null)
-            {
-                throw new ArgumentNullException();
-            }
-
+            base.Parse(boundCall);
             this.Method = boundCall.Method;
             if (boundCall.ReceiverOpt != null)
             {

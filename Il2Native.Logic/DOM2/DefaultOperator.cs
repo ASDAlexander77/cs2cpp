@@ -8,21 +8,14 @@
 
     public class DefaultOperator : Expression
     {
-        private TypeSymbol type;
-
         internal void Parse(BoundDefaultOperator boundDefaultOperator)
         {
-            if (boundDefaultOperator == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            this.type = boundDefaultOperator.Type;
+            base.Parse(boundDefaultOperator);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(this.type);
+            c.WriteType(this.Type);
             c.TextSpan("()");
         }
     }

@@ -10,20 +10,13 @@
 
     public class ArrayCreation : Expression
     {
-        private TypeSymbol type;
-
         private IList<Expression> bounds = new List<Expression>();
 
         private Expression initializerOpt;
 
         internal void Parse(BoundArrayCreation boundArrayCreation)
         {
-            if (boundArrayCreation == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            this.type = boundArrayCreation.Type;
+            base.Parse(boundArrayCreation); 
             foreach (var boundExpression in boundArrayCreation.Bounds)
             {
                 var item = Deserialize(boundExpression) as Expression;
@@ -39,7 +32,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var elementType = ((ArrayTypeSymbol)this.type).ElementType;
+            var elementType = ((ArrayTypeSymbol)Type).ElementType;
             Debug.Assert(this.initializerOpt is ArrayInitialization);
             var arrayInitialization = this.initializerOpt as ArrayInitialization;
 
