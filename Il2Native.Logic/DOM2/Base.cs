@@ -169,15 +169,19 @@
                 if (boundSequence.Syntax.Green is PrefixUnaryExpressionSyntax)
                 {
                     var prefixUnaryExpression = new PrefixUnaryExpression();
-                    prefixUnaryExpression.Parse(boundSequence);
-                    return prefixUnaryExpression;
+                    if (prefixUnaryExpression.Parse(boundSequence))
+                    {
+                        return prefixUnaryExpression;
+                    }
                 }
 
                 if (boundSequence.Syntax.Green is PostfixUnaryExpressionSyntax)
                 {
                     var postfixUnaryExpression = new PostfixUnaryExpression();
-                    postfixUnaryExpression.Parse(boundSequence);
-                    return postfixUnaryExpression;
+                    if (postfixUnaryExpression.Parse(boundSequence))
+                    {
+                        return postfixUnaryExpression;
+                    }
                 }
 
                 var lambdaCallExpression = new LambdaCallExpression();
@@ -215,6 +219,22 @@
                 var objectCreationExpression = new ObjectCreationExpression();
                 objectCreationExpression.Parse(boundObjectCreationExpression);
                 return objectCreationExpression;
+            }
+
+            var boundUnaryOperator = boundBody as BoundUnaryOperator;
+            if (boundUnaryOperator != null)
+            {
+                var unaryOperator = new UnaryOperator();
+                unaryOperator.Parse(boundUnaryOperator);
+                return unaryOperator;
+            }
+
+            var boundConditionalOperator = boundBody as BoundConditionalOperator;
+            if (boundConditionalOperator != null)
+            {
+                var conditionalOperator = new ConditionalOperator();
+                conditionalOperator.Parse(boundConditionalOperator);
+                return conditionalOperator;
             }
 
             var boundConversion = boundBody as BoundConversion;

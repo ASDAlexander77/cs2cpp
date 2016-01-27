@@ -99,6 +99,8 @@
                     c.TextSpan("|");
                     break;
 
+                default:
+                    throw new NotImplementedException();
             }
 
             c.WhiteSpace();

@@ -61,13 +61,13 @@
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
-                c.WriteName(this.Method);
+                c.WriteMethodName(this.Method);
             }
             else
             {
                 this.receiverOpt.WriteTo(c);
                 c.TextSpan("->");
-                c.WriteName(this.Method);
+                c.WriteMethodName(this.Method);
             }
 
             this.WriteCallArguments(c);

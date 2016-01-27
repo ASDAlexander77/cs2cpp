@@ -55,6 +55,7 @@
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
     <Compile Include="DOM2\Call.cs" />
+    <Compile Include="DOM2\ConditionalOperator.cs" />
     <Compile Include="DOM2\Conversion.cs" />
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="DOM2\Statement.cs" />
     <Compile Include="DOM2\ThisReference.cs" />
     <Compile Include="DOM2\TypeExpression.cs" />
+    <Compile Include="DOM2\UnaryOperator.cs" />
     <Compile Include="DOM2\VariableDeclaration.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />

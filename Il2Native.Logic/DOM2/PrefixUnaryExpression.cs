@@ -12,7 +12,7 @@
 
         private SyntaxKind operatorKind;
 
-        internal void Parse(BoundSequence boundSequence)
+        internal bool Parse(BoundSequence boundSequence)
         {
             if (boundSequence == null)
             {
@@ -22,7 +22,7 @@
             var boundAssignmentOperator = boundSequence.SideEffects.First() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
-                this.value = Deserialize(boundAssignmentOperator.Left) as Expression;
+                this.value = Deserialize(boundAssignmentOperator.Right) as Expression;
             }
 
             var prefixUnaryExpressionSyntax = boundSequence.Syntax.Green as PrefixUnaryExpressionSyntax;
@@ -30,6 +30,14 @@
             {
                 this.operatorKind = prefixUnaryExpressionSyntax.OperatorToken.Kind;
             }
+
+            var call = value as Call;
+            if (call != null && (call.Method.Name == "op_Increment" || call.Method.Name == "op_Decrement"))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
