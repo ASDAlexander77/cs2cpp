@@ -8,6 +8,7 @@
         internal void Parse(BoundThisReference boundThisReference)
         {
             base.Parse(boundThisReference);
+            IsReference = true;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

@@ -62,7 +62,7 @@
             else
             {
                 this.receiverOpt.WriteTo(c);
-                c.TextSpan("->");
+                c.WriteAccess(this.receiverOpt);
                 c.WriteMethodName(this.Method);
             }
 

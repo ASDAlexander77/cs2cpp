@@ -14,8 +14,11 @@
             }
 
             this.Type = boundExpression.Type;
+            this.IsReference = this.Type.IsReferenceType;
         }
 
-        public ITypeSymbol Type { get; private set; }
+        public ITypeSymbol Type { get; protected set; }
+
+        public bool IsReference { get; protected set; }
     }
 }

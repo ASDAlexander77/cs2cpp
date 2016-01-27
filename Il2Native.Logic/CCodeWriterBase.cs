@@ -606,9 +606,16 @@ namespace Il2Native.Logic
             TextSpan("> ");
         }
 
-        public void WriteAccess(Expression receiverOpt)
+        public void WriteAccess(Expression expression)
         {
-            TextSpan("->");
+            if (expression.Type.TypeKind == TypeKind.Struct && !expression.IsReference)
+            {
+                TextSpan(".");
+            }
+            else
+            {
+                TextSpan("->");
+            }
         }
     }
 }
