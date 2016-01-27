@@ -57,7 +57,19 @@
             }
 
             c.TextSpan("(");
-            this.operand.WriteTo(c);
+
+            // TODO: temp hack for supporting cast to interface
+            if (this.conversionKind == ConversionKind.ImplicitReference && this.typeDestination.IsInterfaceType())
+            {
+                c.TextSpan("nullptr/*");
+                this.operand.WriteTo(c);
+                c.TextSpan("*/");
+            }
+            else
+            {
+                this.operand.WriteTo(c);
+            }
+
             c.TextSpan(")");
         }
     }

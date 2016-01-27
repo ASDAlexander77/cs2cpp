@@ -261,6 +261,14 @@
                 return arrayAccess;
             }
 
+            var boundDefaultOperator = boundBody as BoundDefaultOperator;
+            if (boundDefaultOperator != null)
+            {
+                var defaultOperator = new DefaultOperator();
+                defaultOperator.Parse(boundDefaultOperator);
+                return defaultOperator;
+            }
+
             var boundConversion = boundBody as BoundConversion;
             if (boundConversion != null)
             {

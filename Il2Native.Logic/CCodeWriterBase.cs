@@ -104,6 +104,14 @@ namespace Il2Native.Logic
             {
                 TextSpan("_");
                 WriteTypeSuffix(methodSymbol.ReturnType);
+                return;
+            }
+
+            if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
+            {
+                TextSpan("_");
+                WriteTypeSuffix(methodSymbol.ReturnType);
+                return;
             }
         }
 
@@ -190,7 +198,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var namedType = (INamedTypeSymbol)type;
             switch (type.TypeKind)
             {
                 case TypeKind.Unknown:
@@ -209,7 +216,7 @@ namespace Il2Native.Logic
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    WriteTypeFullName(namedType);
+                    WriteTypeFullName((INamedTypeSymbol)type);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         TextSpan("*");
@@ -223,7 +230,7 @@ namespace Il2Native.Logic
                     if (!cleanName)
                     {
                         TextSpan("__enum<");
-                        WriteTypeFullName(namedType);
+                        WriteTypeFullName((INamedTypeSymbol)type);
                         TextSpan(", ");
                         WriteType(enumUnderlyingType);
                         TextSpan(">");
@@ -244,7 +251,7 @@ namespace Il2Native.Logic
                     TextSpan("*");
                     return;
                 case TypeKind.Struct:
-                    WriteTypeFullName(namedType);
+                    WriteTypeFullName((INamedTypeSymbol)type);
                     return;
                 case TypeKind.TypeParameter:
                     WriteName(type);

@@ -33,7 +33,7 @@
 
             c.WhiteSpace();
 
-            switch (operatorKind & BinaryOperatorKind.OpMask)
+            switch (operatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical))
             {
                 case BinaryOperatorKind.Multiplication:
                     c.TextSpan("*");
@@ -64,7 +64,7 @@
                     break;
 
                 case BinaryOperatorKind.Equal:
-                    c.TextSpan("=");
+                    c.TextSpan("==");
                     break;
 
                 case BinaryOperatorKind.NotEqual:
@@ -97,6 +97,14 @@
 
                 case BinaryOperatorKind.Or:
                     c.TextSpan("|");
+                    break;
+
+                case BinaryOperatorKind.LogicalAnd:
+                    c.TextSpan("&&");
+                    break;
+
+                case BinaryOperatorKind.LogicalOr:
+                    c.TextSpan("||");
                     break;
 
                 default:

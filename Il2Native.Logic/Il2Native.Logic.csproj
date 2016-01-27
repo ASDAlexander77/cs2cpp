@@ -60,6 +60,7 @@
     <Compile Include="DOM2\Call.cs" />
     <Compile Include="DOM2\ConditionalOperator.cs" />
     <Compile Include="DOM2\Conversion.cs" />
+    <Compile Include="DOM2\DefaultOperator.cs" />
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />
     <Compile Include="DOM2\FieldAccess.cs" />

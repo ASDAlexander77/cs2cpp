@@ -123,7 +123,7 @@
                 case 0x3F:
                     return (@"\?");
                 default:
-                    if (code >= 0x20 && c <= 'z')
+                    if (code >= 0x20 && c <= '~')
                     {
                         return c.ToString();
                     }
