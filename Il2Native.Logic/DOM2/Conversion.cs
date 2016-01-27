@@ -22,10 +22,11 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("(");
+            c.TextSpan("static_cast<");
             c.WriteType(type);
-            c.TextSpan(")");
+            c.TextSpan(">(");
             this.operand.WriteTo(c);
+            c.TextSpan(")");
         }
     }
 }
