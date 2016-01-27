@@ -245,6 +245,14 @@
                 return arrayCreation;
             }
 
+            var boundArrayInitialization = boundBody as BoundArrayInitialization;
+            if (boundArrayInitialization != null)
+            {
+                var arrayInitialization = new ArrayInitialization();
+                arrayInitialization.Parse(boundArrayInitialization);
+                return arrayInitialization;
+            }
+
             var boundArrayAccess = boundBody as BoundArrayAccess;
             if (boundArrayAccess != null)
             {

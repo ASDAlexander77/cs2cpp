@@ -11,7 +11,10 @@
     public class ArrayCreation : Expression
     {
         private TypeSymbol type;
+
         private IList<Expression> bounds = new List<Expression>();
+
+        private Expression initializerOpt;
 
         internal void Parse(BoundArrayCreation boundArrayCreation)
         {
@@ -27,16 +30,49 @@
                 Debug.Assert(item != null);
                 this.bounds.Add(item);
             }
+
+            if (boundArrayCreation.InitializerOpt != null)
+            {
+                initializerOpt = Deserialize(boundArrayCreation.InitializerOpt) as Expression;
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            var elementType = ((ArrayTypeSymbol)this.type).ElementType;
+            Debug.Assert(this.initializerOpt is ArrayInitialization);
+            var arrayInitialization = this.initializerOpt as ArrayInitialization;
+
+            if (arrayInitialization != null)
+            {
+                c.TextSpan("reinterpret_cast<");
+                c.TextSpan("__array<");
+                c.WriteType(elementType);
+                c.TextSpan(">*");
+                c.TextSpan(">(");
+            }
+
             c.TextSpan("new");
             c.WhiteSpace();
 
-            var elementType = ((ArrayTypeSymbol)this.type).ElementType;
-            c.TextSpan("__array<");
+            if (arrayInitialization != null)
+            {
+                c.TextSpan("__array_init<");
+            }
+            else
+            {
+                c.TextSpan("__array<");
+            }
+
             c.WriteType(elementType);
+
+            if (arrayInitialization != null)
+            {
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.TextSpan(arrayInitialization.Initializers.Count.ToString());
+            }
+
             c.TextSpan(">");
             c.TextSpan("(");
 
@@ -54,7 +90,27 @@
                 any = true;
             }
 
+            if (this.initializerOpt != null)
+            {
+                foreach (var bound in arrayInitialization.Initializers)
+                {
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
+
+                    bound.WriteTo(c);
+
+                    any = true;
+                }
+            }
+
             c.TextSpan(")");
+            if (arrayInitialization != null)
+            {
+                c.TextSpan(")");
+            }
         }
     }
 }
