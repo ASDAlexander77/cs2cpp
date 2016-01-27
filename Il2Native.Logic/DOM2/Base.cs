@@ -237,6 +237,22 @@
                 return conditionalOperator;
             }
 
+            var boundArrayCreation = boundBody as BoundArrayCreation;
+            if (boundArrayCreation != null)
+            {
+                var arrayCreation = new ArrayCreation();
+                arrayCreation.Parse(boundArrayCreation);
+                return arrayCreation;
+            }
+
+            var boundArrayAccess = boundBody as BoundArrayAccess;
+            if (boundArrayAccess != null)
+            {
+                var arrayAccess = new ArrayAccess();
+                arrayAccess.Parse(boundArrayAccess);
+                return arrayAccess;
+            }
+
             var boundConversion = boundBody as BoundConversion;
             if (boundConversion != null)
             {
