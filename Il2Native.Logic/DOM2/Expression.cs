@@ -13,6 +13,11 @@
                 throw new ArgumentNullException();
             }
 
+            if (boundExpression.Type == null)
+            {
+                return;
+            }
+
             this.Type = boundExpression.Type;
             this.IsReference = this.Type.IsReferenceType;
         }
