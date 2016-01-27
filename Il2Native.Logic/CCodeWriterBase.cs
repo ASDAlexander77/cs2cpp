@@ -183,13 +183,14 @@ namespace Il2Native.Logic
             WriteName(type);
         }
 
-        public void WriteType(ITypeSymbol type, bool cleanName = false)
+        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false)
         {
             if (type.IsValueType && WriteSpecialType(type, cleanName))
             {
                 return;
             }
 
+            var namedType = (INamedTypeSymbol)type;
             switch (type.TypeKind)
             {
                 case TypeKind.Unknown:
@@ -198,13 +199,18 @@ namespace Il2Native.Logic
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
                     TextSpan("__array<");
                     WriteType(elementType, cleanName);
-                    TextSpan(">*");
+                        TextSpan(">");
+                    if (!suppressReference)
+                    {
+                        TextSpan("*");
+                    }
+
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    WriteTypeFullName((INamedTypeSymbol)type);
-                    if (type.IsReferenceType)
+                    WriteTypeFullName(namedType);
+                    if (type.IsReferenceType && !suppressReference)
                     {
                         TextSpan("*");
                     }
@@ -217,7 +223,7 @@ namespace Il2Native.Logic
                     if (!cleanName)
                     {
                         TextSpan("__enum<");
-                        WriteTypeFullName((INamedTypeSymbol)type);
+                        WriteTypeFullName(namedType);
                         TextSpan(", ");
                         WriteType(enumUnderlyingType);
                         TextSpan(">");
@@ -238,7 +244,7 @@ namespace Il2Native.Logic
                     TextSpan("*");
                     return;
                 case TypeKind.Struct:
-                    WriteTypeFullName((INamedTypeSymbol)type);
+                    WriteTypeFullName(namedType);
                     return;
                 case TypeKind.TypeParameter:
                     WriteName(type);

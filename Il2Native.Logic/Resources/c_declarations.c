@@ -16,6 +16,18 @@ public:
     template <typename... Ta> __array_init(int length, Ta... items) : _length(length), _data{items...} {} 
 };
 
+template <typename D, typename S> inline D* __box(S v)
+{
+	return (D*) new S(v);
+}
+
+template <typename D, typename S> inline D __unbox(S* c)
+{
+	// TODO: finish it
+	D d;
+	return d;
+}
+
 inline string* operator "" _s(const wchar_t* str, size_t len)
 {
 	return new string((wchar_t*)str, 0, (int32_t)len);
