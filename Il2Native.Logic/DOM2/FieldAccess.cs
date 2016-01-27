@@ -17,7 +17,10 @@
             }
 
             this.field = boundFieldAccess.FieldSymbol;
-            this.receiverOpt = Deserialize(boundFieldAccess.ReceiverOpt) as Expression;
+            if (boundFieldAccess.ReceiverOpt != null)
+            {
+                this.receiverOpt = Deserialize(boundFieldAccess.ReceiverOpt) as Expression;
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
