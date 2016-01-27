@@ -147,12 +147,60 @@
                 return block;
             }
 
-            var boundReturnStatement = boundBody as BoundReturnStatement;
-            if (boundReturnStatement != null)
+            var boundConversion = boundBody as BoundConversion;
+            if (boundConversion != null)
             {
-                var returnStatement = new ReturnStatement();
-                returnStatement.Parse(boundReturnStatement);
-                return returnStatement;
+                var conversion = new Conversion();
+                conversion.Parse(boundConversion);
+                return conversion;
+            }
+
+            var boundTypeExpression = boundBody as BoundTypeExpression;
+            if (boundTypeExpression != null)
+            {
+                var typeExpression = new TypeExpression();
+                typeExpression.Parse(boundTypeExpression);
+                return typeExpression;
+            }
+
+            var boundThisReference = boundBody as BoundThisReference;
+            if (boundThisReference != null)
+            {
+                var thisReference = new ThisReference();
+                thisReference.Parse(boundThisReference);
+                return thisReference;
+            }
+
+            var boundFieldAccess = boundBody as BoundFieldAccess;
+            if (boundFieldAccess != null)
+            {
+                var fieldAccess = new FieldAccess();
+                fieldAccess.Parse(boundFieldAccess);
+                return fieldAccess;
+            }
+
+            var boundParameter = boundBody as BoundParameter;
+            if (boundParameter != null)
+            {
+                var parameter = new Parameter();
+                parameter.Parse(boundParameter);
+                return parameter;
+            }
+
+            var boundLocal = boundBody as BoundLocal;
+            if (boundLocal != null)
+            {
+                var local = new Local();
+                local.Parse(boundLocal);
+                return local;
+            }
+
+            var boundLiteral = boundBody as BoundLiteral;
+            if (boundLiteral != null)
+            {
+                var literal = new Literal();
+                literal.Parse(boundLiteral);
+                return literal;
             }
 
             var boundExpressionStatement = boundBody as BoundExpressionStatement;
@@ -269,60 +317,36 @@
                 return defaultOperator;
             }
 
-            var boundConversion = boundBody as BoundConversion;
-            if (boundConversion != null)
+            var boundReturnStatement = boundBody as BoundReturnStatement;
+            if (boundReturnStatement != null)
             {
-                var conversion = new Conversion();
-                conversion.Parse(boundConversion);
-                return conversion;
+                var returnStatement = new ReturnStatement();
+                returnStatement.Parse(boundReturnStatement);
+                return returnStatement;
             }
 
-            var boundTypeExpression = boundBody as BoundTypeExpression;
-            if (boundTypeExpression != null)
+            var boundThrowStatement = boundBody as BoundThrowStatement;
+            if (boundThrowStatement != null)
             {
-                var typeExpression = new TypeExpression();
-                typeExpression.Parse(boundTypeExpression);
-                return typeExpression;
+                var throwStatement = new ThrowStatement();
+                throwStatement.Parse(boundThrowStatement);
+                return throwStatement;
             }
 
-            var boundThisReference = boundBody as BoundThisReference;
-            if (boundThisReference != null)
+            var boundTryStatement = boundBody as BoundTryStatement;
+            if (boundTryStatement != null)
             {
-                var thisReference = new ThisReference();
-                thisReference.Parse(boundThisReference);
-                return thisReference;
+                var tryStatement = new TryStatement();
+                tryStatement.Parse(boundTryStatement);
+                return tryStatement;
             }
 
-            var boundFieldAccess = boundBody as BoundFieldAccess;
-            if (boundFieldAccess != null)
+            var boundCatchBlock = boundBody as BoundCatchBlock;
+            if (boundCatchBlock != null)
             {
-                var fieldAccess = new FieldAccess();
-                fieldAccess.Parse(boundFieldAccess);
-                return fieldAccess;
-            }
-
-            var boundParameter = boundBody as BoundParameter;
-            if (boundParameter != null)
-            {
-                var parameter = new Parameter();
-                parameter.Parse(boundParameter);
-                return parameter;
-            }
-
-            var boundLocal = boundBody as BoundLocal;
-            if (boundLocal != null)
-            {
-                var local = new Local();
-                local.Parse(boundLocal);
-                return local;
-            }
-
-            var boundLiteral = boundBody as BoundLiteral;
-            if (boundLiteral != null)
-            {
-                var literal = new Literal();
-                literal.Parse(boundLiteral);
-                return literal;
+                var catchBlock = new CatchBlock();
+                catchBlock.Parse(boundCatchBlock);
+                return catchBlock;
             }
 
             var statemnent = UnwrapStatement(boundBody);

@@ -58,6 +58,7 @@
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
     <Compile Include="DOM2\Call.cs" />
+    <Compile Include="DOM2\CatchBlock.cs" />
     <Compile Include="DOM2\ConditionalOperator.cs" />
     <Compile Include="DOM2\Conversion.cs" />
     <Compile Include="DOM2\DefaultOperator.cs" />
@@ -78,6 +79,8 @@
     <Compile Include="DOM2\ReturnStatement.cs" />
     <Compile Include="DOM2\Statement.cs" />
     <Compile Include="DOM2\ThisReference.cs" />
+    <Compile Include="DOM2\ThrowStatement.cs" />
+    <Compile Include="DOM2\TryStatement.cs" />
     <Compile Include="DOM2\TypeExpression.cs" />
     <Compile Include="DOM2\UnaryOperator.cs" />
     <Compile Include="DOM2\VariableDeclaration.cs" />

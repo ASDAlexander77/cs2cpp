@@ -8,14 +8,14 @@
     {
         public Expression Expression { get; private set; }
 
-        internal void Parse(BoundExpressionStatement expressionStatement)
+        internal void Parse(BoundExpressionStatement boundExpressionStatement)
         {
-            if (expressionStatement == null)
+            if (boundExpressionStatement == null)
             {
                 throw new ArgumentNullException();
             }
 
-            this.Expression = Deserialize(expressionStatement.Expression) as Expression;
+            this.Expression = Deserialize(boundExpressionStatement.Expression) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

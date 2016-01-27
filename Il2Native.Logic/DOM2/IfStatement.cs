@@ -1,11 +1,8 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class IfStatement : Statement
     {
