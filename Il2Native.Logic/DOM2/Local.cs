@@ -8,6 +8,18 @@
     {
         private LocalSymbol local;
 
+        internal static void WriteLocal(LocalSymbol local, CCodeWriterBase c)
+        {
+            if (local.SynthesizedLocalKind != SynthesizedLocalKind.None)
+            {
+                c.TextSpan(local.SynthesizedLocalKind.ToString());
+            }
+            else
+            {
+                c.WriteName(local);
+            }
+        }
+
         internal void Parse(BoundLocal boundLocal)
         {
             base.Parse(boundLocal);
@@ -16,14 +28,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.local.SynthesizedLocalKind != SynthesizedLocalKind.None)
-            {
-                c.TextSpan(this.local.SynthesizedLocalKind.ToString());
-            }
-            else
-            {
-                c.WriteName(this.local);
-            }
+            WriteLocal(this.local, c);
         }
     }
 }

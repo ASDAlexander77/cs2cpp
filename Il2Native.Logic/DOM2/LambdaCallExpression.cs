@@ -8,6 +8,8 @@
 
     public class LambdaCallExpression : Expression
     {
+        private readonly IList<Statement> locals = new List<Statement>();
+
         private readonly IList<Expression> sideEffects = new List<Expression>();
 
         private Expression value;
@@ -15,6 +17,7 @@
         internal void Parse(BoundSequence boundSequence)
         {
             base.Parse(boundSequence);
+            ParseLocals(boundSequence.Locals, locals);
             foreach (var sideEffect in boundSequence.SideEffects)
             {
                 var expression = Deserialize(sideEffect) as Expression;
@@ -31,7 +34,12 @@
 
             c.NewLine();
             c.OpenBlock();
-            foreach (var expression in sideEffects)
+            foreach (var statement in this.locals)
+            {
+                statement.WriteTo(c);
+            }
+
+            foreach (var expression in this.sideEffects)
             {
                 expression.WriteTo(c);
                 c.EndStatement();

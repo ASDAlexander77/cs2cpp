@@ -70,17 +70,20 @@
             c.TextSpan("(");
 
             var any = false;
-            foreach (var bound in this.bounds)
+            if (arrayInitialization == null)
             {
-                if (any)
+                foreach (var bound in this.bounds)
                 {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
+
+                    bound.WriteTo(c);
+
+                    any = true;
                 }
-
-                bound.WriteTo(c);
-
-                any = true;
             }
 
             if (this.initializerOpt != null)

@@ -1,21 +1,28 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
+    using System;
+
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     internal class LocalVariableDeclaration : Statement
     {
-        private LocalSymbol localSymbolOpt;
+        private LocalSymbol local;
 
         public void Parse(LocalSymbol localSymbol)
         {
-            this.localSymbolOpt = localSymbol;
+            if (localSymbol == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            this.local = localSymbol;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(this.localSymbolOpt.Type);
+            c.WriteType(this.local.Type);
             c.WhiteSpace();
-            c.WriteName(this.localSymbolOpt);
+            Local.WriteLocal(this.local, c);
             base.WriteTo(c);
         }
     }

@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Security;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public abstract class Base
@@ -15,17 +16,7 @@
             var boundBlock = boundStatementList as BoundBlock;
             if (boundBlock != null)
             {
-                foreach (var local in boundBlock.Locals)
-                {
-                    var reference = local.DeclaringSyntaxReferences[0];
-                    var variableDeclaratorSyntax = reference.GetSyntax().Green as VariableDeclaratorSyntax;
-                    if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer == null)
-                    {
-                        var localVariableDeclaration = new LocalVariableDeclaration();
-                        localVariableDeclaration.Parse(local);
-                        statements.Add(localVariableDeclaration);
-                    }
-                }
+                ParseLocals(boundBlock.Locals, statements);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
@@ -46,6 +37,19 @@
                 if (statement != null)
                 {
                     statements.Add(statement);
+                }
+            }
+        }
+
+        internal static void ParseLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements)
+        {
+            foreach (var local in locals)
+            {
+                if (local.SynthesizedLocalKind != SynthesizedLocalKind.None || IsDeclarationWithoutInitializer(local))
+                {
+                    var localVariableDeclaration = new LocalVariableDeclaration();
+                    localVariableDeclaration.Parse(local);
+                    statements.Add(localVariableDeclaration);
                 }
             }
         }
@@ -364,5 +368,12 @@
         }
 
         internal abstract void WriteTo(CCodeWriterBase c);
+
+        private static bool IsDeclarationWithoutInitializer(LocalSymbol local)
+        {
+            var reference = local.DeclaringSyntaxReferences[0];
+            var variableDeclaratorSyntax = reference.GetSyntax().Green as VariableDeclaratorSyntax;
+            return (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer == null);
+        }
     }
 }

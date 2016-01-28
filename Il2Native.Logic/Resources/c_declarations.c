@@ -13,7 +13,7 @@ template <typename T, int N> class __array_init : public <<%assemblyName%>>::Sys
 	int32_t _length;
 	T _data[N];
 public:
-    template <typename... Ta> __array_init(int length, Ta... items) : _length(length), _data{items...} {} 
+    template <typename... Ta> __array_init(Ta... items) : _length(sizeof...(items)), _data{items...} {} 
 };
 
 template <typename D, typename S> inline D* __box(S v)

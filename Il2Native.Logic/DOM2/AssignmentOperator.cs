@@ -24,12 +24,6 @@
                 this.ApplyAutoType = true;
             }
 
-            var boundLocal = boundAssignmentOperator.Left as BoundLocal;
-            if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind != SynthesizedLocalKind.None)
-            {
-                this.ApplyAutoType = true;
-            }
-
             this.left = Deserialize(boundAssignmentOperator.Left) as Expression;
             Debug.Assert(this.left != null);
             this.right = Deserialize(boundAssignmentOperator.Right) as Expression;
