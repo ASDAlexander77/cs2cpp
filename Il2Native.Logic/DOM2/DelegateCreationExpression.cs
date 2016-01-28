@@ -6,13 +6,15 @@
 
     public class DelegateCreationExpression : Call
     {
+        private Expression instanceOpt;
+
         private MethodSymbol methodOpt;
 
         internal void Parse(BoundDelegateCreationExpression boundDelegateCreationExpression)
         {
             base.Parse(boundDelegateCreationExpression);
-            var argument = Deserialize(boundDelegateCreationExpression.Argument) as Expression;
             this.methodOpt = boundDelegateCreationExpression.MethodOpt;
+            var argument = Deserialize(boundDelegateCreationExpression.Argument) as Expression;
             Debug.Assert(argument != null);
             Arguments.Add(argument);
         }

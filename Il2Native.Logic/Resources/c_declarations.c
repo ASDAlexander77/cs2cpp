@@ -7,7 +7,7 @@ public:
 	// TODO: finish checking boundries
 	__array(size_t length) { _length = length; }
 	inline T operator [](size_t index) { return _data[index]; }
-	inline size_t operator size_t() { return (size_t)_length; }
+	inline operator size_t() { return (size_t)_length; }
 };
 
 template <typename T, int N> class __array_init : public <<%assemblyName%>>::System::Array

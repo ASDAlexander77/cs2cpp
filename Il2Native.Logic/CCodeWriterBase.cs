@@ -32,6 +32,10 @@ namespace Il2Native.Logic
 
         public abstract void Separate();
 
+        public abstract void SaveAndSet0Indent();
+
+        public abstract void RestoreIndent();
+
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
             if (boundBody != null)

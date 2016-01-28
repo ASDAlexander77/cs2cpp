@@ -28,12 +28,22 @@
 
             if (method.IsStatic)
             {
+                c.TextSpan("nullptr");
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.TextSpan("(intptr_t)");
+                c.TextSpan("&");
                 c.WriteTypeFullName(method.ContainingType);
                 c.TextSpan("::");
                 c.WriteName(method);
             }
             else
             {
+                this.receiverOpt.WriteTo(c);
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.TextSpan("(intptr_t)");
+                c.TextSpan("&");               
                 this.receiverOpt.WriteTo(c);
                 c.WriteAccess(this.receiverOpt);
                 c.WriteName(method);

@@ -24,6 +24,8 @@
         private IndentedTextWriter _itw;
 
         private TextState text = TextState.Empty;
+        
+        private int saved;
 
         public CCodeWriterText(IndentedTextWriter itw)
         {
@@ -116,6 +118,17 @@
         public override void Separate()
         {
             this.text = TextState.Separated;
+        }
+
+        public override void SaveAndSet0Indent()
+        {
+            this.saved = this._itw.Indent;
+            this._itw.Indent = 0;
+        }
+
+        public override void RestoreIndent()
+        {
+            this._itw.Indent = this.saved;
         }
     }
 }

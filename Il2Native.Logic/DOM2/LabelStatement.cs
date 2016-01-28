@@ -20,8 +20,10 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            c.SaveAndSet0Indent();
             c.WriteName(this.label);
             c.TextSpan(":");
+            c.RestoreIndent();
             c.NewLine();
         }
     }
