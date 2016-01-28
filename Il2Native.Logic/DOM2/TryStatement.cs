@@ -39,7 +39,7 @@
                 c.OpenBlock();
                 c.TextSpan("Finally");
                 c.WhiteSpace();
-                c.TextSpan("__finally");
+                c.TextSpan("__finally_block");
                 c.TextSpan("(");
                 new LambdaExpression() { Block = this.finallyBlockOpt }.WriteTo(c);
                 c.TextSpan(");");
