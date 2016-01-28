@@ -17,11 +17,21 @@
 
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
-            base.Parse(boundAssignmentOperator); 
+            base.Parse(boundAssignmentOperator);
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {
                 this.ApplyAutoType = true;
+            }
+
+            var forEachStatementSyntax = boundAssignmentOperator.Left.Syntax.Green as ForEachStatementSyntax;
+            if (forEachStatementSyntax != null)
+            {
+                var boundLocal = boundAssignmentOperator.Left as BoundLocal;
+                if (boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
+                {
+                    this.ApplyAutoType = true;
+                }
             }
 
             this.left = Deserialize(boundAssignmentOperator.Left) as Expression;

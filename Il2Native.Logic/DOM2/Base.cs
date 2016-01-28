@@ -160,9 +160,12 @@
                 }
 
                 // TODO: finish ForEachStatementSyntax
-                if (boundStatementList.Syntax.Green is ForEachStatementSyntax)
+                var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
+                if (forEachStatementSyntax != null)
                 {
-                    Debug.Assert(false, "not implemented yet");
+                    var forStatement = new ForStatement();
+                    forStatement.Parse(boundStatementList);
+                    return forStatement;
                 }
 
                 var block = new Block();
