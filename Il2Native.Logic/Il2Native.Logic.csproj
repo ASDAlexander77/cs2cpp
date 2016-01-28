@@ -70,6 +70,8 @@
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />
     <Compile Include="DOM2\FieldAccess.cs" />
+    <Compile Include="DOM2\ForEachIteratorStatement.cs" />
+    <Compile Include="DOM2\ForEachSimpleArrayStatement.cs" />
     <Compile Include="DOM2\ForStatement.cs" />
     <Compile Include="DOM2\GotoStatement.cs" />
     <Compile Include="DOM2\IfStatement.cs" />

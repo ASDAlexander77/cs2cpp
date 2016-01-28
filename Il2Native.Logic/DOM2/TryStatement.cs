@@ -6,9 +6,17 @@
 
     public class TryStatement : Statement
     {
-        private Block tryBlock;
         private IList<CatchBlock> catchBlocks = new List<CatchBlock>();
-        private Block finallyBlockOpt;
+
+        public Base TryBlock { get; set; }
+
+        public Base FinallyBlockOpt { get; set; }
+
+        public IList<CatchBlock> CatchBlocks
+        {
+            get { return this.catchBlocks; }
+            set { this.catchBlocks = value; }
+        }
 
         internal void Parse(BoundTryStatement boundTryStatement)
         {
@@ -17,7 +25,7 @@
                 throw new ArgumentNullException();
             }
 
-            this.tryBlock = Deserialize(boundTryStatement.TryBlock) as Block;
+            this.TryBlock = Deserialize(boundTryStatement.TryBlock) as Block;
 
             foreach (var boundCatchBlock in boundTryStatement.CatchBlocks)
             {
@@ -26,22 +34,26 @@
 
             if (boundTryStatement.FinallyBlockOpt != null)
             {
-                this.finallyBlockOpt = Deserialize(boundTryStatement.FinallyBlockOpt) as Block;
+                this.FinallyBlockOpt = Deserialize(boundTryStatement.FinallyBlockOpt) as Block;
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.finallyBlockOpt != null)
+            if (this.FinallyBlockOpt != null)
             {
-                this.finallyBlockOpt.SuppressNewLineAtEnd = true;
+                var block = this.FinallyBlockOpt as Block;
+                if (block != null)
+                {
+                    block.SuppressNewLineAtEnd = true;
+                }
 
                 c.OpenBlock();
                 c.TextSpan("Finally");
                 c.WhiteSpace();
                 c.TextSpan("__finally_block");
                 c.TextSpan("(");
-                new LambdaExpression() { Block = this.finallyBlockOpt }.WriteTo(c);
+                new LambdaExpression() { Block = block }.WriteTo(c);
                 c.TextSpan(");");
                 c.NewLine();
             }
@@ -49,14 +61,14 @@
             c.TextSpan("try");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.tryBlock);
+            PrintBlockOrStatementsAsBlock(c, this.TryBlock);
 
             foreach (var catchBlock in this.catchBlocks)
             {
                 catchBlock.WriteTo(c);
             }
 
-            if (this.finallyBlockOpt != null)
+            if (this.FinallyBlockOpt != null)
             {
                 c.EndBlock();
             }

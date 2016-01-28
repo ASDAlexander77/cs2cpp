@@ -11,8 +11,9 @@
 
         internal void Parse(BoundStatementList boundStatementList)
         {
-            this.Block = new Block();
-            this.Block.Parse(boundStatementList);
+            var block = new Block();
+            block.Parse(boundStatementList);
+            this.Block = block;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

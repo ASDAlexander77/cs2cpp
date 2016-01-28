@@ -111,7 +111,13 @@
             c.EndBlock();
         }
 
-        internal static Base Deserialize(BoundNode boundBody, bool root = false)
+        public enum SpecialCases
+        {
+            None,
+            ForEachBody
+        }
+
+        internal static Base Deserialize(BoundNode boundBody, bool root = false, SpecialCases specialCases = SpecialCases.None)
         {
             // method
             var boundStatementList = boundBody as BoundStatementList;
@@ -159,13 +165,21 @@
                     return doStatement;
                 }
 
-                // TODO: finish ForEachStatementSyntax
-                var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
-                if (forEachStatementSyntax != null)
+                if (specialCases != SpecialCases.ForEachBody)
                 {
-                    var forStatement = new ForStatement();
-                    forStatement.Parse(boundStatementList);
-                    return forStatement;
+                    var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
+                    if (forEachStatementSyntax != null)
+                    {
+                        var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
+                        if (forEachSimpleArrayStatement.Parse(boundStatementList))
+                        {
+                            return forEachSimpleArrayStatement;
+                        }
+
+                        var forEachIteratorStatement = new ForEachIteratorStatement();
+                        forEachIteratorStatement.Parse(boundStatementList);
+                        return forEachIteratorStatement;
+                    }
                 }
 
                 var block = new Block();
