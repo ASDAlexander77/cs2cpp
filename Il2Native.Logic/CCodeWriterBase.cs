@@ -18,6 +18,8 @@ namespace Il2Native.Logic
 
         public abstract void EndBlock();
 
+        public abstract void EndBlockWithoutNewLine();
+
         public abstract void EndStatement();
 
         public abstract void TextSpan(string line);

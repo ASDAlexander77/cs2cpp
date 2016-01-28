@@ -78,7 +78,7 @@
                 PrintBlockOrStatementsAsBlock(c, this.elseStatements);
             }
 
-            c.NewLine();
+            c.Separate();
 
             // No normal ending of Statement as we do not need extra ;
         }

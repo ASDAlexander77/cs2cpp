@@ -30,6 +30,25 @@
             }
         }
 
+        internal static void WriteCallArguments(IEnumerable<Expression> arguments, CCodeWriterBase c)
+        {
+            c.TextSpan("(");
+            var anyArgs = false;
+            foreach (var boundExpression in arguments)
+            {
+                if (anyArgs)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
+                boundExpression.WriteTo(c);
+                anyArgs = true;
+            }
+
+            c.TextSpan(")");
+        }
+
         internal void Parse(BoundCall boundCall)
         {
             base.Parse(boundCall);
@@ -66,26 +85,7 @@
                 c.WriteMethodName(this.Method);
             }
 
-            this.WriteCallArguments(c);
-        }
-
-        private void WriteCallArguments(CCodeWriterBase c)
-        {
-            c.TextSpan("(");
-            var anyArgs = false;
-            foreach (var boundExpression in this.arguments)
-            {
-                if (anyArgs)
-                {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                }
-
-                boundExpression.WriteTo(c);
-                anyArgs = true;
-            }
-
-            c.TextSpan(")");
+            WriteCallArguments(this.arguments, c);
         }
     }
 }

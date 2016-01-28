@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <functional>
 
 template <typename T> class __array;
 

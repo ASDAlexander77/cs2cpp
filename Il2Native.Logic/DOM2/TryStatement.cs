@@ -32,6 +32,20 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.finallyBlockOpt != null)
+            {
+                this.finallyBlockOpt.SuppressNewLineAtEnd = true;
+
+                c.OpenBlock();
+                c.TextSpan("Finally");
+                c.WhiteSpace();
+                c.TextSpan("__finally");
+                c.TextSpan("(");
+                new LambdaExpression() { Block = this.finallyBlockOpt }.WriteTo(c);
+                c.TextSpan(");");
+                c.NewLine();
+            }
+
             c.TextSpan("try");
 
             c.NewLine();
@@ -42,21 +56,12 @@
                 catchBlock.WriteTo(c);
             }
 
-            // TODO: finish finally block
             if (this.finallyBlockOpt != null)
             {
-                c.TextSpan("// Finally block");
-                c.NewLine();
-                c.TextSpan("/*");
-                c.NewLine();
-
-                this.finallyBlockOpt.WriteTo(c);
-
-                c.TextSpan("*/");
-                c.NewLine();
+                c.EndBlock();
             }
 
-            c.NewLine();
+            c.Separate();
         }
     }
 }

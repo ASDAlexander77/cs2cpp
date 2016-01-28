@@ -122,9 +122,9 @@
 
             c.NewLine();
             PrintBlockOrStatementsAsBlock(c, this.statements);
-            c.NewLine();
-
+            
             // No normal ending of Statement as we do not need extra ;
+            c.Separate();
         }
     }
 }

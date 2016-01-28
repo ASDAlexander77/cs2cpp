@@ -15,14 +15,14 @@
         Empty,
         Separated,
         Any,
-        Whitespace,
-        ConditionalWhitespace,
+        Whitespace
     }
 
     [Obsolete]
     public class CCodeWriterText : CCodeWriterBase
     {
         private IndentedTextWriter _itw;
+
         private TextState text = TextState.Empty;
 
         public CCodeWriterText(IndentedTextWriter itw)
@@ -32,19 +32,35 @@
 
         public override void OpenBlock()
         {
-            _itw.WriteLine("{");
+            TextSpanNewLine("{");
             _itw.Indent++;
+        }
+
+        public override void EndBlockWithoutNewLine()
+        {
+            _itw.Indent--;
+            NewLine();
+            TextSpan("}");
         }
 
         public override void EndBlock()
         {
             _itw.Indent--;
-            _itw.WriteLine("}");
+            if (this.text == TextState.Separated)
+            {
+                this.text = TextState.Any;
+            }
+            else
+            {
+                NewLine();
+            }
+
+            TextSpanNewLine("}");
         }
 
         public override void EndStatement()
         {
-            _itw.WriteLine(";");
+            this.TextSpanNewLine(";");
         }
 
         public override void TextSpan(string line)
@@ -54,9 +70,9 @@
                 return;
             }
 
-            if (this.text == TextState.ConditionalWhitespace)
+            if (this.text == TextState.Separated)
             {
-                _itw.Write(" ");
+                _itw.WriteLine();
             }
 
             this.text = TextState.Any;
@@ -99,12 +115,6 @@
 
         public override void Separate()
         {
-            if (this.text == TextState.Separated)
-            {
-                return;
-            }
-
-            _itw.WriteLine();
             this.text = TextState.Separated;
         }
     }

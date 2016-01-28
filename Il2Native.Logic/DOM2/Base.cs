@@ -236,9 +236,9 @@
                     }
                 }
 
-                var lambdaCallExpression = new LambdaCallExpression();
-                lambdaCallExpression.Parse(boundSequence);
-                return lambdaCallExpression;   
+                var sideEffectsAsLambdaCallExpression = new SideEffectsAsLambdaCallExpression();
+                sideEffectsAsLambdaCallExpression.Parse(boundSequence);
+                return sideEffectsAsLambdaCallExpression;   
             }
 
             var boundCall = boundBody as BoundCall;

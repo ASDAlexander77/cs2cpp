@@ -1,15 +1,13 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
 
     using Microsoft.CodeAnalysis.CSharp;
 
     public class Block : Base
     {
+        public bool SuppressNewLineAtEnd { get; set; }
+
         private readonly IList<Statement> statements = new List<Statement>();
 
         public IList<Statement> Statements 
@@ -33,7 +31,14 @@
                 statement.WriteTo(c);
             }
 
-            c.EndBlock();
+            if (SuppressNewLineAtEnd)
+            {
+                c.EndBlockWithoutNewLine();
+            }
+            else
+            {
+                c.EndBlock();
+            }
         }
     }
 }
