@@ -106,9 +106,7 @@
             }
 
             c.OpenBlock();
-
             node.WriteTo(c);
-
             c.EndBlock();
         }
 

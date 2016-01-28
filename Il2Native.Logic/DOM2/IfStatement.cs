@@ -10,6 +10,15 @@
         private Base ifStatements;
         private Base elseStatements;
 
+        private enum Stages
+        {
+            Condition,
+            IfBody,
+            EndOfIf,
+            ElseBody,
+            EndOfElse
+        }
+
         internal void Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
@@ -17,27 +26,41 @@
                 throw new ArgumentNullException();
             }
 
-            var elsePart = false;
+            var stage = Stages.Condition;
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
                 var boundConditionalGoto = boundStatement as BoundConditionalGoto;
-                if (boundConditionalGoto != null)
+                if (boundConditionalGoto != null
+                    && (boundConditionalGoto.Label.Name.StartsWith("<afterif-") || boundConditionalGoto.Label.Name.StartsWith("<alternative-"))
+                    && stage == Stages.Condition)
                 {
                     condition = Deserialize(boundConditionalGoto.Condition) as Expression;
                     Debug.Assert(condition != null);
-                    continue;
-                }
-
-                var boundLabelStatement = boundStatement as BoundLabelStatement;
-                if (boundLabelStatement != null)
-                {
+                    stage = Stages.IfBody;
                     continue;
                 }
 
                 var boundGotoStatement = boundStatement as BoundGotoStatement;
-                if (boundGotoStatement != null)
+                if (boundGotoStatement != null && boundGotoStatement.Label.Name.StartsWith("<afterif-") && stage == Stages.IfBody)
                 {
-                    elsePart = true;
+                    stage = Stages.EndOfIf;
+                    continue;
+                }
+
+                var boundLabelStatement = boundStatement as BoundLabelStatement;
+                if (boundLabelStatement != null
+                    && boundLabelStatement.Label.Name.StartsWith("<alternative-")
+                    && stage == Stages.EndOfIf)
+                {
+                    stage = Stages.ElseBody;
+                    continue;
+                }
+
+                if (boundLabelStatement != null
+                    && boundLabelStatement.Label.Name.StartsWith("<afterif-")
+                    && (stage == Stages.IfBody || stage == Stages.ElseBody))
+                {
+                    stage = stage == Stages.IfBody ? Stages.EndOfIf : Stages.EndOfElse;
                     continue;
                 }
 
@@ -45,15 +68,18 @@
                 var statement = Deserialize(boundStatement);
                 if (statement != null)
                 {
-                    if (!elsePart)
+                    switch (stage)
                     {
-                        Debug.Assert(this.ifStatements == null);
-                        this.ifStatements = statement;
-                    }
-                    else
-                    {
-                        Debug.Assert(this.elseStatements == null);
-                        this.elseStatements = statement;
+                        case Stages.IfBody:
+                            Debug.Assert(this.ifStatements == null);
+                            this.ifStatements = statement;
+                            break;
+                        case Stages.ElseBody:
+                            Debug.Assert(this.elseStatements == null);
+                            this.elseStatements = statement;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
             }
@@ -66,7 +92,7 @@
             c.TextSpan("(");
             this.condition.WriteTo(c);
             c.TextSpan(")");
-            
+
             c.NewLine();
             PrintBlockOrStatementsAsBlock(c, this.ifStatements);
 
