@@ -56,16 +56,21 @@
     <Compile Include="DOM2\Base.cs" />
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
+    <Compile Include="DOM2\BreakStatement.cs" />
     <Compile Include="DOM2\Call.cs" />
     <Compile Include="DOM2\CatchBlock.cs" />
     <Compile Include="DOM2\ConditionalOperator.cs" />
+    <Compile Include="DOM2\ContinueStatement.cs" />
     <Compile Include="DOM2\Conversion.cs" />
     <Compile Include="DOM2\DefaultOperator.cs" />
+    <Compile Include="DOM2\DoStatement.cs" />
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />
     <Compile Include="DOM2\FieldAccess.cs" />
     <Compile Include="DOM2\ForStatement.cs" />
+    <Compile Include="DOM2\GotoStatement.cs" />
     <Compile Include="DOM2\IfStatement.cs" />
+    <Compile Include="DOM2\LabelStatement.cs" />
     <Compile Include="DOM2\SideEffectsAsLambdaCallExpression.cs" />
     <Compile Include="DOM2\LambdaExpression.cs" />
     <Compile Include="DOM2\Literal.cs" />
@@ -84,6 +89,7 @@
     <Compile Include="DOM2\TypeExpression.cs" />
     <Compile Include="DOM2\UnaryOperator.cs" />
     <Compile Include="DOM2\VariableDeclaration.cs" />
+    <Compile Include="DOM2\WhileStatement.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
@@ -100,7 +106,6 @@
     </Compile>
     <Compile Include="Cs2CGenerator.cs" />
     <Compile Include="CLangKeywords.cs" />
-    <Compile Include="LambdaExpression.cs" />
     <Compile Include="ProjectProperties.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

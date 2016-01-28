@@ -146,6 +146,20 @@
                     return forStatement;
                 }
 
+                if (boundStatementList.Syntax.Green is WhileStatementSyntax)
+                {
+                    var whileStatement = new WhileStatement();
+                    whileStatement.Parse(boundStatementList);
+                    return whileStatement;
+                }
+
+                if (boundStatementList.Syntax.Green is DoStatementSyntax)
+                {
+                    var doStatement = new DoStatement();
+                    doStatement.Parse(boundStatementList);
+                    return doStatement;
+                }
+
                 var block = new Block();
                 block.Parse(boundStatementList);
                 return block;
@@ -351,6 +365,36 @@
                 var catchBlock = new CatchBlock();
                 catchBlock.Parse(boundCatchBlock);
                 return catchBlock;
+            }
+
+            var boundGotoStatement = boundBody as BoundGotoStatement;
+            if (boundGotoStatement != null)
+            {
+                if (boundGotoStatement.Syntax.Green is ContinueStatementSyntax)
+                {
+                    var continueStatement = new ContinueStatement();
+                    continueStatement.Parse(boundGotoStatement);
+                    return continueStatement;                    
+                }
+
+                if (boundGotoStatement.Syntax.Green is BreakStatementSyntax)
+                {
+                    var breakStatement = new BreakStatement();
+                    breakStatement.Parse(boundGotoStatement);
+                    return breakStatement;
+                }
+
+                var gotoStatement = new GotoStatement();
+                gotoStatement.Parse(boundGotoStatement);
+                return gotoStatement;
+            }
+
+            var boundLabelStatement = boundBody as BoundLabelStatement;
+            if (boundLabelStatement != null)
+            {
+                var labelStatement = new LabelStatement();
+                labelStatement.Parse(boundLabelStatement);
+                return labelStatement;
             }
 
             var statemnent = UnwrapStatement(boundBody);
