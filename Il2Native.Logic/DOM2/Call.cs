@@ -68,7 +68,12 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.IsCallingConstructor)
+            if (this.Method == null)
+            {
+                // this is default Constructor call, for example for Delegates etc
+                c.WriteTypeFullName((INamedTypeSymbol)Type);
+            }
+            else if (this.IsCallingConstructor)
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
             }

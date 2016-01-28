@@ -1,9 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -11,16 +9,9 @@
     {
         private Expression initializerExpressionOpt;
 
-        private TypeSymbol type;
-
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
         {
-            if (boundObjectCreationExpression == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            this.type = boundObjectCreationExpression.Type;
+            base.Parse(boundObjectCreationExpression);
             this.Method = boundObjectCreationExpression.Constructor;
             if (boundObjectCreationExpression.InitializerExpressionOpt != null)
             {
@@ -37,7 +28,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (!type.IsValueType)
+            if (!Type.IsValueType)
             {
                 c.TextSpan("new");
                 c.WhiteSpace();

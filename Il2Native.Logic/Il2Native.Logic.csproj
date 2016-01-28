@@ -63,6 +63,7 @@
     <Compile Include="DOM2\ContinueStatement.cs" />
     <Compile Include="DOM2\Conversion.cs" />
     <Compile Include="DOM2\DefaultOperator.cs" />
+    <Compile Include="DOM2\DelegateCreationExpression.cs" />
     <Compile Include="DOM2\DoStatement.cs" />
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />

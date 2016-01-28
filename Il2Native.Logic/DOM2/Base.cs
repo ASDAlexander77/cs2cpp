@@ -341,6 +341,14 @@
                 return returnStatement;
             }
 
+            var boundDelegateCreationExpression = boundBody as BoundDelegateCreationExpression;
+            if (boundDelegateCreationExpression != null)
+            {
+                var delegateCreationExpression = new DelegateCreationExpression();
+                delegateCreationExpression.Parse(boundDelegateCreationExpression);
+                return delegateCreationExpression;
+            }
+
             var boundThrowStatement = boundBody as BoundThrowStatement;
             if (boundThrowStatement != null)
             {
