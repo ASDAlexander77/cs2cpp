@@ -56,6 +56,7 @@
     <Compile Include="DOM2\Base.cs" />
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
+    <Compile Include="DOM2\ConditionalGoto.cs" />
     <Compile Include="DOM2\BreakStatement.cs" />
     <Compile Include="DOM2\Call.cs" />
     <Compile Include="DOM2\CatchBlock.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="DOM2\GotoStatement.cs" />
     <Compile Include="DOM2\IfStatement.cs" />
     <Compile Include="DOM2\LabelStatement.cs" />
+    <Compile Include="DOM2\MethodGroup.cs" />
     <Compile Include="DOM2\SideEffectsAsLambdaCallExpression.cs" />
     <Compile Include="DOM2\LambdaExpression.cs" />
     <Compile Include="DOM2\Literal.cs" />

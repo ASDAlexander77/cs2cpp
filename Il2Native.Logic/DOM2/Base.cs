@@ -403,6 +403,22 @@
                 return labelStatement;
             }
 
+            var boundMethodGroup = boundBody as BoundMethodGroup;
+            if (boundMethodGroup != null)
+            {
+                var methodGroup = new MethodGroup();
+                methodGroup.Parse(boundMethodGroup);
+                return methodGroup;                
+            }
+
+            var boundConditionalGoto = boundBody as BoundConditionalGoto;
+            if (boundConditionalGoto != null)
+            {
+                var conditionalGoto = new ConditionalGoto();
+                conditionalGoto.Parse(boundConditionalGoto);
+                return conditionalGoto;
+            }
+
             var statemnent = UnwrapStatement(boundBody);
             if (statemnent != null)
             {
