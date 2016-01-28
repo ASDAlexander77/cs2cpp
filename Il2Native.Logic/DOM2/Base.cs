@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Security;
     using Microsoft.CodeAnalysis.CSharp;
@@ -156,6 +157,12 @@
                     var doStatement = new DoStatement();
                     doStatement.Parse(boundStatementList);
                     return doStatement;
+                }
+
+                // TODO: finish ForEachStatementSyntax
+                if (boundStatementList.Syntax.Green is ForEachStatementSyntax)
+                {
+                    Debug.Assert(false, "not implemented yet");
                 }
 
                 var block = new Block();
@@ -323,6 +330,14 @@
                 var arrayAccess = new ArrayAccess();
                 arrayAccess.Parse(boundArrayAccess);
                 return arrayAccess;
+            }
+
+            var boundArrayLength = boundBody as BoundArrayLength;
+            if (boundArrayLength != null)
+            {
+                var arrayLength = new ArrayLength();
+                arrayLength.Parse(boundArrayLength);
+                return arrayLength;
             }
 
             var boundDefaultOperator = boundBody as BoundDefaultOperator;

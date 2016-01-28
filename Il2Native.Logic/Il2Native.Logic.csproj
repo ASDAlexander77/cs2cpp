@@ -52,6 +52,7 @@
     <Compile Include="DOM2\ArrayAccess.cs" />
     <Compile Include="DOM2\ArrayCreation.cs" />
     <Compile Include="DOM2\ArrayInitialization.cs" />
+    <Compile Include="DOM2\ArrayLength.cs" />
     <Compile Include="DOM2\AssignmentOperator.cs" />
     <Compile Include="DOM2\Base.cs" />
     <Compile Include="DOM2\BinaryOperator.cs" />
