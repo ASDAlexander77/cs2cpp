@@ -102,22 +102,27 @@ namespace Il2Native.Logic
             if (methodSymbol.MethodKind == MethodKind.Constructor)
             {
                 WriteTypeName((INamedTypeSymbol)methodSymbol.ReceiverType, false);
-                return;
+            }
+            else
+            {
+                WriteName(methodSymbol);
+                if (methodSymbol.MetadataName == "op_Explicit")
+                {
+                    TextSpan("_");
+                    WriteTypeSuffix(methodSymbol.ReturnType);
+                }
+                else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
+                {
+                    TextSpan("_");
+                    WriteTypeSuffix(methodSymbol.ReturnType);
+                }
             }
 
-            WriteName(methodSymbol);
-            if (methodSymbol.MetadataName == "op_Explicit")
+            // write suffixes for ref & out parameters
+            foreach (var parameter in methodSymbol.Parameters.Where(p => p.RefKind != RefKind.None))
             {
                 TextSpan("_");
-                WriteTypeSuffix(methodSymbol.ReturnType);
-                return;
-            }
-
-            if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
-            {
-                TextSpan("_");
-                WriteTypeSuffix(methodSymbol.ReturnType);
-                return;
+                TextSpan(parameter.RefKind.ToString());
             }
         }
 
@@ -435,6 +440,11 @@ namespace Il2Native.Logic
                 anyParameter = true;
 
                 this.WriteType(parameterSymbol.Type);
+                if (parameterSymbol.RefKind != RefKind.None)
+                {
+                    TextSpan("&");
+                }
+
                 if (!declarationWithingClass)
                 {
                     this.WhiteSpace();

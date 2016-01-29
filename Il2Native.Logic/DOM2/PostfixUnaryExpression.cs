@@ -15,7 +15,7 @@
         internal bool Parse(BoundSequence boundSequence)
         {
             base.Parse(boundSequence);
-            var boundAssignmentOperator = boundSequence.SideEffects.Skip(1).First() as BoundAssignmentOperator;
+            var boundAssignmentOperator = boundSequence.SideEffects.Skip(boundSequence.SideEffects.Length - 1).First() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
                 this.value = Deserialize(boundAssignmentOperator.Left) as Expression;

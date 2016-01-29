@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
+    using System;
     using System.Text;
 
     using Microsoft.CodeAnalysis;
@@ -155,11 +156,28 @@
             }
 
             sb.Append("(");
+            var any = false;
             if (methodSymbol.ParameterCount > 0)
             {
-                foreach (var parameter in methodSymbol.ParameterTypes)
+                foreach (var parameter in methodSymbol.Parameters)
                 {
-                    sb.Append(parameter);
+                    if (any)
+                    {
+                        sb.Append(", ");
+                    }
+
+                    if (parameter.RefKind.HasFlag(RefKind.Out))
+                    {
+                        sb.Append("out ");
+                    }
+
+                    if (parameter.RefKind.HasFlag(RefKind.Ref))
+                    {
+                        sb.Append("ref ");
+                    }
+
+                    sb.Append(parameter.Type);
+                    any = true;
                 }
             }
 

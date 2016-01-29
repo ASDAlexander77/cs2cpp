@@ -137,7 +137,7 @@
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.Name != "<Module>")
+            if (type.Name != "<Module>" && type.TypeKind != TypeKind.Interface)
             {
                 // add internal infrustructure
                 unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type));
