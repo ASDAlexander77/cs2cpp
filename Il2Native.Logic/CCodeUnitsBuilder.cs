@@ -6,6 +6,9 @@
     using System.Diagnostics;
     using System.Linq;
     using DOM;
+
+    using Il2Native.Logic.DOM.Synthesized;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -120,7 +123,20 @@
                 this.BuildField(field, unit);
             }
 
-            foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
+            var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
+            var constructors = methodSymbols.Where(m => m.MethodKind == MethodKind.Constructor);
+            foreach (var method in constructors)
+            {
+                this.BuildMethod(method, unit);
+            }
+
+            // add default copy constructor
+            if (constructors.Any())
+            {
+                unit.Declarations.Add(new CCodeCopyConstructorDeclaration(constructors.First()));
+            }
+
+            foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
             {
                 this.BuildMethod(method, unit);
             }
@@ -144,7 +160,8 @@
 
         private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
         {
-            if (method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0)
+            var isDefaultConstructor = method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0;
+            if (isDefaultConstructor)
             {
                 unit.HasDefaultConstructor = true;
             }

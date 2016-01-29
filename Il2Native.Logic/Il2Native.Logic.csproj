@@ -106,6 +106,7 @@
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\CCodeFieldDefinition.cs" />
     <Compile Include="DOM\Helpers.cs" />
+    <Compile Include="DOM\Synthesized\CCodeCopyConstructorDeclaration.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>

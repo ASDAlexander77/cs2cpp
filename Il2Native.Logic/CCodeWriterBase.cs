@@ -385,21 +385,92 @@ namespace Il2Native.Logic
 
         public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
-            if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
+            this.WriteMethodPrefixesAndName(methodSymbol, declarationWithingClass);
+            this.WriteMethodPatameters(methodSymbol, declarationWithingClass);
+            this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
+        }
+
+        public void WriteMethodSuffixes(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            if (declarationWithingClass)
             {
-                WriteTemplateDeclaration(methodSymbol.ContainingType);
+                if (methodSymbol.IsGenericMethod)
+                {
+                    // TODO: finish it
+                    this.TextSpan("/*");
+                }
+
+                if (methodSymbol.IsOverride)
+                {
+                    this.TextSpan(" override");
+                }
+                else if (methodSymbol.IsAbstract)
+                {
+                    this.TextSpan(" = 0");
+                }
+
+                if (methodSymbol.IsGenericMethod)
+                {
+                    // TODO: finish it
+                    this.TextSpan("*/");
+                }
+            }
+        }
+
+        public void WriteMethodPatameters(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            // parameters
+            var anyParameter = false;
+            var notUniqueParametersNames = !declarationWithingClass && methodSymbol.Parameters.Select(p => p.Name).Distinct().Count() != methodSymbol.Parameters.Length;
+            var parameterIndex = 0;
+
+            this.TextSpan("(");
+            foreach (var parameterSymbol in methodSymbol.Parameters)
+            {
+                if (anyParameter)
+                {
+                    this.TextSpan(", ");
+                }
+
+                anyParameter = true;
+
+                this.WriteType(parameterSymbol.Type);
                 if (!declarationWithingClass)
                 {
-                    NewLine();
+                    this.WhiteSpace();
+                    if (!notUniqueParametersNames)
+                    {
+                        this.WriteNameEnsureCompatible(parameterSymbol);
+                    }
+                    else
+                    {
+                        this.TextSpan(string.Format("__arg{0}", parameterIndex));
+                    }
+                }
+
+                parameterIndex++;
+            }
+
+            this.TextSpan(")");
+        }
+
+        public void WriteMethodPrefixesAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
+            {
+                this.WriteTemplateDeclaration(methodSymbol.ContainingType);
+                if (!declarationWithingClass)
+                {
+                    this.NewLine();
                 }
             }
 
             if (methodSymbol.IsGenericMethod)
             {
-                WriteTemplateDeclaration(methodSymbol);
+                this.WriteTemplateDeclaration(methodSymbol);
                 if (!declarationWithingClass)
                 {
-                    NewLine();
+                    this.NewLine();
                 }
             }
 
@@ -407,7 +478,7 @@ namespace Il2Native.Logic
             {
                 if (methodSymbol.IsStatic)
                 {
-                    TextSpan("static ");
+                    this.TextSpan("static ");
                 }
 
                 if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
@@ -415,14 +486,14 @@ namespace Il2Native.Logic
                     if (methodSymbol.IsGenericMethod)
                     {
                         // TODO: finish it
-                        TextSpan("/*");
+                        this.TextSpan("/*");
                     }
 
-                    TextSpan("virtual ");
+                    this.TextSpan("virtual ");
                     if (methodSymbol.IsGenericMethod)
                     {
                         // TODO: finish it
-                        TextSpan("*/");
+                        this.TextSpan("*/");
                     }
                 }
             }
@@ -432,81 +503,23 @@ namespace Il2Native.Logic
             {
                 if (methodSymbol.ReturnsVoid)
                 {
-                    TextSpan("void");
+                    this.TextSpan("void");
                 }
                 else
                 {
-                    WriteType(methodSymbol.ReturnType);
+                    this.WriteType(methodSymbol.ReturnType);
                 }
 
-                WhiteSpace();
+                this.WhiteSpace();
             }
 
             if (!declarationWithingClass)
             {
-                WriteMethodFullName(methodSymbol);
+                this.WriteMethodFullName(methodSymbol);
             }
             else
             {
-                WriteMethodName(methodSymbol);
-            }
-
-            // parameters
-            var anyParameter = false;
-            var notUniqueParametersNames = !declarationWithingClass && methodSymbol.Parameters.Select(p => p.Name).Distinct().Count() != methodSymbol.Parameters.Length;
-            var parameterIndex = 0;
-
-            TextSpan("(");
-            foreach (var parameterSymbol in methodSymbol.Parameters)
-            {
-                if (anyParameter)
-                {
-                    TextSpan(", ");
-                }
-
-                anyParameter = true;
-
-                WriteType(parameterSymbol.Type);
-                if (!declarationWithingClass)
-                {
-                    WhiteSpace();
-                    if (!notUniqueParametersNames)
-                    {
-                        WriteNameEnsureCompatible(parameterSymbol);
-                    }
-                    else
-                    {
-                        TextSpan(string.Format("__arg{0}", parameterIndex));
-                    }
-                }
-
-                parameterIndex++;
-            }
-
-            TextSpan(")");
-
-            if (declarationWithingClass)
-            {
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    TextSpan("/*");
-                }
-
-                if (methodSymbol.IsOverride)
-                {
-                    TextSpan(" override");
-                }
-                else if (methodSymbol.IsAbstract)
-                {
-                    TextSpan(" = 0");
-                }
-
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    TextSpan("*/");
-                }
+                this.WriteMethodName(methodSymbol);
             }
         }
 

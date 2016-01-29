@@ -26,6 +26,8 @@
         {
             var method = methods.First();
 
+            // TODO: use std::function to store function and invoke it later
+
             if (method.IsStatic)
             {
                 c.TextSpan("nullptr");
@@ -42,11 +44,13 @@
                 this.receiverOpt.WriteTo(c);
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan("(intptr_t)");
+                c.TextSpan("(intptr_t)nullptr");
+                /*
                 c.TextSpan("&");               
                 this.receiverOpt.WriteTo(c);
                 c.WriteAccess(this.receiverOpt);
                 c.WriteName(method);
+                */
             }
         }
     }
