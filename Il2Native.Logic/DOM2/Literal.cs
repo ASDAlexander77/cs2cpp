@@ -9,17 +9,17 @@
 
     public class Literal : Expression
     {
-        private ConstantValue constantValue;
+        internal ConstantValue Value { get; set; }
 
         internal void Parse(BoundLiteral boundLiteral)
         {
             base.Parse(boundLiteral);
-            this.constantValue = boundLiteral.ConstantValue;
+            this.Value = boundLiteral.ConstantValue;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            ConstantValueTypeDiscriminator discriminator = this.constantValue.Discriminator;
+            ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
 
             switch (discriminator)
             {
@@ -28,52 +28,52 @@
                     break;
                 case ConstantValueTypeDiscriminator.SByte:
                     c.TextSpan("(int8_t)");
-                    c.TextSpan(this.constantValue.SByteValue.ToString());
+                    c.TextSpan(this.Value.SByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Byte:
                     c.TextSpan("(uint8_t)");
-                    c.TextSpan(this.constantValue.ByteValue.ToString());
+                    c.TextSpan(this.Value.ByteValue.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int16:
                     c.TextSpan("(int16_t)");
-                    c.TextSpan(this.constantValue.Int16Value.ToString());
+                    c.TextSpan(this.Value.Int16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.UInt16:
                     c.TextSpan("(uint16_t)");
-                    c.TextSpan(this.constantValue.UInt16Value.ToString());
+                    c.TextSpan(this.Value.UInt16Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Char:
-                    c.TextSpan(string.Format("L'{0}'", UnicodeChar(this.constantValue.CharValue)));
+                    c.TextSpan(string.Format("L'{0}'", UnicodeChar(this.Value.CharValue)));
                     break;
                 case ConstantValueTypeDiscriminator.Int32:
-                    c.TextSpan(this.constantValue.Int32Value.ToString());
+                    c.TextSpan(this.Value.Int32Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.UInt32:
                     c.TextSpan("(uint32_t)");
-                    c.TextSpan(this.constantValue.Int32Value.ToString());
+                    c.TextSpan(this.Value.Int32Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
-                    c.TextSpan(this.constantValue.Int64Value.ToString());
+                    c.TextSpan(this.Value.Int64Value.ToString());
                     c.TextSpan("L");
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
-                    c.TextSpan(this.constantValue.Int64Value.ToString());
+                    c.TextSpan(this.Value.Int64Value.ToString());
                     c.TextSpan("UL");
                     break;
                 case ConstantValueTypeDiscriminator.Single:
-                    var line = this.constantValue.DoubleValue.ToString();
+                    var line = this.Value.DoubleValue.ToString();
                     c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
                     c.TextSpan("f");
                     break;
                 case ConstantValueTypeDiscriminator.Double:
-                    line = this.constantValue.DoubleValue.ToString();
+                    line = this.Value.DoubleValue.ToString();
                     c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    c.TextSpan(string.Format("L\"{0}\"_s", UnicodeString(this.constantValue.StringValue)));
+                    c.TextSpan(string.Format("L\"{0}\"_s", UnicodeString(this.Value.StringValue)));
                     break;
                 case ConstantValueTypeDiscriminator.Boolean:
-                    c.TextSpan(this.constantValue.BooleanValue.ToString().ToLowerInvariant());
+                    c.TextSpan(this.Value.BooleanValue.ToString().ToLowerInvariant());
                     break;
                 default:
                     throw new NotSupportedException();

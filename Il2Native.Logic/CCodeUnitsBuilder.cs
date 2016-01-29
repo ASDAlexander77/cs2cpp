@@ -137,8 +137,11 @@
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
-            // add internal infrustructure
-            unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type, assembliesInfoResolver));
+            if (type.Name != "<Module>")
+            {
+                // add internal infrustructure
+                unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type));
+            }
 
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
             {
@@ -189,7 +192,7 @@
                 return;
             }
 
-            Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBody information can't be found");
+            Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
 
             var methodSymbol = sourceMethodFound ? sourceMethod : method;
             unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));

@@ -23,7 +23,7 @@
         public override void WriteTo(CCodeWriterBase c)
         {
             c.Separate();
-            c.TextSpanNewLine(string.Format("// MethodBody: {0}", this.Method.ToDisplayString()));
+            c.TextSpanNewLine(string.Format("// MethodBodyOpt: {0}", this.Method.ToDisplayString()));
 
             c.WriteMethodDeclaration(this.Method, false);
             c.WriteMethodBody(this.BoundBody, this.Method);

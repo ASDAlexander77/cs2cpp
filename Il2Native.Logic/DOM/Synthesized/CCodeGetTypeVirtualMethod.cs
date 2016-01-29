@@ -3,19 +3,24 @@
     using System.Collections.Immutable;
     using System.Linq;
     using System.Net;
+    using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
 
     public class CCodeGetTypeVirtualMethod : CCodeMethodDeclaration
     {
-        public CCodeGetTypeVirtualMethod(INamedTypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
-            : base(new GetTypeVirtualMethod(type, assembliesInfoResolver.GetType("System.Object")))
+        public CCodeGetTypeVirtualMethod(INamedTypeSymbol type)
+            : base(new GetTypeVirtualMethod(type))
         {
+            MethodBodyOpt = new MethodBody
+            {
+                Statements = { new ReturnStatement { ExpressionOpt = new Literal { Value = ConstantValue.Null } } }
+            };
         }
 
         public class GetTypeVirtualMethod : MethodImpl
         {
-            public GetTypeVirtualMethod(INamedTypeSymbol type, ITypeSymbol objectType)
+            public GetTypeVirtualMethod(INamedTypeSymbol type)
             {
                 Name = "__get_type";
                 MetadataName = Name;
@@ -23,7 +28,7 @@
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = objectType;
+                ReturnType = type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

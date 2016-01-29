@@ -6,7 +6,7 @@
 
     public class ReturnStatement : Statement
     {
-        private Expression expressionOpt;
+        public Expression ExpressionOpt { get; set; }
 
         internal void Parse(BoundReturnStatement boundReturnStatement)
         {
@@ -17,17 +17,17 @@
 
             if (boundReturnStatement.ExpressionOpt != null)
             {
-                this.expressionOpt = Deserialize(boundReturnStatement.ExpressionOpt) as Expression;
+                this.ExpressionOpt = Deserialize(boundReturnStatement.ExpressionOpt) as Expression;
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("return");
-            if (expressionOpt != null)
+            if (this.ExpressionOpt != null)
             {
                 c.WhiteSpace();
-                this.expressionOpt.WriteTo(c);
+                this.ExpressionOpt.WriteTo(c);
             }
 
             base.WriteTo(c);
