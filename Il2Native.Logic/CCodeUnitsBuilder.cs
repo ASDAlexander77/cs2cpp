@@ -6,7 +6,7 @@
     using System.Diagnostics;
     using System.Linq;
     using DOM;
-
+    using DOM.Implementations;
     using Il2Native.Logic.DOM.Synthesized;
 
     using Microsoft.CodeAnalysis;
@@ -47,9 +47,10 @@
                 AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
             }
 
+            var assembliesInfoResolver = new AssembliesInfoResolver() { TypesByName = typesByNames };
             foreach (var type in reordered)
             {
-                this._cunits.Add(BuildUnit(type));
+                this._cunits.Add(this.BuildUnit(type, assembliesInfoResolver));
             }
 
             return this._cunits;
@@ -114,7 +115,7 @@
             return true;
         }
 
-        private CCodeUnit BuildUnit(ITypeSymbol type)
+        private CCodeUnit BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
         {
             var unit = new CCodeUnit(type);
 
@@ -135,6 +136,9 @@
             {
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
+
+            // add internal infrustructure
+            unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type, assembliesInfoResolver));
 
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
             {

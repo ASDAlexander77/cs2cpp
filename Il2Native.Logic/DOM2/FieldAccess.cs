@@ -29,7 +29,6 @@
             }
             else
             {
-                this.receiverOpt.WriteTo(c);
                 c.WriteAccess(this.receiverOpt);
                 c.WriteName(field);
             }

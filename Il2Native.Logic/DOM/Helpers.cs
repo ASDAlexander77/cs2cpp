@@ -19,5 +19,16 @@
 
             yield return namespaceSymbol;
         }
+
+        public static ITypeSymbol GetBaseType(this ITypeSymbol type)
+        {
+            var current = type;
+            while (current.BaseType != null)
+            {
+                current = current.BaseType;
+            }
+
+            return current;
+        }
     }
 }

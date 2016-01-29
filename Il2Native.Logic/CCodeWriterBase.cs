@@ -627,6 +627,21 @@ namespace Il2Native.Logic
 
         public void WriteAccess(Expression expression)
         {
+            var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
+                               expression is DelegateCreationExpression || expression is BinaryOperator || expression is UnaryOperator;
+
+            if (parenthesis)
+            {
+                TextSpan("(");
+            }
+
+            expression.WriteTo(this);
+
+            if (parenthesis)
+            {
+                TextSpan(")");
+            }
+
             if (expression.Type.TypeKind == TypeKind.Struct && !expression.IsReference)
             {
                 TextSpan(".");
