@@ -25,7 +25,7 @@ template <typename D, typename S> inline D* __box(S v)
 }
 
 // Unboxing internals
-template <typename D, typename S> inline D __unbox(S* c)
+template <typename D, typename C, typename S> inline D __unbox(S* c)
 {
 	// TODO: finish it
 	D d;

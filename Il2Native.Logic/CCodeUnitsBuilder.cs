@@ -191,7 +191,7 @@
             unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
-            if (boundStatement != null || requiresCompletion)
+            if (boundStatement != null || (requiresCompletion && !methodSymbol.IsAbstract))
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
             }

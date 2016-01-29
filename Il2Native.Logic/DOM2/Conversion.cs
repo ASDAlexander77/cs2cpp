@@ -43,6 +43,9 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
+                    c.WriteType((INamedTypeSymbol)this.typeDestination);
+                    c.TextSpan(",");
+                    c.WhiteSpace();
                     c.WriteTypeFullName((INamedTypeSymbol)this.typeDestination);
                     c.TextSpan(">");
                     break;
