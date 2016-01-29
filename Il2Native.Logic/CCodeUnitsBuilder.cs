@@ -131,9 +131,9 @@
             }
 
             // add default copy constructor
-            if (constructors.Any())
+            if (!type.IsValueType)
             {
-                unit.Declarations.Add(new CCodeCopyConstructorDeclaration(constructors.First()));
+                unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
@@ -187,8 +187,11 @@
 
             Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBody information can't be found");
 
-            unit.Declarations.Add(new CCodeMethodDeclaration(sourceMethodFound ? sourceMethod : method));
-            if (boundStatement != null)
+            var methodSymbol = sourceMethodFound ? sourceMethod : method;
+            unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
+            var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
+            // so in case of Delegates you need to complete methods yourself
+            if (boundStatement != null || requiresCompletion)
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
             }

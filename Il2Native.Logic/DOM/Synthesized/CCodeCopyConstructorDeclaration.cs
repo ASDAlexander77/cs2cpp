@@ -2,27 +2,37 @@
 {
     using Microsoft.CodeAnalysis;
 
-    public class CCodeCopyConstructorDeclaration : CCodeMethodDeclaration
+    public class CCodeCopyConstructorDeclaration : CCodeDeclaration
     {
-        public CCodeCopyConstructorDeclaration(IMethodSymbol method)
-            : base(method)
+        private INamedTypeSymbol _type;
+
+        public CCodeCopyConstructorDeclaration(INamedTypeSymbol type)
         {
+            _type = type;
         }
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteMethodPrefixesAndName(Method, true);
+            c.WriteTypeName(_type);
             c.TextSpan("(");
-            c.WriteType(Method.ContainingType);
+            c.WriteType(_type);
             c.WhiteSpace();
-            c.TextSpan("cpy)");
-            c.WriteMethodSuffixes(Method, true);
+            c.TextSpan("__");
+            c.TextSpan(_type.MetadataName.CleanUpName().ToLowerInvariant());
+            c.TextSpan(")");
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
-            c.WriteTypeName(Method.ContainingType);
+            c.WriteTypeName(_type);
             c.TextSpan("(");
-            c.TextSpan("*cpy)");
+            if (!_type.IsValueType)
+            {
+                c.TextSpan("*");
+            }
+
+            c.TextSpan("__");
+            c.TextSpan(_type.MetadataName.CleanUpName().ToLowerInvariant());
+            c.TextSpan(")");
             c.WhiteSpace();
             c.TextSpanNewLine("{}");
         }
