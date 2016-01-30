@@ -257,18 +257,20 @@
                 var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
                 if (forEachStatementSyntax != null)
                 {
-                    ////if (specialCase != SpecialCases.ForEachBody)
-                    ////{
-                    ////    var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
-                    ////    if (forEachSimpleArrayStatement.Parse(boundStatementList))
-                    ////    {
-                    ////        return forEachSimpleArrayStatement;
-                    ////    }
+                    if (specialCase != SpecialCases.ForEachBody)
+                    {
+                        var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
+                        if (forEachSimpleArrayStatement.Parse(boundStatementList))
+                        {
+                            return forEachSimpleArrayStatement;
+                        }
 
-                    ////    var forEachIteratorStatement = new ForEachIteratorStatement();
-                    ////    forEachIteratorStatement.Parse(boundStatementList);
-                    ////    return forEachIteratorStatement;
-                    ////}
+                        var forEachIteratorStatement = new ForEachIteratorStatement();
+                        if (forEachIteratorStatement.Parse(boundStatementList))
+                        {
+                            return forEachIteratorStatement;
+                        }
+                    }
 
                     // try to detect 'if'
                     var ifStatement = new IfStatement();

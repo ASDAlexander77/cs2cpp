@@ -37,14 +37,16 @@
 
             var stage = Stages.Initialization;
             var statementList = Unwrap(boundStatementList);
-            foreach (var boundStatement in statementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
-            {
-                if (stage == Stages.Initialization && boundStatement is BoundTryStatement)
-                {
-                    // this is Iterator ForEach
-                    return false;
-                }
 
+            // in case of multi array if current statmentList contains BoundBlock you should process all statements into Initial stage
+            if (statementList.Statements.Last() is BoundBlock &&
+                !(statementList.Statements.Take(statementList.Statements.Length - 1).All(s => s is BoundBlock)))
+            {
+                return false;
+            }
+
+            foreach (var boundStatement in IterateBoundStatementsList(statementList))
+            {
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null)
                 {
@@ -122,6 +124,7 @@
             c.OpenBlock();
 
             foreach (var statement in this.locals)
+
             {
                 statement.WriteTo(c);
             }

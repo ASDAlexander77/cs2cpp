@@ -33,7 +33,16 @@
             }
 
             var stage = Stages.Initialization;
-            foreach (var boundStatement in boundStatementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
+            var statementList = Unwrap(boundStatementList);
+
+            // in case of multi array if current statmentList contains BoundBlock you should process all statements into Initial stage
+            if (statementList.Statements.Last() is BoundBlock &&
+                !(statementList.Statements.Take(statementList.Statements.Length - 1).All(s => s is BoundBlock)))
+            {
+                return false;
+            }
+
+            foreach (var boundStatement in IterateBoundStatementsList(statementList))
             {
                 BoundTryStatement boundTryStatement = null;
                 if (stage == Stages.Initialization)
@@ -57,8 +66,7 @@
                 {
                     case Stages.Initialization:
                         var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
-                        Debug.Assert(this.initialization == null);
-                        this.initialization = statement;
+                        MergeOrSet(ref this.initialization, statement);
                         break;
                     case Stages.TryBody:
                         this.tryStatement = new TryStatement();
