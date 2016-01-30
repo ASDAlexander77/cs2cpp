@@ -16,7 +16,7 @@
         {
             base.Parse(boundSequence);
 
-            if (boundSequence.SideEffects.Length > 2)
+            if (boundSequence.SideEffects.Length > 2 || !boundSequence.SideEffects.All(se => se is BoundAssignmentOperator))
             {
                 return false;
             }

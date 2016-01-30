@@ -16,12 +16,12 @@
         {
             base.Parse(boundSequence);
 
-            if (boundSequence.SideEffects.Length > 2)
+            if (boundSequence.SideEffects.Length > 2 || !boundSequence.SideEffects.All(se => se is BoundAssignmentOperator))
             {
                 return false;
             }
 
-            var boundAssignmentOperator = boundSequence.SideEffects.Skip(boundSequence.SideEffects.Length - 1).First() as BoundAssignmentOperator;
+            var boundAssignmentOperator = boundSequence.SideEffects.Last() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
                 this.value = Deserialize(boundAssignmentOperator.Left) as Expression;
