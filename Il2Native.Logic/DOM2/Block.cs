@@ -18,9 +18,9 @@
             }
         }
 
-        internal void Parse(BoundStatementList boundStatementList)
+        internal void Parse(BoundStatementList boundStatementList, SpecialCases specialCase = SpecialCases.None)
         {
-            ParseBoundStatementList(boundStatementList, this.statements);
+            ParseBoundStatementList(boundStatementList, this.statements, specialCase);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

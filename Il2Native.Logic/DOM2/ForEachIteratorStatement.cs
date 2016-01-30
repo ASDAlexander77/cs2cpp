@@ -35,25 +35,28 @@
             var stage = Stages.Initialization;
             foreach (var boundStatement in boundStatementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
             {
-                var boundTryStatement = boundStatement as BoundTryStatement;
-                if (boundTryStatement != null)
-                {
-                    stage = Stages.TryBody;
-                }
-
+                BoundTryStatement boundTryStatement = null;
                 if (stage == Stages.Initialization)
                 {
-                    var boundGotoStatement = boundStatement as BoundGotoStatement;
-                    if (boundGotoStatement != null)
+                    boundTryStatement = boundStatement as BoundTryStatement;
+                    if (boundTryStatement != null)
                     {
-                        continue;
+                        stage = Stages.TryBody;
+                    }
+                    else
+                    {
+                        var boundGotoStatement = boundStatement as BoundGotoStatement;
+                        if (boundGotoStatement != null)
+                        {
+                            continue;
+                        }
                     }
                 }
 
                 switch (stage)
                 {
                     case Stages.Initialization:
-                        var statement = Deserialize(boundStatement, specialCases: SpecialCases.ForEachBody);
+                        var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
                         Debug.Assert(this.initialization == null);
                         this.initialization = statement;
                         break;
@@ -69,7 +72,7 @@
                         {
                             this.tryStatement.FinallyBlockOpt = Deserialize(
                                 boundTryStatement.FinallyBlockOpt,
-                                specialCases: SpecialCases.ForEachBody);
+                                specialCase: SpecialCases.ForEachBody);
                         }
 
                         break;

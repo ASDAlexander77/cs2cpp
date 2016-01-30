@@ -38,7 +38,7 @@
             var stage = Stages.Initialization;
             foreach (var boundStatement in boundStatementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
             {
-                if (boundStatement is BoundTryStatement)
+                if (stage == Stages.Initialization && boundStatement is BoundTryStatement)
                 {
                     // this is Iterator ForEach
                     return false;
@@ -91,7 +91,7 @@
                     }
                 }
 
-                var statement = Deserialize(boundStatement, specialCases: SpecialCases.ForEachBody);
+                var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
                 if (statement != null)
                 {
                     switch (stage)

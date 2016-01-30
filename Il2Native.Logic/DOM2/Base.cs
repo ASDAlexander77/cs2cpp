@@ -11,7 +11,7 @@
 
     public abstract class Base
     {
-        internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements)
+        internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
         {
             // process locals when not used with assignment operator
             var boundBlock = boundStatementList as BoundBlock;
@@ -22,7 +22,7 @@
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
-                var deserialize = Deserialize(boundStatement);
+                var deserialize = Deserialize(boundStatement, specialCase: specialCase);
                 var block = deserialize as Block;
                 if (block != null)
                 {
@@ -117,7 +117,7 @@
             ForEachBody
         }
 
-        internal static Base Deserialize(BoundNode boundBody, bool root = false, SpecialCases specialCases = SpecialCases.None)
+        internal static Base Deserialize(BoundNode boundBody, bool root = false, SpecialCases specialCase = SpecialCases.None)
         {
             // method
             var boundStatementList = boundBody as BoundStatementList;
@@ -165,10 +165,10 @@
                     return doStatement;
                 }
 
-                if (specialCases != SpecialCases.ForEachBody)
+                var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
+                if (forEachStatementSyntax != null)
                 {
-                    var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
-                    if (forEachStatementSyntax != null)
+                    if (specialCase != SpecialCases.ForEachBody)
                     {
                         var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
                         if (forEachSimpleArrayStatement.Parse(boundStatementList))
@@ -183,7 +183,7 @@
                 }
 
                 var block = new Block();
-                block.Parse(boundStatementList);
+                block.Parse(boundStatementList, specialCase);
                 return block;
             }
 
@@ -248,7 +248,7 @@
             {
                 var expressionStatement = new ExpressionStatement();
                 expressionStatement.Parse(boundExpressionStatement);
-                return expressionStatement;                
+                return expressionStatement;
             }
 
             var boundSequence = boundBody as BoundSequence;
@@ -274,7 +274,7 @@
 
                 var sideEffectsAsLambdaCallExpression = new SideEffectsAsLambdaCallExpression();
                 sideEffectsAsLambdaCallExpression.Parse(boundSequence);
-                return sideEffectsAsLambdaCallExpression;   
+                return sideEffectsAsLambdaCallExpression;
             }
 
             var boundCall = boundBody as BoundCall;
@@ -412,7 +412,7 @@
                 {
                     var continueStatement = new ContinueStatement();
                     continueStatement.Parse(boundGotoStatement);
-                    return continueStatement;                    
+                    return continueStatement;
                 }
 
                 if (boundGotoStatement.Syntax.Green is BreakStatementSyntax)
@@ -440,7 +440,7 @@
             {
                 var methodGroup = new MethodGroup();
                 methodGroup.Parse(boundMethodGroup);
-                return methodGroup;                
+                return methodGroup;
             }
 
             var boundConditionalGoto = boundBody as BoundConditionalGoto;
@@ -449,6 +449,22 @@
                 var conditionalGoto = new ConditionalGoto();
                 conditionalGoto.Parse(boundConditionalGoto);
                 return conditionalGoto;
+            }
+
+            var boundAsOperator = boundBody as BoundAsOperator;
+            if (boundAsOperator != null)
+            {
+                var asOperator = new AsOperator();
+                asOperator.Parse(boundAsOperator);
+                return asOperator;
+            }
+
+            var boundIsOperator = boundBody as BoundIsOperator;
+            if (boundIsOperator != null)
+            {
+                var isOperator = new IsOperator();
+                isOperator.Parse(boundIsOperator);
+                return isOperator;
             }
 
             var statemnent = UnwrapStatement(boundBody);
