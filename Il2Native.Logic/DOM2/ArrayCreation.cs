@@ -32,16 +32,13 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var elementType = ((ArrayTypeSymbol)Type).ElementType;
-            Debug.Assert(this.initializerOpt is ArrayInitialization);
+            var arrayTypeSymbol = (ArrayTypeSymbol)Type;
+            var elementType = arrayTypeSymbol.ElementType;
             var arrayInitialization = this.initializerOpt as ArrayInitialization;
-
             if (arrayInitialization != null)
             {
                 c.TextSpan("reinterpret_cast<");
-                c.TextSpan("__array<");
-                c.WriteType(elementType);
-                c.TextSpan(">*");
+                c.WriteCArrayTemplate(arrayTypeSymbol);
                 c.TextSpan(">(");
             }
 
@@ -51,22 +48,17 @@
             if (arrayInitialization != null)
             {
                 c.TextSpan("__array_init<");
-            }
-            else
-            {
-                c.TextSpan("__array<");
-            }
-
-            c.WriteType(elementType);
-
-            if (arrayInitialization != null)
-            {
+                c.WriteType(elementType);
                 c.TextSpan(",");
                 c.WhiteSpace();
                 c.TextSpan(arrayInitialization.Initializers.Count.ToString());
+                c.TextSpan(">");
+            }
+            else
+            {
+                c.WriteCArrayTemplate(arrayTypeSymbol, false);
             }
 
-            c.TextSpan(">");
             c.TextSpan("(");
 
             var any = false;

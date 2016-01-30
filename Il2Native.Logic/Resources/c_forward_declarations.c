@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 
 template <typename T> class __array;
 

@@ -661,5 +661,31 @@ namespace Il2Native.Logic
                 TextSpan("->");
             }
         }
+
+        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true)
+        {
+            var elementType = arrayTypeSymbol.ElementType;
+
+            if (arrayTypeSymbol.Rank <= 1)
+            {
+                TextSpan("__array<");
+                WriteType(elementType);
+                TextSpan(">");
+            }
+            else
+            {
+                TextSpan("__multi_array<");
+                WriteType(elementType);
+                TextSpan(",");
+                WhiteSpace();
+                TextSpan(arrayTypeSymbol.Rank.ToString());
+                TextSpan(">");
+            }
+
+            if (reference)
+            {
+                TextSpan("*");
+            }
+        }
     }
 }
