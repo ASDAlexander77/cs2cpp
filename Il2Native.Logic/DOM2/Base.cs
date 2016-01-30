@@ -1,14 +1,18 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Security;
+    using System.Text;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
+    [DebuggerDisplay("{ToString()}")]
     public abstract class Base
     {
         internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
@@ -64,10 +68,10 @@
 
         internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
         {
-            return boundStatementList.Statements.Select(UnwrapStatement).Where(s => s != null);
+            return boundStatementList.Statements.Select(Unwrap).OfType<BoundStatement>().Where(s => s != null);
         }
 
-        internal static BoundStatement UnwrapStatement(BoundNode boundNode)
+        internal static BoundNode Unwrap(BoundNode boundNode)
         {
             var boundSequencePoint = boundNode as BoundSequencePoint;
             if (boundSequencePoint != null)
@@ -81,7 +85,85 @@
                 return boundSequencePointWithSpan.StatementOpt;
             }
 
-            return boundNode as BoundStatement;
+            return boundNode;
+        }
+
+        internal static BoundStatementList Unwrap(BoundStatementList boundStatementList)
+        {
+            var current = boundStatementList;
+            BoundStatementList lastFoundBlock = null;
+            do
+            {
+                if (lastFoundBlock != null)
+                {
+                    current = lastFoundBlock;
+                    lastFoundBlock = null;
+                }
+
+                foreach (var item in current.Statements)
+                {
+                    if (lastFoundBlock != null)
+                    {
+                        return current;
+                    }
+
+                    var boundSequencePoint = item as BoundSequencePoint;
+                    if (boundSequencePoint != null)
+                    {
+                        if (boundSequencePoint.StatementOpt != null)
+                        {
+                            return current;
+                        }
+
+                        continue;
+                    }
+
+                    var boundSequencePointWithSpan = item as BoundSequencePointWithSpan;
+                    if (boundSequencePointWithSpan != null)
+                    {
+                        if (boundSequencePointWithSpan.StatementOpt != null)
+                        {
+                            return current;
+                        }
+
+                        continue;
+                    }
+
+                    if (item is BoundBlock)
+                    {
+                        lastFoundBlock = item as BoundStatementList;
+                        continue;
+                    }
+
+                    return current;
+                }
+            } 
+            while (lastFoundBlock != null);
+
+            return current;
+        }
+
+        public static void MergeOrSet(ref Base variable, Base item)
+        {
+            if (variable == null)
+            {
+                variable = item;
+                return;
+            }
+
+            var block = variable as Block;
+            if (block == null)
+            {
+                block = new Block();
+                if (variable != null)
+                {
+                    block.Statements.Add(variable as Statement);
+                }
+
+                variable = block;
+            }
+
+            block.Statements.Add(item as Statement);
         }
 
         internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)
@@ -175,18 +257,18 @@
                 var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
                 if (forEachStatementSyntax != null)
                 {
-                    if (specialCase != SpecialCases.ForEachBody)
-                    {
-                        var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
-                        if (forEachSimpleArrayStatement.Parse(boundStatementList))
-                        {
-                            return forEachSimpleArrayStatement;
-                        }
+                    ////if (specialCase != SpecialCases.ForEachBody)
+                    ////{
+                    ////    var forEachSimpleArrayStatement = new ForEachSimpleArrayStatement();
+                    ////    if (forEachSimpleArrayStatement.Parse(boundStatementList))
+                    ////    {
+                    ////        return forEachSimpleArrayStatement;
+                    ////    }
 
-                        var forEachIteratorStatement = new ForEachIteratorStatement();
-                        forEachIteratorStatement.Parse(boundStatementList);
-                        return forEachIteratorStatement;
-                    }
+                    ////    var forEachIteratorStatement = new ForEachIteratorStatement();
+                    ////    forEachIteratorStatement.Parse(boundStatementList);
+                    ////    return forEachIteratorStatement;
+                    ////}
 
                     // try to detect 'if'
                     var ifStatement = new IfStatement();
@@ -481,7 +563,7 @@
                 return isOperator;
             }
 
-            var statemnent = UnwrapStatement(boundBody);
+            var statemnent = Unwrap(boundBody);
             if (statemnent != null)
             {
                 throw new InvalidOperationException("Unwrap statement in foreach cycle in block class");
@@ -496,6 +578,19 @@
         }
 
         internal abstract void WriteTo(CCodeWriterBase c);
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(sb)))
+            {
+                var writer = new CCodeWriterText(itw);
+                this.WriteTo(writer);
+                itw.Close();
+            }
+
+            return sb.ToString();
+        }
 
         private static bool IsDeclarationWithoutInitializer(LocalSymbol local)
         {

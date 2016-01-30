@@ -36,7 +36,8 @@
             }
 
             var stage = Stages.Initialization;
-            foreach (var boundStatement in boundStatementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
+            var statementList = Unwrap(boundStatementList);
+            foreach (var boundStatement in statementList.Statements.OfType<BoundStatementList>().SelectMany(IterateBoundStatementsList))
             {
                 if (stage == Stages.Initialization && boundStatement is BoundTryStatement)
                 {
@@ -97,8 +98,7 @@
                     switch (stage)
                     {
                         case Stages.Initialization:
-                            Debug.Assert(this.initialization == null);
-                            this.initialization = statement;
+                            MergeOrSet(ref this.initialization, statement);
                             break;
                         case Stages.Body:
                             Debug.Assert(this.statements == null);
