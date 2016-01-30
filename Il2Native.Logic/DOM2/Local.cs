@@ -14,9 +14,22 @@
         {
             if (local.SynthesizedLocalKind != SynthesizedLocalKind.None)
             {
-                c.TextSpan(local.SynthesizedLocalKind.ToString());
-                c.TextSpan("_");
+                if (local.SynthesizedLocalKind > SynthesizedLocalKind.ForEachArrayIndex0 &&
+                    local.SynthesizedLocalKind < SynthesizedLocalKind.ForEachArrayLimit0)
+                {
+                    c.TextSpan(string.Format("ForEachArrayIndex{0}", local.SynthesizedLocalKind - SynthesizedLocalKind.ForEachArrayIndex0));
+                }
+                else if (local.SynthesizedLocalKind > SynthesizedLocalKind.ForEachArrayLimit0 &&
+                    local.SynthesizedLocalKind < SynthesizedLocalKind.FixedString)
+                {
+                    c.TextSpan(string.Format("ForEachArrayLimit{0}", local.SynthesizedLocalKind - SynthesizedLocalKind.ForEachArrayLimit0));
+                }
+                else
+                {
+                    c.TextSpan(local.SynthesizedLocalKind.ToString());
+                }
 
+                c.TextSpan("_");
                 var firstTime = false;
                 c.TextSpan(objectIDGenerator.GetId(local, out firstTime).ToString());
             }

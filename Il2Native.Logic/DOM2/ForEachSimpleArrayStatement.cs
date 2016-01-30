@@ -151,7 +151,7 @@
             }
             else
             {
-                this.initialization.WriteTo(c);
+                PrintStatementAsExpression(c, this.initialization);
             }
 
             c.TextSpan(";");
