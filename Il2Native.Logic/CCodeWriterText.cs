@@ -107,6 +107,7 @@
         {
             if (this.text == TextState.Empty || this.text == TextState.Separated)
             {
+                this.text = TextState.Empty;
                 return;
             }
 

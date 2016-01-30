@@ -180,6 +180,13 @@
                         forEachIteratorStatement.Parse(boundStatementList);
                         return forEachIteratorStatement;
                     }
+
+                    // try to detect 'if'
+                    var ifStatement = new IfStatement();
+                    if (ifStatement.Parse(boundStatementList))
+                    {
+                        return ifStatement;
+                    }
                 }
 
                 var block = new Block();

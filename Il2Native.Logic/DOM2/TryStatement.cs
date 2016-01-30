@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class TryStatement : Statement
@@ -58,9 +59,13 @@
                 c.NewLine();
             }
 
-            c.TextSpan("try");
+            if (this.catchBlocks.Any())
+            {
+                c.TextSpan("try");
+            }
 
             c.NewLine();
+
             PrintBlockOrStatementsAsBlock(c, this.TryBlock);
 
             foreach (var catchBlock in this.catchBlocks)

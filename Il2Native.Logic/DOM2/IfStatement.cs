@@ -19,7 +19,7 @@
             EndOfElse
         }
 
-        internal void Parse(BoundStatementList boundStatementList)
+        internal bool Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
             {
@@ -79,10 +79,12 @@
                             this.elseStatements = statement;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            return false;
                     }
                 }
             }
+
+            return stage == Stages.EndOfIf || stage == Stages.EndOfElse;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
