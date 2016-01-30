@@ -1,6 +1,6 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
+    using System.Runtime.Serialization;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -8,11 +8,17 @@
     {
         private LocalSymbol local;
 
+        private static ObjectIDGenerator objectIDGenerator = new ObjectIDGenerator();
+
         internal static void WriteLocal(LocalSymbol local, CCodeWriterBase c)
         {
             if (local.SynthesizedLocalKind != SynthesizedLocalKind.None)
             {
                 c.TextSpan(local.SynthesizedLocalKind.ToString());
+                c.TextSpan("_");
+
+                var firstTime = false;
+                c.TextSpan(objectIDGenerator.GetId(local, out firstTime).ToString());
             }
             else
             {

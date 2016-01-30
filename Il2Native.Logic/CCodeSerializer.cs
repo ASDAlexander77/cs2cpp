@@ -366,7 +366,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 Directory.CreateDirectory(fullDirPath);
             }
 
-            var fullPath = Path.Combine(fullDirPath, String.Concat(GetTypeName((INamedTypeSymbol)unit.Type).CleanUpNameAllUnderscore(), ext));
+            var fullPath = Path.Combine(fullDirPath, String.Concat(((INamedTypeSymbol)unit.Type).GetTypeName().CleanUpNameAllUnderscore(), ext));
             return fullPath;
         }
 
@@ -375,16 +375,6 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
             nestedLevel = enumNamespaces.Count();
             return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
-        }
-
-        private static string GetTypeName(INamedTypeSymbol type)
-        {
-            if (type.ContainingType != null)
-            {
-                return GetTypeName(type.ContainingType) + "_" + type.MetadataName;
-            }
-
-            return type.MetadataName;
         }
     }
 }

@@ -208,5 +208,15 @@
 
             return sb.ToString();
         }
+
+        public static string GetTypeName(this INamedTypeSymbol type)
+        {
+            if (type.ContainingType != null)
+            {
+                return type.ContainingType.GetTypeName() + "_" + type.MetadataName;
+            }
+
+            return type.MetadataName;
+        }
     }
 }

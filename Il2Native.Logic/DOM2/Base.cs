@@ -46,12 +46,19 @@
         {
             foreach (var local in locals)
             {
-                if (local.SynthesizedLocalKind != SynthesizedLocalKind.None || IsDeclarationWithoutInitializer(local))
+                if (statements == null)
                 {
-                    var localVariableDeclaration = new LocalVariableDeclaration();
-                    localVariableDeclaration.Parse(local);
-                    statements.Add(localVariableDeclaration);
+                    continue;
                 }
+
+                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && !IsDeclarationWithoutInitializer(local))
+                {
+                    continue;
+                }
+
+                var localVariableDeclaration = new LocalVariableDeclaration();
+                localVariableDeclaration.Parse(local);
+                statements.Add(localVariableDeclaration);
             }
         }
 

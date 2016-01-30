@@ -2,7 +2,7 @@
 {
     using System;
     using System.Diagnostics;
-
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
@@ -12,6 +12,7 @@
         private BinaryOperatorKind operatorKind;
         private Expression left;
         private Expression right;
+        private ITypeSymbol type;
 
         public bool ApplyAutoType { get; set; }
 
@@ -38,13 +39,26 @@
             Debug.Assert(this.left != null);
             this.right = Deserialize(boundAssignmentOperator.Right) as Expression;
             Debug.Assert(this.right != null);
+
+            if (this.right is Literal)
+            {
+                this.type = this.right.Type;
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (this.ApplyAutoType)
             {
-                c.TextSpan("auto");
+                if (this.type != null)
+                {
+                    c.WriteType(this.type);
+                }
+                else
+                {
+                    c.TextSpan("auto");
+                }
+
                 c.WhiteSpace();
             }
 

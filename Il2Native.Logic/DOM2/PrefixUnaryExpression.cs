@@ -15,6 +15,12 @@
         internal bool Parse(BoundSequence boundSequence)
         {
             base.Parse(boundSequence);
+
+            if (boundSequence.SideEffects.Length > 2)
+            {
+                return false;
+            }
+
             var boundAssignmentOperator = boundSequence.SideEffects.First() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
@@ -29,6 +35,11 @@
 
             var call = value as Call;
             if (call != null && (call.Method.Name == "op_Increment" || call.Method.Name == "op_Decrement"))
+            {
+                return false;
+            }
+
+            if (value == null)
             {
                 return false;
             }
