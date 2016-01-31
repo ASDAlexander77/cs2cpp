@@ -99,6 +99,7 @@ namespace Il2Native.Logic
             if (methodSymbol.MethodKind == MethodKind.Constructor)
             {
                 WriteTypeName((INamedTypeSymbol)methodSymbol.ReceiverType, false);
+                return;
             }
             else
             {
