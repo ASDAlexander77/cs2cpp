@@ -2,10 +2,7 @@
 namespace Il2Native.Logic
 {
     using System;
-    using System.CodeDom.Compiler;
-    using System.IO;
     using System.Linq;
-    using System.Text;
     using DOM;
     using DOM2;
     using Microsoft.CodeAnalysis;
@@ -96,7 +93,7 @@ namespace Il2Native.Logic
             TextSpan(symbol.MetadataName.CleanUpName().EnsureCompatible());
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true)
         {
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
@@ -154,11 +151,11 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeyword = true)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true)
         {
-            if (allowKeyword && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
+            if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
-                WriteTypeName(type, allowKeyword);
+                WriteTypeName(type, allowKeywords);
                 return;
             }
 
@@ -168,7 +165,7 @@ namespace Il2Native.Logic
                 TextSpan("::");
             }
 
-            WriteTypeName(type, allowKeyword);
+            WriteTypeName(type, allowKeywords);
 
             if (type.IsGenericType)
             {
@@ -176,9 +173,9 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeyword = true)
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true)
         {
-            if (allowKeyword)
+            if (allowKeywords)
             {
                 if (type.SpecialType == SpecialType.System_Object)
                 {
@@ -202,7 +199,7 @@ namespace Il2Native.Logic
             WriteName(type);
         }
 
-        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false)
+        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = false)
         {
             if (type.IsValueType && WriteSpecialType(type, cleanName))
             {
@@ -214,20 +211,12 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     break;
                 case TypeKind.ArrayType:
-                    var elementType = ((ArrayTypeSymbol)type).ElementType;
-                    TextSpan("__array<");
-                    WriteType(elementType, cleanName);
-                        TextSpan(">");
-                    if (!suppressReference)
-                    {
-                        TextSpan("*");
-                    }
-
+                    WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, cleanName, allowKeywords);
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    WriteTypeFullName((INamedTypeSymbol)type);
+                    WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         TextSpan("*");
@@ -241,14 +230,14 @@ namespace Il2Native.Logic
                     if (!cleanName)
                     {
                         TextSpan("__enum<");
-                        WriteTypeFullName((INamedTypeSymbol)type);
+                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
                         TextSpan(", ");
                         WriteType(enumUnderlyingType);
                         TextSpan(">");
                     }
                     else
                     {
-                        WriteType(enumUnderlyingType);
+                        WriteType(enumUnderlyingType, allowKeywords: allowKeywords);
                     }
 
                     return;
@@ -258,7 +247,7 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.PointerType:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteType(pointedAtType, cleanName);
+                    WriteType(pointedAtType, cleanName, allowKeywords: allowKeywords);
                     TextSpan("*");
                     return;
                 case TypeKind.Struct:
@@ -439,7 +428,7 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                this.WriteType(parameterSymbol.Type);
+                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     TextSpan("&");
@@ -517,7 +506,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteType(methodSymbol.ReturnType);
+                    this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass);
                 }
 
                 this.WhiteSpace();
@@ -529,7 +518,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteMethodName(methodSymbol);
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
             }
         }
 
@@ -551,7 +540,7 @@ namespace Il2Native.Logic
 
             TextSpan("::");
 
-            WriteMethodName(methodSymbol);
+            WriteMethodName(methodSymbol, false);
         }
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
@@ -662,20 +651,20 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true)
+        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = false)
         {
             var elementType = arrayTypeSymbol.ElementType;
 
             if (arrayTypeSymbol.Rank <= 1)
             {
                 TextSpan("__array<");
-                WriteType(elementType);
+                WriteType(elementType, cleanName, allowKeywords: allowKeywords);
                 TextSpan(">");
             }
             else
             {
                 TextSpan("__multi_array<");
-                WriteType(elementType);
+                WriteType(elementType, cleanName, allowKeywords: allowKeywords);
                 TextSpan(",");
                 WhiteSpace();
                 TextSpan(arrayTypeSymbol.Rank.ToString());

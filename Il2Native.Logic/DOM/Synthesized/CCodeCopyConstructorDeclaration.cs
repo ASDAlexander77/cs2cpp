@@ -13,25 +13,23 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteTypeName(_type);
+            c.WriteTypeName(_type, allowKeywords: false);
             c.TextSpan("(");
-            c.WriteType(_type);
+            c.WriteType(_type, allowKeywords: false);
             c.WhiteSpace();
-            c.TextSpan("__");
-            c.TextSpan(_type.MetadataName.CleanUpName().ToLowerInvariant());
+            c.TextSpan("__class");
             c.TextSpan(")");
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
-            c.WriteTypeName(_type);
+            c.WriteTypeName(_type, allowKeywords: false);
             c.TextSpan("(");
             if (!_type.IsValueType)
             {
                 c.TextSpan("*");
             }
 
-            c.TextSpan("__");
-            c.TextSpan(_type.MetadataName.CleanUpName().ToLowerInvariant());
+            c.TextSpan("__class");
             c.TextSpan(")");
             c.WhiteSpace();
             c.TextSpanNewLine("{}");

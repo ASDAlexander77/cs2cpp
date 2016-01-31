@@ -8,7 +8,7 @@ public:
 	// TODO: finish checking boundries
 	__array(size_t length) : _rank(1) { _length = length; }
 	inline const T operator [](size_t index) const { return _data[index]; }
-	inline T& operator [](size_t index) const { return _data[index]; }
+	inline T& operator [](size_t index) { return _data[index]; }
 	inline operator size_t() const { return (size_t)_length; }
 };
 

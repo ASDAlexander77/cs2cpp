@@ -132,7 +132,7 @@
             }
 
             // add default copy constructor
-            if (!type.IsValueType)
+            if (type.TypeKind == TypeKind.Delegate)
             {
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
@@ -198,7 +198,9 @@
             unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
-            if (boundStatement != null || (requiresCompletion && !methodSymbol.IsAbstract))
+            if (boundStatement != null ||
+                (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate &&
+                 !methodSymbol.IsAbstract))
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
             }

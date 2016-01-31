@@ -30,6 +30,8 @@
 
             this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
 
+            this.WriteCoreLibSource(identity, isCoreLib);
+
             this.WriteSources(identity, units);
 
             this.WriteBuildFiles(identity, references, !isCoreLib);
@@ -341,6 +343,23 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     itw.WriteLine("#include \"{0}\"", includeHeader);
                 }
 
+                itw.Close();
+            }
+        }
+
+        public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
+        {
+            if (!isCoreLib)
+            {
+                return;
+            }
+
+            // write header
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src", ext:".cpp"))))
+            {
+                WriteSourceInclude(itw, identity, 0);
+
+                itw.WriteLine(Resources.c_definitions.Replace("<<%assemblyName%>>", identity.Name));
                 itw.Close();
             }
         }
