@@ -27,11 +27,6 @@
                 throw new ArgumentNullException();
             }
 
-            foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
-            {
-                ParseLocals(boundBlock.Locals, locals);
-            }
-
             var stage = Stages.Initialization;
             var statementList = Unwrap(boundStatementList);
 
@@ -41,6 +36,23 @@
             {
                 return false;
             }
+
+            var mainBlock = boundStatementList as BoundBlock;
+            if (mainBlock != null)
+            {
+                ParseLocals(mainBlock.Locals, locals);
+            }
+
+            var innerBlock = statementList as BoundBlock;
+            if (innerBlock != null)
+            {
+                ParseLocals(innerBlock.Locals, locals);
+            }
+
+            //foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
+            //{
+            //    ParseLocals(boundBlock.Locals, locals);
+            //}
 
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
             {
@@ -89,7 +101,7 @@
                 }
             }
 
-            return true;
+            return stage == Stages.TryBody;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

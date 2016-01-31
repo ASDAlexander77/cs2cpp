@@ -29,9 +29,12 @@
                     c.TextSpan(local.SynthesizedLocalKind.ToString());
                 }
 
-                c.TextSpan("_");
-                var firstTime = false;
-                c.TextSpan(objectIDGenerator.GetId(local, out firstTime).ToString());
+                if (local.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
+                {
+                    c.TextSpan("_");
+                    var firstTime = false;
+                    c.TextSpan(objectIDGenerator.GetId(local, out firstTime).ToString());
+                }
             }
             else
             {

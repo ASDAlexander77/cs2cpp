@@ -30,11 +30,6 @@
                 throw new ArgumentNullException();
             }
 
-            foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
-            {
-                ParseLocals(boundBlock.Locals, locals);
-            }
-
             var stage = Stages.Initialization;
             var statementList = Unwrap(boundStatementList);
 
@@ -44,6 +39,23 @@
             {
                 return false;
             }
+
+            var mainBlock = boundStatementList as BoundBlock;
+            if (mainBlock != null)
+            {
+                ParseLocals(mainBlock.Locals, locals);
+            }
+
+            var innerBlock = statementList as BoundBlock;
+            if (innerBlock != null)
+            {
+                ParseLocals(innerBlock.Locals, locals);
+            }
+
+            //foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
+            //{
+            //    ParseLocals(boundBlock.Locals, locals);
+            //}
 
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
             {
@@ -94,7 +106,7 @@
                     }
                 }
 
-                var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
+                var statement = Deserialize(boundStatement, specialCase: stage != Stages.Body ? SpecialCases.ForEachBody : SpecialCases.None);
                 if (statement != null)
                 {
                     switch (stage)
@@ -116,17 +128,20 @@
                 }
             }
 
-            return true;
+            return stage == Stages.End;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.OpenBlock();
-
-            foreach (var statement in this.locals)
-
+            if (this.locals.Count > 0)
             {
-                statement.WriteTo(c);
+                c.OpenBlock();
+
+                foreach (var statement in this.locals)
+
+                {
+                    statement.WriteTo(c);
+                }
             }
 
             c.TextSpan("for");
@@ -169,7 +184,10 @@
             c.NewLine();
             PrintBlockOrStatementsAsBlock(c, this.statements);
 
-            c.EndBlock();
+            if (this.locals.Count > 0)
+            {
+                c.EndBlock();
+            }
 
             // No normal ending of Statement as we do not need extra ;
             c.Separate();
