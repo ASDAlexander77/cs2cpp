@@ -44,7 +44,7 @@
             }
 
             var innerBlock = statementList as BoundBlock;
-            if (innerBlock != null)
+            if (innerBlock != null && (object)mainBlock != (object)innerBlock)
             {
                 ParseLocals(innerBlock.Locals, locals);
             }
