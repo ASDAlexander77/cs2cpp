@@ -137,7 +137,7 @@
 
                     return current;
                 }
-            } 
+            }
             while (lastFoundBlock != null);
 
             return current;
@@ -277,6 +277,12 @@
                     if (ifStatement.Parse(boundStatementList))
                     {
                         return ifStatement;
+                    }
+
+                    var whileStatement = new WhileStatement();
+                    if (whileStatement.Parse(boundStatementList))
+                    {
+                        return whileStatement;
                     }
                 }
 

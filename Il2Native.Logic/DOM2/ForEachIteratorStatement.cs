@@ -49,11 +49,6 @@
                 ParseLocals(innerBlock.Locals, locals);
             }
 
-            //foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
-            //{
-            //    ParseLocals(boundBlock.Locals, locals);
-            //}
-
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
             {
                 BoundTryStatement boundTryStatement = null;
@@ -106,11 +101,14 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.OpenBlock();
-
-            foreach (var statement in this.locals)
+            if (this.locals.Count > 0)
             {
-                statement.WriteTo(c);
+                c.OpenBlock();
+
+                foreach (var statement in this.locals)
+                {
+                    statement.WriteTo(c);
+                }
             }
 
             var block = this.initialization as Block;
@@ -131,15 +129,18 @@
             }
             else
             {
-                PrintStatementAsExpression(c, this.initialization);
+                this.initialization.WriteTo(c);
             }
 
             this.tryStatement.WriteTo(c);
 
-            c.EndBlock();
+            if (this.locals.Count > 0)
+            {
+                c.EndBlock();
 
-            // No normal ending of Statement as we do not need extra ;
-            c.Separate();
+                // No normal ending of Statement as we do not need extra ;
+                c.Separate();
+            }
         }
     }
 }

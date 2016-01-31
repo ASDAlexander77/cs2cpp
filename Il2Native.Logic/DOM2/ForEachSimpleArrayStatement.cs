@@ -52,11 +52,6 @@
                 ParseLocals(innerBlock.Locals, locals);
             }
 
-            //foreach (var boundBlock in boundStatementList.Statements.OfType<BoundBlock>())
-            //{
-            //    ParseLocals(boundBlock.Locals, locals);
-            //}
-
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
             {
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
@@ -115,15 +110,13 @@
                             MergeOrSet(ref this.initialization, statement);
                             break;
                         case Stages.Body:
-                            Debug.Assert(this.statements == null);
                             this.statements = statement;
                             break;
                         case Stages.Incrementing:
-                            Debug.Assert(this.incrementing == null);
                             this.incrementing = statement;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            return false;
                     }
                 }
             }
