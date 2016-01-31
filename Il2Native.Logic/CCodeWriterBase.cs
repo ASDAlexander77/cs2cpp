@@ -1,4 +1,4 @@
-﻿////#define EMPTY_SKELETON
+﻿#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;
@@ -35,17 +35,16 @@ namespace Il2Native.Logic
 
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
+#if EMPTY_SKELETON
+            this.NewLine();
+            this.OpenBlock();
+            this.TextSpanNewLine("throw 0xC000C000;");
+            this.EndBlock();
+#else
             if (boundBody != null)
             {
-#if EMPTY_SKELETON
-                this.NewLine();
-                this.OpenBlock();
-                this.TextSpanNewLine("throw 0xC000C000;");
-                this.EndBlock();
-#else
                 var methodBase = Base.Deserialize(boundBody, true);
                 methodBase.WriteTo(this);
-#endif
             }
             else
             {
@@ -53,6 +52,7 @@ namespace Il2Native.Logic
                 this.OpenBlock();
                 this.EndBlock();                
             }
+#endif
         }
 
         public void WriteNamespace(INamespaceSymbol namespaceSymbol)

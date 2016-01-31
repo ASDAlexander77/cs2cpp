@@ -744,24 +744,8 @@ namespace Ll2NativeTests
                         868
                     });
 
-            // MISSING ARRAY IN CORELIB
-            // TODO: remove it
-            skip.Add(45);
-            // TODO: full namespace not correct
-            skip.Add(126);
-            
-            if (CompilerHelper.UsingRoslyn)
-            {
-                // object o = -(2147483648); type is "int", not "long" in Roslyn
-                skip.AddRange(new[] { 129 });
-            }
-            else
-            {
-                skip.AddRange(new[] { 499, 591 });
-            }
-
-            // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 643 });
+            // skip
+            skip.Add(410); // using "new" on method
 
             //CompilerHelper.CompactMode = true;
             //CompilerHelper.Stubs = true;
