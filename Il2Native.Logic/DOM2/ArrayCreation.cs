@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
+    using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -38,20 +39,22 @@
             if (arrayInitialization != null)
             {
                 c.TextSpan("reinterpret_cast<");
-                c.WriteCArrayTemplate(arrayTypeSymbol);
+                c.WriteCArrayTemplate(arrayTypeSymbol, cleanName: true);
                 c.TextSpan(">(");
             }
 
             c.TextSpan("new");
             c.WhiteSpace();
 
+            var initItems = IterateInitializers(arrayInitialization).ToList();
+
             if (arrayInitialization != null)
             {
                 c.TextSpan("__array_init<");
-                c.WriteType(elementType);
+                c.WriteType(elementType, true);
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan(arrayInitialization.Initializers.Count.ToString());
+                c.TextSpan(initItems.Count.ToString());
                 c.TextSpan(">");
             }
             else
@@ -80,7 +83,7 @@
 
             if (this.initializerOpt != null)
             {
-                foreach (var bound in arrayInitialization.Initializers)
+                foreach (var bound in initItems)
                 {
                     if (any)
                     {
@@ -98,6 +101,38 @@
             if (arrayInitialization != null)
             {
                 c.TextSpan(")");
+            }
+        }
+
+        private static IEnumerable<Expression> IterateInitializers(ArrayInitialization arrayInitialization)
+        {
+            if (arrayInitialization == null)
+            {
+                yield break;
+            }
+
+            foreach (var item in arrayInitialization.Initializers)
+            {
+                var arrayInitialization2 = item as ArrayInitialization;
+                if (arrayInitialization2 != null)
+                {
+                    foreach (var item2 in IterateInitializers(arrayInitialization2))
+                    {
+                        yield return item2;
+                    }
+                }
+                else
+                {
+                    var creationExpression = item as ObjectCreationExpression;
+                    if (creationExpression != null && creationExpression.Type.IsValueType && creationExpression.Arguments.Any())
+                    {
+                        yield return creationExpression.Arguments.First();
+                    }
+                    else
+                    {
+                        yield return item;
+                    }
+                }
             }
         }
     }

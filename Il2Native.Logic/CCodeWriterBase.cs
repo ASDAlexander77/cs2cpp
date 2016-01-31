@@ -1,4 +1,4 @@
-﻿#define EMPTY_SKELETON
+﻿////#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;
@@ -200,7 +200,7 @@ namespace Il2Native.Logic
             WriteName(type);
         }
 
-        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = false)
+        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true)
         {
             if (type.IsValueType && WriteSpecialType(type, cleanName))
             {
@@ -212,7 +212,7 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     break;
                 case TypeKind.ArrayType:
-                    WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, cleanName, allowKeywords);
+                    WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
@@ -233,7 +233,7 @@ namespace Il2Native.Logic
                         TextSpan("__enum<");
                         WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
                         TextSpan(", ");
-                        WriteType(enumUnderlyingType);
+                        WriteType(enumUnderlyingType, true);
                         TextSpan(">");
                     }
                     else
@@ -507,7 +507,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass);
+                    this.WriteType(methodSymbol.ReturnType, true, allowKeywords: !declarationWithingClass);
                 }
 
                 this.WhiteSpace();
@@ -652,7 +652,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = false)
+        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true)
         {
             var elementType = arrayTypeSymbol.ElementType;
 

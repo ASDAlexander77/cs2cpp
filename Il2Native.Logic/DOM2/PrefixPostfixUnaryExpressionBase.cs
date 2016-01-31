@@ -27,10 +27,18 @@
                 this.Value = Deserialize(FindValue(boundAssignmentOperator.Left, boundAssignmentOperator.Right)) as Expression;
             }
 
-            var postfixUnaryExpressionSyntax = boundSequence.Syntax.Green as PostfixUnaryExpressionSyntax;
-            if (postfixUnaryExpressionSyntax != null)
+            var prefixUnaryExpressionSyntax = boundSequence.Syntax.Green as PrefixUnaryExpressionSyntax;
+            if (prefixUnaryExpressionSyntax != null)
             {
-                this.OperatorKind = postfixUnaryExpressionSyntax.OperatorToken.Kind;
+                this.OperatorKind = prefixUnaryExpressionSyntax.OperatorToken.Kind;
+            }
+            else
+            {
+                var postfixUnaryExpressionSyntax = boundSequence.Syntax.Green as PostfixUnaryExpressionSyntax;
+                if (postfixUnaryExpressionSyntax != null)
+                {
+                    this.OperatorKind = postfixUnaryExpressionSyntax.OperatorToken.Kind;
+                }
             }
 
             var call = this.Value as Call;
@@ -49,13 +57,24 @@
 
         private static BoundExpression FindValue(BoundExpression left, BoundExpression right)
         {
+            return CheckValue(left) ?? CheckValue(right);
+        }
+
+        private static BoundExpression CheckValue(BoundExpression left)
+        {
             var boundLocal = left as BoundLocal;
-            if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind != SynthesizedLocalKind.None)
+            if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
             {
-                return right;
+                return boundLocal;
             }
 
-            return left;
+            var boundBinaryOperator = left as BoundBinaryOperator;
+            if (boundBinaryOperator != null)
+            {
+                return CheckValue(boundBinaryOperator.Left) ?? CheckValue(boundBinaryOperator.Right);
+            }
+
+            return null;
         }
     }
 }

@@ -168,6 +168,11 @@
 
         internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)
         {
+            if (blockOfExpression == null)
+            {
+                return;
+            }
+
             var expr = blockOfExpression as ExpressionStatement;
             if (expr != null)
             {

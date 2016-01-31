@@ -22,7 +22,7 @@
 
         internal MethodSymbol Method { get; set; }
 
-        protected IList<Expression> Arguments
+        public IList<Expression> Arguments
         {
             get
             {
