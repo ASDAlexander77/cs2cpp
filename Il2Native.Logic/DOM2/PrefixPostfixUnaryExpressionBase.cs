@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -24,7 +25,13 @@
             var boundAssignmentOperator = boundSequence.SideEffects.First() as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
-                this.Value = Deserialize(FindValue(boundAssignmentOperator.Left, boundAssignmentOperator.Right)) as Expression;
+                var boundExpression = FindValue(boundAssignmentOperator.Left, boundAssignmentOperator.Right);
+                if (boundExpression == null)
+                {
+                    return false;
+                } 
+                
+                this.Value = Deserialize(boundExpression) as Expression;
             }
 
             var prefixUnaryExpressionSyntax = boundSequence.Syntax.Green as PrefixUnaryExpressionSyntax;
@@ -41,16 +48,7 @@
                 }
             }
 
-            var call = this.Value as Call;
-            if (call != null && (call.Method.Name == "op_Increment" || call.Method.Name == "op_Decrement"))
-            {
-                return false;
-            }
-
-            if (this.Value == null)
-            {
-                return false;
-            }
+            Debug.Assert(this.OperatorKind != SyntaxKind.None);
 
             return true;
         }
@@ -66,6 +64,18 @@
             if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
             {
                 return boundLocal;
+            }
+
+            var boundFieldAccess = left as BoundFieldAccess;
+            if (boundFieldAccess != null)
+            {
+                return boundFieldAccess;
+            }
+
+            var boundArrayAccess = left as BoundArrayAccess;
+            if (boundArrayAccess != null)
+            {
+                return boundArrayAccess;
             }
 
             var boundBinaryOperator = left as BoundBinaryOperator;

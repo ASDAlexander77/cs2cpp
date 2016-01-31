@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
 
     using Microsoft.CodeAnalysis.CSharp;
@@ -20,6 +21,11 @@
 
         internal void Parse(BoundStatementList boundStatementList, SpecialCases specialCase = SpecialCases.None)
         {
+            if (boundStatementList == null)
+            {
+                throw new ArgumentNullException();
+            }
+
             ParseBoundStatementList(boundStatementList, this.statements, specialCase);
         }
 

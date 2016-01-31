@@ -17,6 +17,47 @@
             this.Value = boundLiteral.ConstantValue;
         }
 
+        public override string ToString()
+        {
+            ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
+
+            switch (discriminator)
+            {
+                case ConstantValueTypeDiscriminator.Null:
+                    return "nullptr";
+                case ConstantValueTypeDiscriminator.SByte:
+                    return this.Value.SByteValue.ToString();
+                case ConstantValueTypeDiscriminator.Byte:
+                    return this.Value.ByteValue.ToString();
+                case ConstantValueTypeDiscriminator.Int16:
+                    return this.Value.Int16Value.ToString();
+                case ConstantValueTypeDiscriminator.UInt16:
+                    return this.Value.UInt16Value.ToString();
+                case ConstantValueTypeDiscriminator.Char:
+                    return string.Format("L'{0}'", UnicodeChar(this.Value.CharValue));
+                case ConstantValueTypeDiscriminator.Int32:
+                    return this.Value.Int32Value.ToString();
+                case ConstantValueTypeDiscriminator.UInt32:
+                    return this.Value.Int32Value.ToString();
+                case ConstantValueTypeDiscriminator.Int64:
+                    return  string.Format("{0}L", this.Value.Int64Value);
+                case ConstantValueTypeDiscriminator.UInt64:
+                    return  string.Format("{0}UL", this.Value.UInt64Value);
+                case ConstantValueTypeDiscriminator.Single:
+                    var line = this.Value.DoubleValue.ToString();
+                    return string.Format("{0}f", line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                case ConstantValueTypeDiscriminator.Double:
+                    line = this.Value.DoubleValue.ToString();
+                    return line.IndexOf('.') != -1 ? line : string.Concat(line, ".0");
+                case ConstantValueTypeDiscriminator.String:
+                    return string.Format("L\"{0}\"", UnicodeString(this.Value.StringValue));
+                case ConstantValueTypeDiscriminator.Boolean:
+                    return this.Value.BooleanValue.ToString().ToLowerInvariant();
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;

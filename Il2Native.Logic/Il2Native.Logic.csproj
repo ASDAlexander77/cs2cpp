@@ -92,10 +92,13 @@
     <Compile Include="DOM2\PrefixUnaryExpression.cs" />
     <Compile Include="DOM2\ReturnStatement.cs" />
     <Compile Include="DOM2\Statement.cs" />
+    <Compile Include="DOM2\SwitchSection.cs" />
+    <Compile Include="DOM2\SwitchStatement.cs" />
     <Compile Include="DOM2\ThisReference.cs" />
     <Compile Include="DOM2\ThrowStatement.cs" />
     <Compile Include="DOM2\TryStatement.cs" />
     <Compile Include="DOM2\TypeExpression.cs" />
+    <Compile Include="DOM2\TypeOfOperator.cs" />
     <Compile Include="DOM2\UnaryOperator.cs" />
     <Compile Include="DOM2\VariableDeclaration.cs" />
     <Compile Include="DOM2\WhileStatement.cs" />

@@ -576,6 +576,22 @@
                 return isOperator;
             }
 
+            var boundTypeOfOperator = boundBody as BoundTypeOfOperator;
+            if (boundTypeOfOperator != null)
+            {
+                var typeOfOperator = new TypeOfOperator();
+                typeOfOperator.Parse(boundTypeOfOperator);
+                return typeOfOperator;
+            }
+
+            var boundSwitchStatement = boundBody as BoundSwitchStatement;
+            if (boundSwitchStatement != null)
+            {
+                var switchStatement = new SwitchStatement();
+                switchStatement.Parse(boundSwitchStatement);
+                return switchStatement;
+            }
+
             var statemnent = Unwrap(boundBody);
             if (statemnent != null)
             {
