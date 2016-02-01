@@ -56,6 +56,7 @@
     <Compile Include="DOM2\AsOperator.cs" />
     <Compile Include="DOM2\AssignmentOperator.cs" />
     <Compile Include="DOM2\Base.cs" />
+    <Compile Include="DOM2\BaseReference.cs" />
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
     <Compile Include="DOM2\ConditionalGoto.cs" />

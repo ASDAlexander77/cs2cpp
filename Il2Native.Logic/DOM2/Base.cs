@@ -320,6 +320,14 @@
                 return thisReference;
             }
 
+            var boundBaseReference = boundBody as BoundBaseReference;
+            if (boundBaseReference != null)
+            {
+                var baseReference = new BaseReference();
+                baseReference.Parse(boundBaseReference);
+                return baseReference;
+            }
+
             var boundFieldAccess = boundBody as BoundFieldAccess;
             if (boundFieldAccess != null)
             {

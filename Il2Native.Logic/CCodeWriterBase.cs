@@ -648,7 +648,14 @@ namespace Il2Native.Logic
             }
             else
             {
-                TextSpan("->");
+                if (expression is BaseReference)
+                {
+                    TextSpan("::");
+                }
+                else
+                {
+                    TextSpan("->");
+                }
             }
         }
 

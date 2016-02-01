@@ -307,6 +307,14 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     itw.WriteLine("public:");
                     itw.Indent++;
 
+                    // base declaration
+                    if (namedTypeSymbol.BaseType != null)
+                    {
+                        itw.Write("typedef ");
+                        c.WriteTypeFullName(namedTypeSymbol.BaseType, false);
+                        itw.WriteLine(" base;");
+                    }
+
                     if (!unit.HasDefaultConstructor)
                     {
                         c.WriteTypeName(namedTypeSymbol, false);
