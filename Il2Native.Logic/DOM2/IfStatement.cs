@@ -6,10 +6,6 @@
 
     public class IfStatement : Statement
     {
-        private Expression condition;
-        private Base ifStatements;
-        private Base elseStatements;
-
         private enum Stages
         {
             Condition,
@@ -18,6 +14,12 @@
             ElseBody,
             EndOfElse
         }
+
+        public Expression Condition { get; set; }
+
+        public Base IfStatements { get; set; }
+
+        public Base ElseStatements { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -34,8 +36,8 @@
                     && (boundConditionalGoto.Label.Name.StartsWith("<afterif-") || boundConditionalGoto.Label.Name.StartsWith("<alternative-"))
                     && stage == Stages.Condition)
                 {
-                    condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-                    Debug.Assert(condition != null);
+                    this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+                    Debug.Assert(this.Condition != null);
                     stage = Stages.IfBody;
                     continue;
                 }
@@ -71,12 +73,12 @@
                     switch (stage)
                     {
                         case Stages.IfBody:
-                            Debug.Assert(this.ifStatements == null);
-                            this.ifStatements = statement;
+                            Debug.Assert(this.IfStatements == null);
+                            this.IfStatements = statement;
                             break;
                         case Stages.ElseBody:
-                            Debug.Assert(this.elseStatements == null);
-                            this.elseStatements = statement;
+                            Debug.Assert(this.ElseStatements == null);
+                            this.ElseStatements = statement;
                             break;
                         default:
                             return false;
@@ -92,18 +94,18 @@
             c.TextSpan("if");
             c.WhiteSpace();
             c.TextSpan("(");
-            this.condition.WriteTo(c);
+            this.Condition.WriteTo(c);
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.ifStatements);
+            PrintBlockOrStatementsAsBlock(c, this.IfStatements);
 
-            if (this.elseStatements != null)
+            if (this.ElseStatements != null)
             {
                 c.TextSpan("else");
 
                 c.NewLine();
-                PrintBlockOrStatementsAsBlock(c, this.elseStatements);
+                PrintBlockOrStatementsAsBlock(c, this.ElseStatements);
             }
 
             c.Separate();

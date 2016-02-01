@@ -114,7 +114,9 @@
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
     <Compile Include="DOM\Implementations\IAssembliesInfoResolver.cs" />
+    <Compile Include="DOM\Implementations\LocalImpl.cs" />
     <Compile Include="DOM\Implementations\MethodImpl.cs" />
+    <Compile Include="DOM\Implementations\TypeImpl.cs" />
     <Compile Include="DOM\Synthesized\CCodeCopyConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethod.cs" />
     <Compile Include="Helpers.cs" />

@@ -2,14 +2,20 @@
 {
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Reflection.Emit;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class SwitchSection : Block
     {
-        private readonly IList<Literal> labels = new List<Literal>(); 
+        private readonly IList<Literal> labels = new List<Literal>();
+
+        public IList<Literal> Labels
+        {
+            get
+            {
+                return this.labels;
+            }
+        }
 
         internal void Parse(BoundSwitchSection boundSwitchSection)
         {
@@ -21,14 +27,14 @@
                 if (sourceLabelSymbol != null)
                 {
                     var switchCaseLabelConstant = sourceLabelSymbol.SwitchCaseLabelConstant;
-                    labels.Add(new Literal { Value = switchCaseLabelConstant });
+                    this.Labels.Add(new Literal { Value = switchCaseLabelConstant });
                 }
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            foreach (var literal in this.labels)
+            foreach (var literal in this.Labels)
             {
                 WriteCaseLabel(c, literal);
 

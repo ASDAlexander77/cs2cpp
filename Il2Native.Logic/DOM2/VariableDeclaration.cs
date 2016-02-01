@@ -3,14 +3,16 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     internal class VariableDeclaration : Statement
     {
         private readonly IList<Statement> statements = new List<Statement>();
-        private LocalSymbol localSymbolOpt;
+
+        public ILocalSymbol LocalSymbolOpt { get; set; }
 
         public void Parse(BoundStatementList boundStatementList)
         {
@@ -30,16 +32,16 @@
 
         public void Parse(LocalSymbol localSymbol)
         {
-            this.localSymbolOpt = localSymbol;
+            this.LocalSymbolOpt = localSymbol;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.localSymbolOpt != null)
+            if (this.LocalSymbolOpt != null)
             {
-                c.WriteType(this.localSymbolOpt.Type);
+                c.WriteType(this.LocalSymbolOpt.Type);
                 c.WhiteSpace();
-                c.WriteName(this.localSymbolOpt);
+                c.WriteName(this.LocalSymbolOpt);
             }
 
             var any = false;

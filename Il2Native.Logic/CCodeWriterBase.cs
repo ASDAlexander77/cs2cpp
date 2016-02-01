@@ -85,7 +85,7 @@ namespace Il2Native.Logic
 
         public void WriteName(ISymbol symbol, bool ensureCompatible = false)
         {
-            TextSpan(symbol.MetadataName.CleanUpName());
+            TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName());
         }
 
         public void WriteNameEnsureCompatible(ISymbol symbol)
@@ -126,7 +126,7 @@ namespace Il2Native.Logic
 
         public void WriteTypeSuffix(ITypeSymbol type)
         {
-            if (type.IsValueType && WriteSpecialType(type, true))
+            if (WriteSpecialType(type, true))
             {
                 return;
             }
@@ -202,7 +202,7 @@ namespace Il2Native.Logic
 
         public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true)
         {
-            if (type.IsValueType && WriteSpecialType(type, cleanName))
+            if (WriteSpecialType(type, cleanName))
             {
                 return;
             }

@@ -8,27 +8,29 @@
 
     public class BinaryOperator : Expression
     {
-        private BinaryOperatorKind operatorKind;
-        private Expression left;
-        private Expression right;
+        internal BinaryOperatorKind OperatorKind { get; set; }
+
+        public Expression Left { get; set; }
+
+        public Expression Right { get; set; }
 
         internal void Parse(BoundBinaryOperator boundBinaryOperator)
         {
             base.Parse(boundBinaryOperator);
-            this.operatorKind = boundBinaryOperator.OperatorKind;
-            this.left = Deserialize(boundBinaryOperator.Left) as Expression;
-            Debug.Assert(this.left != null);
-            this.right = Deserialize(boundBinaryOperator.Right) as Expression;
-            Debug.Assert(this.right != null);
+            this.OperatorKind = boundBinaryOperator.OperatorKind;
+            this.Left = Deserialize(boundBinaryOperator.Left) as Expression;
+            Debug.Assert(this.Left != null);
+            this.Right = Deserialize(boundBinaryOperator.Right) as Expression;
+            Debug.Assert(this.Right != null);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.left.WriteTo(c);
+            this.Left.WriteTo(c);
 
             c.WhiteSpace();
 
-            switch (operatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical))
+            switch (this.OperatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical))
             {
                 case BinaryOperatorKind.Multiplication:
                     c.TextSpan("*");
@@ -108,7 +110,7 @@
 
             c.WhiteSpace();
 
-            this.right.WriteTo(c);
+            this.Right.WriteTo(c);
         }
     }
 }

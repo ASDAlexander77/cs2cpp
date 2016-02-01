@@ -6,7 +6,7 @@
 
     public class ExpressionStatement : Statement
     {
-        public Expression Expression { get; private set; }
+        public Expression Expression { get; set; }
 
         internal void Parse(BoundExpressionStatement boundExpressionStatement)
         {

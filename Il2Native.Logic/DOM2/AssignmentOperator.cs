@@ -9,10 +9,11 @@
 
     public class AssignmentOperator : Expression
     {
-        private BinaryOperatorKind operatorKind;
-        private Expression left;
-        private Expression right;
-        private ITypeSymbol type;
+        private ITypeSymbol assignmentType;
+
+        public Expression Left { get; set; }
+
+        public Expression Right { get; set; }
 
         public bool ApplyAutoType { get; set; }
 
@@ -35,14 +36,14 @@
                 }
             }
 
-            this.left = Deserialize(boundAssignmentOperator.Left) as Expression;
-            Debug.Assert(this.left != null);
-            this.right = Deserialize(boundAssignmentOperator.Right) as Expression;
-            Debug.Assert(this.right != null);
+            this.Left = Deserialize(boundAssignmentOperator.Left) as Expression;
+            Debug.Assert(this.Left != null);
+            this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
+            Debug.Assert(this.Right != null);
 
-            if (this.right is Literal)
+            if (this.Right is Literal)
             {
-                this.type = this.right.Type;
+                this.assignmentType = this.Right.Type;
             }
         }
 
@@ -50,9 +51,9 @@
         {
             if (this.ApplyAutoType)
             {
-                if (this.type != null)
+                if (this.assignmentType != null)
                 {
-                    c.WriteType(this.type);
+                    c.WriteType(this.assignmentType);
                 }
                 else
                 {
@@ -62,11 +63,11 @@
                 c.WhiteSpace();
             }
 
-            this.left.WriteTo(c);
+            this.Left.WriteTo(c);
             c.WhiteSpace();
             c.TextSpan("=");
             c.WhiteSpace();
-            this.right.WriteTo(c);
+            this.Right.WriteTo(c);
         }
     }
 }
