@@ -2,14 +2,16 @@
 {
     using System.Collections.Generic;
     using System.Diagnostics;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class SwitchSection : Block
     {
-        private readonly IList<Literal> labels = new List<Literal>();
+        private readonly IList<SwitchLabel> labels = new List<SwitchLabel>();
 
-        public IList<Literal> Labels
+        public IList<SwitchLabel> Labels
         {
             get
             {
@@ -26,37 +28,37 @@
                 var sourceLabelSymbol = (boundSwitchLabel.Label as SourceLabelSymbol);
                 if (sourceLabelSymbol != null)
                 {
-                    var switchCaseLabelConstant = sourceLabelSymbol.SwitchCaseLabelConstant;
-                    this.Labels.Add(new Literal { Value = switchCaseLabelConstant });
+                    var switchLabel = new SwitchLabel();
+                    switchLabel.Parse(sourceLabelSymbol);
+                    this.Labels.Add(switchLabel);
                 }
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            foreach (var literal in this.Labels)
+            foreach (var label in this.Labels)
             {
-                WriteCaseLabel(c, literal);
+                if (label.Value != null)
+                {
+                    c.TextSpan("case");
+                    c.WhiteSpace();
+                    c.TextSpan(label.ToString());
+                }
+                else
+                {
+                    c.TextSpan("default");
+                }
 
+                c.TextSpan(":");
+                c.NewLine();
+
+                label.WriteTo(c);
                 c.TextSpan(":");
                 c.NewLine();
             }
 
             base.WriteTo(c);
-        }
-
-        public static void WriteCaseLabel(CCodeWriterBase c, Literal literal)
-        {
-            if (literal.Value != null)
-            {
-                c.TextSpan("case");
-                c.WhiteSpace();
-                c.TextSpan(literal.ToString());
-            }
-            else
-            {
-                c.TextSpan("default");
-            }
         }
     }
 }

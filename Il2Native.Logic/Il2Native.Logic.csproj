@@ -92,6 +92,7 @@
     <Compile Include="DOM2\PrefixUnaryExpression.cs" />
     <Compile Include="DOM2\ReturnStatement.cs" />
     <Compile Include="DOM2\Statement.cs" />
+    <Compile Include="DOM2\SwitchLabel.cs" />
     <Compile Include="DOM2\SwitchSection.cs" />
     <Compile Include="DOM2\SwitchStatement.cs" />
     <Compile Include="DOM2\ThisReference.cs" />

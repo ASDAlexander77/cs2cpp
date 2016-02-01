@@ -39,6 +39,10 @@
                     case '}':
                     case '$':
                     case '=':
+                    case '#':
+                    case ' ':
+                    case '\'':
+                    case '\"':
                         n = '_';
                         break;
                     default:

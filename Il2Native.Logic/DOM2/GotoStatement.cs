@@ -26,8 +26,9 @@
             var sourceLabelSymbol = this.label as SourceLabelSymbol;
             if (sourceLabelSymbol != null)
             {
-                var switchCaseLabelConstant = sourceLabelSymbol.SwitchCaseLabelConstant;
-                SwitchSection.WriteCaseLabel(c, new Literal { Value = switchCaseLabelConstant });
+                var switchLabel = new SwitchLabel();
+                switchLabel.Parse(sourceLabelSymbol);
+                switchLabel.WriteTo(c);
             }
             else
             {
