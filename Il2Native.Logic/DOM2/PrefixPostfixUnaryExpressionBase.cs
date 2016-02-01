@@ -72,6 +72,12 @@
                 return boundFieldAccess;
             }
 
+            var boundParameter = left as BoundParameter;
+            if (boundParameter != null)
+            {
+                return boundParameter;
+            }
+
             var boundArrayAccess = left as BoundArrayAccess;
             if (boundArrayAccess != null)
             {
