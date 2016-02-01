@@ -12,7 +12,21 @@
 
         private string customName;
 
-        public ILocalSymbol LocalSymbol { get; set; }
+        private ILocalSymbol localSymbol;
+
+        public ILocalSymbol LocalSymbol 
+        {
+            get
+            {
+                return localSymbol;
+            }
+
+            set
+            {
+                localSymbol = value;
+                Parse(localSymbol);
+            }
+        }
 
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
@@ -31,7 +45,13 @@
             IsReference = this.Type.IsReferenceType;
 
             ParseName(localSymbol);
-            this.LocalSymbol = localSymbol;
+            this.localSymbol = localSymbol;
+        }
+
+        internal void Parse(ILocalSymbol localSymbol)
+        {
+            Type = localSymbol.Type;
+            IsReference = this.Type.IsReferenceType;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
