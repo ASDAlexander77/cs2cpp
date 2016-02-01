@@ -61,7 +61,6 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
-
             switch (discriminator)
             {
                 case ConstantValueTypeDiscriminator.Null:

@@ -3,7 +3,6 @@
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using DOM;
@@ -11,9 +10,7 @@
     using Il2Native.Logic.Properties;
 
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
-
+ 
     public class CCodeSerializer
     {
         private string currentFolder;
@@ -212,7 +209,9 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             itw.WriteLine("{0}.h\"", identity.Name);
         }
 
-        public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
+        public void 
+            
+            WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
@@ -300,6 +299,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     {
                         itw.Write(" : public ");
                         c.WriteTypeFullName(namedTypeSymbol.BaseType, false);
+                    }
+
+                    if (namedTypeSymbol.TypeKind == TypeKind.Interface && namedTypeSymbol.Interfaces.Any())
+                    {
+                        var firstInterface = namedTypeSymbol.Interfaces.First();
+                        itw.Write(" : public ");
+                        c.WriteTypeFullName(firstInterface, false);
                     }
 
                     itw.WriteLine();
