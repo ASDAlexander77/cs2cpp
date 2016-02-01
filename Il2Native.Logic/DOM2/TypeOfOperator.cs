@@ -14,7 +14,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("typeof<");
+            c.TextSpan("_typeof<");
             sourceType.WriteTo(c);
             c.TextSpan(">()");
         }

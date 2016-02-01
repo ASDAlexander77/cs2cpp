@@ -50,8 +50,8 @@
                 var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
                 localCase = new Local { LocalSymbol = localImplCase };
 
-                new VariableDeclaration { LocalSymbolOpt = localImplCase }.WriteTo(c);
-                new VariableDeclaration { LocalSymbolOpt = localImpl }.WriteTo(c);
+                new VariableDeclaration { Local = localCase }.WriteTo(c);
+                new VariableDeclaration { Local = local }.WriteTo(c);
 
                 // first if
                 IfStatement first = null;

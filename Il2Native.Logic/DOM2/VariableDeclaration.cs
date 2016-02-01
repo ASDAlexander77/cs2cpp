@@ -12,7 +12,7 @@
     {
         private readonly IList<Statement> statements = new List<Statement>();
 
-        public ILocalSymbol LocalSymbolOpt { get; set; }
+        public Local Local { get; set; }
 
         public void Parse(BoundStatementList boundStatementList)
         {
@@ -23,7 +23,7 @@
 
             ParseBoundStatementList(boundStatementList, this.statements);
 
-            // supress autoType in all but first declaration
+            // suppress autoType in all but first declaration
             foreach (var statement in this.statements.Skip(1).OfType<ExpressionStatement>().Select(es => es.Expression).OfType<AssignmentOperator>())
             {
                 statement.ApplyAutoType = false;
@@ -32,16 +32,18 @@
 
         public void Parse(LocalSymbol localSymbol)
         {
-            this.LocalSymbolOpt = localSymbol;
+            var local = new Local();
+            local.Parse(localSymbol);
+            this.Local = local;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.LocalSymbolOpt != null)
+            if (this.Local != null)
             {
-                c.WriteType(this.LocalSymbolOpt.Type);
+                c.WriteType(this.Local.Type);
                 c.WhiteSpace();
-                c.WriteName(this.LocalSymbolOpt);
+                this.Local.WriteTo(c);
             }
 
             var any = false;

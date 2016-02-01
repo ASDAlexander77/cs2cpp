@@ -22,8 +22,16 @@
         internal void Parse(BoundLocal boundLocal)
         {
             base.Parse(boundLocal);
-            ParseName(boundLocal.LocalSymbol);
-            this.LocalSymbol = boundLocal.LocalSymbol;
+            Parse(boundLocal.LocalSymbol);
+        }
+
+        internal void Parse(LocalSymbol localSymbol)
+        {
+            Type = localSymbol.Type;
+            IsReference = this.Type.IsReferenceType;
+
+            ParseName(localSymbol);
+            this.LocalSymbol = localSymbol;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

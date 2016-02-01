@@ -60,7 +60,7 @@
                     continue;
                 }
 
-                var localVariableDeclaration = new LocalVariableDeclaration();
+                var localVariableDeclaration = new VariableDeclaration();
                 localVariableDeclaration.Parse(local);
                 statements.Add(localVariableDeclaration);
             }

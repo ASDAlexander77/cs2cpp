@@ -49,10 +49,11 @@ template <typename D, typename C, typename S> inline D __unbox(S* c)
 	return d;
 }
 
-// Unboxing internals
+// Typeof internals
 template <typename T> inline <<%assemblyName%>>::System::Type* typeof()
 {
 	// TODO: finish it
+	T* t;
 	return nullptr;
 }
 
