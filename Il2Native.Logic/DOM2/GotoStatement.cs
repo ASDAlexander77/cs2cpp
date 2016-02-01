@@ -22,7 +22,18 @@
         {
             c.TextSpan("goto");
             c.WhiteSpace();
-            c.WriteName(this.label);
+
+            var sourceLabelSymbol = this.label as SourceLabelSymbol;
+            if (sourceLabelSymbol != null)
+            {
+                var switchCaseLabelConstant = sourceLabelSymbol.SwitchCaseLabelConstant;
+                SwitchSection.WriteCaseLabel(c, new Literal { Value = switchCaseLabelConstant });
+            }
+            else
+            {
+                c.WriteName(this.label);
+            }
+
             base.WriteTo(c);
         }
     }

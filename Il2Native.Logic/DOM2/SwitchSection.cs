@@ -30,24 +30,27 @@
         {
             foreach (var literal in this.labels)
             {
-                if (literal.Value != null)
-                {
-                    c.TextSpan("case");
-                    c.WhiteSpace();
-                    c.TextSpan(literal.ToString());
-                    c.TextSpan(":");
-                    c.NewLine();
-                }
-                else
-                {
-                    c.TextSpan("default");
-                    c.WhiteSpace();
-                    c.TextSpan(":");
-                    c.NewLine();
-                }
+                WriteCaseLabel(c, literal);
+
+                c.TextSpan(":");
+                c.NewLine();
             }
 
             base.WriteTo(c);
+        }
+
+        public static void WriteCaseLabel(CCodeWriterBase c, Literal literal)
+        {
+            if (literal.Value != null)
+            {
+                c.TextSpan("case");
+                c.WhiteSpace();
+                c.TextSpan(literal.ToString());
+            }
+            else
+            {
+                c.TextSpan("default");
+            }
         }
     }
 }

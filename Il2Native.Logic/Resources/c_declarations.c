@@ -49,6 +49,13 @@ template <typename D, typename C, typename S> inline D __unbox(S* c)
 	return d;
 }
 
+// Unboxing internals
+template <typename T> inline <<%assemblyName%>>::System::Type* typeof()
+{
+	// TODO: finish it
+	return nullptr;
+}
+
 // String literal
 inline string* operator "" _s(const wchar_t* str, size_t len)
 {
