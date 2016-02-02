@@ -362,7 +362,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // in the usual way, if there is such a binder.  That's why we're using update,
             // rather than add, semantics.
             Binder existing;
-            Debug.Assert(!this.map.TryGetValue(node, out existing) || existing == binder.Next);
+            ////Debug.Assert(!this.map.TryGetValue(node, out existing) || existing == binder.Next);
 
             this.map[node] = binder;
         }

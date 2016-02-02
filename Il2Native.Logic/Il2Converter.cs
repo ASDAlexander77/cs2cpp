@@ -32,13 +32,17 @@ namespace Il2Native.Logic
         /// </param>
         protected void ConvertInternal(string[] sources, string outputFolder, string[] args = null)
         {
+            var concurrent = true;
+
             var cs2CGenerator = new Cs2CGenerator(sources, args);
             var assemblySymbol = cs2CGenerator.Load();            
 
             var cgenerator = new CCodeUnitsBuilder(assemblySymbol, cs2CGenerator.BoundBodyByMethodSymbol, cs2CGenerator.SourceMethodByMethodSymbol);
+            cgenerator.Concurrent = concurrent;
             var units = cgenerator.Build();
 
             var codeSerializer = new CCodeSerializer();
+            codeSerializer.Concurrent = concurrent;
             codeSerializer.WriteTo(assemblySymbol.Identity, cs2CGenerator.Assemblies, cs2CGenerator.IsCoreLib, units, outputFolder);
         }
     }

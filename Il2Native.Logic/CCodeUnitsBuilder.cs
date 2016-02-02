@@ -1,9 +1,11 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
     using DOM;
     using DOM.Implementations;
     using Il2Native.Logic.DOM.Synthesized;
@@ -14,7 +16,7 @@
 
     public class CCodeUnitsBuilder
     {
-        private readonly IList<CCodeUnit> _cunits = new List<CCodeUnit>();
+        private CCodeUnit[] _cunits;
 
         internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<string, BoundStatement> boundBodyByMethodSymbol, IDictionary<string, SourceMethodSymbol> sourceMethodByMethodSymbol)
         {
@@ -23,13 +25,15 @@
             this.SourceMethodByMethodSymbol = sourceMethodByMethodSymbol;
         }
 
+        public bool Concurrent { get; set; }
+
         internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol { get; private set; }
 
         internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; private set; }
 
         protected IAssemblySymbol Assembly { get; private set; }
 
-        public IList<CCodeUnit> Build()
+        public IEnumerable<CCodeUnit> Build()
         {
             var processedTypes = new HashSet<string>();
             var typeSymbols = this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(TypesFilter).ToArray();
@@ -43,9 +47,24 @@
             var reordered = BuildOrder(typeSymbols, typesByNames, processedTypes);
 
             var assembliesInfoResolver = new AssembliesInfoResolver() { TypesByName = typesByNames };
-            foreach (var type in reordered)
+
+            this._cunits = new CCodeUnit[reordered.Count];
+            if (this.Concurrent)
             {
-                this._cunits.Add(this.BuildUnit(type, assembliesInfoResolver));
+                Parallel.ForEach(
+                    reordered,
+                    (type, state, index) =>
+                    {
+                        this._cunits[index] = this.BuildUnit(type, assembliesInfoResolver);
+                    });
+            }
+            else
+            {
+                var index = 0;
+                foreach (var type in reordered)
+                {
+                    this._cunits[index++] = this.BuildUnit(type, assembliesInfoResolver);
+                }
             }
 
             return this._cunits;

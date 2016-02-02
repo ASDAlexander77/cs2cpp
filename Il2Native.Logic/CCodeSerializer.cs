@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
     using DOM;
 
     using Il2Native.Logic.Properties;
@@ -15,7 +16,9 @@
     {
         private string currentFolder;
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, string outputFolder)
+        public bool Concurrent { get; set; }
+
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, string outputFolder)
         {
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
             if (!Directory.Exists(this.currentFolder))
@@ -145,37 +148,55 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
         public void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
         {
-            // write all sources
-            foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
+            if (this.Concurrent)
             {
-                int nestedLevel;
-                var path = this.GetPath(unit, out nestedLevel);
-
-                var anyRecord = false;
-                using (var itw = new IndentedTextWriter(new StreamWriter(path)))
+                // write all sources
+                Parallel.ForEach(
+                    units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType),
+                    (unit) =>
+                    {
+                        this.WriteSource(identity, unit);
+                    });
+            }
+            else
+            {
+                // write all sources
+                foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
                 {
-                    var c = new CCodeWriterText(itw);
+                    this.WriteSource(identity, unit);
+                }                 
+            }
+        }
 
-                    WriteSourceInclude(itw, identity, nestedLevel);
+        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit)
+        {
+            int nestedLevel;
+            var path = this.GetPath(unit, out nestedLevel);
 
-                    foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
-                    {
-                        anyRecord = true;
-                        definition.WriteTo(c);
-                    }
+            var anyRecord = false;
+            using (var itw = new IndentedTextWriter(new StreamWriter(path)))
+            {
+                var c = new CCodeWriterText(itw);
 
-                    if (unit.MainMethod != null)
-                    {
-                        WriteSourceMainEntry(c, itw, unit.MainMethod);
-                    }
+                WriteSourceInclude(itw, identity, nestedLevel);
 
-                    itw.Close();
+                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
+                {
+                    anyRecord = true;
+                    definition.WriteTo(c);
                 }
 
-                if (!anyRecord)
+                if (unit.MainMethod != null)
                 {
-                    File.Delete(path);
+                    WriteSourceMainEntry(c, itw, unit.MainMethod);
                 }
+
+                itw.Close();
+            }
+
+            if (!anyRecord)
+            {
+                File.Delete(path);
             }
         }
 
@@ -209,9 +230,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             itw.WriteLine("{0}.h\"", identity.Name);
         }
 
-        public void 
-            
-            WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IList<CCodeUnit> units, IList<string> includeHeaders)
+        public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IList<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))

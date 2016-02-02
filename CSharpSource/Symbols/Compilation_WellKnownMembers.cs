@@ -286,7 +286,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if ((object)ctorSymbol == null)
             {
                 // if this assert fails, UseSiteErrors for "member" have not been checked before emitting ...
-                Debug.Assert(WellKnownMembers.IsSynthesizedAttributeOptional(constructor));
+                ////Debug.Assert(WellKnownMembers.IsSynthesizedAttributeOptional(constructor));
                 return null;
             }
 
