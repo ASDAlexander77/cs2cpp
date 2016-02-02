@@ -77,6 +77,12 @@
                     }
 
                     break;
+                case ConversionKind.PointerToInteger:
+                case ConversionKind.IntegerToPointer:
+                        c.TextSpan("reinterpret_cast<");
+                        c.WriteType(this.typeDestination);
+                        c.TextSpan(">");
+                    break;
                 default:
                     c.TextSpan("static_cast<");
                     c.WriteType(this.typeDestination);

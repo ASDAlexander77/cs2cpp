@@ -600,6 +600,22 @@
                 return switchStatement;
             }
 
+            var boundAddressOfOperator = boundBody as BoundAddressOfOperator;
+            if (boundAddressOfOperator != null)
+            {
+                var addressOfOperator = new AddressOfOperator();
+                addressOfOperator.Parse(boundAddressOfOperator);
+                return addressOfOperator;
+            }
+
+            var boundNoOpStatement = boundBody as BoundNoOpStatement;
+            if (boundNoOpStatement != null)
+            {
+                var noOpStatement = new NoOpStatement();
+                noOpStatement.Parse(boundNoOpStatement);
+                return noOpStatement;
+            }
+
             var statemnent = Unwrap(boundBody);
             if (statemnent != null)
             {
