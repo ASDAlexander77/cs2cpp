@@ -2,16 +2,25 @@
 {
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class IsOperator : AsOperator
+    public class IsOperator : Expression
     {
+        public Expression Operand { get; set; }
+
+        public TypeExpression TargetType { get; set; }
+
+        internal ConversionKind ConversionKind { get; set; }
+
         internal void Parse(BoundIsOperator boundIsOperator)
         {
-            Parse(boundIsOperator, boundIsOperator.Operand);
+            base.Parse(boundIsOperator);
+            this.ConversionKind = boundIsOperator.Conversion.Kind;
+            this.TargetType = Deserialize(boundIsOperator.TargetType) as TypeExpression;
+            this.Operand = Deserialize(boundIsOperator.Operand) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            base.WriteTo(c);
+            AsOperator.WriteCast(c, this.ConversionKind, this.TargetType, this.Operand);
             c.WhiteSpace();
             c.TextSpan("==");
             c.WhiteSpace();

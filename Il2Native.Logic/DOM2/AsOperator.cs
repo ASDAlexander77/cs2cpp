@@ -9,57 +9,34 @@
 
     public class AsOperator : Expression
     {
-        private TypeSymbol typeSource;
+        public Expression Operand { get; set; }
 
-        private TypeSymbol typeDestination;
+        public TypeExpression TargetType { get; set; }
 
-        private Expression operand;
-
-        private ConversionKind conversionKind;
+        internal ConversionKind ConversionKind { get; set; }
 
         internal void Parse(BoundAsOperator boundAsOperator)
         {
-            Parse(boundAsOperator, boundAsOperator.Operand);
-        }
-
-        internal void Parse(BoundExpression boundAsOperator, BoundExpression operand)
-        {
             base.Parse(boundAsOperator);
-            this.typeSource = operand.Type;
-            this.typeDestination = boundAsOperator.Type;
-            this.operand = Deserialize(operand) as Expression;
+            this.ConversionKind = boundAsOperator.Conversion.Kind;
+            this.TargetType = Deserialize(boundAsOperator.TargetType) as TypeExpression;
+            this.Operand =  Deserialize(boundAsOperator.Operand) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            WriteCast(c, this.ConversionKind, this.TargetType, this.Operand);
+        }
+
+        internal static void WriteCast(CCodeWriterBase c, ConversionKind conversionKind, TypeExpression targetType, Expression operand)
+        {
             // TODO: finish dynamic cast
             //c.TextSpan("dynamic_cast<");
-            if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
-                && this.typeDestination.IsInterfaceType())
-            {
-                c.TextSpan("static_cast<");
-            }
-            else
-            {
-                c.TextSpan("reinterpret_cast<");
-            }
-            c.WriteType(this.typeDestination);
+            c.TextSpan("reinterpret_cast<");
+            targetType.WriteTo(c);
             c.TextSpan(">");
             c.TextSpan("(");
-
-            // TODO: temp hack for supporting cast to interface
-            if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
-                && this.typeDestination.IsInterfaceType())
-            {
-                c.TextSpan("nullptr/*");
-                this.operand.WriteTo(c);
-                c.TextSpan("*/");
-            }
-            else
-            {
-                this.operand.WriteTo(c);
-            }
-
+            operand.WriteTo(c);
             c.TextSpan(")");
         }
     }

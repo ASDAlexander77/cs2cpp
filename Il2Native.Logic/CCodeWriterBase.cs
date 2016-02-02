@@ -627,20 +627,7 @@ namespace Il2Native.Logic
 
         public void WriteAccess(Expression expression)
         {
-            var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
-                               expression is DelegateCreationExpression || expression is BinaryOperator || expression is UnaryOperator;
-
-            if (parenthesis)
-            {
-                TextSpan("(");
-            }
-
-            expression.WriteTo(this);
-
-            if (parenthesis)
-            {
-                TextSpan(")");
-            }
+            this.WriteExpressionInParenthesesIfNeeded(expression);
 
             if (expression.Type.TypeKind == TypeKind.Struct && !expression.IsReference)
             {
@@ -656,6 +643,26 @@ namespace Il2Native.Logic
                 {
                     TextSpan("->");
                 }
+            }
+        }
+
+        public void WriteExpressionInParenthesesIfNeeded(Expression expression)
+        {
+            var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
+                              expression is DelegateCreationExpression || expression is BinaryOperator ||
+                              expression is UnaryOperator || expression is IsOperator || 
+                              expression is AsOperator;
+
+            if (parenthesis)
+            {
+                this.TextSpan("(");
+            }
+
+            expression.WriteTo(this);
+
+            if (parenthesis)
+            {
+                this.TextSpan(")");
             }
         }
 

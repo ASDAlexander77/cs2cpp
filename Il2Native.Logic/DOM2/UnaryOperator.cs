@@ -7,20 +7,21 @@
 
     public class UnaryOperator : Expression
     {
-        private UnaryOperatorKind operatorKind;
-        private Expression operand;
+        internal UnaryOperatorKind OperatorKind { get; private set; }
+        
+        public Expression Operand { get; private set; }
 
         internal void Parse(BoundUnaryOperator boundUnaryOperator)
         {
             base.Parse(boundUnaryOperator);
-            this.operatorKind = boundUnaryOperator.OperatorKind;
-            this.operand = Deserialize(boundUnaryOperator.Operand) as Expression;
-            Debug.Assert(this.operand != null);
+            this.OperatorKind = boundUnaryOperator.OperatorKind;
+            this.Operand = Deserialize(boundUnaryOperator.Operand) as Expression;
+            Debug.Assert(this.Operand != null);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            switch (operatorKind & UnaryOperatorKind.OpMask)
+            switch (this.OperatorKind & UnaryOperatorKind.OpMask)
             {
                 case UnaryOperatorKind.UnaryPlus:
                     c.TextSpan("+");
@@ -42,7 +43,7 @@
                     throw new NotImplementedException();
             }
 
-            this.operand.WriteTo(c);
+            c.WriteExpressionInParenthesesIfNeeded(this.Operand);
         }
     }
 }
