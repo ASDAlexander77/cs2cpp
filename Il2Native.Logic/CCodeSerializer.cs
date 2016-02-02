@@ -303,9 +303,21 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                     if (namedTypeSymbol.TypeKind == TypeKind.Interface && namedTypeSymbol.Interfaces.Any())
                     {
-                        var firstInterface = namedTypeSymbol.Interfaces.First();
-                        itw.Write(" : public ");
-                        c.WriteTypeFullName(firstInterface, false);
+                        itw.Write(" : ");
+
+                        var any2 = false;
+                        foreach (var item in namedTypeSymbol.Interfaces)
+                        {
+                            if (any2)
+                            {
+                                itw.Write(", ");
+                            }
+
+                            itw.Write("public virtual ");
+                            c.WriteTypeFullName(item, false);
+
+                            any2 = true;
+                        }
                     }
 
                     itw.WriteLine();

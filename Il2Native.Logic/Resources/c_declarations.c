@@ -50,7 +50,7 @@ template <typename D, typename C, typename S> inline D __unbox(S* c)
 }
 
 // Typeof internals
-template <typename T> inline <<%assemblyName%>>::System::Type* typeof()
+template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 {
 	// TODO: finish it
 	T* t;

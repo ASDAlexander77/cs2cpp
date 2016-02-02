@@ -40,11 +40,7 @@
                 typesByNames.Add(((TypeSymbol)typeSymbol).ToKeyString(), typeSymbol);
             }
 
-            var reordered = new List<ITypeSymbol>();
-            foreach (var typeSymbol in typeSymbols)
-            {
-                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
-            }
+            var reordered = BuildOrder(typeSymbols, typesByNames, processedTypes);
 
             var assembliesInfoResolver = new AssembliesInfoResolver() { TypesByName = typesByNames };
             foreach (var type in reordered)
@@ -53,6 +49,17 @@
             }
 
             return this._cunits;
+        }
+
+        private static IList<ITypeSymbol> BuildOrder(ITypeSymbol[] typeSymbols, IDictionary<string, ITypeSymbol> typesByNames, ISet<string> processedTypes)
+        {
+            var reordered = new List<ITypeSymbol>();
+            foreach (var typeSymbol in typeSymbols)
+            {
+                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
+            }
+
+            return reordered;
         }
 
         private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, AssemblyIdentity assembly, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
@@ -68,6 +75,11 @@
                 if (typeSymbol.BaseType != null)
                 {
                     AddTypeIntoOrder(reordered, typeSymbol.BaseType, assembly, bankOfTypes, added);
+                }
+                
+                foreach (var item in typeSymbol.Interfaces)
+                {
+                    AddTypeIntoOrder(reordered, item, assembly, bankOfTypes, added);
                 }
 
                 foreach (var field in typeSymbol.GetMembers().OfType<IFieldSymbol>())
