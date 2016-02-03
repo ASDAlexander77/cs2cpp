@@ -37,7 +37,7 @@
                 statement.WriteTo(c);
             }
 
-            if (SuppressNewLineAtEnd)
+            if (this.SuppressNewLineAtEnd)
             {
                 c.EndBlockWithoutNewLine();
             }

@@ -153,6 +153,21 @@ namespace Il2Native.Logic
             }
         }
 
+        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true)
+        {
+            if (type.TypeKind == TypeKind.TypeParameter)
+            {
+                WriteName(type);
+                return;
+            }
+
+            var namedType = type as INamedTypeSymbol;
+            if (namedType != null)
+            {
+                WriteTypeFullName(namedType, allowKeywords);
+            }
+        }
+
         public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
@@ -218,7 +233,7 @@ namespace Il2Native.Logic
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
+                    WriteTypeFullName(type, allowKeywords);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         TextSpan("*");

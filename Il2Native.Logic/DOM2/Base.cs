@@ -474,6 +474,14 @@
                 return arrayLength;
             }
 
+            var boundStackAllocArrayCreation = boundBody as BoundStackAllocArrayCreation;
+            if (boundStackAllocArrayCreation != null)
+            {
+                var stackAllocArrayCreation = new StackAllocArrayCreation();
+                stackAllocArrayCreation.Parse(boundStackAllocArrayCreation);
+                return stackAllocArrayCreation;
+            }
+
             var boundDefaultOperator = boundBody as BoundDefaultOperator;
             if (boundDefaultOperator != null)
             {
@@ -614,6 +622,38 @@
                 var pointerIndirectionOperator = new PointerIndirectionOperator();
                 pointerIndirectionOperator.Parse(boundPointerIndirectionOperator);
                 return pointerIndirectionOperator;
+            }
+
+            var boundMakeRefOperator = boundBody as BoundMakeRefOperator;
+            if (boundMakeRefOperator != null)
+            {
+                var makeRefOperator = new MakeRefOperator();
+                makeRefOperator.Parse(boundMakeRefOperator);
+                return makeRefOperator;
+            }
+
+            var boundRefValueOperator = boundBody as BoundRefValueOperator;
+            if (boundRefValueOperator != null)
+            {
+                var refValueOperator = new RefValueOperator();
+                refValueOperator.Parse(boundRefValueOperator);
+                return refValueOperator;
+            }
+
+            var boundRefTypeOperator = boundBody as BoundRefTypeOperator;
+            if (boundRefTypeOperator != null)
+            {
+                var refTypeOperator = new RefTypeOperator();
+                refTypeOperator.Parse(boundRefTypeOperator);
+                return refTypeOperator;
+            }
+
+            var boundSizeOfOperator = boundBody as BoundSizeOfOperator;
+            if (boundSizeOfOperator != null)
+            {
+                var sizeOfOperator = new SizeOfOperator();
+                sizeOfOperator.Parse(boundSizeOfOperator);
+                return sizeOfOperator;
             }
 
             var boundNoOpStatement = boundBody as BoundNoOpStatement;

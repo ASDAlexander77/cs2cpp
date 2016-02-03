@@ -38,15 +38,15 @@
                     return;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box<");
-                    c.WriteTypeFullName((INamedTypeSymbol)this.typeSource);
+                    c.WriteTypeFullName(this.typeSource);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType((INamedTypeSymbol)this.typeDestination);
+                    c.WriteType(this.typeDestination);
                     c.TextSpan(",");
                     c.WhiteSpace();
-                    c.WriteTypeFullName((INamedTypeSymbol)this.typeDestination);
+                    c.WriteTypeFullName(this.typeDestination);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
