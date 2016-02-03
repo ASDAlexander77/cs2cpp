@@ -1,22 +1,21 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class Parameter : Expression
     {
-        private ParameterSymbol parameter;
+        public IParameterSymbol ParameterSymbol { get; set; }
 
         internal void Parse(BoundParameter boundParameter)
         {
             base.Parse(boundParameter);
-            this.parameter = boundParameter.ParameterSymbol;
+            this.ParameterSymbol = boundParameter.ParameterSymbol;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteName(this.parameter);
+            c.WriteName(this.ParameterSymbol);
         }
     }
 }

@@ -1,36 +1,37 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class FieldAccess : Expression
     {
-        private FieldSymbol field;
-        private Expression receiverOpt;
+        public IFieldSymbol Field { get; set; }
+
+        public Expression ReceiverOpt { get; set; }
 
         internal void Parse(BoundFieldAccess boundFieldAccess)
         {
             base.Parse(boundFieldAccess);
-            this.field = boundFieldAccess.FieldSymbol;
+            this.Field = boundFieldAccess.FieldSymbol;
             if (boundFieldAccess.ReceiverOpt != null)
             {
-                this.receiverOpt = Deserialize(boundFieldAccess.ReceiverOpt) as Expression;
+                this.ReceiverOpt = Deserialize(boundFieldAccess.ReceiverOpt) as Expression;
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (field.IsStatic)
+            if (this.Field.IsStatic)
             {
-                c.WriteTypeFullName(field.ContainingType);
+                c.WriteTypeFullName(this.Field.ContainingType);
                 c.TextSpan("::");
-                c.WriteName(field);
+                c.WriteName(this.Field);
             }
             else
             {
-                c.WriteAccess(this.receiverOpt);
-                c.WriteName(field);
+                c.WriteAccess(this.ReceiverOpt);
+                c.WriteName(this.Field);
             }
         }
     }
