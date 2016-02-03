@@ -35,7 +35,7 @@
         public Accessibility DeclaredAccessibility { get; private set; }
         public IMethodSymbol OriginalDefinition { get; private set; }
         public IMethodSymbol OverriddenMethod { get; private set; }
-        public ITypeSymbol ReceiverType { get; private set; }
+        public ITypeSymbol ReceiverType { get; set; }
         public IMethodSymbol ReducedFrom { get; private set; }
         public ITypeSymbol GetTypeInferredDuringReduction(ITypeParameterSymbol reducedFromTypeParameter)
         {

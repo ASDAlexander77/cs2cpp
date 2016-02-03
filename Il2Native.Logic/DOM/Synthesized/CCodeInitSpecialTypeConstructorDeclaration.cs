@@ -24,7 +24,7 @@
                                 Left =
                                     new FieldAccess
                                     {
-                                        ReceiverOpt = new ThisReference(),
+                                        ReceiverOpt = new ThisReference { Type = type },
                                         Field = new FieldImpl { Name = "m_value" }
                                     },
                                 Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } }
@@ -39,7 +39,7 @@
             public InitSpecialTypeConstructorMethod(INamedTypeSymbol type)
             {
                 MethodKind = MethodKind.Constructor;
-                ContainingType = type;
+                ReceiverType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }
