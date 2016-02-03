@@ -1,8 +1,6 @@
 ﻿namespace Il2Native.Logic.DOM.Synthesized
 {
     using System.Collections.Immutable;
-    using System.Linq;
-    using System.Net;
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
@@ -40,7 +38,8 @@
             {
                 MethodKind = MethodKind.Constructor;
                 ReceiverType = type;
-                Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                ContainingType = type;
+                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type });
             }
         }
     }

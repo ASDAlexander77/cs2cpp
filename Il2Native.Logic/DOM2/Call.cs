@@ -20,7 +20,7 @@
             }
         }
 
-        internal MethodSymbol Method { get; set; }
+        internal IMethodSymbol Method { get; set; }
 
         public IList<Expression> Arguments
         {

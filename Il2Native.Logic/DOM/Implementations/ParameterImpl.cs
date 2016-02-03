@@ -38,7 +38,7 @@
         public bool IsParams { get; private set; }
         public bool IsOptional { get; private set; }
         public bool IsThis { get; private set; }
-        public ITypeSymbol Type { get; private set; }
+        public ITypeSymbol Type { get; set; }
         public ImmutableArray<CustomModifier> CustomModifiers { get; private set; }
         public int Ordinal { get; private set; }
         public bool HasExplicitDefaultValue { get; private set; }

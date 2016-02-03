@@ -5,10 +5,21 @@
 
     public class ThisReference : Expression
     {
+        public override bool IsReference
+        {
+            get
+            {
+                return true;
+            }
+
+            set
+            {
+            }
+        }
+
         internal void Parse(BoundThisReference boundThisReference)
         {
             base.Parse(boundThisReference);
-            IsReference = true;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

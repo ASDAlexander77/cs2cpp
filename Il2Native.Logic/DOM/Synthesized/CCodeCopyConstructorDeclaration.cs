@@ -1,38 +1,30 @@
 ﻿namespace Il2Native.Logic.DOM.Synthesized
 {
+    using System.Collections.Immutable;
+    using DOM2;
+    using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeCopyConstructorDeclaration : CCodeDeclaration
+    public class CCodeCopyConstructorDeclaration : CCodeMethodDeclaration
     {
-        private INamedTypeSymbol _type;
-
         public CCodeCopyConstructorDeclaration(INamedTypeSymbol type)
+            : base(new CopyConstructorMethod(type))
         {
-            _type = type;
+            var call = new Call { Method = new CopyConstructorMethod(type) };
+            call.Arguments.Add(
+                new PointerIndirectionOperator { Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = type } } });
+            MethodBodyOpt = new MethodBody { Statements = { new ExpressionStatement { Expression = call } } };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
+        public class CopyConstructorMethod : MethodImpl
         {
-            c.WriteTypeName(_type, allowKeywords: false);
-            c.TextSpan("(");
-            c.WriteType(_type, allowKeywords: false);
-            c.WhiteSpace();
-            c.TextSpan("__class");
-            c.TextSpan(")");
-            c.WhiteSpace();
-            c.TextSpan(":");
-            c.WhiteSpace();
-            c.WriteTypeName(_type, allowKeywords: false);
-            c.TextSpan("(");
-            if (!_type.IsValueType)
+            public CopyConstructorMethod(INamedTypeSymbol type)
             {
-                c.TextSpan("*");
+                MethodKind = MethodKind.Constructor;
+                ReceiverType = type;
+                ContainingType = type;
+                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type });
             }
-
-            c.TextSpan("__class");
-            c.TextSpan(")");
-            c.WhiteSpace();
-            c.TextSpanNewLine("{}");
         }
     }
 }

@@ -3,11 +3,13 @@
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using DOM;
 
+    using Il2Native.Logic.DOM.Synthesized;
     using Il2Native.Logic.Properties;
 
     using Microsoft.CodeAnalysis;

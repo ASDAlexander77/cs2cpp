@@ -16,7 +16,7 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteMethodDeclaration(this.Method, true);
+            c.WriteMethodDeclaration(this.Method, true, this.MethodBodyOpt != null);
             if (this.MethodBodyOpt == null)
             {
                 c.EndStatement();

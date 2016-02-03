@@ -1,7 +1,8 @@
-﻿////#define EMPTY_SKELETON
+﻿#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using DOM;
     using DOM2;
@@ -83,14 +84,14 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteName(ISymbol symbol, bool ensureCompatible = false)
+        public void WriteName(ISymbol symbol)
         {
             TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName());
         }
 
         public void WriteNameEnsureCompatible(ISymbol symbol)
         {
-            TextSpan(symbol.MetadataName.CleanUpName().EnsureCompatible());
+            TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
         }
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true)
@@ -383,10 +384,10 @@ namespace Il2Native.Logic
             WriteName(fieldSymbol);
         }
 
-        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
         {
             this.WriteMethodPrefixesAndName(methodSymbol, declarationWithingClass);
-            this.WriteMethodPatameters(methodSymbol, declarationWithingClass);
+            this.WriteMethodPatameters(methodSymbol, declarationWithingClass, hasBody);
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
 
@@ -417,7 +418,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodPatameters(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        public void WriteMethodPatameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody)
         {
             // parameters
             var anyParameter = false;
@@ -440,7 +441,7 @@ namespace Il2Native.Logic
                     TextSpan("&");
                 }
 
-                if (!declarationWithingClass)
+                if (!declarationWithingClass || hasBody)
                 {
                     this.WhiteSpace();
                     if (!notUniqueParametersNames)
