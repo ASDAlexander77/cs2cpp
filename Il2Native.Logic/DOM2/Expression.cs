@@ -24,6 +24,6 @@
 
         public ITypeSymbol Type { get; protected set; }
 
-        public bool IsReference { get; protected set; }
+        public bool IsReference { get; set; }
     }
 }

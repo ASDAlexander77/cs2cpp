@@ -14,7 +14,7 @@ public:
 
 template <typename T, size_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
 {
-	int32_t _rank;
+	size_t _rank;
 	int32_t _length;
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
@@ -22,8 +22,8 @@ template <typename T, size_t RANK> class __multi_array : public <<%assemblyName%
 public:
 	// TODO: finish checking boundries
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
-	inline const T operator [](std::initializer_list<T> indexes) const { return _data[0]; }
-	inline T& operator [](std::initializer_list<T> indexes) { return _data[0]; }
+	inline const T operator [](std::initializer_list<size_t> indexes) const { return _data[0]; }
+	inline T& operator [](std::initializer_list<size_t> indexes) { return _data[0]; }
 	inline operator size_t() const { return (size_t)_length; }
 };
 

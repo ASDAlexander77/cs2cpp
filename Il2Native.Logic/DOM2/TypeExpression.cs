@@ -1,24 +1,17 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Diagnostics;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class TypeExpression : Expression
     {
-        private TypeSymbol type;
-
         internal void Parse(BoundTypeExpression boundTypeExpression)
         {
             base.Parse(boundTypeExpression);
-            this.type = boundTypeExpression.Type;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(type);
+            c.WriteType(Type, valueTypeAsClass: IsReference);
         }
     }
 }

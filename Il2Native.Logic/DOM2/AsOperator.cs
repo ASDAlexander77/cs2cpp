@@ -33,6 +33,7 @@
             // TODO: finish dynamic cast
             //c.TextSpan("dynamic_cast<");
             c.TextSpan("reinterpret_cast<");
+            targetType.IsReference = true;
             targetType.WriteTo(c);
             c.TextSpan(">");
             c.TextSpan("(");

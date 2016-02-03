@@ -200,9 +200,9 @@ namespace Il2Native.Logic
             WriteName(type);
         }
 
-        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true)
+        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
         {
-            if (WriteSpecialType(type, cleanName))
+            if (!valueTypeAsClass && WriteSpecialType(type, cleanName))
             {
                 return;
             }
@@ -253,6 +253,11 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.Struct:
                     WriteTypeFullName((INamedTypeSymbol)type);
+                    if (valueTypeAsClass && !suppressReference)
+                    {
+                        TextSpan("*");
+                    }
+
                     return;
                 case TypeKind.TypeParameter:
                     WriteName(type);
