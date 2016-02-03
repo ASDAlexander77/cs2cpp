@@ -51,7 +51,7 @@ namespace Il2Native.Logic
             {
                 this.NewLine();
                 this.OpenBlock();
-                this.EndBlock();                
+                this.EndBlock();
             }
 #endif
         }
@@ -229,7 +229,7 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.Enum:
                     var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
-                    if (!cleanName)
+                    if (!cleanName && !valueTypeAsClass)
                     {
                         TextSpan("__enum<");
                         WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
@@ -239,7 +239,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        WriteType(enumUnderlyingType, allowKeywords: allowKeywords);
+                        WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
                     }
 
                     return;
@@ -633,22 +633,37 @@ namespace Il2Native.Logic
 
         public void WriteAccess(Expression expression)
         {
+            var literal = false;
+            if (expression.Type.IsPrimitiveValueType() || expression.Type.TypeKind == TypeKind.Enum)
+            {
+                this.WriteType(expression.Type, valueTypeAsClass: true, suppressReference: true);
+                TextSpan("(");
+                literal = true;
+            }
+
             this.WriteExpressionInParenthesesIfNeeded(expression);
 
-            if (expression.Type.TypeKind == TypeKind.Struct && !expression.IsReference)
+            if (literal)
             {
-                TextSpan(".");
+                TextSpan(")");
             }
-            else
+
+            if (expression.IsReference)
             {
                 if (expression is BaseReference)
                 {
                     TextSpan("::");
+                    return;
                 }
-                else
-                {
-                    TextSpan("->");
-                }
+
+                TextSpan("->");
+                return;
+            }
+
+            if (expression.Type.TypeKind == TypeKind.Struct || expression.Type.TypeKind == TypeKind.Enum)
+            {
+                TextSpan(".");
+                return;
             }
         }
 
@@ -661,7 +676,7 @@ namespace Il2Native.Logic
 
             var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
-                              expression is UnaryOperator || expression is IsOperator || 
+                              expression is UnaryOperator || expression is IsOperator ||
                               expression is AsOperator;
 
             if (parenthesis)
