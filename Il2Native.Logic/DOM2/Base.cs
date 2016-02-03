@@ -608,6 +608,14 @@
                 return addressOfOperator;
             }
 
+            var boundPointerIndirectionOperator = boundBody as BoundPointerIndirectionOperator;
+            if (boundPointerIndirectionOperator != null)
+            {
+                var pointerIndirectionOperator = new PointerIndirectionOperator();
+                pointerIndirectionOperator.Parse(boundPointerIndirectionOperator);
+                return pointerIndirectionOperator;
+            }
+
             var boundNoOpStatement = boundBody as BoundNoOpStatement;
             if (boundNoOpStatement != null)
             {

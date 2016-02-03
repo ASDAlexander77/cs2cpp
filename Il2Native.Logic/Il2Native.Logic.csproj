@@ -82,6 +82,7 @@
     <Compile Include="DOM2\LabelStatement.cs" />
     <Compile Include="DOM2\MethodGroup.cs" />
     <Compile Include="DOM2\NoOpStatement.cs" />
+    <Compile Include="DOM2\PointerIndirectionOperator.cs" />
     <Compile Include="DOM2\PrefixPostfixUnaryExpressionBase.cs" />
     <Compile Include="DOM2\SideEffectsAsLambdaCallExpression.cs" />
     <Compile Include="DOM2\LambdaExpression.cs" />

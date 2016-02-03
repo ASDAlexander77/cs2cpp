@@ -1,4 +1,4 @@
-﻿#define EMPTY_SKELETON
+﻿////#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;
@@ -653,6 +653,11 @@ namespace Il2Native.Logic
 
         public void WriteExpressionInParenthesesIfNeeded(Expression expression)
         {
+            if (expression == null)
+            {
+                throw new ArgumentNullException("expression");
+            }
+
             var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
                               expression is UnaryOperator || expression is IsOperator || 
