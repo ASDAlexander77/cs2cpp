@@ -1,43 +1,36 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Diagnostics;
-
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ConditionalOperator : Expression
     {
-        private Expression condition;
-        private Expression consequence;
-        private Expression alternative;
+        public Expression Condition { get; set; }
+        public Expression Consequence { get; set; }
+        public Expression Alternative { get; set; }
 
         internal void Parse(BoundConditionalOperator boundConditionalOperator)
         {
             base.Parse(boundConditionalOperator);
-            this.condition = Deserialize(boundConditionalOperator.Condition) as Expression;
-            Debug.Assert(this.condition != null);
-            this.consequence = Deserialize(boundConditionalOperator.Consequence) as Expression;
-            Debug.Assert(this.consequence != null);
-            this.alternative = Deserialize(boundConditionalOperator.Alternative) as Expression;
-            Debug.Assert(this.alternative != null);
+            this.Condition = Deserialize(boundConditionalOperator.Condition) as Expression;
+            this.Consequence = Deserialize(boundConditionalOperator.Consequence) as Expression;
+            this.Alternative = Deserialize(boundConditionalOperator.Alternative) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.condition.WriteTo(c);
+            this.Condition.WriteTo(c);
 
             c.WhiteSpace();
             c.TextSpan("?");
             c.WhiteSpace();
 
-            this.consequence.WriteTo(c);
+            this.Consequence.WriteTo(c);
 
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
 
-            this.alternative.WriteTo(c);
+            this.Alternative.WriteTo(c);
         }
     }
 }

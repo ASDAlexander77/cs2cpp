@@ -30,7 +30,7 @@
             if (forEachStatementSyntax != null)
             {
                 var boundLocal = boundAssignmentOperator.Left as BoundLocal;
-                if (boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
+                if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
                 {
                     this.ApplyAutoType = true;
                 }

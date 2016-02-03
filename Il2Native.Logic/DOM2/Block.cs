@@ -9,6 +9,8 @@
     {
         public bool SuppressNewLineAtEnd { get; set; }
 
+        public bool Sequence { get; set; }
+
         private readonly IList<Statement> statements = new List<Statement>();
 
         public IList<Statement> Statements 
@@ -31,6 +33,25 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.Sequence)
+            {
+                var any = false;
+                foreach (var statement in this.statements)
+                {
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
+
+                    statement.SuppressEnding = true;
+                    statement.WriteTo(c);
+                    any = true;
+                }
+
+                return;
+            }
+
             c.OpenBlock();
             foreach (var statement in this.statements)
             {

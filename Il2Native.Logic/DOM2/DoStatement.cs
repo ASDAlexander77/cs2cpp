@@ -17,7 +17,7 @@
             End
         }
 
-        internal void Parse(BoundStatementList boundStatementList)
+        internal bool Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
             {
@@ -83,6 +83,8 @@
                     }
                 }
             }
+
+            return stage == Stages.End;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

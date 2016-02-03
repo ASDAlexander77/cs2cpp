@@ -19,7 +19,7 @@
             End
         }
 
-        internal void Parse(BoundStatementList boundStatementList)
+        internal bool Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
             {
@@ -94,10 +94,12 @@
                             this.incrementing = statement;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            return false;
                     }
                 }
             }
+
+            return stage == Stages.End;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

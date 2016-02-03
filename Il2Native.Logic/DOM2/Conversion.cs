@@ -2,7 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-
+    using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -31,7 +31,9 @@
             switch (this.conversionKind)
             {
                 case ConversionKind.MethodGroup:
-                    throw new NotImplementedException();
+                    Debug.Assert(false, "Not Implemented");
+                    ////throw new NotImplementedException();
+                    return;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
                     c.TextSpan("(uintptr_t)0");
@@ -53,7 +55,7 @@
                 case ConversionKind.ImplicitReference:
 
                     var useSiteDiagnostics = new HashSet<DiagnosticInfo>();
-                    if (this.typeSource.IsDerivedFrom(this.typeDestination, true, ref useSiteDiagnostics))
+                    if (this.typeDestination.TypeKind != TypeKind.TypeParameter && this.typeSource.IsDerivedFrom(this.typeDestination, true, ref useSiteDiagnostics))
                     {
                         c.TextSpan("static_cast<");
                         c.WriteType(this.typeDestination);

@@ -173,10 +173,17 @@
                 return;
             }
 
-            var expr = blockOfExpression as ExpressionStatement;
+            var expr = blockOfExpression as Expression;
             if (expr != null)
             {
-                expr.Expression.WriteTo(c);
+                expr.WriteTo(c);
+                return;
+            }
+
+            var exprFromStatement = blockOfExpression as ExpressionStatement;
+            if (exprFromStatement != null)
+            {
+                exprFromStatement.Expression.WriteTo(c);
                 return;
             }
 
@@ -185,6 +192,14 @@
             {
                 statement.SuppressEnding = true;
                 statement.WriteTo(c);
+                return;
+            }
+
+            var block = blockOfExpression as Block;
+            if (block != null)
+            {
+                block.Sequence = true;
+                block.WriteTo(c);
                 return;
             }
 
@@ -234,29 +249,37 @@
                 if (boundStatementList.Syntax.Green is IfStatementSyntax)
                 {
                     var ifStatement = new IfStatement();
-                    ifStatement.Parse(boundStatementList);
-                    return ifStatement;
+                    if (ifStatement.Parse(boundStatementList))
+                    {
+                        return ifStatement;
+                    }
                 }
 
                 if (boundStatementList.Syntax.Green is ForStatementSyntax)
                 {
                     var forStatement = new ForStatement();
-                    forStatement.Parse(boundStatementList);
-                    return forStatement;
+                    if (forStatement.Parse(boundStatementList))
+                    {
+                        return forStatement;
+                    }
                 }
 
                 if (boundStatementList.Syntax.Green is WhileStatementSyntax)
                 {
                     var whileStatement = new WhileStatement();
-                    whileStatement.Parse(boundStatementList);
-                    return whileStatement;
+                    if (whileStatement.Parse(boundStatementList))
+                    {
+                        return whileStatement;
+                    }
                 }
 
                 if (boundStatementList.Syntax.Green is DoStatementSyntax)
                 {
                     var doStatement = new DoStatement();
-                    doStatement.Parse(boundStatementList);
-                    return doStatement;
+                    if (doStatement.Parse(boundStatementList))
+                    {
+                        return doStatement;
+                    }
                 }
 
                 var forEachStatementSyntax = boundStatementList.Syntax.Green as ForEachStatementSyntax;
@@ -440,6 +463,14 @@
                 var conditionalOperator = new ConditionalOperator();
                 conditionalOperator.Parse(boundConditionalOperator);
                 return conditionalOperator;
+            }
+
+            var boundNullCoalescingOperator = boundBody as BoundNullCoalescingOperator;
+            if (boundNullCoalescingOperator != null)
+            {
+                var nullCoalescingOperator = new NullCoalescingOperator();
+                nullCoalescingOperator.Parse(boundNullCoalescingOperator);
+                return nullCoalescingOperator;
             }
 
             var boundArrayCreation = boundBody as BoundArrayCreation;
@@ -662,6 +693,30 @@
                 var noOpStatement = new NoOpStatement();
                 noOpStatement.Parse(boundNoOpStatement);
                 return noOpStatement;
+            }
+
+            var boundIteratorScope = boundBody as BoundIteratorScope;
+            if (boundIteratorScope != null)
+            {
+                var iteratorScope = new IteratorScope();
+                iteratorScope.Parse(boundIteratorScope);
+                return iteratorScope;
+            }
+
+            var boundArgList = boundBody as BoundArgList;
+            if (boundArgList != null)
+            {
+                var argList = new ArgList();
+                argList.Parse(boundArgList);
+                return argList;
+            }
+
+            var boundArgListOperator = boundBody as BoundArgListOperator;
+            if (boundArgListOperator != null)
+            {
+                var argListOperator = new ArgListOperator();
+                argListOperator.Parse(boundArgListOperator);
+                return argListOperator;
             }
 
             var statemnent = Unwrap(boundBody);

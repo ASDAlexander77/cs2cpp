@@ -50,6 +50,8 @@
     <Compile Include="CodeAnalysisHelpers.cs" />
     <Compile Include="CCodeWriterText.cs" />
     <Compile Include="DOM2\AddressOfOperator.cs" />
+    <Compile Include="DOM2\ArgList.cs" />
+    <Compile Include="DOM2\ArgListOperator.cs" />
     <Compile Include="DOM2\ArrayAccess.cs" />
     <Compile Include="DOM2\ArrayCreation.cs" />
     <Compile Include="DOM2\ArrayInitialization.cs" />
@@ -79,10 +81,12 @@
     <Compile Include="DOM2\GotoStatement.cs" />
     <Compile Include="DOM2\IfStatement.cs" />
     <Compile Include="DOM2\IsOperator.cs" />
+    <Compile Include="DOM2\IteratorScope.cs" />
     <Compile Include="DOM2\LabelStatement.cs" />
     <Compile Include="DOM2\MakeRefOperator.cs" />
     <Compile Include="DOM2\MethodGroup.cs" />
     <Compile Include="DOM2\NoOpStatement.cs" />
+    <Compile Include="DOM2\NullCoalescingOperator.cs" />
     <Compile Include="DOM2\PointerIndirectionOperator.cs" />
     <Compile Include="DOM2\PrefixPostfixUnaryExpressionBase.cs" />
     <Compile Include="DOM2\RefTypeOperator.cs" />
