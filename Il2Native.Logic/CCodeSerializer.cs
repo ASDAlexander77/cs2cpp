@@ -9,7 +9,6 @@
     using System.Threading.Tasks;
     using DOM;
 
-    using Il2Native.Logic.DOM.Synthesized;
     using Il2Native.Logic.Properties;
 
     using Microsoft.CodeAnalysis;

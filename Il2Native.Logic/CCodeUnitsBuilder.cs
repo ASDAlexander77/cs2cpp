@@ -180,8 +180,6 @@
                 case SpecialType.System_UInt64:
                 case SpecialType.System_Single:
                 case SpecialType.System_Double:
-                case SpecialType.System_IntPtr:
-                case SpecialType.System_UIntPtr:
                     unit.Declarations.Add(new CCodeInitSpecialTypeConstructorDeclaration((INamedTypeSymbol)type));
                     break;
             }
