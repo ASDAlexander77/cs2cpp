@@ -74,7 +74,7 @@ public:
 
 // Interlocked
 template <typename T>
-T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
+T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
 {
     throw 0xC000C000;
 }
