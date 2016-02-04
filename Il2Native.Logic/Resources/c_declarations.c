@@ -71,3 +71,10 @@ public:
 	Finally(std::function<void()> dtor) : _dtor(dtor) {};
 	~Finally() { _dtor(); }
 };
+
+// Interlocked
+template <typename T>
+T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
+{
+    throw 0xC000C000;
+}
