@@ -237,14 +237,17 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
             {
                 var c = new CCodeWriterText(itw);
+
                 if (isCoreLib)
                 {
-                    itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine(Resources.c_include.Replace("<<%assemblyName%>>", identity.Name));
                 }
-
-                foreach (var reference in references)
+                else
                 {
-                    itw.WriteLine("#include \"{0}.h\"", reference.Name);
+                    foreach (var reference in references)
+                    {
+                        itw.WriteLine("#include \"{0}.h\"", reference.Name);
+                    }
                 }
 
                 // write forward declaration
@@ -284,6 +287,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         c.WriteTypeName(namedTypeSymbol);
                         itw.WriteLine(";");
                     }
+                }
+
+                itw.WriteLine();
+
+                if (isCoreLib)
+                {
+                    itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
                 }
 
                 itw.WriteLine();

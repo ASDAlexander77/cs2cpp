@@ -127,6 +127,9 @@
   <data name="c_forward_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\c_forward_declarations.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="c_include" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\c_include.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="decimals" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\decimals.cpp;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>

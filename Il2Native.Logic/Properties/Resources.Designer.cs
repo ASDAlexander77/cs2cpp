@@ -61,9 +61,21 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to template &lt;typename T&gt; class __array_t : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
+        ///   Looks up a localized string similar to // Arrays internals
+        ///template &lt;typename T&gt; class __array : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
         ///{
-        ///};.
+        ///	int32_t _rank;
+        ///	int32_t _length;
+        ///	T _data[0];
+        ///public:
+        ///	// TODO: finish checking boundries
+        ///	__array(size_t length) : _rank(1) { _length = length; }
+        ///	inline const T operator [](size_t index) const { return _data[index]; }
+        ///	inline T&amp; operator [](size_t index) { return _data[index]; }
+        ///	inline operator size_t() const { return (size_t)_length; }
+        ///};
+        ///
+        ///template &lt;typename T, size_t RANK&gt; class __multi_a [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -72,7 +84,26 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to // __val conversions
+        ///template&lt;&gt;
+        ///inline __val&lt;intptr_t&gt;::__val(const &lt;&lt;%assemblyName%&gt;&gt;::System::IntPtr&amp; value)
+        ///{
+        ///	_value = reinterpret_cast&lt;intptr_t&gt;(value.m_value);
+        ///}
+        ///
+        ///// MethodBodyOpt: object.GetType()
+        ///&lt;&lt;%assemblyName%&gt;&gt;::System::Type* &lt;&lt;%assemblyName%&gt;&gt;::System::Object::GetType()
+        ///{
+        ///    throw 0xC000C000;
+        ///}
+        ///
+        ///// MethodBodyOpt: System.Array.GetUpperBound(int)
+        ///int32_t &lt;&lt;%assemblyName%&gt;&gt;::System::Array::GetUpperBound(int32_t index)
+        ///{
+        ///    throw 0xC000C000;
+        ///}
+        ///
+        ///// MethodBodyOpt: System.Array.Ge [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_definitions {
             get {
@@ -82,12 +113,54 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to #include &lt;cstdint&gt;
+        ///#include &lt;functional&gt;
+        ///#include &lt;initializer_list&gt;
         ///
-        ///template &lt;typename T&gt; class __array_t;.
+        ///template &lt;typename T&gt; class __array;
+        ///
+        ///template &lt;typename T&gt; struct __val
+        ///{
+        ///public: 
+        ///	T _value;
+        ///	inline __val(T value) : _value(value) {}
+        ///	__val(const CoreLib::System::IntPtr&amp; value);
+        ///	inline operator T() { return _value; }
+        ///};
+        ///
+        ///template &lt;typename T, typename TUnderlying&gt; struct __enum
+        ///{
+        ///public: 
+        ///	TUnderlying _value;
+        ///	inline __enum(TUnderlying value) : _value(value) {}
+        ///	inline operator TUnderlying() { return _value; }
+        ///} [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_forward_declarations {
             get {
                 return ResourceManager.GetString("c_forward_declarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to // Arrays internals
+        ///template &lt;typename T&gt; class __array : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
+        ///{
+        ///	int32_t _rank;
+        ///	int32_t _length;
+        ///	T _data[0];
+        ///public:
+        ///	// TODO: finish checking boundries
+        ///	__array(size_t length) : _rank(1) { _length = length; }
+        ///	inline const T operator [](size_t index) const { return _data[index]; }
+        ///	inline T&amp; operator [](size_t index) { return _data[index]; }
+        ///	inline operator size_t() const { return (size_t)_length; }
+        ///};
+        ///
+        ///template &lt;typename T, size_t RANK&gt; class __multi_a [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string c_include {
+            get {
+                return ResourceManager.GetString("c_include", resourceCulture);
             }
         }
         

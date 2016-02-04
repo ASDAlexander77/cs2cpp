@@ -174,7 +174,9 @@
     <None Include="packages.config" />
     <None Include="Resources\c_declarations.c" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\c_include.c" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="Resources\decimals.cpp" />
   </ItemGroup>

@@ -244,5 +244,18 @@
 
             return false;
         }
+
+
+        public static bool IsIntPtrType(this ITypeSymbol type)
+        {
+            switch (type.SpecialType)
+            {
+                case SpecialType.System_IntPtr:
+                case SpecialType.System_UIntPtr:
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

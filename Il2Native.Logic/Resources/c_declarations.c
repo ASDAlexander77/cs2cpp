@@ -72,6 +72,13 @@ public:
 	~Finally() { _dtor(); }
 };
 
+// __val conversions
+template<> template<>
+inline __val<intptr_t>::__val<<<%assemblyName%>>::System::IntPtr>(const <<%assemblyName%>>::System::IntPtr& value)
+{
+	_value = reinterpret_cast<intptr_t>(value.m_value);
+}
+
 // Interlocked
 template <typename T>
 T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)

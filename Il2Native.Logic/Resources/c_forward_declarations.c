@@ -1,7 +1,3 @@
-#include <cstdint>
-#include <functional>
-#include <initializer_list>
-
 template <typename T> class __array;
 
 template <typename T> struct __val
@@ -9,6 +5,7 @@ template <typename T> struct __val
 public: 
 	T _value;
 	inline __val(T value) : _value(value) {}
+	template <typename F> __val(const F& value);
 	inline operator T() { return _value; }
 };
 
