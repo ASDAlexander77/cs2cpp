@@ -72,7 +72,12 @@
         private static IList<ITypeSymbol> BuildOrder(ITypeSymbol[] typeSymbols, IDictionary<string, ITypeSymbol> typesByNames, ISet<string> processedTypes)
         {
             var reordered = new List<ITypeSymbol>();
-            foreach (var typeSymbol in typeSymbols)
+            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind != TypeKind.Interface))
+            {
+                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
+            }
+
+            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind == TypeKind.Interface))
             {
                 AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
             }

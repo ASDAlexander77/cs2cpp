@@ -331,22 +331,29 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         c.WriteTypeFullName(namedTypeSymbol.BaseType, false);
                     }
 
-                    if (namedTypeSymbol.TypeKind == TypeKind.Interface && namedTypeSymbol.Interfaces.Any())
+                    if (namedTypeSymbol.TypeKind == TypeKind.Interface)
                     {
                         itw.Write(" : ");
 
-                        var any2 = false;
-                        foreach (var item in namedTypeSymbol.Interfaces)
+                        if (namedTypeSymbol.Interfaces.Any())
                         {
-                            if (any2)
+                            var any2 = false;
+                            foreach (var item in namedTypeSymbol.Interfaces)
                             {
-                                itw.Write(", ");
+                                if (any2)
+                                {
+                                    itw.Write(", ");
+                                }
+
+                                itw.Write("public virtual ");
+                                c.WriteTypeFullName(item, false);
+
+                                any2 = true;
                             }
-
-                            itw.Write("public virtual ");
-                            c.WriteTypeFullName(item, false);
-
-                            any2 = true;
+                        }
+                        else
+                        {
+                            itw.Write("public virtual object");
                         }
                     }
 

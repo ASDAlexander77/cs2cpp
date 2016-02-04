@@ -5,7 +5,11 @@ template <typename T> struct __val
 public: 
 	T _value;
 	inline __val(T value) : _value(value) {}
+#if _MSC_VER 
+	__val(const <<%assemblyName%>>::System::IntPtr& value);
+#else
 	template <typename F> __val(const F& value);
+#endif
 	inline operator T() { return _value; }
 };
 

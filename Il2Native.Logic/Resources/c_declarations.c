@@ -73,8 +73,13 @@ public:
 };
 
 // __val conversions
+#if _MSC_VER 
+template<>
+inline __val<intptr_t>::__val(const <<%assemblyName%>>::System::IntPtr& value)
+#else
 template<> template<>
 inline __val<intptr_t>::__val<<<%assemblyName%>>::System::IntPtr>(const <<%assemblyName%>>::System::IntPtr& value)
+#endif
 {
 	_value = reinterpret_cast<intptr_t>(value.m_value);
 }
