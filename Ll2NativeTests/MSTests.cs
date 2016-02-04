@@ -745,10 +745,8 @@ namespace Ll2NativeTests
                     });
 
             // skip
+            skip.Add(126); // no Main method
             skip.Add(410); // using "new" on method
-
-            //CompilerHelper.CompactMode = true;
-            //CompilerHelper.Stubs = true;
 
             foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {

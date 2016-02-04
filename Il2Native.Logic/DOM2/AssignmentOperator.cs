@@ -41,7 +41,7 @@
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
             Debug.Assert(this.Right != null);
 
-            if (this.Right is Literal)
+            if (this.Right is Literal || boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
             {
                 this.assignmentType = this.Right.Type;
             }
