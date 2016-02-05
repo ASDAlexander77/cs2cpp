@@ -74,6 +74,13 @@
                         Debug.Assert(condition != null);
                         continue;
                     }
+
+                    var boundGoto = boundStatement as BoundGotoStatement;
+                    if (boundGoto != null)
+                    {
+                        // empty condition
+                        continue;
+                    }
                 }
 
                 var statement = Deserialize(boundStatement);
@@ -122,7 +129,10 @@
             c.TextSpan(";");
             c.WhiteSpace();
 
-            this.condition.WriteTo(c);
+            if (this.condition != null)
+            {
+                this.condition.WriteTo(c);
+            }
 
             c.TextSpan(";");
             c.WhiteSpace();

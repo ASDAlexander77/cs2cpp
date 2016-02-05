@@ -25,6 +25,8 @@
             c.TextSpan(":");
             c.RestoreIndent();
             c.NewLine();
+
+            c.RequireEmptyStatement();
         }
     }
 }

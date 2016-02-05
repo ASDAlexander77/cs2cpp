@@ -14,6 +14,7 @@
     {
         Empty,
         Separated,
+        RequireEmptyStatement,
         Any,
         Whitespace
     }
@@ -47,6 +48,11 @@
 
         public override void EndBlock()
         {
+            if (this.text == TextState.RequireEmptyStatement)
+            {
+                TextSpan(";");
+            }
+
             _itw.Indent--;
             if (this.text == TextState.Separated)
             {
@@ -119,6 +125,11 @@
         public override void Separate()
         {
             this.text = TextState.Separated;
+        }
+
+        public override void RequireEmptyStatement()
+        {
+            this.text = TextState.RequireEmptyStatement;
         }
 
         public override void IncrementIndent()

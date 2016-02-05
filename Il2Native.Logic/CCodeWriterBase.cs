@@ -45,6 +45,8 @@ namespace Il2Native.Logic
 
         public abstract void RestoreIndent();
 
+        public abstract void RequireEmptyStatement();
+
         internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
         {
 #if EMPTY_SKELETON
