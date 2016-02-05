@@ -101,17 +101,38 @@
             {
                 c.WriteAccess(this.receiverOpt);
 
-                if (!this.Method.HidesBaseMethodsByName && this.receiverOpt.Type != this.Method.ContainingType && !(this.receiverOpt is BaseReference))
+                if (IsHidden(this.receiverOpt.Type, this.Method))
                 {
                     // is HiddenBySignature
-                    c.WriteTypeFullName(this.Method.ContainingType);
-                    c.TextSpan("::");
+                    c.TextSpan("base::");
                 }
 
                 c.WriteMethodName(this.Method);
             }
 
             WriteCallArguments(this.arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+        }
+
+        private static bool IsHidden(ITypeSymbol receiverType, IMethodSymbol method)
+        {
+            if (receiverType == method.ContainingType)
+            {
+                return false;
+            }
+
+            var current = receiverType;
+            do
+            {
+                if (current.GetMembers().Any(m => m.Name.Equals(method.Name)))
+                {
+                    return true;
+                }
+
+                current = current.BaseType;
+            } 
+            while (current != null && current != method.ContainingType);
+
+            return false;
         }
     }
 }
