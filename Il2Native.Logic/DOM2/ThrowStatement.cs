@@ -21,6 +21,14 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            if (this.expressionOpt != null)
+            {
+                visitor(this.expressionOpt);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("throw");

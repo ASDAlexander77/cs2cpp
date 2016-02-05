@@ -102,6 +102,14 @@
             return stage == Stages.End;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.statements);
+            visitor(this.initialization);
+            visitor(this.incrementing);
+            visitor(this.condition);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("for");

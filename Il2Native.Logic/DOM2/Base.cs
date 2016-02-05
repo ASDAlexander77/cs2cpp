@@ -66,6 +66,21 @@
             }
         }
 
+        internal static void AddLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements)
+        {
+            foreach (var local in locals)
+            {
+                if (statements == null)
+                {
+                    continue;
+                }
+
+                var localVariableDeclaration = new VariableDeclaration();
+                localVariableDeclaration.Parse(local);
+                statements.Add(localVariableDeclaration);
+            }
+        }
+
         internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
         {
             return boundStatementList.Statements.Select(Unwrap).OfType<BoundStatement>().Where(s => s != null);
@@ -734,6 +749,8 @@
         }
 
         internal abstract void WriteTo(CCodeWriterBase c);
+
+        internal abstract void Visit(Action<Base> visitor);
 
         public override string ToString()
         {

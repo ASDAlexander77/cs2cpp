@@ -37,6 +37,15 @@
             this.Local = local;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.Local);
+            foreach (var statement in this.statements)
+            {
+                visitor(statement);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (this.Local != null)

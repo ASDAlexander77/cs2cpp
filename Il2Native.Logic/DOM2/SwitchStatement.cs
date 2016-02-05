@@ -14,10 +14,10 @@
 
     public class SwitchStatement : Statement
     {
-        private Expression boundExpression;
+        private Expression expression;
         private IList<SwitchSection> switchCases = new List<SwitchSection>();
-
         private MethodSymbol stringEquality;
+        private IList<Statement> statements = new List<Statement>();
 
         internal void Parse(BoundSwitchStatement boundSwitchStatement)
         {
@@ -26,7 +26,17 @@
                 throw new ArgumentNullException();
             }
 
-            this.boundExpression = Deserialize(boundSwitchStatement.BoundExpression) as Expression;
+            if (boundSwitchStatement.OuterLocals != null)
+            {
+                AddLocals(boundSwitchStatement.OuterLocals, this.statements);
+            }
+
+            if (boundSwitchStatement.InnerLocals != null)
+            {
+                AddLocals(boundSwitchStatement.InnerLocals, this.statements);
+            }
+
+            this.expression = Deserialize(boundSwitchStatement.BoundExpression) as Expression;
             foreach (var boundSwitchSection in boundSwitchStatement.SwitchSections)
             {
                 var switchSection = new SwitchSection();
@@ -37,6 +47,20 @@
             this.stringEquality = boundSwitchStatement.StringEquality;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.expression);
+            foreach (var statement in this.statements)
+            {
+                visitor(statement);
+            }
+
+            foreach (var statement in this.switchCases)
+            {
+                visitor(statement);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             Local localCase = null;
@@ -44,7 +68,7 @@
             {
                 c.OpenBlock();
 
-                var localImpl = new LocalImpl { Name = "__SwitchExpression", Type = boundExpression.Type };
+                var localImpl = new LocalImpl { Name = "__SwitchExpression", Type = this.expression.Type };
                 var local = new Local { LocalSymbol = localImpl };
 
                 var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
@@ -119,6 +143,11 @@
                 c.Separate();
             }
 
+            foreach (var statement in this.statements)
+            {
+                statement.WriteTo(c);
+            }
+
             c.TextSpan("switch");
             c.WhiteSpace();
             c.TextSpan("(");
@@ -128,7 +157,7 @@
             }
             else
             {
-                this.boundExpression.WriteTo(c);
+                this.expression.WriteTo(c);
             }
 
             c.TextSpan(")");

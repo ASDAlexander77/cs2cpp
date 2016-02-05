@@ -37,6 +37,8 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            c.DecrementIndent();
+
             foreach (var label in this.Labels)
             {
                 if (label.Value != null)
@@ -58,6 +60,9 @@
                 c.NewLine();
             }
 
+            c.IncrementIndent();
+
+            NoParenthesis = true;
             base.WriteTo(c);
         }
     }

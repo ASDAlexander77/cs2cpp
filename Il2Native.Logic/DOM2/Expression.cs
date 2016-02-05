@@ -24,6 +24,10 @@
 
         public virtual bool IsReference { get; set; }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+        }
+
         internal void Parse(BoundExpression boundExpression)
         {
             if (boundExpression == null)

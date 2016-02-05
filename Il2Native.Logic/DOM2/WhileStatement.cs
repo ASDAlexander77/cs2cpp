@@ -87,6 +87,12 @@
             return stage == Stages.End;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.condition);
+            visitor(this.statements);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("while");

@@ -99,6 +99,17 @@
             return stage == Stages.TryBody;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            foreach (var statement in this.locals)
+            {
+                visitor(statement);
+            }
+
+            visitor(this.initialization);
+            visitor(this.tryStatement);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (this.locals.Count > 0)

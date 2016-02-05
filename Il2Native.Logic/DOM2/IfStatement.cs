@@ -89,6 +89,13 @@
             return stage == Stages.EndOfIf || stage == Stages.EndOfElse;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.Condition);
+            visitor(this.IfStatements);
+            visitor(this.ElseStatements);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("if");

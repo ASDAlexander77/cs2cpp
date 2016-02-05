@@ -21,6 +21,11 @@
             this.label = boundConditionalGoto.Label;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.condition);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("if");

@@ -30,6 +30,10 @@ namespace Il2Native.Logic
 
         public abstract void Separate();
 
+        public abstract void IncrementIndent();
+
+        public abstract void DecrementIndent();
+
         public abstract void SaveAndSet0Indent();
 
         public abstract void RestoreIndent();

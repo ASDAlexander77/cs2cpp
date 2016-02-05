@@ -31,6 +31,11 @@
             this.Statement = Deserialize(boundIteratorScope.Statement);
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.Statement);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("[&]");
@@ -43,7 +48,10 @@
             }
 
             c.TextSpan(")");
+
+            c.OpenBlock();
             this.Statement.WriteTo(c);
+            c.EndBlock();
         }
     }
 }

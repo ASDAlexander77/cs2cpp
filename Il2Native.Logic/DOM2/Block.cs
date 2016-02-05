@@ -11,6 +11,8 @@
 
         public bool Sequence { get; set; }
 
+        public bool NoParenthesis { get; set; }
+
         private readonly IList<Statement> statements = new List<Statement>();
 
         public IList<Statement> Statements 
@@ -29,6 +31,14 @@
             }
 
             ParseBoundStatementList(boundStatementList, this.statements, specialCase);
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            foreach (var statement in this.statements)
+            {
+                visitor(statement);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -52,19 +62,26 @@
                 return;
             }
 
-            c.OpenBlock();
+            if (!this.NoParenthesis)
+            {
+                c.OpenBlock();
+            }
+
             foreach (var statement in this.statements)
             {
                 statement.WriteTo(c);
             }
 
-            if (this.SuppressNewLineAtEnd)
+            if (!this.NoParenthesis)
             {
-                c.EndBlockWithoutNewLine();
-            }
-            else
-            {
-                c.EndBlock();
+                if (this.SuppressNewLineAtEnd)
+                {
+                    c.EndBlockWithoutNewLine();
+                }
+                else
+                {
+                    c.EndBlock();
+                }
             }
         }
     }

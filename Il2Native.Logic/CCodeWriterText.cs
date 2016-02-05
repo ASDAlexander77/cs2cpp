@@ -121,6 +121,16 @@
             this.text = TextState.Separated;
         }
 
+        public override void IncrementIndent()
+        {
+            this._itw.Indent++;
+        }
+
+        public override void DecrementIndent()
+        {
+            this._itw.Indent--;
+        }
+
         public override void SaveAndSet0Indent()
         {
             this.saved = this._itw.Indent;

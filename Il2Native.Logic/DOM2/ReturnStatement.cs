@@ -21,6 +21,14 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            if (this.ExpressionOpt != null)
+            {
+                visitor(this.ExpressionOpt);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("return");

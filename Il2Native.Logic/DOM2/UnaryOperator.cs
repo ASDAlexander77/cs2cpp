@@ -19,6 +19,11 @@
             Debug.Assert(this.Operand != null);
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.Operand);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             switch (this.OperatorKind & UnaryOperatorKind.OpMask)

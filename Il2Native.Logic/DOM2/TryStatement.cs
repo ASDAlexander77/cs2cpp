@@ -19,6 +19,17 @@
             set { this.catchBlocks = value; }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.TryBlock);
+            foreach (var catchBlock in CatchBlocks)
+            {
+                visitor(catchBlock);
+            }
+
+            visitor(this.FinallyBlockOpt);
+        }
+
         internal void Parse(BoundTryStatement boundTryStatement)
         {
             if (boundTryStatement == null)

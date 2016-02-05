@@ -13,6 +13,10 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("break");

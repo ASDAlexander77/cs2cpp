@@ -18,6 +18,11 @@
             this.Expression = Deserialize(boundExpressionStatement.Expression) as Expression;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            visitor(this.Expression);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             this.Expression.WriteTo(c);

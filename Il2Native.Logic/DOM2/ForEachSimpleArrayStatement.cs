@@ -124,6 +124,19 @@
             return stage == Stages.End;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            foreach (var statement in this.locals)
+            {
+                visitor(statement);
+            }
+
+            visitor(this.statements);
+            visitor(this.initialization);
+            visitor(this.incrementing);
+            visitor(this.condition);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (this.locals.Count > 0)
