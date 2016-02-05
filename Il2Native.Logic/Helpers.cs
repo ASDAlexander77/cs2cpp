@@ -119,6 +119,12 @@
                     case '$':
                         n = 'D';
                         break;
+                    case '\'':
+                        n = 'Q';
+                        break;
+                    case '"':
+                        n = 'Q';
+                        break;
                     case '=':
                         n = 'E';
                         break;
