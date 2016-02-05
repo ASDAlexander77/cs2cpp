@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -30,11 +32,13 @@
             }
         }
 
-        internal static void WriteCallArguments(IEnumerable<Expression> arguments, CCodeWriterBase c)
+        internal static void WriteCallArguments(IEnumerable<Expression> arguments, IEnumerable<IParameterSymbol> parameterSymbols, CCodeWriterBase c)
         {
             c.TextSpan("(");
             var anyArgs = false;
-            foreach (var boundExpression in arguments)
+
+            var paramEnum = parameterSymbols.GetEnumerator();
+            foreach (var expression in arguments)
             {
                 if (anyArgs)
                 {
@@ -42,8 +46,9 @@
                     c.WhiteSpace();
                 }
 
-                boundExpression.WriteTo(c);
+                expression.WriteTo(c);
                 anyArgs = true;
+                paramEnum.MoveNext();
             }
 
             c.TextSpan(")");
@@ -89,7 +94,7 @@
                 c.WriteMethodName(this.Method);
             }
 
-            WriteCallArguments(this.arguments, c);
+            WriteCallArguments(this.arguments, this.Method.Parameters, c);
         }
     }
 }
