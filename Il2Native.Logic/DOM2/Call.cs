@@ -101,7 +101,7 @@
             {
                 c.WriteAccess(this.receiverOpt);
 
-                if (!this.Method.HidesBaseMethodsByName && this.receiverOpt.Type != this.Method.ContainingType && !(this.receiverOpt is BaseTypeAnalysis))
+                if (!this.Method.HidesBaseMethodsByName && this.receiverOpt.Type != this.Method.ContainingType && !(this.receiverOpt is BaseReference))
                 {
                     // is HiddenBySignature
                     c.WriteTypeFullName(this.Method.ContainingType);
