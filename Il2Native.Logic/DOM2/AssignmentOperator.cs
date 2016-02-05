@@ -63,10 +63,21 @@
                 c.WhiteSpace();
             }
 
+            if (this.Right.Type.IsValueType && this.Left is ThisReference)
+            {
+                c.TextSpan("*");
+            }
+
             this.Left.WriteTo(c);
             c.WhiteSpace();
             c.TextSpan("=");
             c.WhiteSpace();
+
+            if (this.Left.Type.IsValueType && this.Right is ThisReference)
+            {
+                c.TextSpan("*");
+            }
+
             this.Right.WriteTo(c);
         }
     }

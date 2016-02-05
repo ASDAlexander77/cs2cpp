@@ -40,15 +40,20 @@
             var paramEnum = parameterSymbols.GetEnumerator();
             foreach (var expression in arguments)
             {
+                paramEnum.MoveNext();
                 if (anyArgs)
                 {
                     c.TextSpan(",");
                     c.WhiteSpace();
                 }
 
+                if (paramEnum.Current.Type.IsValueType && expression is ThisReference)
+                {
+                    c.TextSpan("*");
+                }
+
                 expression.WriteTo(c);
                 anyArgs = true;
-                paramEnum.MoveNext();
             }
 
             c.TextSpan(")");
