@@ -36,6 +36,15 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            foreach (var switchLabel in this.labels)
+            {
+                switchLabel.Visit(visitor);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.DecrementIndent();
@@ -56,9 +65,12 @@
                 c.TextSpan(":");
                 c.NewLine();
 
-                label.WriteTo(c);
-                c.TextSpan(":");
-                c.NewLine();
+                if (label.GenerateLabel)
+                {
+                    label.WriteTo(c);
+                    c.TextSpan(":");
+                    c.NewLine();
+                }
             }
 
             c.IncrementIndent();

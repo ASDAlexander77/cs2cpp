@@ -1,12 +1,13 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class GotoStatement : Statement
     {
-        private LabelSymbol label;
+        public SwitchLabel Label { get; private set; }
 
         internal void Parse(BoundGotoStatement boundGotoStatement)
         {
@@ -15,7 +16,18 @@
                 throw new ArgumentNullException();
             }
 
-            this.label = boundGotoStatement.Label;
+            var switchLabel = new SwitchLabel();
+            var sourceLabelSymbol = boundGotoStatement.Label as SourceLabelSymbol;
+            if (sourceLabelSymbol != null)
+            {
+                switchLabel.Parse(sourceLabelSymbol);
+            }
+            else
+            {
+                switchLabel.Label = boundGotoStatement.Label.Name;
+            }
+        
+            this.Label = switchLabel;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -23,18 +35,7 @@
             c.TextSpan("goto");
             c.WhiteSpace();
 
-            var sourceLabelSymbol = this.label as SourceLabelSymbol;
-            if (sourceLabelSymbol != null)
-            {
-                var switchLabel = new SwitchLabel();
-                switchLabel.Parse(sourceLabelSymbol);
-                switchLabel.WriteTo(c);
-            }
-            else
-            {
-                c.WriteName(this.label);
-            }
-
+            this.Label.WriteTo(c);
             base.WriteTo(c);
         }
     }

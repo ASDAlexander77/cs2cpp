@@ -47,6 +47,10 @@
             this.stringEquality = boundSwitchStatement.StringEquality;
 
             // disable all 'auto' variables
+
+            var usedGotoLabels = new List<GotoStatement>();
+            var usedSwitchLabels = new List<SwitchLabel>();
+
             this.Visit(
                 (e) =>
                 {
@@ -55,7 +59,31 @@
                     {
                         assignmentOperator.ApplyAutoType = false;
                     }
+
+                    var gotoStatement = e as GotoStatement;
+                    if (gotoStatement != null)
+                    {
+                        usedGotoLabels.Add(gotoStatement);
+                    }
+
+                    var switchSection = e as SwitchSection;
+                    if (switchSection != null)
+                    {
+                        usedSwitchLabels.AddRange(switchSection.Labels);
+                    }
                 });
+
+            if (usedGotoLabels.Count > 0)
+            {
+                var dict = new SortedDictionary<string, bool>(usedGotoLabels.ToDictionary(i => i.Label.Label, i => true));
+                foreach (var usedSwitchLabel in usedSwitchLabels)
+                {
+                    if (dict.ContainsKey(usedSwitchLabel.Label))
+                    {
+                        usedSwitchLabel.GenerateLabel = true;
+                    }
+                }
+            }
         }
 
         internal override void Visit(Action<Base> visitor)

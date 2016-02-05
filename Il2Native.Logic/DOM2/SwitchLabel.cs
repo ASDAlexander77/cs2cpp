@@ -7,6 +7,7 @@
     public class SwitchLabel : Literal
     {
         public string Label { get; set; }
+        public bool GenerateLabel { get; set; }
 
         internal void Parse(SourceLabelSymbol sourceLabelSymbol)
         {
@@ -30,7 +31,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan(Label.CleanUpNameAllUnderscore());
+            c.TextSpan(Label.CleanUpName());
         }
     }
 }
