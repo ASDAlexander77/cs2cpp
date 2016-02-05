@@ -100,6 +100,14 @@
             else
             {
                 c.WriteAccess(this.receiverOpt);
+
+                if (!this.Method.HidesBaseMethodsByName && this.receiverOpt.Type != this.Method.ContainingType && !(this.receiverOpt is BaseTypeAnalysis))
+                {
+                    // is HiddenBySignature
+                    c.WriteTypeFullName(this.Method.ContainingType);
+                    c.TextSpan("::");
+                }
+
                 c.WriteMethodName(this.Method);
             }
 
