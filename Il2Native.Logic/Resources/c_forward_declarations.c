@@ -4,6 +4,7 @@ template <typename T> struct __val
 {
 public: 
 	T _value;
+	__val() = default;
 	inline __val(T value) : _value(value) {}
 #if _MSC_VER 
 	__val(const <<%assemblyName%>>::System::IntPtr& value);
@@ -17,6 +18,7 @@ template <typename T, typename TUnderlying> struct __enum
 {
 public: 
 	TUnderlying _value;
+	__enum() = default;
 	inline __enum(TUnderlying value) : _value(value) {}
 	inline operator TUnderlying() { return _value; }
 };

@@ -36,7 +36,7 @@
                     return;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
-                    c.TextSpan("(uintptr_t)0");
+                    c.TextSpan("nullptr");
                     return;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box<");
