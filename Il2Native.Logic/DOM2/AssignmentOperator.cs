@@ -63,7 +63,8 @@
                 c.WhiteSpace();
             }
 
-            if (this.Right.Type.IsValueType && this.Left is ThisReference)
+            var rightType = this.Right.Type;
+            if (rightType != null && rightType.IsValueType && this.Left is ThisReference)
             {
                 c.TextSpan("*");
             }
@@ -73,7 +74,8 @@
             c.TextSpan("=");
             c.WhiteSpace();
 
-            if (this.Left.Type.IsValueType && this.Right is ThisReference)
+            var leftType = this.Left.Type;
+            if (leftType != null && leftType.IsValueType && this.Right is ThisReference)
             {
                 c.TextSpan("*");
             }

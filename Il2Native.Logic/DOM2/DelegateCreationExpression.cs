@@ -5,8 +5,6 @@
 
     public class DelegateCreationExpression : Call
     {
-        private Expression instanceOpt;
-
         internal void Parse(BoundDelegateCreationExpression boundDelegateCreationExpression)
         {
             base.Parse(boundDelegateCreationExpression);

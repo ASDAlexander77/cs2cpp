@@ -37,17 +37,21 @@
             c.TextSpan("(");
             var anyArgs = false;
 
-            var paramEnum = parameterSymbols.GetEnumerator();
+            var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
-                paramEnum.MoveNext();
+                if (paramEnum != null)
+                {
+                    paramEnum.MoveNext();
+                }
+
                 if (anyArgs)
                 {
                     c.TextSpan(",");
                     c.WhiteSpace();
                 }
 
-                if (paramEnum.Current.Type.IsValueType && expression is ThisReference)
+                if (paramEnum != null && paramEnum.Current.Type.IsValueType && expression is ThisReference)
                 {
                     c.TextSpan("*");
                 }
@@ -99,7 +103,7 @@
                 c.WriteMethodName(this.Method);
             }
 
-            WriteCallArguments(this.arguments, this.Method.Parameters, c);
+            WriteCallArguments(this.arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
     }
 }
