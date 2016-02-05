@@ -19,7 +19,7 @@
 
         public Base IfStatements { get; set; }
 
-        public Base ElseStatements { get; set; }
+        public Base ElseStatementsOpt { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -77,8 +77,8 @@
                             this.IfStatements = statement;
                             break;
                         case Stages.ElseBody:
-                            Debug.Assert(this.ElseStatements == null);
-                            this.ElseStatements = statement;
+                            Debug.Assert(this.ElseStatementsOpt == null);
+                            this.ElseStatementsOpt = statement;
                             break;
                         default:
                             return false;
@@ -91,9 +91,13 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.Condition);
-            visitor(this.IfStatements);
-            visitor(this.ElseStatements);
+            base.Visit(visitor);
+            this.Condition.Visit(visitor);
+            this.IfStatements.Visit(visitor);
+            if (this.ElseStatementsOpt != null)
+            {
+                this.ElseStatementsOpt.Visit(visitor);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -107,12 +111,12 @@
             c.NewLine();
             PrintBlockOrStatementsAsBlock(c, this.IfStatements);
 
-            if (this.ElseStatements != null)
+            if (this.ElseStatementsOpt != null)
             {
                 c.TextSpan("else");
 
                 c.NewLine();
-                PrintBlockOrStatementsAsBlock(c, this.ElseStatements);
+                PrintBlockOrStatementsAsBlock(c, this.ElseStatementsOpt);
             }
 
             c.Separate();

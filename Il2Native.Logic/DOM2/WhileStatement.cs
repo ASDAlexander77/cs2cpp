@@ -89,8 +89,9 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.condition);
-            visitor(this.statements);
+            base.Visit(visitor);
+            this.condition.Visit(visitor);
+            this.statements.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

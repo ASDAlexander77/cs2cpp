@@ -750,7 +750,10 @@
 
         internal abstract void WriteTo(CCodeWriterBase c);
 
-        internal abstract void Visit(Action<Base> visitor);
+        internal virtual void Visit(Action<Base> visitor)
+        {
+            visitor(this);
+        }
 
         public override string ToString()
         {

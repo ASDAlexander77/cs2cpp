@@ -39,10 +39,11 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.Local);
+            base.Visit(visitor);
+            this.Local.Visit(visitor);
             foreach (var statement in this.statements)
             {
-                visitor(statement);
+                statement.Visit(visitor);
             }
         }
 

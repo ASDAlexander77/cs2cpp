@@ -20,7 +20,8 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.Expression);
+            base.Visit(visitor);
+            this.Expression.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

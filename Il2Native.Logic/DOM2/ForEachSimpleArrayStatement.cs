@@ -126,15 +126,16 @@
 
         internal override void Visit(Action<Base> visitor)
         {
+            base.Visit(visitor);
             foreach (var statement in this.locals)
             {
-                visitor(statement);
+                statement.Visit(visitor);
             }
 
-            visitor(this.statements);
-            visitor(this.initialization);
-            visitor(this.incrementing);
-            visitor(this.condition);
+            this.statements.Visit(visitor);
+            this.initialization.Visit(visitor);
+            this.incrementing.Visit(visitor);
+            this.condition.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

@@ -15,7 +15,8 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.sourceType);
+            base.Visit(visitor);
+            this.sourceType.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

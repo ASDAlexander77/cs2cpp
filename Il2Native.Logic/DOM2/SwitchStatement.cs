@@ -45,19 +45,31 @@
             }
 
             this.stringEquality = boundSwitchStatement.StringEquality;
+
+            // disable all 'auto' variables
+            this.Visit(
+                (e) =>
+                {
+                    var assignmentOperator = e as AssignmentOperator;
+                    if (assignmentOperator != null)
+                    {
+                        assignmentOperator.ApplyAutoType = false;
+                    }
+                });
         }
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.expression);
+            base.Visit(visitor);
+            this.expression.Visit(visitor);
             foreach (var statement in this.statements)
             {
-                visitor(statement);
+                statement.Visit(visitor);
             }
 
             foreach (var statement in this.switchCases)
             {
-                visitor(statement);
+                statement.Visit(visitor);
             }
         }
 
@@ -125,7 +137,7 @@
                         first = first ?? ifStatement;
                         if (last != null)
                         {
-                            last.ElseStatements = ifStatement;
+                            last.ElseStatementsOpt = ifStatement;
                         }
 
                         last = ifStatement;

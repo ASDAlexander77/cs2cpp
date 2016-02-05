@@ -104,10 +104,11 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.statements);
-            visitor(this.initialization);
-            visitor(this.incrementing);
-            visitor(this.condition);
+            base.Visit(visitor);
+            this.statements.Visit(visitor);
+            this.initialization.Visit(visitor);
+            this.incrementing.Visit(visitor);
+            this.condition.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

@@ -33,7 +33,8 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.Statement);
+            base.Visit(visitor);
+            this.Statement.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

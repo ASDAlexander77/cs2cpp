@@ -21,13 +21,14 @@
 
         internal override void Visit(Action<Base> visitor)
         {
-            visitor(this.TryBlock);
+            base.Visit(visitor);
+            this.TryBlock.Visit(visitor);
             foreach (var catchBlock in CatchBlocks)
             {
-                visitor(catchBlock);
+                catchBlock.Visit(visitor);
             }
 
-            visitor(this.FinallyBlockOpt);
+            this.FinallyBlockOpt.Visit(visitor);
         }
 
         internal void Parse(BoundTryStatement boundTryStatement)

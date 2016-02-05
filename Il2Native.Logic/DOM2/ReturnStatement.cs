@@ -23,9 +23,10 @@
 
         internal override void Visit(Action<Base> visitor)
         {
+            base.Visit(visitor);
             if (this.ExpressionOpt != null)
             {
-                visitor(this.ExpressionOpt);
+                this.ExpressionOpt.Visit(visitor);
             }
         }
 
