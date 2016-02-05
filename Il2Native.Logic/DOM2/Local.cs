@@ -8,8 +8,6 @@
 
     public class Local : Expression
     {
-        private static ObjectIDGenerator objectIDGenerator = new ObjectIDGenerator();
-
         private string customName;
 
         private ILocalSymbol localSymbol;
@@ -89,7 +87,7 @@
                 if (local.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
                 {
                     var firstTime = false;
-                    lbl += string.Format("_{0}", objectIDGenerator.GetId(local, out firstTime).ToString());
+                    lbl += string.Format("_{0}", CCodeWriterBase.ObjectIdGenerator.GetId(local, out firstTime).ToString());
                 }
 
                 this.customName = lbl;

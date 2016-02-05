@@ -2,8 +2,8 @@
 namespace Il2Native.Logic
 {
     using System;
-    using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.Serialization;
     using DOM;
     using DOM2;
     using Microsoft.CodeAnalysis;
@@ -12,6 +12,13 @@ namespace Il2Native.Logic
 
     public abstract class CCodeWriterBase
     {
+        private static ObjectIDGenerator objectIDGenerator = new ObjectIDGenerator();
+
+        public static ObjectIDGenerator ObjectIdGenerator
+        {
+            get { return objectIDGenerator; }
+        }
+
         public abstract void OpenBlock();
 
         public abstract void EndBlock();
