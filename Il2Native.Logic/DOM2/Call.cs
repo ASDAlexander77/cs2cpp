@@ -51,38 +51,43 @@
                     c.WhiteSpace();
                 }
 
-                var closeCast = false;
-                if (paramEnum != null)
-                {
-                    if (paramEnum.Current.Type.IsReferenceType)
-                    {
-                        var literal = expression as Literal;
-                        if (literal != null && literal.Value.IsNull)
-                        {
-                            c.TextSpan("static_cast<");
-                            c.WriteType(paramEnum.Current.Type);
-                            c.TextSpan(">(");
-                            closeCast = true;
-                        }
-                    }
-
-                    if (paramEnum.Current.Type.IsValueType && expression is ThisReference)
-                    {
-                        c.TextSpan("*");
-                    }
-                }
-
-                expression.WriteTo(c);
-
-                if (closeCast)
-                {
-                    c.TextSpan(")");
-                }
-
+                PreprocessParameter(expression, paramEnum != null ? paramEnum.Current : null).WriteTo(c);
                 anyArgs = true;
             }
 
             c.TextSpan(")");
+        }
+
+        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter)
+        {
+            if (parameter == null)
+            {
+                return expression;
+            }
+
+            var effectiveExpression = expression;
+
+            var typeDestination = parameter.Type;
+            if (typeDestination.IsReferenceType)
+            {
+                var literal = expression as Literal;
+                if (literal != null && literal.Value.IsNull)
+                {
+                    var conversion = new Conversion();
+                    conversion.TypeDestination = typeDestination;
+                    conversion.Operand = expression;
+                    effectiveExpression = conversion;
+                }
+            }
+
+            if (typeDestination.IsValueType && expression is ThisReference)
+            {
+                var pointerIndirectionOperator = new PointerIndirectionOperator();
+                pointerIndirectionOperator.Operand = expression;
+                effectiveExpression = pointerIndirectionOperator;
+            }
+
+            return effectiveExpression;
         }
 
         internal void Parse(BoundCall boundCall)

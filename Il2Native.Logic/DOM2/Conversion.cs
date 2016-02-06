@@ -1,28 +1,26 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class Conversion : Expression
     {
-        private TypeSymbol typeSource;
+        public ITypeSymbol TypeSource { get; set; }
 
-        private TypeSymbol typeDestination;
+        public ITypeSymbol TypeDestination { get; set; }
 
-        private Expression operand;
+        public Expression Operand { get; set; }
 
         private ConversionKind conversionKind;
 
         internal void Parse(BoundConversion boundConversion)
         {
             base.Parse(boundConversion);
-            this.typeSource = boundConversion.Operand.Type;
-            this.typeDestination = boundConversion.Type;
-            this.operand = Deserialize(boundConversion.Operand) as Expression;
+            this.TypeSource = boundConversion.Operand.Type;
+            this.TypeDestination = boundConversion.Type;
+            this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.conversionKind = boundConversion.ConversionKind;
         }
 
@@ -40,25 +38,24 @@
                     return;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box<");
-                    c.WriteTypeFullName(this.typeSource);
+                    c.WriteTypeFullName(this.TypeSource);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(this.typeDestination);
+                    c.WriteType(this.TypeDestination);
                     c.TextSpan(",");
                     c.WhiteSpace();
-                    c.WriteTypeFullName(this.typeDestination);
+                    c.WriteTypeFullName(this.TypeDestination);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
                 case ConversionKind.ImplicitReference:
 
-                    var useSiteDiagnostics = new HashSet<DiagnosticInfo>();
-                    if (this.typeDestination.TypeKind != TypeKind.TypeParameter && this.typeSource.IsDerivedFrom(this.typeDestination, true, ref useSiteDiagnostics))
+                    if (this.TypeDestination.TypeKind != TypeKind.TypeParameter && this.TypeSource.IsDerivedFrom(this.TypeDestination))
                     {
                         c.TextSpan("static_cast<");
-                        c.WriteType(this.typeDestination);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     }
                     else
@@ -66,7 +63,7 @@
                         // TODO: finish dynamic cast
                         //c.TextSpan("dynamic_cast<");
                         if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
-                            && this.typeDestination.IsInterfaceType())
+                            && this.TypeDestination.TypeKind == TypeKind.Interface)
                         {
                             c.TextSpan("static_cast<");
                         }
@@ -74,7 +71,7 @@
                         {
                             c.TextSpan("reinterpret_cast<");
                         }
-                        c.WriteType(this.typeDestination);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     }
 
@@ -82,12 +79,12 @@
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
                         c.TextSpan("reinterpret_cast<");
-                        c.WriteType(this.typeDestination);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     break;
                 default:
                     c.TextSpan("static_cast<");
-                    c.WriteType(this.typeDestination);
+                    c.WriteType(this.TypeDestination);
                     c.TextSpan(">");
                     break;
             }
@@ -96,15 +93,15 @@
 
             // TODO: temp hack for supporting cast to interface
             if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
-                && this.typeDestination.IsInterfaceType())
+                && this.TypeDestination.TypeKind == TypeKind.Interface)
             {
                 c.TextSpan("nullptr/*");
-                this.operand.WriteTo(c);
+                this.Operand.WriteTo(c);
                 c.TextSpan("*/");
             }
             else
             {
-                this.operand.WriteTo(c);
+                this.Operand.WriteTo(c);
             }
 
             c.TextSpan(")");

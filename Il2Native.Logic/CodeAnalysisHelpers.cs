@@ -31,5 +31,16 @@
         {
             return source.GetTypeMembers().SelectMany(nestedType => EnumAllNestedTypes(nestedType));
         }
+
+        public static bool IsDerivedFrom(this ITypeSymbol source, ITypeSymbol from)
+        {
+            var current = source.BaseType;
+            while (current != null && current != from)
+            {
+                current = current.BaseType;
+            }
+
+            return current != null;
+        }
     }
 }
