@@ -73,18 +73,17 @@
                 var literal = expression as Literal;
                 if (literal != null && literal.Value.IsNull)
                 {
-                    var conversion = new Conversion();
-                    conversion.TypeDestination = typeDestination;
-                    conversion.Operand = expression;
-                    effectiveExpression = conversion;
+                    effectiveExpression = new Conversion
+                    {
+                        TypeDestination = typeDestination,
+                        Operand = expression
+                    };
                 }
             }
 
             if (typeDestination.IsValueType && expression is ThisReference)
             {
-                var pointerIndirectionOperator = new PointerIndirectionOperator();
-                pointerIndirectionOperator.Operand = expression;
-                effectiveExpression = pointerIndirectionOperator;
+                effectiveExpression = new PointerIndirectionOperator { Operand = expression };
             }
 
             return effectiveExpression;
