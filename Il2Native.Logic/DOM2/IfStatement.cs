@@ -31,15 +31,18 @@
             var stage = Stages.Condition;
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
-                var boundConditionalGoto = boundStatement as BoundConditionalGoto;
-                if (boundConditionalGoto != null
-                    && (boundConditionalGoto.Label.Name.StartsWith("<afterif-") || boundConditionalGoto.Label.Name.StartsWith("<alternative-"))
-                    && stage == Stages.Condition)
+                if (stage == Stages.Condition)
                 {
-                    this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-                    Debug.Assert(this.Condition != null);
-                    stage = Stages.IfBody;
-                    continue;
+                    var boundConditionalGoto = boundStatement as BoundConditionalGoto;
+                    if (boundConditionalGoto != null && (boundConditionalGoto.Label.Name.StartsWith("<afterif-") || boundConditionalGoto.Label.Name.StartsWith("<alternative-")))
+                    {
+                        this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+                        Debug.Assert(this.Condition != null);
+                        stage = Stages.IfBody;
+                        continue;
+                    }
+
+                    return false;
                 }
 
                 var boundGotoStatement = boundStatement as BoundGotoStatement;

@@ -324,36 +324,19 @@
                             return forEachIteratorStatement;
                         }
                     }
-
-                    // try to detect 'if'
-                    var ifStatement = new IfStatement();
-                    if (ifStatement.Parse(boundStatementList))
-                    {
-                        return ifStatement;
-                    }
-
-                    var whileStatement = new WhileStatement();
-                    if (whileStatement.Parse(boundStatementList))
-                    {
-                        return whileStatement;
-                    }
                 }
 
-                var blockSyntax = boundStatementList.Syntax.Green as BlockSyntax;
-                if (blockSyntax != null)
+                // try to detect 'if'
+                var ifStatementNoHint = new IfStatement();
+                if (ifStatementNoHint.Parse(boundStatementList))
                 {
-                    // try to detect 'if'
-                    var ifStatement = new IfStatement();
-                    if (ifStatement.Parse(boundStatementList))
-                    {
-                        return ifStatement;
-                    }
+                    return ifStatementNoHint;
+                }
 
-                    var whileStatement = new WhileStatement();
-                    if (whileStatement.Parse(boundStatementList))
-                    {
-                        return whileStatement;
-                    }
+                var whileStatementNoHint = new WhileStatement();
+                if (whileStatementNoHint.Parse(boundStatementList))
+                {
+                    return whileStatementNoHint;
                 }
 
                 var block = new Block();

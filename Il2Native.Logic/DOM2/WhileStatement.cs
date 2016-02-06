@@ -51,10 +51,12 @@
                 if (stage == Stages.Initialization)
                 {
                     var boundGotoStatement = boundStatement as BoundGotoStatement;
-                    if (boundGotoStatement != null)
+                    if (boundGotoStatement != null && boundGotoStatement.Label.Name.StartsWith("<continue"))
                     {
                         continue;
                     }
+
+                    return false;
                 }
 
                 if (stage == Stages.Condition)
