@@ -78,7 +78,7 @@
                             Statements = statement;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            return false;
                     }
                 }
             }

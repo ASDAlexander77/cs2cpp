@@ -30,7 +30,7 @@
             if (interfaceCastRequired)
             {
                 c.TextSpan("interface_cast<");
-                c.WriteType(this.TypeDestination);
+                c.WriteType(this.TypeDestination, true);
                 c.TextSpan(">");
                 c.TextSpan("(");
             }
@@ -67,7 +67,7 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(this.TypeDestination);
+                    c.WriteType(this.TypeDestination, true);
                     c.TextSpan(",");
                     c.WhiteSpace();
                     c.WriteTypeFullName(this.TypeDestination);
@@ -80,7 +80,7 @@
                         this.TypeSource.IsDerivedFrom(this.TypeDestination))
                     {
                         c.TextSpan("static_cast<");
-                        c.WriteType(this.TypeDestination);
+                        c.WriteType(this.TypeDestination, true);
                         c.TextSpan(">");
                     }
                     else
@@ -96,7 +96,7 @@
                             c.TextSpan("as<");
                         }
 
-                        c.WriteType(this.TypeDestination);
+                        c.WriteType(this.TypeDestination, true);
                         c.TextSpan(">");
                     }
 
@@ -104,12 +104,12 @@
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
                     c.TextSpan("reinterpret_cast<");
-                    c.WriteType(this.TypeDestination);
+                    c.WriteType(this.TypeDestination, true);
                     c.TextSpan(">");
                     break;
                 default:
                     c.TextSpan("static_cast<");
-                    c.WriteType(this.TypeDestination);
+                    c.WriteType(this.TypeDestination, true);
                     c.TextSpan(">");
                     break;
             }

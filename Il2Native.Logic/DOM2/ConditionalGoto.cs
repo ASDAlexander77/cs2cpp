@@ -31,8 +31,8 @@
         {
             c.TextSpan("if");
             c.WhiteSpace();
-            c.TextSpan("(");
-            this.condition.WriteTo(c);
+            c.TextSpan("(!");
+            c.WriteExpressionInParenthesesIfNeeded(this.condition);
             c.TextSpan(")");
 
             c.NewLine();

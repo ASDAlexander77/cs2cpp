@@ -339,6 +339,23 @@
                     }
                 }
 
+                var blockSyntax = boundStatementList.Syntax.Green as BlockSyntax;
+                if (blockSyntax != null)
+                {
+                    // try to detect 'if'
+                    var ifStatement = new IfStatement();
+                    if (ifStatement.Parse(boundStatementList))
+                    {
+                        return ifStatement;
+                    }
+
+                    var whileStatement = new WhileStatement();
+                    if (whileStatement.Parse(boundStatementList))
+                    {
+                        return whileStatement;
+                    }
+                }
+
                 var block = new Block();
                 block.Parse(boundStatementList, specialCase);
                 return block;

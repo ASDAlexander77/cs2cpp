@@ -88,15 +88,12 @@
                     switch (stage)
                     {
                         case Stages.Initialization:
-                            Debug.Assert(this.initialization == null);
                             this.initialization = statement;
                             break;
                         case Stages.Body:
-                            Debug.Assert(Statements == null);
                             Statements = statement;
                             break;
                         case Stages.Incrementing:
-                            Debug.Assert(this.incrementing == null);
                             this.incrementing = statement;
                             break;
                         default:
