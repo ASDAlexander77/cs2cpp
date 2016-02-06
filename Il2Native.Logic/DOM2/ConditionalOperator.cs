@@ -18,7 +18,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.Condition.WriteTo(c);
+            c.WriteExpressionInParenthesesIfNeeded(this.Condition);
 
             c.WhiteSpace();
             c.TextSpan("?");
