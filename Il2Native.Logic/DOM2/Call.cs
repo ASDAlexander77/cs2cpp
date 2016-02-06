@@ -67,6 +67,7 @@
 
             var effectiveExpression = expression;
 
+            var typeSource = expression.Type;
             var typeDestination = parameter.Type;
             if (typeDestination.IsReferenceType)
             {

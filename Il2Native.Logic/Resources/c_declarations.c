@@ -49,6 +49,12 @@ template <typename D, typename C, typename S> inline D __unbox(S* c)
 	return d;
 }
 
+// interface cast internals
+template <typename D, typename S> inline D interface_cast(S v)
+{
+	return (D) nullptr;
+}
+
 // Typeof internals
 template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 {

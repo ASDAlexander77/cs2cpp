@@ -26,16 +26,40 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            var interfaceCastRequired = this.conversionKind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
+            if (interfaceCastRequired)
+            {
+                c.TextSpan("interface_cast<");
+                c.WriteType(this.TypeDestination);
+                c.TextSpan(">");
+                c.TextSpan("(");
+            }
+
+            if (this.WriteCast(c))
+            {
+                c.TextSpan("(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");
+            }
+
+            if (interfaceCastRequired)
+            {
+                c.TextSpan(")");
+            }
+        }
+
+        private bool WriteCast(CCodeWriterBase c)
+        {
             switch (this.conversionKind)
             {
                 case ConversionKind.MethodGroup:
                     Debug.Assert(false, "Not Implemented");
                     ////throw new NotImplementedException();
-                    return;
+                    return false;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
                     c.TextSpan("nullptr");
-                    return;
+                    return false;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box<");
                     c.WriteTypeFullName(this.TypeSource);
@@ -52,7 +76,8 @@
                 case ConversionKind.ExplicitReference:
                 case ConversionKind.ImplicitReference:
 
-                    if (this.TypeDestination.TypeKind != TypeKind.TypeParameter && this.TypeSource.IsDerivedFrom(this.TypeDestination))
+                    if (this.TypeDestination.TypeKind != TypeKind.TypeParameter &&
+                        this.TypeSource.IsDerivedFrom(this.TypeDestination))
                     {
                         c.TextSpan("static_cast<");
                         c.WriteType(this.TypeDestination);
@@ -62,10 +87,11 @@
                     {
                         // TODO: finish dynamic cast
                         //c.TextSpan("dynamic_cast<");
-                        if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
+                        if ((this.conversionKind == ConversionKind.ExplicitReference ||
+                             this.conversionKind == ConversionKind.ImplicitReference)
                             && this.TypeDestination.TypeKind == TypeKind.Interface)
                         {
-                            c.TextSpan("static_cast<");
+                            c.TextSpan("interface_cast<");
                         }
                         else
                         {
@@ -78,9 +104,9 @@
                     break;
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
-                        c.TextSpan("reinterpret_cast<");
-                        c.WriteType(this.TypeDestination);
-                        c.TextSpan(">");
+                    c.TextSpan("reinterpret_cast<");
+                    c.WriteType(this.TypeDestination);
+                    c.TextSpan(">");
                     break;
                 default:
                     c.TextSpan("static_cast<");
@@ -89,22 +115,7 @@
                     break;
             }
 
-            c.TextSpan("(");
-
-            // TODO: temp hack for supporting cast to interface
-            if ((this.conversionKind == ConversionKind.ExplicitReference || this.conversionKind == ConversionKind.ImplicitReference)
-                && this.TypeDestination.TypeKind == TypeKind.Interface)
-            {
-                c.TextSpan("nullptr/*");
-                this.Operand.WriteTo(c);
-                c.TextSpan("*/");
-            }
-            else
-            {
-                this.Operand.WriteTo(c);
-            }
-
-            c.TextSpan(")");
+            return true;
         }
     }
 }
