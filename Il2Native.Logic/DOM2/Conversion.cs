@@ -13,6 +13,8 @@
 
         public Expression Operand { get; set; }
 
+        public bool CCast { get; set; }
+
         private ConversionKind conversionKind;
 
         internal void Parse(BoundConversion boundConversion)
@@ -26,6 +28,15 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.CCast)
+            {
+                c.WriteType(this.TypeDestination, true);
+                c.TextSpan("(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");
+                return;
+            }
+
             var interfaceCastRequired = this.conversionKind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {

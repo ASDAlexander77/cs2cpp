@@ -25,7 +25,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                             {
                                 ReceiverOpt = new ThisReference { Type = type },
                                 Field = new FieldImpl { Name = "m_value" }
-                            }
+                            },
+                            CCast = true
                         }       
                     }
                 }
