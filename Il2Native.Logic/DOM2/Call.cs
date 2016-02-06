@@ -51,12 +51,34 @@
                     c.WhiteSpace();
                 }
 
-                if (paramEnum != null && paramEnum.Current.Type.IsValueType && expression is ThisReference)
+                var closeCast = false;
+                if (paramEnum != null)
                 {
-                    c.TextSpan("*");
+                    if (paramEnum.Current.Type.IsReferenceType)
+                    {
+                        var literal = expression as Literal;
+                        if (literal != null && literal.Value.IsNull)
+                        {
+                            c.TextSpan("static_cast<");
+                            c.WriteType(paramEnum.Current.Type);
+                            c.TextSpan(">(");
+                            closeCast = true;
+                        }
+                    }
+
+                    if (paramEnum.Current.Type.IsValueType && expression is ThisReference)
+                    {
+                        c.TextSpan("*");
+                    }
                 }
 
                 expression.WriteTo(c);
+
+                if (closeCast)
+                {
+                    c.TextSpan(")");
+                }
+
                 anyArgs = true;
             }
 
