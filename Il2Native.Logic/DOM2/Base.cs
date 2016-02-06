@@ -26,15 +26,25 @@
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
             {
+                var boundBlock2 = boundStatement as BoundBlock;
                 var deserialize = Deserialize(boundStatement, specialCase: specialCase);
                 var block = deserialize as Block;
-                if (block != null)
+                if (block != null && (boundBlock2 == null || boundBlock2.Locals.Length == 0))
                 {
                     foreach (var statement2 in block.Statements.Where(s => s != null))
                     {
                         statements.Add(statement2);
                     }
 
+                    continue;
+                }
+
+                if (block != null)
+                {
+                    var blockStatement = new BlockStatement();
+                    blockStatement.Statements = block;
+                    blockStatement.SuppressEnding = true;
+                    statements.Add(blockStatement);
                     continue;
                 }
 

@@ -4,9 +4,8 @@
     using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class DoStatement : Statement
+    public class DoStatement : BlockStatement
     {
-        private Base statements;
         private Expression condition;
 
         private enum Stages
@@ -75,8 +74,8 @@
                     switch (stage)
                     {
                         case Stages.Body:
-                            Debug.Assert(this.statements == null);
-                            this.statements = statement;
+                            Debug.Assert(Statements == null);
+                            Statements = statement;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -91,14 +90,14 @@
         {
             base.Visit(visitor);
             this.condition.Visit(visitor);
-            this.statements.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("do");
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.statements);
+            NoSeparation = true;
+            base.WriteTo(c);
 
             c.TextSpan("while");
             c.WhiteSpace();
@@ -107,7 +106,8 @@
             this.condition.WriteTo(c);
 
             c.TextSpan(")");
-            base.WriteTo(c);
+
+            c.EndStatement();
         }
     }
 }

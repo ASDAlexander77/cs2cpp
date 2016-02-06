@@ -38,11 +38,11 @@
                 case ConstantValueTypeDiscriminator.Int32:
                     return this.Value.Int32Value.ToString();
                 case ConstantValueTypeDiscriminator.UInt32:
-                    return this.Value.Int32Value.ToString();
+                    return  string.Format("{0}U", this.Value.UInt32Value);
                 case ConstantValueTypeDiscriminator.Int64:
-                    return  string.Format("{0}L", this.Value.Int64Value);
+                    return  string.Format("{0}LL", this.Value.Int64Value);
                 case ConstantValueTypeDiscriminator.UInt64:
-                    return  string.Format("{0}UL", this.Value.UInt64Value);
+                    return  string.Format("{0}ULL", this.Value.UInt64Value);
                 case ConstantValueTypeDiscriminator.Single:
                     var line = this.Value.DoubleValue.ToString();
                     return string.Format("{0}f", line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
@@ -89,19 +89,19 @@
                     c.TextSpan(this.Value.Int32Value.ToString());
                     break;
                 case ConstantValueTypeDiscriminator.UInt32:
-                    c.TextSpan("(uint32_t)");
-                    c.TextSpan(this.Value.Int32Value.ToString());
+                    c.TextSpan(this.Value.UInt32Value.ToString());
+                    c.TextSpan("U");
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
                     c.TextSpan(this.Value.Int64Value.ToString());
-                    c.TextSpan("L");
+                    c.TextSpan("LL");
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
-                    c.TextSpan(this.Value.Int64Value.ToString());
-                    c.TextSpan("UL");
+                    c.TextSpan(this.Value.UInt64Value.ToString());
+                    c.TextSpan("ULL");
                     break;
                 case ConstantValueTypeDiscriminator.Single:
-                    var line = this.Value.DoubleValue.ToString();
+                    var line = this.Value.SingleValue.ToString();
                     c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
                     c.TextSpan("f");
                     break;

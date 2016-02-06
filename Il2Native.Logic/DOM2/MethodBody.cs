@@ -1,14 +1,30 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System.Linq;
+    using System.Net.Sockets;
 
     public class MethodBody : Block
     {
         internal override void WriteTo(CCodeWriterBase c)
         {
+            // get actual statements
+            var statements = this.Statements;
+            if (statements.Count == 1 && statements.First() is BlockStatement)
+            {
+                var blockStatement = statements.First() as BlockStatement;
+                if (blockStatement != null)
+                {
+                    var block = blockStatement.Statements as Block;
+                    if (block != null)
+                    {
+                        statements = block.Statements;
+                    }
+                }
+            }
+
             // call constructors
             var constructors =
-                this.Statements.TakeWhile(
+                statements.TakeWhile(
                     s =>
                     s is ExpressionStatement && ((ExpressionStatement)s).Expression is Call
                     && ((Call)(((ExpressionStatement)s).Expression)).IsCallingConstructor)
@@ -38,7 +54,7 @@
             c.NewLine();
 
             c.OpenBlock();
-            foreach (var statement in this.Statements.Skip(constructors.Length))
+            foreach (var statement in statements.Skip(constructors.Length))
             {
                 statement.WriteTo(c);
             }

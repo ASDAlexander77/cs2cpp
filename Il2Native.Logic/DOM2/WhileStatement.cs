@@ -4,9 +4,8 @@
     using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class WhileStatement : Statement
+    public class WhileStatement : BlockStatement
     {
-        private Base statements;
         private Expression condition;
 
         private enum Stages
@@ -75,8 +74,8 @@
                     switch (stage)
                     {
                         case Stages.Body:
-                            Debug.Assert(this.statements == null);
-                            this.statements = statement;
+                            Debug.Assert(Statements == null);
+                            Statements = statement;
                             break;
                         default:
                             return false;
@@ -91,7 +90,6 @@
         {
             base.Visit(visitor);
             this.condition.Visit(visitor);
-            this.statements.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -105,10 +103,7 @@
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.statements);
-
-            // No normal ending of Statement as we do not need extra ;
-            c.Separate();
+            base.WriteTo(c);
         }
     }
 }

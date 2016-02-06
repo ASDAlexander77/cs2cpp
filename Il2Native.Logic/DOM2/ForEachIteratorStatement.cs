@@ -16,8 +16,7 @@
         private enum Stages
         {
             Initialization,
-            TryBody,
-            End
+            TryBody
         }
 
         internal bool Parse(BoundStatementList boundStatementList)

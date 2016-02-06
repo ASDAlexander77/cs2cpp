@@ -6,11 +6,10 @@
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class ForEachSimpleArrayStatement : Statement
+    public class ForEachSimpleArrayStatement : BlockStatement
     {
         private readonly IList<Statement> locals = new List<Statement>(); 
 
-        private Base statements;
         private Base initialization;
         private Base incrementing;
         private Expression condition;
@@ -110,7 +109,7 @@
                             MergeOrSet(ref this.initialization, statement);
                             break;
                         case Stages.Body:
-                            this.statements = statement;
+                            Statements = statement;
                             break;
                         case Stages.Incrementing:
                             this.incrementing = statement;
@@ -132,7 +131,6 @@
                 statement.Visit(visitor);
             }
 
-            this.statements.Visit(visitor);
             this.initialization.Visit(visitor);
             this.incrementing.Visit(visitor);
             this.condition.Visit(visitor);
@@ -189,15 +187,12 @@
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.statements);
+            base.WriteTo(c);
 
             if (this.locals.Count > 0)
             {
                 c.EndBlock();
             }
-
-            // No normal ending of Statement as we do not need extra ;
-            c.Separate();
         }
     }
 }

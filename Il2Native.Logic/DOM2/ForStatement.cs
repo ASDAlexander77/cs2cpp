@@ -4,9 +4,8 @@
     using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class ForStatement : Statement
+    public class ForStatement : BlockStatement
     {
-        private Base statements;
         private Base initialization;
         private Base incrementing;
         private Expression condition;
@@ -93,8 +92,8 @@
                             this.initialization = statement;
                             break;
                         case Stages.Body:
-                            Debug.Assert(this.statements == null);
-                            this.statements = statement;
+                            Debug.Assert(Statements == null);
+                            Statements = statement;
                             break;
                         case Stages.Incrementing:
                             Debug.Assert(this.incrementing == null);
@@ -112,7 +111,6 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.statements.Visit(visitor);
             this.initialization.Visit(visitor);
             this.incrementing.Visit(visitor);
             this.condition.Visit(visitor);
@@ -142,10 +140,7 @@
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.statements);
-            
-            // No normal ending of Statement as we do not need extra ;
-            c.Separate();
+            base.WriteTo(c);
         }
     }
 }

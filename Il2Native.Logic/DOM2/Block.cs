@@ -13,13 +13,13 @@
 
         public bool NoParenthesis { get; set; }
 
-        private readonly IList<Statement> statements = new List<Statement>();
+        private readonly IList<Statement> _statements = new List<Statement>();
 
         public IList<Statement> Statements 
         {
             get
             {
-                return this.statements;
+                return this._statements;
             }
         }
 
@@ -30,13 +30,13 @@
                 throw new ArgumentNullException();
             }
 
-            ParseBoundStatementList(boundStatementList, this.statements, specialCase);
+            ParseBoundStatementList(boundStatementList, this._statements, specialCase);
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            foreach (var statement in this.statements)
+            foreach (var statement in this._statements)
             {
                 statement.Visit(visitor);
             }
@@ -47,7 +47,7 @@
             if (this.Sequence)
             {
                 var any = false;
-                foreach (var statement in this.statements)
+                foreach (var statement in this._statements)
                 {
                     if (any)
                     {
@@ -68,7 +68,7 @@
                 c.OpenBlock();
             }
 
-            foreach (var statement in this.statements)
+            foreach (var statement in this._statements)
             {
                 statement.WriteTo(c);
             }
