@@ -5,10 +5,10 @@
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeInitSpecialTypeConstructorDeclaration : CCodeMethodDeclaration
+    public class CCodeSpecialTypeConstructorDeclaration : CCodeMethodDeclaration
     {
-        public CCodeInitSpecialTypeConstructorDeclaration(INamedTypeSymbol type)
-            : base(new InitSpecialTypeConstructorMethod(type))
+        public CCodeSpecialTypeConstructorDeclaration(INamedTypeSymbol type)
+            : base(new SpecialTypeConstructorMethod(type))
         {
             MethodBodyOpt = new MethodBody
             {
@@ -32,9 +32,9 @@
             };
         }
 
-        public class InitSpecialTypeConstructorMethod : MethodImpl
+        public class SpecialTypeConstructorMethod : MethodImpl
         {
-            public InitSpecialTypeConstructorMethod(INamedTypeSymbol type)
+            public SpecialTypeConstructorMethod(INamedTypeSymbol type)
             {
                 MethodKind = MethodKind.Constructor;
                 ReceiverType = type;

@@ -28,7 +28,10 @@
                 catchBlock.Visit(visitor);
             }
 
-            this.FinallyBlockOpt.Visit(visitor);
+            if (this.FinallyBlockOpt != null)
+            {
+                this.FinallyBlockOpt.Visit(visitor);
+            }
         }
 
         internal void Parse(BoundTryStatement boundTryStatement)

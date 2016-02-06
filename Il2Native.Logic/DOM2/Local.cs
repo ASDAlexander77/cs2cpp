@@ -87,7 +87,7 @@
                 if (local.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
                 {
                     var firstTime = false;
-                    lbl += string.Format("_{0}", CCodeWriterBase.ObjectIdGenerator.GetId(local, out firstTime).ToString());
+                    lbl += string.Format("_{0}", CCodeWriterBase.ObjectIdGenerator.GetId(local, out firstTime));
                 }
 
                 this.customName = lbl;

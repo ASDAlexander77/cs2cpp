@@ -133,9 +133,10 @@
     <Compile Include="DOM\Implementations\MethodImpl.cs" />
     <Compile Include="DOM\Implementations\ParameterImpl.cs" />
     <Compile Include="DOM\Implementations\TypeImpl.cs" />
+    <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCopyConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethod.cs" />
-    <Compile Include="DOM\Synthesized\CCodeInitSpecialTypeConstructorDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeSpecialTypeConstructorDeclaration.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>

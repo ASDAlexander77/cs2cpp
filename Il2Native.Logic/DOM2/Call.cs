@@ -40,9 +40,10 @@
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
+                var hasParfameter = false;
                 if (paramEnum != null)
                 {
-                    paramEnum.MoveNext();
+                    hasParfameter = paramEnum.MoveNext();
                 }
 
                 if (anyArgs)
@@ -51,7 +52,7 @@
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, paramEnum != null ? paramEnum.Current : null).WriteTo(c);
+                PreprocessParameter(expression, hasParfameter ? paramEnum.Current : null).WriteTo(c);
                 anyArgs = true;
             }
 

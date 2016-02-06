@@ -173,7 +173,12 @@
 
             if (type.IsPrimitiveValueType())
             {
-                unit.Declarations.Add(new CCodeInitSpecialTypeConstructorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeSpecialTypeConstructorDeclaration((INamedTypeSymbol)type));
+            }
+
+            if (type.IsPrimitiveValueType() || type.IsIntPtrType())
+            {
+                unit.Declarations.Add(new CCodeCastOperatorDeclaration((INamedTypeSymbol)type));
             }
 
             if (type.Name != "<Module>" && type.TypeKind != TypeKind.Interface)

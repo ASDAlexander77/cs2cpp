@@ -75,7 +75,7 @@
 
             if (usedGotoLabels.Count > 0)
             {
-                var dict = new SortedDictionary<string, bool>(usedGotoLabels.ToDictionary(i => i.Label.Label, i => true));
+                var dict = new SortedDictionary<string, bool>(usedGotoLabels.Select(i => i.Label.Label).Distinct().ToDictionary(i => i, i => true));
                 foreach (var usedSwitchLabel in usedSwitchLabels)
                 {
                     if (dict.ContainsKey(usedSwitchLabel.Label))

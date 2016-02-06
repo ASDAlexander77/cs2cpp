@@ -20,6 +20,9 @@
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
             base.Parse(boundAssignmentOperator);
+            
+            var boundLocal = boundAssignmentOperator.Left as BoundLocal;
+
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {
@@ -29,7 +32,6 @@
             var forEachStatementSyntax = boundAssignmentOperator.Left.Syntax.Green as ForEachStatementSyntax;
             if (forEachStatementSyntax != null)
             {
-                var boundLocal = boundAssignmentOperator.Left as BoundLocal;
                 if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
                 {
                     this.ApplyAutoType = true;
@@ -44,6 +46,12 @@
             if (this.Right is Literal || boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
             {
                 this.assignmentType = this.Right.Type;
+            }
+
+            if (boundLocal == null)
+            {
+                this.ApplyAutoType = false;
+                this.assignmentType = null;
             }
         }
 
