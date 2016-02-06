@@ -25,19 +25,12 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            WriteCast(c, this.ConversionKind, this.TargetType, this.Operand);
-        }
-
-        internal static void WriteCast(CCodeWriterBase c, ConversionKind conversionKind, TypeExpression targetType, Expression operand)
-        {
-            // TODO: finish dynamic cast
-            //c.TextSpan("dynamic_cast<");
-            c.TextSpan("reinterpret_cast<");
-            targetType.IsReference = true;
-            targetType.WriteTo(c);
+            c.TextSpan("as<");
+            this.TargetType.IsReference = true;
+            this.TargetType.WriteTo(c);
             c.TextSpan(">");
             c.TextSpan("(");
-            operand.WriteTo(c);
+            this.Operand.WriteTo(c);
             c.TextSpan(")");
         }
     }

@@ -152,7 +152,7 @@ namespace Il2Native.Logic
                         }
 
                         anyTypeArg = true;
-                        WriteType(typeArg);
+                        this.WriteType(typeArg);
                     }
 
                     TextSpan(">");
@@ -719,6 +719,9 @@ namespace Il2Native.Logic
                 TextSpan(".");
                 return;
             }
+
+            // default for Templates
+            TextSpan("->");
         }
 
         public void WriteExpressionInParenthesesIfNeeded(Expression expression)

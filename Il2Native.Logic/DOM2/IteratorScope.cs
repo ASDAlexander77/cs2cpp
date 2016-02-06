@@ -5,7 +5,7 @@
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class IteratorScope : Statement
+    public class IteratorScope : BlockStatement
     {
         private IList<IFieldSymbol> _fields = new List<IFieldSymbol>();
 
@@ -13,8 +13,6 @@
         {
             get { return _fields; }
         }
-
-        public Base Statement { get; set; }
 
         internal void Parse(BoundIteratorScope boundIteratorScope)
         {
@@ -28,13 +26,13 @@
                 this.Fields.Add(synthesizedFieldSymbolBase);
             }
 
-            this.Statement = Deserialize(boundIteratorScope.Statement);
+            Statements = Deserialize(boundIteratorScope.Statement);
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.Statement.Visit(visitor);
+            Statements.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -49,10 +47,13 @@
             }
 
             c.TextSpan(")");
+            c.NewLine();
+            base.WriteTo(c);
 
-            c.OpenBlock();
-            this.Statement.WriteTo(c);
-            c.EndBlock();
+            // call lambda
+            c.TextSpan("()");
+
+            c.EndStatement();
         }
     }
 }

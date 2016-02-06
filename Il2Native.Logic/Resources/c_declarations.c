@@ -55,6 +55,18 @@ template <typename D, typename S> inline D interface_cast(S v)
 	return (D) nullptr;
 }
 
+// interface cast internals
+template <typename D, typename S> inline D as(S v)
+{
+	return (D) nullptr;
+}
+
+// interface cast internals
+template <typename D, typename S> inline D is(S v)
+{
+	return as<D>(v) != nullptr;
+}
+
 // Typeof internals
 template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 {

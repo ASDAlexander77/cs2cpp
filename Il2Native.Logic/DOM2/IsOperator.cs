@@ -20,11 +20,13 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            AsOperator.WriteCast(c, this.ConversionKind, this.TargetType, this.Operand);
-            c.WhiteSpace();
-            c.TextSpan("==");
-            c.WhiteSpace();
-            c.TextSpan("nullptr");
+            c.TextSpan("is<");
+            this.TargetType.IsReference = true;
+            this.TargetType.WriteTo(c);
+            c.TextSpan(">");
+            c.TextSpan("(");
+            this.Operand.WriteTo(c);
+            c.TextSpan(")");
         }
     }
 }

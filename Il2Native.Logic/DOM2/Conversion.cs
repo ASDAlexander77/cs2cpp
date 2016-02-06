@@ -85,8 +85,6 @@
                     }
                     else
                     {
-                        // TODO: finish dynamic cast
-                        //c.TextSpan("dynamic_cast<");
                         if ((this.conversionKind == ConversionKind.ExplicitReference ||
                              this.conversionKind == ConversionKind.ImplicitReference)
                             && this.TypeDestination.TypeKind == TypeKind.Interface)
@@ -95,8 +93,9 @@
                         }
                         else
                         {
-                            c.TextSpan("reinterpret_cast<");
+                            c.TextSpan("as<");
                         }
+
                         c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     }
