@@ -15,7 +15,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteName(this.ParameterSymbol);
+            c.WriteNameEnsureCompatible(this.ParameterSymbol);
         }
     }
 }

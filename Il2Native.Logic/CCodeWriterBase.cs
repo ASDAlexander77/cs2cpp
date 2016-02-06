@@ -107,7 +107,7 @@ namespace Il2Native.Logic
             TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false)
         {
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
@@ -135,6 +135,28 @@ namespace Il2Native.Logic
             {
                 TextSpan("_");
                 TextSpan(parameter.RefKind.ToString());
+            }
+
+            if (addTemplate)
+            {
+                if (methodSymbol.IsGenericMethod)
+                {
+                    TextSpan("<");
+
+                    var anyTypeArg = false;
+                    foreach (var typeArg in methodSymbol.TypeArguments)
+                    {
+                        if (anyTypeArg)
+                        {
+                            TextSpan(", ");
+                        }
+
+                        anyTypeArg = true;
+                        WriteType(typeArg);
+                    }
+
+                    TextSpan(">");
+                }
             }
         }
 
@@ -586,16 +608,16 @@ namespace Il2Native.Logic
             TextSpan("template <");
 
             var anyTypeParam = false;
-            WriteTemplateDeclarationRecusive(namedTypeSymbol, ref anyTypeParam);
+            this.WriteTemplateDeclarationRecursive(namedTypeSymbol, ref anyTypeParam);
 
             TextSpan("> ");
         }
 
-        public void WriteTemplateDeclarationRecusive(INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
+        public void WriteTemplateDeclarationRecursive(INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
         {
             if (namedTypeSymbol.ContainingType != null)
             {
-                WriteTemplateDeclarationRecusive(namedTypeSymbol.ContainingType, ref anyTypeParam);
+                this.WriteTemplateDeclarationRecursive(namedTypeSymbol.ContainingType, ref anyTypeParam);
             }
 
             foreach (var typeParam in namedTypeSymbol.TypeParameters)

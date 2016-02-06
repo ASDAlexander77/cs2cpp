@@ -123,7 +123,7 @@
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
-                c.WriteMethodName(this.Method);
+                c.WriteMethodName(this.Method, addTemplate: true);
             }
             else
             {
@@ -135,7 +135,7 @@
                     c.TextSpan("base::");
                 }
 
-                c.WriteMethodName(this.Method);
+                c.WriteMethodName(this.Method, addTemplate: true);
             }
 
             WriteCallArguments(this.arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
