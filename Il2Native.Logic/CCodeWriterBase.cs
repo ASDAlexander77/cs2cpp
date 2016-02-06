@@ -733,8 +733,7 @@ namespace Il2Native.Logic
 
             var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
-                              expression is UnaryOperator || expression is IsOperator ||
-                              expression is AsOperator || expression is ConditionalOperator;
+                              expression is UnaryOperator || expression is ConditionalOperator;
 
             if (parenthesis)
             {

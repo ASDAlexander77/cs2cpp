@@ -62,7 +62,7 @@ template <typename D, typename S> inline D as(S v)
 }
 
 // interface cast internals
-template <typename D, typename S> inline D is(S v)
+template <typename D, typename S> inline bool is(S v)
 {
 	return as<D>(v) != nullptr;
 }
