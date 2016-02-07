@@ -786,18 +786,27 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteBlockOrStatementsAsBlock(Base node)
+        public void WriteBlockOrStatementsAsBlock(Base node, bool noNewLineAtEnd = false)
         {
             var block = node as Block;
             if (block != null)
             {
+                block.SuppressNewLineAtEnd = noNewLineAtEnd;
                 block.WriteTo(this);
                 return;
             }
 
             this.OpenBlock();
             node.WriteTo(this);
-            this.EndBlock();
+
+            if (noNewLineAtEnd)
+            {
+                this.EndBlockWithoutNewLine();
+            }
+            else
+            {
+                this.EndBlock();
+            }
         }
     }
 }

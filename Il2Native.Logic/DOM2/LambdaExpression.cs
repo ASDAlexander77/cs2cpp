@@ -37,8 +37,7 @@
             }
 
             c.TextSpan(")");
-
-            c.WriteBlockOrStatementsAsBlock(this.Statements);
+            c.WriteBlockOrStatementsAsBlock(this.Statements, true);
         }
     }
 }
