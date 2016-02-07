@@ -118,6 +118,18 @@
                     c.WriteType(this.TypeDestination, true);
                     c.TextSpan(">");
                     break;
+                case ConversionKind.Identity:
+                    // for string
+                    if (this.TypeSource.SpecialType == SpecialType.System_String &&
+                        this.TypeDestination.TypeKind == TypeKind.PointerType)
+                    {
+                        c.TextSpan("&");
+                        this.Operand.WriteTo(c);
+                        c.TextSpan("->m_firstChar");
+                        return false;
+                    }
+
+                    return true;
                 default:
                     c.TextSpan("static_cast<");
                     c.WriteType(this.TypeDestination, true);

@@ -65,7 +65,7 @@
                     continue;
                 }
 
-                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && !IsDeclarationWithoutInitializer(local))
+                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable && !IsDeclarationWithoutInitializer(local))
                 {
                     continue;
                 }

@@ -26,7 +26,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.Left.WriteTo(c);
+            c.WriteExpressionInParenthesesIfNeeded(this.Left);
 
             c.WhiteSpace();
 
@@ -110,7 +110,7 @@
 
             c.WhiteSpace();
 
-            this.Right.WriteTo(c);
+            c.WriteExpressionInParenthesesIfNeeded(this.Right);
         }
     }
 }

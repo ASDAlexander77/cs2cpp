@@ -104,7 +104,7 @@ inline __val<intptr_t>::__val<<<%assemblyName%>>::System::IntPtr>(const <<%assem
 
 // Interlocked
 template <typename T>
-T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
+T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_RefT1(T& location1, T value, T comparant)
 {
     throw 0xC000C000;
 }
