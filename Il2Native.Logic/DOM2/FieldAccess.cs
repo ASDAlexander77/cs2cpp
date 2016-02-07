@@ -3,12 +3,15 @@
     using System;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     public class FieldAccess : Expression
     {
         public IFieldSymbol Field { get; set; }
 
         public Expression ReceiverOpt { get; set; }
+
+        public bool PointerAccess { get; set; }
 
         internal void Parse(BoundFieldAccess boundFieldAccess)
         {
@@ -17,6 +20,12 @@
             if (boundFieldAccess.ReceiverOpt != null)
             {
                 this.ReceiverOpt = Deserialize(boundFieldAccess.ReceiverOpt) as Expression;
+            }
+
+            var memberAccessExpressionSyntax = boundFieldAccess.Syntax as MemberAccessExpressionSyntax;
+            if (memberAccessExpressionSyntax != null)
+            {
+                this.PointerAccess = memberAccessExpressionSyntax.Kind == SyntaxKind.PointerMemberAccessExpression;
             }
         }
 
@@ -30,6 +39,18 @@
             }
             else
             {
+                if (this.PointerAccess)
+                {
+                    var pointerIndirect = this.ReceiverOpt as PointerIndirectionOperator;
+                    if (pointerIndirect != null)
+                    {
+                        c.WriteExpressionInParenthesesIfNeeded(pointerIndirect.Operand);
+                        c.TextSpan("->");
+                        c.WriteName(this.Field);
+                        return;
+                    }
+                }
+
                 c.WriteAccess(this.ReceiverOpt);
                 c.WriteName(this.Field);
             }

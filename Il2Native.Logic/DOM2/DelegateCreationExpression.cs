@@ -11,7 +11,7 @@
             var argument = Deserialize(boundDelegateCreationExpression.Argument) as Expression;
             Debug.Assert(argument != null);
 
-            if (boundDelegateCreationExpression.MethodOpt != null)
+            if (boundDelegateCreationExpression.MethodOpt != null && !(boundDelegateCreationExpression.Argument is BoundMethodGroup))
             {
                 var methodGroup = new MethodGroup { ReceiverOpt = argument };
                 methodGroup.Methods.Add(boundDelegateCreationExpression.MethodOpt);

@@ -27,6 +27,10 @@
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null)
             {
                 this.ApplyAutoType = true;
+                if (variableDeclaratorSyntax.Initializer.Value.Kind == SyntaxKind.NullLiteralExpression)
+                {
+                    this.assignmentType = boundAssignmentOperator.Left.Type;
+                }
             }
 
             var forEachStatementSyntax = boundAssignmentOperator.Left.Syntax.Green as ForEachStatementSyntax;
