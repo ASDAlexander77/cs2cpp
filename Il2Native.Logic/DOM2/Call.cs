@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -131,34 +132,61 @@
 
                 if (IsHidden(this.receiverOpt.Type, this.Method))
                 {
-                    // is HiddenBySignature
-                    c.TextSpan("base::");
+                    if (this.Method.ReceiverType == this.receiverOpt.Type.BaseType)
+                    {
+                        // is HiddenBySignature
+                        c.TextSpan("base::");
+                    }
+                    else
+                    {
+                        c.WriteTypeName((INamedTypeSymbol)this.Method.ReceiverType);
+                    }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true);
+                var explicitMethod = IsExplicitInterfaceCall(this.receiverOpt.Type, this.Method);
+                c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
             }
 
             WriteCallArguments(this.arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
+        private MethodSymbol IsExplicitInterfaceCall(ITypeSymbol type, IMethodSymbol method)
+        {
+            if (!type.IsValueType || method.ReceiverType.TypeKind != TypeKind.Interface)
+            {
+                return null;
+            }
+
+            return type.GetMembers().OfType<MethodSymbol>().FirstOrDefault(m => IsCalledMethodExplicitInterface(m, method));
+        }
+
+        private static bool IsCalledMethodExplicitInterface(MethodSymbol methodOfType, IMethodSymbol calledMethod)
+        {
+            return methodOfType.ExplicitInterfaceImplementations.Any(m => m.Name == calledMethod.Name && m.ParameterCount == calledMethod.Parameters.Length);
+        }
+
         private static bool IsHidden(ITypeSymbol receiverType, IMethodSymbol method)
         {
-            if (receiverType == method.ContainingType)
+            if (method.ReceiverType.TypeKind == TypeKind.Interface)
+            {
+                return false;
+            }
+
+            if (receiverType == method.ReceiverType)
             {
                 return false;
             }
 
             var current = receiverType;
-            do
+            while (current != null && current != method.ReceiverType) 
             {
-                if (current.GetMembers().Any(m => m.Name.Equals(method.Name)))
+                if (current.GetMembers().OfType<MethodSymbol>().Any(m => m.Name.Equals(method.Name)))
                 {
                     return true;
                 }
 
                 current = current.BaseType;
             } 
-            while (current != null && current != method.ContainingType);
 
             return false;
         }

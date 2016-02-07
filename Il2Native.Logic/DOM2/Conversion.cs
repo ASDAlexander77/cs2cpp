@@ -114,6 +114,7 @@
                     break;
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
+                case ConversionKind.PointerToPointer:
                     c.TextSpan("reinterpret_cast<");
                     c.WriteType(this.TypeDestination, true);
                     c.TextSpan(">");

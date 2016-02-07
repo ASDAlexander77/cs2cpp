@@ -107,7 +107,7 @@ namespace Il2Native.Logic
             TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
@@ -117,7 +117,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                WriteName(methodSymbol);
+                WriteName(methodSymbolForName ?? methodSymbol);
                 if (methodSymbol.MetadataName == "op_Explicit")
                 {
                     TextSpan("_");

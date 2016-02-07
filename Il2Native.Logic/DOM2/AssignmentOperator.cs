@@ -48,7 +48,7 @@
                 this.assignmentType = this.Right.Type;
             }
 
-            if (boundLocal == null)
+            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed)
             {
                 this.ApplyAutoType = false;
                 this.assignmentType = null;
