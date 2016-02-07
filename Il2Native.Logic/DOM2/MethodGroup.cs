@@ -1,24 +1,32 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class MethodGroup : Expression
     {
-        private IList<MethodSymbol> methods = new List<MethodSymbol>();
-        private Expression receiverOpt;
+        private IList<IMethodSymbol> methods = new List<IMethodSymbol>();
+
+        public Expression ReceiverOpt { get; set; }
+
+        public IList<IMethodSymbol> Methods
+        {
+            get { return this.methods; }
+        }
 
         internal void Parse(BoundMethodGroup boundMethodGroup)
         {
             base.Parse(boundMethodGroup);
-            this.methods = boundMethodGroup.Methods;
+            foreach (var methodSymbol in boundMethodGroup.Methods.OfType<IMethodSymbol>())
+            {
+                this.Methods.Add(methodSymbol);
+            }
+
             if (boundMethodGroup.ReceiverOpt != null)
             {
-                this.receiverOpt = Deserialize(boundMethodGroup.ReceiverOpt) as Expression;
+                this.ReceiverOpt = Deserialize(boundMethodGroup.ReceiverOpt) as Expression;
             }
         }
 
@@ -41,7 +49,15 @@
             }
             else
             {
-                this.receiverOpt.WriteTo(c);
+                if (this.ReceiverOpt is BaseReference)
+                {
+                    c.TextSpan("this");
+                }
+                else
+                {
+                    this.ReceiverOpt.WriteTo(c);
+                }
+
                 c.TextSpan(",");
                 c.WhiteSpace();
                 c.TextSpan("(intptr_t)nullptr");

@@ -151,7 +151,7 @@
 
         private MethodSymbol IsExplicitInterfaceCall(ITypeSymbol type, IMethodSymbol method)
         {
-            if (!type.IsValueType || method.ReceiverType.TypeKind != TypeKind.Interface)
+            if (type.TypeKind == TypeKind.Interface || method.ReceiverType.TypeKind != TypeKind.Interface)
             {
                 return null;
             }

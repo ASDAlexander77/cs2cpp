@@ -64,8 +64,9 @@
             switch (this.conversionKind)
             {
                 case ConversionKind.MethodGroup:
-                    Debug.Assert(false, "Not Implemented");
-                    ////throw new NotImplementedException();
+                    var newDelegate = new DelegateCreationExpression { Type = this.TypeDestination };
+                    newDelegate.Arguments.Add(this.Operand);
+                    newDelegate.WriteTo(c);
                     return false;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
