@@ -14,10 +14,12 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("alloca");
+            c.TextSpan("reinterpret_cast<");
+            c.WriteType(Type);
+            c.TextSpan(">(alloca");
             c.TextSpan("("); 
             this.Count.WriteTo(c);
-            c.TextSpan(")");
+            c.TextSpan("))");
         }
     }
 }

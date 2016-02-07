@@ -23,14 +23,7 @@
             }
 
             // call constructors
-            var constructors =
-                statements.TakeWhile(
-                    s =>
-                    s is ExpressionStatement && ((ExpressionStatement)s).Expression is Call
-                    && ((Call)(((ExpressionStatement)s).Expression)).IsCallingConstructor)
-                    .Select(s => ((ExpressionStatement)s).Expression as Call)
-                    .ToArray();
-
+            var constructors = statements.TakeWhile(s => IsConstructorCall(s)).Select(s => GetCall(s)).ToArray();
             if (constructors.Length > 0)
             {
                 c.WhiteSpace();
@@ -60,6 +53,32 @@
             }
 
             c.EndBlock();
+        }
+
+        private static Call GetCall(Statement s)
+        {
+            var expressionStatement = s as ExpressionStatement;
+            if (expressionStatement != null)
+            {
+                return expressionStatement.Expression as Call;
+            }
+
+            return null;
+        }
+
+        private static bool IsConstructorCall(Statement s)
+        {
+            var expressionStatement = s as ExpressionStatement;
+            if (expressionStatement != null)
+            {
+                var call = expressionStatement.Expression as Call;
+                if (call != null)
+                {
+                    return call.IsCallingConstructor && call.ReceiverOpt is ThisReference;
+                }
+            }
+
+            return false;
         }
     }
 }

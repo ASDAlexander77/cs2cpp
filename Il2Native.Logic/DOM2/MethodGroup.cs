@@ -45,7 +45,7 @@
                 c.TextSpan("&");
                 c.WriteTypeFullName(method.ContainingType);
                 c.TextSpan("::");
-                c.WriteName(method);
+                c.WriteMethodName(method, true, true);
             }
             else
             {
@@ -65,7 +65,7 @@
                 c.TextSpan("&");               
                 this.receiverOpt.WriteTo(c);
                 c.WriteAccess(this.receiverOpt);
-                c.WriteName(method);
+                c.WriteMethodName(method, true, true);
                 */
             }
         }

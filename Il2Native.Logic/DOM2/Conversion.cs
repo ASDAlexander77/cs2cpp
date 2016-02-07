@@ -15,7 +15,7 @@
 
         public bool CCast { get; set; }
 
-        private ConversionKind conversionKind;
+        internal ConversionKind Kind { get; set; }
 
         internal void Parse(BoundConversion boundConversion)
         {
@@ -23,7 +23,7 @@
             this.TypeSource = boundConversion.Operand.Type;
             this.TypeDestination = boundConversion.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
-            this.conversionKind = boundConversion.ConversionKind;
+            this.Kind = boundConversion.ConversionKind;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -37,7 +37,7 @@
                 return;
             }
 
-            var interfaceCastRequired = this.conversionKind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
+            var interfaceCastRequired = this.Kind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
                 c.TextSpan("interface_cast<");
@@ -61,7 +61,7 @@
 
         private bool WriteCast(CCodeWriterBase c)
         {
-            switch (this.conversionKind)
+            switch (this.Kind)
             {
                 case ConversionKind.MethodGroup:
                     var newDelegate = new DelegateCreationExpression { Type = this.TypeDestination };
@@ -97,8 +97,8 @@
                     }
                     else
                     {
-                        if ((this.conversionKind == ConversionKind.ExplicitReference ||
-                             this.conversionKind == ConversionKind.ImplicitReference)
+                        if ((this.Kind == ConversionKind.ExplicitReference ||
+                             this.Kind == ConversionKind.ImplicitReference)
                             && this.TypeDestination.TypeKind == TypeKind.Interface)
                         {
                             c.TextSpan("interface_cast<");

@@ -12,9 +12,8 @@
 
     public class Call : Expression
     {
-        private readonly IList<Expression> arguments = new List<Expression>();
-        private Expression receiverOpt;
-
+        private readonly IList<Expression> _arguments = new List<Expression>();
+        
         public bool IsCallingConstructor
         {
             get
@@ -23,13 +22,15 @@
             }
         }
 
-        internal IMethodSymbol Method { get; set; }
+        public IMethodSymbol Method { get; set; }
+
+        public Expression ReceiverOpt { get; set; }
 
         public IList<Expression> Arguments
         {
             get
             {
-                return arguments;
+                return this._arguments;
             }
         }
 
@@ -97,14 +98,14 @@
             this.Method = boundCall.Method;
             if (boundCall.ReceiverOpt != null)
             {
-                this.receiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+                this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
             }
 
             foreach (var expression in boundCall.Arguments)
             {
                 var argument = Deserialize(expression) as Expression;
                 Debug.Assert(argument != null);
-                arguments.Add(argument);
+                this._arguments.Add(argument);
             }
         }
 
@@ -127,11 +128,11 @@
             }
             else
             {
-                c.WriteAccess(this.receiverOpt);
+                c.WriteAccess(this.ReceiverOpt);
 
-                if (IsHidden(this.receiverOpt.Type, this.Method))
+                if (IsHidden(this.ReceiverOpt.Type, this.Method))
                 {
-                    if (this.Method.ReceiverType == this.receiverOpt.Type.BaseType)
+                    if (this.Method.ReceiverType == this.ReceiverOpt.Type.BaseType)
                     {
                         // is HiddenBySignature
                         c.TextSpan("base::");
@@ -142,11 +143,11 @@
                     }
                 }
 
-                var explicitMethod = IsExplicitInterfaceCall(this.receiverOpt.Type, this.Method);
+                var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
                 c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
             }
 
-            WriteCallArguments(this.arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+            WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
         private MethodSymbol IsExplicitInterfaceCall(ITypeSymbol type, IMethodSymbol method)

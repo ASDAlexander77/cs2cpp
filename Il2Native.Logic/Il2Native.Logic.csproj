@@ -73,6 +73,7 @@
     <Compile Include="DOM2\DefaultOperator.cs" />
     <Compile Include="DOM2\DelegateCreationExpression.cs" />
     <Compile Include="DOM2\DoStatement.cs" />
+    <Compile Include="DOM2\ElementAccessExpression.cs" />
     <Compile Include="DOM2\Expression.cs" />
     <Compile Include="DOM2\ExpressionStatement.cs" />
     <Compile Include="DOM2\FieldAccess.cs" />

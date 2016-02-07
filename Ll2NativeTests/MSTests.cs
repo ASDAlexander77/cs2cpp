@@ -746,9 +746,10 @@ namespace Ll2NativeTests
 
             // skip
             skip.Add(126); // no Main method
+            skip.Add(317); // using "new" on method
             skip.Add(410); // using "new" on method
 
-            foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(317, 869).Where(n => !skip.Contains(n)))
             {
                 //CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
                 CompilerHelper.Compile(string.Format("test-{0}", index));

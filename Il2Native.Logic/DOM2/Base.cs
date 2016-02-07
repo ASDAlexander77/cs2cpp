@@ -335,6 +335,17 @@
             {
                 var conversion = new Conversion();
                 conversion.Parse(boundConversion);
+
+                // special cast for PointerSubstruction
+                if (boundConversion.Syntax.Green is BinaryExpressionSyntax)
+                {
+                    var binaryOperator = new BinaryOperator();
+                    if (binaryOperator.Parse(boundConversion))
+                    {
+                        conversion.Operand = binaryOperator;
+                    }
+                }
+
                 return conversion;
             }
 
@@ -661,6 +672,13 @@
             var boundPointerIndirectionOperator = boundBody as BoundPointerIndirectionOperator;
             if (boundPointerIndirectionOperator != null)
             {
+                if (boundPointerIndirectionOperator.Syntax.Green is ElementAccessExpressionSyntax)
+                {
+                    var elementAccessExpression = new ElementAccessExpression();
+                    elementAccessExpression.Parse(boundPointerIndirectionOperator);
+                    return elementAccessExpression;
+                }
+
                 var pointerIndirectionOperator = new PointerIndirectionOperator();
                 pointerIndirectionOperator.Parse(boundPointerIndirectionOperator);
                 return pointerIndirectionOperator;
