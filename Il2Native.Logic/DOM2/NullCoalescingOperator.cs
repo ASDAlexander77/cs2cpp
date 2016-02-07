@@ -53,7 +53,10 @@
 
                         }
                 });
-            new LambdaExpression { Block = block, Type = Type }.WriteTo(c);
+            new LambdaCall
+            {
+                Lambda = new LambdaExpression { Statements = block, Type = Type }
+            }.WriteTo(c);
         }
     }
 }

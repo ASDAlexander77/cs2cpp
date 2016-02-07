@@ -516,6 +516,11 @@ namespace Il2Native.Logic
                 parameterIndex++;
             }
 
+            if (anyParameter && methodSymbol.IsVararg)
+            {
+                this.TextSpan("...");
+            }
+
             this.TextSpan(")");
         }
 
@@ -779,6 +784,20 @@ namespace Il2Native.Logic
             {
                 TextSpan("*");
             }
+        }
+
+        public void WriteBlockOrStatementsAsBlock(Base node)
+        {
+            var block = node as Block;
+            if (block != null)
+            {
+                block.WriteTo(this);
+                return;
+            }
+
+            this.OpenBlock();
+            node.WriteTo(this);
+            this.EndBlock();
         }
     }
 }

@@ -18,7 +18,7 @@
         {
             if (this.Statements != null)
             {
-                PrintBlockOrStatementsAsBlock(c, this.Statements);
+                c.WriteBlockOrStatementsAsBlock(this.Statements);
             }
             else
             {

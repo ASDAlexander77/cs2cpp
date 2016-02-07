@@ -5,6 +5,7 @@
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
+    /// TODO: join with lambda expression
     public class IteratorScope : BlockStatement
     {
         private IList<IFieldSymbol> _fields = new List<IFieldSymbol>();

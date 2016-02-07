@@ -231,20 +231,6 @@
             throw new NotSupportedException();
         }
 
-        internal static void PrintBlockOrStatementsAsBlock(CCodeWriterBase c, Base node)
-        {
-            var block = node as Block;
-            if (block != null)
-            {
-                block.WriteTo(c);
-                return;
-            }
-
-            c.OpenBlock();
-            node.WriteTo(c);
-            c.EndBlock();
-        }
-
         public enum SpecialCases
         {
             None,

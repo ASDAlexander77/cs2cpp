@@ -53,24 +53,23 @@
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, hasParfameter ? paramEnum.Current : null).WriteTo(c);
+                PreprocessParameter(expression, hasParfameter ? paramEnum.Current.Type : null).WriteTo(c);
                 anyArgs = true;
             }
 
             c.TextSpan(")");
         }
 
-        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter)
+        private static Expression PreprocessParameter(Expression expression, ITypeSymbol parameterType)
         {
-            if (parameter == null)
+            if (parameterType == null)
             {
                 return expression;
             }
 
             var effectiveExpression = expression;
 
-            var typeSource = expression.Type;
-            var typeDestination = parameter.Type;
+            var typeDestination = parameterType;
             if (typeDestination.IsReferenceType)
             {
                 var literal = expression as Literal;

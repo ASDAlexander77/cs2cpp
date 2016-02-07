@@ -33,7 +33,7 @@
                         }
                 });
             block.Statements.Add(new ReturnStatement { ExpressionOpt = local });
-            new LambdaExpression { Block = block, Type = Type }.WriteTo(c);
+            new LambdaExpression { Statements = block, Type = Type }.WriteTo(c);
         }
     }
 }

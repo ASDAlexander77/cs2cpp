@@ -69,7 +69,7 @@
                 c.WhiteSpace();
                 c.TextSpan("__finally_block");
                 c.TextSpan("(");
-                new LambdaExpression() { Block = block }.WriteTo(c);
+                new LambdaExpression() { Statements = block }.WriteTo(c);
                 c.TextSpan(");");
                 c.NewLine();
             }
@@ -81,7 +81,7 @@
 
             c.NewLine();
 
-            PrintBlockOrStatementsAsBlock(c, this.TryBlock);
+            c.WriteBlockOrStatementsAsBlock(this.TryBlock);
 
             foreach (var catchBlock in this.catchBlocks)
             {

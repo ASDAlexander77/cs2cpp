@@ -112,14 +112,14 @@
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.IfStatements);
+            c.WriteBlockOrStatementsAsBlock(this.IfStatements);
 
             if (this.ElseStatementsOpt != null)
             {
                 c.TextSpan("else");
 
                 c.NewLine();
-                PrintBlockOrStatementsAsBlock(c, this.ElseStatementsOpt);
+                c.WriteBlockOrStatementsAsBlock(this.ElseStatementsOpt);
             }
 
             c.Separate();

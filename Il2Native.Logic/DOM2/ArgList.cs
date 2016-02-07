@@ -11,7 +11,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("...");
+            c.TextSpan("va_list");
         }
     }
 }

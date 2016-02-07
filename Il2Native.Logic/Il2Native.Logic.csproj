@@ -84,6 +84,7 @@
     <Compile Include="DOM2\IsOperator.cs" />
     <Compile Include="DOM2\IteratorScope.cs" />
     <Compile Include="DOM2\LabelStatement.cs" />
+    <Compile Include="DOM2\LambdaCall.cs" />
     <Compile Include="DOM2\MakeRefOperator.cs" />
     <Compile Include="DOM2\MethodGroup.cs" />
     <Compile Include="DOM2\NoOpStatement.cs" />

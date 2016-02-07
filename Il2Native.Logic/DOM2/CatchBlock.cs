@@ -59,7 +59,7 @@
             c.TextSpan(")");
 
             c.NewLine();
-            PrintBlockOrStatementsAsBlock(c, this.statements);
+            c.WriteBlockOrStatementsAsBlock(this.statements);
         }
     }
 }
