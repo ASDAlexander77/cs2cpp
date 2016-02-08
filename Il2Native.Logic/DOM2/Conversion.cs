@@ -116,9 +116,9 @@
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
                 case ConversionKind.PointerToPointer:
-                    c.TextSpan("reinterpret_cast<");
+                    c.TextSpan("(");
                     c.WriteType(this.TypeDestination, true);
-                    c.TextSpan(">");
+                    c.TextSpan(")");
                     break;
                 case ConversionKind.Identity:
                     // for string

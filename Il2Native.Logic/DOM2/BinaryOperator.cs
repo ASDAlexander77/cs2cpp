@@ -18,32 +18,22 @@
         {
             base.Parse(boundBinaryOperator);
             this.OperatorKind = boundBinaryOperator.OperatorKind;
+
+            // special case for PointerSubtraction 
+            if (this.OperatorKind == BinaryOperatorKind.Division)
+            {
+                var boundBinaryOperator2 = boundBinaryOperator.Left as BoundBinaryOperator;
+                if (boundBinaryOperator2 != null && boundBinaryOperator2.OperatorKind == BinaryOperatorKind.PointerSubtraction)
+                {
+                    this.Parse(boundBinaryOperator2);
+                    return;
+                }
+            }
+
             this.Left = Deserialize(boundBinaryOperator.Left) as Expression;
             Debug.Assert(this.Left != null);
             this.Right = Deserialize(boundBinaryOperator.Right) as Expression;
             Debug.Assert(this.Right != null);
-        }
-
-        // special cast to support pointer operation '-'
-        internal bool Parse(BoundConversion boundConversion)
-        {
-            var conversion2 = boundConversion.Operand as BoundConversion;
-            if (conversion2 != null)
-            {
-                var boundBinaryOperator = conversion2.Operand as BoundBinaryOperator;
-                if (boundBinaryOperator != null)
-                {
-                    var boundBinaryOperator2 = boundBinaryOperator.Left as BoundBinaryOperator;
-                    if (boundBinaryOperator2 != null && boundBinaryOperator2.OperatorKind == BinaryOperatorKind.PointerSubtraction)
-                    {
-                        this.Parse(boundBinaryOperator2);
-                    }
-
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
