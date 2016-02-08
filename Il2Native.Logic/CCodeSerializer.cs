@@ -282,7 +282,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         namedTypeSymbol.SpecialType == SpecialType.System_String)
                     {
                         itw.Write("typedef ");
-                        c.WriteTypeFullName(namedTypeSymbol, false);
+                        c.WriteType(namedTypeSymbol, true, true, false);
                         itw.Write(" ");
                         c.WriteTypeName(namedTypeSymbol);
                         itw.WriteLine(";");
@@ -381,7 +381,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     {
                         c.TextSpan("using");
                         c.WhiteSpace();
-                        c.WriteTypeFullName(method.ReceiverType);
+                        c.WriteType(method.ReceiverType, true, true, true);
                         c.TextSpan("::");
                         c.WriteMethodName(method);
                         c.TextSpan(";");

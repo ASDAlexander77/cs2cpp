@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -59,7 +60,7 @@
 
             var methods = new List<IMethodSymbol>();
 
-            var groupsByName = type.EnumerateAllMethodsRecursevly().GroupBy(m => m.Name);
+            var groupsByName = type.EnumerateAllMethodsRecursevly().GroupBy(m => m.MetadataName);
             foreach (var groupByName in groupsByName)
             {
                 var groupByType = groupByName.GroupBy(g => g.ContainingType);
@@ -78,12 +79,20 @@
         {
             public bool Equals(IMethodSymbol x, IMethodSymbol y)
             {
-                return string.Compare(((MethodSymbol)x).ToKeyString(), ((MethodSymbol)y).ToKeyString(), StringComparison.Ordinal) == 0;
+                if (x.ContainingType != y.ContainingType)
+                {
+                    return false;
+                }
+
+                return string.Compare(x.MetadataName, y.MetadataName, StringComparison.Ordinal) == 0;
             }
 
             public int GetHashCode(IMethodSymbol obj)
             {
-                return obj.GetHashCode();
+                var hash = 17;
+                hash = hash * 31 + obj.ContainingType.GetHashCode();
+                hash = hash * 31 + obj.MetadataName.GetHashCode();
+                return hash;
             }
         }
 
@@ -105,7 +114,7 @@
                 }
             }
 
-            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
+            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor && !m.IsGenericMethod))
             {
                 yield return member;
             }
