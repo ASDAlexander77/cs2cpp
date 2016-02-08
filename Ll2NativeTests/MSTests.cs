@@ -746,6 +746,7 @@ namespace Ll2NativeTests
 
             // skip
             skip.Add(126); // no Main method
+            skip.Add(315); // using "new" on method (can be solved by removing 'Using' or new method etc
             skip.Add(317); // using "new" on method
             skip.Add(410); // using "new" on method
 
