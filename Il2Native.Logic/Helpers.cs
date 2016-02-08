@@ -251,7 +251,6 @@
             return false;
         }
 
-
         public static bool IsIntPtrType(this ITypeSymbol type)
         {
             switch (type.SpecialType)

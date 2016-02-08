@@ -376,6 +376,18 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         itw.WriteLine("() = default;");
                     }
 
+                    // declare using to solve issue with overloaded functions in different classes
+                    foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNames())
+                    {
+                        c.TextSpan("using");
+                        c.WhiteSpace();
+                        c.WriteTypeFullName(method.ReceiverType);
+                        c.TextSpan("::");
+                        c.WriteMethodName(method);
+                        c.TextSpan(";");
+                        c.NewLine();
+                    }
+
                     foreach (var declaration in unit.Declarations)
                     {
                         declaration.WriteTo(c);

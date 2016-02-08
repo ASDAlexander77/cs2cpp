@@ -129,20 +129,6 @@
             else
             {
                 c.WriteAccess(this.ReceiverOpt);
-
-                if (IsHidden(this.ReceiverOpt.Type, this.Method))
-                {
-                    if (this.Method.ReceiverType == this.ReceiverOpt.Type.BaseType)
-                    {
-                        // is HiddenBySignature
-                        c.TextSpan("base::");
-                    }
-                    else
-                    {
-                        c.WriteTypeName((INamedTypeSymbol)this.Method.ReceiverType);
-                    }
-                }
-
                 var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
                 c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
             }
@@ -163,32 +149,6 @@
         private static bool IsCalledMethodExplicitInterface(MethodSymbol methodOfType, IMethodSymbol calledMethod)
         {
             return methodOfType.ExplicitInterfaceImplementations.Any(m => m.Name == calledMethod.Name && m.ParameterCount == calledMethod.Parameters.Length);
-        }
-
-        private static bool IsHidden(ITypeSymbol receiverType, IMethodSymbol method)
-        {
-            if (method.ReceiverType.TypeKind == TypeKind.Interface)
-            {
-                return false;
-            }
-
-            if (receiverType == method.ReceiverType)
-            {
-                return false;
-            }
-
-            var current = receiverType;
-            while (current != null && current != method.ReceiverType) 
-            {
-                if (current.GetMembers().OfType<MethodSymbol>().Any(m => m.Name.Equals(method.Name)))
-                {
-                    return true;
-                }
-
-                current = current.BaseType;
-            } 
-
-            return false;
         }
     }
 }
