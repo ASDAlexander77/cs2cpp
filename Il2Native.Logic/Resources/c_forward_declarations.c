@@ -21,4 +21,16 @@ public:
 	__enum() = default;
 	inline __enum(TUnderlying value) : _value(value) {}
 	inline operator TUnderlying() { return _value; }
+	inline __enum& operator++()
+	{
+		// actual increment takes place here
+		_value++;
+		return *this;
+	}
+	inline __enum operator++(int)
+	{
+		__enum tmp(*this);
+		operator++();
+		return tmp;
+	}
 };
