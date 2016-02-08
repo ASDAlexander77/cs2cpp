@@ -24,7 +24,7 @@
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
 
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
-            if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
+            if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null && (boundLocal == null || boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None))
             {
                 this.ApplyAutoType = true;
                 if (variableDeclaratorSyntax.Initializer.Value.Kind == SyntaxKind.NullLiteralExpression)

@@ -191,6 +191,12 @@
                 }
             }
 
+            if (any && methodSymbol.IsVararg)
+            {
+                sb.Append(", ");
+                sb.Append("__argList");
+            }
+
             sb.Append(")");
 
             return sb.ToString();
