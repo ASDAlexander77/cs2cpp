@@ -114,7 +114,7 @@
                 }
             }
 
-            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor && !m.IsGenericMethod))
+            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
             {
                 yield return member;
             }
