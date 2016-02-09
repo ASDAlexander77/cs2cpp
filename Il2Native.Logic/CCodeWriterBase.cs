@@ -301,8 +301,9 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.Error:
                     // Comment: Unbound Generic in typeof
-                    TextSpan("__unbound_generic_type_");
+                    TextSpan("__unbound_generic_type<");
                     WriteName(type);
+                    TextSpan(">");
                     return;
                 case TypeKind.Module:
                     break;

@@ -35,3 +35,7 @@ public:
 		return tmp;
 	}
 };
+
+template <typename T> struct __unbound_generic_type
+{
+};
