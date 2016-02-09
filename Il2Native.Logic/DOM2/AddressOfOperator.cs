@@ -18,7 +18,11 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("&");
+            if (!(this.Operand is ThisReference))
+            {
+                c.TextSpan("&");
+            }
+
             this.Operand.WriteTo(c);
         }
     }

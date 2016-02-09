@@ -137,11 +137,11 @@ namespace Il2Native.Logic
                 TextSpan(parameter.RefKind.ToString());
             }
 
-            if (methodSymbol.Arity > 0)
-            {
-                TextSpan("T");
-                TextSpan(methodSymbol.Arity.ToString());
-            }
+            ////if (methodSymbol.Arity > 0)
+            ////{
+            ////    TextSpan("T");
+            ////    TextSpan(methodSymbol.Arity.ToString());
+            ////}
 
             if (addTemplate)
             {

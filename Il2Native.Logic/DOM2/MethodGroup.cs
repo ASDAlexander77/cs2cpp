@@ -41,11 +41,13 @@
                 c.TextSpan("nullptr");
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan("(intptr_t)");
-                c.TextSpan("&");
+                c.TextSpan("(intptr_t)nullptr");
+                /*
+                c.TextSpan("(void (*)())&");
                 c.WriteTypeFullName(method.ContainingType);
                 c.TextSpan("::");
                 c.WriteMethodName(method, true, true);
+                */
             }
             else
             {
@@ -62,7 +64,7 @@
                 c.WhiteSpace();
                 c.TextSpan("(intptr_t)nullptr");
                 /*
-                c.TextSpan("&");               
+                c.TextSpan("(void (*)())&");               
                 this.receiverOpt.WriteTo(c);
                 c.WriteAccess(this.receiverOpt);
                 c.WriteMethodName(method, true, true);

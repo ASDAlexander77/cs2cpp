@@ -99,6 +99,13 @@
             if (boundCall.ReceiverOpt != null)
             {
                 this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+                // special case to avoid calling (*xxx).method() and replace with xxx->method();
+                var pointerIndirectionOperator = this.ReceiverOpt as PointerIndirectionOperator;
+                if (pointerIndirectionOperator != null)
+                {
+                    this.ReceiverOpt = pointerIndirectionOperator.Operand;
+                    this.ReceiverOpt.IsReference = true;
+                }
             }
 
             foreach (var expression in boundCall.Arguments)

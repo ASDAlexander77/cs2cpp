@@ -70,6 +70,9 @@
                     return false;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
+                    c.TextSpan("(");
+                    c.WriteType(this.TypeDestination);
+                    c.TextSpan(")");
                     c.TextSpan("nullptr");
                     return false;
                 case ConversionKind.Boxing:
