@@ -26,7 +26,7 @@
             else
             {
                 var label = new Label();
-                label.Parse(sourceLabelSymbol);
+                label.Parse(boundGotoStatement.Label);
                 this.Label = label;
             }
         }
