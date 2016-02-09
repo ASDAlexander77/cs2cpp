@@ -17,16 +17,7 @@
             }
 
             Value = sourceLabelSymbol.SwitchCaseLabelConstant;
-            
-            var lbl = sourceLabelSymbol.Name;
-
-            if (lbl.StartsWith("case") || lbl.StartsWith("default"))
-            {
-                var firstTime = false;
-                lbl += string.Format("_{0}", CCodeWriterBase.ObjectIdGenerator.GetId(sourceLabelSymbol, out firstTime));
-            }
-
-            this.Label = lbl;
+            this.Label = LabelStatement.GetUniqueLabel(sourceLabelSymbol);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

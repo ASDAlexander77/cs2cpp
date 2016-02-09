@@ -751,7 +751,7 @@ namespace Ll2NativeTests
             skip.Add(410); // using "new" on method
             skip.Add(553); // the same method with different retuning types
 
-            foreach (var index in Enumerable.Range(553, 869).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
             {
                 //CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
                 CompilerHelper.Compile(string.Format("test-{0}", index));

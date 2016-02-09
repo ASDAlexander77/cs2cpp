@@ -24,7 +24,7 @@
             }
             else
             {
-                switchLabel.Label = boundGotoStatement.Label.Name;
+                switchLabel.Label = LabelStatement.GetUniqueLabel(boundGotoStatement.Label);
             }
         
             this.Label = switchLabel;
