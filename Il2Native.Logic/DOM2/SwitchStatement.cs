@@ -57,7 +57,11 @@
                     var assignmentOperator = e as AssignmentOperator;
                     if (assignmentOperator != null)
                     {
-                        assignmentOperator.ApplyAutoType = false;
+                        var local = assignmentOperator.Left as Local;
+                        if (local != null && boundSwitchStatement.InnerLocals.Any(ol => ol.Name == local.Name))
+                        {
+                            assignmentOperator.ApplyAutoType = false;
+                        }
                     }
 
                     var gotoStatement = e as GotoStatement;

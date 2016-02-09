@@ -20,7 +20,7 @@
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
             base.Parse(boundAssignmentOperator);
-            
+
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
 
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;

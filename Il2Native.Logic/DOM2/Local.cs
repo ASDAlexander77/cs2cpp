@@ -26,6 +26,14 @@
             }
         }
 
+        public string Name
+        {
+            get 
+            {
+                return this.customName ?? this.LocalSymbol.Name;
+            }
+        }
+
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
             c.WriteName(local);
