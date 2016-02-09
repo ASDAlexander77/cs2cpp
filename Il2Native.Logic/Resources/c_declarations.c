@@ -104,6 +104,17 @@ inline __val<intptr_t>::__val<<<%assemblyName%>>::System::IntPtr>(const <<%assem
 	_value = reinterpret_cast<intptr_t>(value.m_value);
 }
 
+#if _MSC_VER 
+template<>
+inline __val<uintptr_t>::__val(const <<%assemblyName%>>::System::UIntPtr& value)
+#else
+template<> template<>
+inline __val<uintptr_t>::__val<<<%assemblyName%>>::System::UIntPtr>(const <<%assemblyName%>>::System::UIntPtr& value)
+#endif
+{
+	_value = reinterpret_cast<uintptr_t>(value.m_value);
+}
+
 // Interlocked
 template <typename T>
 T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_RefT1(T& location1, T value, T comparant)

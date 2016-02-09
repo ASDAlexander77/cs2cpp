@@ -51,10 +51,9 @@
             c.NewLine();
             c.OpenBlock();
 
-            c.TextSpan("goto");
-            c.WhiteSpace();
-            c.WriteName(this.label);
-            c.EndStatement();
+            var localLabel = new Label();
+            localLabel.Parse(this.label);
+            new GotoStatement { Label = localLabel }.WriteTo(c);
 
             c.EndBlock();
 

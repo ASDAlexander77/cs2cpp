@@ -8,6 +8,7 @@ public:
 	inline __val(T value) : _value(value) {}
 #if _MSC_VER 
 	__val(const <<%assemblyName%>>::System::IntPtr& value);
+	__val(const <<%assemblyName%>>::System::UIntPtr& value);
 #else
 	template <typename F> __val(const F& value);
 #endif

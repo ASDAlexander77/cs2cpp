@@ -7,7 +7,7 @@
 
     public class GotoStatement : Statement
     {
-        public SwitchLabel Label { get; private set; }
+        public Label Label { get; set; }
 
         internal void Parse(BoundGotoStatement boundGotoStatement)
         {
@@ -16,18 +16,19 @@
                 throw new ArgumentNullException();
             }
 
-            var switchLabel = new SwitchLabel();
             var sourceLabelSymbol = boundGotoStatement.Label as SourceLabelSymbol;
             if (sourceLabelSymbol != null)
             {
+                var switchLabel = new SwitchLabel();
                 switchLabel.Parse(sourceLabelSymbol);
+                this.Label = switchLabel;
             }
             else
             {
-                switchLabel.Label = LabelStatement.GetUniqueLabel(boundGotoStatement.Label);
+                var label = new Label();
+                label.Parse(sourceLabelSymbol);
+                this.Label = label;
             }
-        
-            this.Label = switchLabel;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

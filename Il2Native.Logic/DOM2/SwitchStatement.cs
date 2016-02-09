@@ -75,10 +75,10 @@
 
             if (usedGotoLabels.Count > 0)
             {
-                var dict = new SortedDictionary<string, bool>(usedGotoLabels.Select(i => i.Label.Label).Distinct().ToDictionary(i => i, i => true));
+                var dict = new SortedDictionary<string, bool>(usedGotoLabels.Select(i => i.Label.LabelName).Distinct().ToDictionary(i => i, i => true));
                 foreach (var usedSwitchLabel in usedSwitchLabels)
                 {
-                    if (dict.ContainsKey(usedSwitchLabel.Label))
+                    if (dict.ContainsKey(usedSwitchLabel.LabelName))
                     {
                         usedSwitchLabel.GenerateLabel = true;
                     }
