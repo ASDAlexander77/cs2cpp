@@ -10,6 +10,11 @@
     {
         private IList<IFieldSymbol> _fields = new List<IFieldSymbol>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.IteratorScope; }
+        }
+
         public IList<IFieldSymbol> Fields
         {
             get { return _fields; }

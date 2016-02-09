@@ -5,6 +5,11 @@
 
     public class DelegateCreationExpression : Call
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.DelegateCreationExpression; }
+        }
+
         internal void Parse(BoundDelegateCreationExpression boundDelegateCreationExpression)
         {
             base.Parse(boundDelegateCreationExpression);

@@ -6,6 +6,11 @@
 
     public class SwitchLabel : Label
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.SwitchLabel; }
+        }
+
         internal void Parse(SourceLabelSymbol sourceLabelSymbol)
         {
             if (sourceLabelSymbol == null)

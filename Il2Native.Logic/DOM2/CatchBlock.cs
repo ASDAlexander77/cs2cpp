@@ -2,15 +2,22 @@
 {
     using System;
     using System.Diagnostics;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
-    public class CatchBlock : Block
+    public class CatchBlock : BlockStatement
     {
-        private TypeSymbol exceptionTypeOpt;
-        private Expression exceptionSourceOpt;
-        private Expression exceptionFilterOpt;
-        private Base statements;
+        public override Kinds Kind
+        {
+            get { return Kinds.CatchBlock; }
+        }
+
+        public ITypeSymbol ExceptionTypeOpt { get; set; }
+
+        public Expression ExceptionSourceOpt { get; set; }
+
+        public Expression ExceptionFilterOpt { get; set; }
 
         internal void Parse(BoundCatchBlock boundCatchBlock)
         {
@@ -21,20 +28,20 @@
 
             if (boundCatchBlock.ExceptionTypeOpt != null)
             {
-                this.exceptionTypeOpt = boundCatchBlock.ExceptionTypeOpt;
+                this.ExceptionTypeOpt = boundCatchBlock.ExceptionTypeOpt;
             }
 
             if (boundCatchBlock.ExceptionSourceOpt != null)
             {
-                this.exceptionSourceOpt = Deserialize(boundCatchBlock.ExceptionSourceOpt) as Expression;
+                this.ExceptionSourceOpt = Deserialize(boundCatchBlock.ExceptionSourceOpt) as Expression;
             }
 
             if (boundCatchBlock.ExceptionFilterOpt != null)
             {
-                this.exceptionFilterOpt = Deserialize(boundCatchBlock.ExceptionFilterOpt) as Expression;
+                this.ExceptionFilterOpt = Deserialize(boundCatchBlock.ExceptionFilterOpt) as Expression;
             }
 
-            this.statements = Deserialize(boundCatchBlock.Body);
+            this.Statements = Deserialize(boundCatchBlock.Body);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -42,13 +49,13 @@
             c.TextSpan("catch");
             c.WhiteSpace();
             c.TextSpan("(");
-            if (this.exceptionTypeOpt != null)
+            if (this.ExceptionTypeOpt != null)
             {
-                c.WriteType(this.exceptionTypeOpt);
-                if (this.exceptionSourceOpt != null)
+                c.WriteType(this.ExceptionTypeOpt);
+                if (this.ExceptionSourceOpt != null)
                 {
                     c.WhiteSpace();
-                    this.exceptionSourceOpt.WriteTo(c);
+                    this.ExceptionSourceOpt.WriteTo(c);
                 }
             }
             else
@@ -59,7 +66,7 @@
             c.TextSpan(")");
 
             c.NewLine();
-            c.WriteBlockOrStatementsAsBlock(this.statements);
+            c.WriteBlockOrStatementsAsBlock(Statements);
         }
     }
 }

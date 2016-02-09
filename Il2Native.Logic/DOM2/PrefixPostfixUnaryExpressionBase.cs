@@ -9,9 +9,14 @@
 
     public abstract class PrefixPostfixUnaryExpressionBase : Expression
     {
-        public Expression Value { get; protected set; }
+        public override Kinds Kind
+        {
+            get { return Kinds.PrefixPostfixUnaryExpressionBase; }
+        }
 
-        public SyntaxKind OperatorKind { get; protected set; }
+        public Expression Value { get; set; }
+
+        public SyntaxKind OperatorKind { get; set; }
 
         internal bool Parse(BoundSequence boundSequence)
         {

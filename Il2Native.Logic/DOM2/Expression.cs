@@ -8,6 +8,11 @@
     {
         private ITypeSymbol _type;
 
+        public override Kinds Kind
+        {
+            get { return Kinds.Expression; }
+        }
+
         public ITypeSymbol Type
         {
             get

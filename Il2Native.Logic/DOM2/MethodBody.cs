@@ -5,11 +5,16 @@
 
     public class MethodBody : Block
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.MethodBody; }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             // get actual statements
             var statements = this.Statements;
-            if (statements.Count == 1 && statements.First() is BlockStatement)
+            if (statements.Count == 1 && statements.First().Kind == Kinds.BlockStatement)
             {
                 var blockStatement = statements.First() as BlockStatement;
                 if (blockStatement != null)
@@ -23,7 +28,7 @@
             }
 
             // call constructors
-            var constructors = statements.TakeWhile(s => IsConstructorCall(s)).Select(s => GetCall(s)).ToArray();
+            var constructors = statements.TakeWhile(IsConstructorCall).Select(GetCall).ToArray();
             if (constructors.Length > 0)
             {
                 c.WhiteSpace();

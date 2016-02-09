@@ -54,6 +54,21 @@
         ArrayAccess,
         ArgListOperator,
         ArgList,
-        AddressOfOperator
+        AddressOfOperator,
+        WhileStatement,
+        SwitchSection,
+        SwitchLabel,
+        Statement,
+        PrefixPostfixUnaryExpressionBase,
+        ObjectCreationExpression,
+        MethodBody,
+        Label,
+        IteratorScope,
+        ForStatement,
+        ForEachSimpleArrayStatement,
+        Expression,
+        DoStatement,
+        DelegateCreationExpression,
+        CatchBlock
     }
 }

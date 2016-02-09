@@ -12,6 +12,11 @@
     {
         private readonly IList<SwitchLabel> labels = new List<SwitchLabel>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.SwitchSection; }
+        }
+        
         public IList<SwitchLabel> Labels
         {
             get

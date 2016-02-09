@@ -5,6 +5,11 @@
 
     public class Label : Literal
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.Label; }
+        }
+
         public string LabelName { get; set; }
 
         public bool GenerateLabel { get; set; }

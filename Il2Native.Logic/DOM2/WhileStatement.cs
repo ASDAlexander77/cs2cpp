@@ -6,8 +6,6 @@
 
     public class WhileStatement : BlockStatement
     {
-        private Expression condition;
-
         private enum Stages
         {
             Initialization,
@@ -16,6 +14,13 @@
             End
         }
 
+        public override Kinds Kind
+        {
+            get { return Kinds.WhileStatement; }
+        }
+
+        public Expression Condition { get; set; }
+        
         internal bool Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
@@ -64,8 +69,8 @@
                     var boundConditionalGoto = boundStatement as BoundConditionalGoto;
                     if (boundConditionalGoto != null)
                     {
-                        condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-                        Debug.Assert(condition != null);
+                        this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+                        Debug.Assert(this.Condition != null);
                         continue;
                     }
                 }
@@ -91,7 +96,7 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.condition.Visit(visitor);
+            this.Condition.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -100,7 +105,7 @@
             c.WhiteSpace();
             c.TextSpan("(");
 
-            this.condition.WriteTo(c);
+            this.Condition.WriteTo(c);
 
             c.TextSpan(")");
 

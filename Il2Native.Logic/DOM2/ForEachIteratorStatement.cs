@@ -8,19 +8,32 @@
 
     public class ForEachIteratorStatement : Statement
     {
-        private readonly IList<Statement> locals = new List<Statement>();
-        private Base initialization;
-        private TryStatement tryStatement;
-
         private enum Stages
         {
             Initialization,
             TryBody
         }
 
+        private readonly IList<Statement> locals = new List<Statement>();
+        
+        private Base _initialization;
+
         public override Kinds Kind
         {
             get { return Kinds.ForEachIteratorStatement; }
+        }
+
+        public Base Initialization
+        {
+            get { return this._initialization; }
+            set { this._initialization = value; }
+        }
+        
+        public TryStatement TryStatement { get; set; }
+
+        public IList<Statement> Locals
+        {
+            get { return this.locals; }
         }
 
         internal bool Parse(BoundStatementList boundStatementList)
@@ -43,13 +56,13 @@
             var mainBlock = boundStatementList as BoundBlock;
             if (mainBlock != null)
             {
-                ParseLocals(mainBlock.Locals, locals);
+                ParseLocals(mainBlock.Locals, this.Locals);
             }
 
             var innerBlock = statementList as BoundBlock;
             if (innerBlock != null && (object)mainBlock != (object)innerBlock)
             {
-                ParseLocals(innerBlock.Locals, locals);
+                ParseLocals(innerBlock.Locals, this.Locals);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
@@ -76,19 +89,19 @@
                 {
                     case Stages.Initialization:
                         var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
-                        MergeOrSet(ref this.initialization, statement);
+                        MergeOrSet(ref _initialization, statement);
                         break;
                     case Stages.TryBody:
-                        this.tryStatement = new TryStatement();
+                        this.TryStatement = new TryStatement();
 
                         // apply special parsing to block of try
                         var whileStatement = new WhileStatement();
                         whileStatement.Parse(boundTryStatement.TryBlock.Statements.OfType<BoundStatementList>().First());
 
-                        this.tryStatement.TryBlock = whileStatement;
+                        this.TryStatement.TryBlock = whileStatement;
                         if (boundTryStatement.FinallyBlockOpt != null)
                         {
-                            this.tryStatement.FinallyBlockOpt = Deserialize(
+                            this.TryStatement.FinallyBlockOpt = Deserialize(
                                 boundTryStatement.FinallyBlockOpt,
                                 specialCase: SpecialCases.ForEachBody);
                         }
@@ -105,28 +118,28 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            foreach (var statement in this.locals)
+            foreach (var statement in this.Locals)
             {
                 statement.Visit(visitor);
             }
 
-            this.initialization.Visit(visitor);
-            this.tryStatement.Visit(visitor);
+            this.Initialization.Visit(visitor);
+            this.TryStatement.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.locals.Count > 0)
+            if (this.Locals.Count > 0)
             {
                 c.OpenBlock();
 
-                foreach (var statement in this.locals)
+                foreach (var statement in this.Locals)
                 {
                     statement.WriteTo(c);
                 }
             }
 
-            var block = this.initialization as Block;
+            var block = this.Initialization as Block;
             if (block != null)
             {
                 var any = false;
@@ -144,12 +157,12 @@
             }
             else
             {
-                this.initialization.WriteTo(c);
+                this.Initialization.WriteTo(c);
             }
 
-            this.tryStatement.WriteTo(c);
+            this.TryStatement.WriteTo(c);
 
-            if (this.locals.Count > 0)
+            if (this.Locals.Count > 0)
             {
                 c.EndBlock();
 

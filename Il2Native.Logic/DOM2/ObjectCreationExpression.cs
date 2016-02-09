@@ -7,7 +7,12 @@
 
     public class ObjectCreationExpression : Call
     {
-        private Expression initializerExpressionOpt;
+        public override Kinds Kind
+        {
+            get { return Kinds.ObjectCreationExpression; }
+        }
+
+        public Expression InitializerExpressionOpt { get; set; }
 
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
         {
@@ -15,7 +20,7 @@
             this.Method = boundObjectCreationExpression.Constructor;
             if (boundObjectCreationExpression.InitializerExpressionOpt != null)
             {
-                this.initializerExpressionOpt = Deserialize(boundObjectCreationExpression.InitializerExpressionOpt) as Expression;
+                this.InitializerExpressionOpt = Deserialize(boundObjectCreationExpression.InitializerExpressionOpt) as Expression;
             }
 
             foreach (var expression in boundObjectCreationExpression.Arguments)
