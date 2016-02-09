@@ -9,6 +9,11 @@
     {
         private IList<CatchBlock> catchBlocks = new List<CatchBlock>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.TryStatement; }
+        }
+
         public Base TryBlock { get; set; }
 
         public Base FinallyBlockOpt { get; set; }

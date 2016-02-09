@@ -9,6 +9,11 @@
     {
         private IList<Expression> initializers = new List<Expression>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.ArrayInitialization; }
+        }
+
         public IList<Expression> Initializers
         {
             get

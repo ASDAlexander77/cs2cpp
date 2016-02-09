@@ -7,6 +7,11 @@
 
     public class UnaryOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.UnaryOperator; }
+        }
+
         internal UnaryOperatorKind OperatorKind { get; private set; }
         
         public Expression Operand { get; private set; }

@@ -15,6 +15,8 @@
     [DebuggerDisplay("{ToString()}")]
     public abstract class Base
     {
+        public abstract Kinds Kind { get; }
+
         internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
         {
             // process locals when not used with assignment operator
@@ -29,7 +31,7 @@
                 var boundBlock2 = boundStatement as BoundBlock;
                 var deserialize = Deserialize(boundStatement, specialCase: specialCase);
                 var block = deserialize as Block;
-                if (block != null && (boundBlock2 == null || boundBlock2.Locals.Length == 0))
+                if (block != null && (block.Kind == Kinds.Block || block.Kind == Kinds.BlockStatement) && (boundBlock2 == null || boundBlock2.Locals.Length == 0))
                 {
                     foreach (var statement2 in block.Statements.Where(s => s != null))
                     {

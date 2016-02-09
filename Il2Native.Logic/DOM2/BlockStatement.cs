@@ -4,6 +4,11 @@
 
     public class BlockStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.BlockStatement; }
+        }
+
         public Base Statements { get; set; }
 
         public bool NoSeparation { get; set; }

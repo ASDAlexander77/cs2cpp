@@ -11,7 +11,12 @@
 
         private readonly IList<Expression> sideEffects = new List<Expression>();
 
-        private Expression value;
+        public override Kinds Kind
+        {
+            get { return Kinds.SideEffectsAsLambdaCallExpression; }
+        }
+
+        public Expression Value { get; private set; }
 
         public IList<Statement> Locals
         {
@@ -40,7 +45,7 @@
                 this.SideEffects.Add(expression);
             }
 
-            this.value = Deserialize(boundSequence.Value) as Expression;
+            this.Value = Deserialize(boundSequence.Value) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -62,7 +67,7 @@
 
             c.TextSpan("return");
             c.WhiteSpace();
-            this.value.WriteTo(c);
+            this.Value.WriteTo(c);
             c.EndStatement();
 
             c.EndBlockWithoutNewLine();

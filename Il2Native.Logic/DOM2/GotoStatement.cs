@@ -7,6 +7,11 @@
 
     public class GotoStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.GotoStatement; }
+        }
+
         public Label Label { get; set; }
 
         internal void Parse(BoundGotoStatement boundGotoStatement)

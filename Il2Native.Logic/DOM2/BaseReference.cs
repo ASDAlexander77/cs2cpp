@@ -4,6 +4,11 @@
 
     public class BaseReference : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.BaseReference; }
+        }
+
         internal void Parse(BoundBaseReference boundBaseReference)
         {
             base.Parse(boundBaseReference);

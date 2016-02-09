@@ -9,6 +9,11 @@
     {
         private IList<IMethodSymbol> methods = new List<IMethodSymbol>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.MethodGroup; }
+        }
+
         public Expression ReceiverOpt { get; set; }
 
         public IList<IMethodSymbol> Methods

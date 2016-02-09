@@ -5,6 +5,11 @@
 
     public class ContinueStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ContinueStatement; }
+        }
+
         internal void Parse(BoundGotoStatement boundGotoStatement)
         {
             if (boundGotoStatement == null)

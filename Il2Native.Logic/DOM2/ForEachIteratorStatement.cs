@@ -9,7 +9,6 @@
     public class ForEachIteratorStatement : Statement
     {
         private readonly IList<Statement> locals = new List<Statement>();
-
         private Base initialization;
         private TryStatement tryStatement;
 
@@ -17,6 +16,11 @@
         {
             Initialization,
             TryBody
+        }
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ForEachIteratorStatement; }
         }
 
         internal bool Parse(BoundStatementList boundStatementList)

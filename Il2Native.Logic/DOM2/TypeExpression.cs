@@ -4,6 +4,11 @@
 
     public class TypeExpression : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.TypeExpression; }
+        }
+
         internal void Parse(BoundTypeExpression boundTypeExpression)
         {
             base.Parse(boundTypeExpression);

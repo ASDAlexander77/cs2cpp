@@ -4,6 +4,11 @@
 
     public class StackAllocArrayCreation : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.StackAllocArrayCreation; }
+        }
+
         public Expression Count { get; set; }
 
         internal void Parse(BoundStackAllocArrayCreation boundStackAllocArrayCreation)

@@ -9,6 +9,11 @@
 
     public class AsOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.AsOperator; }
+        }
+
         public Expression Operand { get; set; }
 
         public TypeExpression TargetType { get; set; }

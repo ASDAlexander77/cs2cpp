@@ -6,8 +6,14 @@
 
     public class ElementAccessExpression : Expression
     {
-        private Expression operand;
-        private Expression index;
+        public override Kinds Kind
+        {
+            get { return Kinds.ElementAccessExpression; }
+        }
+
+        public Expression Operand { get; set; }
+        
+        public Expression Index { get; set; }
 
         internal bool Parse(BoundPointerIndirectionOperator boundPointerIndirectionOperator)
         {
@@ -16,18 +22,18 @@
             var boundBinaryOperator = boundPointerIndirectionOperator.Operand as BoundBinaryOperator;
             if (boundBinaryOperator != null)
             {
-                this.operand = Deserialize(boundBinaryOperator.Left) as Expression;
+                this.Operand = Deserialize(boundBinaryOperator.Left) as Expression;
                 var boundBinaryOperatorWithIndex = boundBinaryOperator.Right as BoundBinaryOperator;
                 if (boundBinaryOperatorWithIndex != null)
                 {
-                    this.index = Deserialize(boundBinaryOperatorWithIndex.Left) as Expression;
+                    this.Index = Deserialize(boundBinaryOperatorWithIndex.Left) as Expression;
                 }
                 else
                 {
                     var boundSizeOfOperator = boundBinaryOperator.Right as BoundSizeOfOperator;
                     if (boundSizeOfOperator != null)
                     {
-                        this.index = new Literal { Value = ConstantValue.Create(1) };
+                        this.Index = new Literal { Value = ConstantValue.Create(1) };
                     }
                     else
                     {
@@ -40,10 +46,10 @@
                 return false;
             }
 
-            var conversion = this.index as Conversion;
-            if (conversion != null && conversion.Kind == ConversionKind.IntegerToPointer)
+            var conversion = this.Index as Conversion;
+            if (conversion != null && conversion.ConversionKind == ConversionKind.IntegerToPointer)
             {
-                this.index = conversion.Operand;
+                this.Index = conversion.Operand;
             }
 
             return true;
@@ -52,15 +58,15 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.operand.Visit(visitor);
-            this.index.Visit(visitor);
+            this.Operand.Visit(visitor);
+            this.Index.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.operand.WriteTo(c);
+            this.Operand.WriteTo(c);
             c.TextSpan("[");
-            this.index.WriteTo(c);
+            this.Index.WriteTo(c);
             c.TextSpan("]");
         }
     }

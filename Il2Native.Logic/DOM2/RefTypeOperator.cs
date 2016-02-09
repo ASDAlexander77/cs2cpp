@@ -4,6 +4,11 @@
 
     public class RefTypeOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.RefTypeOperator; }
+        }
+
         internal void Parse(BoundRefTypeOperator boundRefTypeOperator)
         {
             base.Parse(boundRefTypeOperator);

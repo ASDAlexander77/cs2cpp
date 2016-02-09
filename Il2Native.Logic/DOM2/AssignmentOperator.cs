@@ -11,6 +11,11 @@
     {
         private ITypeSymbol assignmentType;
 
+        public override Kinds Kind
+        {
+            get { return Kinds.AssignmentOperator; }
+        }
+
         public Expression Left { get; set; }
 
         public Expression Right { get; set; }

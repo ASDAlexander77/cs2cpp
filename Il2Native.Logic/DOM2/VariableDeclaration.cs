@@ -4,13 +4,17 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     internal class VariableDeclaration : Statement
     {
         private readonly IList<Statement> statements = new List<Statement>();
+
+        public override Kinds Kind
+        {
+            get { return Kinds.VariableDeclaration; }
+        }
 
         public Local Local { get; set; }
 

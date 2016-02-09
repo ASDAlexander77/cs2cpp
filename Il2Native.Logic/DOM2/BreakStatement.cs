@@ -5,6 +5,11 @@
 
     public class BreakStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.BreakStatement; }
+        }
+
         internal void Parse(BoundGotoStatement boundGotoStatement)
         {
             if (boundGotoStatement == null)

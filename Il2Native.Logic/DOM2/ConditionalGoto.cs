@@ -1,16 +1,22 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ConditionalGoto : Statement
     {
-        private Expression condition;
+        public override Kinds Kind
+        {
+            get { return Kinds.ConditionalGoto; }
+        }
 
-        private LabelSymbol label;
-        
-        private bool jumpIfTrue;
+        public Expression Condition { get; set; }
+
+        public ILabelSymbol Label { get; set; }
+
+        public bool JumpIfTrue { get; private set; }
 
         internal void Parse(BoundConditionalGoto boundConditionalGoto)
         {
@@ -19,15 +25,15 @@
                 throw new ArgumentNullException();
             }
 
-            this.condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-            this.label = boundConditionalGoto.Label;
-            this.jumpIfTrue = boundConditionalGoto.JumpIfTrue;
+            this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
+            this.Label = boundConditionalGoto.Label;
+            this.JumpIfTrue = boundConditionalGoto.JumpIfTrue;
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.condition.Visit(visitor);
+            this.Condition.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -36,14 +42,14 @@
             c.WhiteSpace();
             c.TextSpan("(");
 
-            if (!jumpIfTrue)
+            if (!this.JumpIfTrue)
             {
                 c.TextSpan("!");
-                c.WriteExpressionInParenthesesIfNeeded(this.condition);
+                c.WriteExpressionInParenthesesIfNeeded(this.Condition);
             }
             else
             {
-                this.condition.WriteTo(c);
+                this.Condition.WriteTo(c);
             }
 
             c.TextSpan(")");
@@ -52,7 +58,7 @@
             c.OpenBlock();
 
             var localLabel = new Label();
-            localLabel.Parse(this.label);
+            localLabel.Parse(this.Label);
             new GotoStatement { Label = localLabel }.WriteTo(c);
 
             c.EndBlock();

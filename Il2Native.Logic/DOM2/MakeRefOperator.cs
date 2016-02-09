@@ -7,6 +7,11 @@
     {
         public Expression Operand { get; set; }
 
+        public override Kinds Kind
+        {
+            get { return Kinds.MakeRefOperator; }
+        }
+
         internal void Parse(BoundMakeRefOperator boundMakeRefOperator)
         {
             base.Parse(boundMakeRefOperator);

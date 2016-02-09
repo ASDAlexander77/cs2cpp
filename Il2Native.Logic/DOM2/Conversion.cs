@@ -7,6 +7,11 @@
 
     public class Conversion : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.Conversion; }
+        }
+
         public ITypeSymbol TypeSource { get; set; }
 
         public ITypeSymbol TypeDestination { get; set; }
@@ -15,7 +20,7 @@
 
         public bool CCast { get; set; }
 
-        internal ConversionKind Kind { get; set; }
+        internal ConversionKind ConversionKind { get; set; }
 
         internal void Parse(BoundConversion boundConversion)
         {
@@ -23,7 +28,7 @@
             this.TypeSource = boundConversion.Operand.Type;
             this.TypeDestination = boundConversion.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
-            this.Kind = boundConversion.ConversionKind;
+            this.ConversionKind = boundConversion.ConversionKind;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -37,7 +42,7 @@
                 return;
             }
 
-            var interfaceCastRequired = this.Kind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
+            var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
                 c.TextSpan("interface_cast<");
@@ -61,7 +66,7 @@
 
         private bool WriteCast(CCodeWriterBase c)
         {
-            switch (this.Kind)
+            switch (this.ConversionKind)
             {
                 case ConversionKind.MethodGroup:
                     var newDelegate = new DelegateCreationExpression { Type = this.TypeDestination };
@@ -100,8 +105,8 @@
                     }
                     else
                     {
-                        if ((this.Kind == ConversionKind.ExplicitReference ||
-                             this.Kind == ConversionKind.ImplicitReference)
+                        if ((this.ConversionKind == ConversionKind.ExplicitReference ||
+                             this.ConversionKind == ConversionKind.ImplicitReference)
                             && this.TypeDestination.TypeKind == TypeKind.Interface)
                         {
                             c.TextSpan("interface_cast<");

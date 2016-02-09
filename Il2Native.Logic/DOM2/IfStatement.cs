@@ -15,6 +15,11 @@
             EndOfElse
         }
 
+        public override Kinds Kind
+        {
+            get { return Kinds.IfStatement; }
+        }
+
         public Expression Condition { get; set; }
 
         public Base IfStatements { get; set; }

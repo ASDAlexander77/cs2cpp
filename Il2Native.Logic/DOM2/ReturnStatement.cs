@@ -6,6 +6,11 @@
 
     public class ReturnStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ReturnStatement; }
+        }
+
         public Expression ExpressionOpt { get; set; }
 
         internal void Parse(BoundReturnStatement boundReturnStatement)

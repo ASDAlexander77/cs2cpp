@@ -1,8 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis;
 
     public class Label : Literal
     {
@@ -10,7 +9,7 @@
 
         public bool GenerateLabel { get; set; }
 
-        internal void Parse(LabelSymbol labelSymbol)
+        internal void Parse(ILabelSymbol labelSymbol)
         {
             if (labelSymbol == null)
             {

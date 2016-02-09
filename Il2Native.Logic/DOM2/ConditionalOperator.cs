@@ -4,8 +4,15 @@
 
     public class ConditionalOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ConditionalOperator; }
+        }
+
         public Expression Condition { get; set; }
+
         public Expression Consequence { get; set; }
+        
         public Expression Alternative { get; set; }
 
         internal void Parse(BoundConditionalOperator boundConditionalOperator)

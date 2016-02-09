@@ -12,6 +12,11 @@
 
         private ILocalSymbol localSymbol;
 
+        public override Kinds Kind
+        {
+            get { return Kinds.Local; }
+        }
+
         public ILocalSymbol LocalSymbol 
         {
             get

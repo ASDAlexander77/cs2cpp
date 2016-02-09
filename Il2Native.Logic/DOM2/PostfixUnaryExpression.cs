@@ -4,6 +4,11 @@
 
     public class PostfixUnaryExpression : PrefixPostfixUnaryExpressionBase
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.PostfixUnaryExpression; }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             Value.WriteTo(c);

@@ -5,6 +5,11 @@
 
     public class ThisReference : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ThisReference; }
+        }
+
         public override bool IsReference
         {
             get

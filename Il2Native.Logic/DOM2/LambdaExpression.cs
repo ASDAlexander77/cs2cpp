@@ -8,6 +8,11 @@
     {
         private readonly IList<ILocalSymbol> _locals = new List<ILocalSymbol>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.LambdaExpression; }
+        }
+
         public IList<ILocalSymbol> Locals
         {
             get { return _locals; }

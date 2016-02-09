@@ -8,14 +8,24 @@
 
     public class ArrayAccess : Expression
     {
-        private Expression _expression;
-
         private readonly IList<Expression> _indices = new List<Expression>();
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ArrayAccess; }
+        }
+
+        public Expression Expression { get; set; }
+
+        public IList<Expression> Indices
+        {
+            get { return this._indices; }
+        }
 
         internal void Parse(BoundArrayAccess boundArrayAccess)
         {
             base.Parse(boundArrayAccess);
-            this._expression = Deserialize(boundArrayAccess.Expression) as Expression;
+            this.Expression = Deserialize(boundArrayAccess.Expression) as Expression;
             foreach (var boundExpression in boundArrayAccess.Indices)
             {
                 var item = Deserialize(boundExpression) as Expression;
@@ -26,7 +36,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this._expression.WriteTo(c);
+            this.Expression.WriteTo(c);
             c.TextSpan("->operator[](");
 
             if (this._indices.Count > 1)

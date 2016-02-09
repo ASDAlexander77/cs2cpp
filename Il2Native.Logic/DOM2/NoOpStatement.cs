@@ -5,6 +5,11 @@
 
     public class NoOpStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.NoOpStatement; }
+        }
+
         internal void Parse(BoundNoOpStatement boundNoOpStatement)
         {
         }

@@ -4,6 +4,11 @@
 
     public class ArgList : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ArgList; }
+        }
+
         internal void Parse(BoundArgList boundArgList)
         {
             base.Parse(boundArgList);

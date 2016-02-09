@@ -6,6 +6,11 @@
 
     public class ExpressionStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.ExpressionStatement; }
+        }
+
         public Expression Expression { get; set; }
 
         internal void Parse(BoundExpressionStatement boundExpressionStatement)

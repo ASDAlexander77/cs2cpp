@@ -6,6 +6,11 @@
 
     public class LabelStatement : Statement
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.LabelStatement; }
+        }
+
         public ILabelSymbol Label { get; private set; }
 
         internal void Parse(BoundLabelStatement boundLabelStatement)

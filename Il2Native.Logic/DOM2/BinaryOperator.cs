@@ -8,6 +8,11 @@
 
     public class BinaryOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.BinaryOperator; }
+        }
+
         internal BinaryOperatorKind OperatorKind { get; set; }
 
         public Expression Left { get; set; }

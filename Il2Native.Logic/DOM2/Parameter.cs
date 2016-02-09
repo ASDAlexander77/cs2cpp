@@ -5,6 +5,11 @@
 
     public class Parameter : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.Parameter; }
+        }
+
         public IParameterSymbol ParameterSymbol { get; set; }
 
         internal void Parse(BoundParameter boundParameter)

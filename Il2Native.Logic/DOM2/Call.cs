@@ -13,7 +13,12 @@
     public class Call : Expression
     {
         private readonly IList<Expression> _arguments = new List<Expression>();
-        
+
+        public override Kinds Kind
+        {
+            get { return Kinds.Call; }
+        }
+
         public bool IsCallingConstructor
         {
             get

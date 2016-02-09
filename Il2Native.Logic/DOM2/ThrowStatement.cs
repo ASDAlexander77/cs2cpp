@@ -8,6 +8,11 @@
     {
         private Expression expressionOpt;
 
+        public override Kinds Kind
+        {
+            get { return Kinds.ThrowStatement; }
+        }
+
         internal void Parse(BoundThrowStatement boundThrowStatement)
         {
             if (boundThrowStatement == null)

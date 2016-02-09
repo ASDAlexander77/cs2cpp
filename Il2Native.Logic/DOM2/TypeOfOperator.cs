@@ -7,6 +7,11 @@
     {
         private Expression sourceType;
 
+        public override Kinds Kind
+        {
+            get { return Kinds.TypeOfOperator; }
+        }
+
         internal void Parse(BoundTypeOfOperator boundTypeOfOperator)
         {
             base.Parse(boundTypeOfOperator);

@@ -9,6 +9,11 @@
 
     public class Literal : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.Literal; }
+        }
+
         internal ConstantValue Value { get; set; }
 
         internal void Parse(BoundLiteral boundLiteral)

@@ -7,6 +7,11 @@
 
     public class FieldAccess : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.FieldAccess; }
+        }
+
         public IFieldSymbol Field { get; set; }
 
         public Expression ReceiverOpt { get; set; }

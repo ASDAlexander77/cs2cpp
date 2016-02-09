@@ -4,6 +4,11 @@
 
     public class IsOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.IsOperator; }
+        }
+
         public Expression Operand { get; set; }
 
         public TypeExpression TargetType { get; set; }

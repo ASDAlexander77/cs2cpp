@@ -4,6 +4,11 @@
 
     public class AddressOfOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.AddressOfOperator; }
+        }
+
         public Expression Operand { get; set; }
 
         public bool IsFixedStatementAddressOf { get; set; }

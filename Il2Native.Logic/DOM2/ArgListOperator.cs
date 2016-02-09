@@ -8,6 +8,11 @@
     {
         private readonly IList<Expression> arguments = new List<Expression>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.ArgListOperator; }
+        }
+
         public IList<Expression> Arguments
         {
             get { return this.arguments; }

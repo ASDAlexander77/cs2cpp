@@ -6,16 +6,23 @@
 
     public class NullCoalescingOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.NullCoalescingOperator; }
+        }
+
         public Expression LeftOperand { get; set; }
+        
         public Expression RightOperand { get; set; }
-        internal ConversionKind Kind { get; set; }
+
+        internal ConversionKind ConversionKind { get; set; }
 
         internal void Parse(BoundNullCoalescingOperator boundNullCoalescingOperator)
         {
             base.Parse(boundNullCoalescingOperator);
             this.LeftOperand = Deserialize(boundNullCoalescingOperator.LeftOperand) as Expression;
             this.RightOperand = Deserialize(boundNullCoalescingOperator.RightOperand) as Expression;
-            this.Kind = boundNullCoalescingOperator.LeftConversion.Kind;
+            this.ConversionKind = boundNullCoalescingOperator.LeftConversion.Kind;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

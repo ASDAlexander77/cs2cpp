@@ -13,7 +13,17 @@
     {
         private IList<Expression> bounds = new List<Expression>();
 
-        private Expression initializerOpt;
+        public override Kinds Kind
+        {
+            get { return Kinds.ArrayCreation; }
+        }
+
+        public Expression InitializerOpt { get; set; }
+
+        public IList<Expression> Bounds
+        {
+            get { return this.bounds; }
+        }
 
         internal void Parse(BoundArrayCreation boundArrayCreation)
         {
@@ -27,7 +37,7 @@
 
             if (boundArrayCreation.InitializerOpt != null)
             {
-                initializerOpt = Deserialize(boundArrayCreation.InitializerOpt) as Expression;
+                this.InitializerOpt = Deserialize(boundArrayCreation.InitializerOpt) as Expression;
             }
         }
 
@@ -35,7 +45,7 @@
         {
             var arrayTypeSymbol = (ArrayTypeSymbol)Type;
             var elementType = arrayTypeSymbol.ElementType;
-            var arrayInitialization = this.initializerOpt as ArrayInitialization;
+            var arrayInitialization = this.InitializerOpt as ArrayInitialization;
             if (arrayInitialization != null)
             {
                 c.TextSpan("reinterpret_cast<");
@@ -81,7 +91,7 @@
                 }
             }
 
-            if (this.initializerOpt != null)
+            if (this.InitializerOpt != null)
             {
                 foreach (var bound in initItems)
                 {

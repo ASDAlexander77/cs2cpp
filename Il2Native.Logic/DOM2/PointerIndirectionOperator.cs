@@ -4,6 +4,11 @@
 
     public class PointerIndirectionOperator : Expression
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.PointerIndirectionOperator; }
+        }
+
         public Expression Operand { get; set; }
 
         internal void Parse(BoundPointerIndirectionOperator pointerIndirectionOperator)

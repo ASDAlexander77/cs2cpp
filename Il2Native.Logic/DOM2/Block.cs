@@ -7,6 +7,11 @@
 
     public class Block : Base
     {
+        public override Kinds Kind
+        {
+            get { return Kinds.Block; }
+        }
+
         public bool SuppressNewLineAtEnd { get; set; }
 
         public bool Sequence { get; set; }

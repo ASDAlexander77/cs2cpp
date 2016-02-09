@@ -4,18 +4,23 @@
 
     public class SizeOfOperator : Expression
     {
-        private Expression sourceType;
+        public override Kinds Kind
+        {
+            get { return Kinds.SizeOfOperator; }
+        }
+
+        public Expression SourceType { get; set; }
 
         internal void Parse(BoundSizeOfOperator boundSizeOfOperator)
         {
             base.Parse(boundSizeOfOperator);
-            this.sourceType = Deserialize(boundSizeOfOperator.SourceType) as Expression;
+            this.SourceType = Deserialize(boundSizeOfOperator.SourceType) as Expression;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("sizeof(");
-            sourceType.WriteTo(c);
+            this.SourceType.WriteTo(c);
             c.TextSpan(")");
         }
     }

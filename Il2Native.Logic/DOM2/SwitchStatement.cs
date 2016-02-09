@@ -19,6 +19,11 @@
         private MethodSymbol stringEquality;
         private IList<Statement> statements = new List<Statement>();
 
+        public override Kinds Kind
+        {
+            get { return Kinds.SwitchStatement; }
+        }
+
         internal void Parse(BoundSwitchStatement boundSwitchStatement)
         {
             if (boundSwitchStatement == null)
