@@ -556,6 +556,8 @@ namespace Ll2NativeTests
             // 860 - error CS0117: 'System.Attribute' does not contain a definition for 'GetCustomAttribute'
             // 863 - NotImplemented __refanytype. TODO: Can be implemeneted
             // 868 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'Location'
+            // 892 - can'be compiled error CS0246: The type or namespace name 'FileVersionInfo' could not be found (are you missing a using directive or an assembly reference?)
+            // 906 - test-1.cs(8,9): error CS0568: Structs cannot contain explicit parameterless constructors
             // -----------
             // 32, 55, 74 - missing class
 
@@ -741,7 +743,9 @@ namespace Ll2NativeTests
                         858,
                         860,
                         863,
-                        868
+                        868,
+                        892,
+                        906
                     });
 
             // skip
@@ -765,7 +769,7 @@ namespace Ll2NativeTests
             
             skip.Add(883); // no Main method
 
-            foreach (var index in Enumerable.Range(883, 903).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 //CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
                 CompilerHelper.Compile(string.Format("test-{0}", index));
