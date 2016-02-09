@@ -79,7 +79,7 @@
         {
             public bool Equals(IMethodSymbol x, IMethodSymbol y)
             {
-                if (x.ContainingType != y.ContainingType)
+                if (string.Compare(x.ContainingType.ToString(), y.ContainingType.ToString(), StringComparison.Ordinal) != 0)
                 {
                     return false;
                 }
