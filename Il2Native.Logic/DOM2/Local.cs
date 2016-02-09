@@ -41,7 +41,7 @@
 
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
-            c.WriteName(local);
+            c.WriteNameEnsureCompatible(local);
         }
 
         internal void Parse(BoundLocal boundLocal)
