@@ -82,7 +82,7 @@
                     return false;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box<");
-                    c.WriteTypeFullName(this.TypeSource);
+                    c.WriteType(this.TypeSource, suppressReference: true);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.Unboxing:

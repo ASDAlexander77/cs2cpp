@@ -2,6 +2,7 @@
 namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
     using DOM;
@@ -14,11 +15,30 @@ namespace Il2Native.Logic
     {
         private static readonly ObjectIDGenerator ObjectIdGenerator = new ObjectIDGenerator();
 
+        private static readonly IDictionary<string, long> StringIdGenerator = new SortedDictionary<string, long>();
+
         public static long GetId(object obj, out bool firstTime)
         {
             lock (ObjectIdGenerator)
             {
                 return ObjectIdGenerator.GetId(obj, out firstTime);
+            }
+        }
+
+        public static long GetId(string obj)
+        {
+            lock (StringIdGenerator)
+            {
+                long id;
+                if (StringIdGenerator.TryGetValue(obj, out id))
+                {
+                    return id;
+                }
+
+                id = StringIdGenerator.Count + 1;
+                StringIdGenerator[obj] = id;
+
+                return id;
             }
         }
 
@@ -108,6 +128,13 @@ namespace Il2Native.Logic
         public void WriteNameEnsureCompatible(ISymbol symbol)
         {
             TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
+        }
+
+        public void WriteUniqueNameByContainingType(ISymbol symbol)
+        {
+            var name = symbol.MetadataName ?? symbol.Name;
+            var uniqueName = string.Concat(name, GetId(((TypeSymbol)symbol.ContainingType).ToKeyString()));
+            TextSpan(uniqueName.CleanUpName());
         }
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
@@ -321,7 +348,7 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.TypeParameter:
-                    WriteName(type);
+                    this.WriteUniqueNameByContainingType(type);
                     return;
                 case TypeKind.Submission:
                     break;
@@ -598,29 +625,37 @@ namespace Il2Native.Logic
             TextSpan("template <");
 
             var anyTypeParam = false;
-            this.WriteTemplateDeclarationRecursive(namedTypeSymbol, ref anyTypeParam);
+            foreach (var typeParam in  this.EnumerateTemplateParametersRecursive(namedTypeSymbol).Distinct())
+            {
+                if (anyTypeParam)
+                {
+                    TextSpan(",");
+                    WhiteSpace();
+                }
+
+                TextSpan("typename");
+                WhiteSpace();
+                this.WriteUniqueNameByContainingType(typeParam);
+
+                anyTypeParam = true;
+            }
 
             TextSpan("> ");
         }
 
-        public void WriteTemplateDeclarationRecursive(INamedTypeSymbol namedTypeSymbol, ref bool anyTypeParam)
+        public IEnumerable<ITypeParameterSymbol> EnumerateTemplateParametersRecursive(INamedTypeSymbol namedTypeSymbol)
         {
             if (namedTypeSymbol.ContainingType != null)
             {
-                this.WriteTemplateDeclarationRecursive(namedTypeSymbol.ContainingType, ref anyTypeParam);
+                foreach (var typeParam in this.EnumerateTemplateParametersRecursive(namedTypeSymbol.ContainingType))
+                {
+                    yield return typeParam;
+                }
             }
 
             foreach (var typeParam in namedTypeSymbol.TypeParameters)
             {
-                if (anyTypeParam)
-                {
-                    TextSpan(", ");
-                }
-
-                anyTypeParam = true;
-
-                TextSpan("typename ");
-                WriteName(typeParam);
+                yield return typeParam;
             }
         }
 
@@ -629,28 +664,34 @@ namespace Il2Native.Logic
             TextSpan("<");
 
             var anyTypeParam = false;
-            WriteTemplateDefinitionRecusive(typeSymbol, ref anyTypeParam);
-
-            TextSpan(">");
-        }
-
-        public void WriteTemplateDefinitionRecusive(INamedTypeSymbol typeSymbol, ref bool anyTypeParam)
-        {
-            if (typeSymbol.ContainingType != null)
-            {
-                WriteTemplateDefinitionRecusive(typeSymbol.ContainingType, ref anyTypeParam);
-            }
-
-            foreach (var typeParam in typeSymbol.TypeArguments)
+            foreach (var typeParam in this.EnumerateTemplateArgumentsRecusive(typeSymbol))
             {
                 if (anyTypeParam)
                 {
                     TextSpan(", ");
                 }
 
-                anyTypeParam = true;
-
                 WriteType(typeParam);
+
+                anyTypeParam = true;
+            }
+
+            TextSpan(">");
+        }
+
+        public IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(INamedTypeSymbol typeSymbol)
+        {
+            if (typeSymbol.ContainingType != null)
+            {
+                foreach (var typeParam in this.EnumerateTemplateArgumentsRecusive(typeSymbol.ContainingType))
+                {
+                    yield return typeParam;
+                }
+            }
+
+            foreach (var typeParam in typeSymbol.TypeArguments)
+            {
+                yield return typeParam;
             }
         }
 
@@ -668,7 +709,7 @@ namespace Il2Native.Logic
                 anyTypeParam = true;
 
                 TextSpan("typename ");
-                WriteName(typeParam);
+                this.WriteUniqueNameByContainingType(typeParam);
             }
 
             TextSpan("> ");

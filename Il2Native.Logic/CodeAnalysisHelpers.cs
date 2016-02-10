@@ -75,27 +75,6 @@
             return methods;
         }
 
-        public class KeyStringEqualityComparer : IEqualityComparer<IMethodSymbol>
-        {
-            public bool Equals(IMethodSymbol x, IMethodSymbol y)
-            {
-                if (string.Compare(x.ContainingType.ToString(), y.ContainingType.ToString(), StringComparison.Ordinal) != 0)
-                {
-                    return false;
-                }
-
-                return string.Compare(x.MetadataName, y.MetadataName, StringComparison.Ordinal) == 0;
-            }
-
-            public int GetHashCode(IMethodSymbol obj)
-            {
-                var hash = 17;
-                hash = hash * 31 + obj.ContainingType.GetHashCode();
-                hash = hash * 31 + obj.MetadataName.GetHashCode();
-                return hash;
-            }
-        }
-
         public static IEnumerable<IMethodSymbol> EnumerateAllMethodsRecursevly(this INamedTypeSymbol type)
         {
             if (type.TypeKind == TypeKind.Interface)
@@ -117,6 +96,55 @@
             foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
             {
                 yield return member;
+            }
+        }
+
+        public class KeyStringEqualityComparer : IEqualityComparer<IMethodSymbol>
+        {
+            public bool Equals(IMethodSymbol x, IMethodSymbol y)
+            {
+                if (string.Compare(x.ContainingType.ToString(), y.ContainingType.ToString(), StringComparison.Ordinal) != 0)
+                {
+                    return false;
+                }
+
+                return string.Compare(x.MetadataName, y.MetadataName, StringComparison.Ordinal) == 0;
+            }
+
+            public int GetHashCode(IMethodSymbol obj)
+            {
+                var hash = 17;
+                hash = hash * 31 + obj.ContainingType.GetHashCode();
+                hash = hash * 31 + obj.MetadataName.GetHashCode();
+                return hash;
+            }
+        }
+
+        public class TypeParameterByReferenceEqualityComparer : IEqualityComparer<ITypeParameterSymbol>
+        {
+            public bool Equals(ITypeParameterSymbol x, ITypeParameterSymbol y)
+            {
+                return x.Name == y.Name;
+            }
+
+            public int GetHashCode(ITypeParameterSymbol obj)
+            {
+                return obj.GetHashCode();
+            }
+        }
+
+        public class TypeParameterByNameEqualityComparer : IEqualityComparer<ITypeParameterSymbol>
+        {
+            public bool Equals(ITypeParameterSymbol x, ITypeParameterSymbol y)
+            {
+                return string.Compare(x.Name, y.Name, StringComparison.Ordinal) == 0;
+            }
+
+            public int GetHashCode(ITypeParameterSymbol obj)
+            {
+                var hash = 17;
+                hash = hash * 31 + obj.Name.GetHashCode();
+                return hash;
             }
         }
     }
