@@ -124,9 +124,14 @@
                 case ConversionKind.PointerToInteger:
                 case ConversionKind.IntegerToPointer:
                 case ConversionKind.PointerToPointer:
-                    c.TextSpan("(");
-                    c.WriteType(this.TypeDestination, true);
-                    c.TextSpan(")");
+
+                    if (!this.TypeDestination.IsIntPtrType())
+                    {
+                        c.TextSpan("(");
+                        c.WriteType(this.TypeDestination, true);
+                        c.TextSpan(")");
+                    }
+
                     break;
                 case ConversionKind.Identity:
                     // for string

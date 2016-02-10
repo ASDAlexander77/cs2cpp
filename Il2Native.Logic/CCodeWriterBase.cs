@@ -168,7 +168,7 @@ namespace Il2Native.Logic
 
         public void WriteTypeSuffix(ITypeSymbol type)
         {
-            if (WriteSpecialType(type, true))
+            if (WriteSpecialType(type))
             {
                 return;
             }
@@ -259,7 +259,7 @@ namespace Il2Native.Logic
 
         public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
         {
-            if (!valueTypeAsClass && WriteSpecialType(type, cleanName))
+            if (!valueTypeAsClass && WriteSpecialType(type))
             {
                 return;
             }
@@ -332,7 +332,7 @@ namespace Il2Native.Logic
             throw new NotImplementedException();
         }
 
-        public bool WriteSpecialType(ITypeSymbol type, bool cleanName = false)
+        public bool WriteSpecialType(ITypeSymbol type)
         {
             switch (type.SpecialType)
             {
@@ -374,28 +374,6 @@ namespace Il2Native.Logic
                     return true;
                 case SpecialType.System_Double:
                     TextSpan("double");
-                    return true;
-                case SpecialType.System_IntPtr:
-                    if (cleanName)
-                    {
-                        TextSpan("intptr_t");
-                    }
-                    else
-                    {
-                        TextSpan("__val<intptr_t>");
-                    }
-
-                    return true;
-                case SpecialType.System_UIntPtr:
-                    if (cleanName)
-                    {
-                        TextSpan("uintptr_t");
-                    }
-                    else
-                    {
-                        TextSpan("__val<uintptr_t>");
-                    }
-
                     return true;
             }
 

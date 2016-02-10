@@ -92,29 +92,6 @@ public:
 	~Finally() { _dtor(); }
 };
 
-// __val conversions
-#if _MSC_VER 
-template<>
-inline __val<intptr_t>::__val(const <<%assemblyName%>>::System::IntPtr& value)
-#else
-template<> template<>
-inline __val<intptr_t>::__val<<<%assemblyName%>>::System::IntPtr>(const <<%assemblyName%>>::System::IntPtr& value)
-#endif
-{
-	_value = reinterpret_cast<intptr_t>(value.m_value);
-}
-
-#if _MSC_VER 
-template<>
-inline __val<uintptr_t>::__val(const <<%assemblyName%>>::System::UIntPtr& value)
-#else
-template<> template<>
-inline __val<uintptr_t>::__val<<<%assemblyName%>>::System::UIntPtr>(const <<%assemblyName%>>::System::UIntPtr& value)
-#endif
-{
-	_value = reinterpret_cast<uintptr_t>(value.m_value);
-}
-
 // Interlocked
 template <typename T>
 T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
