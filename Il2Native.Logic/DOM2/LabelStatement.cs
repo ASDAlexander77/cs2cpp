@@ -39,7 +39,7 @@
             var lbl = label.Name;
 
             var firstTime = false;
-            lbl += string.Format("_{0}", CCodeWriterBase.ObjectIdGenerator.GetId(label, out firstTime));
+            lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
 
             return lbl.CleanUpName();
         }

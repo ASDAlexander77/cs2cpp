@@ -12,11 +12,14 @@ namespace Il2Native.Logic
 
     public abstract class CCodeWriterBase
     {
-        private static ObjectIDGenerator objectIDGenerator = new ObjectIDGenerator();
+        private static readonly ObjectIDGenerator ObjectIdGenerator = new ObjectIDGenerator();
 
-        public static ObjectIDGenerator ObjectIdGenerator
+        public static long GetId(object obj, out bool firstTime)
         {
-            get { return objectIDGenerator; }
+            lock (ObjectIdGenerator)
+            {
+                return ObjectIdGenerator.GetId(obj, out firstTime);
+            }
         }
 
         public abstract void OpenBlock();
