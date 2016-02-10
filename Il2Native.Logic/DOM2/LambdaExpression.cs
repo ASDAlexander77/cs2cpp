@@ -34,11 +34,21 @@
         {
             c.TextSpan("[&]");
             c.TextSpan("(");
-            foreach (var field in this.Locals)
+
+            var any = false;
+            foreach (var local in this.Locals)
             {
+                if (any)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
                 c.TextSpan("auto");
                 c.WhiteSpace();
-                c.WriteName(field);
+                c.WriteName(local);
+
+                any = true;
             }
 
             c.TextSpan(")");

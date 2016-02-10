@@ -45,11 +45,21 @@
         {
             c.TextSpan("[&]");
             c.TextSpan("(");
+
+            var any = false;
             foreach (var field in this.Fields)
             {
+                if (any)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
                 c.TextSpan("auto");
                 c.WhiteSpace();
                 c.WriteName(field);
+
+                any = true;
             }
 
             c.TextSpan(")");
