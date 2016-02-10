@@ -112,6 +112,12 @@ namespace Il2Native.Logic
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
+            if (addTemplate && methodSymbol.IsGenericMethod)
+            {
+                this.TextSpan("template");
+                this.WhiteSpace();
+            }
+
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
             {
@@ -140,32 +146,23 @@ namespace Il2Native.Logic
                 TextSpan(parameter.RefKind.ToString());
             }
 
-            ////if (methodSymbol.Arity > 0)
-            ////{
-            ////    TextSpan("T");
-            ////    TextSpan(methodSymbol.Arity.ToString());
-            ////}
-
-            if (addTemplate)
+            if (addTemplate && methodSymbol.IsGenericMethod)
             {
-                if (methodSymbol.IsGenericMethod)
+                TextSpan("<");
+
+                var anyTypeArg = false;
+                foreach (var typeArg in methodSymbol.TypeArguments)
                 {
-                    TextSpan("<");
-
-                    var anyTypeArg = false;
-                    foreach (var typeArg in methodSymbol.TypeArguments)
+                    if (anyTypeArg)
                     {
-                        if (anyTypeArg)
-                        {
-                            TextSpan(", ");
-                        }
-
-                        anyTypeArg = true;
-                        this.WriteType(typeArg);
+                        TextSpan(", ");
                     }
 
-                    TextSpan(">");
+                    anyTypeArg = true;
+                    this.WriteType(typeArg);
                 }
+
+                TextSpan(">");
             }
         }
 
