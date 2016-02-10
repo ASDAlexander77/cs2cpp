@@ -10,12 +10,19 @@
             get { return Kinds.ContinueStatement; }
         }
 
-        internal void Parse(BoundGotoStatement boundGotoStatement)
+        internal bool Parse(BoundGotoStatement boundGotoStatement)
         {
             if (boundGotoStatement == null)
             {
                 throw new ArgumentNullException();
             }
+
+            if (boundGotoStatement.Label.Name.StartsWith("<continue"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         internal override void WriteTo(CCodeWriterBase c)

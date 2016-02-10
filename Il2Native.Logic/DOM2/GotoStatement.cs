@@ -1,6 +1,8 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Diagnostics;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -34,6 +36,9 @@
                 label.Parse(boundGotoStatement.Label);
                 this.Label = label;
             }
+
+            Debug.Assert(!this.Label.LabelName.Contains("break"));
+            Debug.Assert(!this.Label.LabelName.Contains("continue"));
         }
 
         internal override void WriteTo(CCodeWriterBase c)
