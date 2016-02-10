@@ -51,10 +51,10 @@ include_directories(""./""<%include%>)
 
 if (MSVC)
 link_directories(""./""<%link_msvc%>)
-SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /GR- /Zi"")
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /GR- /Zi /EHsc"")
 else()
 link_directories(""./""<%link_other%>)
-SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti"")
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti -fpermissive"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"")
