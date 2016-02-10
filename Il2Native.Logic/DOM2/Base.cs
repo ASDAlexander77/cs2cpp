@@ -23,7 +23,7 @@
             var boundBlock = boundStatementList as BoundBlock;
             if (boundBlock != null)
             {
-                ParseLocals(boundBlock.Locals, statements);
+                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
@@ -58,7 +58,7 @@
             }
         }
 
-        internal static void ParseLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements)
+        internal static void ParseLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements, bool noFilter = false)
         {
             foreach (var local in locals)
             {
@@ -67,12 +67,13 @@
                     continue;
                 }
 
-                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None 
-                    && local.DeclarationKind != LocalDeclarationKind.FixedVariable
-                    && local.DeclarationKind != LocalDeclarationKind.UsingVariable
-                    && !IsDeclarationWithoutInitializer(local))
+                if (!noFilter)
                 {
-                    continue;
+                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable
+                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable && !IsDeclarationWithoutInitializer(local))
+                    {
+                        continue;
+                    }
                 }
 
                 var localVariableDeclaration = new VariableDeclaration();
@@ -783,12 +784,6 @@
             var reference = local.DeclaringSyntaxReferences[0];
             var greenNode = reference.GetSyntax().Green;
             var variableDeclaratorSyntax = greenNode as VariableDeclaratorSyntax;
-            var declarationExpressionSyntax = greenNode as DeclarationExpressionSyntax;
-            if (declarationExpressionSyntax != null)
-            {
-                return false;
-            }
-
             return (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer == null);
         }
     }
