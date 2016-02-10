@@ -67,7 +67,10 @@
                     continue;
                 }
 
-                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable && !IsDeclarationWithoutInitializer(local))
+                if (local.SynthesizedLocalKind == SynthesizedLocalKind.None 
+                    && local.DeclarationKind != LocalDeclarationKind.FixedVariable
+                    && local.DeclarationKind != LocalDeclarationKind.UsingVariable
+                    && !IsDeclarationWithoutInitializer(local))
                 {
                     continue;
                 }
@@ -778,7 +781,14 @@
         private static bool IsDeclarationWithoutInitializer(LocalSymbol local)
         {
             var reference = local.DeclaringSyntaxReferences[0];
-            var variableDeclaratorSyntax = reference.GetSyntax().Green as VariableDeclaratorSyntax;
+            var greenNode = reference.GetSyntax().Green;
+            var variableDeclaratorSyntax = greenNode as VariableDeclaratorSyntax;
+            var declarationExpressionSyntax = greenNode as DeclarationExpressionSyntax;
+            if (declarationExpressionSyntax != null)
+            {
+                return false;
+            }
+
             return (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer == null);
         }
     }

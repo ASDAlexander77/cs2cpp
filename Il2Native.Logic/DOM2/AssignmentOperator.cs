@@ -29,15 +29,6 @@
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
 
             var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
-            if (variableDeclaratorSyntax == null)
-            {
-                var declarationExpressionSyntax = boundAssignmentOperator.Left.Syntax.Green as DeclarationExpressionSyntax;
-                if (declarationExpressionSyntax != null)
-                {
-                    variableDeclaratorSyntax = declarationExpressionSyntax.Variable;
-                }
-            }
-
             if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null && (boundLocal == null || boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None))
             {
                 this.ApplyAutoType = true;
@@ -66,7 +57,7 @@
                 this.assignmentType = this.Right.Type;
             }
 
-            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed)
+            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing)
             {
                 this.ApplyAutoType = false;
                 this.assignmentType = null;
