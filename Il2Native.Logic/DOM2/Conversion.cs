@@ -81,9 +81,7 @@
                     c.TextSpan("nullptr");
                     return false;
                 case ConversionKind.Boxing:
-                    c.TextSpan("__box<");
-                    c.WriteType(this.TypeSource, suppressReference: true, valueTypeAsClass: true);
-                    c.TextSpan(">");
+                    c.TextSpan("__box");
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
