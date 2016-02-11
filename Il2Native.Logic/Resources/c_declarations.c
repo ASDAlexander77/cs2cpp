@@ -103,3 +103,13 @@ T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& loc
 {
     throw 0xC000C000;
 }
+
+// Activator
+template <typename T>
+T <<%assemblyName%>>::System::Activator::CreateInstance()
+{
+	typedef typename std::remove_pointer<T>::type _T;
+	return new _T();
+}
+
+
