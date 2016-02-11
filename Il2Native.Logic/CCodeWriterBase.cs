@@ -1,4 +1,4 @@
-﻿#define EMPTY_SKELETON
+﻿////#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;
@@ -352,7 +352,15 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.TypeParameter:
-                    this.WriteUniqueNameByContainingType(type);
+                    if (type.ContainingType != null && type.ContainingType.ContainingType != null)
+                    {
+                        this.WriteUniqueNameByContainingType(type);
+                    }
+                    else
+                    {
+                        this.WriteName(type);
+                    }
+
                     return;
                 case TypeKind.Submission:
                     break;
@@ -639,7 +647,14 @@ namespace Il2Native.Logic
 
                 TextSpan("typename");
                 WhiteSpace();
-                this.WriteUniqueNameByContainingType(typeParam);
+                if (typeParam.ContainingType != null && typeParam.ContainingType.ContainingType != null)
+                {
+                    this.WriteUniqueNameByContainingType(typeParam);
+                }
+                else
+                {
+                    this.WriteName(typeParam);
+                }
 
                 anyTypeParam = true;
             }
@@ -713,7 +728,15 @@ namespace Il2Native.Logic
                 anyTypeParam = true;
 
                 TextSpan("typename ");
-                this.WriteUniqueNameByContainingType(typeParam);
+                if (typeParam.ContainingType != null && typeParam.ContainingType.ContainingType != null)
+                {
+                    this.WriteUniqueNameByContainingType(typeParam);
+                }
+                else
+                {
+                    this.WriteName(typeParam);
+                }
+
             }
 
             TextSpan("> ");
