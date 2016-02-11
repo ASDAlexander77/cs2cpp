@@ -33,7 +33,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (!Type.IsValueType)
+            if (!Type.IsValueType || IsReference)
             {
                 c.TextSpan("new");
                 c.WhiteSpace();

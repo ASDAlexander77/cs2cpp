@@ -43,7 +43,7 @@ template <typename T, typename = std::enable_if<std::is_base_of<<<%assemblyName%
 	return t;
 }
 
-template <typename T, typename = std::enable_if<!std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline T* __box (T t)
+template <typename T> inline T* __box (T t)
 {
 	return new T(t);
 }
