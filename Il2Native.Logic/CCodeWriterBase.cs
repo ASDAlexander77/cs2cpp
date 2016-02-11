@@ -322,7 +322,12 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
+                        ////WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
+                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
+                        if (!suppressReference && valueTypeAsClass)
+                        {
+                            TextSpan("*");
+                        }
                     }
 
                     return;
