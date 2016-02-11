@@ -749,8 +749,8 @@ namespace Ll2NativeTests
                     });
 
             // skip
-            skip.Add(77); // remove, it can't be compiled
-            skip.Add(450); // remove, it can't be compiled
+            //skip.Add(77); // remove, it can't be compiled
+            //skip.Add(450); // remove, it can't be compiled
 
             skip.Add(126); // no Main method
             skip.Add(315); // using "new" on method (can be solved by removing 'Using' or new method etc

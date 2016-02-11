@@ -38,9 +38,14 @@ public:
 };
 
 // Boxing internals
-template <typename D, typename S> inline D* __box(S v)
+template <typename T, typename = std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline T* __box (T* t)
 {
-	return (D*) new S(v);
+	return t;
+}
+
+template <typename T, typename = std::enable_if<!std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline T* __box (T t)
+{
+	return new T(t);
 }
 
 // Unboxing internals

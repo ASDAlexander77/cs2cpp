@@ -12,7 +12,7 @@
     public static class CompilerHelper
     {
 #if _DISK_C_
-        public const string SourcePath = @"C:\Dev\Gits\Mono-Class-Libraries\mcs\tests\";
+        public const string SourcePath = @"C:\Dev\Gits\mono\mcs\tests\";
         public const string SourcePathCustom = @"C:\Temp\tests\";
         public const string OutputPath = @"C:\Temp\IlCTests\";
         public const string CoreLibCSProjPath = @"C:\Dev\Temp\Il2Native\CoreLib\CoreLib.csproj";

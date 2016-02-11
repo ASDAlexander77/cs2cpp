@@ -312,17 +312,23 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.Enum:
                     var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
-                    if (!cleanName && !valueTypeAsClass)
+                    if (!valueTypeAsClass)
                     {
-                        TextSpan("__enum<");
-                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
-                        TextSpan(", ");
-                        WriteType(enumUnderlyingType, true);
-                        TextSpan(">");
+                        if (!cleanName)
+                        {
+                            TextSpan("__enum<");
+                            WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
+                            TextSpan(", ");
+                            WriteType(enumUnderlyingType, true);
+                            TextSpan(">");
+                        }
+                        else
+                        {
+                            WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
+                        }
                     }
                     else
                     {
-                        ////WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
                         WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
                         if (!suppressReference && valueTypeAsClass)
                         {
