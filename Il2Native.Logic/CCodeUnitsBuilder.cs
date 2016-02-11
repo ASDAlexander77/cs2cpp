@@ -171,9 +171,9 @@
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.IsPrimitiveValueType())
+            if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
-                unit.Declarations.Add(new CCodeSpecialTypeConstructorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));
             }
 
             if (type.IsPrimitiveValueType() || type.IsIntPtrType())

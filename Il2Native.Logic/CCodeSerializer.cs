@@ -370,12 +370,6 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         itw.WriteLine(" base;");
                     }
 
-                    if (!unit.HasDefaultConstructor)
-                    {
-                        c.WriteTypeName(namedTypeSymbol, false);
-                        itw.WriteLine("() = default;");
-                    }
-
                     // declare using to solve issue with overloaded functions in different classes
                     foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNames())
                     {
@@ -386,6 +380,19 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         c.WriteMethodName(method);
                         c.TextSpan(";");
                         c.NewLine();
+                    }
+
+                    if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+                    {
+                        // value holder for enum
+                        c.WriteType(namedTypeSymbol.EnumUnderlyingType, true);
+                        itw.WriteLine(" m_value;");
+                    }
+
+                    if (!unit.HasDefaultConstructor)
+                    {
+                        c.WriteTypeName(namedTypeSymbol, false);
+                        itw.WriteLine("() = default;");
                     }
 
                     foreach (var declaration in unit.Declarations)
