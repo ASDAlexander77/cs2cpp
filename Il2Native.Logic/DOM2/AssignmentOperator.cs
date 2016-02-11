@@ -70,7 +70,7 @@
             {
                 if (this.assignmentType != null)
                 {
-                    c.WriteType(this.assignmentType, true);
+                    c.WriteType(this.assignmentType);
                 }
                 else
                 {

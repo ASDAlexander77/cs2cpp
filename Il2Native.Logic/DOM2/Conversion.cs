@@ -35,7 +35,7 @@
         {
             if (this.CCast)
             {
-                c.WriteType(this.TypeDestination, true);
+                c.WriteType(this.TypeDestination);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");
@@ -46,7 +46,7 @@
             if (interfaceCastRequired)
             {
                 c.TextSpan("interface_cast<");
-                c.WriteType(this.TypeDestination, true);
+                c.WriteType(this.TypeDestination);
                 c.TextSpan(">");
                 c.TextSpan("(");
             }
@@ -87,7 +87,7 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(this.TypeDestination, true);
+                    c.WriteType(this.TypeDestination);
                     c.TextSpan(",");
                     c.WhiteSpace();
                     c.WriteTypeFullName(this.TypeDestination);
@@ -100,7 +100,7 @@
                         this.TypeSource.IsDerivedFrom(this.TypeDestination))
                     {
                         c.TextSpan("static_cast<");
-                        c.WriteType(this.TypeDestination, true);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     }
                     else
@@ -116,7 +116,7 @@
                             c.TextSpan("as<");
                         }
 
-                        c.WriteType(this.TypeDestination, true);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(">");
                     }
 
@@ -128,7 +128,7 @@
                     if (!this.TypeDestination.IsIntPtrType())
                     {
                         c.TextSpan("(");
-                        c.WriteType(this.TypeDestination, true);
+                        c.WriteType(this.TypeDestination);
                         c.TextSpan(")");
                     }
 
@@ -147,7 +147,7 @@
                     return true;
                 default:
                     c.TextSpan("static_cast<");
-                    c.WriteType(this.TypeDestination, true);
+                    c.WriteType(this.TypeDestination);
                     c.TextSpan(">");
                     break;
             }

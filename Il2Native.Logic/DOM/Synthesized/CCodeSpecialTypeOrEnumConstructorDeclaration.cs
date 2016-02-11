@@ -39,9 +39,7 @@
                 MethodKind = MethodKind.Constructor;
                 ReceiverType = type;
                 ContainingType = type;
-                Parameters =
-                    ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "value", Type = type.TypeKind == TypeKind.Enum ? type.EnumUnderlyingType : type });
+                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type });
             }
         }
     }

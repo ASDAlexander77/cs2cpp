@@ -61,7 +61,7 @@
             if (arrayInitialization != null)
             {
                 c.TextSpan("__array_init<");
-                c.WriteType(elementType, true);
+                c.WriteType(elementType);
                 c.TextSpan(",");
                 c.WhiteSpace();
                 c.TextSpan(initItems.Count.ToString());

@@ -276,9 +276,8 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     if (namedTypeSymbol.TypeKind == TypeKind.Enum)
                     {
                         itw.WriteLine();
-                        itw.Write("enum class");
-                        itw.Write(" enum_");
-                        c.WriteTypeName(namedTypeSymbol, false);
+                        itw.Write("enum class ");
+                        c.WriteTypeName(namedTypeSymbol, false, true);
                         itw.Write(" : ");
                         c.WriteType(namedTypeSymbol.EnumUnderlyingType);
 
@@ -320,7 +319,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                         namedTypeSymbol.SpecialType == SpecialType.System_String)
                     {
                         itw.Write("typedef ");
-                        c.WriteType(namedTypeSymbol, true, true, false);
+                        c.WriteType(namedTypeSymbol, suppressReference: true, allowKeywords: false);
                         itw.Write(" ");
                         c.WriteTypeName(namedTypeSymbol);
                         itw.WriteLine(";");
@@ -435,7 +434,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             {
                 c.TextSpan("using");
                 c.WhiteSpace();
-                c.WriteType(method.ReceiverType, true, true, true);
+                c.WriteType(method.ReceiverType, suppressReference: true, allowKeywords: true);
                 c.TextSpan("::");
                 c.WriteMethodName(method);
                 c.TextSpan(";");
@@ -445,7 +444,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             if (namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
                 // value holder for enum
-                c.WriteType(namedTypeSymbol.EnumUnderlyingType, true);
+                c.WriteType(namedTypeSymbol);
                 itw.WriteLine(" m_value;");
             }
 

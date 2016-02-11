@@ -236,7 +236,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -250,7 +250,7 @@ namespace Il2Native.Logic
                 TextSpan("::");
             }
 
-            WriteTypeName(type, allowKeywords);
+            WriteTypeName(type, allowKeywords, valueName);
 
             if (type.IsGenericType)
             {
@@ -258,7 +258,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true)
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
         {
             if (allowKeywords)
             {
@@ -275,6 +275,11 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (valueName && type.TypeKind == TypeKind.Enum)
+            {
+                TextSpan("enum_");
+            }
+
             if (type.ContainingType != null)
             {
                 WriteTypeName(type.ContainingType);
@@ -284,7 +289,7 @@ namespace Il2Native.Logic
             WriteName(type);
         }
 
-        public void WriteType(ITypeSymbol type, bool cleanName = false, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
         {
             if (!valueTypeAsClass && WriteSpecialType(type))
             {
@@ -311,21 +316,9 @@ namespace Il2Native.Logic
                 case TypeKind.DynamicType:
                     break;
                 case TypeKind.Enum:
-                    var enumUnderlyingType = ((NamedTypeSymbol)type).EnumUnderlyingType;
                     if (!valueTypeAsClass)
                     {
-                        if (!cleanName)
-                        {
-                            TextSpan("__enum<");
-                            WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
-                            TextSpan(", ");
-                            WriteType(enumUnderlyingType, true);
-                            TextSpan(">");
-                        }
-                        else
-                        {
-                            WriteType(enumUnderlyingType, allowKeywords: allowKeywords, valueTypeAsClass: valueTypeAsClass, suppressReference: suppressReference);
-                        }
+                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true);
                     }
                     else
                     {
@@ -347,7 +340,7 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.PointerType:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteType(pointedAtType, cleanName, allowKeywords: allowKeywords);
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
                     TextSpan("*");
                     return;
                 case TypeKind.Struct:
@@ -426,7 +419,7 @@ namespace Il2Native.Logic
                 WhiteSpace();
             }
 
-            WriteType(fieldSymbol.Type, true);
+            this.WriteType(fieldSymbol.Type);
             WhiteSpace();
             WriteName(fieldSymbol);
         }
@@ -439,7 +432,7 @@ namespace Il2Native.Logic
                 NewLine();
             }
 
-            WriteType(fieldSymbol.Type, true);
+            this.WriteType(fieldSymbol.Type);
             WhiteSpace();
 
             if (fieldSymbol.ContainingNamespace != null)
@@ -594,7 +587,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteType(methodSymbol.ReturnType, true, allowKeywords: !declarationWithingClass);
+                    this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass);
                 }
 
                 this.WhiteSpace();
@@ -682,7 +675,7 @@ namespace Il2Native.Logic
                     TextSpan(", ");
                 }
 
-                WriteType(typeParam);
+                this.WriteType(typeParam);
 
                 anyTypeParam = true;
             }
@@ -732,7 +725,7 @@ namespace Il2Native.Logic
             if (!expression.IsReference
                 && (expression.Type.IsPrimitiveValueType() || expression.Type.TypeKind == TypeKind.Enum))
             {
-                this.WriteType(expression.Type, valueTypeAsClass: true, suppressReference: true);
+                this.WriteType(expression.Type, suppressReference: true, valueTypeAsClass: true);
                 TextSpan("(");
                 literal = true;
             }
@@ -798,13 +791,13 @@ namespace Il2Native.Logic
             if (arrayTypeSymbol.Rank <= 1)
             {
                 TextSpan("__array<");
-                WriteType(elementType, cleanName, allowKeywords: allowKeywords);
+                this.WriteType(elementType, allowKeywords: allowKeywords);
                 TextSpan(">");
             }
             else
             {
                 TextSpan("__multi_array<");
-                WriteType(elementType, cleanName, allowKeywords: allowKeywords);
+                this.WriteType(elementType, allowKeywords: allowKeywords);
                 TextSpan(",");
                 WhiteSpace();
                 TextSpan(arrayTypeSymbol.Rank.ToString());

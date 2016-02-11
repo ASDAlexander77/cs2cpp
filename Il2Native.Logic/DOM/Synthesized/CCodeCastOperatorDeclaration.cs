@@ -37,7 +37,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             c.TextSpan("operator");
             c.WhiteSpace();
-            c.WriteType(Method.ContainingType, true);
+            c.WriteType(Method.ContainingType);
             c.TextSpan("()");
             MethodBodyOpt.WriteTo(c);
         }
