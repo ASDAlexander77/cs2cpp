@@ -45,6 +45,7 @@
             foreach (var boundSwitchSection in boundSwitchStatement.SwitchSections)
             {
                 var switchSection = new SwitchSection();
+                switchSection.SwitchType = expression.Type;
                 switchSection.Parse(boundSwitchSection);
                 switchCases.Add(switchSection);
             }

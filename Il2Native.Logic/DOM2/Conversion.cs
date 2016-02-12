@@ -35,7 +35,7 @@
         {
             if (this.CCast)
             {
-                c.WriteType(this.TypeDestination);
+                c.WriteType(this.TypeDestination, valueTypeAsClass: this.IsReference);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");

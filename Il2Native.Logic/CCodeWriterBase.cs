@@ -744,21 +744,7 @@ namespace Il2Native.Logic
 
         public void WriteAccess(Expression expression)
         {
-            var literal = false;
-            if (!expression.IsReference
-                && (expression.Type.IsPrimitiveValueType() || expression.Type.TypeKind == TypeKind.Enum))
-            {
-                this.WriteType(expression.Type, suppressReference: true, valueTypeAsClass: true);
-                TextSpan("(");
-                literal = true;
-            }
-
             this.WriteExpressionInParenthesesIfNeeded(expression);
-
-            if (literal)
-            {
-                TextSpan(")");
-            }
 
             if (expression.IsReference)
             {

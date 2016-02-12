@@ -47,10 +47,10 @@
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
-                var hasParfameter = false;
+                var hasParameter = false;
                 if (paramEnum != null)
                 {
-                    hasParfameter = paramEnum.MoveNext();
+                    hasParameter = paramEnum.MoveNext();
                 }
 
                 if (anyArgs)
@@ -59,7 +59,7 @@
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, hasParfameter ? paramEnum.Current.Type : null).WriteTo(c);
+                PreprocessParameter(expression, hasParameter ? paramEnum.Current.Type : null).WriteTo(c);
                 anyArgs = true;
             }
 
@@ -145,7 +145,14 @@
             }
             else
             {
-                c.WriteAccess(this.ReceiverOpt);
+                var receiverOpt = this.ReceiverOpt;
+                if (!receiverOpt.IsReference && (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
+                {
+                    receiverOpt = new Conversion { Operand = receiverOpt, TypeDestination = receiverOpt.Type, IsReference = true, CCast = true };
+                }
+
+                c.WriteAccess(receiverOpt);
+
                 var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
                 c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
             }

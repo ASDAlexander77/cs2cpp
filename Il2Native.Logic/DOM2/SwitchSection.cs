@@ -16,7 +16,9 @@
         {
             get { return Kinds.SwitchSection; }
         }
-        
+
+        public ITypeSymbol SwitchType { get; set; }
+
         public IList<SwitchLabel> Labels
         {
             get
@@ -60,6 +62,14 @@
                 {
                     c.TextSpan("case");
                     c.WhiteSpace();
+
+                    if (this.SwitchType.TypeKind == TypeKind.Enum)
+                    {
+                        c.TextSpan("(");
+                        c.WriteType(this.SwitchType);
+                        c.TextSpan(")");
+                    }
+
                     c.TextSpan(label.ToString());
                 }
                 else
