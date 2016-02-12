@@ -94,11 +94,6 @@
                 effectiveExpression = new PointerIndirectionOperator { Operand = expression };
             }
 
-            if (typeDestination.TypeKind == TypeKind.Enum)
-            {
-                effectiveExpression = new Conversion { Operand = effectiveExpression, TypeDestination = typeDestination, CCast = true };
-            }
-
             return effectiveExpression;
         }
 
@@ -148,12 +143,23 @@
                 var receiverOpt = this.ReceiverOpt;
                 if (!receiverOpt.IsReference && (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
                 {
-                    receiverOpt = new Conversion { Operand = receiverOpt, TypeDestination = receiverOpt.Type, IsReference = true, CCast = true, SuppressReference = true };
+                    receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
+                }
+
+                var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
+                if (explicitMethod != null)
+                {
+                    // remove useless interface cast in case of explicit method call
+                    var conversion = receiverOpt as Conversion;
+                    if (conversion != null && conversion.TypeDestination.TypeKind == TypeKind.Interface &&
+                        this.Method.ContainingType == conversion.TypeDestination)
+                    {
+                        receiverOpt = conversion.Operand;
+                    }
                 }
 
                 c.WriteAccess(receiverOpt);
 
-                var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
                 c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
             }
 

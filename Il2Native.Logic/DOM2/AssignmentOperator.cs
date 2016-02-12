@@ -52,9 +52,13 @@
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
             Debug.Assert(this.Right != null);
 
-            if (this.Right is Literal || boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
+            if (this.Right is Literal)
             {
                 this.assignmentType = this.Right.Type;                
+            }
+            else if (boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
+            {
+                this.assignmentType = boundAssignmentOperator.Type;
             }
 
             if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing)
@@ -65,7 +69,7 @@
 
             if (this.Left.Type.TypeKind == TypeKind.Enum)
             {
-                this.Right = new Conversion { Operand = this.Right, TypeDestination = this.Left.Type, CCast = true };
+                this.Right = new Cast { Operand = this.Right, Type = this.Left.Type };
             }
         }
 

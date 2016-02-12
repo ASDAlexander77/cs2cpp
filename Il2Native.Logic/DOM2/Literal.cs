@@ -65,6 +65,13 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (Type != null && Type.TypeKind == TypeKind.Enum)
+            {
+                c.TextSpan("(");
+                c.WriteType(Type);
+                c.TextSpan(")");
+            }
+
             ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
             switch (discriminator)
             {

@@ -63,6 +63,7 @@
     <Compile Include="DOM2\BinaryOperator.cs" />
     <Compile Include="DOM2\Block.cs" />
     <Compile Include="DOM2\BlockStatement.cs" />
+    <Compile Include="DOM2\Cast.cs" />
     <Compile Include="DOM2\ConditionalGoto.cs" />
     <Compile Include="DOM2\BreakStatement.cs" />
     <Compile Include="DOM2\Call.cs" />

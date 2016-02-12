@@ -31,6 +31,15 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            if (this.InitializerExpressionOpt != null)
+            {
+                this.InitializerExpressionOpt.Visit(visitor);    
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (!Type.IsValueType || IsReference)

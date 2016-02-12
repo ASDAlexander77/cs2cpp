@@ -1,7 +1,6 @@
 ﻿ namespace Il2Native.Logic.DOM2
 {
-    using System.Collections.Generic;
-    using System.Diagnostics;
+    using System;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -12,38 +11,29 @@
             get { return Kinds.Conversion; }
         }
 
-        public ITypeSymbol TypeSource { get; set; }
-
         public ITypeSymbol TypeDestination { get; set; }
 
         public Expression Operand { get; set; }
-
-        public bool CCast { get; set; }
-
-        public bool SuppressReference { get; set; }
 
         internal ConversionKind ConversionKind { get; set; }
 
         internal void Parse(BoundConversion boundConversion)
         {
             base.Parse(boundConversion);
-            this.TypeSource = boundConversion.Operand.Type;
+            Type = boundConversion.Operand.Type;
             this.TypeDestination = boundConversion.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Operand.Visit(visitor);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.CCast)
-            {
-                c.WriteType(this.TypeDestination, valueTypeAsClass: this.IsReference, suppressReference: this.SuppressReference);
-                c.TextSpan("(");
-                this.Operand.WriteTo(c);
-                c.TextSpan(")");
-                return;
-            }
-
             var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && this.TypeDestination.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
@@ -97,7 +87,7 @@
                 case ConversionKind.ImplicitReference:
 
                     if (this.TypeDestination.TypeKind != TypeKind.TypeParameter &&
-                        this.TypeSource.IsDerivedFrom(this.TypeDestination))
+                        Type.IsDerivedFrom(this.TypeDestination))
                     {
                         c.TextSpan("static_cast<");
                         c.WriteType(this.TypeDestination);
@@ -135,7 +125,7 @@
                     break;
                 case ConversionKind.Identity:
                     // for string
-                    if (this.TypeSource.SpecialType == SpecialType.System_String &&
+                    if (Type.SpecialType == SpecialType.System_String &&
                         this.TypeDestination.TypeKind == TypeKind.PointerType)
                     {
                         c.TextSpan("&");

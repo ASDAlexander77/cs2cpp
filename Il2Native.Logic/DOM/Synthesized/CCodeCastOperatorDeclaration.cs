@@ -18,15 +18,14 @@ namespace Il2Native.Logic.DOM.Synthesized
                 {
                     new ReturnStatement
                     {
-                        ExpressionOpt = new Conversion
+                        ExpressionOpt = new Cast
                         {
-                            TypeDestination = type,
+                            Type = type,
                             Operand = new FieldAccess
                             {
                                 ReceiverOpt = new ThisReference { Type = type },
                                 Field = new FieldImpl { Name = "m_value" }
-                            },
-                            CCast = true
+                            }
                         }       
                     }
                 }
