@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Security;
     using System.Text;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
@@ -195,6 +196,18 @@
             }
 
             block.Statements.Add(item as Statement);
+        }
+
+        public Expression AdjustEnumType(Expression expression, out bool changed, bool applyReferenceOperator = false)
+        {
+            changed = false;
+            if (expression.Type != null && expression.Type.TypeKind == TypeKind.Enum)
+            {
+                changed = true;
+                return new Cast { Operand = expression, Type = ((INamedTypeSymbol)expression.Type).EnumUnderlyingType, Reference = applyReferenceOperator };
+            }
+
+            return expression;
         }
 
         internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)

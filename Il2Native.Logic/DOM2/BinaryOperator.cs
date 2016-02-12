@@ -4,7 +4,6 @@
     using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class BinaryOperator : Expression
     {
@@ -41,30 +40,42 @@
             Debug.Assert(this.Right != null);
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Left.Visit(visitor);
+            this.Right.Visit(visitor);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.Left.Type != null && this.Left.Type.TypeKind == TypeKind.Enum)
-            {
-                this.Left = new Cast
-                {
-                    Operand = this.Left,
-                    Type = ((INamedTypeSymbol)this.Left.Type).EnumUnderlyingType
-                };
-            }
+            bool changedLeft;
+            this.Left = AdjustEnumType(this.Left, out changedLeft);
+            bool changedRight;
+            this.Right = AdjustEnumType(this.Right, out changedRight);
 
-            if (this.Right.Type != null && this.Right.Type.TypeKind == TypeKind.Enum)
+            var castOfResult = (changedRight || changedLeft) && Type.TypeKind == TypeKind.Enum;
+            if (castOfResult)
             {
-                this.Right = new Cast
-                {
-                    Operand = this.Left,
-                    Type = ((INamedTypeSymbol)this.Right.Type).EnumUnderlyingType
-                };
+                c.TextSpan("((");
+                c.WriteType(Type);
+                c.TextSpan(")(");
             }
 
             c.WriteExpressionInParenthesesIfNeeded(this.Left);
-
             c.WhiteSpace();
+            this.WriteOperator(c);
+            c.WhiteSpace();
+            c.WriteExpressionInParenthesesIfNeeded(this.Right);
 
+            if (castOfResult)
+            {
+                c.TextSpan("))");
+            }
+        }
+
+        private void WriteOperator(CCodeWriterBase c)
+        {
             switch (this.OperatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical))
             {
                 case BinaryOperatorKind.Multiplication:
@@ -142,10 +153,6 @@
                 default:
                     throw new NotImplementedException();
             }
-
-            c.WhiteSpace();
-
-            c.WriteExpressionInParenthesesIfNeeded(this.Right);
         }
     }
 }

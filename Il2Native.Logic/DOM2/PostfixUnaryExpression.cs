@@ -11,6 +11,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            base.WriteTo(c);
             Value.WriteTo(c);
             switch (OperatorKind)
             {

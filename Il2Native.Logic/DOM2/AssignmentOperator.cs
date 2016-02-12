@@ -66,11 +66,6 @@
                 this.ApplyAutoType = false;
                 this.assignmentType = null;
             }
-
-            if (this.Left.Type.TypeKind == TypeKind.Enum)
-            {
-                this.Right = new Cast { Operand = this.Right, Type = this.Left.Type };
-            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)

@@ -6,12 +6,14 @@
     {
         public override Kinds Kind
         {
-            get { return Kinds.Conversion; }
+            get { return Kinds.Cast; }
         }
 
         public Expression Operand { get; set; }
 
         public bool ClassCast { get; set; }
+
+        public bool Reference { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
@@ -21,10 +23,21 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(Type, suppressReference: ClassCast, valueTypeAsClass: ClassCast);
-            c.TextSpan("(");
-            this.Operand.WriteTo(c);
-            c.TextSpan(")");
+            if (Reference)
+            {
+                c.TextSpan("((");
+                c.WriteType(Type, ClassCast, valueTypeAsClass: ClassCast);
+                c.TextSpan("&)");
+                c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+                c.TextSpan(")");
+            }
+            else
+            {
+                c.WriteType(Type, ClassCast, valueTypeAsClass: ClassCast);
+                c.TextSpan("(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");
+            }
         }
     }
 }

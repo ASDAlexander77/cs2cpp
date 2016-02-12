@@ -3,6 +3,7 @@
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
@@ -56,6 +57,18 @@
             Debug.Assert(this.OperatorKind != SyntaxKind.None);
 
             return true;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Value.Visit(visitor);
+        }
+
+        internal override void WriteTo(CCodeWriterBase c)
+        {
+            bool changed;
+            this.Value = AdjustEnumType(this.Value, out changed, true);
         }
 
         private static BoundExpression FindValue(BoundExpression left, BoundExpression right)
