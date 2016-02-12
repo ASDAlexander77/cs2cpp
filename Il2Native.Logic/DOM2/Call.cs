@@ -148,7 +148,7 @@
                 var receiverOpt = this.ReceiverOpt;
                 if (!receiverOpt.IsReference && (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
                 {
-                    receiverOpt = new Conversion { Operand = receiverOpt, TypeDestination = receiverOpt.Type, IsReference = true, CCast = true };
+                    receiverOpt = new Conversion { Operand = receiverOpt, TypeDestination = receiverOpt.Type, IsReference = true, CCast = true, SuppressReference = true };
                 }
 
                 c.WriteAccess(receiverOpt);

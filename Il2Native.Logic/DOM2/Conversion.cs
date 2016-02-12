@@ -20,6 +20,8 @@
 
         public bool CCast { get; set; }
 
+        public bool SuppressReference { get; set; }
+
         internal ConversionKind ConversionKind { get; set; }
 
         internal void Parse(BoundConversion boundConversion)
@@ -35,7 +37,7 @@
         {
             if (this.CCast)
             {
-                c.WriteType(this.TypeDestination, valueTypeAsClass: this.IsReference);
+                c.WriteType(this.TypeDestination, valueTypeAsClass: this.IsReference, suppressReference: this.SuppressReference);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");
