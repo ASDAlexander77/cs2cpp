@@ -98,10 +98,12 @@
                     c.TextSpan("U");
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
+                    c.TextSpan("(int64_t)");
                     c.TextSpan(this.Value.Int64Value.ToString());
                     c.TextSpan("LL");
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
+                    c.TextSpan("(uint64_t)");
                     c.TextSpan(this.Value.UInt64Value.ToString());
                     c.TextSpan("ULL");
                     break;

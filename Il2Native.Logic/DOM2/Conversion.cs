@@ -1,4 +1,4 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿ namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
     using System.Diagnostics;

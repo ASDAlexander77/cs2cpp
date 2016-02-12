@@ -54,13 +54,18 @@
 
             if (this.Right is Literal || boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
             {
-                this.assignmentType = this.Right.Type;
+                this.assignmentType = this.Right.Type;                
             }
 
             if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing)
             {
                 this.ApplyAutoType = false;
                 this.assignmentType = null;
+            }
+
+            if (this.Left.Type.TypeKind == TypeKind.Enum)
+            {
+                this.Right = new Conversion { Operand = this.Right, TypeDestination = this.Left.Type, CCast = true };
             }
         }
 

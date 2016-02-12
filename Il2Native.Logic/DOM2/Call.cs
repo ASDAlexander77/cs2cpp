@@ -94,6 +94,11 @@
                 effectiveExpression = new PointerIndirectionOperator { Operand = expression };
             }
 
+            if (typeDestination.TypeKind == TypeKind.Enum)
+            {
+                effectiveExpression = new Conversion { Operand = effectiveExpression, TypeDestination = typeDestination, CCast = true };
+            }
+
             return effectiveExpression;
         }
 
