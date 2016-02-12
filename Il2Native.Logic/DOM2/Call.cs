@@ -83,7 +83,7 @@
                 {
                     effectiveExpression = new Conversion
                     {
-                        TypeDestination = typeDestination,
+                        Type = typeDestination,
                         Operand = expression
                     };
                 }
@@ -151,8 +151,8 @@
                 {
                     // remove useless interface cast in case of explicit method call
                     var conversion = receiverOpt as Conversion;
-                    if (conversion != null && conversion.TypeDestination.TypeKind == TypeKind.Interface &&
-                        this.Method.ContainingType == conversion.TypeDestination)
+                    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
+                        this.Method.ContainingType == conversion.Type)
                     {
                         receiverOpt = conversion.Operand;
                     }
