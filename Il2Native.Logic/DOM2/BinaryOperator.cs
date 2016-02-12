@@ -43,6 +43,24 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.Left.Type != null && this.Left.Type.TypeKind == TypeKind.Enum)
+            {
+                this.Left = new Cast
+                {
+                    Operand = this.Left,
+                    Type = ((INamedTypeSymbol)this.Left.Type).EnumUnderlyingType
+                };
+            }
+
+            if (this.Right.Type != null && this.Right.Type.TypeKind == TypeKind.Enum)
+            {
+                this.Right = new Cast
+                {
+                    Operand = this.Left,
+                    Type = ((INamedTypeSymbol)this.Right.Type).EnumUnderlyingType
+                };
+            }
+
             c.WriteExpressionInParenthesesIfNeeded(this.Left);
 
             c.WhiteSpace();

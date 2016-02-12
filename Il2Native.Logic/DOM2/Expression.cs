@@ -23,7 +23,7 @@
             set
             {
                 _type = value;
-                this.IsReference = _type.IsReferenceType;
+                this.IsReference = this._type != null ? _type.IsReferenceType : true;
             }
         }
 
