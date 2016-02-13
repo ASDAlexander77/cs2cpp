@@ -5,10 +5,10 @@
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeCastOperatorDeclaration : CCodeMethodDeclaration
+    public class CCodeArrowOperatorDeclaration : CCodeMethodDeclaration
     {
-        public CCodeCastOperatorDeclaration(INamedTypeSymbol type)
-            : base(new CastOperatorMethod(type))
+        public CCodeArrowOperatorDeclaration(INamedTypeSymbol type)
+            : base(new ArrowOperatorMethod(type))
         {
             MethodBodyOpt = new MethodBody
             {
@@ -16,15 +16,7 @@
                 {
                     new ReturnStatement
                     {
-                        ExpressionOpt = new Cast
-                        {
-                            Type = type,
-                            Operand = new FieldAccess
-                            {
-                                ReceiverOpt = new ThisReference { Type = type },
-                                Field = new FieldImpl { Name = "m_value" }
-                            }
-                        }       
+                        ExpressionOpt = new ThisReference { Type = type }
                     }
                 }
             };
@@ -32,16 +24,16 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("operator");
-            c.WhiteSpace();
             c.WriteType(Method.ContainingType);
-            c.TextSpan("()");
+            c.TextSpan("*");
+            c.WhiteSpace();
+            c.TextSpan("operator->()");
             MethodBodyOpt.WriteTo(c);
         }
 
-        public class CastOperatorMethod : MethodImpl
+        public class ArrowOperatorMethod : MethodImpl
         {
-            public CastOperatorMethod(INamedTypeSymbol type)
+            public ArrowOperatorMethod(INamedTypeSymbol type)
             {
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;

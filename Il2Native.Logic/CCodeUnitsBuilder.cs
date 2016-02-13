@@ -181,6 +181,11 @@
                 unit.Declarations.Add(new CCodeCastOperatorDeclaration((INamedTypeSymbol)type));
             }
 
+            if (type.TypeKind == TypeKind.Struct)
+            {
+                unit.Declarations.Add(new CCodeArrowOperatorDeclaration((INamedTypeSymbol)type));
+            }
+
             if (type.Name != "<Module>" && type.TypeKind != TypeKind.Interface)
             {
                 // add internal infrustructure
