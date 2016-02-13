@@ -24,8 +24,7 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(Method.ContainingType);
-            c.TextSpan("*");
+            c.WriteType(Method.ContainingType, valueTypeAsClass: true);
             c.WhiteSpace();
             c.TextSpan("operator->()");
             MethodBodyOpt.WriteTo(c);
