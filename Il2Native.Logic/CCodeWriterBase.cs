@@ -352,6 +352,7 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.TypeParameter:
+
                     if (type.ContainingType != null && type.ContainingType.ContainingType != null)
                     {
                         this.WriteUniqueNameByContainingType(type);
@@ -744,11 +745,27 @@ namespace Il2Native.Logic
 
         public void WriteAccess(Expression expression)
         {
-            this.WriteExpressionInParenthesesIfNeeded(expression);
+            var effectiveExpression = expression;
 
-            if (expression.IsReference)
+            if (effectiveExpression.Type.TypeKind == TypeKind.TypeParameter)
             {
-                if (expression is BaseReference)
+                var constrained = ((ITypeParameterSymbol)effectiveExpression.Type).ConstraintTypes;
+                foreach (var constrainedType in constrained)
+                {
+                    effectiveExpression = new Cast
+                    {
+                        Constrained = true,
+                        Operand = effectiveExpression,
+                        Type = constrainedType
+                    };
+                }
+            }
+
+            this.WriteExpressionInParenthesesIfNeeded(effectiveExpression);
+
+            if (effectiveExpression.IsReference)
+            {
+                if (effectiveExpression is BaseReference)
                 {
                     TextSpan("::");
                     return;
@@ -758,7 +775,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (expression.Type.TypeKind == TypeKind.Struct || expression.Type.TypeKind == TypeKind.Enum)
+            if (effectiveExpression.Type.TypeKind == TypeKind.Struct || effectiveExpression.Type.TypeKind == TypeKind.Enum)
             {
                 TextSpan(".");
                 return;

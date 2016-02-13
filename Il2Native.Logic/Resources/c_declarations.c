@@ -74,6 +74,17 @@ template <typename D, typename S> inline bool is(S v)
 	return as<D>(v) != nullptr;
 }
 
+// Constrained internals (for templates)
+template <typename C, typename T, typename = std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline C constrained (T* t)
+{
+	return nullptr;
+}
+
+template <typename C, typename T> inline C constrained (T t)
+{
+	return nullptr;
+}
+
 // Typeof internals
 template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 {

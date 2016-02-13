@@ -15,6 +15,8 @@
 
         public bool Reference { get; set; }
 
+        public bool Constrained { get; set; }
+
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
@@ -23,7 +25,15 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (Reference)
+            if (Constrained)
+            {
+                c.TextSpan("constrained<");
+                c.WriteType(Type, ClassCast, valueTypeAsClass: ClassCast);
+                c.TextSpan(">(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");                
+            }
+            else if (Reference)
             {
                 c.TextSpan("((");
                 c.WriteType(Type, ClassCast, valueTypeAsClass: ClassCast);
