@@ -17,7 +17,7 @@ int32_t <<%assemblyName%>>::System::Array::GetLowerBound(int32_t index)
 }
 
 // MethodBodyOpt: System.Array.GetLength(int)
-int32_t <<%assemblyName%>>::System::Array::GetLength()
+int32_t <<%assemblyName%>>::System::Array::GetLength(int32_t index)
 {
     throw 0xC000C000;
 }
