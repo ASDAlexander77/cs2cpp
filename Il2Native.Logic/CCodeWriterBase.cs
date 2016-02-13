@@ -176,7 +176,7 @@ namespace Il2Native.Logic
             if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface && !methodSymbol.ReturnsVoid)
             {
                 TextSpan("_");
-                TextSpan(methodSymbol.ReturnType.GetTypeName());
+                TextSpan(methodSymbol.OriginalDefinition.ReturnType.GetTypeName());
             }
 
             if (addTemplate && methodSymbol.IsGenericMethod)

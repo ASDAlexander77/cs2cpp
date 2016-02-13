@@ -227,9 +227,9 @@
 
         public static string GetTypeName(this ITypeSymbol type)
         {
-            if (type.ContainingType != null)
+            if (type.TypeKind != TypeKind.TypeParameter && type.ContainingType != null) 
             {
-                return type.ContainingType.GetTypeName() + "_" + type.MetadataName;
+                return type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
             }
 
             return type.MetadataName.CleanUpName();
