@@ -173,10 +173,9 @@ namespace Il2Native.Logic
                 TextSpan(parameter.RefKind.ToString());
             }
 
-            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface && !methodSymbol.ReturnsVoid)
+            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface && methodSymbol.OriginalDefinition != null && !methodSymbol.ReturnsVoid && methodSymbol.OriginalDefinition.ReturnType.TypeKind == TypeKind.TypeParameter)
             {
-                TextSpan("_");
-                TextSpan(methodSymbol.OriginalDefinition.ReturnType.GetTypeName());
+                TextSpan("_RetGen");
             }
 
             if (addTemplate && methodSymbol.IsGenericMethod)
@@ -338,9 +337,9 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.Error:
                     // Comment: Unbound Generic in typeof
-                    TextSpan("__unbound_generic_type<");
-                    WriteName(type);
-                    TextSpan(">");
+                    TextSpan("__unbound_generic_type<void>");
+                    //WriteName(type);
+                    //TextSpan(">");
                     return;
                 case TypeKind.Module:
                     break;
