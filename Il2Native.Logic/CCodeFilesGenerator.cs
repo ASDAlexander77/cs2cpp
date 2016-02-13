@@ -15,7 +15,7 @@
 
     using Microsoft.CodeAnalysis;
  
-    public class CCodeSerializer
+    public class CCodeFilesGenerator
     {
         private string currentFolder;
 

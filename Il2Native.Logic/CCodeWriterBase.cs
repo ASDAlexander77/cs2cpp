@@ -173,6 +173,12 @@ namespace Il2Native.Logic
                 TextSpan(parameter.RefKind.ToString());
             }
 
+            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface && !methodSymbol.ReturnsVoid)
+            {
+                TextSpan("_");
+                TextSpan(methodSymbol.ReturnType.GetTypeName());
+            }
+
             if (addTemplate && methodSymbol.IsGenericMethod)
             {
                 TextSpan("<");

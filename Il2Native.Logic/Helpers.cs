@@ -225,14 +225,14 @@
             return sb.ToString();
         }
 
-        public static string GetTypeName(this INamedTypeSymbol type)
+        public static string GetTypeName(this ITypeSymbol type)
         {
             if (type.ContainingType != null)
             {
                 return type.ContainingType.GetTypeName() + "_" + type.MetadataName;
             }
 
-            return type.MetadataName;
+            return type.MetadataName.CleanUpName();
         }
 
         public static bool IsPrimitiveValueType(this ITypeSymbol type)
