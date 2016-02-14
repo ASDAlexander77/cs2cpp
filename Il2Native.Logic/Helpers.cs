@@ -232,12 +232,14 @@
                 return type.MetadataName.CleanUpName();
             }
 
+            var namespaceFullName = type.ContainingNamespace.GetNamespaceFullName();
+            var s = string.Concat(namespaceFullName.CleanUpName(), namespaceFullName.Length > 0 ? "_" : string.Empty);
             if (type.ContainingType != null)
             {
-                return type.ContainingNamespace.GetNamespaceFullName().CleanUpName() + "_" + type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
+                return s + type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
             }
 
-            return type.ContainingNamespace.GetNamespaceFullName().CleanUpName() + "_" + type.MetadataName.CleanUpName();
+            return s + type.MetadataName.CleanUpName();
         }
 
         public static string GetTypeName(this ITypeSymbol type)

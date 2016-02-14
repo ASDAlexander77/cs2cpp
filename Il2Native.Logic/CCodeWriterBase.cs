@@ -594,6 +594,20 @@ namespace Il2Native.Logic
                 }
             }
 
+            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
+
+            if (!declarationWithingClass)
+            {
+                this.WriteMethodFullName(methodSymbol);
+            }
+            else
+            {
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
+            }
+        }
+
+        public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
             // type
             if (methodSymbol.MethodKind != MethodKind.Constructor)
             {
@@ -607,15 +621,6 @@ namespace Il2Native.Logic
                 }
 
                 this.WhiteSpace();
-            }
-
-            if (!declarationWithingClass)
-            {
-                this.WriteMethodFullName(methodSymbol);
-            }
-            else
-            {
-                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
             }
         }
 

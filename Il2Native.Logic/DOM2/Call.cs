@@ -156,18 +156,6 @@
 
         private Expression PrepareMethodReceiver(Expression receiverOpt)
         {
-            ////var explicitMethod = this.IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
-            ////if (explicitMethod != null)
-            ////{
-            ////    // remove useless interface cast in case of explicit method call
-            ////    var conversion = receiverOpt as Conversion;
-            ////    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
-            ////        this.Method.ContainingType == conversion.Type)
-            ////    {
-            ////        receiverOpt = conversion.Operand;
-            ////    }
-            ////}
-
             if (receiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != receiverOpt.Type)
             {
                 ////var constrained = ((ITypeParameterSymbol)receiverOpt.Type).ConstraintTypes;
@@ -189,21 +177,6 @@
             }
 
             return receiverOpt;
-        }
-
-        private MethodSymbol IsExplicitInterfaceCall(ITypeSymbol type, IMethodSymbol method)
-        {
-            if (type.TypeKind == TypeKind.Interface || method.ReceiverType.TypeKind != TypeKind.Interface)
-            {
-                return null;
-            }
-
-            return type.GetMembers().OfType<MethodSymbol>().FirstOrDefault(m => IsCalledMethodExplicitInterface(m, method));
-        }
-
-        private static bool IsCalledMethodExplicitInterface(MethodSymbol methodOfType, IMethodSymbol calledMethod)
-        {
-            return methodOfType.ExplicitInterfaceImplementations.Any(m => m.Name == calledMethod.Name && m.ParameterCount == calledMethod.Parameters.Length);
         }
     }
 }

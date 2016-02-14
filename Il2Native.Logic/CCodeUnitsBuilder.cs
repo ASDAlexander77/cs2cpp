@@ -197,6 +197,12 @@
                 this.BuildMethod(method, unit);
             }
 
+            // append interface calls
+            foreach (var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+            {
+                unit.Declarations.Add(new CCodeInterfaceMethodAdapter(interfaceMethod, (IMethodSymbol) type.FindImplementationForInterfaceMember(interfaceMethod)));
+            }
+
             return unit;
         }
 
