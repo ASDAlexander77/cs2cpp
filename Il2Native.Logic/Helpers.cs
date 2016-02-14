@@ -2,7 +2,7 @@
 {
     using System;
     using System.Text;
-
+    using DOM;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -225,6 +225,21 @@
             return sb.ToString();
         }
 
+        public static string GetTypeFullName(this ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.TypeParameter)
+            {
+                return type.MetadataName.CleanUpName();
+            }
+
+            if (type.ContainingType != null)
+            {
+                return type.ContainingNamespace.GetNamespaceFullName().CleanUpName() + "_" + type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
+            }
+
+            return type.ContainingNamespace.GetNamespaceFullName().CleanUpName() + "_" + type.MetadataName.CleanUpName();
+        }
+
         public static string GetTypeName(this ITypeSymbol type)
         {
             if (type.TypeKind != TypeKind.TypeParameter && type.ContainingType != null) 
@@ -233,6 +248,42 @@
             }
 
             return type.MetadataName.CleanUpName();
+        }
+
+        public static string GetNamespaceFullName(this INamespaceSymbol namespaceSymbol)
+        {
+            var sb = new StringBuilder();
+            var any = false;
+            foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
+            {
+                if (namespaceNode.IsGlobalNamespace)
+                {
+                    continue;
+                }
+
+                if (any)
+                {
+                    sb.Append(".");
+                }
+
+                any = true;
+
+                sb.Append(GetNamespaceName(namespaceNode));
+            }
+
+            return sb.ToString();
+        }
+
+        public static string GetNamespaceName(this INamespaceSymbol namespaceNode)
+        {
+            if (namespaceNode.IsGlobalNamespace)
+            {
+                return namespaceNode.ContainingAssembly.MetadataName.CleanUpName();
+            }
+            else
+            {
+                return namespaceNode.MetadataName;
+            }
         }
 
         public static bool IsPrimitiveValueType(this ITypeSymbol type)

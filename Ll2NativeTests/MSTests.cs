@@ -1108,7 +1108,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
                 583
             });
 
-            skip.Add(232); // conflict of names
+            skip.Add(110); // virtual generic methods
 
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {

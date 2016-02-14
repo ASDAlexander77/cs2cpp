@@ -5,6 +5,7 @@ namespace Il2Native.Logic
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.Serialization;
+    using System.Text;
     using DOM;
     using DOM2;
     using Microsoft.CodeAnalysis;
@@ -145,6 +146,12 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
+            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
+            {
+                TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+                TextSpan("_");
+            }
+
             // name
             if (methodSymbol.MethodKind == MethodKind.Constructor)
             {
@@ -171,11 +178,6 @@ namespace Il2Native.Logic
             {
                 TextSpan("_");
                 TextSpan(parameter.RefKind.ToString());
-            }
-
-            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface && methodSymbol.OriginalDefinition != null && !methodSymbol.ReturnsVoid && methodSymbol.OriginalDefinition.ReturnType.TypeKind == TypeKind.TypeParameter)
-            {
-                TextSpan("_RetGen");
             }
 
             if (addTemplate && methodSymbol.IsGenericMethod)
