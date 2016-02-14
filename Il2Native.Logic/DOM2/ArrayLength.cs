@@ -20,7 +20,7 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             this.Expression1.WriteTo(c);
-            c.TextSpan("->operator size_t()");
+            c.TextSpan("->operator int32_t()");
         }
     }
 }

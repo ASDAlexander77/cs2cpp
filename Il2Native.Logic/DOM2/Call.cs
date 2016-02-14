@@ -146,24 +146,49 @@
                     receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
                 }
 
-                ////var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
-                ////if (explicitMethod != null)
-                ////{
-                ////    // remove useless interface cast in case of explicit method call
-                ////    var conversion = receiverOpt as Conversion;
-                ////    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
-                ////        this.Method.ContainingType == conversion.Type)
-                ////    {
-                ////        receiverOpt = conversion.Operand;
-                ////    }
-                ////}
-
+                receiverOpt = this.PrepareMethodReceiver(receiverOpt);
                 c.WriteAccess(receiverOpt);
-
                 c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
             }
 
             WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+        }
+
+        private Expression PrepareMethodReceiver(Expression receiverOpt)
+        {
+            ////var explicitMethod = this.IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
+            ////if (explicitMethod != null)
+            ////{
+            ////    // remove useless interface cast in case of explicit method call
+            ////    var conversion = receiverOpt as Conversion;
+            ////    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
+            ////        this.Method.ContainingType == conversion.Type)
+            ////    {
+            ////        receiverOpt = conversion.Operand;
+            ////    }
+            ////}
+
+            if (receiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != receiverOpt.Type)
+            {
+                ////var constrained = ((ITypeParameterSymbol)receiverOpt.Type).ConstraintTypes;
+                ////foreach (var constrainedType in constrained)
+                ////{
+                ////    receiverOpt = new Cast
+                ////    {
+                ////        Constrained = true,
+                ////        Operand = receiverOpt,
+                ////        Type = constrainedType
+                ////    };
+                ////}
+                receiverOpt = new Cast
+                {
+                    Constrained = true,
+                    Operand = receiverOpt,
+                    Type = this.Method.ReceiverType
+                };
+            }
+
+            return receiverOpt;
         }
 
         private MethodSymbol IsExplicitInterfaceCall(ITypeSymbol type, IMethodSymbol method)

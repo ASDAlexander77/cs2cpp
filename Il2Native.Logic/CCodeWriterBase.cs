@@ -754,20 +754,6 @@ namespace Il2Native.Logic
         {
             var effectiveExpression = expression;
 
-            if (effectiveExpression.Type.TypeKind == TypeKind.TypeParameter)
-            {
-                var constrained = ((ITypeParameterSymbol)effectiveExpression.Type).ConstraintTypes;
-                foreach (var constrainedType in constrained)
-                {
-                    effectiveExpression = new Cast
-                    {
-                        Constrained = true,
-                        Operand = effectiveExpression,
-                        Type = constrainedType
-                    };
-                }
-            }
-
             this.WriteExpressionInParenthesesIfNeeded(effectiveExpression);
 
             if (effectiveExpression.IsReference)

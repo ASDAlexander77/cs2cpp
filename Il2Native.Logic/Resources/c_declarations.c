@@ -10,7 +10,7 @@ public:
 	__array(size_t length) : _rank(1) { _length = length; }
 	inline const T operator [](size_t index) const { return _data[index]; }
 	inline T& operator [](size_t index) { return _data[index]; }
-	inline operator size_t() const { return (size_t)_length; }
+	inline operator int32_t() const { return (size_t)_length; }
 };
 
 template <typename T, size_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
@@ -26,7 +26,7 @@ public:
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
 	inline const T operator [](std::initializer_list<size_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<size_t> indexes) { return _data[0]; }
-	inline operator size_t() const { return (size_t)_length; }
+	inline operator int32_t() const { return (size_t)_length; }
 };
 
 template <typename T, int N> class __array_init : public <<%assemblyName%>>::System::Array
@@ -116,11 +116,22 @@ T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& loc
 }
 
 // Activator
-template <typename T>
-T <<%assemblyName%>>::System::Activator::CreateInstance()
+template <typename T> 
+typename std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value && std::is_pointer<T>::value>::type __create_instance()
 {
 	typedef typename std::remove_pointer<T>::type _T;
 	return new _T();
 }
 
+template <typename T> 
+T __create_instance()
+{
+	return T();
+}
+
+template <typename T>
+T <<%assemblyName%>>::System::Activator::CreateInstance()
+{
+	return __create_instance<T>();
+}
 
