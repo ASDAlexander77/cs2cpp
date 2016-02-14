@@ -146,21 +146,21 @@
                     receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
                 }
 
-                var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
-                if (explicitMethod != null)
-                {
-                    // remove useless interface cast in case of explicit method call
-                    var conversion = receiverOpt as Conversion;
-                    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
-                        this.Method.ContainingType == conversion.Type)
-                    {
-                        receiverOpt = conversion.Operand;
-                    }
-                }
+                ////var explicitMethod = IsExplicitInterfaceCall(this.ReceiverOpt.Type, this.Method);
+                ////if (explicitMethod != null)
+                ////{
+                ////    // remove useless interface cast in case of explicit method call
+                ////    var conversion = receiverOpt as Conversion;
+                ////    if (conversion != null && conversion.Type.TypeKind == TypeKind.Interface &&
+                ////        this.Method.ContainingType == conversion.Type)
+                ////    {
+                ////        receiverOpt = conversion.Operand;
+                ////    }
+                ////}
 
                 c.WriteAccess(receiverOpt);
 
-                c.WriteMethodName(this.Method, addTemplate: true, methodSymbolForName: explicitMethod);
+                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
             }
 
             WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
