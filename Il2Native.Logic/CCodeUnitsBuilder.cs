@@ -200,10 +200,16 @@
             if (type.TypeKind != TypeKind.Interface)
             {
                 // append interface calls
-                foreach (
-                    var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                foreach (var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
                 {
-                    var implementationForInterfaceMember = type.FindImplementationForInterfaceMember(interfaceMethod);
+                    var method = interfaceMethod;
+                    var implementationForInterfaceMember = type.FindImplementationForInterfaceMember(interfaceMethod) as IMethodSymbol;
+                    if (implementationForInterfaceMember != null &&
+                        implementationForInterfaceMember.ExplicitInterfaceImplementations.Any(ei => ei.Equals(method)))
+                    {
+                        continue;
+                    }
+
                     Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
                     unit.Declarations.Add(
                         new CCodeInterfaceMethodAdapter(
