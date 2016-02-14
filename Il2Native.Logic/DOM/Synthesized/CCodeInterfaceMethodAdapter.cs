@@ -31,6 +31,11 @@
             c.TextSpan(string.Format("// adapter: {0}", this.Method));
             c.NewLine();
 
+            if (this.Method.IsGenericMethod)
+            {
+                c.WriteTemplateDeclaration(this.Method);
+            }
+
             c.WriteMethodReturn(this.Method, true);
             c.WriteMethodName(this.Method, allowKeywords: false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
