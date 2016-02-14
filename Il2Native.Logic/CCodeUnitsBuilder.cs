@@ -197,10 +197,19 @@
                 this.BuildMethod(method, unit);
             }
 
-            // append interface calls
-            foreach (var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+            if (type.TypeKind != TypeKind.Interface)
             {
-                unit.Declarations.Add(new CCodeInterfaceMethodAdapter(interfaceMethod, (IMethodSymbol) type.FindImplementationForInterfaceMember(interfaceMethod)));
+                // append interface calls
+                foreach (
+                    var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                {
+                    var implementationForInterfaceMember = type.FindImplementationForInterfaceMember(interfaceMethod);
+                    Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
+                    unit.Declarations.Add(
+                        new CCodeInterfaceMethodAdapter(
+                            interfaceMethod,
+                            (IMethodSymbol)implementationForInterfaceMember));
+                }
             }
 
             return unit;
