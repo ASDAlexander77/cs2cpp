@@ -266,10 +266,7 @@
             Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
 
             var methodSymbol = sourceMethodFound ? sourceMethod : method;
-            unit.Declarations.Add(
-                methodSymbol.ContainingType.TypeKind == TypeKind.Interface
-                    ? new CCodeInterfaceMethodDeclaration(methodSymbol)
-                    : new CCodeMethodDeclaration(methodSymbol));
+            unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
             if (boundStatement != null ||
