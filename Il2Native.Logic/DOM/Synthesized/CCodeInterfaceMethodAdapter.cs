@@ -6,10 +6,14 @@
 
     public class CCodeInterfaceMethodAdapter : CCodeMethodDeclaration
     {
-        public CCodeInterfaceMethodAdapter(IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
+        public CCodeInterfaceMethodAdapter(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
         {
-            var call = new Call { ReceiverOpt = new ThisReference { Type = classMethod.ContainingType }, Method = classMethod };
+            var receiver = type == classMethod.ContainingType
+                               ? (Expression)new ThisReference { Type = classMethod.ContainingType }
+                               : (Expression)new BaseReference { Type = classMethod.ContainingType, ExplicitType = true };
+            
+            var call = new Call { ReceiverOpt = receiver, Method = classMethod };
             foreach (var argument in interfaceMethod.Parameters.Select(parameterSymbol => new Parameter { ParameterSymbol = parameterSymbol }))
             {
                 call.Arguments.Add(argument);

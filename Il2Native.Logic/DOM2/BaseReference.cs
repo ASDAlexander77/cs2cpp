@@ -9,6 +9,8 @@
             get { return Kinds.BaseReference; }
         }
 
+        public bool ExplicitType { get; set; }
+
         internal void Parse(BoundBaseReference boundBaseReference)
         {
             base.Parse(boundBaseReference);
@@ -17,7 +19,14 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("this->base");
+            if (ExplicitType)
+            {
+                c.WriteTypeFullName(Type);
+            }
+            else
+            {
+                c.TextSpan("base");
+            }
         }
     }
 }

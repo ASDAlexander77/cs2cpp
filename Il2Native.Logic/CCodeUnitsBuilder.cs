@@ -213,6 +213,7 @@
                     Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
                     unit.Declarations.Add(
                         new CCodeInterfaceMethodAdapter(
+                            type,
                             interfaceMethod,
                             (IMethodSymbol)implementationForInterfaceMember));
                 }
