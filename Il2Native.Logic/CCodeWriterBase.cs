@@ -534,7 +534,7 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                if (methodSymbol.IsVirtualGenericMethod())
+                if (methodSymbol.IsVirtualGenericMethod() && parameterSymbol.Type.TypeKind == TypeKind.TypeParameter)
                 {
                     this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
                 }
@@ -626,7 +626,7 @@ namespace Il2Native.Logic
                 {
                     this.TextSpan("void");
                 }
-                else if (methodSymbol.IsVirtualGenericMethod())
+                else if (methodSymbol.IsVirtualGenericMethod() && methodSymbol.ReturnType.TypeKind == TypeKind.TypeParameter)
                 {
                     this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
                 }
