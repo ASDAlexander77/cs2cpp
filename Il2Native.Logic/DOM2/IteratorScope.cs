@@ -46,6 +46,9 @@
             c.TextSpan("[&]");
             c.TextSpan("(");
 
+            // because all of them are fields, you do not need to make a function call
+
+            /*
             var any = false;
             foreach (var field in this.Fields)
             {
@@ -55,12 +58,21 @@
                     c.WhiteSpace();
                 }
 
-                c.TextSpan("auto");
+                if (field is StateMachineHoistedLocalSymbol)
+                {
+                    c.WriteType(field.Type);
+                }
+                else
+                {
+                    c.TextSpan("auto");
+                }
+
                 c.WhiteSpace();
                 c.WriteName(field);
 
                 any = true;
             }
+            */
 
             c.TextSpan(")");
             c.NewLine();

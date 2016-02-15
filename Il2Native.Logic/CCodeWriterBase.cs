@@ -442,6 +442,7 @@ namespace Il2Native.Logic
 
                     break;
                 case SpecialType.System_String:
+                    if (type.TypeKind == TypeKind.Unknown)
                     {
                         TextSpan("string*");
                         return true;
