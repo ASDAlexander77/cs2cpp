@@ -664,6 +664,24 @@ namespace Il2Native.Logic
             this.TextSpan("::");
         }
 
+        public void WriteMethodNamespace(INamedTypeSymbol typeSymbol)
+        {
+            // namespace
+            if (typeSymbol.ContainingNamespace != null)
+            {
+                this.WriteNamespace(typeSymbol.ContainingNamespace);
+                this.TextSpan("::");
+            }
+
+            this.WriteTypeName(typeSymbol, false);
+            if (typeSymbol.IsGenericType)
+            {
+                this.WriteTemplateDefinition(typeSymbol);
+            }
+
+            this.TextSpan("::");
+        }
+
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
         {
             TextSpan("template <");

@@ -12,11 +12,13 @@
     {
         private IList<Statement> typeDefs = new List<Statement>();
 
+        private ITypeSymbol type;
         private IMethodSymbol classMethod;
 
         public CCodeInterfaceMethodAdapterDefinition(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
         {
+            this.type = type;
             this.classMethod = classMethod;
 
             var receiver = type == classMethod.ContainingType
@@ -80,7 +82,7 @@
             }
 
             c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodNamespace(this.classMethod);
+            c.WriteMethodNamespace((INamedTypeSymbol)this.type);
             c.WriteMethodName(this.Method, false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
 
