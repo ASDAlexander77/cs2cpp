@@ -321,5 +321,10 @@
 
             return false;
         }
+
+        public static bool IsVirtualGenericMethod(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.IsGenericMethod && (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride);
+        }
     }
 }

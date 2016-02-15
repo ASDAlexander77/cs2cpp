@@ -117,6 +117,7 @@
     <Compile Include="DOM2\ThisReference.cs" />
     <Compile Include="DOM2\ThrowStatement.cs" />
     <Compile Include="DOM2\TryStatement.cs" />
+    <Compile Include="DOM2\TypeDefStatement.cs" />
     <Compile Include="DOM2\TypeExpression.cs" />
     <Compile Include="DOM2\TypeOfOperator.cs" />
     <Compile Include="DOM2\UnaryOperator.cs" />

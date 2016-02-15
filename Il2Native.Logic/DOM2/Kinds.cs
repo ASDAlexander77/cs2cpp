@@ -6,6 +6,7 @@
         UnaryOperator,
         TypeOfOperator,
         TypeExpression,
+        TypeDef,
         TryStatement,
         ThrowStatement,
         ThisReference,

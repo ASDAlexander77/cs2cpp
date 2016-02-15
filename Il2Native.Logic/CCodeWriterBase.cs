@@ -8,6 +8,9 @@ namespace Il2Native.Logic
     using System.Text;
     using DOM;
     using DOM2;
+
+    using Il2Native.Logic.DOM.Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -180,23 +183,31 @@ namespace Il2Native.Logic
                 TextSpan(parameter.RefKind.ToString());
             }
 
-            if (addTemplate && methodSymbol.IsGenericMethod)
+            if (methodSymbol.IsGenericMethod)
             {
-                TextSpan("<");
-
-                var anyTypeArg = false;
-                foreach (var typeArg in methodSymbol.TypeArguments)
+                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride)
                 {
-                    if (anyTypeArg)
+                    TextSpan("T");
+                    this.TextSpan(methodSymbol.Arity.ToString());
+                }
+                else if (addTemplate)
+                {
+                    TextSpan("<");
+
+                    var anyTypeArg = false;
+                    foreach (var typeArg in methodSymbol.TypeArguments)
                     {
-                        TextSpan(", ");
+                        if (anyTypeArg)
+                        {
+                            TextSpan(", ");
+                        }
+
+                        anyTypeArg = true;
+                        this.WriteType(typeArg);
                     }
 
-                    anyTypeArg = true;
-                    this.WriteType(typeArg);
+                    TextSpan(">");
                 }
-
-                TextSpan(">");
             }
         }
 
@@ -422,6 +433,21 @@ namespace Il2Native.Logic
                 case SpecialType.System_Double:
                     TextSpan("double");
                     return true;
+                case SpecialType.System_Object:
+                    if (type.TypeKind == TypeKind.Unknown)
+                    {
+                        TextSpan("object*");
+                        return true;
+                    }
+
+                    break;
+                case SpecialType.System_String:
+                    {
+                        TextSpan("string*");
+                        return true;
+                    }
+
+                    break;
             }
 
             return false;
@@ -480,12 +506,6 @@ namespace Il2Native.Logic
         {
             if (declarationWithingClass)
             {
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    this.TextSpan("/*");
-                }
-
                 if (methodSymbol.IsOverride)
                 {
                     this.TextSpan(" override");
@@ -493,12 +513,6 @@ namespace Il2Native.Logic
                 else if (methodSymbol.IsAbstract)
                 {
                     this.TextSpan(" = 0");
-                }
-
-                if (methodSymbol.IsGenericMethod)
-                {
-                    // TODO: finish it
-                    this.TextSpan("*/");
                 }
             }
         }
@@ -520,7 +534,15 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
+                if (methodSymbol.IsVirtualGenericMethod())
+                {
+                    this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
+                }
+                else
+                {
+                    this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
+                }
+
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     TextSpan("&");
@@ -561,7 +583,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (methodSymbol.IsGenericMethod)
+            if (methodSymbol.IsGenericMethod && !methodSymbol.IsAbstract && !methodSymbol.IsVirtual && !methodSymbol.IsOverride)
             {
                 this.WriteTemplateDeclaration(methodSymbol);
                 if (!declarationWithingClass)
@@ -579,18 +601,7 @@ namespace Il2Native.Logic
 
                 if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
                 {
-                    if (methodSymbol.IsGenericMethod)
-                    {
-                        // TODO: finish it
-                        this.TextSpan("/*");
-                    }
-
                     this.TextSpan("virtual ");
-                    if (methodSymbol.IsGenericMethod)
-                    {
-                        // TODO: finish it
-                        this.TextSpan("*/");
-                    }
                 }
             }
 
@@ -614,6 +625,10 @@ namespace Il2Native.Logic
                 if (methodSymbol.ReturnsVoid)
                 {
                     this.TextSpan("void");
+                }
+                else if (methodSymbol.IsVirtualGenericMethod())
+                {
+                    this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
                 }
                 else
                 {
@@ -650,7 +665,7 @@ namespace Il2Native.Logic
             TextSpan("template <");
 
             var anyTypeParam = false;
-            foreach (var typeParam in  this.EnumerateTemplateParametersRecursive(namedTypeSymbol).Distinct())
+            foreach (var typeParam in this.EnumerateTemplateParametersRecursive(namedTypeSymbol).Distinct())
             {
                 if (anyTypeParam)
                 {

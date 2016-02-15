@@ -1,15 +1,11 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
-    using System.Runtime.Serialization;
-
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class Local : Expression
     {
-        private string customName;
-
         private ILocalSymbol localSymbol;
 
         public override Kinds Kind
@@ -35,9 +31,11 @@
         {
             get 
             {
-                return this.customName ?? this.LocalSymbol.Name;
+                return this.CustomName ?? this.LocalSymbol.Name;
             }
         }
+
+        public string CustomName { get; set; }
 
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
@@ -67,9 +65,9 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.customName != null)
+            if (this.CustomName != null)
             {
-                c.TextSpan(this.customName);
+                c.TextSpan(this.CustomName);
             }
             else
             {
@@ -99,7 +97,7 @@
                     lbl += string.Format("_{0}", CCodeWriterBase.GetId(local, out firstTime));
                 }
 
-                this.customName = lbl;
+                this.CustomName = lbl;
             }
         }
     }
