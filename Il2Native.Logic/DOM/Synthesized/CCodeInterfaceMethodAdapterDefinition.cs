@@ -12,12 +12,12 @@
     {
         private IList<Statement> typeDefs = new List<Statement>();
 
-        private IMethodSymbol classMethod;
+        private IMethodSymbol interfaceMethod;
 
         public CCodeInterfaceMethodAdapterDefinition(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
-            : base(interfaceMethod)
+            : base(classMethod)
         {
-            this.classMethod = classMethod;
+            this.interfaceMethod = interfaceMethod;
 
             var receiver = type == classMethod.ContainingType
                                ? (Expression)new ThisReference { Type = classMethod.ContainingType }
@@ -53,8 +53,18 @@
             MethodBodyOpt.Statements.Add(body);
         }
 
+        public override bool IsGeneric
+        {
+            get
+            {
+                return Method.ContainingType.IsGenericType;
+            }
+        }
+
         public override void WriteTo(CCodeWriterBase c)
         {
+            c.NewLine();
+
             c.TextSpan(string.Format("// adapter: {0}", this.Method));
             c.NewLine();
 
@@ -63,15 +73,15 @@
                 statement.WriteTo(c);
             }
 
-            if (!this.Method.ContainingType.IsGenericType)
+            if (this.Method.ContainingType.IsGenericType)
             {
                 c.WriteTemplateDeclaration(this.Method.ContainingType);
                 c.NewLine();
             }
 
             c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodNamespace(this.classMethod);
-            c.WriteMethodName(this.Method, false);
+            c.WriteMethodNamespace(this.Method);
+            c.WriteMethodName(this.interfaceMethod, false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
 
             if (this.MethodBodyOpt == null)

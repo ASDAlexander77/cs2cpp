@@ -211,7 +211,7 @@
                     }
 
                     Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
-                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(type, interfaceMethod, implementationForInterfaceMember));
+                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(interfaceMethod, implementationForInterfaceMember));
                     unit.Definitions.Add(new CCodeInterfaceMethodAdapterDefinition(type, interfaceMethod, implementationForInterfaceMember));
                 }
             }

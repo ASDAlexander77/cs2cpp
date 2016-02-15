@@ -12,7 +12,7 @@
     {
         private IList<Statement> typeDefs = new List<Statement>();
 
-        public CCodeInterfaceMethodAdapterDeclaration(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
+        public CCodeInterfaceMethodAdapterDeclaration(IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
         {
             if (classMethod.IsGenericMethod)
