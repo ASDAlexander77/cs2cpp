@@ -211,7 +211,8 @@
                     }
 
                     Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
-                    unit.Declarations.Add(new CCodeInterfaceMethodAdapter(type, interfaceMethod, implementationForInterfaceMember));
+                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(type, interfaceMethod, implementationForInterfaceMember));
+                    unit.Definitions.Add(new CCodeInterfaceMethodAdapterDefinition(type, interfaceMethod, implementationForInterfaceMember));
                 }
             }
 
@@ -255,7 +256,7 @@
             {
                 // ignore empty constructor as they should call Object.ctor() only which is empty
                 unit.Declarations.Add(new CCodeMethodDeclaration(method));
-                unit.Definitions.Add(new CCodeMethodDefinition(method, null));
+                unit.Definitions.Add(new CCodeMethodDefinition(method));
                 return;
             }
 
@@ -269,7 +270,7 @@
                 (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate &&
                  !methodSymbol.IsAbstract))
             {
-                unit.Definitions.Add(new CCodeMethodDefinition(method, boundStatement));
+                unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
             }
         }
     }

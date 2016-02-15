@@ -143,7 +143,7 @@ namespace Il2Native.Logic
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
-            if (addTemplate && methodSymbol.IsGenericMethod)
+            if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod())
             {
                 this.TextSpan("template");
                 this.WhiteSpace();
@@ -641,23 +641,27 @@ namespace Il2Native.Logic
 
         public void WriteMethodFullName(IMethodSymbol methodSymbol)
         {
+            this.WriteMethodNamespace(methodSymbol);
+            WriteMethodName(methodSymbol, false);
+        }
+
+        public void WriteMethodNamespace(IMethodSymbol methodSymbol)
+        {
             // namespace
             if (methodSymbol.ContainingNamespace != null)
             {
-                WriteNamespace(methodSymbol.ContainingNamespace);
-                TextSpan("::");
+                this.WriteNamespace(methodSymbol.ContainingNamespace);
+                this.TextSpan("::");
             }
 
             var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-            WriteTypeName(receiverType, false);
+            this.WriteTypeName(receiverType, false);
             if (receiverType.IsGenericType)
             {
-                WriteTemplateDefinition(methodSymbol.ContainingType);
+                this.WriteTemplateDefinition(methodSymbol.ContainingType);
             }
 
-            TextSpan("::");
-
-            WriteMethodName(methodSymbol, false);
+            this.TextSpan("::");
         }
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
