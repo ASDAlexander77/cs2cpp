@@ -1,4 +1,4 @@
-﻿#define EMPTY_SKELETON
+﻿////#define EMPTY_SKELETON
 namespace Il2Native.Logic
 {
     using System;

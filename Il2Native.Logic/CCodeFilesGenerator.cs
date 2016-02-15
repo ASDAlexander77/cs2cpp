@@ -206,7 +206,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
         public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
         {
             itw.WriteLine();
-            itw.WriteLine("int main()");
+            itw.WriteLine("auto main() -> int32_t");
             itw.WriteLine("{");
             itw.Indent++;
             c.WriteMethodFullName(mainMethod);
