@@ -1,7 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM
 {
     using Il2Native.Logic.DOM2;
-
+    using Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -27,6 +27,19 @@
         {
             c.Separate();
             c.TextSpanNewLine(string.Format("// Method : {0}", this.Method.ToDisplayString()));
+
+            if (Method.IsVirtualGenericMethod())
+            {
+                // set generic types
+                foreach (var typeArgument in Method.TypeArguments)
+                {
+                    new TypeDef
+                    {
+                        TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } },
+                        Identifier = new TypeExpression { Type = typeArgument }
+                    }.WriteTo(c);
+                }
+            }
 
             c.WriteMethodDeclaration(this.Method, false);
 
