@@ -583,7 +583,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (methodSymbol.IsGenericMethod && !methodSymbol.IsAbstract && !methodSymbol.IsVirtual && !methodSymbol.IsOverride)
+            if (methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod())
             {
                 this.WriteTemplateDeclaration(methodSymbol);
                 if (!declarationWithingClass)

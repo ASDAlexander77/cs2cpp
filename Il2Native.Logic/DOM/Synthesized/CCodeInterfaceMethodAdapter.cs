@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.DOM.Synthesized
 {
+    using System.Collections.Generic;
     using System.Linq;
     using DOM2;
 
@@ -9,6 +10,8 @@
 
     public class CCodeInterfaceMethodAdapter : CCodeMethodDeclaration
     {
+        private IList<Statement> typeDefs = new List<Statement>();
+
         public CCodeInterfaceMethodAdapter(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
         {
@@ -22,27 +25,36 @@
                 call.Arguments.Add(argument);
             }
 
-            MethodBodyOpt = new MethodBody();
+            MethodBodyOpt = new MethodBody
+                                {
+                                    Statements =
+                                        {
+                                            !interfaceMethod.ReturnsVoid
+                                                ? (Statement)new ReturnStatement { ExpressionOpt = call }
+                                                : (Statement)new ExpressionStatement { Expression = call }
+                                        }
+                                };
 
             if (classMethod.IsGenericMethod)
             {
                 // set generic types
                 foreach (var typeArgument in classMethod.TypeArguments)
                 {
-                    MethodBodyOpt.Statements.Add(
+                    this.typeDefs.Add(
                         new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Local = new Local { CustomName = typeArgument.Name } });
                 }
             }
-
-            MethodBodyOpt.Statements.Add(!interfaceMethod.ReturnsVoid
-                        ? (Statement)new ReturnStatement { ExpressionOpt = call }
-                        : (Statement)new ExpressionStatement { Expression = call });
         }
 
         public override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan(string.Format("// adapter: {0}", this.Method));
             c.NewLine();
+
+            foreach (var statement in typeDefs)
+            {
+                statement.WriteTo(c);
+            }
 
             c.WriteMethodReturn(this.Method, true);
             c.WriteMethodName(this.Method, allowKeywords: false);
