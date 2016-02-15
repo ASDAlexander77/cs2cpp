@@ -73,9 +73,9 @@
                 statement.WriteTo(c);
             }
 
-            if (this.Method.ContainingType.IsGenericType)
+            if (this.classMethod.ContainingType.IsGenericType)
             {
-                c.WriteTemplateDeclaration(this.Method.ContainingType);
+                c.WriteTemplateDeclaration(this.classMethod.ContainingType);
                 c.NewLine();
             }
 
