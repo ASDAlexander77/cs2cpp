@@ -75,14 +75,15 @@
                 statement.WriteTo(c);
             }
 
-            if (this.classMethod.ContainingType.IsGenericType)
+            var namedTypeSymbol = (INamedTypeSymbol)this.type;
+            if (namedTypeSymbol.IsGenericType)
             {
-                c.WriteTemplateDeclaration(this.classMethod.ContainingType);
+                c.WriteTemplateDeclaration(namedTypeSymbol);
                 c.NewLine();
             }
 
             c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodNamespace((INamedTypeSymbol)this.type);
+            c.WriteMethodNamespace(namedTypeSymbol);
             c.WriteMethodName(this.Method, false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
 
