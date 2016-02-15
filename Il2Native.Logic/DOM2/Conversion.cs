@@ -78,9 +78,6 @@
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
                     c.WriteType(this.Type);
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                    c.WriteTypeFullName(this.Type);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
