@@ -27,7 +27,7 @@
                     new TypeDef
                     {
                         TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } },
-                        Local = new Local { CustomName = typeArgument.Name }
+                        Identifier = new TypeExpression { Type = typeArgument }
                     }.WriteTo(c);
                 }
             }

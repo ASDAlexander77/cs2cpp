@@ -11,13 +11,13 @@
 
         public TypeExpression TypeExpression { get; set; }
 
-        public Local Local { get; set; }
+        public Expression Identifier { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
             TypeExpression.Visit(visitor);
-            Local.Visit(visitor);
+            this.Identifier.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -26,7 +26,7 @@
             c.WhiteSpace();
             this.TypeExpression.WriteTo(c);
             c.WhiteSpace();
-            this.Local.WriteTo(c);
+            this.Identifier.WriteTo(c);
 
             base.WriteTo(c);
         }

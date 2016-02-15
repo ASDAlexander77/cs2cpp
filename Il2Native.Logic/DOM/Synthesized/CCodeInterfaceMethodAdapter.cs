@@ -25,25 +25,28 @@
                 call.Arguments.Add(argument);
             }
 
-            MethodBodyOpt = new MethodBody
-                                {
-                                    Statements =
-                                        {
-                                            !interfaceMethod.ReturnsVoid
-                                                ? (Statement)new ReturnStatement { ExpressionOpt = call }
-                                                : (Statement)new ExpressionStatement { Expression = call }
-                                        }
-                                };
+            var body = !interfaceMethod.ReturnsVoid ? (Statement)new ReturnStatement { ExpressionOpt = call } : (Statement)new ExpressionStatement { Expression = call };
+
+            MethodBodyOpt = new MethodBody();
 
             if (classMethod.IsGenericMethod)
             {
                 // set generic types
-                foreach (var typeArgument in classMethod.TypeArguments)
+                foreach (var typeArgument in interfaceMethod.TypeArguments)
                 {
                     this.typeDefs.Add(
-                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Local = new Local { CustomName = typeArgument.Name } });
+                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                }
+
+                // set generic types
+                foreach (var typeArgument in classMethod.TypeArguments)
+                {
+                    MethodBodyOpt.Statements.Add(
+                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
                 }
             }
+
+            MethodBodyOpt.Statements.Add(body);
         }
 
         public override void WriteTo(CCodeWriterBase c)

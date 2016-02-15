@@ -371,7 +371,7 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.TypeParameter:
 
-                    if (type.ContainingType != null && type.ContainingType.ContainingType != null)
+                    if (type.ContainingType != null && (type.ContainingType.ContainingType != null || type.ContainingSymbol is MethodSymbol))
                     {
                         this.WriteUniqueNameByContainingType(type);
                     }
@@ -675,14 +675,7 @@ namespace Il2Native.Logic
 
                 TextSpan("typename");
                 WhiteSpace();
-                if (typeParam.ContainingType != null && typeParam.ContainingType.ContainingType != null)
-                {
-                    this.WriteUniqueNameByContainingType(typeParam);
-                }
-                else
-                {
-                    this.WriteName(typeParam);
-                }
+                this.WriteType(typeParam);
 
                 anyTypeParam = true;
             }
@@ -756,15 +749,7 @@ namespace Il2Native.Logic
                 anyTypeParam = true;
 
                 TextSpan("typename ");
-                if (typeParam.ContainingType != null && typeParam.ContainingType.ContainingType != null)
-                {
-                    this.WriteUniqueNameByContainingType(typeParam);
-                }
-                else
-                {
-                    this.WriteName(typeParam);
-                }
-
+                this.WriteType(typeParam);
             }
 
             TextSpan("> ");
