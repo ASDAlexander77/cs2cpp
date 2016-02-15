@@ -12,12 +12,12 @@
     {
         private IList<Statement> typeDefs = new List<Statement>();
 
-        private IMethodSymbol interfaceMethod;
+        private IMethodSymbol classMethod;
 
         public CCodeInterfaceMethodAdapterDefinition(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
-            : base(classMethod)
+            : base(interfaceMethod)
         {
-            this.interfaceMethod = interfaceMethod;
+            this.classMethod = classMethod;
 
             var receiver = type == classMethod.ContainingType
                                ? (Expression)new ThisReference { Type = classMethod.ContainingType }
@@ -57,7 +57,7 @@
         {
             get
             {
-                return Method.ContainingType.IsGenericType;
+                return this.classMethod.ContainingType.IsGenericType;
             }
         }
 
@@ -80,8 +80,8 @@
             }
 
             c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodNamespace(this.Method);
-            c.WriteMethodName(this.interfaceMethod, false);
+            c.WriteMethodNamespace(this.classMethod);
+            c.WriteMethodName(this.Method, false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
 
             if (this.MethodBodyOpt == null)
