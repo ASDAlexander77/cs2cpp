@@ -60,24 +60,28 @@
             {
                 if (label.Value != null)
                 {
-                    c.TextSpan("case");
-                    c.WhiteSpace();
-
-                    if (this.SwitchType.TypeKind == TypeKind.Enum)
+                    var skipCaseForNullableWhenNull = this.SwitchType.IsValueType && label.Value.IsNull;
+                    if (!skipCaseForNullableWhenNull)
                     {
-                        c.TextSpan("(");
-                        c.WriteType(this.SwitchType);
-                        c.TextSpan(")");
-                    }
+                        c.TextSpan("case");
+                        c.WhiteSpace();
 
-                    c.TextSpan(label.ToString());
+                        if (this.SwitchType.TypeKind == TypeKind.Enum)
+                        {
+                            c.TextSpan("(");
+                            c.WriteType(this.SwitchType);
+                            c.TextSpan(")");
+                        }
+
+                        c.TextSpan(label.ToString());
+                        c.TextSpan(":");
+                    }
                 }
                 else
                 {
-                    c.TextSpan("default");
+                    c.TextSpan("default:");
                 }
 
-                c.TextSpan(":");
                 c.NewLine();
 
                 if (label.GenerateLabel)

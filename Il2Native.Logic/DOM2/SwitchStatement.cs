@@ -53,47 +53,19 @@
             this.stringEquality = boundSwitchStatement.StringEquality;
 
             // disable all 'auto' variables
-
-            var usedGotoLabels = new List<GotoStatement>();
-            var usedSwitchLabels = new List<SwitchLabel>();
-
             this.Visit(
                 (e) =>
-                {
-                    var assignmentOperator = e as AssignmentOperator;
-                    if (assignmentOperator != null)
                     {
-                        var local = assignmentOperator.Left as Local;
-                        if (local != null && boundSwitchStatement.InnerLocals.Any(ol => ol.Name == local.Name))
+                        var assignmentOperator = e as AssignmentOperator;
+                        if (assignmentOperator != null)
                         {
-                            assignmentOperator.ApplyAutoType = false;
+                            var local = assignmentOperator.Left as Local;
+                            if (local != null && boundSwitchStatement.InnerLocals.Any(ol => ol.Name == local.Name))
+                            {
+                                assignmentOperator.ApplyAutoType = false;
+                            }
                         }
-                    }
-
-                    var gotoStatement = e as GotoStatement;
-                    if (gotoStatement != null)
-                    {
-                        usedGotoLabels.Add(gotoStatement);
-                    }
-
-                    var switchSection = e as SwitchSection;
-                    if (switchSection != null)
-                    {
-                        usedSwitchLabels.AddRange(switchSection.Labels);
-                    }
-                });
-
-            if (usedGotoLabels.Count > 0)
-            {
-                var dict = new SortedDictionary<string, bool>(usedGotoLabels.Select(i => i.Label.LabelName).Distinct().ToDictionary(i => i, i => true));
-                foreach (var usedSwitchLabel in usedSwitchLabels)
-                {
-                    if (dict.ContainsKey(usedSwitchLabel.LabelName))
-                    {
-                        usedSwitchLabel.GenerateLabel = true;
-                    }
-                }
-            }
+                    });
         }
 
         internal override void Visit(Action<Base> visitor)
