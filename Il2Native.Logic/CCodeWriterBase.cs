@@ -134,10 +134,10 @@ namespace Il2Native.Logic
             TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
         }
 
-        public void WriteUniqueNameByContainingType(ISymbol symbol)
+        public void WriteUniqueNameByContainingSymbol(ISymbol symbol)
         {
             var name = symbol.MetadataName ?? symbol.Name;
-            var uniqueName = string.Concat(name, GetId(((TypeSymbol)symbol.ContainingType).ToKeyString()));
+            var uniqueName = string.Concat(name, GetId((symbol.ContainingSymbol).ToString()));
             TextSpan(uniqueName.CleanUpName());
         }
 
@@ -373,7 +373,7 @@ namespace Il2Native.Logic
 
                     if (type.ContainingType != null && (type.ContainingType.ContainingType != null || type.ContainingSymbol is MethodSymbol))
                     {
-                        this.WriteUniqueNameByContainingType(type);
+                        this.WriteUniqueNameByContainingSymbol(type);
                     }
                     else
                     {
