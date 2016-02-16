@@ -77,7 +77,7 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(this.Type);
+                    c.WriteType(this.Type, true, false, true);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
