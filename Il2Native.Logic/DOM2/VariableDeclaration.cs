@@ -44,7 +44,11 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.Local.Visit(visitor);
+            if (this.Local != null)
+            {
+                this.Local.Visit(visitor);
+            }
+
             foreach (var statement in this.statements)
             {
                 statement.Visit(visitor);

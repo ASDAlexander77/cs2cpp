@@ -19,11 +19,11 @@
             get { return Kinds.ForStatement; }
         }
 
-        public Base Initialization { get; set; }
+        public Base InitializationOpt { get; set; }
         
-        public Base Incrementing { get; set; }
+        public Base IncrementingOpt { get; set; }
         
-        public Expression Condition { get; set; }
+        public Expression ConditionOpt { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -76,8 +76,8 @@
                     var boundConditionalGoto = boundStatement as BoundConditionalGoto;
                     if (boundConditionalGoto != null)
                     {
-                        this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-                        Debug.Assert(this.Condition != null);
+                        this.ConditionOpt = Deserialize(boundConditionalGoto.Condition) as Expression;
+                        Debug.Assert(this.ConditionOpt != null);
                         continue;
                     }
 
@@ -95,13 +95,13 @@
                     switch (stage)
                     {
                         case Stages.Initialization:
-                            this.Initialization = statement;
+                            this.InitializationOpt = statement;
                             break;
                         case Stages.Body:
                             Statements = statement;
                             break;
                         case Stages.Incrementing:
-                            this.Incrementing = statement;
+                            this.IncrementingOpt = statement;
                             break;
                         default:
                             return false;
@@ -115,9 +115,20 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.Initialization.Visit(visitor);
-            this.Incrementing.Visit(visitor);
-            this.Condition.Visit(visitor);
+            if (this.InitializationOpt != null)
+            {
+                this.InitializationOpt.Visit(visitor);
+            }
+
+            if (this.IncrementingOpt != null)
+            {
+                this.IncrementingOpt.Visit(visitor);
+            }
+
+            if (this.ConditionOpt != null)
+            {
+                this.ConditionOpt.Visit(visitor);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -126,20 +137,20 @@
             c.WhiteSpace();
             c.TextSpan("(");
 
-            PrintStatementAsExpression(c, this.Initialization);
+            PrintStatementAsExpression(c, this.InitializationOpt);
             
             c.TextSpan(";");
             c.WhiteSpace();
 
-            if (this.Condition != null)
+            if (this.ConditionOpt != null)
             {
-                this.Condition.WriteTo(c);
+                this.ConditionOpt.WriteTo(c);
             }
 
             c.TextSpan(";");
             c.WhiteSpace();
 
-            PrintStatementAsExpression(c, this.Incrementing);
+            PrintStatementAsExpression(c, this.IncrementingOpt);
 
             c.TextSpan(")");
 
