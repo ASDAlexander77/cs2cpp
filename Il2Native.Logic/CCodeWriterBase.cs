@@ -566,8 +566,13 @@ namespace Il2Native.Logic
                 parameterIndex++;
             }
 
-            if (anyParameter && methodSymbol.IsVararg)
+            if (methodSymbol.IsVararg)
             {
+                if (anyParameter)
+                {
+                    this.TextSpan(", ");
+                }
+
                 this.TextSpan("...");
             }
 
@@ -817,7 +822,7 @@ namespace Il2Native.Logic
             TextSpan("->");
         }
 
-        public void WriteExpressionInParenthesesIfNeeded(Expression expression)
+        public bool WriteExpressionInParenthesesIfNeeded(Expression expression)
         {
             if (expression == null)
             {
@@ -828,6 +833,14 @@ namespace Il2Native.Logic
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
                               expression is UnaryOperator || expression is ConditionalOperator ||
                               expression is AssignmentOperator;
+
+            var conversion = expression as DOM2.Conversion;
+            if (conversion != null && (conversion.ConversionKind == ConversionKind.PointerToInteger ||
+                                       conversion.ConversionKind == ConversionKind.IntegerToPointer ||
+                                       conversion.ConversionKind == ConversionKind.PointerToPointer))
+            {
+                parenthesis = true;
+            }
 
             if (parenthesis)
             {
@@ -840,6 +853,8 @@ namespace Il2Native.Logic
             {
                 this.TextSpan(")");
             }
+
+            return parenthesis;
         }
 
         public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true)

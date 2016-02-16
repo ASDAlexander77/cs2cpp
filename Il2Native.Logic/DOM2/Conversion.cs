@@ -43,11 +43,19 @@
                 c.TextSpan("(");
             }
 
-            if (this.WriteCast(c))
+            bool parenthesis = false;
+            if (this.WriteCast(c, out parenthesis))
             {
-                c.TextSpan("(");
-                this.Operand.WriteTo(c);
-                c.TextSpan(")");
+                if (parenthesis)
+                {
+                    c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+                }
+                else
+                {
+                    c.TextSpan("(");
+                    this.Operand.WriteTo(c);
+                    c.TextSpan(")");
+                }
             }
 
             if (interfaceCastRequired)
@@ -56,8 +64,10 @@
             }
         }
 
-        private bool WriteCast(CCodeWriterBase c)
+        private bool WriteCast(CCodeWriterBase c, out bool parenthesis)
         {
+            parenthesis = false;
+
             switch (this.ConversionKind)
             {
                 case ConversionKind.MethodGroup:
@@ -117,6 +127,8 @@
                         c.TextSpan("(");
                         c.WriteType(this.Type);
                         c.TextSpan(")");
+
+                        parenthesis = true;
                     }
 
                     break;

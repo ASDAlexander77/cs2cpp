@@ -64,7 +64,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.Operand.WriteTo(c);
+            c.WriteExpressionInParenthesesIfNeeded(this.Operand);
             c.TextSpan("[");
             this.Index.WriteTo(c);
             c.TextSpan("]");
