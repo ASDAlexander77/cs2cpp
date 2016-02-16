@@ -41,14 +41,14 @@
                 foreach (var typeArgument in interfaceMethod.TypeArguments)
                 {
                     this.typeDefs.Add(
-                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
                 }
 
                 // set generic types
                 foreach (var typeArgument in classMethod.TypeArguments)
                 {
                     MethodBodyOpt.Statements.Add(
-                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
                 }
             }
 

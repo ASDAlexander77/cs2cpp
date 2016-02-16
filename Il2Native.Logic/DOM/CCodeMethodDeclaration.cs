@@ -26,7 +26,7 @@
                 {
                     new TypeDef
                     {
-                        TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } },
+                        TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } },
                         Identifier = new TypeExpression { Type = typeArgument }
                     }.WriteTo(c);
                 }

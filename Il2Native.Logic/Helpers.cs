@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Linq;
     using System.Text;
     using DOM;
     using Microsoft.CodeAnalysis;
@@ -325,6 +326,18 @@
         public static bool IsVirtualGenericMethod(this IMethodSymbol methodSymbol)
         {
             return methodSymbol.IsGenericMethod && (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride);
+        }
+
+        public static ITypeSymbol GetFirstConstraintType(this ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol.TypeKind == TypeKind.TypeParameter)
+            {
+                var typeParameterSymbol = (ITypeParameterSymbol)typeSymbol;
+                // TODO: finish typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasReferenceTypeConstraint
+                return typeParameterSymbol.ConstraintTypes.FirstOrDefault();
+            }
+
+            return null;
         }
     }
 }

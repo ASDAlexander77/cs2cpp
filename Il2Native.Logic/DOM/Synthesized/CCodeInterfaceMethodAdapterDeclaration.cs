@@ -21,7 +21,7 @@
                 foreach (var typeArgument in interfaceMethod.TypeArguments)
                 {
                     this.typeDefs.Add(
-                        new TypeDef { TypeExpression = new TypeExpression { Type = new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
                 }
             }
         }
