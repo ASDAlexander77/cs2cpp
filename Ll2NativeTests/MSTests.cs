@@ -1114,7 +1114,9 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
 
             skip.Add(283); // COOL EXAMPLE OF CONSTRAINTS ON VIRTUAL METHODS - Review it and use it - TODO: finish typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasReferenceTypeConstraint
 
-            foreach (var index in Enumerable.Range(313, 589).Where(n => !skip.Contains(n)))
+            /// !! LAST 326 - fix it
+
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 //CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
                 CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
