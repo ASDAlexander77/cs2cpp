@@ -685,6 +685,11 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
         {
+            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+            {
+                return;
+            }
+
             TextSpan("template <");
 
             var anyTypeParam = false;
@@ -724,6 +729,11 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol)
         {
+            if (typeSymbol.TypeKind == TypeKind.Enum)
+            {
+                return;
+            }
+
             TextSpan("<");
 
             var anyTypeParam = false;
