@@ -10,7 +10,7 @@
         public CCodeSpecialTypeOrEnumConstructorDeclaration(INamedTypeSymbol type)
             : base(new SpecialTypeConstructorMethod(type))
         {
-            MethodBodyOpt = new MethodBody
+            MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =
                 {

@@ -10,7 +10,7 @@
         public CCodeCastOperatorDeclaration(INamedTypeSymbol type)
             : base(new CastOperatorMethod(type))
         {
-            MethodBodyOpt = new MethodBody
+            MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =
                 {

@@ -22,19 +22,20 @@
 
         public bool ApplyAutoType { get; set; }
 
+        public bool TypeDeclaration { get; set; }
+
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
             base.Parse(boundAssignmentOperator);
 
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
-
-            var variableDeclaratorSyntax = boundAssignmentOperator.Left.Syntax.Green as VariableDeclaratorSyntax;
-            if (variableDeclaratorSyntax != null && variableDeclaratorSyntax.Initializer != null && (boundLocal == null || boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None))
+            if (boundLocal != null)
             {
-                this.ApplyAutoType = true;
-                if (variableDeclaratorSyntax.Initializer.Value.Kind == SyntaxKind.NullLiteralExpression)
+                var localDeclarationStatementSyntax = boundLocal.Syntax.Parent.Parent.Green as LocalDeclarationStatementSyntax;
+                if (localDeclarationStatementSyntax != null)
                 {
-                    this.assignmentType = boundAssignmentOperator.Left.Type;
+                    this.TypeDeclaration = true;
+                    this.ApplyAutoType = localDeclarationStatementSyntax.Declaration.Type.ToString() == "var";
                 }
             }
 
@@ -43,42 +44,32 @@
             {
                 if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
                 {
+                    this.TypeDeclaration = true;
                     this.ApplyAutoType = true;
                 }
             }
 
             this.Left = Deserialize(boundAssignmentOperator.Left) as Expression;
-            Debug.Assert(this.Left != null);
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
-            Debug.Assert(this.Right != null);
-
-            if (this.Right is Literal)
-            {
-                this.assignmentType = this.Right.Type;                
-            }
-            else if (boundAssignmentOperator.Type.SpecialType == SpecialType.System_Object)
-            {
-                this.assignmentType = boundAssignmentOperator.Type;
-            }
 
             if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing)
             {
+                this.TypeDeclaration = false;
                 this.ApplyAutoType = false;
-                this.assignmentType = null;
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.ApplyAutoType)
+            if (this.TypeDeclaration)
             {
-                if (this.assignmentType != null)
-                {
-                    c.WriteType(this.assignmentType);
-                }
-                else
+                if (this.ApplyAutoType)
                 {
                     c.TextSpan("auto");
+                }
+                else if (Type != null)
+                {
+                    c.WriteType(Type);
                 }
 
                 c.WhiteSpace();

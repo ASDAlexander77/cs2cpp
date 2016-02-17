@@ -13,7 +13,7 @@
             var call = new Call { Method = new CopyConstructorMethod(type), ReceiverOpt = new ThisReference() };
             call.Arguments.Add(
                 new PointerIndirectionOperator { Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = type } } });
-            MethodBodyOpt = new MethodBody { Statements = { new ExpressionStatement { Expression = call } } };
+            MethodBodyOpt = new MethodBody(Method) { Statements = { new ExpressionStatement { Expression = call } } };
         }
 
         public class CopyConstructorMethod : MethodImpl

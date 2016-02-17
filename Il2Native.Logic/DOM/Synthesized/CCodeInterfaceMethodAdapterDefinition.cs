@@ -33,7 +33,7 @@
 
             var body = !interfaceMethod.ReturnsVoid ? (Statement)new ReturnStatement { ExpressionOpt = call } : (Statement)new ExpressionStatement { Expression = call };
 
-            MethodBodyOpt = new MethodBody();
+            MethodBodyOpt = new MethodBody(Method);
 
             if (classMethod.IsGenericMethod)
             {

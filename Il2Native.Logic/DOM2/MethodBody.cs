@@ -1,8 +1,11 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Sockets;
+
+    using Microsoft.CodeAnalysis;
 
     public class MethodBody : Block
     {
@@ -10,6 +13,18 @@
         {
             get { return Kinds.MethodBody; }
         }
+
+        public MethodBody(IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol == null)
+            {
+                throw new ArgumentNullException("methodSymbol");
+            }
+
+            this.MethodSymbol = methodSymbol;
+        }
+
+        public IMethodSymbol MethodSymbol { get; protected set; }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
@@ -73,26 +88,33 @@
                 statement.Visit(
                     (e) =>
                     {
-                        var gotoStatement = e as GotoStatement;
-                        if (gotoStatement != null)
+                        if (e.Kind == Kinds.GotoStatement)
                         {
+                            var gotoStatement = (GotoStatement)e;
                             usedLabels.Add(gotoStatement.Label);
                         }
 
-                        var conditionalGoto = e as ConditionalGoto;
-                        if (conditionalGoto != null)
+                        if (e.Kind == Kinds.ConditionalGoto)
                         {
+                            var conditionalGoto = (ConditionalGoto)e;
                             var label = new Label();
                             label.Parse(conditionalGoto.Label);
                             usedLabels.Add(label);
                         }
 
-                        var switchSection = e as SwitchSection;
-                        if (switchSection != null)
+                        if (e.Kind == Kinds.SwitchSection)
                         {
+                            var switchSection = (SwitchSection)e;
                             usedSwitchLabels.AddRange(switchSection.Labels);
                         }
-                    });                
+
+                        // set return types
+                        if (e.Kind == Kinds.ReturnStatement)
+                        {
+                            var returnStatement = (ReturnStatement)e;
+                            returnStatement.ReturnType = MethodSymbol.ReturnType;
+                        }
+                    });
             }
 
             if (usedLabels.Count > 0)

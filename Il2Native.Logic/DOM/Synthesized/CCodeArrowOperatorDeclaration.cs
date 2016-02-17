@@ -10,7 +10,7 @@
         public CCodeArrowOperatorDeclaration(INamedTypeSymbol type)
             : base(new ArrowOperatorMethod(type))
         {
-            MethodBodyOpt = new MethodBody
+            MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =
                 {

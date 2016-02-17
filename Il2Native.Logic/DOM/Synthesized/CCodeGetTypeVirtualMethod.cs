@@ -12,7 +12,7 @@
         public CCodeGetTypeVirtualMethod(INamedTypeSymbol type)
             : base(new GetTypeVirtualMethod(type))
         {
-            MethodBodyOpt = new MethodBody
+            MethodBodyOpt = new MethodBody(Method)
             {
                 Statements = { new ReturnStatement { ExpressionOpt = new Literal { Value = ConstantValue.Null } } }
             };

@@ -1,7 +1,8 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Diagnostics;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ReturnStatement : Statement
@@ -10,6 +11,8 @@
         {
             get { return Kinds.ReturnStatement; }
         }
+
+        public ITypeSymbol ReturnType { get; set; }
 
         public Expression ExpressionOpt { get; set; }
 
@@ -41,6 +44,11 @@
             if (this.ExpressionOpt != null)
             {
                 c.WhiteSpace();
+                if (this.ReturnType != null && this.ReturnType.IsValueType && ExpressionOpt is ThisReference)
+                {
+                    c.TextSpan("*");
+                }
+
                 this.ExpressionOpt.WriteTo(c);
             }
 

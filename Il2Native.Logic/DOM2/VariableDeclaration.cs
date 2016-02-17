@@ -30,7 +30,7 @@
             // suppress autoType in all but first declaration
             foreach (var statement in this.statements.Skip(1).OfType<ExpressionStatement>().Select(es => es.Expression).OfType<AssignmentOperator>())
             {
-                statement.ApplyAutoType = false;
+                statement.TypeDeclaration = false;
             }
         }
 

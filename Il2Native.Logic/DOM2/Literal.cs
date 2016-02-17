@@ -50,8 +50,34 @@
                     return  string.Format("{0}ULL", this.Value.UInt64Value);
                 case ConstantValueTypeDiscriminator.Single:
                     var line = this.Value.DoubleValue.ToString();
+                    if (float.IsPositiveInfinity(this.Value.SingleValue))
+                    {
+                        return "std::numeric_limits<float>::infinity()";
+                    }
+                    else if (float.IsNegativeInfinity(this.Value.SingleValue))
+                    {
+                        return "-std::numeric_limits<float>::infinity()";
+                    }
+                    else if (float.IsNaN(this.Value.SingleValue))
+                    {
+                        return "std::numeric_limits<float>::quiet_NaN()";
+                    }
+
                     return string.Format("{0}f", line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
                 case ConstantValueTypeDiscriminator.Double:
+                    if (double.IsPositiveInfinity(this.Value.DoubleValue))
+                    {
+                        return "std::numeric_limits<double>::infinity()";
+                    }
+                    else if (double.IsNegativeInfinity(this.Value.DoubleValue))
+                    {
+                        return "-std::numeric_limits<double>::infinity()";
+                    }
+                    else if (double.IsNaN(this.Value.DoubleValue))
+                    {
+                        return "std::numeric_limits<double>::quiet_NaN()";
+                    }
+
                     line = this.Value.DoubleValue.ToString();
                     return line.IndexOf('.') != -1 ? line : string.Concat(line, ".0");
                 case ConstantValueTypeDiscriminator.String:
@@ -115,13 +141,45 @@
                     c.TextSpan("ULL");
                     break;
                 case ConstantValueTypeDiscriminator.Single:
-                    var line = this.Value.SingleValue.ToString();
-                    c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
-                    c.TextSpan("f");
+                    if (float.IsPositiveInfinity(this.Value.SingleValue))
+                    {
+                        c.TextSpan("std::numeric_limits<float>::infinity()");
+                    }
+                    else if (float.IsNegativeInfinity(this.Value.SingleValue))
+                    {
+                        c.TextSpan("-std::numeric_limits<float>::infinity()");
+                    }
+                    else if (float.IsNaN(this.Value.SingleValue))
+                    {
+                        c.TextSpan("std::numeric_limits<float>::quiet_NaN()");
+                    }
+                    else
+                    {
+                        var line = this.Value.SingleValue.ToString();
+                        c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                        c.TextSpan("f");
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.Double:
-                    line = this.Value.DoubleValue.ToString();
-                    c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                    if (double.IsPositiveInfinity(this.Value.DoubleValue))
+                    {
+                        c.TextSpan("std::numeric_limits<double>::infinity()");
+                    }
+                    else if (double.IsNegativeInfinity(this.Value.DoubleValue))
+                    {
+                        c.TextSpan("-std::numeric_limits<double>::infinity()");
+                    }
+                    else if (double.IsNaN(this.Value.DoubleValue))
+                    {
+                        c.TextSpan("std::numeric_limits<double>::quiet_NaN()");
+                    }
+                    else
+                    {
+                        var line = this.Value.DoubleValue.ToString();
+                        c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.String:
                     c.TextSpan(string.Format("L\"{0}\"_s", UnicodeString(this.Value.StringValue)));

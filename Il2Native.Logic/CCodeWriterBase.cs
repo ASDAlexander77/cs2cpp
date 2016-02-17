@@ -85,7 +85,7 @@ namespace Il2Native.Logic
 #else
             if (boundBody != null)
             {
-                var methodBase = Base.Deserialize(boundBody, true);
+                var methodBase = Base.Deserialize(boundBody, methodSymbol) as MethodBody;
                 methodBase.WriteTo(this);
             }
             else

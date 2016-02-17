@@ -256,15 +256,15 @@
             ForEachBody
         }
 
-        internal static Base Deserialize(BoundNode boundBody, bool root = false, SpecialCases specialCase = SpecialCases.None)
+        internal static Base Deserialize(BoundNode boundBody, IMethodSymbol methodSymbol = null, SpecialCases specialCase = SpecialCases.None)
         {
             // method
             var boundStatementList = boundBody as BoundStatementList;
             if (boundStatementList != null)
             {
-                if (root || boundStatementList.Syntax.Green is MethodDeclarationSyntax)
+                if (methodSymbol != null || boundStatementList.Syntax.Green is MethodDeclarationSyntax)
                 {
-                    var methodBody = new MethodBody();
+                    var methodBody = new MethodBody(methodSymbol);
                     methodBody.Parse(boundStatementList);
                     return methodBody;
                 }
