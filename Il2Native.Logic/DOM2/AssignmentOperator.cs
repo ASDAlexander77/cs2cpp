@@ -31,18 +31,11 @@
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
             if (boundLocal != null)
             {
-                var localDeclarationStatementSyntax = boundLocal.Syntax.Parent.Parent.Green as LocalDeclarationStatementSyntax;
-                if (localDeclarationStatementSyntax != null)
+                var variableDeclarationSyntax = boundLocal.Syntax.Parent.Green as VariableDeclarationSyntax;
+                if (variableDeclarationSyntax != null)
                 {
                     this.TypeDeclaration = true;
-                    this.ApplyAutoType = localDeclarationStatementSyntax.Declaration.Type.ToString() == "var";
-                }
-
-                var forStatementSyntax = boundLocal.Syntax.Parent.Parent.Green as ForStatementSyntax;
-                if (forStatementSyntax != null && forStatementSyntax.Declaration != null)
-                {
-                    this.TypeDeclaration = true;
-                    this.ApplyAutoType = forStatementSyntax.Declaration.Type.ToString() == "var";
+                    this.ApplyAutoType = variableDeclarationSyntax.Type.ToString() == "var";
                 }
             }
 
