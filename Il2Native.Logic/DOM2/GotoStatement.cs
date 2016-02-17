@@ -36,9 +36,6 @@
                 label.Parse(boundGotoStatement.Label);
                 this.Label = label;
             }
-
-            Debug.Assert(!this.Label.LabelName.Contains("break"));
-            Debug.Assert(!this.Label.LabelName.Contains("continue"));
         }
 
         internal override void WriteTo(CCodeWriterBase c)

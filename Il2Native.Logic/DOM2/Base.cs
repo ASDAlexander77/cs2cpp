@@ -608,17 +608,17 @@
                     return breakStatement;
                 }
 
-                var continueStatementNoHint = new ContinueStatement();
-                if (continueStatementNoHint.Parse(boundGotoStatement))
-                {
-                    return continueStatementNoHint;
-                }
+                ////var continueStatementNoHint = new ContinueStatement();
+                ////if (continueStatementNoHint.Parse(boundGotoStatement))
+                ////{
+                ////    return continueStatementNoHint;
+                ////}
 
-                var breakStatementNoHint = new BreakStatement();
-                if (breakStatementNoHint.Parse(boundGotoStatement))
-                {
-                    return breakStatementNoHint;
-                }
+                ////var breakStatementNoHint = new BreakStatement();
+                ////if (breakStatementNoHint.Parse(boundGotoStatement))
+                ////{
+                ////    return breakStatementNoHint;
+                ////}
 
                 var gotoStatement = new GotoStatement();
                 gotoStatement.Parse(boundGotoStatement);

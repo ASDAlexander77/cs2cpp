@@ -30,17 +30,24 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var any = false;
-            foreach (var expression in Arguments)
+            if (Arguments.Count > 0)
             {
-                if (any)
+                var any = false;
+                foreach (var expression in Arguments)
                 {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                }
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
 
-                expression.WriteTo(c);
-                any = true;
+                    expression.WriteTo(c);
+                    any = true;
+                }
+            }
+            else
+            {
+                c.TextSpan("va_list()");
             }
         }
     }
