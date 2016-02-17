@@ -39,7 +39,7 @@
                 }
 
                 var forStatementSyntax = boundLocal.Syntax.Parent.Parent.Green as ForStatementSyntax;
-                if (forStatementSyntax != null)
+                if (forStatementSyntax != null && forStatementSyntax.Declaration != null)
                 {
                     this.TypeDeclaration = true;
                     this.ApplyAutoType = forStatementSyntax.Declaration.Type.ToString() == "var";
