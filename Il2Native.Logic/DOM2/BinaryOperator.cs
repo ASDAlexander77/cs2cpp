@@ -62,11 +62,24 @@
                 c.TextSpan(")(");
             }
 
-            c.WriteExpressionInParenthesesIfNeeded(this.Left);
-            c.WhiteSpace();
-            this.WriteOperator(c);
-            c.WhiteSpace();
-            c.WriteExpressionInParenthesesIfNeeded(this.Right);
+            var reminder = this.GetOperatorKind() == BinaryOperatorKind.Remainder && (this.Left.Type.IsRealValueType() || this.Right.Type.IsRealValueType());
+            if (reminder)
+            {
+                c.TextSpan("std::remainder(");
+                c.WriteExpressionInParenthesesIfNeeded(this.Left);
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.WriteExpressionInParenthesesIfNeeded(this.Right);
+                c.TextSpan(")");
+            }
+            else
+            {
+                c.WriteExpressionInParenthesesIfNeeded(this.Left);
+                c.WhiteSpace();
+                this.WriteOperator(c);
+                c.WhiteSpace();
+                c.WriteExpressionInParenthesesIfNeeded(this.Right);
+            }
 
             if (castOfResult)
             {
@@ -76,7 +89,7 @@
 
         private void WriteOperator(CCodeWriterBase c)
         {
-            switch (this.OperatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical))
+            switch (this.GetOperatorKind())
             {
                 case BinaryOperatorKind.Multiplication:
                     c.TextSpan("*");
@@ -153,6 +166,11 @@
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        private BinaryOperatorKind GetOperatorKind()
+        {
+            return this.OperatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical);
         }
     }
 }

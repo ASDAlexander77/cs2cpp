@@ -63,7 +63,7 @@
                         return "std::numeric_limits<float>::quiet_NaN()";
                     }
 
-                    return string.Format("{0}f", line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                    return string.Format("{0}f", line.IndexOf('.') != -1 || line.IndexOf('E') != -1 ? line : string.Concat(line, ".0"));
                 case ConstantValueTypeDiscriminator.Double:
                     if (double.IsPositiveInfinity(this.Value.DoubleValue))
                     {
@@ -79,7 +79,7 @@
                     }
 
                     line = this.Value.DoubleValue.ToString();
-                    return line.IndexOf('.') != -1 ? line : string.Concat(line, ".0");
+                    return line.IndexOf('.') != -1 || line.IndexOf('E') != -1 ? line : string.Concat(line, ".0");
                 case ConstantValueTypeDiscriminator.String:
                     return string.Format("L\"{0}\"", UnicodeString(this.Value.StringValue));
                 case ConstantValueTypeDiscriminator.Boolean:
@@ -156,7 +156,7 @@
                     else
                     {
                         var line = this.Value.SingleValue.ToString();
-                        c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                        c.TextSpan(line.IndexOf('.') != -1 || line.IndexOf('E') != -1 ? line : string.Concat(line, ".0"));
                         c.TextSpan("f");
                     }
 
@@ -177,7 +177,7 @@
                     else
                     {
                         var line = this.Value.DoubleValue.ToString();
-                        c.TextSpan(line.IndexOf('.') != -1 ? line : string.Concat(line, ".0"));
+                        c.TextSpan(line.IndexOf('.') != -1 || line.IndexOf('E') != -1 ? line : string.Concat(line, ".0"));
                     }
 
                     break;

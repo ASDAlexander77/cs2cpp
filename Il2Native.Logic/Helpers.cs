@@ -44,6 +44,7 @@
                     case ' ':
                     case '\'':
                     case '\"':
+                    case '\0':
                         n = '_';
                         break;
                     default:
@@ -131,6 +132,9 @@
                         break;
                     case '`':
                         n = 'T';
+                        break;
+                    case '\0':
+                        n = 'Z';
                         break;
                     default:
                         n = c;
@@ -303,6 +307,18 @@
                 case SpecialType.System_UInt32:
                 case SpecialType.System_Int64:
                 case SpecialType.System_UInt64:
+                case SpecialType.System_Single:
+                case SpecialType.System_Double:
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsRealValueType(this ITypeSymbol type)
+        {
+            switch (type.SpecialType)
+            {
                 case SpecialType.System_Single:
                 case SpecialType.System_Double:
                     return true;
