@@ -16,7 +16,10 @@
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            visitor(this.Statements);
+            if (this.Statements != null)
+            {
+                this.Statements.Visit(visitor);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)

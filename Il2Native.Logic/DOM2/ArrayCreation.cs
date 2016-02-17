@@ -41,6 +41,20 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            if (this.InitializerOpt != null)
+            {
+                this.InitializerOpt.Visit(visitor);
+            }
+
+            foreach (var bound in Bounds)
+            {
+                bound.Visit(visitor);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             var arrayTypeSymbol = (ArrayTypeSymbol)Type;
@@ -133,15 +147,7 @@
                 }
                 else
                 {
-                    var creationExpression = item as ObjectCreationExpression;
-                    if (creationExpression != null && creationExpression.Type.IsValueType && creationExpression.Arguments.Any())
-                    {
-                        yield return creationExpression.Arguments.First();
-                    }
-                    else
-                    {
-                        yield return item;
-                    }
+                    yield return item;
                 }
             }
         }

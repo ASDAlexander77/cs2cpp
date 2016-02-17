@@ -45,6 +45,7 @@
                     case '\'':
                     case '\"':
                     case '\0':
+                    case '\\':
                         n = '_';
                         break;
                     default:
@@ -132,6 +133,9 @@
                         break;
                     case '`':
                         n = 'T';
+                        break;
+                    case '\\':
+                        n = 'B';
                         break;
                     case '\0':
                         n = 'Z';

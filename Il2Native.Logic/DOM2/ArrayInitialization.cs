@@ -7,7 +7,7 @@
 
     public class ArrayInitialization : Expression
     {
-        private IList<Expression> initializers = new List<Expression>();
+        private IList<Expression> _initializers = new List<Expression>();
 
         public override Kinds Kind
         {
@@ -18,7 +18,7 @@
         {
             get
             {
-                return this.initializers;
+                return this._initializers;
             }
         }
 
@@ -30,6 +30,15 @@
                 var item = Deserialize(boundExpression) as Expression;
                 Debug.Assert(item != null);
                 this.Initializers.Add(item);
+            }
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            foreach (var initializer in this.Initializers)
+            {
+                initializer.Visit(visitor);
             }
         }
 

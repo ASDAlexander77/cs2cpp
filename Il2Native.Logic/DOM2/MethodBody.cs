@@ -43,7 +43,7 @@
                 }
             }
 
-            this.SanitizeCaseLabels(statements);
+            this.SanitizeCaseLabelsAndSetReturnTypes(statements);
 
             // call constructors
             var constructors = statements.TakeWhile(IsConstructorCall).Select(GetCall).ToArray();
@@ -78,7 +78,7 @@
             c.EndBlock();
         }
 
-        private void SanitizeCaseLabels(IList<Statement> statements)
+        private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)
         {
             var usedLabels = new List<Label>();
             var usedSwitchLabels = new List<SwitchLabel>();
