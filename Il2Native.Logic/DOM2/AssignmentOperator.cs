@@ -37,6 +37,13 @@
                     this.TypeDeclaration = true;
                     this.ApplyAutoType = localDeclarationStatementSyntax.Declaration.Type.ToString() == "var";
                 }
+
+                var forStatementSyntax = boundLocal.Syntax.Parent.Parent.Green as ForStatementSyntax;
+                if (forStatementSyntax != null)
+                {
+                    this.TypeDeclaration = true;
+                    this.ApplyAutoType = forStatementSyntax.Declaration.Type.ToString() == "var";
+                }
             }
 
             var forEachStatementSyntax = boundAssignmentOperator.Left.Syntax.Green as ForEachStatementSyntax;
