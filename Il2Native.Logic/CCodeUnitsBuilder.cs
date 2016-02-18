@@ -5,6 +5,7 @@ namespace Il2Native.Logic
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
     using System.Threading.Tasks;
     using DOM;
     using DOM.Implementations;
@@ -14,6 +15,8 @@ namespace Il2Native.Logic
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+
+    using MethodBody = Il2Native.Logic.DOM2.MethodBody;
 
     public class CCodeUnitsBuilder
     {
@@ -277,7 +280,9 @@ namespace Il2Native.Logic
             else
             {
 #if GENERATE_STUBS
-                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface && !methodSymbol.IsAbstract && !methodSymbol.IsExtern)
+                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface 
+                    && !methodSymbol.IsAbstract 
+                    && !(methodSymbol.IsExtern && ((MethodSymbol)method).ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged)))
                 {
                     unit.Definitions.Add(
                         new CCodeMethodDefinition(method)
