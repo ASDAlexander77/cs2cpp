@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 namespace System
 {
@@ -16,8 +17,26 @@ namespace System
     using System.Runtime;
 
     [System.Runtime.InteropServices.ComVisible(true)]
-    public static partial class Buffer
+    public static class Buffer
     {
+        // Copies from one primitive array to another primitive array without
+        // respecting types.  This calls memmove internally.  The count and 
+        // offset parameters here are in bytes.  If you want to use traditional
+        // array element indices and counts, use Array.Copy.
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern void BlockCopy(Array src, int srcOffset,
+            Array dst, int dstOffset, int count);
+
+        // A very simple and efficient memmove that assumes all of the
+        // parameter validation has already been done.  The count and offset
+        // parameters here are in bytes.  If you want to use traditional
+        // array element indices and counts, use Array.Copy.
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern void InternalBlockCopy(Array src, int srcOffsetBytes,
+            Array dst, int dstOffsetBytes, int byteCount);
+
         // This is ported from the optimized CRT assembly in memchr.asm. The JIT generates 
         // pretty good code here and this ends up being within a couple % of the CRT asm.
         // It is however cross platform as the CRT hasn't ported their fast version to 64-bit
@@ -489,6 +508,17 @@ namespace System
         {
             __Memmove(dest, src, len);
         }
+
+        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
+        [SuppressUnmanagedCodeSecurity]
+        [SecurityCritical]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+#if WIN64
+        extern private unsafe static void __Memmove(byte* dest, byte* src, ulong len);
+#else
+        extern private unsafe static void __Memmove(byte* dest, byte* src, uint len);
+#endif
+
 
         // The attributes on this method are chosen for best JIT performance. 
         // Please do not edit unless intentional.

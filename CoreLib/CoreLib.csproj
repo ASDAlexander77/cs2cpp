@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="Common\PinnableBufferCache.cs" />
     <Compile Include="Impl\ArgIterator.cs" />
-    <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\Delegate.cs" />
     <Compile Include="Impl\GC.cs" />
