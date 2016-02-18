@@ -226,7 +226,7 @@ namespace Il2Native.Logic
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit)
         {
-            if (field.IsConst)
+            if (field.IsConst && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
             {
                 return;
             }

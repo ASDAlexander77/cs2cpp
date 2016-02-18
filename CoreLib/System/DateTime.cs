@@ -57,9 +57,6 @@ namespace System
     [Serializable()]
     public struct DateTime : IFormattable, IConvertible
     {
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int gettimeofday(int* time, int* timezone);
-
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
@@ -93,12 +90,24 @@ namespace System
         private const long MaxTicks = 441796895990000000;
         private const long MaxMillis = (long)DaysTo10000 * MillisPerDay;
 
+        private const long FileTimeOffset = DaysTo1601 * TicksPerDay;
+
         // This is mask to extract ticks from m_ticks
         private const ulong TickMask = 0x7FFFFFFFFFFFFFFFL;
         private const ulong UTCMask = 0x8000000000000000L;
 
         public static readonly DateTime MinValue = new DateTime(MinTicks);
         public static readonly DateTime MaxValue = new DateTime(MaxTicks);
+
+        private const UInt64 TicksMask = 0x3FFFFFFFFFFFFFFF;
+        private const UInt64 FlagsMask = 0xC000000000000000;
+        private const UInt64 LocalMask = 0x8000000000000000;
+        private const Int64 TicksCeiling = 0x4000000000000000;
+        private const UInt64 KindUnspecified = 0x0000000000000000;
+        private const UInt64 KindUtc = 0x4000000000000000;
+        private const UInt64 KindLocal = 0x8000000000000000;
+        private const UInt64 KindLocalAmbiguousDst = 0xC000000000000000;
+        private const Int32 KindShift = 62;
 
         private const int DatePartYear = 0;
         private const int DatePartDayOfYear = 1;
@@ -113,6 +122,16 @@ namespace System
         private ulong m_ticks;
 
         public DateTime(long ticks)
+        {
+            if (((ticks & (long)TickMask) < MinTicks) || ((ticks & (long)TickMask) > MaxTicks))
+            {
+                throw new ArgumentOutOfRangeException("ticks", "Ticks must be between DateTime.MinValue.Ticks and DateTime.MaxValue.Ticks.");
+            }
+
+            m_ticks = (ulong)ticks;
+        }
+
+        public DateTime(ulong ticks)
         {
             if (((ticks & (long)TickMask) < MinTicks) || ((ticks & (long)TickMask) > MaxTicks))
             {
@@ -357,40 +376,58 @@ namespace System
             }
         }
 
+        // Returns a DateTime representing the current date and time. The
+        // resolution of the returned value depends on the system timer. For
+        // Windows NT 3.5 and later the timer resolution is approximately 10ms,
+        // for Windows NT 3.1 it is approximately 16ms, and for Windows 95 and 98
+        // it is approximately 55ms.
+        //
         public static DateTime Now
         {
             get
             {
-                unsafe
-                {
-                    var timeBuffer = stackalloc int[4];
-                    if (gettimeofday(&timeBuffer[0], &timeBuffer[2]) == 0)
-                    {
-                        return new DateTime(timeBuffer[0] * TicksPerSecond + timeBuffer[1] * 10 + timeBuffer[2] * TicksPerMinute);
-                    }
+                Contract.Ensures(Contract.Result<DateTime>().Kind == DateTimeKind.Local);
 
-                    throw new Exception();
+                DateTime utc = UtcNow;
+                Int64 offset = 0;//TimeZoneInfo.GetDateTimeNowUtcOffsetFromUtc(utc, out isAmbiguousLocalDst).Ticks;
+                long tick = utc.Ticks + offset;
+                if (tick > DateTime.MaxTicks)
+                {
+                    return new DateTime(DateTime.MaxTicks, DateTimeKind.Local);
                 }
+                if (tick < DateTime.MinTicks)
+                {
+                    return new DateTime(DateTime.MinTicks, DateTimeKind.Local);
+                }
+                return new DateTime(tick, DateTimeKind.Local);
             }
         }
 
         public static DateTime UtcNow
         {
-
+            [System.Security.SecuritySafeCritical]  // auto-generated
             get
             {
-                unsafe
-                {
-                    var timeBuffer = stackalloc int[4];
-                    if (gettimeofday(&timeBuffer[0], null) == 0)
-                    {
-                        return new DateTime(timeBuffer[0] * TicksPerSecond + timeBuffer[1] * 10, DateTimeKind.Utc);
-                    }
+                Contract.Ensures(Contract.Result<DateTime>().Kind == DateTimeKind.Utc);
+                // following code is tuned for speed. Don't change it without running benchmark.
+                long ticks = 0;
+                ticks = GetSystemTimeAsFileTime();
 
-                    throw new Exception();
-                }
+#if FEATURE_LEGACYNETCF
+            // Windows Phone 7.0/7.1 return the ticks up to millisecond, not up to the 100th nanosecond.
+            if (CompatibilitySwitches.IsAppEarlierThanWindowsPhone8)
+            {
+                long ticksms = ticks / TicksPerMillisecond;
+                ticks = ticksms * TicksPerMillisecond;
+            }
+#endif
+                return new DateTime(((UInt64)(ticks + FileTimeOffset)) | KindUtc);
             }
         }
+
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern long GetSystemTimeAsFileTime();
 
         public int Second
         {

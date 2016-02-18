@@ -42,12 +42,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common\PinnableBufferCache.cs" />
-    <Compile Include="ImplPAL\Win32\Win32Native.cs" />
     <Compile Include="Impl\ArgIterator.cs" />
     <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\Delegate.cs" />
-    <Compile Include="Impl\Environment.cs" />
     <Compile Include="Impl\GC.cs" />
     <Compile Include="Impl\Globalization\CultureInfo.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
@@ -567,6 +565,9 @@
     <Compile Include="System\Threading\Timer.cs" />
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ImplPAL\Win32\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

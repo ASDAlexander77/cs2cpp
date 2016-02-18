@@ -3,6 +3,8 @@
     using System.Diagnostics.Contracts;
 
     using Runtime.CompilerServices;
+    using Runtime.InteropServices;
+    using Security;
 
     public static partial class Environment
     {
@@ -17,7 +19,12 @@
         public static string CurrentDirectory { get; set; }
 
         private static OperatingSystem _os;
-        
+
+        [SecurityCritical]
+        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
+        [SuppressUnmanagedCodeSecurity]
+        private static extern Int32 GetProcessorCount();
+
         public static int ProcessorCount
         {
             [System.Security.SecuritySafeCritical]  // auto-generated
@@ -54,6 +61,26 @@
         public static bool HasShutdownStarted { get; set; }
 
         public static bool IsWindows8OrAbove { get; set; }
+
+        /*==================================TickCount===================================
+        **Action: Gets the number of ticks since the system was started.
+        **Returns: The number of ticks since the system was started.
+        **Arguments: None
+        **Exceptions: None
+        ==============================================================================*/
+        public static extern int TickCount
+        {
+            [System.Security.SecuritySafeCritical]  // auto-generated
+            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            get;
+        }
+
+        // Terminates this process with the given exit code.
+        [System.Security.SecurityCritical]  // auto-generated
+        [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
+        [SuppressUnmanagedCodeSecurity]
+        internal static extern void _Exit(int exitCode);
+
 
         public static void Exit(int exitCode)
         {

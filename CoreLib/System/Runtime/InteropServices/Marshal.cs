@@ -3,35 +3,27 @@
 namespace System.Runtime.InteropServices
 {
     using System.Runtime.CompilerServices;
-
+    using ConstrainedExecution;
     using Microsoft.Win32;
 
     public static partial class Marshal
     {
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern static int _set_errno(int _Value);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int _get_errno(int* _Value);
-
         //====================================================================
         // GetLastWin32Error
         //====================================================================
-        public static int GetLastWin32Error()
-        {
-            unsafe
-            {
-                return _get_errno(null);
-            }
-        }
+        [System.Security.SecurityCritical]  // auto-generated_required
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        public static extern int GetLastWin32Error();
+
 
         //====================================================================
         // SetLastWin32Error
         //====================================================================
-        internal static void SetLastWin32Error(int error)
-        {
-            _set_errno(error);
-        }
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        internal static extern void SetLastWin32Error(int error);
+
 
         public static int SizeOf<T>(T obj)
         {
