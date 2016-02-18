@@ -126,6 +126,8 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 var anyRecord = false;
                 using (var itw = new IndentedTextWriter(new StreamWriter(path)))
                 {
+                    Debug.Assert(!path.Contains("ByteComparer.h"));
+
                     var c = new CCodeWriterText(itw);
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric))
                     {
