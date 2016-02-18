@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net.Sockets;
 
@@ -46,15 +47,15 @@
             this.SanitizeCaseLabelsAndSetReturnTypes(statements);
 
             // call constructors
-            var constructors = statements.TakeWhile(IsConstructorCall).Select(GetCall).ToArray();
-            if (constructors.Length > 0)
+            var constructorsOrAssignments = statements.TakeWhile(IsConstructorCallOrAssignment).Select(GetCallOrAssignment).ToArray();
+            if (constructorsOrAssignments.Length > 0)
             {
                 c.WhiteSpace();
                 c.TextSpan(":");
                 c.WhiteSpace();
 
                 var any = false;
-                foreach (var constructorCall in constructors)
+                foreach (var constructorAsAssignment in constructorsOrAssignments)
                 {
                     if (any)
                     {
@@ -62,7 +63,28 @@
                         c.WhiteSpace();
                     }
 
-                    constructorCall.WriteTo(c);
+                    if (constructorAsAssignment.Kind == Kinds.Call)
+                    {
+                        constructorAsAssignment.WriteTo(c);
+                    }
+                    else if (constructorAsAssignment.Kind == Kinds.AssignmentOperator)
+                    {
+                        // convert
+                        var assignmentOperator = constructorAsAssignment as AssignmentOperator;
+                        var fieldAccess = assignmentOperator.Left as FieldAccess;
+                        if (fieldAccess != null && fieldAccess.ReceiverOpt.Kind == Kinds.ThisReference)
+                        {
+                            c.WriteName(fieldAccess.Field);
+                            c.TextSpan("(");
+                            assignmentOperator.Right.WriteTo(c);
+                            c.TextSpan(")");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(false);
+                    }
+
                     any = true;
                 }
             }
@@ -70,7 +92,7 @@
             c.NewLine();
 
             c.OpenBlock();
-            foreach (var statement in statements.Skip(constructors.Length))
+            foreach (var statement in statements.Skip(constructorsOrAssignments.Length))
             {
                 statement.WriteTo(c);
             }
@@ -127,18 +149,7 @@
             }
         }
 
-        private static Call GetCall(Statement s)
-        {
-            var expressionStatement = s as ExpressionStatement;
-            if (expressionStatement != null)
-            {
-                return expressionStatement.Expression as Call;
-            }
-
-            return null;
-        }
-
-        private static bool IsConstructorCall(Statement s)
+        private static Expression GetCallOrAssignment(Statement s)
         {
             var expressionStatement = s as ExpressionStatement;
             if (expressionStatement != null)
@@ -146,7 +157,39 @@
                 var call = expressionStatement.Expression as Call;
                 if (call != null)
                 {
-                    return call.IsCallingConstructor && call.ReceiverOpt is ThisReference;
+                    return call;
+                }
+
+                var assignmentOperator = expressionStatement.Expression as AssignmentOperator;
+                if (assignmentOperator != null)
+                {
+                    var fieldAccess = assignmentOperator.Left as FieldAccess;
+                    if (fieldAccess != null && fieldAccess.ReceiverOpt.Kind == Kinds.ThisReference)
+                    {
+                        return assignmentOperator;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsConstructorCallOrAssignment(Statement s)
+        {
+            var expressionStatement = s as ExpressionStatement;
+            if (expressionStatement != null)
+            {
+                var call = expressionStatement.Expression as Call;
+                if (call != null)
+                {
+                    return call.IsCallingConstructor && call.ReceiverOpt.Kind == Kinds.ThisReference;
+                }
+
+                var assignmentOperator = expressionStatement.Expression as AssignmentOperator;
+                if (assignmentOperator != null)
+                {
+                    var fieldAccess = assignmentOperator.Left as FieldAccess;
+                    return fieldAccess != null && fieldAccess.ReceiverOpt != null && fieldAccess.ReceiverOpt.Kind == Kinds.ThisReference;
                 }
             }
 
