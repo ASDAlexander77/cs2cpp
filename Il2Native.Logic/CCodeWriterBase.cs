@@ -601,14 +601,22 @@ namespace Il2Native.Logic
 
             if (declarationWithingClass)
             {
+                if (methodSymbol.IsExtern)
+                {
+                    this.TextSpan("extern");
+                    this.WhiteSpace();
+                }
+
                 if (methodSymbol.IsStatic)
                 {
-                    this.TextSpan("static ");
+                    this.TextSpan("static");
+                    this.WhiteSpace();
                 }
 
                 if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
                 {
-                    this.TextSpan("virtual ");
+                    this.TextSpan("virtual");
+                    this.WhiteSpace();
                 }
             }
 
