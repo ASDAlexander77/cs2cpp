@@ -8,5 +8,7 @@
         {
             get;
         }
+
+        public bool IsStub { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿namespace Il2Native.Logic
+﻿#define GENERATE_STUBS
+namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +9,7 @@
     using DOM;
     using DOM.Implementations;
     using Il2Native.Logic.DOM.Synthesized;
+    using Il2Native.Logic.DOM2;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -271,6 +273,26 @@
                  !methodSymbol.IsAbstract))
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
+            }
+            else
+            {
+#if GENERATE_STUBS
+                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface && !methodSymbol.IsAbstract)
+                {
+                    unit.Definitions.Add(
+                        new CCodeMethodDefinition(method)
+                            {
+                                IsStub = true,
+                                MethodBodyOpt = new MethodBody(method)
+                                {
+                                    Statements = 
+                                    {
+                                        new ThrowStatement { ExpressionOpt = new Literal { Value = ConstantValue.Create(0xC000C000) } }
+                                    }
+                                }
+                            });
+                }
+#endif
             }
         }
     }

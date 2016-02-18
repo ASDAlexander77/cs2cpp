@@ -6,12 +6,12 @@
 
     public class ThrowStatement : Statement
     {
-        private Expression expressionOpt;
-
         public override Kinds Kind
         {
             get { return Kinds.ThrowStatement; }
         }
+
+        public Expression ExpressionOpt { get; set; }
 
         internal void Parse(BoundThrowStatement boundThrowStatement)
         {
@@ -22,26 +22,26 @@
 
             if (boundThrowStatement.ExpressionOpt != null)
             {
-                this.expressionOpt = Deserialize(boundThrowStatement.ExpressionOpt) as Expression;
+                this.ExpressionOpt = Deserialize(boundThrowStatement.ExpressionOpt) as Expression;
             }
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            if (this.expressionOpt != null)
+            if (this.ExpressionOpt != null)
             {
-                this.expressionOpt.Visit(visitor);
+                this.ExpressionOpt.Visit(visitor);
             }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("throw");
-            if (expressionOpt != null)
+            if (this.ExpressionOpt != null)
             {
                 c.WhiteSpace();
-                this.expressionOpt.WriteTo(c);
+                this.ExpressionOpt.WriteTo(c);
             }
 
             base.WriteTo(c);

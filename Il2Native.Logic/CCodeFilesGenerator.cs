@@ -6,6 +6,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using DOM;
     using DOM.Implementations;
@@ -29,7 +30,7 @@
                 Directory.CreateDirectory(this.currentFolder);
             }
 
-            var includeHeaders = this.WriteTemplateSources(units);
+            var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
 
             this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
 
@@ -114,7 +115,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
         }
 
-        public IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units)
+        public IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units, bool stubs = false)
         {
             var headersToInclude = new List<string>();
 
@@ -122,12 +123,12 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             foreach (var unit in units)
             {
                 int nestedLevel;
-                var path = this.GetPath(unit, out nestedLevel, ".h");
                 var anyRecord = false;
-                using (var itw = new IndentedTextWriter(new StreamWriter(path)))
+                var text = new StringBuilder();
+                using (var itw = new IndentedTextWriter(new StringWriter(text)))
                 {
                     var c = new CCodeWriterText(itw);
-                    foreach (var definition in unit.Definitions.Where(d => d.IsGeneric))
+                    foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
                     {
                         anyRecord = true;
                         definition.WriteTo(c);
@@ -136,13 +137,17 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     itw.Close();
                 }
 
-                if (!anyRecord)
+                if (anyRecord && text.Length > 0)
                 {
-                    File.Delete(path);
-                }
-                else
-                {
-                    headersToInclude.Add(path.Substring("src\\".Length + this.currentFolder.Length + 1));
+                    var root = !stubs ? "src" : "impl";
+                    var path = this.GetPath(unit, out nestedLevel, ".h", folder: root);
+
+                    headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
+                    
+                    using (var textFile = new StreamWriter(path))
+                    {
+                        textFile.Write(text.ToString());
+                    }
                 }
             }
 
@@ -159,6 +164,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                     (unit) =>
                     {
                         this.WriteSource(identity, unit);
+                        this.WriteSource(identity, unit, true);
                     });
             }
             else
@@ -167,23 +173,25 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
                 {
                     this.WriteSource(identity, unit);
+                    this.WriteSource(identity, unit, true);
                 }                 
             }
         }
 
-        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit)
+        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
         {
             int nestedLevel;
-            var path = this.GetPath(unit, out nestedLevel);
+            GetRelativePath(unit, out nestedLevel);
 
             var anyRecord = false;
-            using (var itw = new IndentedTextWriter(new StreamWriter(path)))
+            var text = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
                 var c = new CCodeWriterText(itw);
 
                 WriteSourceInclude(itw, identity, nestedLevel);
 
-                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric))
+                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
                 {
                     anyRecord = true;
                     definition.WriteTo(c);
@@ -197,9 +205,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 itw.Close();
             }
 
-            if (!anyRecord)
+            if (anyRecord && text.Length > 0)
             {
-                File.Delete(path);
+                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
+                using (var textFile = new StreamWriter(path))
+                {
+                    textFile.Write(text.ToString());
+                }
             }
         }
 
@@ -233,7 +245,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             itw.WriteLine("{0}.h\"", identity.Name);
         }
 
-        public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IList<string> includeHeaders)
+        public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IEnumerable<string> includeHeaders)
         {
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
@@ -524,16 +536,16 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             return fullPath;
         }
 
-        private string GetPath(CCodeUnit unit, out int nestedLevel, string ext = ".cpp")
+        private string GetPath(CCodeUnit unit, out int nestedLevel, string ext = ".cpp", string folder = "src")
         {
             var fileRelativePath = GetRelativePath(unit, out nestedLevel);
-            var fullDirPath = Path.Combine(this.currentFolder, "src", fileRelativePath);
+            var fullDirPath = Path.Combine(this.currentFolder, folder, fileRelativePath);
             if (!Directory.Exists(fullDirPath))
             {
                 Directory.CreateDirectory(fullDirPath);
             }
 
-            var fullPath = Path.Combine(fullDirPath, String.Concat(((INamedTypeSymbol)unit.Type).GetTypeName().CleanUpNameAllUnderscore(), ext));
+            var fullPath = Path.Combine(fullDirPath, String.Concat(unit.Type.GetTypeName().CleanUpNameAllUnderscore(), ext));
             return fullPath;
         }
 
