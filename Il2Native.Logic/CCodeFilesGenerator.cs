@@ -50,7 +50,11 @@ file(GLOB_RECURSE <%name%>_SRC
     ""./src/*.cpp""
 )
 
-include_directories(""./""<%include%>)
+file(GLOB_RECURSE <%name%>_IMPL
+    ""./impl/*.cpp""
+)
+
+include_directories(""./"" ""./src"" ""./impl""<%include%>)
 
 if (MSVC)
 link_directories(""./""<%link_msvc%>)
@@ -60,7 +64,7 @@ link_directories(""./""<%link_other%>)
 SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti -fpermissive"")
 endif()
 
-add_<%type%> (<%name%> ""${<%name%>_SRC}"")
+add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
 
 <%libraries%>";
 
@@ -180,16 +184,13 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
         private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
         {
-            int nestedLevel;
-            GetRelativePath(unit, out nestedLevel);
-
             var anyRecord = false;
             var text = new StringBuilder();
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
                 var c = new CCodeWriterText(itw);
 
-                WriteSourceInclude(itw, identity, nestedLevel);
+                WriteSourceInclude(itw, identity);
 
                 foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
                 {
@@ -207,6 +208,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
             if (anyRecord && text.Length > 0)
             {
+                int nestedLevel;
                 var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
                 using (var textFile = new StreamWriter(path))
                 {
@@ -234,14 +236,9 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             itw.WriteLine("}");
         }
 
-        public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity, int nestedLevel)
+        public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity)
         {
             itw.Write("#include \"");
-            for (var i = 0; i < nestedLevel; i++)
-            {
-                itw.Write("..\\");
-            }
-
             itw.WriteLine("{0}.h\"", identity.Name);
         }
 
@@ -517,7 +514,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             // write header
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src", ext:".cpp"))))
             {
-                WriteSourceInclude(itw, identity, 0);
+                WriteSourceInclude(itw, identity);
 
                 itw.WriteLine(Resources.c_definitions.Replace("<<%assemblyName%>>", identity.Name));
                 itw.Close();

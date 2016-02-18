@@ -108,13 +108,6 @@ public:
 	~Finally() { _dtor(); }
 };
 
-// Interlocked
-template <typename T>
-T <<%assemblyName%>>::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparant)
-{
-    throw 0xC000C000;
-}
-
 // Activator
 template <typename T> 
 typename std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value && std::is_pointer<T>::value>::type __create_instance()
@@ -129,9 +122,9 @@ T __create_instance()
 	return T();
 }
 
-template <typename T>
-T <<%assemblyName%>>::System::Activator::CreateInstance()
-{
-	return __create_instance<T>();
-}
+////template <typename T>
+////T <<%assemblyName%>>::System::Activator::CreateInstance()
+////{
+////	return __create_instance<T>();
+////}
 

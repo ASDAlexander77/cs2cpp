@@ -601,12 +601,6 @@ namespace Il2Native.Logic
 
             if (declarationWithingClass)
             {
-                if (methodSymbol.IsExtern)
-                {
-                    this.TextSpan("extern");
-                    this.WhiteSpace();
-                }
-
                 if (methodSymbol.IsStatic)
                 {
                     this.TextSpan("static");
