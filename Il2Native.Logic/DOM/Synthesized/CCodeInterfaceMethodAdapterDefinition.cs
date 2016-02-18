@@ -81,7 +81,11 @@
             }
 
             c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodNamespace(namedTypeSymbol);
+            if (!this.Method.IsVirtual && !this.Method.IsAbstract && !this.Method.IsOverride)
+            {
+                c.WriteMethodNamespace(namedTypeSymbol);
+            }
+
             c.WriteMethodName(this.Method, false);
             c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
 
