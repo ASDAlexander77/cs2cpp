@@ -46,14 +46,11 @@
     <Compile Include="Impl\ArgIterator.cs" />
     <Compile Include="Impl\Buffer.cs" />
     <Compile Include="Impl\Console.cs" />
-    <Compile Include="Impl\Decimal.cs" />
     <Compile Include="Impl\Delegate.cs" />
     <Compile Include="Impl\Environment.cs" />
     <Compile Include="Impl\GC.cs" />
     <Compile Include="Impl\Globalization\CultureInfo.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
-    <Compile Include="Impl\Math.cs" />
-    <Compile Include="Impl\Number.cs" />
     <Compile Include="Impl\RuntimeTypeHandle.cs" />
     <Compile Include="Impl\Runtime\CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
@@ -61,12 +58,9 @@
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="Impl\String.cs" />
-    <Compile Include="Impl\Threading\Monitor.cs" />
     <Compile Include="Impl\Threading\Overlapped.cs" />
-    <Compile Include="Impl\Threading\Thread.cs" />
     <Compile Include="Impl\Threading\ThreadPool.cs" />
     <Compile Include="Impl\Threading\Timer.cs" />
-    <Compile Include="Impl\Threading\WaitHandle.cs" />
     <Compile Include="Impl\Type.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileHandle.cs" />
     <Compile Include="Microsoft\Win32\SafeHandles\SafeFileMappingHandle.cs" />
@@ -182,6 +176,7 @@
     <Compile Include="System\Runtime\InteropServices\SafeBuffer.cs" />
     <Compile Include="System\Runtime\InteropServices\SafeHandle.cs" />
     <Compile Include="System\Runtime\Versioning\BinaryCompatibility.cs" />
+    <Compile Include="System\Runtime\Versioning\NonVersionableAttribute.cs" />
     <Compile Include="System\Runtime\Versioning\TargetFrameworkId.cs" />
     <Compile Include="System\Security\Permissions\FileIOPermission.cs" />
     <Compile Include="System\Security\Principal\IIdentity.cs" />

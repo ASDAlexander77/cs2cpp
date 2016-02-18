@@ -1,4 +1,16 @@
-// Licensed under the MIT license.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+//
+/*=============================================================================
+**
+**
+**
+** Purpose: Class to represent all synchronization objects in the runtime (that allow multiple wait)
+**
+**
+=============================================================================*/
 
 namespace System.Threading
 {
@@ -17,9 +29,9 @@ namespace System.Threading
 
     [System.Runtime.InteropServices.ComVisible(true)]
 #if FEATURE_REMOTING
-    public abstract partial class WaitHandle : MarshalByRefObject, IDisposable {
+    public abstract class WaitHandle : MarshalByRefObject, IDisposable {
 #else // FEATURE_REMOTING
-    public abstract partial class WaitHandle : IDisposable
+    public abstract class WaitHandle : IDisposable
     {
 #endif // FEATURE_REMOTING
         public const int WaitTimeout = 0x102;
@@ -76,9 +88,7 @@ namespace System.Threading
 
             [System.Security.SecurityCritical]  // auto-generated_required
 #if !FEATURE_CORECLR
-#if PROTECTION
-[SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-#endif
+            [SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
 #endif
             set
             {
@@ -109,9 +119,7 @@ namespace System.Threading
         {
             [System.Security.SecurityCritical]  // auto-generated_required
 #if !FEATURE_CORECLR
-#if PROTECTION
-[SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-#endif
+            [SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
 #endif
             [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
             get
@@ -125,9 +133,7 @@ namespace System.Threading
 
             [System.Security.SecurityCritical]  // auto-generated_required
 #if !FEATURE_CORECLR
-#if PROTECTION
-[SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
-#endif
+            [SecurityPermissionAttribute(SecurityAction.InheritanceDemand, Flags=SecurityPermissionFlag.UnmanagedCode)]
 #endif
             [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
             set
@@ -218,7 +224,7 @@ namespace System.Threading
         {
             if (waitableSafeHandle == null)
             {
-                throw new ObjectDisposedException(Environment.GetResourceString("ObjectDisposed_Generic"));
+                throw new ObjectDisposedException(null, Environment.GetResourceString("ObjectDisposed_Generic"));
             }
             Contract.EndContractBlock();
             int ret = WaitOneNative(waitableSafeHandle, (uint)millisecondsTimeout, hasThreadAffinity, exitContext);
@@ -240,7 +246,7 @@ namespace System.Threading
             // This is required to support the Wait which FAS needs (otherwise recursive dependency comes in)
             if (safeWaitHandle == null)
             {
-                throw new ObjectDisposedException(Environment.GetResourceString("ObjectDisposed_Generic"));
+                throw new ObjectDisposedException(null, Environment.GetResourceString("ObjectDisposed_Generic"));
             }
             Contract.EndContractBlock();
 
@@ -252,6 +258,24 @@ namespace System.Threading
             }
             return (ret != WaitTimeout);
         }
+
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        private static extern int WaitOneNative(SafeHandle waitableSafeHandle, uint millisecondsTimeout, bool hasThreadAffinity, bool exitContext);
+
+        /*========================================================================
+        ** Waits for signal from all the objects. 
+        ** timeout indicates how long to wait before the method returns.
+        ** This method will return either when all the object have been pulsed
+        ** or timeout milliseonds have elapsed.
+        ** If exitContext is true then the synchronization domain for the context 
+        ** (if in a synchronized context) is exited before the wait and reacquired 
+        ========================================================================*/
+
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+        private static extern int WaitMultiple(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext, bool WaitAll);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         public static bool WaitAll(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext)
@@ -475,6 +499,11 @@ namespace System.Threading
         ==
         ==================================================*/
 
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        private static extern int SignalAndWaitOne(SafeWaitHandle waitHandleToSignal, SafeWaitHandle waitHandleToWaitOn, int millisecondsTimeout,
+                                            bool hasThreadAffinity, bool exitContext);
+
         public static bool SignalAndWait(
                                         WaitHandle toSignal,
                                         WaitHandle toWaitOn)
@@ -522,11 +551,13 @@ namespace System.Threading
             int ret = SignalAndWaitOne(toSignal.safeWaitHandle, toWaitOn.safeWaitHandle, millisecondsTimeout,
                                 toWaitOn.hasThreadAffinity, exitContext);
 
-            if (WAIT_FAILED != ret && toSignal.hasThreadAffinity)
+#if !FEATURE_CORECLR
+            if(WAIT_FAILED != ret  && toSignal.hasThreadAffinity)
             {
                 Thread.EndCriticalRegion();
                 Thread.EndThreadAffinity();
             }
+#endif
 
             if (WAIT_ABANDONED == ret)
             {
