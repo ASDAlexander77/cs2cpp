@@ -13,13 +13,11 @@
         private IList<Statement> typeDefs = new List<Statement>();
 
         private ITypeSymbol type;
-        private IMethodSymbol classMethod;
 
         public CCodeInterfaceMethodAdapterDefinition(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
         {
             this.type = type;
-            this.classMethod = classMethod;
 
             var receiver = type == classMethod.ContainingType
                                ? (Expression)new ThisReference { Type = classMethod.ContainingType }
@@ -59,13 +57,13 @@
         {
             get
             {
-                return this.classMethod.ContainingType.IsGenericType;
+                return ((INamedTypeSymbol)this.type).IsGenericType;
             }
         }
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.NewLine();
+            c.Separate();
 
             c.TextSpan(string.Format("// adapter: {0}", this.Method));
             c.NewLine();
