@@ -564,12 +564,26 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             }
 
             // write header
-            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src", ext:".cpp"))))
+            var text = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
                 WriteSourceInclude(itw, identity);
 
                 itw.WriteLine(Resources.c_definitions.Replace("<<%assemblyName%>>", identity.Name));
                 itw.Close();
+            }
+
+            var newText = text.ToString();
+            var path = this.GetPath(identity.Name, subFolder: "src", ext: ".cpp");
+
+            if (IsNothingChanged(path, newText))
+            {
+                return;
+            }
+
+            using (var textFile = new StreamWriter(path))
+            {
+                textFile.Write(newText);
             }
         }
 
