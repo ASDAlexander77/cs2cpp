@@ -127,6 +127,18 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             foreach (var unit in units)
             {
                 int nestedLevel;
+                var root = !stubs ? "src" : "impl";
+
+                if (stubs)
+                {
+                    var path = this.GetPath(unit, out nestedLevel, ".h", root, doNotCreateFolder: true);
+                    if (File.Exists(path))
+                    {
+                        // do not overwrite an existing file
+                        continue;
+                    }
+                }
+
                 var anyRecord = false;
                 var text = new StringBuilder();
                 using (var itw = new IndentedTextWriter(new StringWriter(text)))
@@ -143,8 +155,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
                 if (anyRecord && text.Length > 0)
                 {
-                    var root = !stubs ? "src" : "impl";
-                    var path = this.GetPath(unit, out nestedLevel, ".h", folder: root);
+                    var path = this.GetPath(unit, out nestedLevel, ".h", root);
 
                     headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
                     
@@ -184,6 +195,18 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
         private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
         {
+            int nestedLevel;
+
+            if (stubs)
+            {
+                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl", doNotCreateFolder: true);
+                if (File.Exists(path))
+                {
+                    // do not overwrite an existing file
+                    return;
+                }
+            }
+
             var anyRecord = false;
             var text = new StringBuilder();
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
@@ -208,7 +231,6 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
 
             if (anyRecord && text.Length > 0)
             {
-                int nestedLevel;
                 var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
                 using (var textFile = new StreamWriter(path))
                 {
@@ -533,11 +555,11 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             return fullPath;
         }
 
-        private string GetPath(CCodeUnit unit, out int nestedLevel, string ext = ".cpp", string folder = "src")
+        private string GetPath(CCodeUnit unit, out int nestedLevel, string ext = ".cpp", string folder = "src", bool doNotCreateFolder = false)
         {
             var fileRelativePath = GetRelativePath(unit, out nestedLevel);
             var fullDirPath = Path.Combine(this.currentFolder, folder, fileRelativePath);
-            if (!Directory.Exists(fullDirPath))
+            if (!doNotCreateFolder && !Directory.Exists(fullDirPath))
             {
                 Directory.CreateDirectory(fullDirPath);
             }
