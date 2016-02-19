@@ -54,7 +54,7 @@ file(GLOB_RECURSE <%name%>_IMPL
     ""./impl/*.cpp""
 )
 
-include_directories(""./"" ""./src"" ""./impl""<%include%>)
+include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
 link_directories(""./""<%link_msvc%>)
@@ -76,7 +76,7 @@ target_link_libraries (<%name%> {0} ""stdc++"")
 endif()";
 
             var type = executable ? "executable" : "library";
-            var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\"", a.Name.CleanUpNameAllUnderscore())));
+            var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
             var link_msvc = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
             var link_other = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
