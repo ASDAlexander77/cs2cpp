@@ -15,7 +15,9 @@
     using Il2Native.Logic.Properties;
 
     using Microsoft.CodeAnalysis;
- 
+
+    using Roslyn.Utilities;
+
     public class CCodeFilesGenerator
     {
         private string currentFolder;
@@ -156,12 +158,18 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 if (anyRecord && text.Length > 0)
                 {
                     var path = this.GetPath(unit, out nestedLevel, ".h", root);
+                    var newText = text.ToString();
 
                     headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
+
+                    if (IsNothingChanged(path, newText))
+                    {
+                        continue;
+                    }
                     
                     using (var textFile = new StreamWriter(path))
                     {
-                        textFile.Write(text.ToString());
+                        textFile.Write(newText);
                     }
                 }
             }
@@ -232,9 +240,16 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             if (anyRecord && text.Length > 0)
             {
                 var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
+                var newText = text.ToString();
+
+                if (IsNothingChanged(path, newText))
+                {
+                    return;
+                }
+
                 using (var textFile = new StreamWriter(path))
                 {
-                    textFile.Write(text.ToString());
+                    textFile.Write(newText);
                 }
             }
         }
@@ -267,7 +282,8 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
         public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IEnumerable<string> includeHeaders)
         {
             // write header
-            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath(identity.Name, subFolder: "src"))))
+            var text = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
                 var c = new CCodeWriterText(itw);
 
@@ -386,6 +402,19 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 }
 
                 itw.Close();
+            }
+
+            var path = this.GetPath(identity.Name, subFolder: "src");
+            var newText = text.ToString();
+
+            if (IsNothingChanged(path, newText))
+            {
+                return;
+            }
+
+            using (var textFile = new StreamWriter(path))
+            {
+                textFile.Write(newText);
             }
         }
 
@@ -564,7 +593,7 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
                 Directory.CreateDirectory(fullDirPath);
             }
 
-            var fullPath = Path.Combine(fullDirPath, String.Concat(unit.Type.GetTypeName().CleanUpNameAllUnderscore(), ext));
+            var fullPath = Path.Combine(fullDirPath, string.Concat(unit.Type.GetTypeName().CleanUpNameAllUnderscore(), ext));
             return fullPath;
         }
 
@@ -573,6 +602,30 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
             nestedLevel = enumNamespaces.Count();
             return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
+        }
+
+        private static bool IsNothingChanged(string path, string newText)
+        {
+            // check if file exist and overwrite only if different in size of HashCode
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            var fileInfo = new FileInfo(path);
+            if (fileInfo.Length != newText.Length)
+            {
+                return false;
+            }
+
+            // sizes the same, check HashValues
+            using (var hashAlorithm = new SHA1CryptoServiceProvider())
+            using (var textFile = new StreamReader(path))
+            {
+                var newHash = hashAlorithm.ComputeHash(Encoding.UTF8.GetBytes(newText));
+                var originalHash = hashAlorithm.ComputeHash(textFile.BaseStream);
+                return newHash == originalHash;
+            }
         }
     }
 }
