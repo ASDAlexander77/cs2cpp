@@ -2,6 +2,7 @@
 {
     using System;
     using System.CodeDom.Compiler;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -624,7 +625,8 @@ MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsver
             {
                 var newHash = hashAlorithm.ComputeHash(Encoding.UTF8.GetBytes(newText));
                 var originalHash = hashAlorithm.ComputeHash(textFile.BaseStream);
-                return newHash == originalHash;
+                var isNothingChanged = StructuralComparisons.StructuralEqualityComparer.Equals(newHash, originalHash);
+                return isNothingChanged;
             }
         }
     }
