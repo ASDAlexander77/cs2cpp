@@ -22,6 +22,14 @@ namespace Il2Native.Logic
 
         private static readonly IDictionary<string, long> StringIdGenerator = new SortedDictionary<string, long>();
 
+        [ThreadStatic]
+        private static ObjectIDGenerator ObjectIdGeneratorLocal;
+
+        public static void SetLocalObjectIDGenerator()
+        {
+            ObjectIdGeneratorLocal = new ObjectIDGenerator();
+        }
+
         public static long GetId(object obj, out bool firstTime)
         {
             lock (ObjectIdGenerator)
@@ -45,6 +53,11 @@ namespace Il2Native.Logic
 
                 return id;
             }
+        }
+
+        public static long GetIdLocal(object obj, out bool firstTime)
+        {
+            return ObjectIdGeneratorLocal.GetId(obj, out firstTime);
         }
 
         public abstract void OpenBlock();

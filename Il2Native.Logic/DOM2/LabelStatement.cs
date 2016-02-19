@@ -46,6 +46,11 @@
         {
             var lbl = label.Name;
 
+            if (!lbl.StartsWith("<"))
+            {
+                return label.Name;
+            }
+
             var firstTime = false;
             lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
 

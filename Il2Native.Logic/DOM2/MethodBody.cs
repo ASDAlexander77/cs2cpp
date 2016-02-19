@@ -29,6 +29,8 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            CCodeWriterBase.SetLocalObjectIDGenerator();
+
             // get actual statements
             var statements = this.Statements;
             if (statements.Count == 1 && statements.First().Kind == Kinds.BlockStatement)
@@ -158,6 +160,56 @@
                     usedSwitchLabel.GenerateLabel = true;
                 }
             }
+
+            IDictionary<string, long> stringIdGeneratorByMethod = new SortedDictionary<string, long>();
+            // change label names to make it less random
+            foreach (var label in labels)
+            {
+                FixLabelName(label, stringIdGeneratorByMethod);
+            }
+
+            foreach (var label in usedLabels)
+            {
+                FixLabelName(label, stringIdGeneratorByMethod);
+            }
+        }
+
+        private static void FixLabelName(Label label, IDictionary<string, long> stringIdGenerator)
+        {
+            var index1 = label.LabelName.IndexOf('<');
+            if (index1 == -1)
+            {
+                return;
+            }
+
+            var index2 = label.LabelName.LastIndexOf('-');
+            if (index2 == -1)
+            {
+                index2 = label.LabelName.LastIndexOf('>');
+            }
+
+            if (index2 == -1)
+            {
+                return;
+            }
+
+            var newLabel = string.Format("{0}_{1}", label.LabelName.Substring(index1, index2 - index1), GetIdIsolatedByMethod(label.LabelName, stringIdGenerator));
+
+            label.LabelName = newLabel;
+        }
+
+        public static long GetIdIsolatedByMethod(string obj, IDictionary<string, long> stringIdGenerator)
+        {
+            long id;
+            if (stringIdGenerator.TryGetValue(obj, out id))
+            {
+                return id;
+            }
+
+            id = stringIdGenerator.Count + 1;
+            stringIdGenerator[obj] = id;
+
+            return id;
         }
 
         private static Expression GetCallOrAssignment(Statement s)

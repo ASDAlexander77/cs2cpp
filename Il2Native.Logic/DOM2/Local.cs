@@ -94,7 +94,7 @@
                 {
                     lbl = local.SynthesizedLocalKind.ToString();
                     var firstTime = false;
-                    lbl += string.Format("_{0}", CCodeWriterBase.GetId(local, out firstTime));
+                    lbl += string.Format("_{0}", CCodeWriterBase.GetIdLocal(local, out firstTime));
                 }
 
                 this.CustomName = lbl;
