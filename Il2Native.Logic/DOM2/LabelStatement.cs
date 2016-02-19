@@ -11,7 +11,7 @@
             get { return Kinds.LabelStatement; }
         }
 
-        public ILabelSymbol Label { get; private set; }
+        public Label Label { get; set; }
 
         internal void Parse(BoundLabelStatement boundLabelStatement)
         {
@@ -20,13 +20,21 @@
                 throw new ArgumentNullException();
             }
 
-            this.Label = boundLabelStatement.Label;
+            var localLabel = new Label();
+            localLabel.Parse(boundLabelStatement.Label);
+            this.Label = localLabel;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Label.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.SaveAndSet0Indent();
-            c.TextSpan(GetUniqueLabel(this.Label));
+            this.Label.WriteTo(c);
             c.TextSpan(":");
             c.RestoreIndent();
             c.NewLine();
@@ -41,7 +49,7 @@
             var firstTime = false;
             lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
 
-            return lbl.CleanUpName();
+            return lbl;
         }
     }
 }

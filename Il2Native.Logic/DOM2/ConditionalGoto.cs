@@ -14,7 +14,7 @@
 
         public Expression Condition { get; set; }
 
-        public ILabelSymbol Label { get; set; }
+        public Label Label { get; set; }
 
         public bool JumpIfTrue { get; private set; }
 
@@ -26,14 +26,18 @@
             }
 
             this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
-            this.Label = boundConditionalGoto.Label;
             this.JumpIfTrue = boundConditionalGoto.JumpIfTrue;
+
+            var localLabel = new Label();
+            localLabel.Parse(boundConditionalGoto.Label);
+            this.Label = localLabel;
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
             this.Condition.Visit(visitor);
+            this.Label.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
@@ -57,9 +61,7 @@
             c.NewLine();
             c.OpenBlock();
 
-            var localLabel = new Label();
-            localLabel.Parse(this.Label);
-            new GotoStatement { Label = localLabel }.WriteTo(c);
+            new GotoStatement { Label = this.Label }.WriteTo(c);
 
             c.EndBlock();
 

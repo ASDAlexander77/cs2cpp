@@ -108,6 +108,7 @@
 
         private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)
         {
+            var labels = new List<Label>();
             var usedLabels = new List<Label>();
             var usedSwitchLabels = new List<SwitchLabel>();
 
@@ -116,6 +117,12 @@
                 statement.Visit(
                     (e) =>
                     {
+                        if (e.Kind == Kinds.LabelStatement)
+                        {
+                            var labelStatement = (LabelStatement)e;
+                            labels.Add(labelStatement.Label);
+                        }
+
                         if (e.Kind == Kinds.GotoStatement)
                         {
                             var gotoStatement = (GotoStatement)e;
@@ -125,9 +132,7 @@
                         if (e.Kind == Kinds.ConditionalGoto)
                         {
                             var conditionalGoto = (ConditionalGoto)e;
-                            var label = new Label();
-                            label.Parse(conditionalGoto.Label);
-                            usedLabels.Add(label);
+                            usedLabels.Add(conditionalGoto.Label);
                         }
 
                         if (e.Kind == Kinds.SwitchSection)

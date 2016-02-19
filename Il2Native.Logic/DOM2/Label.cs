@@ -26,7 +26,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan(this.LabelName);
+            c.TextSpan(this.LabelName.CleanUpName());
         }
     }
 }

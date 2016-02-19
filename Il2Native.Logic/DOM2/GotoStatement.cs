@@ -38,6 +38,12 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Label.Visit(visitor);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("goto");
