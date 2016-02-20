@@ -11,7 +11,7 @@ namespace System.Runtime.CompilerServices
     [Serializable]
     public static partial class RuntimeHelpers
     {
-        
+
         public static void InitializeArray(Array array, RuntimeFieldHandle fldHandle)
         {
             // TODO: Not Implemented
@@ -35,7 +35,7 @@ namespace System.Runtime.CompilerServices
          * @param obj The object that is about to be assigned.
          * @return a shallow copy of 'obj' if it is a value class, 'obj' itself otherwise
          */
-        
+
         public static extern Object GetObjectValue(Object obj);
 
         /**
@@ -47,15 +47,13 @@ namespace System.Runtime.CompilerServices
          * This call will generate an exception if the specified class constructor threw an
          * exception when it ran.
          */
-        
+
         public static extern void RunClassConstructor(RuntimeTypeHandle type);
 
-        public static int OffsetToStringData
+        public static extern int OffsetToStringData
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
         }
 
         public static void PrepareConstrainedRegions()

@@ -49,7 +49,6 @@
     <Compile Include="Impl\Globalization\CultureInfo.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\RuntimeTypeHandle.cs" />
-    <Compile Include="Impl\Runtime\CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Impl\Runtime\InteropServices\CriticalHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
@@ -567,6 +566,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ImplPAL\Win32\" />
+    <Folder Include="Impl\Runtime\CompilerServices\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
