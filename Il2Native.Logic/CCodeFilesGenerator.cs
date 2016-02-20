@@ -113,7 +113,7 @@ mingw32-make -j 8 2>log";
 cd __build_win32_debug
 cmake -f .. -G ""Visual Studio 14"" -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" x86
-MSBuild ALL_BUILD.vcxproj /MP /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
+MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))
             {
