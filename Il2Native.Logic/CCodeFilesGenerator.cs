@@ -100,7 +100,7 @@ endif()";
             var buildMinGw32 = @"md __build_mingw32_debug
 cd __build_mingw32_debug
 cmake -f .. -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=Debug -Wno-dev
-mingw32-make -f 12";
+mingw32-make -j 12";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_debug", ".bat"))))
             {
