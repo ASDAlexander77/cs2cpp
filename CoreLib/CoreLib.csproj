@@ -54,7 +54,6 @@
     <Compile Include="Impl\Runtime\InteropServices\DependentHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\GCHandle.cs" />
     <Compile Include="Impl\Runtime\InteropServices\SafeHandle.cs" />
-    <Compile Include="Impl\String.cs" />
     <Compile Include="Impl\Threading\Overlapped.cs" />
     <Compile Include="Impl\Threading\ThreadPool.cs" />
     <Compile Include="Impl\Threading\Timer.cs" />
@@ -129,6 +128,7 @@
     </Compile>
     <Compile Include="System\MissingMethodException.cs" />
     <Compile Include="System\OperatingSystem.cs" />
+    <Compile Include="System\ParamsArray.cs" />
     <Compile Include="System\PlatformID.cs" />
     <Compile Include="System\Reflection\AmbiguousMatchException.cs" />
     <Compile Include="System\Reflection\Associates.cs" />

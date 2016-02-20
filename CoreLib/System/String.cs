@@ -14,6 +14,8 @@ namespace System
     [Serializable]
     public sealed partial class String : IComparable, IEnumerable<char>, IEnumerable
     {
+        public static string Empty = "";
+
         private const int TrimHead = 0;
         private const int TrimTail = 1;
         private const int TrimBoth = 2;
@@ -22,6 +24,25 @@ namespace System
         private char m_firstChar;
 
         internal char FirstChar { get { return m_firstChar; } }
+
+        public int Length
+        {
+            get
+            {
+                return this.m_stringLength;
+            }
+        }
+
+        public unsafe char this[int index]
+        {
+            get
+            {
+                fixed (char* p = &m_firstChar)
+                {
+                    return p[index];
+                }
+            }
+        }
 
         public override int GetHashCode()
         {
@@ -548,40 +569,26 @@ namespace System
             return CreateTrimmedString(start, end);
         }
 
-        public String(char[] value, int startIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public extern String(char[] value, int startIndex, int length);
 
-        public String(char[] value)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public extern String(char[] value);
 
-        public String(char c, int count)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public extern String(char c, int count);
 
-        public unsafe String(char* src, int startIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public unsafe extern String(char* src, int startIndex, int length);
 
-        public unsafe String(sbyte* src)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public unsafe extern String(sbyte* src);
 
-        public unsafe String(sbyte* src, int startIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public unsafe extern String(sbyte* src, int startIndex, int length);
 
-        public unsafe String(sbyte* src, int startIndex, int length, Encoding enc)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public unsafe extern String(sbyte* src, int startIndex, int length, Encoding enc);
 
         public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length, StringComparison stringComparison = StringComparison.Ordinal)
         {
