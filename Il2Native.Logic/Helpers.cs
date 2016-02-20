@@ -359,5 +359,10 @@
 
             return null;
         }
+
+        public static bool IsStaticMethod(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.IsStatic || (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor"));
+        }
     }
 }

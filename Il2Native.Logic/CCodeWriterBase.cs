@@ -616,7 +616,7 @@ namespace Il2Native.Logic
 
             if (declarationWithingClass)
             {
-                if (methodSymbol.IsStatic)
+                if (methodSymbol.IsStaticMethod())
                 {
                     this.TextSpan("static");
                     this.WhiteSpace();

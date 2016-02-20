@@ -132,7 +132,7 @@
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
             }
-            else if (this.Method.IsStatic)
+            else if (this.Method.IsStaticMethod())
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");

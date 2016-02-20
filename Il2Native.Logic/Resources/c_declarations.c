@@ -96,7 +96,7 @@ template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 // String literal
 inline string* operator "" _s(const wchar_t* str, size_t len)
 {
-	return new string((wchar_t*)str, 0, (int32_t)len);
+	return string::CtorCharPtrStartLength((wchar_t*)str, 0, (int32_t)len);
 }
 
 // Finally block
