@@ -176,6 +176,9 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
+            unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
+            unit.Declarations.Add(new CCodeNewPointerOperatorDeclaration((INamedTypeSymbol)type));
+
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));

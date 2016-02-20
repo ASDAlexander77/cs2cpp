@@ -141,13 +141,18 @@
             else
             {
                 var receiverOpt = this.ReceiverOpt;
-                if (!receiverOpt.IsReference && (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
+                if (receiverOpt != null)
                 {
-                    receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
+                    if (!receiverOpt.IsReference &&
+                        (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
+                    {
+                        receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
+                    }
+
+                    receiverOpt = this.PrepareMethodReceiver(receiverOpt);
+                    c.WriteAccess(receiverOpt);
                 }
 
-                receiverOpt = this.PrepareMethodReceiver(receiverOpt);
-                c.WriteAccess(receiverOpt);
                 c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
             }
 

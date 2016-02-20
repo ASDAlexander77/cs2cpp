@@ -138,9 +138,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteName(ISymbol symbol)
+        public void WriteName(ISymbol symbol, bool noCleanup = false)
         {
-            TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName());
+            var name = symbol.MetadataName ?? symbol.Name;
+            TextSpan(noCleanup ? name : name.CleanUpName());
         }
 
         public void WriteNameEnsureCompatible(ISymbol symbol)
@@ -163,7 +164,7 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            if (methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
+            if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
                 TextSpan(methodSymbol.ContainingType.GetTypeFullName());
                 TextSpan("_");
@@ -177,7 +178,8 @@ namespace Il2Native.Logic
             }
             else
             {
-                WriteName(methodSymbolForName ?? methodSymbol);
+                var symbol = methodSymbolForName ?? methodSymbol;
+                WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
                 if (methodSymbol.MetadataName == "op_Explicit")
                 {
                     TextSpan("_");

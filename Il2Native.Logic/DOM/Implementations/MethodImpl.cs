@@ -9,12 +9,12 @@
     {
         public SymbolKind Kind { get; private set; }
         public string Language { get; private set; }
-        public string Name { get; protected set; }
+        public string Name { get; set; }
         public string MetadataName { get; protected set; }
         public ISymbol ContainingSymbol { get; private set; }
         public IAssemblySymbol ContainingAssembly { get; private set; }
         public IModuleSymbol ContainingModule { get; private set; }
-        public INamedTypeSymbol ContainingType { get; protected set; }
+        public INamedTypeSymbol ContainingType { get; set; }
         public INamespaceSymbol ContainingNamespace { get; private set; }
         public bool IsDefinition { get; private set; }
         public bool IsStatic { get; private set; }
@@ -68,7 +68,7 @@
         }
 
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
-        public MethodKind MethodKind { get; protected set; }
+        public MethodKind MethodKind { get; set; }
         public int Arity { get; private set; }
         public bool IsGenericMethod { get; private set; }
         public bool IsExtensionMethod { get; private set; }
@@ -80,7 +80,7 @@
         public ITypeSymbol ReturnType { get; protected set; }
         public ImmutableArray<ITypeSymbol> TypeArguments { get; private set; }
         public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; private set; }
-        public ImmutableArray<IParameterSymbol> Parameters { get; protected set; }
+        public ImmutableArray<IParameterSymbol> Parameters { get; set; }
         public IMethodSymbol ConstructedFrom { get; private set; }
 
         ISymbol ISymbol.OriginalDefinition
