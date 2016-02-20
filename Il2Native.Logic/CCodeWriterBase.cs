@@ -156,6 +156,14 @@ namespace Il2Native.Logic
             TextSpan(uniqueName.CleanUpName());
         }
 
+        public void WriteNameWithContainingSymbolName(ISymbol symbol)
+        {
+            var name = symbol.MetadataName ?? symbol.Name;
+            var leadName = symbol.ContainingSymbol.MetadataName ?? symbol.ContainingSymbol.Name;
+            var uniqueName = string.Concat(leadName, "_", name);
+            TextSpan(uniqueName.CleanUpName());
+        }
+
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod())
@@ -387,9 +395,9 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.TypeParameter:
 
-                    if (type.ContainingType != null && (type.ContainingType.ContainingType != null || type.ContainingSymbol is MethodSymbol))
+                    if (type.ContainingType != null && type.ContainingType.ContainingType != null)
                     {
-                        this.WriteUniqueNameByContainingSymbol(type);
+                        this.WriteNameWithContainingSymbolName(type);
                     }
                     else
                     {
