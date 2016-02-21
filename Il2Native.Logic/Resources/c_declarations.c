@@ -33,10 +33,11 @@ public:
 
 template <typename T, int N> class __array_init : public <<%assemblyName%>>::System::Array
 {
+	int32_t _rank;
 	int32_t _length;
 	T _data[N];
 public:
-    template <typename... Ta> __array_init(Ta... items) : _length(sizeof...(items)), _data{items...} {} 
+    template <typename... Ta> __array_init(Ta... items) : _rank(1), _length(sizeof...(items)), _data{items...} {} 
 };
 
 // Boxing internals

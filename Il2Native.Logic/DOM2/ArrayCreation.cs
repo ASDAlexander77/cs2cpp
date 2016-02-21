@@ -99,9 +99,17 @@
                         c.WhiteSpace();
                     }
 
-                    c.TextSpan("(int32_t)(");
+                    var isStaticWrapperCall = bound.IsStaticWrapperCall();
+                    if (isStaticWrapperCall)
+                    {
+                        c.TextSpan("(int32_t)(");
+                    }
+
                     bound.WriteTo(c);
-                    c.TextSpan(")");
+                    if (isStaticWrapperCall)
+                    {
+                        c.TextSpan(")");
+                    }
 
                     any = true;
                 }
