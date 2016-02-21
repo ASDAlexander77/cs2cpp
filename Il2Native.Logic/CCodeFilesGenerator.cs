@@ -137,6 +137,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                     var path = this.GetPath(unit, out nestedLevel, ".h", root, doNotCreateFolder: true);
                     if (File.Exists(path))
                     {
+                        headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
+
                         // do not overwrite an existing file
                         continue;
                     }
