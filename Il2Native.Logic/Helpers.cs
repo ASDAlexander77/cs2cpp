@@ -1,9 +1,11 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Specialized;
     using System.Linq;
     using System.Text;
     using DOM;
+    using DOM2;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
@@ -363,6 +365,17 @@
         public static bool IsStaticMethod(this IMethodSymbol methodSymbol)
         {
             return methodSymbol.IsStatic || (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor"));
+        }
+
+        public static bool IsStaticWrapperCall(this Expression expression)
+        {
+            var fieldAccess = expression as FieldAccess;
+            return fieldAccess != null && fieldAccess.Field.IsStaticWrapperCall();
+        }
+
+        public static bool IsStaticWrapperCall(this IFieldSymbol fieldSymbol)
+        {
+            return fieldSymbol.IsStatic && fieldSymbol.ContainingType.StaticConstructors.Any();
         }
     }
 }

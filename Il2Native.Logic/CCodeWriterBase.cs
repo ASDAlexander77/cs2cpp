@@ -7,6 +7,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
+    using System.Threading;
     using DOM;
     using DOM2;
 
@@ -478,20 +479,33 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public void WriteFieldDeclaration(IFieldSymbol fieldSymbol)
+        public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
             if (fieldSymbol.IsStatic)
             {
                 TextSpan("static");
                 WhiteSpace();
+                if (!doNotWrapStatic)
+                {
+                    TextSpan("__static<");
+                }
             }
 
             this.WriteType(fieldSymbol.Type);
+
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                TextSpan(",");
+                WhiteSpace();
+                this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                TextSpan(">");
+            }
+
             WhiteSpace();
             WriteName(fieldSymbol);
         }
 
-        public void WriteFieldDefinition(IFieldSymbol fieldSymbol)
+        public void WriteFieldDefinition(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
             if (fieldSymbol.ContainingType.IsGenericType)
             {
@@ -499,7 +513,21 @@ namespace Il2Native.Logic
                 NewLine();
             }
 
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                TextSpan("__static<");
+            }
+
             this.WriteType(fieldSymbol.Type);
+
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                TextSpan(",");
+                WhiteSpace();
+                this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                TextSpan(">");
+            }
+
             WhiteSpace();
 
             if (fieldSymbol.ContainingNamespace != null)
@@ -837,10 +865,14 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (effectiveExpression.Type.TypeKind == TypeKind.Struct || effectiveExpression.Type.TypeKind == TypeKind.Enum)
+            var expressionType = effectiveExpression.Type;
+            if (expressionType.TypeKind == TypeKind.Struct || expressionType.TypeKind == TypeKind.Enum)
             {
-                TextSpan(".");
-                return;
+                if (!effectiveExpression.IsStaticWrapperCall())
+                {
+                    TextSpan(".");
+                    return;
+                }
             }
 
             // default for Templates

@@ -13,10 +13,10 @@
         public ISymbol ContainingSymbol { get; private set; }
         public IAssemblySymbol ContainingAssembly { get; private set; }
         public IModuleSymbol ContainingModule { get; private set; }
-        public INamedTypeSymbol ContainingType { get; private set; }
-        public INamespaceSymbol ContainingNamespace { get; private set; }
+        public INamedTypeSymbol ContainingType { get; set; }
+        public INamespaceSymbol ContainingNamespace { get; set; }
         public bool IsDefinition { get; private set; }
-        public bool IsStatic { get; private set; }
+        public bool IsStatic { get; set; }
         public bool IsVirtual { get; private set; }
         public bool IsOverride { get; private set; }
         public bool IsAbstract { get; private set; }
@@ -37,7 +37,7 @@
         public bool IsConst { get; private set; }
         public bool IsReadOnly { get; private set; }
         public bool IsVolatile { get; private set; }
-        public ITypeSymbol Type { get; private set; }
+        public ITypeSymbol Type { get; set; }
         public bool HasConstantValue { get; private set; }
         public object ConstantValue { get; private set; }
         public ImmutableArray<CustomModifier> CustomModifiers { get; private set; }

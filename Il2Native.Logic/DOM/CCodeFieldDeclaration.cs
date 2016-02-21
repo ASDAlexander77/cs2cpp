@@ -12,9 +12,11 @@
 
         public IFieldSymbol Field { get; set; }
 
+        public bool DoNotWrapStatic { get; set; }
+
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteFieldDeclaration(this.Field);
+            c.WriteFieldDeclaration(this.Field, this.DoNotWrapStatic);
             c.EndStatement();
         }
     }

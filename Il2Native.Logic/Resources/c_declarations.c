@@ -8,14 +8,14 @@ public:
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	__array(size_t length) : _rank(1) { _length = length; }
-	inline const T operator [](size_t index) const { return _data[index]; }
-	inline T& operator [](size_t index) { return _data[index]; }
+	inline const T operator [](int32_t index) const { return _data[index]; }
+	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
 };
 
-template <typename T, size_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
+template <typename T, int32_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
 {
-	size_t _rank;
+	int32_t _rank;
 	int32_t _length;
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
@@ -24,9 +24,9 @@ public:
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
-	inline const T operator [](std::initializer_list<size_t> indexes) const { return _data[0]; }
-	inline T& operator [](std::initializer_list<size_t> indexes) { return _data[0]; }
-	inline operator int32_t() const { return (size_t)_length; }
+	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
+	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
+	inline operator int32_t() const { return _length; }
 };
 
 template <typename T, int N> class __array_init : public <<%assemblyName%>>::System::Array
@@ -106,6 +106,49 @@ public:
 	std::function<void()> _dtor;
 	Finally(std::function<void()> dtor) : _dtor(dtor) {};
 	~Finally() { _dtor(); }
+};
+
+template< typename T >
+class __lazy
+{
+	typedef std::function<T()> initializer;
+
+	T t;
+	initializer _init;
+	bool _created;
+public:
+	__lazy(initializer init)
+	{
+		_created = false;
+		_init = init;
+	}
+
+	inline T& operator=(const T& value)
+	{
+		_created = true;
+		t = value;
+	}
+
+	inline operator T()
+	{
+		if (!_created)
+		{			
+			t = _init();
+			_created = true;
+		}
+
+		return t;
+	}
+
+	inline T operator ->()
+	{
+		if (!_created)
+		{			
+			t = _init();
+		}
+
+		return t;
+	}
 };
 
 // Activator

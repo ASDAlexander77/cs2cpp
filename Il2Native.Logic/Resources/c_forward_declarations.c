@@ -31,3 +31,62 @@ inline void* __new (size_t _size)
     std::memset(mem, 0, _size);
     return mem;
 }
+
+template< typename T, typename C>
+class __static 
+{
+	T t;
+public:
+
+	inline T& operator=(T value)
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+	
+		t = value;
+
+		return *this;
+	}
+
+	inline operator T&()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		return t;
+	}
+
+	inline T& operator ->()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		return t;
+	}
+
+	inline T* operator &()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		return &t;
+	}
+
+	template <typename D, class = typename std::enable_if<std::is_enum<T>::value>> inline explicit operator D()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		return (D)t;
+	}
+};

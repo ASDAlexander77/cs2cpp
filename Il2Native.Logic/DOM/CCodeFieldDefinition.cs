@@ -12,6 +12,8 @@
 
         public IFieldSymbol Field { get; set; }
 
+        public bool DoNotWrapStatic { get; set; }
+
         public override bool IsGeneric
         {
             get { return this.Field.ContainingType.IsGenericType; }
@@ -19,7 +21,7 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteFieldDefinition(this.Field);
+            c.WriteFieldDefinition(this.Field, this.DoNotWrapStatic);
             c.EndStatement();
         }
     }

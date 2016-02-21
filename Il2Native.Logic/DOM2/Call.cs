@@ -59,15 +59,21 @@
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, hasParameter ? paramEnum.Current.Type : null).WriteTo(c);
+                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null).WriteTo(c);
                 anyArgs = true;
             }
 
             c.TextSpan(")");
         }
 
-        private static Expression PreprocessParameter(Expression expression, ITypeSymbol parameterType)
+        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter)
         {
+            if (parameter == null)
+            {
+                return expression;
+            }
+
+            var parameterType = parameter.Type;
             if (parameterType == null)
             {
                 return expression;
@@ -84,7 +90,7 @@
                     effectiveExpression = new Conversion
                     {
                         Type = typeDestination,
-                        Operand = expression
+                        Operand = effectiveExpression
                     };
                 }
             }
@@ -92,6 +98,18 @@
             if (typeDestination.IsValueType && expression is ThisReference)
             {
                 effectiveExpression = new PointerIndirectionOperator { Operand = expression };
+            }
+
+            if (expression.IsStaticWrapperCall())
+            {
+                effectiveExpression = new Cast
+                {
+                    Type = typeDestination,
+                    Operand = effectiveExpression,
+                    Reference = parameter.RefKind.HasFlag(RefKind.Ref),
+                    CCast = true,
+                    UseEnumUnderlyingType = true,
+                };
             }
 
             return effectiveExpression;

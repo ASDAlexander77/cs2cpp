@@ -158,12 +158,30 @@ namespace Il2Native.Logic
         {
             var unit = new CCodeUnit(type);
 
+            var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
+            var hasStaticConstructor = methodSymbols.Any(m => m.MethodKind == MethodKind.StaticConstructor);
+
             foreach (var field in type.GetMembers().OfType<IFieldSymbol>())
             {
-                this.BuildField(field, unit);
+                this.BuildField(field, unit, hasStaticConstructor);
             }
 
-            var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
+            if (hasStaticConstructor)
+            {
+                // add call flag for static constructor
+                var cctorCalledField = new FieldImpl
+                {
+                    Name = "_cctor_called",
+                    Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
+                    ContainingType = (INamedTypeSymbol) type,
+                    ContainingNamespace = type.ContainingNamespace,
+                    IsStatic = true
+                };
+
+                unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
+                unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
+            }
+
             var constructors = methodSymbols.Where(m => m.MethodKind == MethodKind.Constructor);
             foreach (var method in constructors)
             {
@@ -227,17 +245,17 @@ namespace Il2Native.Logic
             return unit;
         }
 
-        private void BuildField(IFieldSymbol field, CCodeUnit unit)
+        private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
         {
             if (field.IsConst && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
             {
                 return;
             }
 
-            unit.Declarations.Add(new CCodeFieldDeclaration(field));
+            unit.Declarations.Add(new CCodeFieldDeclaration(field) { DoNotWrapStatic = !hasStaticConstructor });
             if (field.IsStatic)
             {
-                unit.Definitions.Add(new CCodeFieldDefinition(field));
+                unit.Definitions.Add(new CCodeFieldDefinition(field) { DoNotWrapStatic = !hasStaticConstructor });
             }
         }
 

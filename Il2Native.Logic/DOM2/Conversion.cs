@@ -43,17 +43,29 @@
                 c.TextSpan("(");
             }
 
+            var effectiveExpression = this.Operand;
+            if (this.ConversionKind == ConversionKind.Boxing && this.Operand.IsStaticWrapperCall())
+            {
+                effectiveExpression = new Cast
+                {
+                    Type = this.TypeSource,
+                    Operand = effectiveExpression,
+                    CCast = true,
+                    UseEnumUnderlyingType = true,
+                };
+            }
+
             bool parenthesis = false;
             if (this.WriteCast(c, out parenthesis))
             {
                 if (parenthesis)
                 {
-                    c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+                    c.WriteExpressionInParenthesesIfNeeded(effectiveExpression);
                 }
                 else
                 {
                     c.TextSpan("(");
-                    this.Operand.WriteTo(c);
+                    effectiveExpression.WriteTo(c);
                     c.TextSpan(")");
                 }
             }
