@@ -24,3 +24,10 @@ public:
 template <typename T> struct __unbound_generic_type
 {
 };
+
+inline void* __new (size_t _size)
+{
+    auto mem = ::operator new(_size);
+    std::memset(mem, 0, _size);
+    return mem;
+}

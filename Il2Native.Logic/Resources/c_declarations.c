@@ -121,10 +121,3 @@ T __create_instance()
 {
 	return T();
 }
-
-////template <typename T>
-////T <<%assemblyName%>>::System::Activator::CreateInstance()
-////{
-////	return __create_instance<T>();
-////}
-

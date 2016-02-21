@@ -12,10 +12,13 @@
         {
             var parameterSymbol = new ParameterImpl { Name = "_size" };
             var parameter = new Parameter { ParameterSymbol = parameterSymbol };
-            var methodSymbol = new MethodImpl { Name = "::operator new", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
+            var methodSymbol = new MethodImpl { Name = "__new", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
             MethodBodyOpt = new MethodBody(Method)
             {
-                Statements = { new ReturnStatement { ExpressionOpt = new Call { Method = methodSymbol, Arguments = { parameter } } } }
+                Statements =
+                {
+                    new ReturnStatement { ExpressionOpt = new Call { Method = methodSymbol, Arguments = { parameter } } }
+                }
             };
         }
 
