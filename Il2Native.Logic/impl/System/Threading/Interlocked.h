@@ -3,7 +3,7 @@
 template <typename T> 
 T CoreLib::System::Threading::Interlocked::Exchange_Ref(T& location1, T value)
 {
-    throw 3221274624U;
+    throw 0xC000C000;
 }
 
 // Method : System.Threading.Interlocked.CompareExchange<T>(ref T, T, T)
