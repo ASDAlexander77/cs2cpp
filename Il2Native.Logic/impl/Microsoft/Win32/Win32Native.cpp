@@ -1,4 +1,5 @@
 #include "CoreLib.h"
+#include <unistd.h>
 
 // Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 bool CoreLib::Microsoft::Win32::Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
@@ -27,7 +28,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 // Method : Microsoft.Win32.Win32Native.GetStdHandle(int)
 CoreLib::System::IntPtr CoreLib::Microsoft::Win32::Win32Native::GetStdHandle(int32_t nStdHandle)
 {
-    throw 3221274624U;
+    return CoreLib::System::IntPtr(nStdHandle);
 }
 
 // Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
@@ -45,7 +46,17 @@ bool CoreLib::Microsoft::Win32::Win32Native::CloseHandle(CoreLib::System::IntPtr
 // Method : Microsoft.Win32.Win32Native.GetFileType(Microsoft.Win32.SafeHandles.SafeFileHandle)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle)
 {
-    throw 3221274624U;
+    const int FILE_TYPE_DISK = 0x0001;
+    const int FILE_TYPE_CHAR = 0x0002;
+    const int FILE_TYPE_PIPE = 0x0003;    
+    
+    auto stdId = handle->DangerousGetHandle()->ToInt32();
+    if (stdId == -11 || stdId == -12)
+    {
+        return FILE_TYPE_CHAR;
+    }
+
+    return FILE_TYPE_DISK;
 }
 
 // Method : Microsoft.Win32.Win32Native.GetFileSize(Microsoft.Win32.SafeHandles.SafeFileHandle, out int)
@@ -63,7 +74,29 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft:
 // Method : Microsoft.Win32.Win32Native.WriteFile(Microsoft.Win32.SafeHandles.SafeFileHandle, byte*, int, out int, System.IntPtr)
 int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToWrite, int32_t& numBytesWritten, CoreLib::System::IntPtr mustBeZero)
 {
-    throw 3221274624U;
+    auto fd = handle->DangerousGetHandle()->ToInt32();
+    if (fd == -11)
+    {
+        numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
+        return numBytesWritten < numBytesToWrite ? 0 : 1;
+    }
+    else if (fd == -12)
+    {
+        numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
+        return numBytesWritten < numBytesToWrite ? 0 : 1;
+    }
+    else
+    {
+        auto r = write(fd, bytes, numBytesToWrite);
+        if (r != -1)
+        {
+            numBytesWritten = r;
+            return 1;
+        }
+    }
+
+    numBytesWritten = 0;
+    return 0;
 }
 
 // Method : Microsoft.Win32.Win32Native.GetFileAttributesEx(string, int, ref Microsoft.Win32.Win32Native.WIN32_FILE_ATTRIBUTE_DATA)
