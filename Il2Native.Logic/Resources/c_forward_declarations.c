@@ -80,7 +80,7 @@ public:
 		return &t;
 	}
 
-	template <typename D, class = typename std::enable_if<std::is_enum<T>::value>> inline explicit operator D()
+	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
 	{
 		if (!C::_cctor_called)
 		{

@@ -9,7 +9,14 @@ void CoreLib::System::Buffer::BlockCopy(CoreLib::System::Array* src, int32_t src
 // Method : System.Buffer.InternalBlockCopy(System.Array, int, System.Array, int, int)
 void CoreLib::System::Buffer::InternalBlockCopy(CoreLib::System::Array* src, int32_t srcOffsetBytes, CoreLib::System::Array* dst, int32_t dstOffsetBytes, int32_t byteCount)
 {
-    throw 3221274624U;
+	if (byteCount <= 0)
+	{
+		return;
+	}
+
+	auto pSrc = &((__array<int8_t>*)src)->_data;
+	auto pDest = &((__array<int8_t>*)dst)->_data;
+	std::memcpy(pDest + dstOffsetBytes, pSrc + srcOffsetBytes, byteCount);
 }
 
 // Method : System.Buffer.IsPrimitiveTypeArray(System.Array)

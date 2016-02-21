@@ -49,63 +49,78 @@
             this.SanitizeCaseLabelsAndSetReturnTypes(statements);
 
             var skip = 0;
-            if (MethodSymbol.MethodKind == MethodKind.Constructor)
+            if (this.MethodSymbol.MethodKind == MethodKind.Constructor)
             {
-                // call constructors
-                var constructorsOrAssignments = statements.TakeWhile(IsConstructorCallOrAssignment).Select(GetCallOrAssignment).ToArray();
-                if (constructorsOrAssignments.Length > 0)
-                {
-                    c.WhiteSpace();
-                    c.TextSpan(":");
-                    c.WhiteSpace();
-
-                    var any = false;
-                    foreach (var constructorAsAssignment in constructorsOrAssignments)
-                    {
-                        skip++;
-
-                        if (any)
-                        {
-                            c.TextSpan(",");
-                            c.WhiteSpace();
-                        }
-
-                        if (constructorAsAssignment.Kind == Kinds.Call)
-                        {
-                            constructorAsAssignment.WriteTo(c);
-                            break;
-                        }
-                        else if (constructorAsAssignment.Kind == Kinds.AssignmentOperator)
-                        {
-                            // convert
-                            var assignmentOperator = constructorAsAssignment as AssignmentOperator;
-                            var fieldAccess = assignmentOperator.Left as FieldAccess;
-                            if (fieldAccess != null && fieldAccess.ReceiverOpt.Kind == Kinds.ThisReference)
-                            {
-                                c.WriteName(fieldAccess.Field);
-                                c.TextSpan("(");
-                                assignmentOperator.Right.WriteTo(c);
-                                c.TextSpan(")");
-                            }
-                        }
-                        else
-                        {
-                            Debug.Assert(false);
-                        }
-
-                        any = true;
-                    }
-                }
-            }
+                skip = ConstructorInitializer(c, statements);
+            }            
 
             c.NewLine();
             c.OpenBlock();
+
+            if (this.MethodSymbol.MethodKind == MethodKind.StaticConstructor)
+            {
+                c.TextSpanNewLine("_cctor_called = true;");
+            }
+
             foreach (var statement in statements.Skip(skip))
             {
                 statement.WriteTo(c);
             }
 
             c.EndBlock();
+        }
+
+        private static int ConstructorInitializer(CCodeWriterBase c, IList<Statement> statements)
+        {
+            int skip = 0;
+// call constructors
+            var constructorsOrAssignments =
+                statements.TakeWhile(IsConstructorCallOrAssignment).Select(GetCallOrAssignment).ToArray();
+            if (constructorsOrAssignments.Length > 0)
+            {
+                c.WhiteSpace();
+                c.TextSpan(":");
+                c.WhiteSpace();
+
+                var any = false;
+                foreach (var constructorAsAssignment in constructorsOrAssignments)
+                {
+                    skip++;
+
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
+
+                    if (constructorAsAssignment.Kind == Kinds.Call)
+                    {
+                        constructorAsAssignment.WriteTo(c);
+                        break;
+                    }
+                    else if (constructorAsAssignment.Kind == Kinds.AssignmentOperator)
+                    {
+                        // convert
+                        var assignmentOperator = constructorAsAssignment as AssignmentOperator;
+                        var fieldAccess = assignmentOperator.Left as FieldAccess;
+                        if (fieldAccess != null && fieldAccess.ReceiverOpt.Kind == Kinds.ThisReference)
+                        {
+                            c.WriteName(fieldAccess.Field);
+                            c.TextSpan("(");
+                            assignmentOperator.Right.WriteTo(c);
+                            c.TextSpan(")");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(false);
+                    }
+
+                    any = true;
+                }
+            }
+
+            return skip;
         }
 
         private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)

@@ -49,7 +49,7 @@
                 this.InitializerOpt.Visit(visitor);
             }
 
-            foreach (var bound in Bounds)
+            foreach (var bound in this.Bounds)
             {
                 bound.Visit(visitor);
             }
@@ -99,7 +99,9 @@
                         c.WhiteSpace();
                     }
 
+                    c.TextSpan("(int32_t)(");
                     bound.WriteTo(c);
+                    c.TextSpan(")");
 
                     any = true;
                 }

@@ -1,13 +1,15 @@
 // Arrays internals
 template <typename T> class __array : public <<%assemblyName%>>::System::Array
 {
+public:
 	int32_t _rank;
 	int32_t _length;
 	T _data[0];
-public:
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
-	__array(size_t length) : _rank(1) { _length = length; }
+	__array(int32_t length) : _rank(1) { _length = length; }
+	__array(const __array<T>&) = delete;
+	__array(__array<T>&&) = delete;
 	inline const T operator [](int32_t index) const { return _data[index]; }
 	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
@@ -15,12 +17,12 @@ public:
 
 template <typename T, int32_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
 {
+public:
 	int32_t _rank;
 	int32_t _length;
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
 	T _data[0];
-public:
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
@@ -94,10 +96,7 @@ template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
 }
 
 // String literal
-inline string* operator "" _s(const wchar_t* str, size_t len)
-{
-	return string::CtorCharPtrStartLength((wchar_t*)str, 0, (int32_t)len);
-}
+string* operator "" _s(const wchar_t* ptr, size_t length);
 
 // Finally block
 class Finally
