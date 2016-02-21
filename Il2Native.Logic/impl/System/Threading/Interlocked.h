@@ -10,5 +10,6 @@ T CoreLib::System::Threading::Interlocked::Exchange_Ref(T& location1, T value)
 template <typename T> 
 T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparand)
 {
-    return __sync_val_compare_and_swap(&location1, value, comparand);
+    return value;
+    ////return __sync_val_compare_and_swap(&location1, value, comparand);
 }
