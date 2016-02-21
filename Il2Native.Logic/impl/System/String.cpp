@@ -49,7 +49,7 @@ string* CoreLib::System::String::FastAllocateString(int32_t length)
     auto mem = ::operator new (size);
 	std::memset(mem, 0, size);
     new (mem) string;
-    auto str = static_cast<string*>(mem);
+    auto str = reinterpret_cast<string*>(mem);
     str->m_stringLength = length;
     return str;
 }
