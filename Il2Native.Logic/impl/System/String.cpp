@@ -45,7 +45,7 @@ CoreLib::System::String::String(int8_t* src, int32_t startIndex, int32_t length,
 // Method : string.FastAllocateString(int)
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {
-	auto size = sizeof(string) + size * sizeof(wchar_t);
+	auto size = sizeof(string) + length * sizeof(wchar_t);
     auto mem = ::operator new (size);
 	std::memset(mem, 0, size);
     new (mem) string;
