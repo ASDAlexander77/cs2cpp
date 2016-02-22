@@ -13,6 +13,15 @@ public:
 	inline const T operator [](int32_t index) const { return _data[index]; }
 	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
+
+	static __array<T>* Allocate(int32_t length)
+	{
+		auto size = sizeof(__array<T>*) + length * sizeof(T);
+		auto mem = ::operator new (size);
+		std::memset(mem, 0, size);
+		new (mem) __array<T>(length);
+		return reinterpret_cast<__array<T>*>(mem);
+	}
 };
 
 template <typename T, int32_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
