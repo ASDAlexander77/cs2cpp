@@ -191,7 +191,7 @@ namespace Il2Native.Logic
                 if (symbol.MethodKind == MethodKind.ExplicitInterfaceImplementation)
                 {
                     var first = symbol.ExplicitInterfaceImplementations.First();
-                    this.WriteTypeFullName(first.ContainingType, false);
+                    this.TextSpan(first.ContainingType.GetTypeFullName());
                     var name = symbol.MetadataName.Substring(first.ContainingType.ToString().Length);
                     this.TextSpan(name.CleanUpName());
                 }
