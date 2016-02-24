@@ -194,7 +194,7 @@ namespace Il2Native.Logic
             if (explicitInterfaceImplementation != null)
             {
                 this.TextSpan(explicitInterfaceImplementation.ContainingType.GetTypeFullName());
-                var explTypeName = explicitInterfaceImplementation.ContainingType.ToString();
+                var explTypeName = explicitInterfaceImplementation.ContainingType.ToString().Replace(" ", string.Empty);
                 if (symbol.MetadataName.StartsWith(explTypeName))
                 {
                     var name = symbol.MetadataName.Substring(explTypeName.Length);
