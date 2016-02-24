@@ -72,13 +72,18 @@ template <typename D, typename S> inline D interface_cast(S v)
 	return (D) nullptr;
 }
 
-// interface cast internals
+// cast internals
 template <typename D, typename S> inline D as(S v)
 {
 	return (D) nullptr;
 }
 
-// interface cast internals
+// cast internals
+template <typename D, typename S, class = typename std::enable_if<std::is_enum<D>::value || std::is_integral<D>::value> > inline bool is(S v)
+{
+	return false;
+}
+
 template <typename D, typename S> inline bool is(S v)
 {
 	return as<D>(v) != nullptr;
