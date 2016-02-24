@@ -194,7 +194,7 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.BaseType == null && type.Name != "<Module>")
+            if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
                 unit.Declarations.Add(new CCodeNewPointerOperatorDeclaration((INamedTypeSymbol)type));

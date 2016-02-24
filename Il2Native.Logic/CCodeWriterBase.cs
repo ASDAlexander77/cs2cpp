@@ -185,31 +185,40 @@ namespace Il2Native.Logic
                 WriteTypeName((INamedTypeSymbol)methodSymbol.ReceiverType, false);
                 return;
             }
-            else
+
+            var symbol = methodSymbolForName ?? methodSymbol;
+            var explicitInterfaceImplementation = 
+                symbol.ExplicitInterfaceImplementations != null 
+                    ? symbol.ExplicitInterfaceImplementations.FirstOrDefault() 
+                    : null;
+            if (explicitInterfaceImplementation != null)
             {
-                var symbol = methodSymbolForName ?? methodSymbol;
-                if (symbol.MethodKind == MethodKind.ExplicitInterfaceImplementation)
+                this.TextSpan(explicitInterfaceImplementation.ContainingType.GetTypeFullName());
+                var explTypeName = explicitInterfaceImplementation.ContainingType.ToString();
+                if (symbol.MetadataName.StartsWith(explTypeName))
                 {
-                    var first = symbol.ExplicitInterfaceImplementations.First();
-                    this.TextSpan(first.ContainingType.GetTypeFullName());
-                    var name = symbol.MetadataName.Substring(first.ContainingType.ToString().Length);
+                    var name = symbol.MetadataName.Substring(explTypeName.Length);
                     this.TextSpan(name.CleanUpName());
                 }
                 else
                 {
                     WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
                 }
+            }
+            else
+            {
+                WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+            }
 
-                if (methodSymbol.MetadataName == "op_Explicit")
-                {
-                    TextSpan("_");
-                    WriteTypeSuffix(methodSymbol.ReturnType);
-                }
-                else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
-                {
-                    TextSpan("_");
-                    WriteTypeSuffix(methodSymbol.ReturnType);
-                }
+            if (methodSymbol.MetadataName == "op_Explicit")
+            {
+                TextSpan("_");
+                WriteTypeSuffix(methodSymbol.ReturnType);
+            }
+            else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
+            {
+                TextSpan("_");
+                WriteTypeSuffix(methodSymbol.ReturnType);
             }
 
             // write suffixes for ref & out parameters
