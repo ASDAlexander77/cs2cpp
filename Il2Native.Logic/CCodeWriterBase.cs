@@ -188,7 +188,18 @@ namespace Il2Native.Logic
             else
             {
                 var symbol = methodSymbolForName ?? methodSymbol;
-                WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                if (symbol.MethodKind == MethodKind.ExplicitInterfaceImplementation)
+                {
+                    var first = symbol.ExplicitInterfaceImplementations.First();
+                    this.WriteTypeName(first.ContainingType, false);
+                    var name = symbol.MetadataName.Substring(first.ContainingType.ToString().Length);
+                    this.TextSpan(name.CleanUpName());
+                }
+                else
+                {
+                    WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                }
+
                 if (methodSymbol.MetadataName == "op_Explicit")
                 {
                     TextSpan("_");

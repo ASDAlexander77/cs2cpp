@@ -169,7 +169,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                     {
                         continue;
                     }
-                    
+
                     using (var textFile = new StreamWriter(path))
                     {
                         textFile.Write(newText);
@@ -200,7 +200,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                 {
                     this.WriteSource(identity, unit);
                     this.WriteSource(identity, unit, true);
-                }                 
+                }
             }
         }
 
@@ -457,42 +457,39 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                 c.WriteTypeFullName(namedTypeSymbol.BaseType);
             }
 
-            if (namedTypeSymbol.TypeKind == TypeKind.Interface)
+            if (namedTypeSymbol.Interfaces.Any())
             {
-                if (namedTypeSymbol.Interfaces.Any())
+                if (namedTypeSymbol.BaseType == null)
                 {
-                    if (namedTypeSymbol.BaseType == null)
-                    {
-                        itw.Write(" : ");
-                    }
-                    else
+                    itw.Write(" : ");
+                }
+                else
+                {
+                    itw.Write(", ");
+                }
+
+                var any2 = false;
+                foreach (var item in namedTypeSymbol.Interfaces)
+                {
+                    if (any2)
                     {
                         itw.Write(", ");
                     }
 
-                    var any2 = false;
-                    foreach (var item in namedTypeSymbol.Interfaces)
-                    {
-                        if (any2)
-                        {
-                            itw.Write(", ");
-                        }
+                    itw.Write("public virtual ");
+                    c.WriteTypeFullName(item, false);
 
-                        itw.Write("public virtual ");
-                        c.WriteTypeFullName(item, false);
-
-                        any2 = true;
-                    }
+                    any2 = true;
                 }
-                else if (namedTypeSymbol.TypeKind == TypeKind.Interface)
+            }
+            else if (namedTypeSymbol.TypeKind == TypeKind.Interface)
+            {
+                if (namedTypeSymbol.BaseType == null)
                 {
-                    if (namedTypeSymbol.BaseType == null)
-                    {
-                        itw.Write(" : ");
-                    }
-
-                    itw.Write("public virtual object");
+                    itw.Write(" : ");
                 }
+
+                itw.Write("public virtual object");
             }
 
             itw.WriteLine();
