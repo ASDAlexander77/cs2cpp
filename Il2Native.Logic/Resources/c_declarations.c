@@ -16,9 +16,7 @@ public:
 
 	static __array<T>* Allocate(int32_t length)
 	{
-		auto size = sizeof(__array<T>*) + length * sizeof(T);
-		auto mem = ::operator new (size);
-		std::memset(mem, 0, size);
+		auto mem = __new(sizeof(__array<T>) + length * sizeof(T));
 		new (mem) __array<T>(length);
 		return reinterpret_cast<__array<T>*>(mem);
 	}

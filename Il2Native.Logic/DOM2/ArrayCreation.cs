@@ -67,13 +67,12 @@
                 c.TextSpan(">(");
             }
 
-            c.TextSpan("new");
-            c.WhiteSpace();
-
             var initItems = IterateInitializers(arrayInitialization).ToList();
 
             if (arrayInitialization != null)
             {
+                c.TextSpan("new");
+                c.WhiteSpace();
                 c.TextSpan("__array_init<");
                 c.WriteType(elementType);
                 c.TextSpan(",");
@@ -84,6 +83,7 @@
             else
             {
                 c.WriteCArrayTemplate(arrayTypeSymbol, false);
+                c.TextSpan("::Allocate");
             }
 
             c.TextSpan("(");

@@ -305,75 +305,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                 // write forward declaration
                 foreach (var unit in units)
                 {
-                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Write("namespace ");
-                        c.WriteNamespaceName(namespaceNode);
-                        itw.Write(" { ");
-                    }
-
-                    if (namedTypeSymbol.IsGenericType)
-                    {
-                        c.WriteTemplateDeclaration(namedTypeSymbol);
-                    }
-
-                    itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
-                    itw.Write(" ");
-                    c.WriteTypeName(namedTypeSymbol, false);
-                    itw.Write("; ");
-
-                    if (namedTypeSymbol.TypeKind == TypeKind.Enum)
-                    {
-                        itw.WriteLine();
-                        itw.Write("enum class ");
-                        c.WriteTypeName(namedTypeSymbol, false, true);
-                        itw.Write(" : ");
-                        c.WriteType(namedTypeSymbol.EnumUnderlyingType);
-
-                        c.NewLine();
-                        c.OpenBlock();
-
-                        var any = false;
-                        foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
-                        {
-                            if (any)
-                            {
-                                c.TextSpan(",");
-                                c.WhiteSpace();
-                            }
-
-                            c.TextSpan("c_");
-                            c.WriteName(constValue);
-                            if (constValue.ConstantValue != null)
-                            {
-                                c.TextSpan(" = ");
-                                c.TextSpan(constValue.ConstantValue.ToString());
-                            }
-
-                            any = true;
-                        }
-
-                        c.EndBlockWithoutNewLine();
-                        c.EndStatement();
-                    }
-
-                    foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
-                    {
-                        itw.Write("}");
-                    }
-
-                    itw.WriteLine();
-
-                    if (namedTypeSymbol.SpecialType == SpecialType.System_Object ||
-                        namedTypeSymbol.SpecialType == SpecialType.System_String)
-                    {
-                        itw.Write("typedef ");
-                        c.WriteType(namedTypeSymbol, suppressReference: true, allowKeywords: false);
-                        itw.Write(" ");
-                        c.WriteTypeName(namedTypeSymbol);
-                        itw.WriteLine(";");
-                    }
+                    WriteForwardDeclarationForUnit(unit, itw, c);
                 }
 
                 itw.WriteLine();
@@ -421,6 +353,78 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
             }
         }
 
+        private static void WriteForwardDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
+        {
+            var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+            {
+                itw.Write("namespace ");
+                c.WriteNamespaceName(namespaceNode);
+                itw.Write(" { ");
+            }
+
+            if (namedTypeSymbol.IsGenericType)
+            {
+                c.WriteTemplateDeclaration(namedTypeSymbol);
+            }
+
+            itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
+            itw.Write(" ");
+            c.WriteTypeName(namedTypeSymbol, false);
+            itw.Write("; ");
+
+            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+            {
+                itw.WriteLine();
+                itw.Write("enum class ");
+                c.WriteTypeName(namedTypeSymbol, false, true);
+                itw.Write(" : ");
+                c.WriteType(namedTypeSymbol.EnumUnderlyingType);
+
+                c.NewLine();
+                c.OpenBlock();
+
+                var any = false;
+                foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
+                {
+                    if (any)
+                    {
+                        c.TextSpan(",");
+                        c.WhiteSpace();
+                    }
+
+                    c.TextSpan("c_");
+                    c.WriteName(constValue);
+                    if (constValue.ConstantValue != null)
+                    {
+                        c.TextSpan(" = ");
+                        c.TextSpan(constValue.ConstantValue.ToString());
+                    }
+
+                    any = true;
+                }
+
+                c.EndBlockWithoutNewLine();
+                c.EndStatement();
+            }
+
+            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+            {
+                itw.Write("}");
+            }
+
+            itw.WriteLine();
+
+            if (namedTypeSymbol.SpecialType == SpecialType.System_Object || namedTypeSymbol.SpecialType == SpecialType.System_String)
+            {
+                itw.Write("typedef ");
+                c.WriteType(namedTypeSymbol, suppressReference: true, allowKeywords: false);
+                itw.Write(" ");
+                c.WriteTypeName(namedTypeSymbol);
+                itw.WriteLine(";");
+            }
+        }
+
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
             var any = false;
@@ -449,16 +453,23 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
             c.WriteTypeName(namedTypeSymbol, false);
             if (namedTypeSymbol.BaseType != null)
             {
-                itw.Write(" : public ");
-                c.WriteTypeFullName(namedTypeSymbol.BaseType, false);
+                itw.Write(" : public virtual ");
+                c.WriteTypeFullName(namedTypeSymbol.BaseType);
             }
 
             if (namedTypeSymbol.TypeKind == TypeKind.Interface)
             {
-                itw.Write(" : ");
-
                 if (namedTypeSymbol.Interfaces.Any())
                 {
+                    if (namedTypeSymbol.BaseType == null)
+                    {
+                        itw.Write(" : ");
+                    }
+                    else
+                    {
+                        itw.Write(", ");
+                    }
+
                     var any2 = false;
                     foreach (var item in namedTypeSymbol.Interfaces)
                     {
@@ -473,8 +484,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                         any2 = true;
                     }
                 }
-                else
+                else if (namedTypeSymbol.TypeKind == TypeKind.Interface)
                 {
+                    if (namedTypeSymbol.BaseType == null)
+                    {
+                        itw.Write(" : ");
+                    }
+
                     itw.Write("public virtual object");
                 }
             }
