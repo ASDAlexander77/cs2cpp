@@ -99,7 +99,7 @@ template <typename T> struct is_struct_type : std::integral_constant<bool, std::
 {
 };
 
-template <typename T> struct is_value_type : std::integral_constant<bool, std::is_struct_type<T>::value || std::is_primitive_type<T>::value>
+template <typename T> struct is_value_type : std::integral_constant<bool, is_struct_type<T>::value || is_primitive_type<T>::value>
 {
 };
 
