@@ -1,7 +1,6 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Diagnostics;
     using System.Text;
 
     using Microsoft.CodeAnalysis;
@@ -105,40 +104,136 @@
                     c.TextSpan("nullptr");
                     break;
                 case ConstantValueTypeDiscriminator.SByte:
-                    c.TextSpan("(int8_t)");
-                    c.TextSpan(this.Value.SByteValue.ToString());
+                    if (sbyte.MaxValue == this.Value.SByteValue)
+                    {
+                        c.TextSpan("std::numeric_limits<int8_t>::max()");
+                    }
+                    else if (sbyte.MinValue == this.Value.SByteValue)
+                    {
+                        c.TextSpan("std::numeric_limits<int8_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(int8_t)");
+                        c.TextSpan(this.Value.SByteValue.ToString());
+                    }
+                    
                     break;
                 case ConstantValueTypeDiscriminator.Byte:
-                    c.TextSpan("(uint8_t)");
-                    c.TextSpan(this.Value.ByteValue.ToString());
+                    if (byte.MaxValue == this.Value.ByteValue)
+                    {
+                        c.TextSpan("std::numeric_limits<uint8_t>::max()");
+                    }
+                    else if (byte.MinValue == this.Value.ByteValue)
+                    {
+                        c.TextSpan("std::numeric_limits<uint8_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(uint8_t)");
+                        c.TextSpan(this.Value.ByteValue.ToString());
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.Int16:
-                    c.TextSpan("(int16_t)");
-                    c.TextSpan(this.Value.Int16Value.ToString());
+                    if (short.MaxValue == this.Value.Int16Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int16_t>::max()");
+                    }
+                    else if (short.MinValue == this.Value.Int16Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int16_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(int16_t)");
+                        c.TextSpan(this.Value.Int16Value.ToString());
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.UInt16:
-                    c.TextSpan("(uint16_t)");
-                    c.TextSpan(this.Value.UInt16Value.ToString());
+                    if (ushort.MaxValue == this.Value.UInt16Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint16_t>::max()");
+                    }
+                    else if (ushort.MinValue == this.Value.UInt16Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint16_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(uint16_t)");
+                        c.TextSpan(this.Value.UInt16Value.ToString());
+                    }
                     break;
                 case ConstantValueTypeDiscriminator.Char:
                     c.TextSpan(string.Format("L'{0}'", UnicodeChar(this.Value.CharValue)));
                     break;
                 case ConstantValueTypeDiscriminator.Int32:
-                    c.TextSpan(this.Value.Int32Value.ToString());
+                    if (int.MaxValue == this.Value.Int32Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int32_t>::max()");
+                    }
+                    else if (int.MinValue == this.Value.Int32Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int32_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan(this.Value.Int32Value.ToString());
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.UInt32:
-                    c.TextSpan(this.Value.UInt32Value.ToString());
-                    c.TextSpan("U");
+                    if (uint.MaxValue == this.Value.UInt32Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint32_t>::max()");
+                    }
+                    else if (uint.MinValue == this.Value.UInt32Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint32_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan(this.Value.UInt32Value.ToString());
+                        c.TextSpan("U");
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.Int64:
-                    c.TextSpan("(int64_t)");
-                    c.TextSpan(this.Value.Int64Value.ToString());
-                    c.TextSpan("LL");
+                    if (long.MaxValue == this.Value.Int64Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int64_t>::max()");
+                    }
+                    else if (long.MinValue == this.Value.Int64Value)
+                    {
+                        c.TextSpan("std::numeric_limits<int64_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(int64_t)");
+                        c.TextSpan(this.Value.Int64Value.ToString());
+                        c.TextSpan("LL");
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.UInt64:
-                    c.TextSpan("(uint64_t)");
-                    c.TextSpan(this.Value.UInt64Value.ToString());
-                    c.TextSpan("ULL");
+
+                    if (ulong.MaxValue == this.Value.UInt64Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint64_t>::max()");
+                    }
+                    else if (ulong.MinValue == this.Value.UInt64Value)
+                    {
+                        c.TextSpan("std::numeric_limits<uint64_t>::min()");
+                    }
+                    else
+                    {
+                        c.TextSpan("(uint64_t)");
+                        c.TextSpan(this.Value.UInt64Value.ToString());
+                        c.TextSpan("ULL");
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.Single:
                     if (float.IsPositiveInfinity(this.Value.SingleValue))

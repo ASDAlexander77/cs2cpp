@@ -4,7 +4,7 @@ template <typename T> class __array : public CoreLib::System::Array
 public:
 	int32_t _rank;
 	int32_t _length;
-	T _data[0];
+	T _data[1];
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	__array(int32_t length) : _rank(1) { _length = length; }
@@ -16,7 +16,7 @@ public:
 
 	static __array<T>* Allocate(int32_t length)
 	{
-		auto mem = __new(sizeof(__array<T>) + length * sizeof(T));
+		auto mem = __new(sizeof(__array<T>) + (length - 1) * sizeof(T));
 		new (mem) __array<T>(length);
 		return reinterpret_cast<__array<T>*>(mem);
 	}
@@ -29,7 +29,7 @@ public:
 	int32_t _length;
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
-	T _data[0];
+	T _data[1];
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}

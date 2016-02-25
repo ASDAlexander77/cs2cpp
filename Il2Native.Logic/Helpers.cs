@@ -377,5 +377,30 @@
         {
             return fieldSymbol.IsStatic && fieldSymbol.ContainingType.StaticConstructors.Any();
         }
+
+        internal static ConstantValueTypeDiscriminator GetDiscriminator(this SpecialType st)
+        {
+            switch (st)
+            {
+                case SpecialType.System_SByte: return ConstantValueTypeDiscriminator.SByte;
+                case SpecialType.System_Byte: return ConstantValueTypeDiscriminator.Byte;
+                case SpecialType.System_Int16: return ConstantValueTypeDiscriminator.Int16;
+                case SpecialType.System_UInt16: return ConstantValueTypeDiscriminator.UInt16;
+                case SpecialType.System_Int32: return ConstantValueTypeDiscriminator.Int32;
+                case SpecialType.System_UInt32: return ConstantValueTypeDiscriminator.UInt32;
+                case SpecialType.System_Int64: return ConstantValueTypeDiscriminator.Int64;
+                case SpecialType.System_UInt64: return ConstantValueTypeDiscriminator.UInt64;
+                case SpecialType.System_Char: return ConstantValueTypeDiscriminator.Char;
+                case SpecialType.System_Boolean: return ConstantValueTypeDiscriminator.Boolean;
+                case SpecialType.System_Single: return ConstantValueTypeDiscriminator.Single;
+                case SpecialType.System_Double: return ConstantValueTypeDiscriminator.Double;
+                case SpecialType.System_Decimal: return ConstantValueTypeDiscriminator.Decimal;
+                case SpecialType.System_DateTime: return ConstantValueTypeDiscriminator.DateTime;
+                case SpecialType.System_String: return ConstantValueTypeDiscriminator.String;
+                case SpecialType.None: return ConstantValueTypeDiscriminator.Nothing;
+            }
+
+            return ConstantValueTypeDiscriminator.Null;
+        }
     }
 }
