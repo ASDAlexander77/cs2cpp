@@ -79,23 +79,27 @@ template <typename D, typename S> inline D as(S v)
 }
 
 // cast internals
-template <typename D, typename S, class = typename std::enable_if<is_value_type<D>::value> > inline bool is(S v)
-{
-	return false;
-}
-
-template <typename D, typename S, class = typename std::enable_if<is_class_type<D>::value> > inline bool is(S v)
+template <typename D, typename S> 
+inline bool is(typename std::enable_if<std::is_base_of<object, S>::value, S>::type* v)
 {
 	return as<D>(v) != nullptr;
 }
 
+template <typename D, typename S> 
+inline bool is(S v)
+{
+	return false;
+}
+
 // Constrained internals (for templates)
-template <typename C, typename T, typename = std::enable_if<std::is_base_of<object, T>::value> > inline C constrained (T* t)
+template <typename C, typename T> 
+inline C constrained (typename std::enable_if<std::is_base_of<object, T>::value, T>::type* t)
 {
 	return nullptr;
 }
 
-template <typename C, typename T> inline C constrained (T t)
+template <typename C, typename T> 
+inline C constrained (T t)
 {
 	return nullptr;
 }

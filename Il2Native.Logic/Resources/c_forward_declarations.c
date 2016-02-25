@@ -95,7 +95,7 @@ template <typename T> struct is_primitive_type : std::integral_constant<bool, st
 {
 };
 
-template <typename T> struct is_struct_type : std::integral_constant<bool, std::is_object<T>::value && std::is_base_of<object, T>::value>
+template <typename T> struct is_struct_type : std::integral_constant<bool, std::is_object<T>::value && std::is_base_of<std::decay<object>, T>::value>
 {
 };
 
@@ -103,6 +103,6 @@ template <typename T> struct is_value_type : std::integral_constant<bool, is_str
 {
 };
 
-template <typename T> struct is_class_type : std::integral_constant<bool, std::is_pointer<T>::value && std::is_base_of<object, T>::value>
+template <typename T> struct is_class_type : std::integral_constant<bool, std::is_pointer<T>::value && std::is_base_of<std::decay<object>, T>::value>
 {
 };
