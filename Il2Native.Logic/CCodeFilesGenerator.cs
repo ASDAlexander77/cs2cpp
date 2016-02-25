@@ -508,11 +508,24 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
             }
 
             // declare using to solve issue with overloaded functions in different classes
+            /*
             foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNames())
             {
                 c.TextSpan("using");
                 c.WhiteSpace();
                 c.WriteType(method.ReceiverType, suppressReference: true, allowKeywords: true);
+                c.TextSpan("::");
+                c.WriteMethodName(method);
+                c.TextSpan(";");
+                c.NewLine();
+            }
+            */
+
+            foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNamesTakeOnlyOne())
+            {
+                c.TextSpan("using");
+                c.WhiteSpace();
+                c.WriteType(namedTypeSymbol.BaseType ?? method.ReceiverType, suppressReference: true, allowKeywords: true);
                 c.TextSpan("::");
                 c.WriteMethodName(method);
                 c.TextSpan(";");

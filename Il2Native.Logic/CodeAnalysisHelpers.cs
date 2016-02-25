@@ -75,6 +75,39 @@
             return methods;
         }
 
+        public static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(this ITypeSymbol type)
+        {
+            return IterateAllMethodsWithTheSameNamesTakeOnlyOne((INamedTypeSymbol)type);
+        }
+
+        private static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(INamedTypeSymbol type)
+        {
+            if (type.TypeKind != TypeKind.Interface && type.BaseType == null)
+            {
+                return new IMethodSymbol[0];
+            }
+
+            var methods = new List<IMethodSymbol>();
+
+            var groupsByName = type.EnumerateAllMethodsRecursevly().GroupBy(m => m.MetadataName);
+            foreach (var groupByName in groupsByName)
+            {
+                var groupByType = groupByName.GroupBy(g => g.ContainingType);
+                if (groupByType.Count() < 2)
+                {
+                    continue;
+                }
+
+                var firstOrDefault = groupByName.Distinct(new KeyStringEqualityComparer()).LastOrDefault(m => m.ContainingType != type);
+                if (firstOrDefault != null)
+                {
+                    methods.Add(firstOrDefault);
+                }
+            }
+
+            return methods;
+        }
+
         public static IEnumerable<IMethodSymbol> EnumerateAllMethodsRecursevly(this INamedTypeSymbol type)
         {
             if (type.TypeKind == TypeKind.Interface)
