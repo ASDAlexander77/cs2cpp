@@ -1,4 +1,6 @@
 #if defined(_MSC_VER)
+
+/*
 #include <windows.h>
 
 template <typename T> inline T InterlockedCompareExchange(T** location1, T* value, T* comparand)
@@ -25,6 +27,7 @@ inline uint64_t InterlockedCompareExchange(uint64_t* location1, uint64_t value, 
 {
 	return InterlockedCompareExchange64((int64_t*)location1, value, comparand);
 }
+*/
 
 #endif
 
@@ -42,7 +45,8 @@ T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T v
 #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
 	return OSAtomicCompareAndSwapPtr (comparand, value, &location1);
 #elif defined(_MSC_VER)
-	return InterlockedCompareExchange(&location1, value, comparand);
+	////return __X::InterlockedCompareExchange(&location1, value, comparand);
+	return value;
 #elif (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 	return __sync_val_compare_and_swap(&location1, comparand, value);
 #else

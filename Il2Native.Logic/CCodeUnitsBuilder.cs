@@ -308,10 +308,10 @@ namespace Il2Native.Logic
                         body = MethodBodies.ReturnNull(method);
                         break;
                     case "Invoke":
-                        body = MethodBodies.ReturnFalse(method);
+                        body = MethodBodies.ReturnDefault(method);
                         break;
                     case "EndInvoke":
-                        body = MethodBodies.ReturnFalse(method);
+                        body = MethodBodies.ReturnDefault(method);
                         break;
                     default:
                         body = MethodBodies.Throw(method);

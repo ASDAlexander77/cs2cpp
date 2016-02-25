@@ -37,5 +37,16 @@
                 }
             };
         }
+
+        public static MethodBody ReturnDefault(IMethodSymbol method)
+        {
+            return new MethodBody(method)
+            {
+                Statements =
+                {
+                    new ReturnStatement { ExpressionOpt = new DefaultOperator { Type = method.ReturnType } }
+                }
+            };
+        }
     }
 }
