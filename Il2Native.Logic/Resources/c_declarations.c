@@ -1,5 +1,5 @@
 // Arrays internals
-template <typename T> class __array : public <<%assemblyName%>>::System::Array
+template <typename T> class __array : public CoreLib::System::Array
 {
 public:
 	int32_t _rank;
@@ -22,7 +22,7 @@ public:
 	}
 };
 
-template <typename T, int32_t RANK> class __multi_array : public <<%assemblyName%>>::System::Array
+template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
 {
 public:
 	int32_t _rank;
@@ -38,7 +38,7 @@ public:
 	inline operator int32_t() const { return _length; }
 };
 
-template <typename T, int N> class __array_init : public <<%assemblyName%>>::System::Array
+template <typename T, int N> class __array_init : public CoreLib::System::Array
 {
 	int32_t _rank;
 	int32_t _length;
@@ -48,7 +48,7 @@ public:
 };
 
 // Boxing internals
-template <typename T, typename = std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline T* __box (T* t)
+template <typename T, typename = std::enable_if<std::is_base_of<object, T>::value> > inline T* __box (T* t)
 {
 	return t;
 }
@@ -79,18 +79,18 @@ template <typename D, typename S> inline D as(S v)
 }
 
 // cast internals
-template <typename D, typename S, class = typename std::enable_if<std::is_enum<D>::value || std::is_integral<D>::value> > inline bool is(S v)
+template <typename D, typename S, class = typename std::enable_if<is_value_type<D>::value> > inline bool is(S v)
 {
 	return false;
 }
 
-template <typename D, typename S> inline bool is(S v)
+template <typename D, typename S, class = typename std::enable_if<is_class_type<D>::value> > inline bool is(S v)
 {
 	return as<D>(v) != nullptr;
 }
 
 // Constrained internals (for templates)
-template <typename C, typename T, typename = std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value> > inline C constrained (T* t)
+template <typename C, typename T, typename = std::enable_if<std::is_base_of<object, T>::value> > inline C constrained (T* t)
 {
 	return nullptr;
 }
@@ -101,7 +101,7 @@ template <typename C, typename T> inline C constrained (T t)
 }
 
 // Typeof internals
-template <typename T> inline <<%assemblyName%>>::System::Type* _typeof()
+template <typename T> inline CoreLib::System::Type* _typeof()
 {
 	// TODO: finish it
 	T* t;
@@ -165,7 +165,7 @@ public:
 
 // Activator
 template <typename T> 
-typename std::enable_if<std::is_base_of<<<%assemblyName%>>::System::Object, T>::value && std::is_pointer<T>::value>::type __create_instance()
+typename std::enable_if<is_class_type<T>::value, T>::type __create_instance()
 {
 	typedef typename std::remove_pointer<T>::type _T;
 	return new _T();

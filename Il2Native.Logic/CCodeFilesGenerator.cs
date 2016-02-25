@@ -292,7 +292,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
 
                 if (isCoreLib)
                 {
-                    itw.WriteLine(Resources.c_include.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine(Resources.c_include);
                 }
                 else
                 {
@@ -312,7 +312,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
 
                 if (isCoreLib)
                 {
-                    itw.WriteLine(Resources.c_forward_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine(Resources.c_forward_declarations);
                 }
 
                 itw.WriteLine();
@@ -326,7 +326,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                 if (isCoreLib)
                 {
                     itw.WriteLine();
-                    itw.WriteLine(Resources.c_declarations.Replace("<<%assemblyName%>>", identity.Name));
+                    itw.WriteLine(Resources.c_declarations);
                 }
 
                 itw.WriteLine();
@@ -584,7 +584,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
             {
                 WriteSourceInclude(itw, identity);
 
-                itw.WriteLine(Resources.c_definitions.Replace("<<%assemblyName%>>", identity.Name));
+                itw.WriteLine(Resources.c_definitions);
                 itw.Close();
             }
 
