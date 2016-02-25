@@ -417,13 +417,21 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.TypeParameter:
 
-                    if (type.ContainingType != null && type.ContainingType.ContainingType != null)
+                    var methodSymbol = type.ContainingSymbol as IMethodSymbol;
+                    if (methodSymbol != null && methodSymbol.IsVirtualGenericMethod())
                     {
-                        this.WriteNameWithContainingSymbolName(type);
+                        TextSpan("object*");
                     }
                     else
                     {
-                        this.WriteName(type);
+                        if (type.ContainingType != null && type.ContainingType.ContainingType != null)
+                        {
+                            this.WriteNameWithContainingSymbolName(type);
+                        }
+                        else
+                        {
+                            this.WriteName(type);
+                        }
                     }
 
                     return;
@@ -608,15 +616,7 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                if (methodSymbol.IsVirtualGenericMethod() && parameterSymbol.Type.TypeKind == TypeKind.TypeParameter)
-                {
-                    this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
-                }
-                else
-                {
-                    this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
-                }
-
+                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     TextSpan("&");
@@ -706,10 +706,6 @@ namespace Il2Native.Logic
                 if (methodSymbol.ReturnsVoid)
                 {
                     this.TextSpan("void");
-                }
-                else if (methodSymbol.IsVirtualGenericMethod() && methodSymbol.ReturnType.TypeKind == TypeKind.TypeParameter)
-                {
-                    this.WriteType(new TypeImpl { SpecialType = SpecialType.System_Object }, allowKeywords: !declarationWithingClass);
                 }
                 else
                 {

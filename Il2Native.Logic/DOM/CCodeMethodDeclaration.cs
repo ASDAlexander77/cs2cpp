@@ -19,19 +19,6 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            if (Method.IsVirtualGenericMethod())
-            {
-                // set generic types
-                foreach (var typeArgument in Method.TypeArguments)
-                {
-                    new TypeDef
-                    {
-                        TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } },
-                        Identifier = new TypeExpression { Type = typeArgument }
-                    }.WriteTo(c);
-                }
-            }
-
             c.WriteMethodDeclaration(this.Method, true, this.MethodBodyOpt != null);
             if (this.MethodBodyOpt == null)
             {

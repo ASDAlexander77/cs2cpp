@@ -30,19 +30,6 @@
             c.Separate();
             c.TextSpanNewLine(string.Format("// Method : {0}", this.Method.ToDisplayString()));
 
-            if (Method.IsVirtualGenericMethod())
-            {
-                // set generic types
-                foreach (var typeArgument in Method.TypeArguments)
-                {
-                    new TypeDef
-                    {
-                        TypeExpression = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } },
-                        Identifier = new TypeExpression { Type = typeArgument }
-                    }.WriteTo(c);
-                }
-            }
-
             c.WriteMethodDeclaration(this.Method, false);
 
             if (MethodBodyOpt != null)

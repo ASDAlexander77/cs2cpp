@@ -295,11 +295,34 @@ namespace Il2Native.Logic
             unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
-            if (boundStatement != null ||
-                (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate &&
-                 !methodSymbol.IsAbstract))
+            if (boundStatement != null)
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
+            }
+            else if (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate && !methodSymbol.IsAbstract)
+            {
+                MethodBody body;
+                switch (methodSymbol.Name)
+                {
+                    case "BeginInvoke":
+                        body = MethodBodies.ReturnNull(method);
+                        break;
+                    case "Invoke":
+                        body = MethodBodies.ReturnFalse(method);
+                        break;
+                    case "EndInvoke":
+                        body = MethodBodies.ReturnFalse(method);
+                        break;
+                    default:
+                        body = MethodBodies.Throw(method);
+                        break;
+                }
+
+                unit.Definitions.Add(
+                    new CCodeMethodDefinition(method)
+                    {
+                        MethodBodyOpt = body
+                    });                
             }
             else
             {
@@ -310,16 +333,10 @@ namespace Il2Native.Logic
                 {
                     unit.Definitions.Add(
                         new CCodeMethodDefinition(method)
-                            {
-                                IsStub = true,
-                                MethodBodyOpt = new MethodBody(method)
-                                {
-                                    Statements = 
-                                    {
-                                        new ThrowStatement { ExpressionOpt = new Literal { Value = ConstantValue.Create(0xC000C000) } }
-                                    }
-                                }
-                            });
+                        {
+                            IsStub = true,
+                            MethodBodyOpt = MethodBodies.Throw(method)
+                        });
                 }
 #endif
             }
