@@ -546,6 +546,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
 
             itw.WriteLine();
 
+            // TODO: use synthersized method
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
                 itw.WriteLine();

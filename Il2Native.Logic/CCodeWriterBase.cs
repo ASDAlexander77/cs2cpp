@@ -194,14 +194,15 @@ namespace Il2Native.Logic
             if (explicitInterfaceImplementation != null)
             {
                 this.TextSpan(explicitInterfaceImplementation.ContainingType.GetTypeFullName());
-                var explTypeName = explicitInterfaceImplementation.ContainingType.ToString().Replace(" ", string.Empty);
-                if (symbol.MetadataName.StartsWith(explTypeName))
+                var dotIndex = symbol.MetadataName.LastIndexOf('.');
+                if (dotIndex > 0)
                 {
-                    var name = symbol.MetadataName.Substring(explTypeName.Length);
+                    var name = symbol.MetadataName.Substring(dotIndex);
                     this.TextSpan(name.CleanUpName());
                 }
                 else
                 {
+                    this.TextSpan("_");
                     WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
                 }
             }
