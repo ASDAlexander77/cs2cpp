@@ -62,7 +62,7 @@
                             var local = assignmentOperator.Left as Local;
                             if (local != null && boundSwitchStatement.InnerLocals.Any(ol => ol.Name == local.Name))
                             {
-                                assignmentOperator.ApplyAutoType = false;
+                                assignmentOperator.TypeDeclaration = false;
                             }
                         }
                     });
