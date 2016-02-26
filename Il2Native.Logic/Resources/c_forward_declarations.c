@@ -85,7 +85,7 @@ public:
 		return *this;
 	}
 
-	inline operator const T()
+	inline operator const T&()
 	{
 		if (!C::_cctor_called)
 		{
