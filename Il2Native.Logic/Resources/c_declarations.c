@@ -82,9 +82,16 @@ template <typename D, typename S> inline D __unbox(S* c)
 }
 
 // interface cast internals
-template <typename D, typename S> inline D interface_cast(S v)
+template <typename D, typename S> 
+inline typename std::enable_if<std::is_pointer<D>::value && std::is_pointer<S>::value && std::is_base_of<std::decay<D>, std::decay<S>>::value, D>::type interface_cast(S s)
 {
-	return (D) nullptr;
+	return static_cast<D>(s);
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<std::is_pointer<D>::value && std::is_pointer<S>::value && !std::is_base_of<std::decay<D>, std::decay<S>>::value, D>::type interface_cast(S s)
+{
+	return dynamic_cast<D>(s);
 }
 
 // cast internals

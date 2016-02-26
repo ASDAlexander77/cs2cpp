@@ -61,10 +61,10 @@ include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
 link_directories(""./""<%link_msvc%>)
-SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /GR- /Zi /EHsc /wd4250 /MP"")
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /Zi /EHsc /wd4250 /MP"")
 else()
 link_directories(""./""<%link_other%>)
-SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fno-rtti -fpermissive"")
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")

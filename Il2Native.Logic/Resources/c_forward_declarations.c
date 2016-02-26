@@ -73,7 +73,7 @@ class __static
 	T t;
 public:
 
-	inline T& operator=(T value)
+	inline __static<T, C>& operator=(const T& value)
 	{
 		if (!C::_cctor_called)
 		{
@@ -85,7 +85,7 @@ public:
 		return *this;
 	}
 
-	inline operator T&()
+	inline operator const T()
 	{
 		if (!C::_cctor_called)
 		{
@@ -103,16 +103,6 @@ public:
 		}
 
 		return t;
-	}
-
-	inline T* operator &()
-	{
-		if (!C::_cctor_called)
-		{
-			C::_cctor();
-		}
-
-		return &t;
 	}
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
