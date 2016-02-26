@@ -9,8 +9,6 @@
 
     public class AssignmentOperator : Expression
     {
-        private ITypeSymbol assignmentType;
-
         public override Kinds Kind
         {
             get { return Kinds.AssignmentOperator; }
