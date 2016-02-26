@@ -28,7 +28,7 @@
         public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences { get; private set; }
         public ImmutableArray<AttributeData> GetAttributes()
         {
-            throw new System.NotImplementedException();
+            return ImmutableArray<AttributeData>.Empty;
         }
 
         public Accessibility DeclaredAccessibility { get; private set; }

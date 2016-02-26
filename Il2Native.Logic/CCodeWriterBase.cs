@@ -514,6 +514,13 @@ namespace Il2Native.Logic
             {
                 TextSpan("static");
                 WhiteSpace();
+
+                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+                {
+                    TextSpan("thread_local");
+                    WhiteSpace();
+                }
+
                 if (!doNotWrapStatic)
                 {
                     TextSpan("__static<");
@@ -540,6 +547,12 @@ namespace Il2Native.Logic
             {
                 WriteTemplateDeclaration(fieldSymbol.ContainingType);
                 NewLine();
+            }
+
+            if (fieldSymbol.IsStatic && fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+            {
+                TextSpan("thread_local");
+                WhiteSpace();
             }
 
             if (fieldSymbol.IsStatic && !doNotWrapStatic)
