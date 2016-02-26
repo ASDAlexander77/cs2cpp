@@ -2,49 +2,67 @@
 template <typename T> class __array : public CoreLib::System::Array
 {
 public:
-	int32_t _rank;
-	int32_t _length;
-	T _data[1];
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	__array(int32_t length) : _rank(1) { _length = length; }
 	__array(const __array<T>&) = delete;
 	__array(__array<T>&&) = delete;
+
+	static __array<T>* Allocate(int32_t length)
+	{
+		auto mem = __new(sizeof(__array<T>) + length * sizeof(T));
+		new (mem) __array<T>(length);
+		return reinterpret_cast<__array<T>*>(mem);
+	}
+
 	inline const T operator [](int32_t index) const { return _data[index]; }
 	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
 
-	static __array<T>* Allocate(int32_t length)
-	{
-		auto mem = __new(sizeof(__array<T>) + (length - 1) * sizeof(T));
-		new (mem) __array<T>(length);
-		return reinterpret_cast<__array<T>*>(mem);
-	}
+private:
+	int32_t _rank;
+	int32_t _length;
+	T _data[1];
 };
 
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
 {
 public:
-	int32_t _rank;
-	int32_t _length;
-	int32_t _lowerBoundries[RANK];
-	int32_t _upperBoundries[RANK];
-	T _data[1];
     typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
 	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
 	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
 	inline operator int32_t() const { return _length; }
+
+private:
+	int32_t _rank;
+	int32_t _length;
+	int32_t _lowerBoundries[RANK];
+	int32_t _upperBoundries[RANK];
+	T _data[1];
 };
 
 template <typename T, int N> class __array_init : public CoreLib::System::Array
 {
+public:
+    template <typename... Ta> __array_init(Ta... items) : _rank(1), _length(sizeof...(items)), _data{items...} {} 
+
+private:
 	int32_t _rank;
 	int32_t _length;
 	T _data[N];
+};
+
+template <typename T> class __array_empty : public CoreLib::System::Array
+{
 public:
-    template <typename... Ta> __array_init(Ta... items) : _rank(1), _length(sizeof...(items)), _data{items...} {} 
+    __array_empty() : _rank(1), _length(0) {} 
+
+private:
+	int32_t _rank;
+	int32_t _length;
+	T _data[1];
 };
 
 // Boxing internals

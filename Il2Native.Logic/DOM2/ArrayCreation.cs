@@ -73,12 +73,21 @@
             {
                 c.TextSpan("new");
                 c.WhiteSpace();
-                c.TextSpan("__array_init<");
-                c.WriteType(elementType);
-                c.TextSpan(",");
-                c.WhiteSpace();
-                c.TextSpan(initItems.Count.ToString());
-                c.TextSpan(">");
+                if (initItems.Count > 0)
+                {
+                    c.TextSpan("__array_init<");
+                    c.WriteType(elementType);
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                    c.TextSpan(initItems.Count.ToString());
+                    c.TextSpan(">");
+                }
+                else
+                {
+                    c.TextSpan("__array_empty<");
+                    c.WriteType(elementType);
+                    c.TextSpan(">");
+                }
             }
             else
             {
