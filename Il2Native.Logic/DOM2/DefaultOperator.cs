@@ -16,8 +16,9 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            c.TextSpan("__default<");
             c.WriteType(this.Type);
-            c.TextSpan("()");
+            c.TextSpan(">()");
         }
     }
 }

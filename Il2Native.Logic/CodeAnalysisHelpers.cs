@@ -98,10 +98,10 @@
                     continue;
                 }
 
-                var firstOrDefault = groupByName.Distinct(new KeyStringEqualityComparer()).LastOrDefault(m => m.ContainingType != type);
-                if (firstOrDefault != null)
+                var lastOrDefault = groupByName.Distinct(new KeyStringEqualityComparer()).LastOrDefault(m => m.ContainingType != type);
+                if (lastOrDefault != null)
                 {
-                    methods.Add(firstOrDefault);
+                    methods.Add(lastOrDefault);
                 }
             }
 

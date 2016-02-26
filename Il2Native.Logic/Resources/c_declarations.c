@@ -167,6 +167,25 @@ public:
 	}
 };
 
+// Default
+template <typename T> 
+inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
+{
+	return nullptr;
+}
+
+template <typename T> 
+inline typename std::enable_if<!std::is_pointer<T>::value && !std::is_void<T>::value, T>::type __default()
+{
+	return T();
+}
+
+template <typename T> 
+inline typename std::enable_if<std::is_void<T>::value, T>::type __default()
+{
+	return;
+}
+
 // Activator
 template <typename T> 
 typename std::enable_if<is_class_type<T>::value, T>::type __create_instance()

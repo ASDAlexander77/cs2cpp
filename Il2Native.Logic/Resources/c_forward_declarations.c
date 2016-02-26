@@ -1,3 +1,19 @@
+template <typename T> struct is_primitive_type : std::integral_constant<bool, std::is_enum<T>::value || std::is_integral<T>::value || std::is_floating_point<T>::value>
+{
+};
+
+template <typename T> struct is_struct_type : std::integral_constant<bool, std::is_object<T>::value && std::is_base_of<std::decay<object>, T>::value>
+{
+};
+
+template <typename T> struct is_value_type : std::integral_constant<bool, is_struct_type<T>::value || is_primitive_type<T>::value>
+{
+};
+
+template <typename T> struct is_class_type : std::integral_constant<bool, std::is_pointer<T>::value && std::is_base_of<std::decay<object>, T>::value>
+{
+};
+
 template <typename T> class __array;
 
 template <typename T, typename TUnderlying> struct __enum
@@ -89,20 +105,4 @@ public:
 
 		return (D)t;
 	}
-};
-
-template <typename T> struct is_primitive_type : std::integral_constant<bool, std::is_enum<T>::value || std::is_integral<T>::value || std::is_floating_point<T>::value>
-{
-};
-
-template <typename T> struct is_struct_type : std::integral_constant<bool, std::is_object<T>::value && std::is_base_of<std::decay<object>, T>::value>
-{
-};
-
-template <typename T> struct is_value_type : std::integral_constant<bool, is_struct_type<T>::value || is_primitive_type<T>::value>
-{
-};
-
-template <typename T> struct is_class_type : std::integral_constant<bool, std::is_pointer<T>::value && std::is_base_of<std::decay<object>, T>::value>
-{
 };
