@@ -84,17 +84,17 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft
     auto fd = handle->DangerousGetHandle()->ToInt32();
     if (fd == -11)
     {
-        numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
+        numBytesWritten = _write(STDOUT_FILENO, bytes, numBytesToWrite);
         return numBytesWritten < numBytesToWrite ? 0 : 1;
     }
     else if (fd == -12)
     {
-        numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
+        numBytesWritten = _write(STDERR_FILENO, bytes, numBytesToWrite);
         return numBytesWritten < numBytesToWrite ? 0 : 1;
     }
     else
     {
-        auto r = write(fd, bytes, numBytesToWrite);
+        auto r = _write(fd, bytes, numBytesToWrite);
         if (r != -1)
         {
             numBytesWritten = r;
