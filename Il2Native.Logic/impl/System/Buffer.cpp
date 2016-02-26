@@ -14,8 +14,8 @@ void CoreLib::System::Buffer::InternalBlockCopy(CoreLib::System::Array* src, int
 		return;
 	}
 
-	auto pSrc = &((__array<int8_t>*)src)->_data;
-	auto pDest = &((__array<int8_t>*)dst)->_data;
+	auto pSrc = &reinterpret_cast<__array<int8_t>*>(src)->_data;
+	auto pDest = &reinterpret_cast<__array<int8_t>*>(dst)->_data;
 	std::memcpy(pDest + dstOffsetBytes, pSrc + srcOffsetBytes, byteCount);
 }
 

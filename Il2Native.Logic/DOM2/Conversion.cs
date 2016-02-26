@@ -37,7 +37,7 @@
             var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && this.Type.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
-                c.TextSpan("interface_cast<");
+                c.TextSpan("static_cast<");
                 c.WriteType(this.Type);
                 c.TextSpan(">");
                 c.TextSpan("(");
@@ -105,8 +105,19 @@
                 case ConversionKind.ExplicitReference:
                 case ConversionKind.ImplicitReference:
 
-                    if (this.Type.TypeKind != TypeKind.TypeParameter &&
-                        TypeSource.IsDerivedFrom(this.Type))
+                    if (this.Type.TypeKind == TypeKind.TypeParameter)
+                    {
+                        c.TextSpan("cast<");
+                        c.WriteType(this.Type);
+                        c.TextSpan(">");                        
+                    }
+                    else if (this.Type.TypeKind == TypeKind.Interface && TypeSource.AllInterfaces.Contains((INamedTypeSymbol)this.Type))
+                    {
+                        c.TextSpan("static_cast<");
+                        c.WriteType(this.Type);
+                        c.TextSpan(">");
+                    }
+                    else if (TypeSource.IsDerivedFrom(this.Type))
                     {
                         c.TextSpan("static_cast<");
                         c.WriteType(this.Type);
@@ -114,17 +125,7 @@
                     }
                     else
                     {
-                        if ((this.ConversionKind == ConversionKind.ExplicitReference ||
-                             this.ConversionKind == ConversionKind.ImplicitReference)
-                            && this.Type.TypeKind == TypeKind.Interface)
-                        {
-                            c.TextSpan("interface_cast<");
-                        }
-                        else
-                        {
-                            c.TextSpan("as<");
-                        }
-
+                        c.TextSpan("cast<");
                         c.WriteType(this.Type);
                         c.TextSpan(">");
                     }

@@ -1,5 +1,5 @@
 // Arrays internals
-template <typename T> class __array : public CoreLib::System::Array
+template <typename T> class __array : public virtual CoreLib::System::Array, public virtual CoreLib::System::Collections::Generic::IListT1<T>
 {
 public:
 	int32_t _rank;
@@ -22,6 +22,157 @@ public:
 	inline const T operator [](int32_t index) const { return _data[index]; }
 	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
+
+	// IListT1
+	T System_Collections_Generic_IListT1_get_Item(int32_t) 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_IListT1_set_Item(int32_t, T)
+	{
+		throw 0xC000C000;
+	}
+
+	int32_t System_Collections_Generic_IListT1_IndexOf(T)
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_IListT1_Insert(int32_t, T)
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_IListT1_RemoveAt(int32_t)
+	{
+		throw 0xC000C000;
+	}
+
+	// ICollectionT1
+	int32_t System_Collections_Generic_ICollectionT1_get_Count() 
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_Generic_ICollectionT1_get_IsReadOnly() 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_ICollectionT1_Add(T) 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_ICollectionT1_Clear() 
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_Generic_ICollectionT1_Contains(T) 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t) 
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_Generic_ICollectionT1_Remove(T) 
+	{
+		throw 0xC000C000;
+	}
+
+	// IEnumerableT1
+	CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator()
+	{
+		throw 0xC000C000;
+	}
+
+	// IList
+	CoreLib::System::Object* System_Collections_IList_get_Item(int32_t)
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*)
+	{
+		throw 0xC000C000;
+	}
+
+	int32_t System_Collections_IList_Add(CoreLib::System::Object*) 
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_IList_Contains(CoreLib::System::Object*) 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_IList_Clear()
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_IList_get_IsReadOnly()
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_IList_get_IsFixedSize() 
+	{
+		throw 0xC000C000;
+	}
+
+	int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*) 
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*)
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_IList_Remove(CoreLib::System::Object*)
+	{
+		throw 0xC000C000;
+	}
+
+	void System_Collections_IList_RemoveAt(int32_t) 
+	{
+		throw 0xC000C000;
+	}
+
+	// ICollection
+	void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t) 	
+	{
+		throw 0xC000C000;
+	}
+
+	int32_t System_Collections_ICollection_get_Count() 	
+	{
+		throw 0xC000C000;
+	}
+
+	CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot() 	
+	{
+		throw 0xC000C000;
+	}
+
+	bool System_Collections_ICollection_get_IsSynchronized() 	
+	{
+		throw 0xC000C000;
+	}
+
+	// IEnumerable
+	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator()	
+	{
+		throw 0xC000C000;
+	}
 };
 
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
@@ -81,34 +232,34 @@ template <typename D, typename S> inline D __unbox(S* c)
 	return d;
 }
 
-// interface cast internals
-template <typename D, typename S> 
-inline typename std::enable_if<std::is_pointer<D>::value && std::is_pointer<S>::value && std::is_base_of<std::decay<D>, std::decay<S>>::value, D>::type interface_cast(S s)
-{
-	return static_cast<D>(s);
-}
-
-template <typename D, typename S> 
-inline typename std::enable_if<std::is_pointer<D>::value && std::is_pointer<S>::value && !std::is_base_of<std::decay<D>, std::decay<S>>::value, D>::type interface_cast(S s)
+// cast internals
+template <typename D, typename S> inline D as(S s)
 {
 	return dynamic_cast<D>(s);
 }
 
 // cast internals
-template <typename D, typename S> inline D as(S v)
+template <typename D, typename S> inline D cast(S s)
 {
-	return (D) nullptr;
+	auto d = dynamic_cast<D>(s);
+	if (d == nullptr)
+	{
+		// TODO: throw InvalidCastException
+		throw 0xC000C000;
+	}
+
+	return d;
 }
 
 // cast internals
 template <typename D, typename S> 
-inline bool is(typename std::enable_if<std::is_base_of<object, S>::value, S>::type* v)
+inline bool is(typename std::enable_if<std::is_base_of<object, S>::value, S>::type* s)
 {
-	return as<D>(v) != nullptr;
+	return as<D>(s) != nullptr;
 }
 
 template <typename D, typename S> 
-inline bool is(S v)
+inline bool is(S s)
 {
 	return false;
 }
