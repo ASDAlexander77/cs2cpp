@@ -35,7 +35,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 // Method : Microsoft.Win32.Win32Native.GetStdHandle(int)
 CoreLib::System::IntPtr CoreLib::Microsoft::Win32::Win32Native::GetStdHandle(int32_t nStdHandle)
 {
-    return CoreLib::System::IntPtr(nStdHandle);
+    return __init<CoreLib::System::IntPtr>(nStdHandle);
 }
 
 // Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)

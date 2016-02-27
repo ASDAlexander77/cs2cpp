@@ -213,10 +213,13 @@ namespace Il2Native.Logic
             }
 
             // write suffixes for ref & out parameters
-            foreach (var parameter in methodSymbol.Parameters.Where(p => p.RefKind != RefKind.None))
+            if (methodSymbol.MethodKind != MethodKind.Constructor)
             {
-                TextSpan("_");
-                TextSpan(parameter.RefKind.ToString());
+                foreach (var parameter in methodSymbol.Parameters.Where(p => p.RefKind != RefKind.None))
+                {
+                    TextSpan("_");
+                    TextSpan(parameter.RefKind.ToString());
+                }
             }
 
             if (methodSymbol.IsGenericMethod)

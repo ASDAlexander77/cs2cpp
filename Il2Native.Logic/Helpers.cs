@@ -153,22 +153,11 @@
             return new string(s);
         }
 
-        internal static string ToKeyString(this MethodSymbol methodSymbol, bool specialCaseForString = false)
+        internal static string ToKeyString(this MethodSymbol methodSymbol)
         {
             var sb = new StringBuilder();
 
-            var isStringCtorReplacement = specialCaseForString && methodSymbol.IsStringCtorReplacement();
-
-            // return
-            if (isStringCtorReplacement)
-            {
-                sb.Append("void");
-            }
-            else
-            {
-                sb.Append(methodSymbol.ReturnType);
-            }
-
+            sb.Append(methodSymbol.ReturnType);
             sb.Append(" ");                
 
             var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
@@ -178,15 +167,7 @@
                 sb.Append(".");
             }
 
-            if (isStringCtorReplacement)
-            {
-                sb.Append(".ctor");
-            }
-            else
-            {
-                sb.Append(methodSymbol.Name);
-            }
-
+            sb.Append(methodSymbol.Name);
             if (methodSymbol.IsGenericMethod)
             {
                 sb.Append("<");

@@ -31,7 +31,7 @@ template <typename T, typename... Tp> inline T* __new(Tp... params)
 template <typename T, typename... Tp> inline T __init(Tp... params) 
 {
 	auto t = T();		
-	t->_ctor(params...);
+	t._ctor(params...);
 	return t;
 } 
 

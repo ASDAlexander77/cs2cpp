@@ -161,11 +161,6 @@ namespace Il2Native.Logic
                 var key = symbol.ToKeyString();
                 Debug.Assert(!boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 this.boundBodyByMethodSymbol[key] = body;
-
-                if (symbol.IsStringCtorReplacement())
-                {
-                    this.boundBodyByMethodSymbol[symbol.ToKeyString(true)] = body;
-                }
             };
 
             PEModuleBuilder.OnSourceMethodDelegate peModuleBuilderOnSourceMethod = (symbol, sourceMethod) =>
@@ -173,11 +168,6 @@ namespace Il2Native.Logic
                 var key = symbol.ToKeyString();
                 Debug.Assert(!sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 this.sourceMethodByMethodSymbol[key] = sourceMethod;
-
-                if (symbol.IsStringCtorReplacement())
-                {
-                    this.sourceMethodByMethodSymbol[symbol.ToKeyString(true)] = sourceMethod;
-                }
             };
 
             PEModuleBuilder.OnMethodBoundBodySynthesized += peModuleBuilderOnOnMethodBoundBodySynthesized;

@@ -106,7 +106,7 @@
                 {
                     Type = typeDestination,
                     Operand = effectiveExpression,
-                    Reference = parameter.RefKind.HasFlag(RefKind.Ref),
+                    Reference = parameter.RefKind.HasFlag(RefKind.Ref) || parameter.RefKind.HasFlag(RefKind.Out),
                     CCast = true,
                     UseEnumUnderlyingType = true,
                 };

@@ -1,13 +1,13 @@
 #include "CoreLib.h"
 
 // Method : decimal.Decimal(float)
-CoreLib::System::Decimal::Decimal(float value)
+void CoreLib::System::Decimal::_ctor(float value)
 {
     throw 0xC000C000;
 }
 
 // Method : decimal.Decimal(double)
-CoreLib::System::Decimal::Decimal(double value)
+void CoreLib::System::Decimal::_ctor(double value)
 {
     throw 0xC000C000;
 }

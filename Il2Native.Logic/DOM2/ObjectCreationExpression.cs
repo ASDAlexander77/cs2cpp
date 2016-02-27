@@ -46,9 +46,36 @@
         {
             if (!Type.IsValueType || IsReference)
             {
-                c.TextSpan("__new<");
-                c.WriteTypeFullName(Type);
-                c.TextSpan(">");
+                if (Type.SpecialType == SpecialType.System_String)
+                {
+                    var asStr = Method.ToString();
+                    switch (asStr)
+                    {
+                        case "string.String(char[])":
+                            c.TextSpan("string::CtorCharArray");
+                            break;
+                        case "string.String(char, int)":
+                            c.TextSpan("string::CtorCharCount");
+                            break;
+                        case "string.String(char*)":
+                            c.TextSpan("string::CtorCharPtr");
+                            break;
+                        case "string.String(char*, int, int)":
+                            c.TextSpan("string::CtorCharPtrStartLength");
+                            break;
+                        case "string.String(char[], int, int)":
+                            c.TextSpan("string::CtorCharArrayStartLength");
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                }
+                else
+                {
+                    c.TextSpan("__new<");
+                    c.WriteTypeFullName(Type);
+                    c.TextSpan(">");
+                }
             }
             else
             {
