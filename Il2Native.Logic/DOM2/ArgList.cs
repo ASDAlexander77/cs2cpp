@@ -17,7 +17,7 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             ////c.TextSpan("va_list");
-            c.TextSpan("(intptr_t)nullptr");
+            c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
         }
     }
 }

@@ -44,42 +44,20 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (Type.SpecialType != SpecialType.System_String)
+            if (!Type.IsValueType || IsReference)
             {
-                if (!Type.IsValueType || IsReference)
-                {
-                    c.TextSpan("__new<");
-                    c.WriteTypeFullName(Type);
-                    c.TextSpan(">");
-                }
-                else
-                {
-                    c.TextSpan("__init<");
-                    c.WriteTypeFullName(Type);
-                    c.TextSpan(">");
-                }
+                c.TextSpan("__new<");
+                c.WriteTypeFullName(Type);
+                c.TextSpan(">");
             }
             else
             {
-                var method = Type
-                    .GetMembers()
-                    .OfType<IMethodSymbol>()
-                    .First(
-                        m =>
-                            m.Name.StartsWith("Ctor") && Method.Parameters.Count() == m.Parameters.Count() &&
-                            m.Parameters.Select((p, i) => new { p, i }).All(p => TypeEquals(p.p.Type, Method.Parameters[p.i].Type)));
-
-                this.Method = method;
+                c.TextSpan("__init<");
+                c.WriteTypeFullName(Type);
+                c.TextSpan(">");
             }
 
             WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
-        }
-
-        private bool TypeEquals(ITypeSymbol leftTypeSymbol, ITypeSymbol rightTypeSymbol)
-        {
-            var left = leftTypeSymbol.ToString();
-            var right = rightTypeSymbol.ToString();
-            return string.CompareOrdinal(left, right) == 0;
         }
     }
 }

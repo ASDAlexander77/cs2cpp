@@ -168,15 +168,15 @@
 
             if (effectiveReceiverOpt.Kind == Kinds.ThisReference 
                 && methodSymbol.MethodKind == MethodKind.Constructor
-                && receiverOpt.Type != methodSymbol.ReceiverType)
+                && ((TypeSymbol)(MethodOwner.ContainingType)).ToKeyString() != ((TypeSymbol)methodSymbol.ContainingType).ToKeyString())
             {
-                effectiveReceiverOpt = new BaseReference { Type = this.Method.ReceiverType };
+                effectiveReceiverOpt = new BaseReference { Type = this.Method.ContainingType, IsReference = true };
             }
 
             if (!effectiveReceiverOpt.IsReference &&
                 (effectiveReceiverOpt.Type.IsPrimitiveValueType() || effectiveReceiverOpt.Type.TypeKind == TypeKind.Enum))
             {
-                effectiveReceiverOpt = new Cast { Operand = effectiveReceiverOpt, Type = effectiveReceiverOpt.Type, ClassCast = true };
+                effectiveReceiverOpt = new ObjectCreationExpression { Arguments = { receiverOpt }, Type = effectiveReceiverOpt.Type };
             }
             
             if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != effectiveReceiverOpt.Type)

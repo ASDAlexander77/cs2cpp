@@ -153,12 +153,22 @@
             return new string(s);
         }
 
-        internal static string ToKeyString(this MethodSymbol methodSymbol)
+        internal static string ToKeyString(this MethodSymbol methodSymbol, bool specialCaseForString = false)
         {
             var sb = new StringBuilder();
 
+            var isStringCtorReplacement = specialCaseForString && methodSymbol.IsStringCtorReplacement();
+
             // return
-            sb.Append(methodSymbol.ReturnType);
+            if (isStringCtorReplacement)
+            {
+                sb.Append("void");
+            }
+            else
+            {
+                sb.Append(methodSymbol.ReturnType);
+            }
+
             sb.Append(" ");                
 
             var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
@@ -168,7 +178,15 @@
                 sb.Append(".");
             }
 
-            sb.Append(methodSymbol.Name);
+            if (isStringCtorReplacement)
+            {
+                sb.Append(".ctor");
+            }
+            else
+            {
+                sb.Append(methodSymbol.Name);
+            }
+
             if (methodSymbol.IsGenericMethod)
             {
                 sb.Append("<");
@@ -401,6 +419,11 @@
             }
 
             return ConstantValueTypeDiscriminator.Null;
+        }
+
+        public static bool IsStringCtorReplacement(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor");
         }
     }
 }

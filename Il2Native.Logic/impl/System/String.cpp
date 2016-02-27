@@ -1,47 +1,5 @@
 #include "CoreLib.h"
 
-// Method : string.String(char[], int, int)
-CoreLib::System::String::String(__array<wchar_t>* value, int32_t startIndex, int32_t length)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(char[])
-CoreLib::System::String::String(__array<wchar_t>* value)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(char, int)
-CoreLib::System::String::String(wchar_t c, int32_t count)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(char*, int, int)
-CoreLib::System::String::String(wchar_t* src, int32_t startIndex, int32_t length)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(sbyte*)
-CoreLib::System::String::String(int8_t* src)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(sbyte*, int, int)
-CoreLib::System::String::String(int8_t* src, int32_t startIndex, int32_t length)
-{
-    throw 0xC000C000;
-}
-
-// Method : string.String(sbyte*, int, int, System.Text.Encoding)
-CoreLib::System::String::String(int8_t* src, int32_t startIndex, int32_t length, CoreLib::System::Text::Encoding* enc)
-{
-    throw 0xC000C000;
-}
-
 // Method : string.FastAllocateString(int)
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {

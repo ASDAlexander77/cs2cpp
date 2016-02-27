@@ -73,7 +73,7 @@
         private static int ConstructorInitializer(CCodeWriterBase c, IList<Statement> statements)
         {
             int skip = 0;
-// call constructors
+            // call constructors
             var constructorsOrAssignments =
                 statements.TakeWhile(IsConstructorCallOrAssignment).Select(GetCallOrAssignment).ToArray();
             if (constructorsOrAssignments.Length > 0)
@@ -134,6 +134,8 @@
                 statement.Visit(
                     (e) =>
                     {
+                        e.MethodOwner = this.MethodSymbol;
+
                         if (e.Kind == Kinds.LabelStatement)
                         {
                             var labelStatement = (LabelStatement)e;

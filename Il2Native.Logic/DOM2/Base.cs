@@ -17,6 +17,8 @@
     public abstract class Base
     {
         public abstract Kinds Kind { get; }
+        
+        public IMethodSymbol MethodOwner { get; set; }
 
         internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
         {

@@ -291,8 +291,8 @@ namespace Il2Native.Logic
 
             Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
 
+            unit.Declarations.Add(new CCodeMethodDeclaration(method));
             var methodSymbol = sourceMethodFound ? sourceMethod : method;
-            unit.Declarations.Add(new CCodeMethodDeclaration(methodSymbol));
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
             if (boundStatement != null)

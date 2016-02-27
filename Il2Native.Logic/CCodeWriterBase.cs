@@ -3,6 +3,7 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Serialization;
     using DOM;
@@ -902,7 +903,7 @@ namespace Il2Native.Logic
                 throw new ArgumentNullException("expression");
             }
 
-            var parenthesis = expression is ObjectCreationExpression || expression is ArrayCreation ||
+            var parenthesis = expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
                               expression is UnaryOperator || expression is ConditionalOperator ||
                               expression is AssignmentOperator;

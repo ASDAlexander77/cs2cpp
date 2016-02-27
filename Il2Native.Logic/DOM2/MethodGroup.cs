@@ -43,10 +43,10 @@
 
             if (method.IsStatic)
             {
-                c.TextSpan("nullptr");
+                c.TextSpan("(object*)nullptr");
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan("(intptr_t)nullptr");
+                c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
                 /*
                 c.TextSpan("(void (*)())&");
                 c.WriteTypeFullName(method.ContainingType);
@@ -67,7 +67,7 @@
 
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan("(intptr_t)nullptr");
+                c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
                 /*
                 c.TextSpan("(void (*)())&");               
                 this.receiverOpt.WriteTo(c);
