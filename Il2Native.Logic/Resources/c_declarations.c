@@ -26,11 +26,15 @@ template <typename D, typename S> inline D as(S s)
 // cast internals
 template <typename D, typename S> inline D cast(S s)
 {
+	if (s == nullptr)
+	{
+		return nullptr;
+	}
+
 	auto d = dynamic_cast<D>(s);
 	if (d == nullptr)
 	{
-		// TODO: throw InvalidCastException
-		throw 0xC000C000;
+		throw __new<CoreLib::System::InvalidCastException>();
 	}
 
 	return d;
@@ -38,24 +42,18 @@ template <typename D, typename S> inline D cast(S s)
 
 // cast internals
 template <typename D, typename S> 
-inline bool is(typename std::enable_if<std::is_base_of<object, S>::value, S>::type* s)
+inline typename std::enable_if<is_class_type<S>::value, bool>::type is(S s)
 {
 	return as<D>(s) != nullptr;
 }
 
 template <typename D, typename S> 
-inline bool is(S s)
+inline typename std::enable_if<is_value_type<S>::value, bool>::type is(S s)
 {
 	return false;
 }
 
 // Constrained internals (for templates)
-template <typename C, typename T> 
-inline C constrained (typename std::enable_if<std::is_base_of<object, T>::value, T>::type* t)
-{
-	return nullptr;
-}
-
 template <typename C, typename T> 
 inline C constrained (T t)
 {
