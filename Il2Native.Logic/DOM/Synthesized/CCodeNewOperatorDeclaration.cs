@@ -12,7 +12,7 @@
         {
             var parameterSymbol = new ParameterImpl { Name = "_size" };
             var parameter = new Parameter { ParameterSymbol = parameterSymbol };
-            var methodSymbol = new MethodImpl { Name = "__new", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
+            var methodSymbol = new MethodImpl { Name = "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
             MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =

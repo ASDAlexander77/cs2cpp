@@ -37,8 +37,10 @@
             public SpecialTypeConstructorMethod(INamedTypeSymbol type)
             {
                 MethodKind = MethodKind.Constructor;
+                Name = "_ctor";
                 ReceiverType = type;
                 ContainingType = type;
+                ReturnType = new TypeImpl { SpecialType = SpecialType.System_Void };
                 Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type });
             }
         }

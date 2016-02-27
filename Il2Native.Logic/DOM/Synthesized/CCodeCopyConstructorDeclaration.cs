@@ -10,10 +10,11 @@
         public CCodeCopyConstructorDeclaration(INamedTypeSymbol type)
             : base(new CopyConstructorMethod(type))
         {
-            var call = new Call { Method = new CopyConstructorMethod(type), ReceiverOpt = new ThisReference() };
-            call.Arguments.Add(
-                new PointerIndirectionOperator { Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = type } } });
-            MethodBodyOpt = new MethodBody(Method) { Statements = { new ExpressionStatement { Expression = call } } };
+            //var call = new Call { Method = new CopyConstructorMethod(type), ReceiverOpt = new ThisReference() };
+            //call.Arguments.Add(
+            //    new PointerIndirectionOperator { Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = type } } });
+            //MethodBodyOpt = new MethodBody(Method) { Statements = { new ExpressionStatement { Expression = call } } };
+            MethodBodyOpt = new MethodBody(Method) {};
         }
 
         public class CopyConstructorMethod : MethodImpl
@@ -21,8 +22,10 @@
             public CopyConstructorMethod(INamedTypeSymbol type)
             {
                 MethodKind = MethodKind.Constructor;
+                Name = "_ctor";
                 ReceiverType = type;
                 ContainingType = type;
+                ReturnType = new TypeImpl { SpecialType = SpecialType.System_Void };
                 Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type });
             }
         }

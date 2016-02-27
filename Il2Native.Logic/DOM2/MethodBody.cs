@@ -49,10 +49,10 @@
             this.SanitizeCaseLabelsAndSetReturnTypes(statements);
 
             var skip = 0;
-            if (this.MethodSymbol.MethodKind == MethodKind.Constructor)
-            {
-                skip = ConstructorInitializer(c, statements);
-            }            
+            ////if (this.MethodSymbol.MethodKind == MethodKind.Constructor)
+            ////{
+            ////    skip = ConstructorInitializer(c, statements);
+            ////}            
 
             c.NewLine();
             c.OpenBlock();

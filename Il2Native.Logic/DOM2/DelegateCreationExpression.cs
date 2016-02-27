@@ -3,7 +3,7 @@
     using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
-    public class DelegateCreationExpression : Call
+    public class DelegateCreationExpression : ObjectCreationExpression
     {
         public override Kinds Kind
         {
@@ -26,13 +26,6 @@
             {
                 Arguments.Add(argument);
             }
-        }
-
-        internal override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("new");
-            c.WhiteSpace();
-            base.WriteTo(c);
         }
     }
 }

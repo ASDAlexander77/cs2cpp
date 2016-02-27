@@ -16,15 +16,12 @@
                 {
                     new ReturnStatement
                     {
-                        ExpressionOpt = new Cast
-                        {
-                            Type = type,
-                            Operand = new FieldAccess
+                        ExpressionOpt =
+                            new FieldAccess
                             {
                                 ReceiverOpt = new ThisReference { Type = type },
                                 Field = new FieldImpl { Name = "m_value" }
                             }
-                        }       
                     }
                 }
             };
@@ -34,7 +31,15 @@
         {
             c.TextSpan("operator");
             c.WhiteSpace();
-            c.WriteType(Method.ContainingType);
+            if (Method.ContainingType.IsIntPtrType())
+            {
+                c.TextSpan("void*");
+            }
+            else
+            {
+                c.WriteType(Method.ContainingType);
+            }
+
             c.TextSpan("()");
             MethodBodyOpt.WriteTo(c);
         }

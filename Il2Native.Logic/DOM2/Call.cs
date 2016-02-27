@@ -141,16 +141,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.Method == null)
-            {
-                // this is default Constructor call, for example for Delegates etc
-                c.WriteTypeFullName((INamedTypeSymbol)Type);
-            }
-            else if (this.IsCallingConstructor)
-            {
-                c.WriteTypeFullName(this.Method.ContainingType);
-            }
-            else if (this.Method.IsStaticMethod())
+            if (this.Method.IsStaticMethod())
             {
                 c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
@@ -161,13 +152,7 @@
                 var receiverOpt = this.ReceiverOpt;
                 if (receiverOpt != null)
                 {
-                    if (!receiverOpt.IsReference &&
-                        (receiverOpt.Type.IsPrimitiveValueType() || receiverOpt.Type.TypeKind == TypeKind.Enum))
-                    {
-                        receiverOpt = new Cast { Operand = receiverOpt, Type = receiverOpt.Type, ClassCast = true };
-                    }
-
-                    receiverOpt = this.PrepareMethodReceiver(receiverOpt);
+                    receiverOpt = this.PrepareMethodReceiver(receiverOpt, this.Method);
                     c.WriteAccess(receiverOpt);
                 }
 
@@ -177,9 +162,24 @@
             WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
-        private Expression PrepareMethodReceiver(Expression receiverOpt)
+        private Expression PrepareMethodReceiver(Expression receiverOpt, IMethodSymbol methodSymbol)
         {
-            if (receiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != receiverOpt.Type)
+            var effectiveReceiverOpt = receiverOpt;
+
+            if (effectiveReceiverOpt.Kind == Kinds.ThisReference 
+                && methodSymbol.MethodKind == MethodKind.Constructor
+                && receiverOpt.Type != methodSymbol.ReceiverType)
+            {
+                effectiveReceiverOpt = new BaseReference { Type = this.Method.ReceiverType };
+            }
+
+            if (!effectiveReceiverOpt.IsReference &&
+                (effectiveReceiverOpt.Type.IsPrimitiveValueType() || effectiveReceiverOpt.Type.TypeKind == TypeKind.Enum))
+            {
+                effectiveReceiverOpt = new Cast { Operand = effectiveReceiverOpt, Type = effectiveReceiverOpt.Type, ClassCast = true };
+            }
+            
+            if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != effectiveReceiverOpt.Type)
             {
                 ////var constrained = ((ITypeParameterSymbol)receiverOpt.Type).ConstraintTypes;
                 ////foreach (var constrainedType in constrained)
@@ -191,15 +191,15 @@
                 ////        Type = constrainedType
                 ////    };
                 ////}
-                receiverOpt = new Cast
+                effectiveReceiverOpt = new Cast
                 {
                     Constrained = true,
-                    Operand = receiverOpt,
+                    Operand = effectiveReceiverOpt,
                     Type = this.Method.ReceiverType
                 };
             }
 
-            return receiverOpt;
+            return effectiveReceiverOpt;
         }
     }
 }

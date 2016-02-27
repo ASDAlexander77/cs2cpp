@@ -539,11 +539,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /too
                 itw.WriteLine(" m_value;");
             }
 
+            /*
             if (!unit.HasDefaultConstructor)
             {
                 c.WriteTypeName(namedTypeSymbol, false);
                 itw.WriteLine("() = default;");
             }
+            */
 
             foreach (var declaration in unit.Declarations)
             {

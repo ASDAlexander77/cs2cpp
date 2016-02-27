@@ -3,15 +3,10 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Serialization;
-    using System.Text;
-    using System.Threading;
     using DOM;
     using DOM2;
-
-    using Il2Native.Logic.DOM.Implementations;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -180,12 +175,6 @@ namespace Il2Native.Logic
             }
 
             // name
-            if (methodSymbol.MethodKind == MethodKind.Constructor)
-            {
-                WriteTypeName((INamedTypeSymbol)methodSymbol.ReceiverType, false);
-                return;
-            }
-
             var symbol = methodSymbolForName ?? methodSymbol;
             var explicitInterfaceImplementation = 
                 symbol.ExplicitInterfaceImplementations != null 
@@ -714,19 +703,16 @@ namespace Il2Native.Logic
         public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
             // type
-            if (methodSymbol.MethodKind != MethodKind.Constructor)
+            if (methodSymbol.ReturnsVoid)
             {
-                if (methodSymbol.ReturnsVoid)
-                {
-                    this.TextSpan("void");
-                }
-                else
-                {
-                    this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass);
-                }
-
-                this.WhiteSpace();
+                this.TextSpan("void");
             }
+            else
+            {
+                this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass);
+            }
+
+            this.WhiteSpace();
         }
 
         public void WriteMethodFullName(IMethodSymbol methodSymbol)

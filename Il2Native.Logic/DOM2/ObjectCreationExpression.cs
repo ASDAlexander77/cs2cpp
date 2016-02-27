@@ -6,7 +6,6 @@
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ObjectCreationExpression : Call
     {
@@ -49,8 +48,15 @@
             {
                 if (!Type.IsValueType || IsReference)
                 {
-                    c.TextSpan("new");
-                    c.WhiteSpace();
+                    c.TextSpan("__new<");
+                    c.WriteTypeFullName(Type);
+                    c.TextSpan(">");
+                }
+                else
+                {
+                    c.TextSpan("__init<");
+                    c.WriteTypeFullName(Type);
+                    c.TextSpan(">");
                 }
             }
             else
@@ -66,7 +72,7 @@
                 this.Method = method;
             }
 
-            base.WriteTo(c);
+            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
         private bool TypeEquals(ITypeSymbol leftTypeSymbol, ITypeSymbol rightTypeSymbol)
