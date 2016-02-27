@@ -42,13 +42,13 @@ template <typename D, typename S> inline D cast(S s)
 
 // cast internals
 template <typename D, typename S> 
-inline typename std::enable_if<is_class_type<S>::value, bool>::type is(S s)
+inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, bool>::type is(S s)
 {
 	return as<D>(s) != nullptr;
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<is_value_type<S>::value, bool>::type is(S s)
+inline typename std::enable_if<is_value_type<D>::value || is_value_type<S>::value, bool>::type is(S s)
 {
 	return false;
 }
