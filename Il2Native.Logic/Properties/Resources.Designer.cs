@@ -61,21 +61,33 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Arrays internals
-        ///template &lt;typename T&gt; class __array : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
+        ///   Looks up a localized string similar to // Boxing internals
+        ///template &lt;typename T, typename = std::enable_if&lt;std::is_base_of&lt;object, T&gt;::value&gt; &gt; inline T* __box (T* t)
         ///{
-        ///	int32_t _rank;
-        ///	int32_t _length;
-        ///	T _data[0];
-        ///public:
-        ///	// TODO: finish checking boundries
-        ///	__array(size_t length) : _rank(1) { _length = length; }
-        ///	inline const T operator [](size_t index) const { return _data[index]; }
-        ///	inline T&amp; operator [](size_t index) { return _data[index]; }
-        ///	inline operator size_t() const { return (size_t)_length; }
-        ///};
+        ///	return t;
+        ///}
         ///
-        ///template &lt;typename T, size_t RANK&gt; class __multi_a [rest of string was truncated]&quot;;.
+        ///template &lt;typename T&gt; inline T* __box (T t)
+        ///{
+        ///	return new T(t);
+        ///}
+        ///
+        ///// Unboxing internals
+        ///template &lt;typename D, typename S&gt; inline D __unbox(S* c)
+        ///{
+        ///	// TODO: finish it
+        ///	D d;
+        ///	return d;
+        ///}
+        ///
+        ///// cast internals
+        ///template &lt;typename D, typename S&gt; inline D as(S s)
+        ///{
+        ///	return dynamic_cast&lt;D&gt;(s);
+        ///}
+        ///
+        ///// cast internals
+        ///template &lt;typename D, typename S&gt;  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -84,26 +96,13 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // __val conversions
-        ///template&lt;&gt;
-        ///inline __val&lt;intptr_t&gt;::__val(const &lt;&lt;%assemblyName%&gt;&gt;::System::IntPtr&amp; value)
+        ///   Looks up a localized string similar to // String literal
+        ///string* operator &quot;&quot; _s(const wchar_t* ptr, size_t length)
         ///{
-        ///	_value = reinterpret_cast&lt;intptr_t&gt;(value.m_value);
-        ///}
-        ///
-        ///// MethodBodyOpt: object.GetType()
-        ///&lt;&lt;%assemblyName%&gt;&gt;::System::Type* &lt;&lt;%assemblyName%&gt;&gt;::System::Object::GetType()
-        ///{
-        ///    throw 0xC000C000;
-        ///}
-        ///
-        ///// MethodBodyOpt: System.Array.GetUpperBound(int)
-        ///int32_t &lt;&lt;%assemblyName%&gt;&gt;::System::Array::GetUpperBound(int32_t index)
-        ///{
-        ///    throw 0xC000C000;
-        ///}
-        ///
-        ///// MethodBodyOpt: System.Array.Ge [rest of string was truncated]&quot;;.
+        ///	auto result = string::FastAllocateString(length);
+        ///	std::wcsncpy(&amp;result-&gt;m_firstChar, ptr, length);
+        ///	return result;
+        ///}.
         /// </summary>
         internal static string c_definitions {
             get {
@@ -112,28 +111,19 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #include &lt;cstdint&gt;
-        ///#include &lt;functional&gt;
-        ///#include &lt;initializer_list&gt;
-        ///
-        ///template &lt;typename T&gt; class __array;
-        ///
-        ///template &lt;typename T&gt; struct __val
+        ///   Looks up a localized string similar to template &lt;typename T&gt; struct is_primitive_type : std::integral_constant&lt;bool, std::is_enum&lt;T&gt;::value || std::is_integral&lt;T&gt;::value || std::is_floating_point&lt;T&gt;::value&gt;
         ///{
-        ///public: 
-        ///	T _value;
-        ///	inline __val(T value) : _value(value) {}
-        ///	__val(const CoreLib::System::IntPtr&amp; value);
-        ///	inline operator T() { return _value; }
         ///};
         ///
-        ///template &lt;typename T, typename TUnderlying&gt; struct __enum
+        ///template &lt;typename T&gt; struct is_struct_type : std::integral_constant&lt;bool, std::is_object&lt;T&gt;::value &amp;&amp; std::is_base_of&lt;object, T&gt;::value&gt;
         ///{
-        ///public: 
-        ///	TUnderlying _value;
-        ///	inline __enum(TUnderlying value) : _value(value) {}
-        ///	inline operator TUnderlying() { return _value; }
-        ///} [rest of string was truncated]&quot;;.
+        ///};
+        ///
+        ///template &lt;typename T&gt; struct is_value_type : std::integral_constant&lt;bool, is_struct_type&lt;T&gt;::value || is_primitive_type&lt;T&gt;::value&gt;
+        ///{
+        ///};
+        ///
+        ///template &lt;typename T&gt; struct is_class_type :  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_forward_declarations {
             get {
@@ -142,25 +132,60 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Arrays internals
-        ///template &lt;typename T&gt; class __array : public &lt;&lt;%assemblyName%&gt;&gt;::System::Array
-        ///{
-        ///	int32_t _rank;
-        ///	int32_t _length;
-        ///	T _data[0];
-        ///public:
-        ///	// TODO: finish checking boundries
-        ///	__array(size_t length) : _rank(1) { _length = length; }
-        ///	inline const T operator [](size_t index) const { return _data[index]; }
-        ///	inline T&amp; operator [](size_t index) { return _data[index]; }
-        ///	inline operator size_t() const { return (size_t)_length; }
-        ///};
+        ///   Looks up a localized string similar to #include &lt;cstdint&gt;
+        ///#include &lt;functional&gt;
+        ///#include &lt;initializer_list&gt;
+        ///#include &lt;type_traits&gt;
+        ///#include &lt;limits&gt;
+        ///#include &lt;cmath&gt;
+        ///#include &lt;atomic&gt;
+        ///#include &lt;cstring&gt;
+        ///#include &lt;cwchar&gt;
+        ///#include &lt;thread&gt;
         ///
-        ///template &lt;typename T, size_t RANK&gt; class __multi_a [rest of string was truncated]&quot;;.
+        ///#ifndef thread_local
+        ///# if __STDC_VERSION__ &gt;= 201112 &amp;&amp; !defined __STDC_NO_THREADS__
+        ///#  define thread_local _Thread_local
+        ///# elif defined _WIN32 &amp;&amp; ( \
+        ///       defined _MSC_VER || \
+        ///       defined __ICL || \
+        ///       defined __DMC__ || \
+        ///       defined __BORLANDC__ )
+        ///#  define thread_local __dec [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_include {
             get {
                 return ResourceManager.GetString("c_include", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///// Array
+        ///virtual void __array&lt;T&gt;::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices) override
+        ///{
+        ///	auto typedRef = reinterpret_cast&lt;CoreLib::System::TypedReference&amp;&gt;(elemRef);
+        ///	typedRef.
+        ///}
+        ///
+        ///// IListT1
+        ///T __array&lt;T&gt;::System_Collections_Generic_IListT1_get_Item(int32_t) 
+        ///{
+        ///	throw 0xC000C000;
+        ///}
+        ///
+        ///void __array&lt;T&gt;::System_Collections_Generic_IListT1_set_Item(int32_t, T)
+        ///{
+        ///	throw 0xC000C000;
+        ///}
+        ///
+        ///int32_t __array&lt;T&gt;::System_Collections_Generic_IListT1_IndexOf(T)
+        ///{
+        ///	throw 0xC000C00 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string c_template_definitions {
+            get {
+                return ResourceManager.GetString("c_template_definitions", resourceCulture);
             }
         }
         

@@ -182,156 +182,49 @@ public:
 	inline T& operator [](int32_t index) { return _data[index]; }
 	inline operator int32_t() const { return (size_t)_length; }
 
+	// Array
+	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+
 	// IListT1
-	T System_Collections_Generic_IListT1_get_Item(int32_t) 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_IListT1_set_Item(int32_t, T)
-	{
-		throw 0xC000C000;
-	}
-
-	int32_t System_Collections_Generic_IListT1_IndexOf(T)
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_IListT1_Insert(int32_t, T)
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_IListT1_RemoveAt(int32_t)
-	{
-		throw 0xC000C000;
-	}
+	T System_Collections_Generic_IListT1_get_Item(int32_t);
+	void System_Collections_Generic_IListT1_set_Item(int32_t, T);
+	int32_t System_Collections_Generic_IListT1_IndexOf(T);
+	void System_Collections_Generic_IListT1_Insert(int32_t, T);
+	void System_Collections_Generic_IListT1_RemoveAt(int32_t);
 
 	// ICollectionT1
-	int32_t System_Collections_Generic_ICollectionT1_get_Count() 
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_Generic_ICollectionT1_get_IsReadOnly() 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_ICollectionT1_Add(T) 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_ICollectionT1_Clear() 
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_Generic_ICollectionT1_Contains(T) 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t) 
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_Generic_ICollectionT1_Remove(T) 
-	{
-		throw 0xC000C000;
-	}
+	int32_t System_Collections_Generic_ICollectionT1_get_Count();
+	bool System_Collections_Generic_ICollectionT1_get_IsReadOnly();
+	void System_Collections_Generic_ICollectionT1_Add(T);
+	void System_Collections_Generic_ICollectionT1_Clear(); 
+	bool System_Collections_Generic_ICollectionT1_Contains(T);
+	void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t);
+	bool System_Collections_Generic_ICollectionT1_Remove(T);
 
 	// IEnumerableT1
-	CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator()
-	{
-		throw 0xC000C000;
-	}
+	CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
 
 	// IList
-	CoreLib::System::Object* System_Collections_IList_get_Item(int32_t)
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*)
-	{
-		throw 0xC000C000;
-	}
-
-	int32_t System_Collections_IList_Add(CoreLib::System::Object*) 
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_IList_Contains(CoreLib::System::Object*) 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_IList_Clear()
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_IList_get_IsReadOnly()
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_IList_get_IsFixedSize() 
-	{
-		throw 0xC000C000;
-	}
-
-	int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*) 
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*)
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_IList_Remove(CoreLib::System::Object*)
-	{
-		throw 0xC000C000;
-	}
-
-	void System_Collections_IList_RemoveAt(int32_t) 
-	{
-		throw 0xC000C000;
-	}
+	CoreLib::System::Object* System_Collections_IList_get_Item(int32_t);
+	void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*);
+	int32_t System_Collections_IList_Add(CoreLib::System::Object*);
+	bool System_Collections_IList_Contains(CoreLib::System::Object*);
+	void System_Collections_IList_Clear();
+	bool System_Collections_IList_get_IsReadOnly();
+	bool System_Collections_IList_get_IsFixedSize(); 
+	int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*);
+	void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*);
+	void System_Collections_IList_Remove(CoreLib::System::Object*);
+	void System_Collections_IList_RemoveAt(int32_t);
 
 	// ICollection
-	void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t) 	
-	{
-		throw 0xC000C000;
-	}
-
-	int32_t System_Collections_ICollection_get_Count() 	
-	{
-		throw 0xC000C000;
-	}
-
-	CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot() 	
-	{
-		throw 0xC000C000;
-	}
-
-	bool System_Collections_ICollection_get_IsSynchronized() 	
-	{
-		throw 0xC000C000;
-	}
+	void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
+	int32_t System_Collections_ICollection_get_Count();
+	CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
+	bool System_Collections_ICollection_get_IsSynchronized();
 
 	// IEnumerable
-	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator()	
-	{
-		throw 0xC000C000;
-	}
+	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
 };
 
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
@@ -349,7 +242,6 @@ public:
 	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
 	inline operator int32_t() const { return _length; }
-
 };
 
 template <typename T, int N> class __array_init : public CoreLib::System::Array

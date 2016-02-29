@@ -3,7 +3,7 @@
 // Method : object.GetType()
 CoreLib::System::Type* CoreLib::System::Object::GetType()
 {
-    throw 0xC000C000;
+    return this->__get_type();
 }
 
 // Method : object.MemberwiseClone()

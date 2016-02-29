@@ -344,9 +344,20 @@
             return false;
         }
 
+        public static bool IsVirtualMethod(this IMethodSymbol methodSymbol)
+        {
+            // special case for Array
+            if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_Array)
+            {
+                return methodSymbol.Name == "InternalGetReference";
+            }
+
+            return methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride;
+        }
+
         public static bool IsVirtualGenericMethod(this IMethodSymbol methodSymbol)
         {
-            return methodSymbol.IsGenericMethod && (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride);
+            return methodSymbol.IsGenericMethod && methodSymbol.IsVirtualMethod();
         }
 
         public static ITypeSymbol GetFirstConstraintType(this ITypeSymbol typeSymbol)

@@ -246,6 +246,7 @@
     <Content Include="impl\System\TypedReference.cpp" />
     <Content Include="impl\System\TypeLoadException.cpp" />
     <Content Include="impl\System\Utf8String.cpp" />
+    <None Include="Resources\c_template_definitions.c" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

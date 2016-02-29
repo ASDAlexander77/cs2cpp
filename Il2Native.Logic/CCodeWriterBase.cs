@@ -685,7 +685,7 @@ namespace Il2Native.Logic
                     this.WhiteSpace();
                 }
 
-                if (methodSymbol.IsVirtual || methodSymbol.IsOverride || methodSymbol.IsAbstract)
+                if (methodSymbol.IsVirtualMethod())
                 {
                     this.TextSpan("virtual");
                     this.WhiteSpace();
