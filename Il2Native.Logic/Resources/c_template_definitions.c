@@ -25,7 +25,7 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 	}	
 
 	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference&>(elemRef);
-	typedRef.Value = &this->_data[index];
+	typedRef.Value = __init<CoreLib::System::IntPtr>((void*)&this->_data[index]);
 	// TODO: finish it
 	////typedRef.Type = &T::__type;
 }
