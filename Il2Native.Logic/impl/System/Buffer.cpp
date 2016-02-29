@@ -18,10 +18,10 @@ void CoreLib::System::Buffer::InternalBlockCopy(CoreLib::System::Array* src, int
 
 	int32_t index = 0;
     src->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
-	auto pSrc = (void*)elemref.Value
+	auto pSrc = (void*)elemref.Value;
 
     dst->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
-	auto pDest = (void*)elemref.Value
+	auto pDest = (void*)elemref.Value;
 
 	std::memcpy(pDest + dstOffsetBytes, pSrc + srcOffsetBytes, byteCount);
 }
