@@ -3,7 +3,8 @@
 // Method : string.FastAllocateString(int)
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {
-	auto size = sizeof(string) + length * sizeof(wchar_t);
+	auto size = sizeof(string) + (length + 1) * sizeof(wchar_t);
+	size += (size | 3) % 4;
     auto mem = ::operator new (size);
 	std::memset(mem, 0, size);
     new (mem) string;
