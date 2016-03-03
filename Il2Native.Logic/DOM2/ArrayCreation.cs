@@ -58,41 +58,15 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             var arrayTypeSymbol = (ArrayTypeSymbol)Type;
-            var elementType = arrayTypeSymbol.ElementType;
             var arrayInitialization = this.InitializerOpt as ArrayInitialization;
-            if (arrayInitialization != null)
-            {
-                c.TextSpan("reinterpret_cast<");
-                c.WriteCArrayTemplate(arrayTypeSymbol, cleanName: true);
-                c.TextSpan(">(");
-            }
 
             var initItems = IterateInitializers(arrayInitialization).ToList();
 
+            c.WriteCArrayTemplate(arrayTypeSymbol, false);
+            c.TextSpan("::__new_array");
             if (arrayInitialization != null)
             {
-                c.TextSpan("new");
-                c.WhiteSpace();
-                if (initItems.Count > 0)
-                {
-                    c.TextSpan("__array_init<");
-                    c.WriteType(elementType);
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                    c.TextSpan(initItems.Count.ToString());
-                    c.TextSpan(">");
-                }
-                else
-                {
-                    c.TextSpan("__array_empty<");
-                    c.WriteType(elementType);
-                    c.TextSpan(">");
-                }
-            }
-            else
-            {
-                c.WriteCArrayTemplate(arrayTypeSymbol, false);
-                c.TextSpan("::Allocate");
+                c.TextSpan("_init");
             }
 
             c.TextSpan("(");
@@ -141,10 +115,6 @@
             }
 
             c.TextSpan(")");
-            if (arrayInitialization != null)
-            {
-                c.TextSpan(")");
-            }
         }
 
         private static IEnumerable<Expression> IterateInitializers(ArrayInitialization arrayInitialization)

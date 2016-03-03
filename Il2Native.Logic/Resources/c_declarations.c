@@ -171,11 +171,27 @@ public:
 	__array(const __array<T>&) = delete;
 	__array(__array<T>&&) = delete;
 
-	static __array<T>* Allocate(int32_t length)
+	static __array<T>* __new_array(int32_t length)
 	{
 		auto mem = __new_set0(sizeof(__array<T>) + length * sizeof(T));
 		new (mem) __array<T>(length);
 		return reinterpret_cast<__array<T>*>(mem);
+	}
+
+	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
+	{
+		auto count = sizeof...(items);
+		auto size = count * sizeof(T);
+		auto mem = __new_set0(sizeof(__array<T>) + size);
+		new (mem) __array<T>(count);
+
+		auto instance = reinterpret_cast<__array<T>*>(mem);
+
+		// initialize
+		T tmp[] = {items...};
+		memcpy(&instance->_data[0], &tmp, size);
+
+		return instance;
 	}
 
 	inline const T operator [](int32_t index) const { return _data[index]; }
@@ -227,7 +243,7 @@ public:
 	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
 };
 
-template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
+template <typename T, int32_t RANK> class __multi_array : public virtual CoreLib::System::Array
 {
 public:
 	int32_t _rank;
@@ -242,24 +258,4 @@ public:
 	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
 	inline operator int32_t() const { return _length; }
-};
-
-template <typename T, int N> class __array_init : public CoreLib::System::Array
-{
-public:
-	int32_t _rank;
-	int32_t _length;
-	T _data[N];
-
-	template <typename... Ta> __array_init(Ta... items) : _rank(1), _length(sizeof...(items)), _data{items...} {} 
-};
-
-template <typename T> class __array_empty : public CoreLib::System::Array
-{
-public:
-	int32_t _rank;
-	int32_t _length;
-	T _data[1];
-
-	__array_empty() : _rank(1), _length(0) {} 
 };
