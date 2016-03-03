@@ -23,11 +23,44 @@
             base.Parse(boundBinaryOperator);
             this.OperatorKind = boundBinaryOperator.OperatorKind;
 
+            // special case for PointerAddition
+            if (IsPointerOperation(this.OperatorKind))
+            {
+                var left = true;
+                var boundBinaryOperator2 = boundBinaryOperator.Right as BoundBinaryOperator;
+                if (boundBinaryOperator2 == null)
+                {
+                    left = false;
+                    boundBinaryOperator2 = boundBinaryOperator.Left as BoundBinaryOperator;
+                }
+
+                if (boundBinaryOperator2 != null)
+                {
+                    if (boundBinaryOperator2.Left is BoundSizeOfOperator)
+                    {
+                        this.Right = Deserialize(boundBinaryOperator2.Right) as Expression;
+                    }
+                    else if (boundBinaryOperator2.Right is BoundSizeOfOperator)
+                    {
+                        this.Right = Deserialize(boundBinaryOperator2.Left) as Expression;
+                    }
+
+                    if (this.Right != null)
+                    {
+                        this.Left = (left) 
+                            ? Deserialize(boundBinaryOperator.Left) as Expression 
+                            : Deserialize(boundBinaryOperator.Right) as Expression;
+                        return;
+                    }
+                }
+            }
+
             // special case for PointerSubtraction 
-            if (this.OperatorKind == BinaryOperatorKind.Division)
+            if (GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Division)
             {
                 var boundBinaryOperator2 = boundBinaryOperator.Left as BoundBinaryOperator;
-                if (boundBinaryOperator2 != null && boundBinaryOperator2.OperatorKind == BinaryOperatorKind.PointerSubtraction)
+                if (boundBinaryOperator2 != null && IsPointerOperation(boundBinaryOperator2.OperatorKind)
+                    && GetOperatorKind(boundBinaryOperator2.OperatorKind) == BinaryOperatorKind.Subtraction)
                 {
                     this.Parse(boundBinaryOperator2);
                     return;
@@ -35,9 +68,7 @@
             }
 
             this.Left = Deserialize(boundBinaryOperator.Left) as Expression;
-            Debug.Assert(this.Left != null);
             this.Right = Deserialize(boundBinaryOperator.Right) as Expression;
-            Debug.Assert(this.Right != null);
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -62,7 +93,7 @@
                 c.TextSpan(")(");
             }
 
-            var reminder = this.GetOperatorKind() == BinaryOperatorKind.Remainder && (this.Left.Type.IsRealValueType() || this.Right.Type.IsRealValueType());
+            var reminder = GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Remainder && (this.Left.Type.IsRealValueType() || this.Right.Type.IsRealValueType());
             if (reminder)
             {
                 c.TextSpan("std::remainder(");
@@ -89,7 +120,7 @@
 
         private void WriteOperator(CCodeWriterBase c)
         {
-            switch (this.GetOperatorKind())
+            switch (GetOperatorKind(this.OperatorKind))
             {
                 case BinaryOperatorKind.Multiplication:
                     c.TextSpan("*");
@@ -168,9 +199,33 @@
             }
         }
 
-        private BinaryOperatorKind GetOperatorKind()
+        private static BinaryOperatorKind GetOperatorKind(BinaryOperatorKind kind)
         {
-            return this.OperatorKind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical);
+            return kind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical);
+        }
+
+        private static BinaryOperatorKind GetOperatorType(BinaryOperatorKind kind)
+        {
+            return kind & BinaryOperatorKind.TypeMask;
+        }
+
+        private static bool IsPointerOperation(BinaryOperatorKind kind)
+        {
+            switch (GetOperatorType(kind))
+            {
+                case BinaryOperatorKind.Pointer:
+                case BinaryOperatorKind.PointerAndInt:
+                case BinaryOperatorKind.PointerAndUInt:
+                case BinaryOperatorKind.PointerAndLong:
+                case BinaryOperatorKind.PointerAndULong:
+                case BinaryOperatorKind.IntAndPointer:
+                case BinaryOperatorKind.UIntAndPointer:
+                case BinaryOperatorKind.LongAndPointer:
+                case BinaryOperatorKind.ULongAndPointer:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

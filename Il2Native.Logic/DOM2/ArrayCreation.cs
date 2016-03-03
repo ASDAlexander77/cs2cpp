@@ -64,7 +64,7 @@
 
             c.WriteCArrayTemplate(arrayTypeSymbol, false);
             c.TextSpan("::__new_array");
-            if (arrayInitialization != null)
+            if (arrayInitialization != null && initItems.Count > 0)
             {
                 c.TextSpan("_init");
             }
@@ -72,7 +72,7 @@
             c.TextSpan("(");
 
             var any = false;
-            if (arrayInitialization == null)
+            if (arrayInitialization == null || initItems.Count == 0)
             {
                 foreach (var bound in this.bounds)
                 {
