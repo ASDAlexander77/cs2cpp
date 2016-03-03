@@ -9,5 +9,5 @@ CoreLib::System::Type* CoreLib::System::Object::GetType()
 // Method : object.MemberwiseClone()
 object* CoreLib::System::Object::MemberwiseClone()
 {
-    throw 0xC000C000;
+    return this->__clone();
 }

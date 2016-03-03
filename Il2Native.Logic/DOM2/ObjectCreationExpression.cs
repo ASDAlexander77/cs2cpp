@@ -16,6 +16,8 @@
 
         public Expression InitializerExpressionOpt { get; set; }
 
+        public bool NewOperator { get; set; }
+
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
         {
             base.Parse(boundObjectCreationExpression);
@@ -43,6 +45,22 @@
         }
 
         internal override void WriteTo(CCodeWriterBase c)
+        {
+            if (this.NewOperator)
+            {
+                c.TextSpan("new");
+                c.WhiteSpace();
+                c.WriteTypeFullName(Type);
+            }
+            else
+            {
+                this.NewTemplate(c);
+            }
+
+            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+        }
+
+        private void NewTemplate(CCodeWriterBase c)
         {
             if (!Type.IsValueType || IsReference)
             {
@@ -83,8 +101,6 @@
                 c.WriteTypeFullName(Type);
                 c.TextSpan(">");
             }
-
-            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
     }
 }

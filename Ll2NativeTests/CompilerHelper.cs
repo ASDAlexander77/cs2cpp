@@ -236,7 +236,7 @@
             Trace.WriteLine(string.Empty);
 
             // file exe
-            ExecCmd("g++", string.Format("-o {0}.exe {1} -lstdc++ -std=gnu++14 -lCoreLib -march=native -I {0}/src -I CoreLib/src -L CoreLib/__build_mingw32_debug -fno-rtti -fpermissive", assemblyName, GetAllSourceFiles(assemblyName)));
+            ExecCmd("g++", string.Format("-o {0}.exe {1} -lstdc++ -std=gnu++14 -lCoreLib -march=native -I {0}/src -I CoreLib/src -I CoreLib/Impl -L CoreLib/__build_mingw32_debug -fpermissive", assemblyName, GetAllSourceFiles(assemblyName)));
 
             if (!justCompile)
             {

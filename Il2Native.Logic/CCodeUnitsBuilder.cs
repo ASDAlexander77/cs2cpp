@@ -191,7 +191,7 @@ namespace Il2Native.Logic
             // add default copy constructor
             if (type.TypeKind == TypeKind.Delegate)
             {
-                unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
+                ////unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
             }
 
             if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
@@ -219,6 +219,7 @@ namespace Il2Native.Logic
             {
                 // add internal infrustructure
                 unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
             }
 
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))

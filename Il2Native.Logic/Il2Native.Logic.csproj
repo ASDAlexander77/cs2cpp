@@ -140,7 +140,9 @@
     <Compile Include="DOM\Implementations\LocalImpl.cs" />
     <Compile Include="DOM\Implementations\MethodImpl.cs" />
     <Compile Include="DOM\Implementations\ParameterImpl.cs" />
+    <Compile Include="DOM\Implementations\PointerTypeImpl.cs" />
     <Compile Include="DOM\Implementations\TypeImpl.cs" />
+    <Compile Include="DOM\Synthesized\CCodeCloneVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />

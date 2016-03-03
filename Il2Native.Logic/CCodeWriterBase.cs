@@ -396,7 +396,7 @@ namespace Il2Native.Logic
                 case TypeKind.Module:
                     break;
                 case TypeKind.PointerType:
-                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
+                    var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
                     this.WriteType(pointedAtType, allowKeywords: allowKeywords);
                     TextSpan("*");
                     return;
