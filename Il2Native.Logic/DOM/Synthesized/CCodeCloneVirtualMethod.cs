@@ -25,7 +25,7 @@
                         ExpressionOpt =
                             new ObjectCreationExpression
                             {
-                                Type = type.IsValueType ? (ITypeSymbol)new PointerTypeImpl { PointedAtType = type } : type,
+                                Type = type,
                                 NewOperator = true,
                                 Arguments = { new PointerIndirectionOperator { Operand = new ThisReference() } }
                             }
@@ -44,7 +44,10 @@
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = type;
+                ReturnType = type.IsValueType || type.TypeKind == TypeKind.Struct ||
+                             type.TypeKind == TypeKind.Enum
+                    ? new ValueTypeAsClassTypeImpl(type)
+                    : type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

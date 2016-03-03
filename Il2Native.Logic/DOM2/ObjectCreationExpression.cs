@@ -50,7 +50,7 @@
             {
                 c.TextSpan("new");
                 c.WhiteSpace();
-                c.WriteTypeFullName(Type);
+                c.WriteType(Type, true, true, true);
             }
             else
             {
@@ -91,14 +91,14 @@
                 else
                 {
                     c.TextSpan("__new<");
-                    c.WriteTypeFullName(Type);
+                    c.WriteType(Type, true, true, true);
                     c.TextSpan(">");
                 }
             }
             else
             {
                 c.TextSpan("__init<");
-                c.WriteTypeFullName(Type);
+                c.WriteType(Type, true, true, true);
                 c.TextSpan(">");
             }
         }

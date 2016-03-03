@@ -219,7 +219,10 @@ namespace Il2Native.Logic
             {
                 // add internal infrustructure
                 unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
+                if (!type.IsAbstract)
+                {
+                    unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
+                }
             }
 
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))

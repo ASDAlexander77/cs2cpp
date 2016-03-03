@@ -61,7 +61,7 @@ include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
 link_directories(""./""<%link_msvc%>)
-SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /Zi /EHsc /wd4250 /MP"")
+SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} /Od /Zi /EHsc /wd4250"")
 else()
 link_directories(""./""<%link_other%>)
 SET(CMAKE_CXX_FLAGS ""${CMAKE_CXX_FLAGS} -O0 -g -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
@@ -113,7 +113,7 @@ mingw32-make -j 8 2>log";
 cd __build_win32_debug
 cmake -f .. -G ""Visual Studio 14"" -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" x86
-MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
+MSBuild ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=""Win32"" /toolsversion:14.0";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))
             {

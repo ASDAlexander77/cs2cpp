@@ -142,6 +142,7 @@
     <Compile Include="DOM\Implementations\ParameterImpl.cs" />
     <Compile Include="DOM\Implementations\PointerTypeImpl.cs" />
     <Compile Include="DOM\Implementations\TypeImpl.cs" />
+    <Compile Include="DOM\Implementations\ValueTypeAsClassTypeImpl.cs" />
     <Compile Include="DOM\Synthesized\CCodeCloneVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
