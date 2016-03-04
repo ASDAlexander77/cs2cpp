@@ -58,7 +58,7 @@ namespace System
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public struct Decimal : IFormattable, IComparable, IConvertible
+    public partial struct Decimal : IFormattable, IComparable, IConvertible
             , IComparable<Decimal>, IEquatable<Decimal>
     {
 

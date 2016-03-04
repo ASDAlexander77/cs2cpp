@@ -1,5 +1,11 @@
 #include "CoreLib.h"
 
+double CoreLib::System::Number::modf_Ref(double x, double& intpart)
+{
+    return std::modf(x, &intpart);
+}
+
+/* 
 // Method : System.Number.FormatDecimal(decimal, string, System.Globalization.NumberFormatInfo)
 string* CoreLib::System::Number::FormatDecimal(CoreLib::System::Decimal value, string* format, CoreLib::System::Globalization::NumberFormatInfo* info)
 {
@@ -59,3 +65,4 @@ string* CoreLib::System::Number::FormatNumberBuffer(uint8_t* number, string* for
 {
     throw 0xC000C000;
 }
+*/
