@@ -65,7 +65,8 @@ SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /wd4250 /MP""
 SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /MP8"")
 else()
 link_directories(""./""<%link_other%>)
-SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
+SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -gsplit-dwarf -fvar-tracking-assignments
+-gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
 SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -std=gnu++14 -fpermissive"")
 endif()
 
@@ -99,39 +100,39 @@ endif()";
             }
 
             // build mingw32 DEBUG .bat
-            var buildMinGw32 = @"md __build_mingw32_debug
-cd __build_mingw32_debug
+            var buildMinGw32 = @"md __build_mingw32_<%build_type_lowercase%>
+cd __build_mingw32_<%build_type_lowercase%>
 cmake -f .. -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 mingw32-make -j 8 2>log";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_debug", ".bat"))))
             {
-                itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug"));
+                itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
                 itw.Close();
             }
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_release", ".bat"))))
             {
-                itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release"));
+                itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                 itw.Close();
             }
 
             // build Visual Studio .bat
-            var buildVS2015 = @"md __build_win32_debug
-cd __build_win32_debug
+            var buildVS2015 = @"md __build_win32_<%build_type_lowercase%>
+cd __build_win32_<%build_type_lowercase%>
 cmake -f .. -G ""Visual Studio 14"" -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_debug", ".bat"))))
             {
-                itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release"));
+                itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "debug"));
                 itw.Close();
             }
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_release", ".bat"))))
             {
-                itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release"));
+                itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                 itw.Close();
             }
         }
