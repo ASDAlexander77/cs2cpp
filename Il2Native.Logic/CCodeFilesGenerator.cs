@@ -90,9 +90,9 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug/Debug\"", a.Name.CleanUpNameAllUnderscore())));
             var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release/Release\"", a.Name.CleanUpNameAllUnderscore())));
             var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
@@ -131,7 +131,7 @@ mingw32-make -j 8 2>log";
             // build Visual Studio .bat
             var buildVS2015 = @"md __build_win32_<%build_type_lowercase%>
 cd __build_win32_<%build_type_lowercase%>
-cmake -f .. -G ""Visual Studio 14"" -Wno-dev
+cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
