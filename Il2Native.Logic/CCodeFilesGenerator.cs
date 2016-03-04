@@ -60,7 +60,7 @@ file(GLOB_RECURSE <%name%>_IMPL
 include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
-    if (CMAKE_BUILD_TYPE EQUAL ""Debug"")
+    if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
         link_directories(""./""<%link_msvc_debug%>)
     else()
         link_directories(""./""<%link_msvc_release%>)
@@ -68,7 +68,7 @@ if (MSVC)
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Z7 /EHsc /wd4250 /MP8"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /MP8"")
 else()
-    if (CMAKE_BUILD_TYPE EQUAL ""Debug"")
+    if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
         link_directories(""./""<%link_other_debug%>)
     else()
         link_directories(""./""<%link_other_release%>)
@@ -90,9 +90,9 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug/Debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
             var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release/Release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\"", a.Name.CleanUpNameAllUnderscore())));
             var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
