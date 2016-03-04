@@ -60,13 +60,21 @@ file(GLOB_RECURSE <%name%>_IMPL
 include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
-link_directories(""./""<%link_msvc%>)
-SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /wd4250 /MP"")
-SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /MP8"")
+    if (CMAKE_BUILD_TYPE EQUAL ""Debug"")
+        link_directories(""./""<%link_msvc_debug%>)
+    else()
+        link_directories(""./""<%link_msvc_release%>)
+    endif()
+    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /wd4250 /MP"")
+    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /MP8"")
 else()
-link_directories(""./""<%link_other%>)
-SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -gsplit-dwarf -fvar-tracking-assignments -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
-SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -std=gnu++14 -fpermissive"")
+    if (CMAKE_BUILD_TYPE EQUAL ""Debug"")
+        link_directories(""./""<%link_other_debug%>)
+    else()
+        link_directories(""./""<%link_other_release%>)
+    endif()
+    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -gsplit-dwarf -fvar-tracking-assignments -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
+    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -std=gnu++14 -fpermissive"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
@@ -82,8 +90,10 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists", ".txt"))))
@@ -93,8 +103,10 @@ endif()";
                          .Replace("<%type%>", type)
                          .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())
                          .Replace("<%include%>", include)
-                         .Replace("<%link_msvc%>", link_msvc)
-                         .Replace("<%link_other%>", link_other));
+                         .Replace("<%link_msvc_debug%>", link_msvc_debug)
+                         .Replace("<%link_other_debug%>", link_other_debug)
+                         .Replace("<%link_msvc_release%>", link_msvc_release)
+                         .Replace("<%link_other_release%>", link_other_release));
                 itw.Close();
             }
 
