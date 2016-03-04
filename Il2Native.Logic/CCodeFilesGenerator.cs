@@ -360,6 +360,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (isCoreLib)
                 {
                     itw.WriteLine(Resources.c_template_definitions);
+                    itw.WriteLine(Resources.decimals);
                 }
 
                 foreach (var includeHeader in includeHeaders)

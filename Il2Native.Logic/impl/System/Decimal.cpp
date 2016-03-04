@@ -15,13 +15,21 @@ void CoreLib::System::Decimal::_ctor(double value)
 // Method : decimal.FCallAddSub(ref decimal, ref decimal, byte)
 void CoreLib::System::Decimal::FCallAddSub_Ref_Ref(CoreLib::System::Decimal& d1, CoreLib::System::Decimal& d2, uint8_t bSign)
 {
-    throw 0xC000C000;
+    CoreLib::System::Decimal res;
+    if (DecAddSub(&d1.flags, &d2.flags, &res.flags, bSign) != 0)
+    {
+        throw new OverflowException();
+    }
+
+    d1 = res;
 }
 
 // Method : decimal.FCallAddSubOverflowed(ref decimal, ref decimal, byte, ref bool)
 void CoreLib::System::Decimal::FCallAddSubOverflowed_Ref_Ref_Ref(CoreLib::System::Decimal& d1, CoreLib::System::Decimal& d2, uint8_t bSign, bool& overflowed)
 {
-    throw 0xC000C000;
+    CoreLib::System::Decimal res;
+    overflowed = DecAddSub(&d1.flags, &d2.flags, &res.flags, bSign) != 0;
+    d1 = res;
 }
 
 // Method : decimal.FCallCompare(ref decimal, ref decimal)

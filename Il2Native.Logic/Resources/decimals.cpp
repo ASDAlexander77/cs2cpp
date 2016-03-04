@@ -1,16 +1,16 @@
 // Decimals
-extern "C" Double pow(Double value, Double power);
-extern "C" Double fabs(Double value);
+extern "C" double pow(double value, double power);
+extern "C" double fabs(double value);
 
 typedef union {
-	UInt64 int64;
+	uint64_t int64;
 	struct {
 #if BIGENDIAN
-		UInt32 Hi;
-		UInt32 Lo;
+		uint32_t Hi;
+		uint32_t Lo;
 #else            
-		UInt32 Lo;
-		UInt32 Hi;
+		uint32_t Lo;
+		uint32_t Hi;
 #endif           
 	} u;
 } SPLIT64__;
@@ -18,15 +18,15 @@ typedef union {
 typedef union{
 	struct {
 #if BIGENDIAN
-		UInt32 sign : 1;
-		UInt32 exp : 11;
-		UInt32 mantHi : 20;
-		UInt32 mantLo;
+		uint32_t sign : 1;
+		uint32_t exp : 11;
+		uint32_t mantHi : 20;
+		uint32_t mantLo;
 #else // BIGENDIAN
-		UInt32 mantLo;
-		UInt32 mantHi : 20;
-		UInt32 exp : 11;
-		UInt32 sign : 1;
+		uint32_t mantLo;
+		uint32_t mantHi : 20;
+		uint32_t exp : 11;
+		uint32_t sign : 1;
 #endif
 	} u;
 	double dbl;
@@ -34,13 +34,13 @@ typedef union{
 
 typedef struct {
 #if BIGENDIAN
-	UInt32 sign : 1;
-	UInt32 exp : 8;
-	UInt32 mant : 23;
+	uint32_t sign : 1;
+	uint32_t exp : 8;
+	uint32_t mant : 23;
 #else
-	UInt32 mant : 23;
-	UInt32 exp : 8;
-	UInt32 sign : 1;
+	uint32_t mant : 23;
+	uint32_t exp : 8;
+	uint32_t sign : 1;
 #endif
 } SNGSTRUCT;
 
@@ -54,7 +54,7 @@ typedef struct {
 
 #define OVFL_MAX_5_HI   42949
 
-#define DECIMAL_NEG__				 ((Byte)0x80)
+#define DECIMAL_NEG__				 ((uint8_t)0x80)
 #define DECIMAL_SCALE__(dec)       ((dec).u.u.scale)
 #define DECIMAL_SIGN__(dec)        ((dec).u.u.sign)
 #define DECIMAL_SIGNSCALE__(dec)   ((dec).u.signscale)
@@ -62,11 +62,11 @@ typedef struct {
 #define DECIMAL_MID32__(dec)       ((dec).v.v.Mid32)
 #define DECIMAL_HI32__(dec)        ((dec).Hi32)
 
-#define DECIMAL_LO64_GET__(dec)       ((UInt64)(((UInt64)DECIMAL_MID32__(dec) << 32) | DECIMAL_LO32__(dec)))
-#define DECIMAL_LO64_SET__(dec,value)   {UInt64 _Value = value; DECIMAL_MID32__(dec) = (UInt32)(_Value >> 32); DECIMAL_LO32__(dec) = (UInt32)_Value; }
+#define DECIMAL_LO64_GET__(dec)       ((uint64_t)(((uint64_t)DECIMAL_MID32__(dec) << 32) | DECIMAL_LO32__(dec)))
+#define DECIMAL_LO64_SET__(dec,value)   {uint64_t _Value = value; DECIMAL_MID32__(dec) = (uint32_t)(_Value >> 32); DECIMAL_LO32__(dec) = (uint32_t)_Value; }
 #define DECIMAL_SETZERO__(dec) {DECIMAL_LO32__(dec) = 0; DECIMAL_MID32__(dec) = 0; DECIMAL_HI32__(dec) = 0; DECIMAL_SIGNSCALE__(dec) = 0;}
 
-const SPLIT64__    sdlTenToEighteen = { UInt64(1000000000000000000) };
+const SPLIT64__    sdlTenToEighteen = { uint64_t(1000000000000000000) };
 
 #define NOERROR__ 0
 #define DISP_E_OVERFLOW__ 1
@@ -75,14 +75,14 @@ const SPLIT64__    sdlTenToEighteen = { UInt64(1000000000000000000) };
 typedef union tagCY__ {
 	struct {
 #if BIGENDIAN
-		Int32    Hi;
-		UInt32   Lo;
+		int32_t    Hi;
+		uint32_t   Lo;
 #else
-		UInt32   Lo;
-		Int32    Hi;
+		uint32_t   Lo;
+		int32_t    Hi;
 #endif
 	} u;
-	Int64 int64;
+	int64_t int64;
 } CY__;
 
 typedef CY__ CURRENCY__;
@@ -96,51 +96,51 @@ typedef struct tagDEC__ {
 #if BIGENDIAN
 	union {
 		struct {
-			Byte sign;
-			Byte scale;
+			uint8_t sign;
+			uint8_t scale;
 		} u;
-		UInt16 signscale;
+		uint16_t signscale;
 	} u;
-	UInt16 wReserved;
+	uint16_t wReserved;
 #else
-	UInt16 wReserved;
+	uint16_t wReserved;
 	union {
 		struct {
-			Byte scale;
-			Byte sign;
+			uint8_t scale;
+			uint8_t sign;
 		} u;
-		UInt16 signscale;
+		uint16_t signscale;
 	} u;
 #endif
-	UInt32 Hi32;
+	uint32_t Hi32;
 	union {
 		struct {
-			UInt32 Lo32;
-			UInt32 Mid32;
+			uint32_t Lo32;
+			uint32_t Mid32;
 		} v;
-		// Don't use Lo64 in the PAL: UInt64 Lo64;
+		// Don't use Lo64 in the PAL: uint64_t Lo64;
 	} v;
 } DECIMAL__;
 
-UInt32 ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
+uint32_t ulPower10[POWER10_MAX + 1] = { 1, 10, 100, 1000, 10000, 100000, 1000000,
 	10000000, 100000000, 1000000000 };
 
-const SPLIT64__ sdlPower10[] = { { UInt64(10000000000) },          // 1E10
-{ UInt64(100000000000) },     // 1E11
-{ UInt64(1000000000000) },    // 1E12
-{ UInt64(10000000000000) },   // 1E13
-{ UInt64(100000000000000) } }; // 1E14
+const SPLIT64__ sdlPower10[] = { { uint64_t(10000000000) },          // 1E10
+{ uint64_t(100000000000) },     // 1E11
+{ uint64_t(1000000000000) },    // 1E12
+{ uint64_t(10000000000000) },   // 1E13
+{ uint64_t(100000000000000) } }; // 1E14
 
 struct DECOVFL
 {
-	UInt32 Hi;
-	UInt32 Mid;
-	UInt32 Lo;
+	uint32_t Hi;
+	uint32_t Mid;
+	uint32_t Lo;
 };
 
 DECOVFL PowerOvfl[] = {
 	// This is a table of the largest values that can be in the upper two
-	// Int32s of a 96-bit number that will not overflow when multiplied
+	// int32_ts of a 96-bit number that will not overflow when multiplied
 	// by a given power.  For the upper word, this is a table of 
 	// 2^32 / 10^n for 1 <= n <= 9.  For the lower word, this is the
 	// remaining fraction part * 2^32.  2^32 = 4294967296.
@@ -156,7 +156,7 @@ DECOVFL PowerOvfl[] = {
 	{ 4u, 1266874889u, 3047500985u }, // 10^9 remainder 0.709551616
 };
 
-const Double dblPower10[] = {
+const double dblPower10[] = {
 	1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
 	1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 	1e20, 1e21, 1e22, 1e23, 1e24, 1e25, 1e26, 1e27, 1e28, 1e29,
@@ -177,29 +177,29 @@ const Double dblPower10[] = {
 
 #define MAXINTPWR10 22
 
-static const UInt32 ulTenToTenDiv4 = 2500000000U;
-static const UInt32 ulTenToNine = 1000000000;
+static const uint32_t ulTenToTenDiv4 = 2500000000U;
+static const uint32_t ulTenToNine = 1000000000;
 #define COPYDEC__(dest, src) {DECIMAL_SIGNSCALE__(dest) = DECIMAL_SIGNSCALE__(src); DECIMAL_HI32__(dest) = DECIMAL_HI32__(src); DECIMAL_LO64_SET__(dest, DECIMAL_LO64_GET__(src));}
 
-#define UInt32x32To64__(a, b) ((UInt64)((UInt32)(a)) * (UInt64)((UInt32)(b)))
+#define uint32_tx32To64__(a, b) ((uint64_t)((uint32_t)(a)) * (uint64_t)((uint32_t)(b)))
 
-#define Div64by32__(num, den) ((UInt32)((UInt64)(num) / (UInt32)(den)))
-#define Mod64by32__(num, den) ((UInt32)((UInt64)(num) % (UInt32)(den)))
+#define Div64by32__(num, den) ((uint32_t)((uint64_t)(num) / (uint32_t)(den)))
+#define Mod64by32__(num, den) ((uint32_t)((uint64_t)(num) % (uint32_t)(den)))
 
 template <class T> const T& min(const T& a, const T& b)
 {
 	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
 }
 
-Double fnDblPower10(Int32 ix)
+double fnDblPower10(int32_t ix)
 {
-	const Int32 maxIx = (sizeof(dblPower10) / sizeof(dblPower10[0]));
+	const int32_t maxIx = (sizeof(dblPower10) / sizeof(dblPower10[0]));
 	if (ix < maxIx)
 		return dblPower10[ix];
 	return pow(10.0, ix);
-} // Double fnDblPower10()
+} // double fnDblPower10()
 
-inline UInt64 DivMod64by32(UInt64 num, UInt32 den)
+inline uint64_t DivMod64by32(uint64_t num, uint32_t den)
 {
 	SPLIT64__  sdl;
 
@@ -208,7 +208,7 @@ inline UInt64 DivMod64by32(UInt64 num, UInt32 den)
 	return sdl.int64;
 }
 
-inline UInt64 DivMod32by32(UInt32 num, UInt32 den)
+inline uint64_t DivMod32by32(uint32_t num, uint32_t den)
 {
 	SPLIT64__  sdl;
 
@@ -217,29 +217,29 @@ inline UInt64 DivMod32by32(UInt32 num, UInt32 den)
 	return sdl.int64;
 }
 
-UInt64 UInt64x64To128(SPLIT64__ sdlOp1, SPLIT64__ sdlOp2, UInt64 *pdlHi)
+uint64_t uint64_tx64To128(SPLIT64__ sdlOp1, SPLIT64__ sdlOp2, uint64_t *pdlHi)
 {
 	SPLIT64__  sdlTmp1;
 	SPLIT64__  sdlTmp2;
 	SPLIT64__  sdlTmp3;
 
-	sdlTmp1.int64 = UInt32x32To64__(sdlOp1.u.Lo, sdlOp2.u.Lo); // lo partial prod
-	sdlTmp2.int64 = UInt32x32To64__(sdlOp1.u.Lo, sdlOp2.u.Hi); // mid 1 partial prod
+	sdlTmp1.int64 = uint32_tx32To64__(sdlOp1.u.Lo, sdlOp2.u.Lo); // lo partial prod
+	sdlTmp2.int64 = uint32_tx32To64__(sdlOp1.u.Lo, sdlOp2.u.Hi); // mid 1 partial prod
 	sdlTmp1.u.Hi += sdlTmp2.u.Lo;
 	if (sdlTmp1.u.Hi < sdlTmp2.u.Lo)  // test for carry
 		sdlTmp2.u.Hi++;
-	sdlTmp3.int64 = UInt32x32To64__(sdlOp1.u.Hi, sdlOp2.u.Hi) + (UInt64)sdlTmp2.u.Hi;
-	sdlTmp2.int64 = UInt32x32To64__(sdlOp1.u.Hi, sdlOp2.u.Lo);
+	sdlTmp3.int64 = uint32_tx32To64__(sdlOp1.u.Hi, sdlOp2.u.Hi) + (uint64_t)sdlTmp2.u.Hi;
+	sdlTmp2.int64 = uint32_tx32To64__(sdlOp1.u.Hi, sdlOp2.u.Lo);
 	sdlTmp1.u.Hi += sdlTmp2.u.Lo;
 	if (sdlTmp1.u.Hi < sdlTmp2.u.Lo)  // test for carry
 		sdlTmp2.u.Hi++;
-	sdlTmp3.int64 += (UInt64)sdlTmp2.u.Hi;
+	sdlTmp3.int64 += (uint64_t)sdlTmp2.u.Hi;
 
 	*pdlHi = sdlTmp3.int64;
 	return sdlTmp1.int64;
 }
 
-UInt32 FullDiv64By32(UInt64 *pdlNum, UInt32 ulDen)
+uint32_t FullDiv64By32(uint64_t *pdlNum, uint32_t ulDen)
 {
 	SPLIT64__  sdlTmp;
 	SPLIT64__  sdlRes;
@@ -262,9 +262,9 @@ UInt32 FullDiv64By32(UInt64 *pdlNum, UInt32 ulDen)
 	return sdlTmp.u.Hi;
 }
 
-Int32 SearchScale(UInt32 ulResHi, UInt32 ulResMid, UInt32 ulResLo, Int32 iScale)
+int32_t SearchScale(uint32_t ulResHi, uint32_t ulResMid, uint32_t ulResLo, int32_t iScale)
 {
-	Int32   iCurScale;
+	int32_t   iCurScale;
 
 	// Quick check to stop us from trying to scale any more.
 	//
@@ -275,7 +275,7 @@ Int32 SearchScale(UInt32 ulResHi, UInt32 ulResMid, UInt32 ulResLo, Int32 iScale)
 
 	if (iScale > DEC_SCALE_MAX - 9) {
 		// We can't scale by 10^9 without exceeding the max scale factor.
-		// See if we can scale to the max.  If not, we'll fall Int32o
+		// See if we can scale to the max.  If not, we'll fall int32_to
 		// standard search for scale factor.
 		//
 		iCurScale = DEC_SCALE_MAX - iScale;
@@ -339,21 +339,21 @@ HaveScale:
 	return iCurScale;
 }
 
-Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
+int32_t ScaleResult(uint32_t *rgulRes, int32_t iHiRes, int32_t iScale)
 {
-	Int32     iNewScale;
-	Int32     iCur;
-	UInt32   ulPwr;
-	UInt32   ulTmp;
-	UInt32   ulSticky;
+	int32_t     iNewScale;
+	int32_t     iCur;
+	uint32_t   ulPwr;
+	uint32_t   ulTmp;
+	uint32_t   ulSticky;
 	SPLIT64__ sdlTmp;
 
 	// See if we need to scale the result.  The combined scale must
 	// be <= DEC_SCALE_MAX and the upper 96 bits must be zero.
 	// 
 	// Start by figuring a lower bound on the scaling needed to make
-	// the upper 96 bits zero.  iHiRes is the index Int32o rgulRes[]
-	// of the highest non-zero UInt32.
+	// the upper 96 bits zero.  iHiRes is the index int32_to rgulRes[]
+	// of the highest non-zero uint32_t.
 	// 
 	iNewScale = iHiRes * 32 - 64 - 1;
 	if (iNewScale > 0) {
@@ -386,7 +386,7 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 		// We scale the log by 256.  log(2) = .30103, * 256 = 77.  Doing this 
 		// with a multiply saves a 96-byte lookup table.  The power returned
 		// is <= the power of the number, so we must add one power of 10
-		// to make it's Int32eger part zero after dividing by 256.
+		// to make it's int32_teger part zero after dividing by 256.
 		// 
 		// Note: the result of this multiplication by an approximation of
 		// log10(2) have been exhaustively checked to verify it gives the 
@@ -405,7 +405,7 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 		iNewScale = 0;
 
 	// Make sure we scale by enough to bring the current scale factor
-	// Int32o valid range.
+	// int32_to valid range.
 	//
 	if (iNewScale < iScale - DEC_SCALE_MAX)
 		iNewScale = iScale - DEC_SCALE_MAX;
@@ -499,17 +499,17 @@ Int32 ScaleResult(UInt32 *rgulRes, Int32 iHiRes, Int32 iScale)
 	return iScale;
 }
 
-Int32 DecAddSub(Int32* d1, Int32* d2, Int32* res, Byte bSign)
+int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign)
 {
 	DECIMAL__* pdecL = (DECIMAL__*)d1;
 	DECIMAL__* pdecR = (DECIMAL__*)d2;
 	DECIMAL__* pdecRes = (DECIMAL__*)res;
 
-	UInt32     rgulNum[6];
-	UInt32     ulPwr;
-	Int32       iScale;
-	Int32       iHiProd;
-	Int32       iCur;
+	uint32_t     rgulNum[6];
+	uint32_t     ulPwr;
+	int32_t       iScale;
+	int32_t       iHiProd;
+	int32_t       iCur;
 	SPLIT64__   sdlTmp;
 	DECIMAL__   decRes;
 	DECIMAL__   decTmp;
@@ -540,7 +540,7 @@ AlignedAdd:
 				// Got negative result.  Flip its sign.
 				// 
 SignFlip:
-				DECIMAL_LO64_SET__(decRes, -(Int64)DECIMAL_LO64_GET__(decRes));
+				DECIMAL_LO64_SET__(decRes, -(int64_t)DECIMAL_LO64_GET__(decRes));
 				DECIMAL_HI32__(decRes) = ~DECIMAL_HI32__(decRes);
 				if (DECIMAL_LO64_GET__(decRes) == 0)
 					DECIMAL_HI32__(decRes)++;
@@ -618,15 +618,15 @@ AlignedScale:
 		// extending it to up to 192 bits of precision.
 		//
 		if (iScale <= POWER10_MAX) {
-			// Scaling won't make it larger than 4 UInt32s
+			// Scaling won't make it larger than 4 uint32_ts
 			//
 			ulPwr = ulPower10[iScale];
-			DECIMAL_LO64_SET__(decTmp, UInt32x32To64__(DECIMAL_LO32__(*pdecL), ulPwr));
-			sdlTmp.int64 = UInt32x32To64__(DECIMAL_MID32__(*pdecL), ulPwr);
+			DECIMAL_LO64_SET__(decTmp, uint32_tx32To64__(DECIMAL_LO32__(*pdecL), ulPwr));
+			sdlTmp.int64 = uint32_tx32To64__(DECIMAL_MID32__(*pdecL), ulPwr);
 			sdlTmp.int64 += DECIMAL_MID32__(decTmp);
 			DECIMAL_MID32__(decTmp) = sdlTmp.u.Lo;
 			DECIMAL_HI32__(decTmp) = sdlTmp.u.Hi;
-			sdlTmp.int64 = UInt32x32To64__(DECIMAL_HI32__(*pdecL), ulPwr);
+			sdlTmp.int64 = uint32_tx32To64__(DECIMAL_HI32__(*pdecL), ulPwr);
 			sdlTmp.int64 += DECIMAL_HI32__(decTmp);
 			if (sdlTmp.u.Hi == 0) {
 				// Result fits in 96 bits.  Use standard aligned add.
@@ -668,7 +668,7 @@ AlignedScale:
 			}
 
 			// Scaling loop, up to 10^9 at a time.  iHiProd stays updated
-			// with index of highest non-zero UInt32.
+			// with index of highest non-zero uint32_t.
 			//
 			for (; iScale > 0; iScale -= POWER10_MAX) {
 				if (iScale > POWER10_MAX)
@@ -678,12 +678,12 @@ AlignedScale:
 
 				sdlTmp.u.Hi = 0;
 				for (iCur = 0; iCur <= iHiProd; iCur++) {
-					sdlTmp.int64 = UInt32x32To64__(rgulNum[iCur], ulPwr) + sdlTmp.u.Hi;
+					sdlTmp.int64 = uint32_tx32To64__(rgulNum[iCur], ulPwr) + sdlTmp.u.Hi;
 					rgulNum[iCur] = sdlTmp.u.Lo;
 				}
 
 				if (sdlTmp.u.Hi != 0)
-					// We're extending the result by another UInt32.
+					// We're extending the result by another uint32_t.
 						rgulNum[++iHiProd] = sdlTmp.u.Hi;
 			}
 		}
@@ -749,8 +749,8 @@ LongAdd:
 			rgulNum[0] = DECIMAL_LO32__(decRes);
 			rgulNum[1] = DECIMAL_MID32__(decRes);
 			rgulNum[2] = DECIMAL_HI32__(decRes);
-			DECIMAL_SCALE__(decRes) = (Byte)ScaleResult(rgulNum, iHiProd, DECIMAL_SCALE__(decRes));
-			if (DECIMAL_SCALE__(decRes) == (Byte)-1)
+			DECIMAL_SCALE__(decRes) = (uint8_t)ScaleResult(rgulNum, iHiProd, DECIMAL_SCALE__(decRes));
+			if (DECIMAL_SCALE__(decRes) == (uint8_t)-1)
 				return DISP_E_OVERFLOW__;
 
 			DECIMAL_LO32__(decRes) = rgulNum[0];
@@ -768,13 +768,13 @@ RetDec:
 #define VARCMP_EQ__   0
 #define VARCMP_GT__   1
 
-Int32 DecCmp(Int32* d1, Int32* d2)
+int32_t DecCmp(int32_t* d1, int32_t* d2)
 {
 	DECIMAL__* pdecL = (DECIMAL__*)d1;
 	DECIMAL__* pdecR = (DECIMAL__*)d2;
 
-	UInt32   ulSgnL;
-	UInt32   ulSgnR;
+	uint32_t   ulSgnL;
+	uint32_t   ulSgnR;
 
 	// First check signs and whether either are zero.  If both are
 	// non-zero and of the same sign, just use subtraction to compare.
@@ -796,7 +796,7 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 
 		DECIMAL__ decRes;
 
-		DecAddSub((Int32*)pdecL, (Int32*)pdecR, (Int32*)&decRes, DECIMAL_NEG__);
+		DecAddSub((int32_t*)pdecL, (int32_t*)pdecR, (int32_t*)&decRes, DECIMAL_NEG__);
 		if (DECIMAL_LO64_GET__(decRes) == 0 && decRes.Hi32 == 0)
 			return VARCMP_EQ__;
 		if (decRes.u.u.sign & DECIMAL_NEG__)
@@ -806,25 +806,25 @@ Int32 DecCmp(Int32* d1, Int32* d2)
 
 	// Signs are different.  Used signed byte compares
 	//
-	if ((SByte)ulSgnL > (SByte)ulSgnR)
+	if ((int8_t)ulSgnL > (int8_t)ulSgnR)
 		return VARCMP_GT__;
 	return VARCMP_LT__;
 }
 
-Int32 DecFromR4(Single fltIn, Int32* pdec)
+int32_t DecFromR4(float fltIn, int32_t* pdec)
 {
 	DECIMAL__* pdecOut = (DECIMAL__*)pdec;
 
-	Int32         iExp;    // number of bits to left of binary poInt32
-	Int32         iPower;
-	UInt32		  ulMant;
-	Double        dbl;
+	int32_t         iExp;    // number of bits to left of binary point32_t
+	int32_t         iPower;
+	uint32_t		  ulMant;
+	double        dbl;
 	SPLIT64__       sdlLo;
 	SPLIT64__       sdlHi;
-	Int32         lmax, cur;  // temps used during scale reduction
+	int32_t         lmax, cur;  // temps used during scale reduction
 
 	// The most we can scale by is 10^28, which is just slightly more
-	// than 2^93.  So a Single with an exponent of -94 could just
+	// than 2^93.  So a float with an exponent of -94 could just
 	// barely reach 0.5, but smaller exponents will always round to zero.
 	//
 	if ((iExp = ((SNGSTRUCT *)&fltIn)->exp - SNGBIAS) < -94)
@@ -836,12 +836,12 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 	if (iExp > 96)
 		return DISP_E_OVERFLOW__;
 
-	// Round the input to a 7-digit Int32eger.  The R4 format has
+	// Round the input to a 7-digit int32_teger.  The R4 format has
 	// only 7 digits of precision, and we want to keep garbage digits
 	// out of the Decimal were making.
 	//
 	// Calculate max power of 10 input value could have by multiplying 
-	// the exponent by log10(2).  Using scaled Int32eger multiplcation, 
+	// the exponent by log10(2).  Using scaled int32_teger multiplcation, 
 	// log10(2) * 2 ^ 16 = .30103 * 65536 = 19728.3.
 	//
 	dbl = fabs(fltIn);
@@ -868,10 +868,10 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 		iPower++;
 	}
 
-	// Round to Int32eger
+	// Round to int32_teger
 	//
-	ulMant = (Int32)dbl;
-	dbl -= (Double)ulMant;  // difference between input & Int32eger
+	ulMant = (int32_t)dbl;
+	dbl -= (double)ulMant;  // difference between input & int32_teger
 	if (dbl > 0.5 || dbl == 0.5 && (ulMant & 1))
 		ulMant++;
 
@@ -886,7 +886,7 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 		//
 		iPower = -iPower;
 		if (iPower < 10) {
-			sdlLo.int64 = UInt32x32To64__(ulMant, (UInt32)ulPower10[iPower]);
+			sdlLo.int64 = uint32_tx32To64__(ulMant, (uint32_t)ulPower10[iPower]);
 
 			DECIMAL_LO32__(*pdecOut) = sdlLo.u.Lo;
 			DECIMAL_MID32__(*pdecOut) = sdlLo.u.Hi;
@@ -896,16 +896,16 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 			// Have a big power of 10.
 			//
 			if (iPower > 18) {
-				sdlLo.int64 = UInt32x32To64__(ulMant, (UInt32)ulPower10[iPower - 18]);
-				sdlLo.int64 = UInt64x64To128(sdlLo, sdlTenToEighteen, &sdlHi.int64);
+				sdlLo.int64 = uint32_tx32To64__(ulMant, (uint32_t)ulPower10[iPower - 18]);
+				sdlLo.int64 = uint64_tx64To128(sdlLo, sdlTenToEighteen, &sdlHi.int64);
 
 				if (sdlHi.u.Hi != 0)
 					return DISP_E_OVERFLOW__;
 			}
 			else {
-				sdlLo.int64 = UInt32x32To64__(ulMant, (UInt32)ulPower10[iPower - 9]);
-				sdlHi.int64 = UInt32x32To64__(ulTenToNine, sdlLo.u.Hi);
-				sdlLo.int64 = UInt32x32To64__(ulTenToNine, sdlLo.u.Lo);
+				sdlLo.int64 = uint32_tx32To64__(ulMant, (uint32_t)ulPower10[iPower - 9]);
+				sdlHi.int64 = uint32_tx32To64__(ulTenToNine, sdlLo.u.Hi);
+				sdlLo.int64 = uint32_tx32To64__(ulTenToNine, sdlLo.u.Lo);
 				sdlHi.int64 += sdlLo.u.Hi;
 				sdlLo.u.Hi = sdlHi.u.Lo;
 				sdlHi.u.Lo = sdlHi.u.Hi;
@@ -923,7 +923,7 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 		// MSD must be non-zero -- but the lower 6 digits could be
 		// zero.  Note also the scale factor is never negative, so
 		// we can't scale by any more than the power we used to
-		// get the Int32eger.
+		// get the int32_teger.
 		//
 		// DivMod32by32 returns the quotient in Lo, the remainder in Hi.
 		//
@@ -937,7 +937,7 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 			if (cur > lmax)
 				continue;
 
-			sdlLo.int64 = DivMod32by32(ulMant, (UInt32)ulPower10[cur]);
+			sdlLo.int64 = DivMod32by32(ulMant, (uint32_t)ulPower10[cur]);
 
 			if (sdlLo.u.Hi == 0) {
 				ulMant = sdlLo.u.Lo;
@@ -951,26 +951,26 @@ Int32 DecFromR4(Single fltIn, Int32* pdec)
 		DECIMAL_SCALE__(*pdecOut) = iPower;
 	}
 
-	DECIMAL_SIGN__(*pdecOut) = (Byte)((SNGSTRUCT *)&fltIn)->sign << 7;
+	DECIMAL_SIGN__(*pdecOut) = (uint8_t)((SNGSTRUCT *)&fltIn)->sign << 7;
 	return NOERROR__;
 }
 
-Int32 DecFromR8(Double dblIn, Int32* pdec)
+int32_t DecFromR8(double dblIn, int32_t* pdec)
 {
 	DECIMAL__* pdecOut = (DECIMAL__*)pdec;
 
-	Int32         iExp;    // number of bits to left of binary poInt32
-	Int32         iPower;  // power-of-10 scale factor
+	int32_t         iExp;    // number of bits to left of binary point32_t
+	int32_t         iPower;  // power-of-10 scale factor
 	SPLIT64__       sdlMant;
 	SPLIT64__       sdlLo;
-	Double        dbl;
-	Int32         lmax, cur;  // temps used during scale reduction
-	UInt32         ulPwrCur;
-	UInt32         ulQuo;
+	double        dbl;
+	int32_t         lmax, cur;  // temps used during scale reduction
+	uint32_t         ulPwrCur;
+	uint32_t         ulQuo;
 
 
 	// The most we can scale by is 10^28, which is just slightly more
-	// than 2^93.  So a Single with an exponent of -94 could just
+	// than 2^93.  So a float with an exponent of -94 could just
 	// barely reach 0.5, but smaller exponents will always round to zero.
 	//
 	if ((iExp = ((DBLSTRUCT__ *)&dblIn)->u.exp - DBLBIAS) < -94)
@@ -982,12 +982,12 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 	if (iExp > 96)
 		return DISP_E_OVERFLOW__;
 
-	// Round the input to a 15-digit Int32eger.  The R8 format has
+	// Round the input to a 15-digit int32_teger.  The R8 format has
 	// only 15 digits of precision, and we want to keep garbage digits
 	// out of the Decimal were making.
 	//
 	// Calculate max power of 10 input value could have by multiplying 
-	// the exponent by log10(2).  Using scaled Int32eger multiplcation, 
+	// the exponent by log10(2).  Using scaled int32_teger multiplcation, 
 	// log10(2) * 2 ^ 16 = .30103 * 65536 = 19728.3.
 	//
 	dbl = fabs(dblIn);
@@ -1016,8 +1016,8 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 
 	// Round to int64
 	//
-	sdlMant.int64 = (Int64)dbl;
-	dbl -= (Double)(Int64)sdlMant.int64;  // dif between input & Int32eger
+	sdlMant.int64 = (int64_t)dbl;
+	dbl -= (double)(int64_t)sdlMant.int64;  // dif between input & int32_teger
 	if (dbl > 0.5 || dbl == 0.5 && (sdlMant.u.Lo & 1))
 		sdlMant.int64++;
 
@@ -1032,8 +1032,8 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		//
 		iPower = -iPower;
 		if (iPower < 10) {
-			sdlLo.int64 = UInt32x32To64__(sdlMant.u.Lo, (UInt32)ulPower10[iPower]);
-			sdlMant.int64 = UInt32x32To64__(sdlMant.u.Hi, (UInt32)ulPower10[iPower]);
+			sdlLo.int64 = uint32_tx32To64__(sdlMant.u.Lo, (uint32_t)ulPower10[iPower]);
+			sdlMant.int64 = uint32_tx32To64__(sdlMant.u.Hi, (uint32_t)ulPower10[iPower]);
 			sdlMant.int64 += sdlLo.u.Hi;
 			sdlLo.u.Hi = sdlMant.u.Lo;
 			sdlMant.u.Lo = sdlMant.u.Hi;
@@ -1041,7 +1041,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		else {
 			// Have a big power of 10.
 			//
-			sdlLo.int64 = UInt64x64To128(sdlMant, sdlPower10[iPower - 10], &sdlMant.int64);
+			sdlLo.int64 = uint64_tx64To128(sdlMant, sdlPower10[iPower - 10], &sdlMant.int64);
 
 			if (sdlMant.u.Hi != 0)
 				return DISP_E_OVERFLOW__;
@@ -1058,7 +1058,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		// MSD must be non-zero -- but the lower 14 digits could be 
 		// zero.  Note also the scale factor is never negative, so
 		// we can't scale by any more than the power we used to
-		// get the Int32eger.
+		// get the int32_teger.
 		//
 		// DivMod64by32 returns the quotient in Lo, the remainder in Hi.
 		//
@@ -1072,7 +1072,7 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 			if (cur > lmax)
 				continue;
 
-			ulPwrCur = (UInt32)ulPower10[cur];
+			ulPwrCur = (uint32_t)ulPower10[cur];
 
 			if (sdlMant.u.Hi >= ulPwrCur) {
 				// Overflow if we try to divide in one step.
@@ -1101,11 +1101,11 @@ Int32 DecFromR8(Double dblIn, Int32* pdec)
 		DECIMAL_MID32__(*pdecOut) = sdlMant.u.Hi;
 	}
 
-	DECIMAL_SIGN__(*pdecOut) = (Byte)((DBLSTRUCT__ *)&dblIn)->u.sign << 7;
+	DECIMAL_SIGN__(*pdecOut) = (uint8_t)((DBLSTRUCT__ *)&dblIn)->u.sign << 7;
 	return NOERROR__;
 }
 
-Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
+int32_t DecMul(int32_t* d1, int32_t* d2, int32_t* res)
 {
 	DECIMAL__* pdecL = (DECIMAL__*)d1;
 	DECIMAL__* pdecR = (DECIMAL__*)d2;
@@ -1114,12 +1114,12 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 	SPLIT64__ sdlTmp;
 	SPLIT64__ sdlTmp2;
 	SPLIT64__ sdlTmp3;
-	Int32   iScale;
-	Int32   iHiProd;
-	UInt32  ulPwr;
-	UInt32  ulRemLo;
-	UInt32  ulRemHi;
-	UInt32  rgulProd[6];
+	int32_t   iScale;
+	int32_t   iHiProd;
+	uint32_t  ulPwr;
+	uint32_t  ulRemLo;
+	uint32_t  ulRemHi;
+	uint32_t  rgulProd[6];
 
 	iScale = pdecL->u.u.scale + pdecR->u.u.scale;
 
@@ -1127,7 +1127,7 @@ Int32 DecMul(Int32* d1, Int32* d2, Int32* res)
 	{
 		// Upper 64 bits are zero.
 		//
-		sdlTmp.int64 = UInt32x32To64__(pdecL->v.v.Lo32, pdecR->v.v.Lo32);
+		sdlTmp.int64 = uint32_tx32To64__(pdecL->v.v.Lo32, pdecR->v.v.Lo32);
 		if (iScale > DEC_SCALE_MAX)
 		{
 			// Result iScale is too big.  Divide result by power of 10 to reduce it.
@@ -1197,12 +1197,12 @@ ReturnZero:
 		// ------------------------------
 		// [p-5][p-4][p-3][p-2][p-1][p-0]   prod[] array
 		//
-		sdlTmp.int64 = UInt32x32To64__(pdecL->v.v.Lo32, pdecR->v.v.Lo32);
+		sdlTmp.int64 = uint32_tx32To64__(pdecL->v.v.Lo32, pdecR->v.v.Lo32);
 		rgulProd[0] = sdlTmp.u.Lo;
 
-		sdlTmp2.int64 = UInt32x32To64__(pdecL->v.v.Lo32, pdecR->v.v.Mid32) + sdlTmp.u.Hi;
+		sdlTmp2.int64 = uint32_tx32To64__(pdecL->v.v.Lo32, pdecR->v.v.Mid32) + sdlTmp.u.Hi;
 
-		sdlTmp.int64 = UInt32x32To64__(pdecL->v.v.Mid32, pdecR->v.v.Lo32);
+		sdlTmp.int64 = uint32_tx32To64__(pdecL->v.v.Mid32, pdecR->v.v.Lo32);
 		sdlTmp.int64 += sdlTmp2.int64; // this could generate carry
 		rgulProd[1] = sdlTmp.u.Lo;
 		if (sdlTmp.int64 < sdlTmp2.int64) // detect carry
@@ -1211,40 +1211,40 @@ ReturnZero:
 			sdlTmp2.u.Hi = 0;
 		sdlTmp2.u.Lo = sdlTmp.u.Hi;
 
-		sdlTmp.int64 = UInt32x32To64__(pdecL->v.v.Mid32, pdecR->v.v.Mid32) + sdlTmp2.int64;
+		sdlTmp.int64 = uint32_tx32To64__(pdecL->v.v.Mid32, pdecR->v.v.Mid32) + sdlTmp2.int64;
 
 		if (pdecL->Hi32 | pdecR->Hi32) {
 			// Highest 32 bits is non-zero.  Calculate 5 more partial products.
 			//
-			sdlTmp2.int64 = UInt32x32To64__(pdecL->v.v.Lo32, pdecR->Hi32);
+			sdlTmp2.int64 = uint32_tx32To64__(pdecL->v.v.Lo32, pdecR->Hi32);
 			sdlTmp.int64 += sdlTmp2.int64; // this could generate carry
 			if (sdlTmp.int64 < sdlTmp2.int64) // detect carry
 				sdlTmp3.u.Hi = 1;
 			else
 				sdlTmp3.u.Hi = 0;
 
-			sdlTmp2.int64 = UInt32x32To64__(pdecL->Hi32, pdecR->v.v.Lo32);
+			sdlTmp2.int64 = uint32_tx32To64__(pdecL->Hi32, pdecR->v.v.Lo32);
 			sdlTmp.int64 += sdlTmp2.int64; // this could generate carry
 			rgulProd[2] = sdlTmp.u.Lo;
 			if (sdlTmp.int64 < sdlTmp2.int64) // detect carry
 				sdlTmp3.u.Hi++;
 			sdlTmp3.u.Lo = sdlTmp.u.Hi;
 
-			sdlTmp.int64 = UInt32x32To64__(pdecL->v.v.Mid32, pdecR->Hi32);
+			sdlTmp.int64 = uint32_tx32To64__(pdecL->v.v.Mid32, pdecR->Hi32);
 			sdlTmp.int64 += sdlTmp3.int64; // this could generate carry
 			if (sdlTmp.int64 < sdlTmp3.int64) // detect carry
 				sdlTmp3.u.Hi = 1;
 			else
 				sdlTmp3.u.Hi = 0;
 
-			sdlTmp2.int64 = UInt32x32To64__(pdecL->Hi32, pdecR->v.v.Mid32);
+			sdlTmp2.int64 = uint32_tx32To64__(pdecL->Hi32, pdecR->v.v.Mid32);
 			sdlTmp.int64 += sdlTmp2.int64; // this could generate carry
 			rgulProd[3] = sdlTmp.u.Lo;
 			if (sdlTmp.int64 < sdlTmp2.int64) // detect carry
 				sdlTmp3.u.Hi++;
 			sdlTmp3.u.Lo = sdlTmp.u.Hi;
 
-			sdlTmp.int64 = UInt32x32To64__(pdecL->Hi32, pdecR->Hi32) + sdlTmp3.int64;
+			sdlTmp.int64 = uint32_tx32To64__(pdecL->Hi32, pdecR->Hi32) + sdlTmp3.int64;
 			rgulProd[4] = sdlTmp.u.Lo;
 			rgulProd[5] = sdlTmp.u.Hi;
 
@@ -1256,7 +1256,7 @@ ReturnZero:
 			iHiProd = 3;
 		}
 
-		// Check for leading zero UInt32s on the product
+		// Check for leading zero uint32_ts on the product
 		//
 		while (rgulProd[iHiProd] == 0) {
 			iHiProd--;
@@ -1274,13 +1274,13 @@ ReturnZero:
 	}
 
 	pdecRes->u.u.sign = pdecR->u.u.sign ^ pdecL->u.u.sign;
-	pdecRes->u.u.scale = (Byte)iScale;
+	pdecRes->u.u.scale = (uint8_t)iScale;
 	return NOERROR__;
 }
 
 // Add a 32 bit unsigned long to an array of 3 unsigned longs representing a 96 integer
 // Returns 0 if there is an overflow
-Byte Add32To96(UInt32* rgulNum, UInt32 ulValue) {
+uint8_t Add32To96(uint32_t* rgulNum, uint32_t ulValue) {
 	rgulNum[0] += ulValue;
 	if (rgulNum[0] < ulValue) {
 		if (++rgulNum[1] == 0) {
@@ -1292,22 +1292,22 @@ Byte Add32To96(UInt32* rgulNum, UInt32 ulValue) {
 	return 1;
 }
 
-UInt32 IncreaseScale(UInt32 *rgulNum, UInt32 ulPwr)
+uint32_t IncreaseScale(uint32_t *rgulNum, uint32_t ulPwr)
 {
 	SPLIT64__   sdlTmp;
 
-	sdlTmp.int64 = UInt32x32To64__(rgulNum[0], ulPwr);
+	sdlTmp.int64 = uint32_tx32To64__(rgulNum[0], ulPwr);
 	rgulNum[0] = sdlTmp.u.Lo;
-	sdlTmp.int64 = UInt32x32To64__(rgulNum[1], ulPwr) + sdlTmp.u.Hi;
+	sdlTmp.int64 = uint32_tx32To64__(rgulNum[1], ulPwr) + sdlTmp.u.Hi;
 	rgulNum[1] = sdlTmp.u.Lo;
-	sdlTmp.int64 = UInt32x32To64__(rgulNum[2], ulPwr) + sdlTmp.u.Hi;
+	sdlTmp.int64 = uint32_tx32To64__(rgulNum[2], ulPwr) + sdlTmp.u.Hi;
 	rgulNum[2] = sdlTmp.u.Lo;
 	return sdlTmp.u.Hi;
 }
 
 // Adjust the quotient to deal with an overflow. We need to divide by 10, 
 // feed in the high bit to undo the overflow and then round as required, 
-Void OverflowUnscale(UInt32* rgulQuo, Byte fRemainder) {
+void OverflowUnscale(uint32_t* rgulQuo, uint8_t fRemainder) {
 	SPLIT64__  sdlTmp;
 
 	// We have overflown, so load the high bit with a one.
@@ -1327,7 +1327,7 @@ Void OverflowUnscale(UInt32* rgulQuo, Byte fRemainder) {
 	}
 }
 
-UInt32 Div96By32(UInt32 *rgulNum, UInt32 ulDen)
+uint32_t Div96By32(uint32_t *rgulNum, uint32_t ulDen)
 {
 	SPLIT64__  sdlTmp;
 
@@ -1358,7 +1358,7 @@ Div1Word:
 	return sdlTmp.u.Hi;
 }
 
-UInt32 Div96By64(UInt32* rgulNum, SPLIT64__ sdlDen)
+uint32_t Div96By64(uint32_t* rgulNum, SPLIT64__ sdlDen)
 {
 	SPLIT64__ sdlQuo;
 	SPLIT64__ sdlNum;
@@ -1392,7 +1392,7 @@ UInt32 Div96By64(UInt32* rgulNum, SPLIT64__ sdlDen)
 
 	// Compute full remainder, rem = dividend - (quo * divisor).
 	//
-	sdlProd.int64 = UInt32x32To64__(sdlQuo.u.Lo, sdlDen.u.Lo); // quo * lo divisor
+	sdlProd.int64 = uint32_tx32To64__(sdlQuo.u.Lo, sdlDen.u.Lo); // quo * lo divisor
 	sdlNum.int64 -= sdlProd.int64;
 
 	if (sdlNum.int64 > ~sdlProd.int64) {
@@ -1411,7 +1411,7 @@ NegRem:
 	return sdlQuo.u.Lo;
 }
 
-UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
+uint32_t Div128By96(uint32_t *rgulNum, uint32_t *rgulDen)
 {
 	SPLIT64__ sdlQuo;
 	SPLIT64__ sdlNum;
@@ -1434,8 +1434,8 @@ UInt32 Div128By96(UInt32 *rgulNum, UInt32 *rgulDen)
 
 	// Compute full remainder, rem = dividend - (quo * divisor).
 	//
-	sdlProd1.int64 = UInt32x32To64__(sdlQuo.u.Lo, rgulDen[0]); // quo * lo divisor
-	sdlProd2.int64 = UInt32x32To64__(sdlQuo.u.Lo, rgulDen[1]); // quo * mid divisor
+	sdlProd1.int64 = uint32_tx32To64__(sdlQuo.u.Lo, rgulDen[0]); // quo * lo divisor
+	sdlProd2.int64 = uint32_tx32To64__(sdlQuo.u.Lo, rgulDen[1]); // quo * mid divisor
 	sdlProd2.int64 += sdlProd1.u.Hi;
 	sdlProd1.u.Hi = sdlProd2.u.Lo;
 
@@ -1479,24 +1479,24 @@ NegRem:
 	return sdlQuo.u.Lo;
 }
 
-Int32 DecDiv(Int32* d1, Int32* d2, Int32* res)
+int32_t DecDiv(int32_t* d1, int32_t* d2, int32_t* res)
 {
 	DECIMAL__* pdecL = (DECIMAL__*)d1;
 	DECIMAL__* pdecR = (DECIMAL__*)d2;
 	DECIMAL__* pdecRes = (DECIMAL__*)res;
 
-	UInt32   rgulQuo[3];
-	UInt32   rgulQuoSave[3];
-	UInt32   rgulRem[4];
-	UInt32   rgulDivisor[3];
-	UInt32   ulPwr;
-	UInt32   ulTmp;
-	UInt32   ulTmp1;
+	uint32_t   rgulQuo[3];
+	uint32_t   rgulQuoSave[3];
+	uint32_t   rgulRem[4];
+	uint32_t   rgulDivisor[3];
+	uint32_t   ulPwr;
+	uint32_t   ulTmp;
+	uint32_t   ulTmp1;
 	SPLIT64__  sdlTmp;
 	SPLIT64__  sdlDivisor;
-	Int32    iScale;
-	Int32    iCurScale;
-	Byte     fUnscale;
+	int32_t    iScale;
+	int32_t    iCurScale;
+	uint8_t     fUnscale;
 
 	iScale = DECIMAL_SCALE__(*pdecL) - DECIMAL_SCALE__(*pdecR);
 	fUnscale = 0;
@@ -1574,7 +1574,7 @@ HaveScale:
 			if (IncreaseScale(rgulQuo, ulPwr) != 0)
 				return DISP_E_OVERFLOW__;
 
-			sdlTmp.int64 = DivMod64by32(UInt32x32To64__(rgulRem[0], ulPwr), rgulDivisor[0]);
+			sdlTmp.int64 = DivMod64by32(uint32_tx32To64__(rgulRem[0], ulPwr), rgulDivisor[0]);
 			rgulRem[0] = sdlTmp.u.Hi;
 
 			if (!Add32To96(rgulQuo, sdlTmp.u.Lo)) {
@@ -1591,7 +1591,7 @@ HaveScale:
 		// Divisor has bits set in the upper 64 bits.
 		//
 		// Divisor must be fully normalized (shifted so bit 31 of the most 
-		// significant UInt32 is 1).  Locate the MSB so we know how much to 
+		// significant uint32_t is 1).  Locate the MSB so we know how much to 
 		// normalize by.  The dividend will be shifted by the same amount so 
 		// the quotient is not changed.
 		//
@@ -1639,7 +1639,7 @@ HaveScale:
 
 		if (rgulDivisor[2] == 0) {
 			// Have a 64-bit divisor in sdlDivisor.  The remainder 
-			// (currently 96 bits spread over 4 UInt32s) will be < divisor.
+			// (currently 96 bits spread over 4 uint32_ts) will be < divisor.
 			// 
 			sdlTmp.u.Lo = rgulRem[2];
 			sdlTmp.u.Hi = rgulRem[3];
@@ -1712,7 +1712,7 @@ HaveScale64:
 			rgulDivisor[1] = sdlDivisor.u.Hi;
 			rgulDivisor[2] = sdlTmp.u.Hi;
 
-			// The remainder (currently 96 bits spread over 4 UInt32s) 
+			// The remainder (currently 96 bits spread over 4 uint32_ts) 
 			// will be < divisor.
 			// 
 			rgulQuo[2] = 0;
@@ -1851,7 +1851,7 @@ HaveScale96:
 	DECIMAL_HI32__(*pdecRes) = rgulQuo[2];
 	DECIMAL_MID32__(*pdecRes) = rgulQuo[1];
 	DECIMAL_LO32__(*pdecRes) = rgulQuo[0];
-	DECIMAL_SCALE__(*pdecRes) = (Byte)iScale;
+	DECIMAL_SCALE__(*pdecRes) = (uint8_t)iScale;
 	DECIMAL_SIGN__(*pdecRes) = DECIMAL_SIGN__(*pdecL) ^ DECIMAL_SIGN__(*pdecR);
 	return NOERROR__;
 }
