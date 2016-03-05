@@ -225,6 +225,11 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (type.SpecialType == SpecialType.System_Array)
+            {
+                unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod((INamedTypeSymbol)type));
+            }
+
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
             {
                 this.BuildMethod(method, unit);

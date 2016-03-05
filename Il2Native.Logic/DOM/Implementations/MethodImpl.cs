@@ -20,7 +20,7 @@
         public bool IsStatic { get; private set; }
         public bool IsVirtual { get; protected set; }
         public bool IsOverride { get; protected set; }
-        public bool IsAbstract { get; private set; }
+        public bool IsAbstract { get; set; }
         public bool IsSealed { get; private set; }
         public bool IsExtern { get; private set; }
         public bool IsImplicitlyDeclared { get; private set; }

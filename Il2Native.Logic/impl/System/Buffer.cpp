@@ -9,9 +9,19 @@ void CoreLib::System::Buffer::BlockCopy(CoreLib::System::Array* src, int32_t src
 // Method : System.Buffer.InternalBlockCopy(System.Array, int, System.Array, int, int)
 void CoreLib::System::Buffer::InternalBlockCopy(CoreLib::System::Array* src, int32_t srcOffsetBytes, CoreLib::System::Array* dst, int32_t dstOffsetBytes, int32_t byteCount)
 {
-	if (byteCount <= 0)
+	if (byteCount == 0)
 	{
 		return;
+	}
+
+	if (src == nullptr || dst == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>();
+	}
+
+	if (byteCount < 0 || srcOffsetBytes < 0 || dstOffsetBytes < 0)
+	{
+		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
 	CoreLib::System::TypedReference elemref;

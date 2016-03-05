@@ -1,5 +1,10 @@
-
 // Array
+template <typename T>
+int32_t  __array<T>::__array_element_size()
+{
+	return sizeof(T);
+}
+
 template <typename T>
 void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
 {

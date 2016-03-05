@@ -41,3 +41,35 @@ int32_t CoreLib::System::Array::get_Length()
 {
     throw 0xC000C000;
 }
+
+// Method : System.Array.Copy(System.Array, int, System.Array, int, int, bool)
+void CoreLib::System::Array::Copy(CoreLib::System::Array* sourceArray, int32_t sourceIndex, CoreLib::System::Array* destinationArray, int32_t destinationIndex, int32_t length, bool reliable)
+{
+	if (length == 0)
+	{
+		return;
+	}
+
+	if (sourceArray == nullptr || destinationArray == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>();
+	}
+
+	if (length < 0 || sourceIndex < 0 || destinationIndex < 0)
+	{
+		throw __new<CoreLib::System::InvalidOperationException>();
+	}
+
+	CoreLib::System::TypedReference elemref;
+
+	int32_t index = sourceIndex;
+	sourceArray->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto pSrc = (int8_t*) (void*)elemref.Value;
+
+	index = destinationIndex;
+	destinationArray->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto pDest = (int8_t*) (void*)elemref.Value;
+
+	auto elementSize = sourceArray->__array_element_size();
+	std::memcpy(pDest, pSrc, length * elementSize);
+}

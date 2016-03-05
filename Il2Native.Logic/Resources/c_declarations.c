@@ -206,6 +206,7 @@ public:
 	inline operator int32_t() const { return (size_t)_length; }
 
 	// Array
+	virtual int32_t __array_element_size() override;
 	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
 	virtual int32_t get_Length() override;
 	virtual int32_t get_Rank() override;

@@ -31,13 +31,21 @@ namespace System
 
         public static void Copy(Array sourceArray, Array destinationArray, int length)
         {
-            Copy(sourceArray, 0, destinationArray, 0, length);
+            Copy(sourceArray, 0, destinationArray, 0, length, false);
         }
-        
+
         public static void Copy(Array sourceArray, int sourceIndex, Array destinationArray, int destinationIndex, int length)
         {
-            throw new NotImplementedException();
+            Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length, false);
         }
+
+        // Reliability-wise, this method will either possibly corrupt your 
+        // instance & might fail when called from within a CER, or if the
+        // reliable flag is true, it will either always succeed or always
+        // throw an exception with no side effects.
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal static extern void Copy(Array sourceArray, int sourceIndex, Array destinationArray, int destinationIndex, int length, bool reliable);
        
         public static void Clear(Array array, int index, int length)
         {
