@@ -207,6 +207,8 @@ public:
 
 	// Array
 	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+	virtual int32_t get_Length() override;
+	virtual int32_t get_Rank() override;
 
 	// IListT1
 	T System_Collections_Generic_IListT1_get_Item(int32_t);

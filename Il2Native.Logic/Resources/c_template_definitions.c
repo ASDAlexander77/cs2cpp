@@ -30,6 +30,18 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 	////typedRef.Type = &T::__type;
 }
 
+template <typename T>
+int32_t __array<T>::get_Length()
+{
+	return this->_length;
+}
+
+template <typename T>
+int32_t __array<T>::get_Rank()
+{
+	return this->_rank;
+}
+
 // IListT1
 template <typename T>
 T __array<T>::System_Collections_Generic_IListT1_get_Item(int32_t) 

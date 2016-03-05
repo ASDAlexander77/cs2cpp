@@ -349,7 +349,7 @@
             // special case for Array
             if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_Array)
             {
-                return methodSymbol.Name == "InternalGetReference";
+                return methodSymbol.Name == "InternalGetReference" || methodSymbol.Name == "get_Length" || methodSymbol.Name == "get_Rank";
             }
 
             return methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride;
