@@ -74,7 +74,7 @@ else()
         link_directories(""./""<%link_other_release%>)
     endif()
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
-    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -std=gnu++14 -fpermissive"")
+    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 -march=native -std=gnu++14 -fpermissive"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")

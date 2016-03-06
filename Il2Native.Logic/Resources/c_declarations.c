@@ -6,7 +6,11 @@ template <typename T, typename = std::enable_if<std::is_base_of<object, T>::valu
 
 template <typename T> inline T* __box (T t)
 {
-	return __new<T>(t);
+	auto size = sizeof(T);
+    auto mem = ::operator new (size);
+    new (mem) T;
+	std::memcpy(mem, &t, size);
+    return reinterpret_cast<T*>(mem);
 }
 
 // Unboxing internals
@@ -138,9 +142,15 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
 }
 
 template <typename T> 
-inline typename std::enable_if<!std::is_pointer<T>::value && !std::is_void<T>::value, T>::type __default()
+inline typename std::enable_if<is_struct_type<T>::value, T>::type __default()
 {
 	return __init<T>();
+}
+
+template <typename T> 
+inline typename std::enable_if<is_primitive_type<T>::value, T>::type __default()
+{
+	return T();
 }
 
 template <typename T> 
