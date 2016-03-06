@@ -63,5 +63,15 @@ int32_t CoreLib::System::Buffer::_ByteLength(CoreLib::System::Array* array)
 // Method : System.Buffer.__Memmove(byte*, byte*, uint)
 void CoreLib::System::Buffer::__Memmove(uint8_t* dest, uint8_t* src, uint32_t len)
 {
-	throw 0xC000C000;
+	if (len == 0)
+	{
+		return;
+	}
+
+	if (src == nullptr || dest == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>();
+	}
+
+	std::memcpy(dest, src, len);
 }

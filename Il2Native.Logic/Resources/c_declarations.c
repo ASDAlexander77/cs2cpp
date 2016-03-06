@@ -6,7 +6,7 @@ template <typename T, typename = std::enable_if<std::is_base_of<object, T>::valu
 
 template <typename T> inline T* __box (T t)
 {
-	return new T(t);
+	return __new<T>(t);
 }
 
 // Unboxing internals
@@ -140,7 +140,7 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
 template <typename T> 
 inline typename std::enable_if<!std::is_pointer<T>::value && !std::is_void<T>::value, T>::type __default()
 {
-	return T();
+	return __init<T>();
 }
 
 template <typename T> 
@@ -154,13 +154,13 @@ template <typename T>
 typename std::enable_if<is_class_type<T>::value, T>::type __create_instance()
 {
 	typedef typename std::remove_pointer<T>::type _T;
-	return new _T();
+	return __new<_T>();
 }
 
 template <typename T> 
 T __create_instance()
 {
-	return T();
+	return __init<T>();
 }
 
 
