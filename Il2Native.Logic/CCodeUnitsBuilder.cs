@@ -197,7 +197,7 @@ namespace Il2Native.Logic
             if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeNewPointerOperatorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)

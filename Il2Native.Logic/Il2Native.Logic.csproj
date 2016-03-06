@@ -153,7 +153,7 @@
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeSpecialTypeOrEnumConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDefinition.cs" />
-    <Compile Include="DOM\Synthesized\CCodeNewPointerOperatorDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeNewOperatorWithSizeDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeNewOperatorDeclaration.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">

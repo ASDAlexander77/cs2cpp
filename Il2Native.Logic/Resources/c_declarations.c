@@ -6,11 +6,9 @@ template <typename T, typename = std::enable_if<std::is_base_of<object, T>::valu
 
 template <typename T> inline T* __box (T t)
 {
-	auto size = sizeof(T);
-    auto mem = ::operator new (size);
-    new (mem) T;
-	std::memcpy(mem, &t, size);
-    return reinterpret_cast<T*>(mem);
+	auto mem = new T;
+	std::memcpy(mem, &t, sizeof(T));
+	return mem;
 }
 
 // Unboxing internals
@@ -190,19 +188,14 @@ public:
 
 	static __array<T>* __new_array(int32_t length)
 	{
-		auto mem = __new_set0(sizeof(__array<T>) + length * sizeof(T));
-		new (mem) __array<T>(length);
-		return reinterpret_cast<__array<T>*>(mem);
+		auto size = sizeof(__array<T>) + length * sizeof(T);
+		return new (size) __array<T>(length);
 	}
 
 	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
 	{
-		auto count = sizeof...(items);
-		auto size = count * sizeof(T);
-		auto mem = __new_set0(sizeof(__array<T>) + size);
-		new (mem) __array<T>(count);
-
-		auto instance = reinterpret_cast<__array<T>*>(mem);
+		auto size = sizeof(__array<T>) + sizeof...(items) * sizeof(T);
+		auto instance = new (size) __array<T>(sizeof...(items));
 
 		// initialize
 		T tmp[] = {items...};
