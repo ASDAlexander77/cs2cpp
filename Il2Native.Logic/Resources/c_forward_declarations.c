@@ -16,7 +16,7 @@ template <typename T> struct is_class_type : std::integral_constant<bool, std::i
 
 inline void* __new_set0(size_t _size)
 {
-	auto alignment = 4 - ((_size & ~3) % 4)
+	auto alignment = 4 - ((_size & ~3) % 4);
 	auto mem = ::operator new(_size + alignment);
 	std::memset(mem, 0, _size);
 	return mem;
