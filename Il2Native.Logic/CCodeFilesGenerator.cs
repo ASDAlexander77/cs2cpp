@@ -406,39 +406,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
-                itw.WriteLine();
-                itw.Write("enum class ");
-                c.WriteTypeName(namedTypeSymbol, false, true);
-                itw.Write(" : ");
-                c.WriteType(namedTypeSymbol.EnumUnderlyingType);
-
-                c.NewLine();
-                c.OpenBlock();
-
-                var constantValueTypeDiscriminator = namedTypeSymbol.EnumUnderlyingType.SpecialType.GetDiscriminator();
-
-                var any = false;
-                foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
-                {
-                    if (any)
-                    {
-                        c.TextSpan(",");
-                        c.WhiteSpace();
-                    }
-
-                    c.TextSpan("c_");
-                    c.WriteName(constValue);
-                    if (constValue.ConstantValue != null)
-                    {
-                        c.TextSpan(" = ");
-                        new Literal { Value = ConstantValue.Create(constValue.ConstantValue, constantValueTypeDiscriminator) }.WriteTo(c);
-                    }
-
-                    any = true;
-                }
-
-                c.EndBlockWithoutNewLine();
-                c.EndStatement();
+                WriteEnum(itw, c, namedTypeSymbol);
             }
 
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -456,6 +424,44 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WriteTypeName(namedTypeSymbol);
                 itw.WriteLine(";");
             }
+        }
+
+        private static void WriteEnum(IndentedTextWriter itw, CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
+        {
+            itw.WriteLine();
+            itw.Write("enum class ");
+            c.WriteTypeName(namedTypeSymbol, false, true);
+            itw.Write(" : ");
+            c.WriteType(namedTypeSymbol.EnumUnderlyingType);
+
+            c.NewLine();
+            c.OpenBlock();
+
+            var constantValueTypeDiscriminator = namedTypeSymbol.EnumUnderlyingType.SpecialType.GetDiscriminator();
+
+            var any = false;
+            foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
+            {
+                if (any)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
+                c.TextSpan("c_");
+                c.WriteName(constValue);
+                if (constValue.ConstantValue != null)
+                {
+                    c.TextSpan(" = ");
+                    new Literal { Value = ConstantValue.Create(constValue.ConstantValue, constantValueTypeDiscriminator) }
+                        .WriteTo(c);
+                }
+
+                any = true;
+            }
+
+            c.EndBlockWithoutNewLine();
+            c.EndStatement();
         }
 
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
@@ -583,6 +589,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 declaration.WriteTo(c);
             }
 
+            // write interface wrappers
+            foreach (var iface in namedTypeSymbol.Interfaces)
+            {
+                WriteInterfaceWrapper(c, iface, namedTypeSymbol);
+            }
+
             itw.Indent--;
             itw.WriteLine("};");
 
@@ -618,6 +630,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.EndBlock();
                 itw.WriteLine();
             }
+        }
+
+        private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
+        {
+            new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
         }
 
         public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
