@@ -496,41 +496,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WriteTypeFullName(namedTypeSymbol.BaseType);
             }
 
-            if (namedTypeSymbol.Interfaces.Any())
-            {
-                if (namedTypeSymbol.BaseType == null)
-                {
-                    itw.Write(" : ");
-                }
-                else
-                {
-                    itw.Write(", ");
-                }
-
-                var any2 = false;
-                foreach (var item in namedTypeSymbol.Interfaces)
-                {
-                    if (any2)
-                    {
-                        itw.Write(", ");
-                    }
-
-                    itw.Write("public virtual ");
-                    c.WriteTypeFullName(item, false);
-
-                    any2 = true;
-                }
-            }
-            else if (namedTypeSymbol.TypeKind == TypeKind.Interface)
-            {
-                if (namedTypeSymbol.BaseType == null)
-                {
-                    itw.Write(" : ");
-                }
-
-                itw.Write("public virtual object");
-            }
-
             itw.WriteLine();
             itw.WriteLine("{");
             itw.WriteLine("public:");
@@ -609,31 +574,51 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             // TODO: use synthersized method
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
-                itw.WriteLine();
-                // write boxing function
-                c.TextSpan("inline");
-                c.WhiteSpace();
-                c.WriteType(namedTypeSymbol, valueTypeAsClass: true);
-                c.WhiteSpace();
-                c.TextSpan("__box(");
-                c.WriteType(namedTypeSymbol);
-                c.WhiteSpace();
-                c.TextSpan("value)");
-                c.NewLine();
-                c.OpenBlock();
-
-                var specialTypeConstructorMethod = new CCodeSpecialTypeOrEnumConstructorDeclaration.SpecialTypeConstructorMethod(namedTypeSymbol);
-                var objectCreationExpression = new ObjectCreationExpression { Type = namedTypeSymbol, IsReference = true, Method = specialTypeConstructorMethod };
-                objectCreationExpression.Arguments.Add(new Parameter { ParameterSymbol = specialTypeConstructorMethod.Parameters.First() });
-                new ReturnStatement { ExpressionOpt = objectCreationExpression }.WriteTo(c);
-
-                c.EndBlock();
-                itw.WriteLine();
+                WriteBoxMethodForPrimitiveValueOrEnum(itw, c, namedTypeSymbol);
             }
+        }
+
+        private static void WriteBoxMethodForPrimitiveValueOrEnum(
+            IndentedTextWriter itw,
+            CCodeWriterText c,
+            INamedTypeSymbol namedTypeSymbol)
+        {
+            itw.WriteLine();
+            // write boxing function
+            c.TextSpan("inline");
+            c.WhiteSpace();
+            c.WriteType(namedTypeSymbol, valueTypeAsClass: true);
+            c.WhiteSpace();
+            c.TextSpan("__box(");
+            c.WriteType(namedTypeSymbol);
+            c.WhiteSpace();
+            c.TextSpan("value)");
+            c.NewLine();
+            c.OpenBlock();
+
+            var specialTypeConstructorMethod =
+                new CCodeSpecialTypeOrEnumConstructorDeclaration.SpecialTypeConstructorMethod(namedTypeSymbol);
+            var objectCreationExpression = new ObjectCreationExpression
+            {
+                Type = namedTypeSymbol,
+                IsReference = true,
+                Method = specialTypeConstructorMethod
+            };
+            objectCreationExpression.Arguments.Add(
+                new Parameter { ParameterSymbol = specialTypeConstructorMethod.Parameters.First() });
+            new ReturnStatement { ExpressionOpt = objectCreationExpression }.WriteTo(c);
+
+            c.EndBlock();
+            itw.WriteLine();
         }
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
         {
+            if (namedTypeSymbol.TypeKind == TypeKind.Interface)
+            {
+                return;
+            }
+
             new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
             c.EndStatement();
             new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);

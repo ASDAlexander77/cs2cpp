@@ -82,7 +82,7 @@
 
         private static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(INamedTypeSymbol type)
         {
-            if (type.TypeKind != TypeKind.Interface && type.BaseType == null)
+            if (type.TypeKind != TypeKind.Interface && type.BaseType == null || type.TypeKind == TypeKind.Interface)
             {
                 return new IMethodSymbol[0];
             }
@@ -110,6 +110,7 @@
 
         public static IEnumerable<IMethodSymbol> EnumerateAllMethodsRecursevly(this INamedTypeSymbol type)
         {
+            /*
             if (type.TypeKind == TypeKind.Interface)
             {
                 foreach (var memberBase in type.Interfaces.SelectMany(i => i.EnumerateAllMethodsRecursevly()))
@@ -117,6 +118,7 @@
                     yield return memberBase;
                 }
             }
+            */ 
 
             if (type.BaseType != null)
             {

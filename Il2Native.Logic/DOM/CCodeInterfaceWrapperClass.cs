@@ -4,12 +4,14 @@
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     public class CCodeInterfaceWrapperClass : CCodeClass
     {
-        private readonly ITypeSymbol @interface;
+        private readonly INamedTypeSymbol @interface;
 
-        public CCodeInterfaceWrapperClass(ITypeSymbol type, ITypeSymbol @interface) : base(type)
+        public CCodeInterfaceWrapperClass(INamedTypeSymbol type, INamedTypeSymbol @interface)
+            : base(type.IsValueType ? new ValueTypeAsClassTypeImpl(type) : type)
         {
             this.@interface = @interface;
             this.CreateMemebers();
@@ -17,11 +19,21 @@
 
         private void CreateMemebers()
         {
-            this.Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>())
+            Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
+            foreach (
+                var method in
+                    this.@interface.GetMembers().OfType<IMethodSymbol>())
             {
-                var newMethod = new MethodImpl { Name = method.Name, Parameters = method.Parameters, ReturnType = method.ReturnType, ReceiverType =  method.ReceiverType, ContainingType = method.ContainingType };
-                this.Declarations.Add(new CCodeMethodDeclaration(newMethod) { MethodBodyOpt = CreateMethodBody(newMethod) });
+                var newMethod = new MethodImpl
+                {
+                    Name = method.Name,
+                    Parameters = method.Parameters,
+                    ReturnType = method.ReturnType,
+                    ReceiverType = method.ReceiverType,
+                    ContainingType = method.ContainingType
+                };
+                Declarations.Add(
+                    new CCodeMethodDeclaration(newMethod) { /*MethodBodyOpt = CreateMethodBody(newMethod)*/ });
             }
         }
 
@@ -75,7 +87,7 @@
             // write default constructor
             this.Name(c);
             c.TextSpan("(");
-            c.WriteType(Type);
+            c.WriteType(Type, false, true, true);
             c.WhiteSpace();
             c.TextSpan("class_");
             c.TextSpan(")");
