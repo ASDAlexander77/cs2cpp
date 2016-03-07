@@ -64,7 +64,7 @@
             throw new System.NotImplementedException();
         }
 
-        public TypeKind TypeKind { get; private set; }
+        public TypeKind TypeKind { get; set; }
 
         public INamedTypeSymbol BaseType { get; private set; }
 

@@ -77,7 +77,7 @@
         public bool IsCheckedBuiltin { get; private set; }
         public bool HidesBaseMethodsByName { get; private set; }
         public bool ReturnsVoid { get; private set; }
-        public ITypeSymbol ReturnType { get; protected set; }
+        public ITypeSymbol ReturnType { get; set; }
         public ImmutableArray<ITypeSymbol> TypeArguments { get; private set; }
         public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; private set; }
         public ImmutableArray<IParameterSymbol> Parameters { get; set; }

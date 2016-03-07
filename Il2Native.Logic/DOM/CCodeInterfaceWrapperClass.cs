@@ -20,7 +20,8 @@
             this.Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
             foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>())
             {
-                this.Declarations.Add(new CCodeMethodDeclaration(method) { MethodBodyOpt = CreateMethodBody(method) });
+                var newMethod = new MethodImpl { Name = method.Name, Parameters = method.Parameters, ReturnType = method.ReturnType, ReceiverType =  method.ReceiverType, ContainingType = method.ContainingType };
+                this.Declarations.Add(new CCodeMethodDeclaration(newMethod) { MethodBodyOpt = CreateMethodBody(newMethod) });
             }
         }
 
@@ -28,7 +29,7 @@
         {
             var callMethod = new Call()
             {
-                ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type } },
+                ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
                 Method = method,
             };
 
@@ -54,22 +55,50 @@
         {
             c.TextSpan("class");
             c.WhiteSpace();
-            c.WriteTypeName((INamedTypeSymbol)this.Type);
-            c.TextSpan("_");
-            c.WriteTypeName((INamedTypeSymbol)this.@interface);
+            this.Name(c);
+
+            c.WhiteSpace();
+            c.TextSpan(":");
+            c.WhiteSpace();
+            c.TextSpan("public");
+            c.WhiteSpace();
+            c.TextSpan("virtual");
+            c.WhiteSpace();
+            c.WriteTypeFullName(this.@interface);
+            c.NewLine();
             c.OpenBlock();
 
             c.DecrementIndent();
             c.TextSpanNewLine("public:");
             c.IncrementIndent();
 
+            // write default constructor
+            this.Name(c);
+            c.TextSpan("(");
+            c.WriteType(Type);
+            c.WhiteSpace();
+            c.TextSpan("class_");
+            c.TextSpan(")");
+            c.WhiteSpace();
+            c.TextSpan(":");
+            c.WhiteSpace();
+            c.TextSpan("_class{class_}");
+            c.WhiteSpace();
+            c.TextSpanNewLine("{}");
+
             foreach (var declaration in Declarations)
             {
                 declaration.WriteTo(c);
             }
 
-            c.EndBlock();
-            c.Separate();
+            c.EndBlockWithoutNewLine();
+        }
+
+        private void Name(CCodeWriterBase c)
+        {
+            c.WriteTypeName((INamedTypeSymbol)this.Type);
+            c.TextSpan("_");
+            c.WriteTypeName((INamedTypeSymbol)this.@interface);
         }
     }
 }

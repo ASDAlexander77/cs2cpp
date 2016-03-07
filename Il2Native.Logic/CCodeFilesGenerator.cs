@@ -635,6 +635,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
         {
             new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
+            c.EndStatement();
+            new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
         }
 
         public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
