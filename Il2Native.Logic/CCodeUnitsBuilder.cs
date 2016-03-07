@@ -230,6 +230,15 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod((INamedTypeSymbol)type));
             }
 
+            if (type.TypeKind == TypeKind.Interface)
+            {
+                // add all methods from all inetrafces
+                foreach (var method in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                {
+                    unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                }
+            }
+
             foreach (var method in methodSymbols.Where(m => m.MethodKind != MethodKind.Constructor))
             {
                 this.BuildMethod(method, unit);

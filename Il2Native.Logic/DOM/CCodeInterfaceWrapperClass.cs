@@ -22,7 +22,7 @@
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
             foreach (
                 var method in
-                    this.@interface.GetMembers().OfType<IMethodSymbol>())
+                    this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
             {
                 var newMethod = new MethodImpl
                 {
@@ -108,9 +108,9 @@
 
         private void Name(CCodeWriterBase c)
         {
-            c.WriteTypeName((INamedTypeSymbol)this.Type);
+            c.WriteName((INamedTypeSymbol)Type);
             c.TextSpan("_");
-            c.WriteTypeName((INamedTypeSymbol)this.@interface);
+            c.WriteName(this.@interface);
         }
     }
 }
