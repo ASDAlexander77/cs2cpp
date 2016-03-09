@@ -55,6 +55,19 @@ inline typename std::enable_if<is_value_type<D>::value || is_value_type<S>::valu
 	return false;
 }
 
+// interface cast
+template <typename C, typename T> 
+inline C interface_cast (T t)
+{
+	return nullptr;
+}
+
+template <typename C, typename T> 
+inline C dynamic_interface_cast (T t)
+{
+	return nullptr;
+}
+
 // Constrained internals (for templates)
 template <typename C, typename T> 
 inline C constrained (T t)

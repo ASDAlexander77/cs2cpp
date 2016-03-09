@@ -34,11 +34,12 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && this.Type.TypeKind == TypeKind.Interface;
+            var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && Type.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
-                c.TextSpan("static_cast<");
-                c.WriteType(this.Type);
+                c.TextSpan(this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type) ? "interface_cast" : "dynamic_interface_cast");
+                c.TextSpan("<");
+                c.WriteType(Type);
                 c.TextSpan(">");
                 c.TextSpan("(");
             }
@@ -111,22 +112,28 @@
                         c.WriteType(this.Type);
                         c.TextSpan(">");                        
                     }
-                    else if (this.Type.TypeKind == TypeKind.Interface && TypeSource.AllInterfaces.Contains((INamedTypeSymbol)this.Type))
+                    else if (Type.TypeKind == TypeKind.Interface && this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type))
                     {
-                        c.TextSpan("static_cast<");
+                        c.TextSpan("interface_cast<");
                         c.WriteType(this.Type);
                         c.TextSpan(">");
                     }
-                    else if (TypeSource.IsDerivedFrom(this.Type))
+                    else if (Type.TypeKind == TypeKind.Interface)
+                    {
+                        c.TextSpan("dynamic_interface_cast<");
+                        c.WriteType(Type);
+                        c.TextSpan(">");
+                    }
+                    else if (TypeSource.IsDerivedFrom(Type))
                     {
                         c.TextSpan("static_cast<");
-                        c.WriteType(this.Type);
+                        c.WriteType(Type);
                         c.TextSpan(">");
                     }
                     else
                     {
                         c.TextSpan("cast<");
-                        c.WriteType(this.Type);
+                        c.WriteType(Type);
                         c.TextSpan(">");
                     }
 
@@ -135,10 +142,10 @@
                 case ConversionKind.IntegerToPointer:
                 case ConversionKind.PointerToPointer:
 
-                    if (!this.Type.IsIntPtrType())
+                    if (!Type.IsIntPtrType())
                     {
                         c.TextSpan("(");
-                        c.WriteType(this.Type);
+                        c.WriteType(Type);
                         c.TextSpan(")");
 
                         parenthesis = true;
@@ -147,8 +154,7 @@
                     break;
                 case ConversionKind.Identity:
                     // for string
-                    if (TypeSource.SpecialType == SpecialType.System_String &&
-                        this.Type.TypeKind == TypeKind.PointerType)
+                    if (TypeSource.SpecialType == SpecialType.System_String && Type.TypeKind == TypeKind.PointerType)
                     {
                         c.TextSpan("&");
                         this.Operand.WriteTo(c);
@@ -159,7 +165,7 @@
                     return true;
                 default:
                     c.TextSpan("static_cast<");
-                    c.WriteType(this.Type);
+                    c.WriteType(Type);
                     c.TextSpan(">");
                     break;
             }
