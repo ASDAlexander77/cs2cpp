@@ -113,7 +113,7 @@
                 ReturnType = method.ReturnType,
                 ReceiverType = new NamedTypeImpl { Name = string.Concat(Type.MetadataName, "_", this.@interface.MetadataName), ContainingType = (INamedTypeSymbol)Type },
                 ContainingType = method.ContainingType,
-                ContainingNamespace = method.ContainingNamespace
+                ContainingNamespace = Type.ContainingNamespace
             };
         }
 

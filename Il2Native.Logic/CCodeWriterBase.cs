@@ -340,8 +340,15 @@ namespace Il2Native.Logic
             if (type.ContainingType != null)
             {
                 WriteTypeName(type.ContainingType);
+
+                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
+                if (isNestedCppClass && type.ContainingType.IsGenericType)
+                {
+                    WriteTemplateDefinition(type.ContainingType);
+                }
+
                 // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
-                this.TextSpan(type.TypeKind == TypeKind.Unknown ? "::" : "_");
+                this.TextSpan(isNestedCppClass ? "::" : "_");
             }
 
             WriteName(type);
@@ -660,9 +667,16 @@ namespace Il2Native.Logic
 
         public void WriteMethodPrefixesAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
-            if (!declarationWithingClass && methodSymbol.ContainingType.IsGenericType)
+            var methodContainingType = methodSymbol.ContainingType;
+            // special case for C++ nested classes
+            if (methodSymbol.ReceiverType != null && methodSymbol.ReceiverType.TypeKind == TypeKind.Unknown)
             {
-                this.WriteTemplateDeclaration(methodSymbol.ContainingType);
+                methodContainingType = methodSymbol.ReceiverType.ContainingType;
+            }
+
+            if (!declarationWithingClass && methodContainingType.IsGenericType)
+            {
+                this.WriteTemplateDeclaration(methodContainingType);
                 if (!declarationWithingClass)
                 {
                     this.NewLine();
@@ -736,11 +750,10 @@ namespace Il2Native.Logic
             }
 
             var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-
             this.WriteTypeName(receiverType, false);
             if (receiverType.IsGenericType)
             {
-                this.WriteTemplateDefinition(methodSymbol.ContainingType);
+                this.WriteTemplateDefinition(receiverType);
             }
 
             this.TextSpan("::");
