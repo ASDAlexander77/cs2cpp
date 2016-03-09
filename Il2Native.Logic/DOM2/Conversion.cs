@@ -130,6 +130,12 @@
                         c.WriteType(Type);
                         c.TextSpan(">");
                     }
+                    else if (TypeSource.TypeKind == TypeKind.Interface && Type.SpecialType == SpecialType.System_Object)
+                    {
+                        c.TextSpan("object_cast<");
+                        c.WriteType(Type);
+                        c.TextSpan(">");
+                    }
                     else
                     {
                         c.TextSpan("cast<");

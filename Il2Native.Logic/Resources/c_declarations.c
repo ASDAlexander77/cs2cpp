@@ -68,6 +68,13 @@ inline C dynamic_interface_cast (T t)
 	return nullptr;
 }
 
+// object cast (interface etc)
+template <typename T> 
+inline object* object_cast (T t)
+{
+	return nullptr;
+}
+
 // Constrained internals (for templates)
 template <typename C, typename T> 
 inline C constrained (T t)
