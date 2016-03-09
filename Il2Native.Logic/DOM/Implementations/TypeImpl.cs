@@ -8,23 +8,23 @@
 
     public class TypeImpl : ITypeSymbol
     {
-        public SymbolKind Kind { get; private set; }
+        public SymbolKind Kind { get; set; }
 
-        public string Language { get; private set; }
+        public string Language { get; set; }
 
         public string Name { get; set; }
 
-        public string MetadataName { get; private set; }
+        public string MetadataName { get; set; }
 
-        public ISymbol ContainingSymbol { get; private set; }
+        public ISymbol ContainingSymbol { get; set; }
 
-        public IAssemblySymbol ContainingAssembly { get; private set; }
+        public IAssemblySymbol ContainingAssembly { get; set; }
 
-        public IModuleSymbol ContainingModule { get; private set; }
+        public IModuleSymbol ContainingModule { get; set; }
 
-        public INamedTypeSymbol ContainingType { get; private set; }
+        public INamedTypeSymbol ContainingType { get; set; }
 
-        public INamespaceSymbol ContainingNamespace { get; private set; }
+        public INamespaceSymbol ContainingNamespace { get; set; }
 
         public bool IsDefinition { get; private set; }
 

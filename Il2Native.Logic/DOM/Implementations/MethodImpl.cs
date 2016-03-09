@@ -15,7 +15,7 @@
         public IAssemblySymbol ContainingAssembly { get; private set; }
         public IModuleSymbol ContainingModule { get; private set; }
         public INamedTypeSymbol ContainingType { get; set; }
-        public INamespaceSymbol ContainingNamespace { get; private set; }
+        public INamespaceSymbol ContainingNamespace { get; set; }
         public bool IsDefinition { get; private set; }
         public bool IsStatic { get; private set; }
         public bool IsVirtual { get; protected set; }
@@ -113,7 +113,7 @@
 
         public string ToDisplayString(SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            return string.Empty;
         }
 
         public ImmutableArray<SymbolDisplayPart> ToDisplayParts(SymbolDisplayFormat format = null)

@@ -188,12 +188,6 @@ namespace Il2Native.Logic
                 this.BuildMethod(method, unit);
             }
 
-            // add default copy constructor
-            if (type.TypeKind == TypeKind.Delegate)
-            {
-                ////unit.Declarations.Add(new CCodeCopyConstructorDeclaration((INamedTypeSymbol)type));
-            }
-
             if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
@@ -265,6 +259,7 @@ namespace Il2Native.Logic
 
             return unit;
         }
+
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
         {

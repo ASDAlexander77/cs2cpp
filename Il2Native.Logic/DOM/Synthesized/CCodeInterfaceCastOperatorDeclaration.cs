@@ -38,7 +38,7 @@
         {
             c.TextSpan("operator");
             c.WhiteSpace();
-            c.WriteType(interfaceSymbol);
+            c.WriteType(this.interfaceSymbol);
             c.TextSpan("()");
             MethodBodyOpt.WriteTo(c);
         }

@@ -1,10 +1,10 @@
 ﻿namespace Il2Native.Logic.DOM
 {
+    using System.Collections.Generic;
     using System.Linq;
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     public class CCodeInterfaceWrapperClass : CCodeClass
     {
@@ -17,23 +17,21 @@
             this.CreateMemebers();
         }
 
+        public IEnumerable<CCodeDefinition> GetMembersImplementation()
+        {
+            return this.@interface.GetMembers()
+                .OfType<IMethodSymbol>()
+                .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                .Select(this.CreateWrapperMethod)
+                .Select(m => new CCodeMethodDefinition(m) { MethodBodyOpt = this.CreateMethodBody(m) });
+        }
+
         private void CreateMemebers()
         {
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (
-                var method in
-                    this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
+            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
             {
-                var newMethod = new MethodImpl
-                {
-                    Name = method.Name,
-                    Parameters = method.Parameters,
-                    ReturnType = method.ReturnType,
-                    ReceiverType = method.ReceiverType,
-                    ContainingType = method.ContainingType
-                };
-                Declarations.Add(
-                    new CCodeMethodDeclaration(newMethod) { /*MethodBodyOpt = CreateMethodBody(newMethod)*/ });
+                Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
             }
         }
 
@@ -104,6 +102,19 @@
             }
 
             c.EndBlockWithoutNewLine();
+        }
+
+        private MethodImpl CreateWrapperMethod(IMethodSymbol method)
+        {
+            return new MethodImpl
+            {
+                Name = method.Name,
+                Parameters = method.Parameters,
+                ReturnType = method.ReturnType,
+                ReceiverType = new NamedTypeImpl { Name = string.Concat(Type.MetadataName, "_", this.@interface.MetadataName), ContainingType = (INamedTypeSymbol)Type },
+                ContainingType = method.ContainingType,
+                ContainingNamespace = method.ContainingNamespace
+            };
         }
 
         private void Name(CCodeWriterBase c)

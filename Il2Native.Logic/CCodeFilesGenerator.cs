@@ -181,6 +181,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         definition.WriteTo(c);
                     }
 
+                    // write interface wrappers
+                    foreach (var iface in unit.Type.Interfaces)
+                    {
+                        WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                    }
+
                     itw.Close();
                 }
 
@@ -256,6 +262,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 {
                     anyRecord = true;
                     definition.WriteTo(c);
+                }
+
+                // write interface wrappers
+                foreach (var iface in unit.Type.Interfaces)
+                {
+                    WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
                 }
 
                 if (unit.MainMethod != null)
@@ -623,6 +635,20 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             c.EndStatement();
             new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
         }
+
+        private static void WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
+        {
+            if (namedTypeSymbol.TypeKind == TypeKind.Interface)
+            {
+                return;
+            }
+
+            foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
+            {
+                interfaceMethodWrapper.WriteTo(c);
+            }
+        }
+
 
         public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
         {

@@ -340,7 +340,8 @@ namespace Il2Native.Logic
             if (type.ContainingType != null)
             {
                 WriteTypeName(type.ContainingType);
-                TextSpan("_");
+                // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
+                this.TextSpan(type.TypeKind == TypeKind.Unknown ? "::" : "_");
             }
 
             WriteName(type);
@@ -735,6 +736,7 @@ namespace Il2Native.Logic
             }
 
             var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
+
             this.WriteTypeName(receiverType, false);
             if (receiverType.IsGenericType)
             {
