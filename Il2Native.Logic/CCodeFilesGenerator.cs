@@ -181,10 +181,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         definition.WriteTo(c);
                     }
 
+                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
                     // write interface wrappers
                     foreach (var iface in unit.Type.Interfaces)
                     {
-                        WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                        WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
                     }
 
                     itw.Close();
@@ -636,7 +637,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
         }
 
-        private static void WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
+        private static void WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol, bool genericHeaderFile = false)
         {
             if (namedTypeSymbol.TypeKind == TypeKind.Interface)
             {
@@ -645,6 +646,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
             {
+                var allowedMethod = !genericHeaderFile || genericHeaderFile && (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
+                if (!allowedMethod)
+                {
+                    continue;
+                }
+
                 interfaceMethodWrapper.WriteTo(c);
             }
         }
