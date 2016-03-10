@@ -56,6 +56,8 @@
             }
             else
             {
+                c.TextSpan("object_cast(");
+
                 if (this.ReceiverOpt is BaseReference)
                 {
                     c.TextSpan("this");
@@ -64,6 +66,8 @@
                 {
                     this.ReceiverOpt.WriteTo(c);
                 }
+
+                c.TextSpan(")");
 
                 c.TextSpan(",");
                 c.WhiteSpace();

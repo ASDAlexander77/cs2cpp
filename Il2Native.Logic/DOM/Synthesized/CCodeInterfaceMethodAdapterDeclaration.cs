@@ -38,7 +38,7 @@
 
             c.WriteMethodReturn(this.Method, true);
             c.WriteMethodName(this.Method, allowKeywords: false);
-            c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
+            c.WriteMethodParameters(this.Method, true, this.MethodBodyOpt != null);
 
             if (this.MethodBodyOpt == null)
             {

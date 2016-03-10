@@ -14,7 +14,7 @@
         public Expression Operand { get; set; }
 
         // TODO: get rid of TypeSoure and use Operand.Type for it
-        protected ITypeSymbol TypeSource { get; set; }
+        public ITypeSymbol TypeSource { get; set; }
 
         internal ConversionKind ConversionKind { get; set; }
 

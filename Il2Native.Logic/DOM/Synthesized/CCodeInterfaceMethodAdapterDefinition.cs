@@ -83,7 +83,7 @@
             c.WriteMethodReturn(this.Method, true);
             c.WriteMethodNamespace(namedTypeSymbol);
             c.WriteMethodName(this.Method, false);
-            c.WriteMethodPatameters(this.Method, true, this.MethodBodyOpt != null);
+            c.WriteMethodParameters(this.Method, true, this.MethodBodyOpt != null);
 
             if (this.MethodBodyOpt == null)
             {

@@ -339,7 +339,7 @@ namespace Il2Native.Logic
 
             if (type.ContainingType != null)
             {
-                WriteTypeName(type.ContainingType);
+                WriteTypeName(type.ContainingType, false);
 
                 var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
                 if (isNestedCppClass && type.ContainingType.IsGenericType)
@@ -594,7 +594,7 @@ namespace Il2Native.Logic
         public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
         {
             this.WriteMethodPrefixesAndName(methodSymbol, declarationWithingClass);
-            this.WriteMethodPatameters(methodSymbol, declarationWithingClass, hasBody);
+            this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody);
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
 
@@ -613,7 +613,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodPatameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody)
+        public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody)
         {
             // parameters
             var anyParameter = false;

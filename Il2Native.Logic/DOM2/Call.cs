@@ -112,6 +112,18 @@
                 };
             }
 
+            if (effectiveExpression.IsReference && (effectiveExpression.Type.TypeKind == TypeKind.Interface) && parameter.Type.SpecialType == SpecialType.System_Object)
+            {
+                effectiveExpression = new Conversion
+                {
+                    ConversionKind = ConversionKind.ImplicitReference,
+                    IsReference = true,
+                    Operand = expression,
+                    TypeSource = effectiveExpression.Type,
+                    Type = parameter.Type
+                };
+            }
+
             return effectiveExpression;
         }
 
@@ -178,7 +190,19 @@
             {
                 effectiveReceiverOpt = new ObjectCreationExpression { Arguments = { receiverOpt }, Type = effectiveReceiverOpt.Type };
             }
-            
+
+            if (effectiveReceiverOpt.IsReference && (effectiveReceiverOpt.Type.TypeKind == TypeKind.Interface) && methodSymbol.ContainingType.SpecialType == SpecialType.System_Object)
+            {
+                effectiveReceiverOpt = new Conversion
+                                           {
+                                               ConversionKind = ConversionKind.ImplicitReference,
+                                               IsReference = true,
+                                               Operand = receiverOpt,
+                                               TypeSource = receiverOpt.Type,
+                                               Type = methodSymbol.ContainingType
+                                           };
+            }
+
             if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != effectiveReceiverOpt.Type)
             {
                 ////var constrained = ((ITypeParameterSymbol)receiverOpt.Type).ConstraintTypes;
