@@ -1,10 +1,5 @@
 // Boxing internals
-template <typename T, typename = std::enable_if<std::is_base_of<object, T>::value> > inline T* __box (T* t)
-{
-	return t;
-}
-
-template <typename T, typename = std::enable_if<!is_interface_type<T>::value> > inline T* __box (T t)
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
 {
 	// as we working with __init structs we do not need to call Ctors second time here
 	auto mem = new T;
@@ -12,10 +7,9 @@ template <typename T, typename = std::enable_if<!is_interface_type<T>::value> > 
 	return mem;
 }
 
-// Boxing internals
-template <typename T, typename = std::enable_if<is_interface_type<T>::value> > inline object* __box (T t)
+template <typename T> inline typename std::enable_if<!is_struct_type<T>::value && !is_primitive_type<T>::value, T>::type __box (T t)
 {
-	return object_cast(t);
+	return t;
 }
 
 // Unboxing internals
@@ -205,7 +199,6 @@ T __create_instance()
 {
 	return __init<T>();
 }
-
 
 // Arrays internals
 template <typename T> class __array : public virtual CoreLib::System::Array, public virtual CoreLib::System::Collections::Generic::IListT1<T>
