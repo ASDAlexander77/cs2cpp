@@ -14,6 +14,10 @@ template <typename T> struct is_class_type : std::integral_constant<bool, std::i
 {
 };
 
+template <typename T> struct is_interface_type : std::integral_constant<bool, std::is_pointer<T>::value && !is_class_type<T>::value && !is_value_type<typename std::remove_pointer<T>::type>::value && !std::is_pointer<typename std::remove_pointer<T>::type>::value>
+{
+};
+
 inline void* __new_set0(size_t _size)
 {
 	auto mem = ::operator new(_size);

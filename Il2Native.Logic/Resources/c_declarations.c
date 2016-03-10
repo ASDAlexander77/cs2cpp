@@ -6,9 +6,16 @@ template <typename T, typename = std::enable_if<std::is_base_of<object, T>::valu
 
 template <typename T> inline T* __box (T t)
 {
+	// as we working with __init structs we do not need to call Ctors second time here
 	auto mem = new T;
 	std::memcpy(mem, &t, sizeof(T));
 	return mem;
+}
+
+// Boxing internals
+template <typename T, typename = std::enable_if<is_interface_type<T>::value> > inline object* __box (T t)
+{
+	return object_cast(t);
 }
 
 // Unboxing internals
@@ -17,6 +24,26 @@ template <typename D, typename S> inline D __unbox(S* c)
 	// TODO: finish it
 	D d;
 	return d;
+}
+
+// interface cast
+template <typename C, typename T> 
+inline C interface_cast (T t)
+{
+	return nullptr;
+}
+
+template <typename C, typename T> 
+inline C dynamic_interface_cast (T t)
+{
+	return nullptr;
+}
+
+// object cast (interface etc)
+template <typename T> 
+inline object* object_cast (T t)
+{
+	return nullptr;
 }
 
 // cast internals
@@ -55,24 +82,12 @@ inline typename std::enable_if<is_value_type<D>::value || is_value_type<S>::valu
 	return false;
 }
 
-// interface cast
-template <typename C, typename T> 
-inline C interface_cast (T t)
+// special case for interfaces
+// add flag to each interface to be able to create is_interface<T>::value
+template <typename D, typename S> 
+inline typename std::enable_if<is_interface_type<D>::value && is_class_type<S>::value, bool>::type is(S s)
 {
-	return nullptr;
-}
-
-template <typename C, typename T> 
-inline C dynamic_interface_cast (T t)
-{
-	return nullptr;
-}
-
-// object cast (interface etc)
-template <typename T> 
-inline object* object_cast (T t)
-{
-	return nullptr;
+	return dynamic_interface_cast<D>(s) != nullptr;
 }
 
 // Constrained internals (for templates)
