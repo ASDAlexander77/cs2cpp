@@ -4,7 +4,7 @@ template <typename T, typename = std::enable_if<std::is_base_of<object, T>::valu
 	return t;
 }
 
-template <typename T> inline T* __box (T t)
+template <typename T, typename = std::enable_if<!is_interface_type<T>::value> > inline T* __box (T t)
 {
 	// as we working with __init structs we do not need to call Ctors second time here
 	auto mem = new T;
