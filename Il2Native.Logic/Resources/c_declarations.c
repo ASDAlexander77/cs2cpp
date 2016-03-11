@@ -1,25 +1,3 @@
-// Boxing internals
-template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
-{
-	// as we working with __init structs we do not need to call Ctors second time here
-	auto mem = new T;
-	std::memcpy(mem, &t, sizeof(T));
-	return mem;
-}
-
-template <typename T> inline typename std::enable_if<!is_struct_type<T>::value && !is_primitive_type<T>::value, T>::type __box (T t)
-{
-	return t;
-}
-
-// Unboxing internals
-template <typename D, typename S> inline D __unbox(S* c)
-{
-	// TODO: finish it
-	D d;
-	return d;
-}
-
 // interface cast
 template <typename C, typename T> 
 inline C interface_cast (T t)
@@ -38,6 +16,38 @@ template <typename T>
 inline object* object_cast (T t)
 {
 	return nullptr;
+}
+
+// Boxing internals
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
+{
+	// as we working with __init structs we do not need to call Ctors second time here
+	auto mem = new T;
+	std::memcpy(mem, &t, sizeof(T));
+	return mem;
+}
+
+template <typename T> inline typename std::enable_if<!is_struct_type<T>::value && !is_primitive_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
+{
+	return t;
+}
+
+template <typename D, typename S> inline typename std::enable_if<is_interface_type<S>::value && std::is_same<D, S>::value, D>::type __box (S s)
+{
+	return s;
+}
+
+template <typename D, typename S> inline typename std::enable_if<is_interface_type<S>::value && std::is_same<D, object*>::value, object*>::type __box (S s)
+{
+	return object_cast(s);
+}
+
+// Unboxing internals
+template <typename D, typename S> inline D __unbox(S* c)
+{
+	// TODO: finish it
+	D d;
+	return d;
 }
 
 // cast internals
@@ -82,6 +92,12 @@ template <typename D, typename S>
 inline typename std::enable_if<is_interface_type<D>::value && is_class_type<S>::value, bool>::type is(S s)
 {
 	return dynamic_interface_cast<D>(s) != nullptr;
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<is_class_type<D>::value && is_interface_type<S>::value, bool>::type is(S s)
+{
+	return dynamic_cast<D>(object_cast(s)) != nullptr;
 }
 
 // Constrained internals (for templates)
