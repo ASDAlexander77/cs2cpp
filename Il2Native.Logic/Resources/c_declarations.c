@@ -217,7 +217,7 @@ T __create_instance()
 }
 
 // Arrays internals
-template <typename T> class __array : public virtual CoreLib::System::Array, public virtual CoreLib::System::Collections::Generic::IListT1<T>
+template <typename T> class __array : public virtual CoreLib::System::Array
 {
 public:
 	int32_t _rank;
