@@ -44,11 +44,19 @@
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = type.IsValueType || type.TypeKind == TypeKind.Struct ||
-                             type.TypeKind == TypeKind.Enum
-                    ? new ValueTypeAsClassTypeImpl(type)
-                    : type;
+                ReturnType = GetReturnType(type);
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+            }
+
+            private static INamedTypeSymbol GetReturnType(INamedTypeSymbol type)
+            {
+                return new NamedTypeImpl { SpecialType = SpecialType.System_Object };
+                /*
+                return type.IsValueType || type.TypeKind == TypeKind.Struct ||
+                       type.TypeKind == TypeKind.Enum
+                           ? (INamedTypeSymbol)new ValueTypeAsClassTypeImpl(type)
+                           : type;
+                */ 
             }
         }
     }
