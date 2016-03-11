@@ -233,13 +233,13 @@ public:
 	static __array<T>* __new_array(int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new (size) __array<T>(length);
+		return new ((int32_t)size) __array<T>(length);
 	}
 
 	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
 	{
 		auto size = sizeof(__array<T>) + sizeof...(items) * sizeof(T);
-		auto instance = new (size) __array<T>(sizeof...(items));
+		auto instance = new ((int32_t)size) __array<T>(sizeof...(items));
 
 		// initialize
 		T tmp[] = {items...};

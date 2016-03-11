@@ -35,7 +35,7 @@ void CoreLib::System::Decimal::FCallAddSubOverflowed_Ref_Ref_Ref(CoreLib::System
 // Method : decimal.FCallCompare(ref decimal, ref decimal)
 int32_t CoreLib::System::Decimal::FCallCompare_Ref_Ref(CoreLib::System::Decimal& d1, CoreLib::System::Decimal& d2)
 {
-    DecCmp(&d1.flags, &d2.flags);
+    return DecCmp(&d1.flags, &d2.flags);
 }
 
 // Method : decimal.FCallDivide(ref decimal, ref decimal)

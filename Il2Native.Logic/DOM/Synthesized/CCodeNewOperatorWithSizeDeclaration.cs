@@ -24,7 +24,7 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("void* operator new (size_t _size, size_t _customSize)");
+            c.TextSpan("void* operator new (size_t _size, int32_t _customSize)");
             MethodBodyOpt.WriteTo(c);
         }
 

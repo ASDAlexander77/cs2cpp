@@ -4,7 +4,7 @@
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {
 	auto size = sizeof(string) + (length + 1) * sizeof(wchar_t);
-	auto str = new (size) string;
+	auto str = new ((int32_t)size) string;
 	str->m_stringLength = length;
 	return str;
 }
