@@ -505,7 +505,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             c.WriteTypeName(namedTypeSymbol, false);
             if (namedTypeSymbol.BaseType != null)
             {
-                itw.Write(" : public virtual ");
+                itw.Write(" : public ");
                 c.WriteTypeFullName(namedTypeSymbol.BaseType);
             }
 
