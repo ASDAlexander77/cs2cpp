@@ -3,5 +3,5 @@
 // Method : System.DateTime.GetSystemTimeAsFileTime()
 int64_t CoreLib::System::DateTime::GetSystemTimeAsFileTime()
 {
-    throw 0xC000C000;
+    throw 3221274624U;
 }

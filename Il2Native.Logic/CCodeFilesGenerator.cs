@@ -181,11 +181,14 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         definition.WriteTo(c);
                     }
 
-                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-                    // write interface wrappers
-                    foreach (var iface in unit.Type.Interfaces)
+                    if (!stubs)
                     {
-                        anyRecord = WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
+                        var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                        // write interface wrappers
+                        foreach (var iface in unit.Type.Interfaces)
+                        {
+                            anyRecord = WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
+                        }
                     }
 
                     itw.Close();
@@ -267,10 +270,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     definition.WriteTo(c);
                 }
 
-                // write interface wrappers
-                foreach (var iface in unit.Type.Interfaces)
+                if (!stubs)
                 {
-                    anyRecord = WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                    // write interface wrappers
+                    foreach (var iface in unit.Type.Interfaces)
+                    {
+                        anyRecord = WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                    }
                 }
 
                 if (unit.MainMethod != null)
