@@ -45,7 +45,10 @@ void CoreLib::System::String::_ctor(int8_t* src, int32_t startIndex, int32_t len
 // Method : string.FastAllocateString(int)
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {
-    throw 3221274624U;
+	auto size = sizeof(string) + (length + 1) * sizeof(wchar_t);
+	auto str = new ((int32_t)size) string;
+	str->m_stringLength = length;
+	return str;
 }
 
 // Method : string.LastIndexOf(char, int)

@@ -9,7 +9,6 @@ void CoreLib::System::Threading::Monitor::Enter(object* obj)
 // Method : System.Threading.Monitor.ReliableEnter(object, ref bool)
 void CoreLib::System::Threading::Monitor::ReliableEnter_Ref(object* obj, bool& lockTaken)
 {
-    throw 3221274624U;
 }
 
 // Method : System.Threading.Monitor.Exit(object)

@@ -15,5 +15,5 @@ void CoreLib::System::Runtime::CompilerServices::RuntimeHelpers::RunClassConstru
 // Method : System.Runtime.CompilerServices.RuntimeHelpers.OffsetToStringData.get
 int32_t CoreLib::System::Runtime::CompilerServices::RuntimeHelpers::get_OffsetToStringData()
 {
-    throw 3221274624U;
+    return 0;
 }
