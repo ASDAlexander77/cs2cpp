@@ -236,12 +236,17 @@
             Trace.WriteLine(string.Empty);
 
             // file exe
-            ExecCmd(string.Format("{0}\\build_vs2015_release.bat", assemblyName), string.Empty);
+            ExecCmd("build_vs2015_release.bat", string.Empty, Path.Combine(OutputPath, assemblyName));
 
             if (!justCompile)
             {
                 // test execution
-                ExecCmd(string.Format("{0}\\__build_win32_release\\Release\\{0}.exe", assemblyName), readOutput: true, returnCode: returnCode);
+                ExecCmd(
+                    string.Format("{0}.exe", assemblyName.Replace("-", "_")),
+                    string.Empty,
+                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_release\\Release\\", assemblyName)),
+                    readOutput: true,
+                    returnCode: returnCode);
             }
             else
             {
@@ -267,10 +272,10 @@
             processStartInfo.WorkingDirectory = workingDir;
             processStartInfo.FileName = readOutput ? Path.Combine(workingDir, fileName) : fileName;
             processStartInfo.Arguments = arguments;
-            processStartInfo.CreateNoWindow = true;
+            processStartInfo.CreateNoWindow = false;
             processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             processStartInfo.RedirectStandardOutput = readOutput;
-            processStartInfo.UseShellExecute = false;
+            processStartInfo.UseShellExecute = !readOutput;
 
             var process = Process.Start(processStartInfo);
             var output = string.Empty;
