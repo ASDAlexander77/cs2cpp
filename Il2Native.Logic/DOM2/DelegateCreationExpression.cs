@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System.Diagnostics;
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class DelegateCreationExpression : ObjectCreationExpression
@@ -24,7 +25,15 @@
             }
             else
             {
-                Arguments.Add(argument);
+                if (argument.Type != null && argument.Type.TypeKind == TypeKind.Delegate)
+                {
+                    NewOperator = true;
+                    Arguments.Add(new PointerIndirectionOperator { Operand = argument });
+                }
+                else
+                {
+                    Arguments.Add(argument);
+                }
             }
         }
     }
