@@ -112,8 +112,11 @@
                 Parameters = method.Parameters,
                 ReturnType = method.ReturnType,
                 ReceiverType = new NamedTypeImpl { Name = string.Concat(Type.MetadataName, "_", this.@interface.MetadataName), ContainingType = (INamedTypeSymbol)Type },
-                ContainingType = method.ContainingType,
-                ContainingNamespace = Type.ContainingNamespace
+                ContainingType = (INamedTypeSymbol)Type,
+                ContainingNamespace = Type.ContainingNamespace,
+                IsGenericMethod = method.IsGenericMethod,
+                TypeArguments = method.TypeArguments,
+                TypeParameters = method.TypeParameters,
             };
         }
 

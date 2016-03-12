@@ -70,7 +70,7 @@
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
         public MethodKind MethodKind { get; set; }
         public int Arity { get; private set; }
-        public bool IsGenericMethod { get; private set; }
+        public bool IsGenericMethod { get; set; }
         public bool IsExtensionMethod { get; private set; }
         public bool IsAsync { get; private set; }
         public bool IsVararg { get; private set; }
@@ -78,8 +78,8 @@
         public bool HidesBaseMethodsByName { get; private set; }
         public bool ReturnsVoid { get; private set; }
         public ITypeSymbol ReturnType { get; set; }
-        public ImmutableArray<ITypeSymbol> TypeArguments { get; private set; }
-        public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; private set; }
+        public ImmutableArray<ITypeSymbol> TypeArguments { get; set; }
+        public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; set; }
         public ImmutableArray<IParameterSymbol> Parameters { get; set; }
         public IMethodSymbol ConstructedFrom { get; private set; }
 

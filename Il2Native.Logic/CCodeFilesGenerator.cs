@@ -185,7 +185,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     // write interface wrappers
                     foreach (var iface in unit.Type.Interfaces)
                     {
-                        WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
+                        anyRecord = WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
                     }
 
                     itw.Close();
@@ -194,6 +194,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (anyRecord && text.Length > 0)
                 {
                     var path = this.GetPath(unit, out nestedLevel, ".h", root);
+                    Debug.Assert(!path.Contains("Decimal.h"));
+
                     var newText = text.ToString();
 
                     headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
@@ -268,7 +270,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 // write interface wrappers
                 foreach (var iface in unit.Type.Interfaces)
                 {
-                    WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                    anyRecord = WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
                 }
 
                 if (unit.MainMethod != null)
@@ -627,35 +629,28 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
         {
-            if (namedTypeSymbol.TypeKind == TypeKind.Interface)
-            {
-                return;
-            }
-
             new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
             c.EndStatement();
             new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
         }
 
-        private static void WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol, bool genericHeaderFile = false)
+        private static bool WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol, bool genericHeaderFile = false)
         {
-            if (namedTypeSymbol.TypeKind == TypeKind.Interface)
-            {
-                return;
-            }
-
+            var anyRecord = false;
             foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
             {
-                var allowedMethod = !genericHeaderFile || genericHeaderFile && (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
+                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
                 if (!allowedMethod)
                 {
                     continue;
                 }
 
                 interfaceMethodWrapper.WriteTo(c);
+                anyRecord = true;
             }
-        }
 
+            return anyRecord;
+        }
 
         public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
         {

@@ -226,7 +226,7 @@ namespace Il2Native.Logic
 
             if (type.TypeKind == TypeKind.Interface)
             {
-                // add all methods from all inetrafces
+                // add all methods from all interfaces
                 foreach (var method in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
                 {
                     unit.Declarations.Add(new CCodeMethodDeclaration(method));
