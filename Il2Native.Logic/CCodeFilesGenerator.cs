@@ -187,7 +187,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         // write interface wrappers
                         foreach (var iface in unit.Type.Interfaces)
                         {
-                            anyRecord = WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
+                            anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
                         }
                     }
 
@@ -275,7 +275,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     // write interface wrappers
                     foreach (var iface in unit.Type.Interfaces)
                     {
-                        anyRecord = WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
                     }
                 }
 
@@ -645,7 +645,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             var anyRecord = false;
             foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
             {
-                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType);
+                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
                 if (!allowedMethod)
                 {
                     continue;

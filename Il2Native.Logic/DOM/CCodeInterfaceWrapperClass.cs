@@ -17,13 +17,13 @@
             this.CreateMemebers();
         }
 
-        public IEnumerable<CCodeDefinition> GetMembersImplementation()
+        public IEnumerable<CCodeMethodDefinition> GetMembersImplementation()
         {
             return this.@interface.GetMembers()
                 .OfType<IMethodSymbol>()
                 .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
                 .Select(this.CreateWrapperMethod)
-                .Select(m => new CCodeMethodDefinition(m) { MethodBodyOpt = this.CreateMethodBody(m) });
+                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
         }
 
         private void CreateMemebers()
@@ -122,6 +122,19 @@
             c.WriteName((INamedTypeSymbol)Type);
             c.TextSpan("_");
             c.WriteName(this.@interface);
+        }
+
+        public class CCodeMethodDefinitionWrapper : CCodeMethodDefinition
+        {
+            public CCodeMethodDefinitionWrapper(IMethodSymbol method)
+                : base(method)
+            {
+            }
+
+            public override bool IsGeneric
+            {
+                get { return Method.IsGenericMethod && !Method.IsVirtualGenericMethod(); }
+            }
         }
     }
 }
