@@ -236,18 +236,16 @@
             Trace.WriteLine(string.Empty);
 
             // file exe
-            ExecCmd("g++", string.Format("-o {0}.exe {1} -lstdc++ -std=gnu++14 -lCoreLib -march=native -I {0}/src -I CoreLib/src -I CoreLib/Impl -L CoreLib/__build_mingw32_release -fpermissive", assemblyName, GetAllSourceFiles(assemblyName)));
+            ExecCmd(string.Format("{0}\\build_vs2015_release.bat", assemblyName), string.Empty);
 
             if (!justCompile)
             {
                 // test execution
-                ExecCmd(string.Format("{0}.exe", assemblyName), readOutput: true, returnCode: returnCode);
+                ExecCmd(string.Format("{0}\\__build_win32_release\\Release\\{0}.exe", assemblyName), readOutput: true, returnCode: returnCode);
             }
             else
             {
-                Assert.IsTrue(
-                    File.Exists(
-                        Path.Combine(OutputPath, string.Format("{0}{1}.exe", OutputPath, assemblyName))));
+                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_release\\Release\\{0}.exe", assemblyName)));
             }
         }
 
