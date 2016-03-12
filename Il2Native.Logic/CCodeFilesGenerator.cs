@@ -639,7 +639,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             var anyRecord = false;
             foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
             {
-                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
+                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType);
                 if (!allowedMethod)
                 {
                     continue;
