@@ -295,7 +295,7 @@
             }
             else
             {
-                return namespaceNode.MetadataName ?? namespaceNode.Name;
+                return namespaceNode.MetadataName;
             }
         }
 
