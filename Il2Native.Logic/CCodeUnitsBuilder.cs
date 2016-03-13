@@ -287,7 +287,7 @@ namespace Il2Native.Logic
                             new NamespaceImpl
                             {
                                 Name = "System",
-                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true }
+                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true, ContainingAssembly = new IAssemblySymbolImpl { MetadataName = "CoreLib" } }
                             },
                         TypeKind = TypeKind.Struct
                     },
