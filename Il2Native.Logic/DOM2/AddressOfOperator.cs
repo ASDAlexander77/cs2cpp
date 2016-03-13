@@ -11,13 +11,9 @@
 
         public Expression Operand { get; set; }
 
-        public bool IsFixedStatementAddressOf { get; set; }
-
         internal void Parse(BoundAddressOfOperator boundAddressOfOperator)
         {
             base.Parse(boundAddressOfOperator);
-
-            this.IsFixedStatementAddressOf = boundAddressOfOperator.IsFixedStatementAddressOf;
             this.Operand = Deserialize(boundAddressOfOperator.Operand) as Expression;
         }
 

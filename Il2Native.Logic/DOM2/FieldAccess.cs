@@ -56,7 +56,11 @@
                     }
                 }
 
-                c.WriteAccess(this.ReceiverOpt);
+                if (this.ReceiverOpt != null)
+                {
+                    c.WriteAccess(this.ReceiverOpt);
+                }
+
                 c.WriteName(this.Field);
             }
         }

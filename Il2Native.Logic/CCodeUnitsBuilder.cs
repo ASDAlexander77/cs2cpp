@@ -168,18 +168,12 @@ namespace Il2Native.Logic
 
             if (hasStaticConstructor)
             {
-                // add call flag for static constructor
-                var cctorCalledField = new FieldImpl
-                {
-                    Name = "_cctor_called",
-                    Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
-                    ContainingType = (INamedTypeSymbol) type,
-                    ContainingNamespace = type.ContainingNamespace,
-                    IsStatic = true
-                };
+                BuildStaticConstructorVariables(type, unit);
+            }
 
-                unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
-                unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
+            if (type.Name != "<Module>")
+            {
+                BuildTypeHolderVariables(type, unit);
             }
 
             var constructors = methodSymbols.Where(m => m.MethodKind == MethodKind.Constructor);
@@ -212,7 +206,10 @@ namespace Il2Native.Logic
             if (type.Name != "<Module>" && type.TypeKind != TypeKind.Interface)
             {
                 // add internal infrustructure
-                unit.Declarations.Add(new CCodeGetTypeVirtualMethod((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeGetTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
+                unit.Definitions.Add(new CCodeGetTypeVirtualMethodDefinition((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeIsTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
+                unit.Definitions.Add(new CCodeIsTypeVirtualMethodDefinition((INamedTypeSymbol)type));
                 if (!type.IsAbstract)
                 {
                     unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
@@ -260,6 +257,37 @@ namespace Il2Native.Logic
             return unit;
         }
 
+        private static void BuildStaticConstructorVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add call flag for static constructor
+            var cctorCalledField = new FieldImpl
+            {
+                Name = "_cctor_called",
+                Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
+        }
+
+        private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add call flag for static constructor
+            var typeHolderField = new FieldImpl
+            {
+                Name = "__type",
+                Type = new NamedTypeImpl { Name = "RuntimeType", ContainingNamespace = type.GetBaseType().ContainingNamespace, TypeKind = TypeKind.Struct },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
+        }
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
         {

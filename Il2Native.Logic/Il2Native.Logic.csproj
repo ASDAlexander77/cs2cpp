@@ -149,10 +149,13 @@
     <Compile Include="DOM\Synthesized\CCodeCloneVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetArrayElementSizeVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\CCodeInterfaceCastOperatorDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethodDefinition.cs" />
+    <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethod.cs" />
+    <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethodDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeSpecialTypeOrEnumConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDefinition.cs" />

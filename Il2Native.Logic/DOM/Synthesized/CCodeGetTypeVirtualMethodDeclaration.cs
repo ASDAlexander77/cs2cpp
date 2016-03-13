@@ -7,15 +7,11 @@
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeGetTypeVirtualMethod : CCodeMethodDeclaration
+    public class CCodeGetTypeVirtualMethodDeclaration : CCodeMethodDeclaration
     {
-        public CCodeGetTypeVirtualMethod(INamedTypeSymbol type)
+        public CCodeGetTypeVirtualMethodDeclaration(INamedTypeSymbol type)
             : base(new GetTypeVirtualMethod(type))
         {
-            MethodBodyOpt = new MethodBody(Method)
-            {
-                Statements = { new ReturnStatement { ExpressionOpt = new Literal { Value = ConstantValue.Null } } }
-            };
         }
 
         public class GetTypeVirtualMethod : MethodImpl
@@ -26,6 +22,7 @@
                 MetadataName = Name;
                 MethodKind = MethodKind.Ordinary;
                 ContainingType = type;
+                ReceiverType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
                 ReturnType = type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType;
