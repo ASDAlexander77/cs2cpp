@@ -279,7 +279,18 @@ namespace Il2Native.Logic
             var typeHolderField = new FieldImpl
             {
                 Name = "__type",
-                Type = new NamedTypeImpl { Name = "RuntimeType", ContainingNamespace = type.GetBaseType().ContainingNamespace, TypeKind = TypeKind.Struct },
+                Type =
+                    new NamedTypeImpl
+                    {
+                        Name = "RuntimeType",
+                        ContainingNamespace =
+                            new NamespaceImpl
+                            {
+                                Name = "System",
+                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true }
+                            },
+                        TypeKind = TypeKind.Struct
+                    },
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
                 IsStatic = true

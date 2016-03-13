@@ -142,6 +142,7 @@
     <Compile Include="DOM\Implementations\LocalImpl.cs" />
     <Compile Include="DOM\Implementations\MethodImpl.cs" />
     <Compile Include="DOM\Implementations\NamedTypeImpl.cs" />
+    <Compile Include="DOM\Implementations\NamespaceImpl.cs" />
     <Compile Include="DOM\Implementations\ParameterImpl.cs" />
     <Compile Include="DOM\Implementations\PointerTypeImpl.cs" />
     <Compile Include="DOM\Implementations\TypeImpl.cs" />
