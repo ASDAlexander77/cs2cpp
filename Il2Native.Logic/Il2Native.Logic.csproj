@@ -154,6 +154,8 @@
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDefinition.cs" />
+    <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDefinition.cs" />
+    <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDeclaration.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />

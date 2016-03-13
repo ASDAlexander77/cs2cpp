@@ -210,6 +210,8 @@ namespace Il2Native.Logic
                 unit.Definitions.Add(new CCodeGetTypeVirtualMethodDefinition((INamedTypeSymbol)type));
                 unit.Declarations.Add(new CCodeIsTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
                 unit.Definitions.Add(new CCodeIsTypeVirtualMethodDefinition((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeGetInterfaceVirtualMethodDeclaration((INamedTypeSymbol)type));
+                unit.Definitions.Add(new CCodeGetInterfaceVirtualMethodDefinition((INamedTypeSymbol)type));
                 if (!type.IsAbstract)
                 {
                     unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
