@@ -8,7 +8,12 @@ inline C interface_cast (T t)
 template <typename C, typename T> 
 inline C dynamic_interface_cast (T t)
 {
-	return nullptr;
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return reinterpret_cast<C>(t->__get_interface(&C::__type));
 }
 
 // object cast (interface etc)
