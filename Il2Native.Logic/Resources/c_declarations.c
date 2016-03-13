@@ -6,14 +6,25 @@ inline C interface_cast (T t)
 }
 
 template <typename C, typename T> 
-inline C dynamic_interface_cast (T t)
+inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
 {
 	if (t == nullptr)
 	{
 		return nullptr;
 	}
 
-	return reinterpret_cast<C>(t->__get_interface(&C::__type));
+	return reinterpret_cast<C>(t->__get_interface(&std::remove_pointer<C>::type::__type));
+}
+
+template <typename C, typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
 }
 
 // object cast (interface etc)
