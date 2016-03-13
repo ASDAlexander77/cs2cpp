@@ -10,7 +10,7 @@
         public SymbolKind Kind { get; private set; }
         public string Language { get; private set; }
         public string Name { get; set; }
-        public string MetadataName { get; private set; }
+        public string MetadataName { get; set; }
         public ISymbol ContainingSymbol { get; private set; }
         public IAssemblySymbol ContainingAssembly { get; set; }
         public IModuleSymbol ContainingModule { get; private set; }

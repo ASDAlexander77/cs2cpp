@@ -139,7 +139,7 @@
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
     <Compile Include="DOM\Implementations\FieldImpl.cs" />
     <Compile Include="DOM\Implementations\IAssembliesInfoResolver.cs" />
-    <Compile Include="DOM\Implementations\IAssemblySymbolImpl.cs" />
+    <Compile Include="DOM\Implementations\AssemblySymbolImpl.cs" />
     <Compile Include="DOM\Implementations\LocalImpl.cs" />
     <Compile Include="DOM\Implementations\MethodImpl.cs" />
     <Compile Include="DOM\Implementations\NamedTypeImpl.cs" />

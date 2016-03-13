@@ -5,7 +5,7 @@
     using System.Globalization;
     using System.Threading;
     using Microsoft.CodeAnalysis;
-    public class IAssemblySymbolImpl : IAssemblySymbol
+    public class AssemblySymbolImpl : IAssemblySymbol
     {
         public SymbolKind Kind { get; private set; }
         public string Language { get; private set; }

@@ -23,6 +23,7 @@
                 MethodKind = MethodKind.Ordinary;
                 ContainingType = type;
                 ReceiverType = type;
+                ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
                 ReturnType = type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType;

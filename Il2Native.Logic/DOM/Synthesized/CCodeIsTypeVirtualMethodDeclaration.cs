@@ -21,6 +21,7 @@
                 MethodKind = MethodKind.Ordinary;
                 ContainingType = type;
                 ReceiverType = type;
+                ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
                 ReturnType = new TypeImpl { SpecialType = SpecialType.System_Boolean };
