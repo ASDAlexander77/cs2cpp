@@ -35,10 +35,7 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 // Boxing internals
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
 {
-	// as we working with __init structs we do not need to call Ctors second time here
-	auto mem = new T;
-	std::memcpy(mem, &t, sizeof(T));
-	return mem;
+	return new T(t);
 }
 
 template <typename T> inline typename std::enable_if<!is_struct_type<T>::value && !is_primitive_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
