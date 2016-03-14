@@ -3,6 +3,9 @@
     using System.Collections.Generic;
     using System.Linq;
     using DOM2;
+
+    using Il2Native.Logic.DOM.Synthesized;
+
     using Implementations;
     using Microsoft.CodeAnalysis;
 
@@ -96,6 +99,8 @@
             c.WhiteSpace();
             c.TextSpanNewLine("{}");
 
+            new CCodeObjectCastOperatorDefinition((INamedTypeSymbol)Type).WriteTo(c);
+
             foreach (var declaration in Declarations)
             {
                 declaration.WriteTo(c);
@@ -119,7 +124,7 @@
 
         private void Name(CCodeWriterBase c)
         {
-            c.WriteName((INamedTypeSymbol)Type);
+            c.WriteName(Type);
             c.TextSpan("_");
             c.WriteName(this.@interface);
         }

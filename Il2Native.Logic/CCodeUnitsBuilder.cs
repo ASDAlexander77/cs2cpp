@@ -218,6 +218,11 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (type.TypeKind == TypeKind.Interface)
+            {
+                unit.Declarations.Add(new CCodeObjectCastOperatorDeclaration((INamedTypeSymbol)type));
+            }
+
             if (type.SpecialType == SpecialType.System_Array)
             {
                 unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod((INamedTypeSymbol)type));

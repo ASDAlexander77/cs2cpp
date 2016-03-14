@@ -8,8 +8,8 @@
 
     public class CCodeInterfaceCastOperatorDeclaration : CCodeMethodDeclaration
     {
-        private INamedTypeSymbol type;
-        private ITypeSymbol interfaceSymbol;
+        private readonly INamedTypeSymbol type;
+        private readonly ITypeSymbol interfaceSymbol;
 
         public CCodeInterfaceCastOperatorDeclaration(INamedTypeSymbol type, ITypeSymbol interfaceSymbol)
             : base(new InterfaceCastOperatorMethod(type))

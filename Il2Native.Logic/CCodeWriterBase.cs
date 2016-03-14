@@ -593,7 +593,7 @@ namespace Il2Native.Logic
 
         public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
         {
-            this.WriteMethodPrefixesAndName(methodSymbol, declarationWithingClass);
+            this.WriteMethodPrefixesReturnTypeAndName(methodSymbol, declarationWithingClass);
             this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody);
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
@@ -665,7 +665,22 @@ namespace Il2Native.Logic
             this.TextSpan(")");
         }
 
-        public void WriteMethodPrefixesAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        public void WriteMethodPrefixesReturnTypeAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            this.WriteMethodPrefixes(methodSymbol, declarationWithingClass);
+            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
+
+            if (!declarationWithingClass)
+            {
+                this.WriteMethodFullName(methodSymbol);
+            }
+            else
+            {
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
+            }
+        }
+
+        public void WriteMethodPrefixes(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
             var methodContainingType = methodSymbol.ContainingType;
             // special case for C++ nested classes
@@ -705,17 +720,6 @@ namespace Il2Native.Logic
                     this.TextSpan("virtual");
                     this.WhiteSpace();
                 }
-            }
-
-            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
-
-            if (!declarationWithingClass)
-            {
-                this.WriteMethodFullName(methodSymbol);
-            }
-            else
-            {
-                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
             }
         }
 
