@@ -61,9 +61,9 @@ inline T __unbox(T* t)
 }
 
 template <typename T> 
-inline typename std::enable_if<!is_primitive_type<T>::value, T>::type __unbox(object* t)
+inline T __unbox(object* o)
 {
-	return *cast<T*>(t);
+	return *cast<T*>(o);
 }
 
 template <typename T, typename D> 
