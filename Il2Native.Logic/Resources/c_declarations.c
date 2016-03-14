@@ -27,13 +27,6 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
 }
 
-// object cast (interface etc)
-template <typename T> 
-inline object* object_cast (T t)
-{
-	return nullptr;
-}
-
 // Boxing internals
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
 {
@@ -315,113 +308,137 @@ public:
 	// IEnumerable
 	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
 
-    class __array_IListT1 : public virtual CoreLib::System::Collections::Generic::IListT1<T>
-    {
-    public:
-        __array_IListT1(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        T System_Collections_Generic_IListT1_get_Item(int32_t);
-        void System_Collections_Generic_IListT1_set_Item(int32_t, T);
-        int32_t System_Collections_Generic_IListT1_IndexOf(T);
-        void System_Collections_Generic_IListT1_Insert(int32_t, T);
-        void System_Collections_Generic_IListT1_RemoveAt(int32_t);
-        int32_t System_Collections_Generic_ICollectionT1_get_Count();
-        bool System_Collections_Generic_ICollectionT1_get_IsReadOnly();
-        void System_Collections_Generic_ICollectionT1_Add(T);
-        void System_Collections_Generic_ICollectionT1_Clear();
-        bool System_Collections_Generic_ICollectionT1_Contains(T);
-        void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t);
-        bool System_Collections_Generic_ICollectionT1_Remove(T);
-        CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::Generic::IListT1<T>*()
-    {
-        return new __array_IListT1(this);
-    }
-    class __array_ICollectionT1 : public virtual CoreLib::System::Collections::Generic::ICollectionT1<T>
-    {
-    public:
-        __array_ICollectionT1(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        int32_t System_Collections_Generic_ICollectionT1_get_Count();
-        bool System_Collections_Generic_ICollectionT1_get_IsReadOnly();
-        void System_Collections_Generic_ICollectionT1_Add(T);
-        void System_Collections_Generic_ICollectionT1_Clear();
-        bool System_Collections_Generic_ICollectionT1_Contains(T);
-        void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t);
-        bool System_Collections_Generic_ICollectionT1_Remove(T);
-        CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::Generic::ICollectionT1<T>*()
-    {
-        return new __array_ICollectionT1(this);
-    }
-    class __array_IEnumerableT1 : public virtual CoreLib::System::Collections::Generic::IEnumerableT1<T>
-    {
-    public:
-        __array_IEnumerableT1(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::Generic::IEnumerableT1<T>*()
-    {
-        return new __array_IEnumerableT1(this);
-    }
-    class __array_IEnumerable : public virtual CoreLib::System::Collections::IEnumerable
-    {
-    public:
-        __array_IEnumerable(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::IEnumerable*()
-    {
-        return new __array_IEnumerable(this);
-    }
-    class __array_IList : public virtual CoreLib::System::Collections::IList
-    {
-    public:
-        __array_IList(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        CoreLib::System::Object* System_Collections_IList_get_Item(int32_t);
-        void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*);
-        int32_t System_Collections_IList_Add(CoreLib::System::Object*);
-        bool System_Collections_IList_Contains(CoreLib::System::Object*);
-        void System_Collections_IList_Clear();
-        bool System_Collections_IList_get_IsReadOnly();
-        bool System_Collections_IList_get_IsFixedSize();
-        int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*);
-        void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*);
-        void System_Collections_IList_Remove(CoreLib::System::Object*);
-        void System_Collections_IList_RemoveAt(int32_t);
-        void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
-        int32_t System_Collections_ICollection_get_Count();
-        CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
-        bool System_Collections_ICollection_get_IsSynchronized();
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::IList*()
-    {
-        return new __array_IList(this);
-    }
-    class __array_ICollection : public virtual CoreLib::System::Collections::ICollection
-    {
-    public:
-        __array_ICollection(__array<T>* class_) : _class{class_} {}
-        __array<T>* _class;
-        void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
-        int32_t System_Collections_ICollection_get_Count();
-        CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
-        bool System_Collections_ICollection_get_IsSynchronized();
-        CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
-    };
-    operator CoreLib::System::Collections::ICollection*()
-    {
-        return new __array_ICollection(this);
-    }
+	class __array_IListT1 : public virtual CoreLib::System::Collections::Generic::IListT1<T>
+	{
+	public:
+		__array_IListT1(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		T System_Collections_Generic_IListT1_get_Item(int32_t);
+		void System_Collections_Generic_IListT1_set_Item(int32_t, T);
+		int32_t System_Collections_Generic_IListT1_IndexOf(T);
+		void System_Collections_Generic_IListT1_Insert(int32_t, T);
+		void System_Collections_Generic_IListT1_RemoveAt(int32_t);
+		int32_t System_Collections_Generic_ICollectionT1_get_Count();
+		bool System_Collections_Generic_ICollectionT1_get_IsReadOnly();
+		void System_Collections_Generic_ICollectionT1_Add(T);
+		void System_Collections_Generic_ICollectionT1_Clear();
+		bool System_Collections_Generic_ICollectionT1_Contains(T);
+		void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t);
+		bool System_Collections_Generic_ICollectionT1_Remove(T);
+		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::Generic::IListT1<T>*()
+	{
+		return new __array_IListT1(this);
+	}
+	class __array_ICollectionT1 : public virtual CoreLib::System::Collections::Generic::ICollectionT1<T>
+	{
+	public:
+		__array_ICollectionT1(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		int32_t System_Collections_Generic_ICollectionT1_get_Count();
+		bool System_Collections_Generic_ICollectionT1_get_IsReadOnly();
+		void System_Collections_Generic_ICollectionT1_Add(T);
+		void System_Collections_Generic_ICollectionT1_Clear();
+		bool System_Collections_Generic_ICollectionT1_Contains(T);
+		void System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t);
+		bool System_Collections_Generic_ICollectionT1_Remove(T);
+		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::Generic::ICollectionT1<T>*()
+	{
+		return new __array_ICollectionT1(this);
+	}
+	class __array_IEnumerableT1 : public virtual CoreLib::System::Collections::Generic::IEnumerableT1<T>
+	{
+	public:
+		__array_IEnumerableT1(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::Generic::IEnumerableT1<T>*()
+	{
+		return new __array_IEnumerableT1(this);
+	}
+	class __array_IEnumerable : public virtual CoreLib::System::Collections::IEnumerable
+	{
+	public:
+		__array_IEnumerable(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::IEnumerable*()
+	{
+		return new __array_IEnumerable(this);
+	}
+	class __array_IList : public virtual CoreLib::System::Collections::IList
+	{
+	public:
+		__array_IList(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		CoreLib::System::Object* System_Collections_IList_get_Item(int32_t);
+		void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*);
+		int32_t System_Collections_IList_Add(CoreLib::System::Object*);
+		bool System_Collections_IList_Contains(CoreLib::System::Object*);
+		void System_Collections_IList_Clear();
+		bool System_Collections_IList_get_IsReadOnly();
+		bool System_Collections_IList_get_IsFixedSize();
+		int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*);
+		void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*);
+		void System_Collections_IList_Remove(CoreLib::System::Object*);
+		void System_Collections_IList_RemoveAt(int32_t);
+		void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
+		int32_t System_Collections_ICollection_get_Count();
+		CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
+		bool System_Collections_ICollection_get_IsSynchronized();
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::IList*()
+	{
+		return new __array_IList(this);
+	}
+	class __array_ICollection : public virtual CoreLib::System::Collections::ICollection
+	{
+	public:
+		__array_ICollection(__array<T>* class_) : _class{class_} {}
+		operator object*()
+		{
+			return this->_class;
+		}
+		__array<T>* _class;
+		void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
+		int32_t System_Collections_ICollection_get_Count();
+		CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
+		bool System_Collections_ICollection_get_IsSynchronized();
+		CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	};
+	operator CoreLib::System::Collections::ICollection*()
+	{
+		return new __array_ICollection(this);
+	}
 };
 
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array

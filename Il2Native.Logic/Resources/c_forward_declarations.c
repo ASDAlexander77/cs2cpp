@@ -114,3 +114,10 @@ public:
 		return (D)t;
 	}
 };
+
+// object cast (interface etc)
+template <typename T> 
+inline object* object_cast (T t)
+{
+	return nullptr;
+}
