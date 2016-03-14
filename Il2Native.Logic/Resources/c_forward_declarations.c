@@ -117,7 +117,13 @@ public:
 
 // object cast (interface etc)
 template <typename T> 
-inline object* object_cast (T t)
+inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
 {
-	return nullptr;
+	return static_cast<object*>(t);
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast (T t)
+{
+	return t->operator object*();
 }
