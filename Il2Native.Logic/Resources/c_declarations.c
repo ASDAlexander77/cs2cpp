@@ -2,6 +2,11 @@
 template <typename C, typename T> 
 inline C interface_cast (T t)
 {
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
 	return t->operator C();
 }
 

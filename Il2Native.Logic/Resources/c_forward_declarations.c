@@ -125,5 +125,10 @@ inline typename std::enable_if<!is_interface_type<T>::value, object*>::type obje
 template <typename T> 
 inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast (T t)
 {
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
 	return t->operator object*();
 }
