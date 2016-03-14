@@ -21,7 +21,7 @@
             this.type = type;
 
             var objectType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
-            var returnStatement = new ReturnStatement { ExpressionOpt = new PointerIndirectionOperator { Operand = new Conversion { ConversionKind = ConversionKind.ImplicitReference, Type = new ValueTypeAsClassTypeImpl(type), TypeSource = objectType, Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType } } } } };
+            var returnStatement = new ReturnStatement { ExpressionOpt = new PointerIndirectionOperator { Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType } } } };
             MethodBodyOpt = new MethodBody(Method) { Statements = { returnStatement } };
         }
 
@@ -33,8 +33,7 @@
             c.WriteType(this.type);
             c.WhiteSpace();
             c.TextSpan("__unbox(");
-            ////c.WriteType(this.type, valueTypeAsClass: true);
-            c.TextSpan("object*");
+            c.WriteType(this.type, valueTypeAsClass: true);
             c.WhiteSpace();
             c.TextSpan("value)");
             MethodBodyOpt.WriteTo(c);

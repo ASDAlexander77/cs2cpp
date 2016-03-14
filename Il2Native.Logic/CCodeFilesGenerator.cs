@@ -596,7 +596,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             {
                 itw.WriteLine();
                 new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
-                new CCodeUnboxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
+                ////new CCodeUnboxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
                 itw.WriteLine();
             }
         }
