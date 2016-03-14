@@ -591,46 +591,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             itw.WriteLine();
-
-            // TODO: use synthersized method
-            if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
-            {
-                WriteBoxMethodForPrimitiveValueOrEnum(itw, c, namedTypeSymbol);
-            }
-        }
-
-        private static void WriteBoxMethodForPrimitiveValueOrEnum(
-            IndentedTextWriter itw,
-            CCodeWriterText c,
-            INamedTypeSymbol namedTypeSymbol)
-        {
-            itw.WriteLine();
-            // write boxing function
-            c.TextSpan("inline");
-            c.WhiteSpace();
-            c.WriteType(namedTypeSymbol, valueTypeAsClass: true);
-            c.WhiteSpace();
-            c.TextSpan("__box(");
-            c.WriteType(namedTypeSymbol);
-            c.WhiteSpace();
-            c.TextSpan("value)");
-            c.NewLine();
-            c.OpenBlock();
-
-            var specialTypeConstructorMethod =
-                new CCodeSpecialTypeOrEnumConstructorDeclaration.SpecialTypeConstructorMethod(namedTypeSymbol);
-            var objectCreationExpression = new ObjectCreationExpression
-            {
-                Type = namedTypeSymbol,
-                IsReference = true,
-                Method = specialTypeConstructorMethod
-            };
-            objectCreationExpression.Arguments.Add(
-                new Parameter { ParameterSymbol = specialTypeConstructorMethod.Parameters.First() });
-            new ReturnStatement { ExpressionOpt = objectCreationExpression }.WriteTo(c);
-
-            c.EndBlock();
-            itw.WriteLine();
         }
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
