@@ -77,23 +77,6 @@ template <typename D, typename S> inline D as(S s)
 }
 
 // cast internals
-template <typename D, typename S> inline D cast(S s)
-{
-	if (s == nullptr)
-	{
-		return nullptr;
-	}
-
-	auto d = dynamic_cast<D>(s);
-	if (d == nullptr)
-	{
-		throw __new<CoreLib::System::InvalidCastException>();
-	}
-
-	return d;
-}
-
-// cast internals
 template <typename D, typename S> 
 inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, bool>::type is(S s)
 {

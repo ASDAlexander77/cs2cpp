@@ -591,6 +591,14 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             itw.WriteLine();
+
+            if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
+            {
+                itw.WriteLine();
+                new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
+                new CCodeUnboxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
+                itw.WriteLine();
+            }
         }
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)

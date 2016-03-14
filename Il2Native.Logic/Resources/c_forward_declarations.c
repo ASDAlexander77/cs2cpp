@@ -132,3 +132,20 @@ inline typename std::enable_if<is_interface_type<T>::value, object*>::type objec
 
 	return t->operator object*();
 }
+
+// cast internals
+template <typename D, typename S> inline D cast(S s)
+{
+	if (s == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto d = dynamic_cast<D>(s);
+	if (d == nullptr)
+	{
+		throw __new<CoreLib::System::InvalidCastException>();
+	}
+
+	return d;
+}

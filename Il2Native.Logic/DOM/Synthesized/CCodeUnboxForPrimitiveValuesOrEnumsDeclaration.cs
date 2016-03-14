@@ -20,56 +20,9 @@
         {
             this.type = type;
 
-            var localVariable = new Local { CustomName = "d" };
             var objectType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
-
-            var assignmentOperator = new AssignmentOperator
-                                         {
-                                             ApplyAutoType = true,
-                                             Left = localVariable,
-                                             Right =
-                                                 new Conversion
-                                                     {
-                                                         ConversionKind = ConversionKind.ImplicitReference,
-                                                         Type = type,
-                                                         TypeSource = objectType,
-                                                         Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType }}
-                                                     }
-                                         };
-            var ifStatement = new IfStatement
-                                  {
-                                      Condition =
-                                          new BinaryOperator
-                                              {
-                                                  Left = localVariable,
-                                                  Right = new Literal { Value = ConstantValue.Null },
-                                                  OperatorKind = BinaryOperatorKind.NotEqual
-                                              },
-                                      IfStatements = new ReturnStatement { ExpressionOpt = new PointerIndirectionOperator { Operand = localVariable } }
-                                  };
-
-            var throwInvalidCast = new ThrowStatement
-            {
-                ExpressionOpt = new ObjectCreationExpression
-                {
-                    Type = new NamedTypeImpl
-                        {
-                            Name = "InvalidCastException",
-                            ContainingNamespace =
-                                new NamespaceImpl
-                                {
-                                    MetadataName = "System",
-                                    ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true, ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" } }
-                                },
-                            TypeKind = TypeKind.Class
-                        }
-                }
-            };
-
-            MethodBodyOpt = new MethodBody(Method)
-                                {
-                                    Statements = { new ExpressionStatement { Expression = assignmentOperator }, ifStatement, throwInvalidCast }
-                                };
+            var returnStatement = new ReturnStatement { ExpressionOpt = new PointerIndirectionOperator { Operand = new Conversion { ConversionKind = ConversionKind.ImplicitReference, Type = new ValueTypeAsClassTypeImpl(type), TypeSource = objectType, Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType } } } } };
+            MethodBodyOpt = new MethodBody(Method) { Statements = { returnStatement } };
         }
 
         public override void WriteTo(CCodeWriterBase c)

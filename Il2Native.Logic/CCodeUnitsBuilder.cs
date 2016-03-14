@@ -223,12 +223,6 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeObjectCastOperatorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
-            {
-                unit.Declarations.Add(new CCodeBoxForPrimitiveValuesOrEnumsDeclaration((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeUnboxForPrimitiveValuesOrEnumsDeclaration((INamedTypeSymbol)type));
-            }
-
             if (type.SpecialType == SpecialType.System_Array)
             {
                 unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod((INamedTypeSymbol)type));
