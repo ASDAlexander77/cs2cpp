@@ -55,15 +55,15 @@ template <typename D, typename S> inline typename std::enable_if<is_interface_ty
 
 // Unboxing internals
 template <typename T, typename D, typename S> 
-inline typename std::enable_if<std::is_same<D, S>::value, D>::type __unbox(S* s)
+inline D __unbox(typename std::enable_if<std::is_same<D, S>::value, S>::type* s)
 {
-	return *s;
+	return (D)*s;
 }
 
 template <typename T, typename D, typename S> 
-inline typename std::enable_if<!std::is_same<D, S>::value && std::is_same<S, object>::value, D>::type __unbox(S* s)
+inline D __unbox(typename std::enable_if<std::is_same<S, object>::value, S>::type* s)
 {
-	return *cast<T*>(s);
+	return (D)*cast<T*>(s);
 }
 
 // cast internals
