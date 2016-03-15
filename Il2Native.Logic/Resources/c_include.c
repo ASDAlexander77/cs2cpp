@@ -27,3 +27,9 @@
 #  error "Cannot define thread_local"
 # endif
 #endif
+
+#ifndef DEBUG
+# define GC_DEBUG
+#endif
+
+#include "gc.h"

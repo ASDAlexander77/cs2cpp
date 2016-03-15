@@ -61,17 +61,17 @@ include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
 if (MSVC)
     if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
-        link_directories(""./""<%link_msvc_debug%>)
+        link_directories(""./"" <%link_msvc_debug%>)
     else()
-        link_directories(""./""<%link_msvc_release%>)
+        link_directories(""./"" <%link_msvc_release%>)
     endif()
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /wd4250 /MP8"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /MP8"")
 else()
     if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
-        link_directories(""./""<%link_other_debug%>)
+        link_directories(""./"" <%link_other_debug%>)
     else()
-        link_directories(""./""<%link_other_release%>)
+        link_directories(""./"" <%link_other_release%>)
     endif()
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -march=native -std=gnu++14 -fpermissive"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 -march=native -std=gnu++14 -fpermissive"")
@@ -83,18 +83,27 @@ add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
 
             var targetLinkLibraries = @"
 if (MSVC)
-target_link_libraries (<%name%> {0})
+target_link_libraries (<%name%> {0} ""gcmt-lib"")
 else()
-target_link_libraries (<%name%> {0} ""stdc++"")
+target_link_libraries (<%name%> {0} ""stdc++"" ""gcmt-lib"")
 endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\" \"../{0}/bdwgc/lib/win32/msvc/debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\" \"../{0}/bdwgc/lib/win32/mingw32/debug\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\" \"../{0}/bdwgc/lib/win32/msvc/release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\" \"../{0}/bdwgc/lib/win32/mingw32/release\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
+
+            if (references.Any())
+            {
+                include += " \"../CoreLib/bdwgc/include\"";
+            }
+            else
+            {
+                include += " \"./bdwgc/include\"";
+            }
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists", ".txt"))))
             {
@@ -309,7 +318,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.WriteLine();
             itw.WriteLine("auto main() -> int32_t");
             itw.WriteLine("{");
+            itw.WriteLine("#ifndef GC_H");
             itw.Indent++;
+            itw.WriteLine("GC_INIT()");
+            itw.Indent--;
+            itw.WriteLine("#endif");
+            itw.Indent++;
+
             c.WriteMethodFullName(mainMethod);
             itw.Write("(");
             if (mainMethod.Parameters.Length > 0)
