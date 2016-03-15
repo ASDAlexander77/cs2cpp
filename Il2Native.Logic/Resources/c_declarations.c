@@ -120,25 +120,25 @@ inline typename std::enable_if<is_class_type<D>::value && is_interface_type<S>::
 
 // Constrained internals (for templates)
 template <typename D, typename S> 
-inline typename std::enable_if<std::is_same<D, S>::value, D>::type constrained (S s)
+inline D constrained (typename std::enable_if<std::is_same<D, S>::value, S>::type s)
 {
 	return s;
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<!std::is_same<D, S>::value && is_class_type<S>::value, D>::type constrained (S s)
+inline D constrained (typename std::enable_if<!std::is_same<D, S>::value && is_class_type<S>::value, S>::type s)
 {
 	return static_cast<D>(s);
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<!std::is_same<D, S>::value && is_interface_type<S>::value, D>::type constrained (S s)
+inline D constrained (typename std::enable_if<!std::is_same<D, S>::value && is_interface_type<S>::value, S>::type s)
 {
 	return interface_cast<D>(s);
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<!std::is_same<D, S>::value && is_value_type<S>::value && is_class_type<D>::value, D>::type constrained (S s)
+inline D constrained (typename std::enable_if<!std::is_same<D, S>::value && is_value_type<S>::value && is_class_type<D>::value, S>::type s)
 {
 	return __box(s);
 }
