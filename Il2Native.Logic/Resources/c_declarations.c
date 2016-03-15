@@ -38,7 +38,7 @@ template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T
 	return new T(t);
 }
 
-template <typename T> inline typename std::enable_if<!is_struct_type<T>::value && !is_primitive_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
 {
 	return t;
 }
@@ -71,6 +71,18 @@ inline typename std::enable_if<is_value_type<T>::value, T>::type __unbox(object*
 {
 	typedef typename valuetype_to_class<T>::type _T;
 	return *cast<_T*>(o);
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(T t)
+{
+	return t;
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(object* o)
+{
+	return dynamic_interface_cast<T>(o);
 }
 
 // cast internals
