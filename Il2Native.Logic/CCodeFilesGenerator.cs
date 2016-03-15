@@ -530,20 +530,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.WriteLine(" base;");
             }
 
-            // declare using to solve issue with overloaded functions in different classes
-            /*
-            foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNames())
-            {
-                c.TextSpan("using");
-                c.WhiteSpace();
-                c.WriteType(method.ReceiverType, suppressReference: true, allowKeywords: true);
-                c.TextSpan("::");
-                c.WriteMethodName(method);
-                c.TextSpan(";");
-                c.NewLine();
-            }
-            */
-
             foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNamesTakeOnlyOne())
             {
                 c.TextSpan("using");
@@ -594,9 +580,21 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
+                c.TextSpanNewLine("template<>");
+                c.TextSpan("struct");
+                c.WhiteSpace();
+                c.TextSpan("valuetype_to_class<");
+                c.WriteType(namedTypeSymbol);
+                c.TextSpan(">");
+                c.WhiteSpace();
+                c.TextSpan("{ typedef");
+                c.WhiteSpace();
+                c.WriteType(namedTypeSymbol, true, false, true);
+                c.WhiteSpace();
+                c.TextSpan("type; };");
+
                 itw.WriteLine();
                 new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
-                ////new CCodeUnboxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
                 itw.WriteLine();
             }
         }

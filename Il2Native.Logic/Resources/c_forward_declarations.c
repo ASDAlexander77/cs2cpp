@@ -1,4 +1,8 @@
-template <typename T> struct convert_type_to_class
+// map valuetype to class
+template<typename T> 
+struct valuetype_to_class { typedef T type; };
+
+template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
 		typename std::conditional< std::is_same< T, int8_t >::value, CoreLib::System::SByte, 
