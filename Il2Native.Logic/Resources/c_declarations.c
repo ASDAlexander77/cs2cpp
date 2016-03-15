@@ -291,12 +291,14 @@ public:
 
 	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
 	{
-		auto size = sizeof(__array<T>) + sizeof...(items) * sizeof(T);
-		auto instance = new ((int32_t)size) __array<T>(sizeof...(items));
+		auto count = sizeof...(items);
+		auto data_size = count * sizeof(T);
+		auto size = sizeof(__array<T>) + data_size;
+		auto instance = new ((int32_t)size) __array<T>(count);
 
 		// initialize
 		T tmp[] = {items...};
-		memcpy(&instance->_data[0], &tmp, size);
+		memcpy(&instance->_data[0], &tmp, data_size);
 
 		return instance;
 	}
