@@ -220,7 +220,7 @@
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        public static void ExecCompile(string assemblyName, bool justCompile = false, bool opt = false, int returnCode = 0)
+        public static void ExecCompile(string assemblyName, bool justCompile = false, bool opt = false, int returnCode = 0, bool debug = true)
         {
             Trace.WriteLine("==========================================================================");
             if (justCompile)
@@ -236,7 +236,7 @@
             Trace.WriteLine(string.Empty);
 
             // file exe
-            ExecCmd("build_vs2015_release.bat", string.Empty, Path.Combine(OutputPath, assemblyName));
+            ExecCmd(string.Format("build_vs2015_{0}.bat", debug ? "debug" : "release"), string.Empty, Path.Combine(OutputPath, assemblyName));
 
             if (!justCompile)
             {
@@ -244,13 +244,13 @@
                 ExecCmd(
                     string.Format("{0}.exe", assemblyName.Replace("-", "_")),
                     string.Empty,
-                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_release\\Release\\", assemblyName)),
+                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_{1}\\Debug\\", assemblyName, debug ? "debug" : "release")),
                     readOutput: true,
                     returnCode: returnCode);
             }
             else
             {
-                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_release\\Release\\{0}.exe", assemblyName)));
+                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_{1}\\Debug\\{0}.exe", assemblyName, debug ? "debug" : "release")));
             }
         }
 
