@@ -578,7 +578,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             itw.WriteLine();
 
-            if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum)
+            if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum || namedTypeSymbol.SpecialType == SpecialType.System_Void)
             {
                 c.TextSpanNewLine("template<>");
                 c.TextSpan("struct");
@@ -594,8 +594,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.TextSpan("type; };");
 
                 itw.WriteLine();
-                new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
-                itw.WriteLine();
+                if (namedTypeSymbol.SpecialType != SpecialType.System_Void)
+                {
+                    new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
+                    itw.WriteLine();
+                }
             }
         }
 

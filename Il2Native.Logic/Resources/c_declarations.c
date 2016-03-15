@@ -128,9 +128,8 @@ inline C constrained (T t)
 // Typeof internals
 template <typename T> inline CoreLib::System::Type* _typeof()
 {
-	// TODO: finish it
-	T* t;
-	return nullptr;
+	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
+	return &_T::__type;
 }
 
 // String literal

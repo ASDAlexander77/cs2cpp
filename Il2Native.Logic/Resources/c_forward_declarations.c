@@ -5,6 +5,7 @@ struct valuetype_to_class { typedef T type; };
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
+		typename std::conditional< std::is_same< T, void >::value, CoreLib::System::Void, 
 		typename std::conditional< std::is_same< T, int8_t >::value, CoreLib::System::SByte, 
 		typename std::conditional< std::is_same< T, uint8_t >::value, CoreLib::System::Byte, 
 		typename std::conditional< std::is_same< T, int16_t >::value, CoreLib::System::Int16, 
@@ -17,7 +18,7 @@ template <typename T> struct convert_primitive_type_to_class
 		typename std::conditional< std::is_same< T, float >::value, CoreLib::System::Single, 
 		typename std::conditional< std::is_same< T, double >::value, CoreLib::System::Double, 
 			 T 
-			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
+			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
 
 template <typename T> struct is_primitive_type : std::integral_constant<bool, std::is_enum<T>::value || std::is_integral<T>::value || std::is_floating_point<T>::value>
