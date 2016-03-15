@@ -61,7 +61,13 @@ inline T __unbox(T* t)
 }
 
 template <typename T> 
-inline T __unbox(object* o)
+inline typename std::enable_if<is_class_type<T>::value, T>::type __unbox(object* o)
+{
+	return cast<T>(o);
+}
+
+template <typename T> 
+inline typename std::enable_if<!is_class_type<T>::value, T>::type __unbox(object* o)
 {
 	typedef typename convert_type_to_class<T>::type _T;
 	return *cast<_T*>(o);
