@@ -63,13 +63,8 @@ inline T __unbox(T* t)
 template <typename T> 
 inline T __unbox(object* o)
 {
-	return *cast<T*>(o);
-}
-
-template <typename T, typename D> 
-inline D __unbox(object* t)
-{
-	return (D)*cast<T*>(t);
+	typedef typename convert_type_to_class<T>::type _T;
+	return *cast<_T*>(o);
 }
 
 // cast internals
