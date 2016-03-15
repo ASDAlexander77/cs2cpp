@@ -193,7 +193,7 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.IsPrimitiveValueType() || type.IsIntPtrType())
+            if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum || type.IsIntPtrType())
             {
                 unit.Declarations.Add(new CCodeCastOperatorDeclaration((INamedTypeSymbol)type));
             }
