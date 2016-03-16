@@ -26,7 +26,6 @@
             this.TypeSource = boundConversion.Operand.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
-            this.ExplicitCastIn = boundConversion.ExplicitCastInCode;
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -102,15 +101,7 @@
                     c.TextSpan("__box");
                     break;
                 case ConversionKind.Unboxing:
-                    if (ExplicitCastIn)
-                    {
-                        c.TextSpan("cast<");
-                    }
-                    else
-                    {
-                        c.TextSpan("__unbox<");
-                    }
-
+                    c.TextSpan("__unbox<");
                     c.WriteType(this.Type, true, false, true);
                     c.TextSpan(">");
                     break;
