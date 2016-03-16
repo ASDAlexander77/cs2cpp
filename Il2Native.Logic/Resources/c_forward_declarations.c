@@ -47,7 +47,7 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 
 inline void* __new_set0(size_t _size)
 {
-#ifndef GC_H
+#ifdef GC_H
 	auto mem = GC_MALLOC(_size);
 #else
 	auto mem = ::operator new(_size);

@@ -360,7 +360,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.WriteLine();
             itw.WriteLine("auto main() -> int32_t");
             itw.WriteLine("{");
-            itw.WriteLine("#ifndef GC_H");
+            itw.WriteLine("#ifdef GC_H");
             itw.Indent++;
             itw.WriteLine("GC_INIT()");
             itw.Indent--;
