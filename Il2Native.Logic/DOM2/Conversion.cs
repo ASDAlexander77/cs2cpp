@@ -3,6 +3,7 @@
     using System;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public class Conversion : Expression
     {
@@ -26,6 +27,12 @@
             this.TypeSource = boundConversion.Operand.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
+
+            var castExpression = boundConversion.Syntax.Green as CastExpressionSyntax;
+            if (castExpression != null)
+            {
+                // TODO: finish it
+            }
         }
 
         internal override void Visit(Action<Base> visitor)

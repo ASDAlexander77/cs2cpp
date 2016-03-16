@@ -95,6 +95,8 @@ namespace Il2Native.Logic
 #else
             if (boundBody != null)
             {
+                Debug.Assert(!(methodSymbol.Name == "Equals" && methodSymbol.ContainingType.Name == "Boolean"));
+
                 var methodBase = Base.Deserialize(boundBody, methodSymbol) as MethodBody;
                 methodBase.WriteTo(this);
             }
