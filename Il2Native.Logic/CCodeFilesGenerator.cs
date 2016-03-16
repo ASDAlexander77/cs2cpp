@@ -90,10 +90,10 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\" \"../{0}/bdwgc/lib/win32/msvc/debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\" \"../{0}/bdwgc/lib/win32/mingw32/debug\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\" \"../{0}/bdwgc/lib/win32/msvc/release\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\" \"../{0}/bdwgc/lib/win32/mingw32/release\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\" \"../{0}/__build_win32_debug_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\" \"../{0}/__build_mingw32_debug_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\" \"../{0}/__build_win32_release_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
+            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\" \"../{0}/__build_mingw32_release_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             if (references.Any())
@@ -154,6 +154,48 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             {
                 itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                 itw.Close();
+            }
+
+            // prerequisite
+            if (!references.Any())
+            {
+                var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
+md __build_mingw32_<%build_type_lowercase%>_bdwgc 
+cd __build_mingw32_<%build_type_lowercase%>_bdwgc
+cmake -f ../bdwgc -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+mingw32-make -j 8 2>log";
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_mingw32_debug", ".bat"))))
+                {
+                    itw.Write(buildMinGw32Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
+                    itw.Close();
+                }
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_mingw32_release", ".bat"))))
+                {
+                    itw.Write(buildMinGw32Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                    itw.Close();
+                }
+
+                // build Visual Studio .bat
+                var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
+md __build_win32_<%build_type_lowercase%>_bdwgc
+cd __build_win32_<%build_type_lowercase%>_bdwgc
+cmake -f ../bdwgc -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
+MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_debug", ".bat"))))
+                {
+                    itw.Write(buildVS2015Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
+                    itw.Close();
+                }
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_release", ".bat"))))
+                {
+                    itw.Write(buildVS2015Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                    itw.Close();
+                }                
             }
         }
 
