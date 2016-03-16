@@ -72,7 +72,7 @@ inline typename std::enable_if<is_class_type<T>::value, T>::type __unbox(object*
 	return cast<T>(o);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_value<T>::type> 
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_valuetype<T>::type> 
 inline typename std::enable_if<is_value_type<T>::value, _VAL>::type __unbox(object* o)
 {
 	return *cast<_CLASS*>(o);
