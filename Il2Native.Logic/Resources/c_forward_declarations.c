@@ -29,7 +29,7 @@ template <typename T> struct convert_class_to_primitive_type
 {
 	typedef
 		typename std::conditional< std::is_same< T, CoreLib::System::Void >::value, void, 
-		typename std::conditional< std::is_same< T, CoreLib::System::SByt >::value, int8_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::SByte >::value, int8_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Byte >::value, uint8_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Int16 >::value, int16_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::UInt16 >::value, uint16_t, 
