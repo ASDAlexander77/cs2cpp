@@ -160,6 +160,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             if (!references.Any())
             {
                 var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_mingw32_<%build_type_lowercase%>_bdwgc 
 cd __build_mingw32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
@@ -179,6 +180,7 @@ mingw32-make -j 8 2>log";
 
                 // build Visual Studio .bat
                 var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
