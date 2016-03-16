@@ -2,6 +2,10 @@
 template<typename T> 
 struct valuetype_to_class { typedef T type; };
 
+// map class to valuetype
+template<typename T> 
+struct class_to_valuetype { typedef T type; };
+
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
@@ -17,6 +21,25 @@ template <typename T> struct convert_primitive_type_to_class
 		typename std::conditional< std::is_same< T, uint64_t >::value, CoreLib::System::UInt64, 
 		typename std::conditional< std::is_same< T, float >::value, CoreLib::System::Single, 
 		typename std::conditional< std::is_same< T, double >::value, CoreLib::System::Double, 
+			 T 
+			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
+};
+
+template <typename T> struct convert_class_to_primitive_type
+{
+	typedef
+		typename std::conditional< std::is_same< T, CoreLib::System::Void >::value, void, 
+		typename std::conditional< std::is_same< T, CoreLib::System::SByt >::value, int8_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Byte >::value, uint8_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Int16 >::value, int16_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::UInt16 >::value, uint16_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Char >::value, wchar_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Int32 >::value, int32_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::UInt32 >::value, uint32_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Int64 >::value, int64_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::UInt64 >::value, uint64_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Single >::value, float, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Double >::value, double, 
 			 T 
 			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };

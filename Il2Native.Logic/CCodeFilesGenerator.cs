@@ -640,6 +640,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum || namedTypeSymbol.SpecialType == SpecialType.System_Void)
             {
+                // value to class
                 c.TextSpanNewLine("template<>");
                 c.TextSpan("struct");
                 c.WhiteSpace();
@@ -650,6 +651,20 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.TextSpan("{ typedef");
                 c.WhiteSpace();
                 c.WriteType(namedTypeSymbol, true, false, true);
+                c.WhiteSpace();
+                c.TextSpan("type; };");
+
+                // class to value
+                c.TextSpanNewLine("template<>");
+                c.TextSpan("struct");
+                c.WhiteSpace();
+                c.TextSpan("class_to_valuetype<");
+                c.WriteType(namedTypeSymbol, true, false, true);
+                c.TextSpan(">");
+                c.WhiteSpace();
+                c.TextSpan("{ typedef");
+                c.WhiteSpace();
+                c.WriteType(namedTypeSymbol);
                 c.WhiteSpace();
                 c.TextSpan("type; };");
 
