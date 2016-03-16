@@ -188,7 +188,7 @@ inline typename std::enable_if<is_interface_type<T>::value, object*>::type objec
 }
 
 // cast internals
-template <typename D, typename S> inline D cast(S s)
+template <typename D, typename S> inline typename std::enable_if<!is_value_type<D>::value, D>::type cast(S s)
 {
 	if (s == nullptr)
 	{
@@ -202,4 +202,10 @@ template <typename D, typename S> inline D cast(S s)
 	}
 
 	return d;
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> 
+inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(object* o)
+{
+	return *cast<_CLASS*>(o);
 }
