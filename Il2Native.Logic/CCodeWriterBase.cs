@@ -528,7 +528,15 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.WriteType(fieldSymbol.Type);
+            var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
+            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
+            {
+                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType);
+            }
+            else
+            {
+                this.WriteType(fieldSymbol.Type);
+            }
 
             if (fieldSymbol.IsStatic && !doNotWrapStatic)
             {
@@ -540,6 +548,13 @@ namespace Il2Native.Logic
 
             WhiteSpace();
             WriteName(fieldSymbol);
+
+            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
+            {
+                TextSpan("[");
+                TextSpan(fieldSymbolOriginal.FixedSize.ToString());
+                TextSpan("]");
+            }
         }
 
         public void WriteFieldDefinition(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
