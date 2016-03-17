@@ -29,6 +29,60 @@
 
         /// <summary>
         /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IMethodSymbol GetNewMethod(bool @static = false, bool doNotMergeTemplateParameters = false)
+        {
+            var typeSymbol = (INamedTypeSymbol)this.Type;
+            var methodImpl = new MethodImpl
+                                 {
+                                     Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new"), 
+                                     ReturnType = typeSymbol, 
+                                     ReturnsVoid = false, 
+                                     IsGenericMethod = typeSymbol.IsGenericType
+                                 };
+
+            if (@static)
+            {
+                methodImpl.Parameters =
+                    ImmutableArray.Create<IParameterSymbol>(
+                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+            }
+            else
+            {
+                methodImpl.Parameters =
+                    ImmutableArray.Create<IParameterSymbol>(
+                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } }, 
+                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+            }
+
+            if (doNotMergeTemplateParameters)
+            {
+                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments);
+                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters);
+            }
+            else
+            {
+                methodImpl.IsGenericMethod = true;
+                if (!typeSymbol.IsGenericType)
+                {
+                    methodImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetNewMethodTypeGeneric(@static));
+                    methodImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetNewMethodTypeParameterGeneric(@static));
+                }
+                else
+                {
+                    methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments.Union(GetNewMethodTypeGeneric(@static)));
+                    methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters.Union(GetNewMethodTypeParameterGeneric(@static)));
+                }
+            }
+
+            return methodImpl;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="c">
         /// </param>
         public override void WriteTo(CCodeWriterBase c)
@@ -36,7 +90,10 @@
             // non-static
             var nonStaticType = this.GetDelegateType();
 
-            c.WriteTemplateDeclaration(nonStaticType);
+            if (nonStaticType.IsGenericType)
+            {
+                c.WriteTemplateDeclaration(nonStaticType);
+            }
 
             c.TextSpan("class");
             c.WhiteSpace();
@@ -69,7 +126,7 @@
             c.TextSpanNewLine("_Memptr _memptr;");
 
             // write default constructor
-            this.Name(c);
+            c.WriteTypeName(nonStaticType);
             c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) {}");
 
             // write invoke
@@ -91,8 +148,10 @@
 
             // static
             var staticType = this.GetDelegateType(true);
-
-            c.WriteTemplateDeclaration(staticType);
+            if (staticType.IsGenericType)
+            {
+                c.WriteTemplateDeclaration(staticType);
+            }
 
             c.TextSpan("class");
             c.WhiteSpace();
@@ -123,7 +182,7 @@
             c.TextSpanNewLine("_Memptr _memptr;");
 
             // write default constructor
-            this.Name(c, true);
+            c.WriteTypeName(staticType);
             c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {}");
 
             // write invoke
@@ -249,11 +308,11 @@
         {
             var methodImpl = new MethodImpl
                                  {
-                                     Name = this.invoke.Name,
-                                     IsVirtual = true,
-                                     IsOverride = true,
-                                     ReturnType = this.invoke.ReturnType,
-                                     ReturnsVoid = this.invoke.ReturnsVoid,
+                                     Name = this.invoke.Name, 
+                                     IsVirtual = true, 
+                                     IsOverride = true, 
+                                     ReturnType = this.invoke.ReturnType, 
+                                     ReturnsVoid = this.invoke.ReturnsVoid, 
                                      Parameters = this.invoke.Parameters
                                  };
 
@@ -264,14 +323,14 @@
                               : (Expression)
                                 new Access
                                     {
-                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = this.Type } },
+                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = this.Type } }, 
                                         Expression =
                                             new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
                                     };
 
             var callExpr = new Call
                                {
-                                   ReceiverOpt = new Parenthesis { Operand = operand, Type = new TypeImpl { } },
+                                   ReceiverOpt = new Parenthesis { Operand = operand, Type = new TypeImpl { } }, 
                                    Method = new MethodImpl { Name = string.Empty, Parameters = this.invoke.Parameters }
                                };
             foreach (var p in this.invoke.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
@@ -296,16 +355,17 @@
             var typeSymbol = (INamedTypeSymbol)this.Type;
             var namedTypeImpl = new NamedTypeImpl
                                     {
-                                        TypeKind = TypeKind.Class,
-                                        Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty),
-                                        ContainingNamespace = typeSymbol.ContainingNamespace,
-                                        IsGenericType = typeSymbol.IsGenericType,
-                                        TypeArguments = typeSymbol.TypeArguments,
+                                        TypeKind = TypeKind.Class, 
+                                        Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty), 
+                                        ContainingNamespace = typeSymbol.ContainingNamespace, 
+                                        IsGenericType = typeSymbol.IsGenericType, 
+                                        TypeArguments = typeSymbol.TypeArguments, 
                                         TypeParameters = typeSymbol.TypeParameters
                                     };
 
             if (!@static)
             {
+                namedTypeImpl.IsGenericType = true;
                 if (!namedTypeImpl.IsGenericType)
                 {
                     namedTypeImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetTypeGeneric());
@@ -319,71 +379,6 @@
             }
 
             return namedTypeImpl;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="static">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public IMethodSymbol GetNewMethod(bool @static = false, bool doNotMergeTemplateParameters = false)
-        {
-            var typeSymbol = (INamedTypeSymbol)this.Type;
-            var methodImpl = new MethodImpl { Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new"), ReturnType = typeSymbol, ReturnsVoid = false, IsGenericMethod = typeSymbol.IsGenericType };
-
-            if (@static)
-            {
-                methodImpl.Parameters =
-                    ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
-            }
-            else
-            {
-                methodImpl.Parameters =
-                    ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } },
-                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
-            }
-
-
-            if (doNotMergeTemplateParameters)
-            {
-                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments);
-                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters);
-            }
-            else
-            {
-                methodImpl.IsGenericMethod = true;
-                if (!typeSymbol.IsGenericType)
-                {
-                    methodImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetNewMethodTypeGeneric(@static));
-                    methodImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetNewMethodTypeParameterGeneric(@static));
-                }
-                else
-                {
-                    methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments.Union(GetNewMethodTypeGeneric(@static)));
-                    methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters.Union(GetNewMethodTypeParameterGeneric(@static)));
-                }
-            }
-
-            return methodImpl;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="c">
-        /// </param>
-        /// <param name="static">
-        /// </param>
-        private void Name(CCodeWriterBase c, bool @static = false)
-        {
-            c.WriteTypeName((INamedTypeSymbol)this.Type, false, true);
-            c.TextSpan("_delegate");
-            if (@static)
-            {
-                c.TextSpan("_static");
-            }
         }
     }
 }
