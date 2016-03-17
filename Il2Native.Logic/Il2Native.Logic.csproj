@@ -50,6 +50,7 @@
     <Compile Include="CCodeWriterBase.cs" />
     <Compile Include="CodeAnalysisHelpers.cs" />
     <Compile Include="CCodeWriterText.cs" />
+    <Compile Include="DOM2\Access.cs" />
     <Compile Include="DOM2\AddressOfOperator.cs" />
     <Compile Include="DOM2\ArgList.cs" />
     <Compile Include="DOM2\ArgListOperator.cs" />
@@ -135,6 +136,7 @@
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\CCodeFieldDefinition.cs" />
+    <Compile Include="DOM\CCodeDelegateWrapperClass.cs" />
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
     <Compile Include="DOM\Implementations\FieldImpl.cs" />
@@ -147,6 +149,7 @@
     <Compile Include="DOM\Implementations\ParameterImpl.cs" />
     <Compile Include="DOM\Implementations\PointerTypeImpl.cs" />
     <Compile Include="DOM\Implementations\TypeImpl.cs" />
+    <Compile Include="DOM\Implementations\TypeParameterSymbolImpl.cs" />
     <Compile Include="DOM\Implementations\ValueTypeAsClassTypeImpl.cs" />
     <Compile Include="DOM\Synthesized\CCodeCloneVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetArrayElementSizeVirtualMethod.cs" />

@@ -75,8 +75,6 @@
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.TextSpan("virtual");
-            c.WhiteSpace();
             c.WriteTypeFullName(this.@interface);
             c.NewLine();
             c.OpenBlock();

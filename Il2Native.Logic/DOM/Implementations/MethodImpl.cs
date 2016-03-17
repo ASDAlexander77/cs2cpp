@@ -18,8 +18,8 @@
         public INamespaceSymbol ContainingNamespace { get; set; }
         public bool IsDefinition { get; private set; }
         public bool IsStatic { get; private set; }
-        public bool IsVirtual { get; protected set; }
-        public bool IsOverride { get; protected set; }
+        public bool IsVirtual { get; set; }
+        public bool IsOverride { get; set; }
         public bool IsAbstract { get; set; }
         public bool IsSealed { get; private set; }
         public bool IsExtern { get; private set; }
@@ -76,7 +76,7 @@
         public bool IsVararg { get; private set; }
         public bool IsCheckedBuiltin { get; private set; }
         public bool HidesBaseMethodsByName { get; private set; }
-        public bool ReturnsVoid { get; private set; }
+        public bool ReturnsVoid { get; set; }
         public ITypeSymbol ReturnType { get; set; }
         public ImmutableArray<ITypeSymbol> TypeArguments { get; set; }
         public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; set; }

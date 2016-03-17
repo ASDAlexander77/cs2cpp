@@ -630,6 +630,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.Indent--;
             itw.WriteLine("};");
 
+            if (namedTypeSymbol.TypeKind == TypeKind.Delegate)
+            {
+                itw.WriteLine();
+                new CCodeDelegateWrapperClass(namedTypeSymbol).WriteTo(c);
+                itw.WriteLine();
+            }
+
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
             {
                 itw.Indent--;

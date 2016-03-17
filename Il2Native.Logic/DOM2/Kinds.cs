@@ -2,6 +2,7 @@
 {
     public enum Kinds
     {
+        Access,
         VariableDeclaration,
         UnaryOperator,
         TypeOfOperator,

@@ -422,5 +422,47 @@
         {
             return methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor");
         }
+
+        public static IEnumerable<ITypeParameterSymbol> GetTemplateParameters(this INamedTypeSymbol namedTypeSymbol)
+        {
+            return namedTypeSymbol.EnumerateTemplateParametersRecursive().Distinct();
+        }
+
+        public static IEnumerable<ITypeSymbol> GetTemplateArguments(this INamedTypeSymbol namedTypeSymbol)
+        {
+            return namedTypeSymbol.EnumerateTemplateArgumentsRecusive();
+        }
+
+        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(this INamedTypeSymbol typeSymbol)
+        {
+            if (typeSymbol.ContainingType != null)
+            {
+                foreach (var typeParam in typeSymbol.ContainingType.EnumerateTemplateArgumentsRecusive())
+                {
+                    yield return typeParam;
+                }
+            }
+
+            foreach (var typeParam in typeSymbol.TypeArguments)
+            {
+                yield return typeParam;
+            }
+        }
+
+        private static IEnumerable<ITypeParameterSymbol> EnumerateTemplateParametersRecursive(this INamedTypeSymbol namedTypeSymbol)
+        {
+            if (namedTypeSymbol.ContainingType != null)
+            {
+                foreach (var typeParam in namedTypeSymbol.ContainingType.EnumerateTemplateParametersRecursive())
+                {
+                    yield return typeParam;
+                }
+            }
+
+            foreach (var typeParam in namedTypeSymbol.TypeParameters)
+            {
+                yield return typeParam;
+            }
+        }
     }
 }

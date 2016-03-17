@@ -38,26 +38,15 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             var method = methods.First();
-
-            // TODO: use std::function to store function and invoke it later
-
             if (method.IsStatic)
             {
-                c.TextSpan("(object*)nullptr");
-                c.TextSpan(",");
-                c.WhiteSpace();
-                c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
-                /*
-                c.TextSpan("(void (*)())&");
+                c.TextSpan("&");
                 c.WriteTypeFullName(method.ContainingType);
                 c.TextSpan("::");
                 c.WriteMethodName(method, true, true);
-                */
             }
             else
             {
-                c.TextSpan("object_cast(");
-
                 if (this.ReceiverOpt is BaseReference)
                 {
                     c.TextSpan("this");
@@ -67,17 +56,11 @@
                     this.ReceiverOpt.WriteTo(c);
                 }
 
-                c.TextSpan(")");
-
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
-                /*
-                c.TextSpan("(void (*)())&");               
-                this.receiverOpt.WriteTo(c);
-                c.WriteAccess(this.receiverOpt);
+                c.TextSpan("&");
+                c.WriteAccess(this.ReceiverOpt);
                 c.WriteMethodName(method, true, true);
-                */
             }
         }
     }
