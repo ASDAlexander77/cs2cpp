@@ -58,7 +58,19 @@
 
                 if (this.ReceiverOpt != null)
                 {
-                    c.WriteAccess(this.ReceiverOpt);
+                    var primitiveValueAccess = this.Field.ContainingType != null &&
+                                                               this.Field.ContainingType.IsPrimitiveValueType() &&
+                                                               this.Field.Name == "m_value" && this.ReceiverOpt is Conversion &&
+                                                               ((Conversion)this.ReceiverOpt).ConversionKind == ConversionKind.Unboxing;
+                    if (primitiveValueAccess)
+                    {
+                        c.WriteExpressionInParenthesesIfNeeded(this.ReceiverOpt);
+                        return;
+                    }
+                    else
+                    {
+                        c.WriteAccess(this.ReceiverOpt);
+                    }
                 }
 
                 c.WriteName(this.Field);
