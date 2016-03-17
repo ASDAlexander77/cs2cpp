@@ -84,8 +84,7 @@
             // static
             c.TextSpan("class");
             c.WhiteSpace();
-            this.Name(c);
-            c.TextSpan("_static");
+            this.Name(c, true);
 
             c.WhiteSpace();
             c.TextSpan(":");
@@ -101,7 +100,6 @@
             c.IncrementIndent();
 
             // typedef
-            c.TextSpanNewLine("typedef typename std::remove_pointer<_T>::type _Ty;");
             c.TextSpan("typedef ");
             c.WriteType(invoke.ReturnType);
             c.WhiteSpace();
@@ -113,7 +111,7 @@
             c.TextSpanNewLine("_Memptr _memptr;");
 
             // write default constructor
-            this.Name(c);
+            this.Name(c, true);
             c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {}");
 
             // write invoke
@@ -192,10 +190,14 @@
             return invokeMethod;
         }
 
-        private void Name(CCodeWriterBase c)
+        private void Name(CCodeWriterBase c, bool @static = false)
         {
             c.WriteTypeName((INamedTypeSymbol)Type, false, true);
             c.TextSpan("_delegate");
+            if (@static)
+            {
+                c.TextSpan("_static");
+            }
         }
     }
 }

@@ -1,15 +1,21 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Diagnostics;
 
     using Il2Native.Logic.DOM;
+    using Il2Native.Logic.DOM.Implementations;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class DelegateCreationExpression : ObjectCreationExpression
     {
+        private bool clone;
+
+        private Expression cloneArgument;
+
         public override Kinds Kind
         {
             get { return Kinds.DelegateCreationExpression; }
@@ -31,8 +37,8 @@
             {
                 if (argument.Type != null && argument.Type.TypeKind == TypeKind.Delegate)
                 {
-                    NewOperator = true;
-                    Arguments.Add(new PointerIndirectionOperator { Operand = argument });
+                    clone = true;
+                    cloneArgument = argument;
                 }
                 else
                 {
@@ -43,17 +49,25 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (NewOperator)
+            if (this.clone)
             {
-                base.WriteTo(c);
-                return;
+                new Cast
+                    {
+                        Operand =
+                            new Call
+                                {
+                                    ReceiverOpt = cloneArgument,
+                                    Method = new MethodImpl { Name = "__clone", Parameters = ImmutableArray<IParameterSymbol>.Empty }
+                                },
+                        Type = Type,
+                        CCast = true,
+                    }.WriteTo(c);
             }
             else
             {
                 new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).WriteNewMethod(c);
+                WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
             }
-
-            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
     }
 }
