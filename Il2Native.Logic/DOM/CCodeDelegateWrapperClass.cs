@@ -3,37 +3,51 @@
     using System.Collections.Immutable;
     using System.Linq;
 
+    using Il2Native.Logic.DOM.Implementations;
     using Il2Native.Logic.DOM.Synthesized;
     using Il2Native.Logic.DOM2;
 
-    using Implementations;
     using Microsoft.CodeAnalysis;
 
+    /// <summary>
+    /// </summary>
     public class CCodeDelegateWrapperClass : CCodeClass
     {
-        private IMethodSymbol invoke;
+        /// <summary>
+        /// </summary>
+        private readonly IMethodSymbol invoke;
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
         public CCodeDelegateWrapperClass(INamedTypeSymbol type)
             : base(type.IsValueType ? new ValueTypeAsClassTypeImpl(type) : type)
         {
             this.invoke = (IMethodSymbol)type.GetMembers("Invoke").First();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="c">
+        /// </param>
         public override void WriteTo(CCodeWriterBase c)
         {
             // non-static
+            var nonStaticType = this.GetDelegateType();
 
-            c.TextSpanNewLine("template <typename _T>");
+            c.WriteTemplateDeclaration(nonStaticType);
+
             c.TextSpan("class");
             c.WhiteSpace();
-            this.Name(c);
+            c.WriteTypeName(nonStaticType);
 
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.WriteTypeFullName(Type);
+            c.WriteTypeFullName(this.Type);
             c.NewLine();
             c.OpenBlock();
 
@@ -44,10 +58,10 @@
             // typedef
             c.TextSpanNewLine("typedef typename std::remove_pointer<_T>::type _Ty;");
             c.TextSpan("typedef ");
-            c.WriteType(invoke.ReturnType);
+            c.WriteType(this.invoke.ReturnType);
             c.WhiteSpace();
             c.TextSpan("(_Ty::* _Memptr)");
-            c.WriteMethodParameters(invoke, true, false);
+            c.WriteMethodParameters(this.invoke, true, false);
             c.TextSpanNewLine(";");
 
             // fields
@@ -64,7 +78,7 @@
             // write clonse
             this.CreateCloneMethod().WriteTo(c);
 
-            foreach (var declaration in Declarations)
+            foreach (var declaration in this.Declarations)
             {
                 declaration.WriteTo(c);
             }
@@ -72,31 +86,24 @@
             c.EndBlockWithoutNewLine();
             c.EndStatement();
 
-            c.TextSpan("template<class _Ty, class _Memptr> inline");
-            c.WhiteSpace();
-            c.WriteType((INamedTypeSymbol)Type);
-            c.WhiteSpace();
-            this.WriteNewMethod(c);
-            c.TextSpanNewLine("(_Ty t, _Memptr m)");
-            c.OpenBlock();
-            c.TextSpan("return new");
-            c.WhiteSpace();
-            this.Name(c);
-            c.TextSpanNewLine("<_Ty>(t, m);");
-            c.EndBlockWithoutNewLine();
-            c.EndStatement();
+            var newNonStaticMethod = this.GetNewMethod();
+            WriteNewMethod(c, newNonStaticMethod, nonStaticType);
 
             // static
+            var staticType = this.GetDelegateType(true);
+
+            c.WriteTemplateDeclaration(staticType);
+
             c.TextSpan("class");
             c.WhiteSpace();
-            this.Name(c, true);
+            c.WriteTypeName(staticType);
 
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.WriteTypeFullName(Type);
+            c.WriteTypeFullName(this.Type);
             c.NewLine();
             c.OpenBlock();
 
@@ -106,10 +113,10 @@
 
             // typedef
             c.TextSpan("typedef ");
-            c.WriteType(invoke.ReturnType);
+            c.WriteType(this.invoke.ReturnType);
             c.WhiteSpace();
             c.TextSpan("(* _Memptr)");
-            c.WriteMethodParameters(invoke, true, false);
+            c.WriteMethodParameters(this.invoke, true, false);
             c.TextSpanNewLine(";");
 
             // fields
@@ -125,7 +132,7 @@
             // write clonse
             this.CreateCloneMethod(true).WriteTo(c);
 
-            foreach (var declaration in Declarations)
+            foreach (var declaration in this.Declarations)
             {
                 declaration.WriteTo(c);
             }
@@ -133,28 +140,111 @@
             c.EndBlockWithoutNewLine();
             c.EndStatement();
 
-            c.TextSpan("template<class _Memptr> inline");
-            c.WhiteSpace();
-            c.WriteType((INamedTypeSymbol)Type);
-            c.WhiteSpace();
-            this.WriteNewMethod(c);
-            c.TextSpanNewLine("(_Memptr m)");
+            var newStaticMethod = this.GetNewMethod(true);
+            WriteNewMethod(c, newStaticMethod, staticType);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static TypeImpl[] GetNewMethodTypeGeneric(bool @static)
+        {
+            if (@static)
+            {
+                return new[] { new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } };
+            }
+
+            return new[]
+                       {
+                          new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter }, new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } 
+                       };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static TypeParameterSymbolImpl[] GetNewMethodTypeParameterGeneric(bool @static)
+        {
+            if (@static)
+            {
+                return new[] { new TypeParameterSymbolImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } };
+            }
+
+            return new[]
+                       {
+                           new TypeParameterSymbolImpl { Name = "_T", TypeKind = TypeKind.TypeParameter }, 
+                           new TypeParameterSymbolImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter }
+                       };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private static TypeImpl[] GetTypeGeneric()
+        {
+            return new[] { new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private static TypeParameterSymbolImpl[] GetTypeParameterGeneric()
+        {
+            return new[] { new TypeParameterSymbolImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="c">
+        /// </param>
+        /// <param name="newNonStaticMethod">
+        /// </param>
+        /// <param name="nonStaticType">
+        /// </param>
+        private static void WriteNewMethod(CCodeWriterBase c, IMethodSymbol newNonStaticMethod, NamedTypeImpl nonStaticType)
+        {
+            c.WriteTemplateDeclaration(newNonStaticMethod);
+            c.WriteMethodDeclaration(newNonStaticMethod, true, true);
+            c.NewLine();
             c.OpenBlock();
-            c.TextSpan("return new");
-            c.WhiteSpace();
-            this.Name(c);
-            c.TextSpan("_static");
-            c.TextSpanNewLine("(m);");
+
+            var objectCreationExpression = new ObjectCreationExpression { Type = nonStaticType, NewOperator = true };
+            foreach (var parameter in newNonStaticMethod.Parameters)
+            {
+                objectCreationExpression.Arguments.Add(new Parameter { ParameterSymbol = parameter });
+            }
+
+            new ReturnStatement { ExpressionOpt = objectCreationExpression }.WriteTo(c);
+
             c.EndBlockWithoutNewLine();
             c.EndStatement();
         }
 
-        public void WriteNewMethod(CCodeWriterBase c)
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private CCodeCloneVirtualMethod CreateCloneMethod(bool @static = false)
         {
-            this.Name(c);
-            c.TextSpan("_new");
+            return new CCodeCloneVirtualMethod(this.GetDelegateType(@static));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private CCodeMethodDeclaration CreateInvokeMethod(bool @static = false)
         {
             var methodImpl = new MethodImpl
@@ -170,21 +260,18 @@
             var invokeMethod = new CCodeMethodDeclaration(methodImpl);
 
             var operand = @static
-                              ? (Expression)new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
-                              : (Expression)new Access
+                              ? new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
+                              : (Expression)
+                                new Access
                                     {
-                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = Type } },
+                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = this.Type } },
                                         Expression =
                                             new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
                                     };
 
             var callExpr = new Call
                                {
-                                   ReceiverOpt = new Parenthesis
-                                           {
-                                               Operand = operand,
-                                               Type = new TypeImpl { }
-                                           },
+                                   ReceiverOpt = new Parenthesis { Operand = operand, Type = new TypeImpl { } },
                                    Method = new MethodImpl { Name = string.Empty, Parameters = this.invoke.Parameters }
                                };
             foreach (var p in this.invoke.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
@@ -198,27 +285,100 @@
             return invokeMethod;
         }
 
-        private CCodeCloneVirtualMethod CreateCloneMethod(bool @static = false)
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private NamedTypeImpl GetDelegateType(bool @static = false)
         {
+            var typeSymbol = (INamedTypeSymbol)this.Type;
             var namedTypeImpl = new NamedTypeImpl
                                     {
                                         TypeKind = TypeKind.Class,
-                                        Name = string.Concat(this.Type.GetTypeName(), "_delegate", @static ? "_static" : string.Empty),
-                                        ContainingNamespace = this.Type.ContainingNamespace
+                                        Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty),
+                                        ContainingNamespace = typeSymbol.ContainingNamespace,
+                                        IsGenericType = typeSymbol.IsGenericType,
+                                        TypeArguments = typeSymbol.TypeArguments,
+                                        TypeParameters = typeSymbol.TypeParameters
                                     };
 
             if (!@static)
             {
-                namedTypeImpl.IsGenericType = true;
-                namedTypeImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter });
+                if (!namedTypeImpl.IsGenericType)
+                {
+                    namedTypeImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetTypeGeneric());
+                    namedTypeImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetTypeParameterGeneric());
+                }
+                else
+                {
+                    namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(namedTypeImpl.TypeArguments.Union(GetTypeGeneric()));
+                    namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(namedTypeImpl.TypeParameters.Union(GetTypeParameterGeneric()));
+                }
             }
 
-            return new CCodeCloneVirtualMethod(namedTypeImpl);
+            return namedTypeImpl;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IMethodSymbol GetNewMethod(bool @static = false, bool doNotMergeTemplateParameters = false)
+        {
+            var typeSymbol = (INamedTypeSymbol)this.Type;
+            var methodImpl = new MethodImpl { Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new"), ReturnType = typeSymbol, ReturnsVoid = false, IsGenericMethod = typeSymbol.IsGenericType };
+
+            if (@static)
+            {
+                methodImpl.Parameters =
+                    ImmutableArray.Create<IParameterSymbol>(
+                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+            }
+            else
+            {
+                methodImpl.Parameters =
+                    ImmutableArray.Create<IParameterSymbol>(
+                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } },
+                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+            }
+
+
+            if (doNotMergeTemplateParameters)
+            {
+                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments);
+                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters);
+            }
+            else
+            {
+                methodImpl.IsGenericMethod = true;
+                if (!typeSymbol.IsGenericType)
+                {
+                    methodImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetNewMethodTypeGeneric(@static));
+                    methodImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetNewMethodTypeParameterGeneric(@static));
+                }
+                else
+                {
+                    methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments.Union(GetNewMethodTypeGeneric(@static)));
+                    methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters.Union(GetNewMethodTypeParameterGeneric(@static)));
+                }
+            }
+
+            return methodImpl;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="c">
+        /// </param>
+        /// <param name="static">
+        /// </param>
         private void Name(CCodeWriterBase c, bool @static = false)
         {
-            c.WriteTypeName((INamedTypeSymbol)Type, false, true);
+            c.WriteTypeName((INamedTypeSymbol)this.Type, false, true);
             c.TextSpan("_delegate");
             if (@static)
             {

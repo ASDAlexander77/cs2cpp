@@ -11,7 +11,7 @@
         public bool IsScriptClass { get; private set; }
         public bool IsImplicitClass { get; private set; }
         public IEnumerable<string> MemberNames { get; private set; }
-        public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; private set; }
+        public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; set; }
         public ImmutableArray<ITypeSymbol> TypeArguments { get; set; }
         public INamedTypeSymbol OriginalDefinition { get; private set; }
         public IMethodSymbol DelegateInvokeMethod { get; private set; }
