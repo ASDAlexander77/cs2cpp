@@ -349,17 +349,19 @@
                                         TypeKind = TypeKind.Class, 
                                         Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty), 
                                         ContainingNamespace = typeSymbol.ContainingNamespace, 
-                                        ContainingType = typeSymbol.ContainingType,
-                                        IsGenericType = typeSymbol.IsGenericType, 
-                                        TypeArguments = typeSymbol.TypeArguments, 
-                                        TypeParameters = typeSymbol.TypeParameters
+                                        IsGenericType = typeSymbol.IsGenericType
                                     };
 
             if (!@static)
             {
                 namedTypeImpl.IsGenericType = true;
-                namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(namedTypeImpl.GetTemplateArguments().Union(GetTypeGeneric()));
-                namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(namedTypeImpl.GetTemplateParameters().Union(GetTypeParameterGeneric()));
+                namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.GetTemplateArguments().Union(GetTypeGeneric()));
+                namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.GetTemplateParameters().Union(GetTypeParameterGeneric()));
+            }
+            else
+            {
+                namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.GetTemplateArguments());
+                namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.GetTemplateParameters());
             }
 
             return namedTypeImpl;

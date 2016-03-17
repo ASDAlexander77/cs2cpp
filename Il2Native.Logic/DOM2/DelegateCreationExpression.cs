@@ -66,7 +66,7 @@
             else
             {
                 var newDelegateMethod = new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).GetNewMethod(false, true);
-                c.WriteMethodName(newDelegateMethod, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
+                c.WriteMethodName(newDelegateMethod);
                 WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
             }
         }
