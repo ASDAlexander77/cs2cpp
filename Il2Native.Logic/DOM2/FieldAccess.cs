@@ -34,6 +34,15 @@
             }
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            if (this.ReceiverOpt != null)
+            {
+                this.ReceiverOpt.Visit(visitor);
+            }
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (this.Field.IsStatic)

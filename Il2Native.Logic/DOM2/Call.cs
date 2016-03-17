@@ -165,7 +165,15 @@
                 if (receiverOpt != null)
                 {
                     receiverOpt = this.PrepareMethodReceiver(receiverOpt, this.Method);
-                    c.WriteAccess(receiverOpt);
+                    // if method name is empty then receiverOpt returns function pointer
+                    if (!string.IsNullOrWhiteSpace(this.Method.Name))
+                    {
+                        c.WriteAccess(receiverOpt);
+                    }
+                    else
+                    {
+                        c.WriteExpressionInParenthesesIfNeeded(receiverOpt);
+                    }
                 }
 
                 c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);

@@ -1,6 +1,10 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
+
+    using Il2Native.Logic.DOM;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -35,6 +39,21 @@
                     Arguments.Add(argument);
                 }
             }
+        }
+
+        internal override void WriteTo(CCodeWriterBase c)
+        {
+            if (NewOperator)
+            {
+                base.WriteTo(c);
+                return;
+            }
+            else
+            {
+                new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).WriteNewMethod(c);
+            }
+
+            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
     }
 }

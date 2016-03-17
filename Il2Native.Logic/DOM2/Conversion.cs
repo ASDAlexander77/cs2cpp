@@ -28,11 +28,11 @@
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
 
-            var castExpression = boundConversion.Syntax.Green as CastExpressionSyntax;
-            if (castExpression != null)
-            {
-                // TODO: finish it
-            }
+            ////var castExpression = boundConversion.Syntax.Green as CastExpressionSyntax;
+            ////if (castExpression != null)
+            ////{
+            ////    // TODO: finish it
+            ////}
         }
 
         internal override void Visit(Action<Base> visitor)
