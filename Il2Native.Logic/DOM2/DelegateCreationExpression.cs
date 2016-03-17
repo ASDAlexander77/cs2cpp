@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
-
+    using System.Linq;
     using Il2Native.Logic.DOM;
     using Il2Native.Logic.DOM.Implementations;
 
@@ -69,7 +69,9 @@
             }
             else
             {
-                var newDelegateMethod = new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).GetNewMethod(false, true);
+                var methodGroup = Arguments.First() as MethodGroup;
+                var isStatic = methodGroup != null && methodGroup.Method.IsStatic;
+                var newDelegateMethod = new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).GetNewMethod(isStatic, true);
                 if (newDelegateMethod.ContainingNamespace != null)
                 {
                     c.WriteNamespace(newDelegateMethod.ContainingNamespace);
@@ -77,7 +79,7 @@
                 }
 
                 c.WriteMethodName(newDelegateMethod, addTemplate: true);
-                WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+                WriteCallArguments(this.Arguments, Method != null ? Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
             }
         }
     }

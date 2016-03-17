@@ -38,7 +38,7 @@
             var typeSymbol = (INamedTypeSymbol)this.Type;
             var methodImpl = new MethodImpl
                                  {
-                                     Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new"), 
+                                     Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new", @static ? "_static" : string.Empty), 
                                      ReturnType = typeSymbol, 
                                      ReturnsVoid = false, 
                                      IsGenericMethod = typeSymbol.IsGenericType,
