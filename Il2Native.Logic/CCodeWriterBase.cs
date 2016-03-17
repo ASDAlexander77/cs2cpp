@@ -163,23 +163,60 @@ namespace Il2Native.Logic
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
-            if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod())
+            if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null)
             {
                 this.TextSpan("template");
                 this.WhiteSpace();
             }
 
+            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName);
+
+            if (methodSymbol.IsGenericMethod)
+            {
+                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride)
+                {
+                    TextSpan("T");
+                    this.TextSpan(methodSymbol.Arity.ToString());
+                }
+                else if (addTemplate)
+                {
+                    this.WriteTypeArguments(methodSymbol.TypeArguments);
+                }
+            }
+        }
+
+        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments)
+        {
+            this.TextSpan("<");
+
+            var anyTypeArg = false;
+            foreach (var typeArg in typeArguments)
+            {
+                if (anyTypeArg)
+                {
+                    this.TextSpan(", ");
+                }
+
+                anyTypeArg = true;
+                this.WriteType(typeArg);
+            }
+
+            this.TextSpan(">");
+        }
+
+        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
+        {
             if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
-                TextSpan(methodSymbol.ContainingType.GetTypeFullName());
-                TextSpan("_");
+                this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+                this.TextSpan("_");
             }
 
             // name
             var symbol = methodSymbolForName ?? methodSymbol;
-            var explicitInterfaceImplementation = 
-                symbol.ExplicitInterfaceImplementations != null 
-                    ? symbol.ExplicitInterfaceImplementations.FirstOrDefault() 
+            var explicitInterfaceImplementation =
+                symbol.ExplicitInterfaceImplementations != null
+                    ? symbol.ExplicitInterfaceImplementations.FirstOrDefault()
                     : null;
             if (explicitInterfaceImplementation != null)
             {
@@ -193,23 +230,23 @@ namespace Il2Native.Logic
                 else
                 {
                     this.TextSpan("_");
-                    WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                    this.WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
                 }
             }
             else
             {
-                WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                this.WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
             }
 
             if (methodSymbol.MetadataName == "op_Explicit")
             {
-                TextSpan("_");
-                WriteTypeSuffix(methodSymbol.ReturnType);
+                this.TextSpan("_");
+                this.WriteTypeSuffix(methodSymbol.ReturnType);
             }
             else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
             {
-                TextSpan("_");
-                WriteTypeSuffix(methodSymbol.ReturnType);
+                this.TextSpan("_");
+                this.WriteTypeSuffix(methodSymbol.ReturnType);
             }
 
             // write suffixes for ref & out parameters
@@ -217,35 +254,8 @@ namespace Il2Native.Logic
             {
                 foreach (var parameter in methodSymbol.Parameters.Where(p => p.RefKind != RefKind.None))
                 {
-                    TextSpan("_");
-                    TextSpan(parameter.RefKind.ToString());
-                }
-            }
-
-            if (methodSymbol.IsGenericMethod)
-            {
-                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride)
-                {
-                    TextSpan("T");
-                    this.TextSpan(methodSymbol.Arity.ToString());
-                }
-                else if (addTemplate)
-                {
-                    TextSpan("<");
-
-                    var anyTypeArg = false;
-                    foreach (var typeArg in methodSymbol.TypeArguments)
-                    {
-                        if (anyTypeArg)
-                        {
-                            TextSpan(", ");
-                        }
-
-                        anyTypeArg = true;
-                        this.WriteType(typeArg);
-                    }
-
-                    TextSpan(">");
+                    this.TextSpan("_");
+                    this.TextSpan(parameter.RefKind.ToString());
                 }
             }
         }

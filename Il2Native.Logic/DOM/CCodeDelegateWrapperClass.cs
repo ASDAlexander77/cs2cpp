@@ -41,7 +41,8 @@
                                      Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new"), 
                                      ReturnType = typeSymbol, 
                                      ReturnsVoid = false, 
-                                     IsGenericMethod = typeSymbol.IsGenericType
+                                     IsGenericMethod = typeSymbol.IsGenericType,
+                                     ContainingNamespace = typeSymbol.ContainingNamespace
                                  };
 
             if (@static)

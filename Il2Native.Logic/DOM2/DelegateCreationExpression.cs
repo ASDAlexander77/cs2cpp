@@ -29,8 +29,12 @@
 
             if (boundDelegateCreationExpression.MethodOpt != null && !(boundDelegateCreationExpression.Argument is BoundMethodGroup))
             {
-                var methodGroup = new MethodGroup { ReceiverOpt = argument };
-                methodGroup.Methods.Add(boundDelegateCreationExpression.MethodOpt);
+                var methodGroup = new MethodGroup
+                {
+                    ReceiverOpt = argument,
+                    Method = boundDelegateCreationExpression.MethodOpt
+                };
+
                 Arguments.Add(methodGroup);
             }
             else
@@ -66,7 +70,13 @@
             else
             {
                 var newDelegateMethod = new CCodeDelegateWrapperClass((INamedTypeSymbol)Type).GetNewMethod(false, true);
-                c.WriteMethodName(newDelegateMethod);
+                if (newDelegateMethod.ContainingNamespace != null)
+                {
+                    c.WriteNamespace(newDelegateMethod.ContainingNamespace);
+                    c.TextSpan("::");
+                }
+
+                c.WriteMethodName(newDelegateMethod, addTemplate: true);
                 WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
             }
         }

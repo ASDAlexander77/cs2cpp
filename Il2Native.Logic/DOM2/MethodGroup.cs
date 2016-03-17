@@ -1,49 +1,78 @@
 ﻿namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class MethodGroup : Expression
     {
-        private IList<IMethodSymbol> methods = new List<IMethodSymbol>();
-
         public override Kinds Kind
         {
             get { return Kinds.MethodGroup; }
         }
 
+        public Expression InstanceOpt { get; set; }
+
         public Expression ReceiverOpt { get; set; }
 
-        public IList<IMethodSymbol> Methods
-        {
-            get { return this.methods; }
-        }
+        public IMethodSymbol Method { get; set; }
+
+        public IList<ITypeSymbol> TypeArgumentsOpt { get; set; }
 
         internal void Parse(BoundMethodGroup boundMethodGroup)
         {
             base.Parse(boundMethodGroup);
-            foreach (var methodSymbol in boundMethodGroup.Methods.OfType<IMethodSymbol>())
+            if (boundMethodGroup.LookupSymbolOpt != null)
             {
-                this.Methods.Add(methodSymbol);
+                this.Method = boundMethodGroup.LookupSymbolOpt as IMethodSymbol;
+            }
+
+            if (boundMethodGroup.TypeArgumentsOpt != null)
+            {
+                this.TypeArgumentsOpt = boundMethodGroup.TypeArgumentsOpt.OfType<ITypeSymbol>().ToList();
             }
 
             if (boundMethodGroup.ReceiverOpt != null)
             {
                 this.ReceiverOpt = Deserialize(boundMethodGroup.ReceiverOpt) as Expression;
             }
+
+            if (boundMethodGroup.InstanceOpt != null)
+            {
+                this.InstanceOpt = Deserialize(boundMethodGroup.InstanceOpt) as Expression;
+            }
+
+            if (this.Method == null)
+            {
+                this.Method = boundMethodGroup.Methods.First();
+            }
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            if (this.InstanceOpt != null)
+            {
+                this.InstanceOpt.Visit(visitor);
+            }
+
+            if (this.ReceiverOpt != null)
+            {
+                this.ReceiverOpt.Visit(visitor);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var method = methods.First();
-            if (method.IsStatic)
+            if (this.Method.IsStatic)
             {
                 c.TextSpan("&");
-                c.WriteTypeFullName(method.ContainingType);
+                c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
-                c.WriteMethodName(method, true, true);
+                c.WriteMethodNameNoTemplate(this.Method);
             }
             else
             {
@@ -60,7 +89,12 @@
                 c.WhiteSpace();
                 c.TextSpan("&");
                 c.WriteAccess(this.ReceiverOpt);
-                c.WriteMethodName(method, true, true);
+                c.WriteMethodNameNoTemplate(this.Method);
+            }
+
+            if (this.TypeArgumentsOpt != null && this.TypeArgumentsOpt.Any())
+            {
+                c.WriteTypeArguments(this.TypeArgumentsOpt);
             }
         }
     }
