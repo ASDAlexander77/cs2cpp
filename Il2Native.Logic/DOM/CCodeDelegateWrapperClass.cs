@@ -1,7 +1,9 @@
 ﻿namespace Il2Native.Logic.DOM
 {
+    using System.Collections.Immutable;
     using System.Linq;
 
+    using Il2Native.Logic.DOM.Synthesized;
     using Il2Native.Logic.DOM2;
 
     using Implementations;
@@ -58,6 +60,9 @@
 
             // write invoke
             this.CreateInvokeMethod().WriteTo(c);
+
+            // write clonse
+            this.CreateCloneMethod().WriteTo(c);
 
             foreach (var declaration in Declarations)
             {
@@ -116,6 +121,9 @@
 
             // write invoke
             this.CreateInvokeMethod(true).WriteTo(c);
+
+            // write clonse
+            this.CreateCloneMethod(true).WriteTo(c);
 
             foreach (var declaration in Declarations)
             {
@@ -188,6 +196,24 @@
             invokeMethod.MethodBodyOpt = new MethodBody(methodImpl) { Statements = { returnStatement } };
 
             return invokeMethod;
+        }
+
+        private CCodeCloneVirtualMethod CreateCloneMethod(bool @static = false)
+        {
+            var namedTypeImpl = new NamedTypeImpl
+                                    {
+                                        TypeKind = TypeKind.Class,
+                                        Name = string.Concat(this.Type.GetTypeName(), "_delegate", @static ? "_static" : string.Empty),
+                                        ContainingNamespace = this.Type.ContainingNamespace
+                                    };
+
+            if (!@static)
+            {
+                namedTypeImpl.IsGenericType = true;
+                namedTypeImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter });
+            }
+
+            return new CCodeCloneVirtualMethod(namedTypeImpl);
         }
 
         private void Name(CCodeWriterBase c, bool @static = false)
