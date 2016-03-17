@@ -806,7 +806,7 @@ namespace Il2Native.Logic
             TextSpan("template <");
 
             var anyTypeParam = false;
-            foreach (var typeParam in this.EnumerateTemplateParametersRecursive(namedTypeSymbol).Distinct())
+            foreach (var typeParam in namedTypeSymbol.GetTemplateParameters())
             {
                 if (anyTypeParam)
                 {
@@ -824,22 +824,6 @@ namespace Il2Native.Logic
             TextSpan("> ");
         }
 
-        public IEnumerable<ITypeParameterSymbol> EnumerateTemplateParametersRecursive(INamedTypeSymbol namedTypeSymbol)
-        {
-            if (namedTypeSymbol.ContainingType != null)
-            {
-                foreach (var typeParam in this.EnumerateTemplateParametersRecursive(namedTypeSymbol.ContainingType))
-                {
-                    yield return typeParam;
-                }
-            }
-
-            foreach (var typeParam in namedTypeSymbol.TypeParameters)
-            {
-                yield return typeParam;
-            }
-        }
-
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol)
         {
             if (typeSymbol.TypeKind == TypeKind.Enum)
@@ -850,7 +834,7 @@ namespace Il2Native.Logic
             TextSpan("<");
 
             var anyTypeParam = false;
-            foreach (var typeParam in this.EnumerateTemplateArgumentsRecusive(typeSymbol))
+            foreach (var typeParam in typeSymbol.GetTemplateArguments())
             {
                 if (anyTypeParam)
                 {
@@ -863,22 +847,6 @@ namespace Il2Native.Logic
             }
 
             TextSpan(">");
-        }
-
-        public IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(INamedTypeSymbol typeSymbol)
-        {
-            if (typeSymbol.ContainingType != null)
-            {
-                foreach (var typeParam in this.EnumerateTemplateArgumentsRecusive(typeSymbol.ContainingType))
-                {
-                    yield return typeParam;
-                }
-            }
-
-            foreach (var typeParam in typeSymbol.TypeArguments)
-            {
-                yield return typeParam;
-            }
         }
 
         public void WriteTemplateDeclaration(IMethodSymbol methodSymbol)

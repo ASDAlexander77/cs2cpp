@@ -60,22 +60,14 @@
 
             if (doNotMergeTemplateParameters)
             {
-                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments);
-                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters);
+                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.GetTemplateArguments());
+                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.GetTemplateParameters());
             }
             else
             {
                 methodImpl.IsGenericMethod = true;
-                if (!typeSymbol.IsGenericType)
-                {
-                    methodImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetNewMethodTypeGeneric(@static));
-                    methodImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetNewMethodTypeParameterGeneric(@static));
-                }
-                else
-                {
-                    methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.TypeArguments.Union(GetNewMethodTypeGeneric(@static)));
-                    methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.TypeParameters.Union(GetNewMethodTypeParameterGeneric(@static)));
-                }
+                methodImpl.TypeArguments = ImmutableArray.CreateRange(typeSymbol.GetTemplateArguments().Union(GetNewMethodTypeGeneric(@static)));
+                methodImpl.TypeParameters = ImmutableArray.CreateRange(typeSymbol.GetTemplateParameters().Union(GetNewMethodTypeParameterGeneric(@static)));
             }
 
             return methodImpl;
@@ -270,7 +262,6 @@
         /// </param>
         private static void WriteNewMethod(CCodeWriterBase c, IMethodSymbol newNonStaticMethod, NamedTypeImpl nonStaticType)
         {
-            c.WriteTemplateDeclaration(newNonStaticMethod);
             c.WriteMethodDeclaration(newNonStaticMethod, true, true);
             c.NewLine();
             c.OpenBlock();
@@ -358,6 +349,7 @@
                                         TypeKind = TypeKind.Class, 
                                         Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty), 
                                         ContainingNamespace = typeSymbol.ContainingNamespace, 
+                                        ContainingType = typeSymbol.ContainingType,
                                         IsGenericType = typeSymbol.IsGenericType, 
                                         TypeArguments = typeSymbol.TypeArguments, 
                                         TypeParameters = typeSymbol.TypeParameters
@@ -366,16 +358,8 @@
             if (!@static)
             {
                 namedTypeImpl.IsGenericType = true;
-                if (!namedTypeImpl.IsGenericType)
-                {
-                    namedTypeImpl.TypeArguments = ImmutableArray.Create<ITypeSymbol>(GetTypeGeneric());
-                    namedTypeImpl.TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(GetTypeParameterGeneric());
-                }
-                else
-                {
-                    namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(namedTypeImpl.TypeArguments.Union(GetTypeGeneric()));
-                    namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(namedTypeImpl.TypeParameters.Union(GetTypeParameterGeneric()));
-                }
+                namedTypeImpl.TypeArguments = ImmutableArray.CreateRange(namedTypeImpl.GetTemplateArguments().Union(GetTypeGeneric()));
+                namedTypeImpl.TypeParameters = ImmutableArray.CreateRange(namedTypeImpl.GetTemplateParameters().Union(GetTypeParameterGeneric()));
             }
 
             return namedTypeImpl;
