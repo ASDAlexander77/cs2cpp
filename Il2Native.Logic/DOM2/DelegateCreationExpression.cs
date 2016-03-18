@@ -46,6 +46,12 @@
                 }
                 else
                 {
+                    var methodGroup = argument as MethodGroup;
+                    if (methodGroup != null && boundDelegateCreationExpression.MethodOpt != null)
+                    {
+                        methodGroup.Method = boundDelegateCreationExpression.MethodOpt;
+                    }
+
                     Arguments.Add(argument);
                 }
             }

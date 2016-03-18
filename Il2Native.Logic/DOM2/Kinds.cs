@@ -73,6 +73,7 @@
         Expression,
         DoStatement,
         DelegateCreationExpression,
-        CatchBlock
+        CatchBlock,
+        MethodPointer
     }
 }

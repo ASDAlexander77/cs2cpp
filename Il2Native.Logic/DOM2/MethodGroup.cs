@@ -44,11 +44,6 @@
             {
                 this.InstanceOpt = Deserialize(boundMethodGroup.InstanceOpt) as Expression;
             }
-
-            if (this.Method == null)
-            {
-                this.Method = boundMethodGroup.Methods.First();
-            }
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -69,6 +64,7 @@
         {
             if (this.Method.IsStatic)
             {
+                new Parenthesis { Operand = new MethodPointer{ Method = this.Method } }.WriteTo(c);
                 c.TextSpan("&");
                 c.WriteTypeFullName(this.Method.ContainingType);
                 c.TextSpan("::");
@@ -76,19 +72,26 @@
             }
             else
             {
-                if (this.ReceiverOpt is BaseReference)
+                var receiverOpt = this.ReceiverOpt;
+                if (receiverOpt is BaseReference)
                 {
-                    c.TextSpan("this");
+                    receiverOpt = new ThisReference();
+                }
+
+                if (this.ReceiverOpt.IsStaticWrapperCall())
+                {
+                    new Cast { Type = receiverOpt.Type, CCast = true, Operand = receiverOpt }.WriteTo(c);
                 }
                 else
                 {
-                    this.ReceiverOpt.WriteTo(c);
+                    receiverOpt.WriteTo(c);
                 }
 
                 c.TextSpan(",");
                 c.WhiteSpace();
+                new Parenthesis { Operand = new MethodPointer { Method = this.Method } }.WriteTo(c);
                 c.TextSpan("&");
-                c.WriteAccess(this.ReceiverOpt);
+                c.WriteAccess(receiverOpt);
                 c.WriteMethodNameNoTemplate(this.Method);
             }
 

@@ -93,6 +93,7 @@
     <Compile Include="DOM2\LambdaCall.cs" />
     <Compile Include="DOM2\MakeRefOperator.cs" />
     <Compile Include="DOM2\MethodGroup.cs" />
+    <Compile Include="DOM2\MethodPointer.cs" />
     <Compile Include="DOM2\NoOpStatement.cs" />
     <Compile Include="DOM2\NullCoalescingOperator.cs" />
     <Compile Include="DOM2\Parenthesis.cs" />
