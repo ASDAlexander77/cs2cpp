@@ -212,7 +212,7 @@ inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(objec
 
 template <typename D, typename S> inline D map_pointer_cast(S s)
 {
-	union { D d, S s } u;
+	union { D d; S s; } u;
 	u.s = s;
 	return u.d;
 }
