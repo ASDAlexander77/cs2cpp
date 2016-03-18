@@ -4,10 +4,19 @@
 
     public class Access : Expression
     {
+        public enum AccessTypes
+        {
+            Arrow,
+            Dot,
+            DoubleColon
+        }
+
         public override Kinds Kind
         {
             get { return Kinds.Access; }
         }
+
+        public AccessTypes AccessType { get; set; }
 
         public Expression ReceiverOpt { get; set; }
 
@@ -27,7 +36,19 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.WriteExpressionInParenthesesIfNeeded(ReceiverOpt);
-            c.TextSpan("->");
+            switch (this.AccessType)
+            {
+                case AccessTypes.Dot:
+                    c.TextSpan(".");
+                    break;
+                case AccessTypes.DoubleColon:
+                    c.TextSpan("::");
+                    break;
+                default:
+                    c.TextSpan("->");
+                    break;
+            }
+
             this.Expression.WriteTo(c);
         }
     }

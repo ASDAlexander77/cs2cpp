@@ -277,7 +277,14 @@
                                               {
                                                   Operand = parameterExpression,
                                                   MapPointerCast = true,
-                                                  Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } }
+                                                  MapPointerCastTypeParameter1 =
+                                                      new Access
+                                                          {
+                                                              AccessType = Access.AccessTypes.DoubleColon,
+                                                              ReceiverOpt = new TypeExpression { Type = nonStaticType },
+                                                              Expression = new Parameter { ParameterSymbol = new ParameterImpl { Name = "_Memptr" } }
+                                                          },
+                                                  MapPointerCastTypeParameter2 = new TypeExpression { Type = new TypeImpl { TypeKind = TypeKind.TypeParameter, Name = "_Memptr" } },
                                               };
                 }
 

@@ -20,9 +20,13 @@
 
         public bool CCast { get; set; }
 
+        public bool UseEnumUnderlyingType { get; set; }
+
         public bool MapPointerCast { get; set; }
 
-        public bool UseEnumUnderlyingType { get; set; }
+        public Expression MapPointerCastTypeParameter1 { get; set; }
+
+        public Expression MapPointerCastTypeParameter2 { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
@@ -64,8 +68,11 @@
             }
             else if (this.MapPointerCast)
             {
-                c.TextSpan("map_pointer_cast");
-                c.TextSpan("(");
+                c.TextSpan("map_pointer_cast<");
+                MapPointerCastTypeParameter1.WriteTo(c);
+                c.TextSpan(", ");
+                MapPointerCastTypeParameter2.WriteTo(c);
+                c.TextSpan(">(");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
             }
