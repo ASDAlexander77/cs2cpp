@@ -120,7 +120,7 @@
 
             // write default constructor
             c.WriteTypeName(nonStaticType);
-            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) {}");
+            c.TextSpanNewLine("(_Ty* t, void* memptr) : _t(t), _memptr(reinterpret_cast<_Memptr>(memptr)) {}");
 
             // write invoke
             this.CreateInvokeMethod().WriteTo(c);
@@ -176,7 +176,7 @@
 
             // write default constructor
             c.WriteTypeName(staticType);
-            c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {}");
+            c.TextSpanNewLine("(void* memptr) : _memptr(reinterpret_cast<_Memptr>(memptr)) {}");
 
             // write invoke
             this.CreateInvokeMethod(true).WriteTo(c);
@@ -270,7 +270,18 @@
             var objectCreationExpression = new ObjectCreationExpression { Type = nonStaticType, NewOperator = true };
             foreach (var parameter in newNonStaticMethod.Parameters)
             {
-                objectCreationExpression.Arguments.Add(new Parameter { ParameterSymbol = parameter });
+                Expression parameterExpression = new Parameter { ParameterSymbol = parameter };
+                if (parameter.Name == "m")
+                {
+                    parameterExpression = new Cast
+                                              {
+                                                  Operand = parameterExpression,
+                                                  Reinterpret = true,
+                                                  Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } }
+                                              };
+                }
+
+                objectCreationExpression.Arguments.Add(parameterExpression);
             }
 
             new ReturnStatement { ExpressionOpt = objectCreationExpression }.WriteTo(c);

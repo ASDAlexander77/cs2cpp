@@ -20,6 +20,8 @@
 
         public bool CCast { get; set; }
 
+        public bool Reinterpret { get; set; }
+
         public bool UseEnumUnderlyingType { get; set; }
 
         internal override void Visit(Action<Base> visitor)
@@ -57,6 +59,14 @@
                 c.TextSpan("((");
                 c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
                 c.TextSpan(")");
+                c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+                c.TextSpan(")");
+            }
+            else if (this.Reinterpret)
+            {
+                c.TextSpan("reinterpret_cast<");
+                c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
+                c.TextSpan(">(");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
             }

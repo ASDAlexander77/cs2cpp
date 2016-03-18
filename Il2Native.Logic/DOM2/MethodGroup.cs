@@ -62,15 +62,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.Method.IsStatic)
-            {
-                new Parenthesis { Operand = new MethodPointer{ Method = this.Method } }.WriteTo(c);
-                c.TextSpan("&");
-                c.WriteTypeFullName(this.Method.ContainingType);
-                c.TextSpan("::");
-                c.WriteMethodNameNoTemplate(this.Method);
-            }
-            else
+            if (!this.Method.IsStatic)
             {
                 var receiverOpt = this.ReceiverOpt;
                 if (receiverOpt is BaseReference)
@@ -89,11 +81,13 @@
 
                 c.TextSpan(",");
                 c.WhiteSpace();
-                new Parenthesis { Operand = new MethodPointer { Method = this.Method } }.WriteTo(c);
-                c.TextSpan("&");
-                c.WriteAccess(receiverOpt);
-                c.WriteMethodNameNoTemplate(this.Method);
             }
+
+            new Parenthesis { Operand = new MethodPointer { Method = this.Method } }.WriteTo(c);
+            c.TextSpan("&");
+            c.WriteTypeFullName(this.Method.ContainingType);
+            c.TextSpan("::");
+            c.WriteMethodNameNoTemplate(this.Method);
 
             if (this.TypeArgumentsOpt != null && this.TypeArgumentsOpt.Any())
             {
