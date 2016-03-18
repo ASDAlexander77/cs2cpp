@@ -120,7 +120,7 @@
 
             // write default constructor
             c.WriteTypeName(nonStaticType);
-            c.TextSpanNewLine("(_Ty* t, void* memptr) : _t(t), _memptr(reinterpret_cast<_Memptr>(memptr)) {}");
+            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) {}");
 
             // write invoke
             this.CreateInvokeMethod().WriteTo(c);
@@ -176,7 +176,7 @@
 
             // write default constructor
             c.WriteTypeName(staticType);
-            c.TextSpanNewLine("(void* memptr) : _memptr(reinterpret_cast<_Memptr>(memptr)) {}");
+            c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {}");
 
             // write invoke
             this.CreateInvokeMethod(true).WriteTo(c);
@@ -276,7 +276,7 @@
                     parameterExpression = new Cast
                                               {
                                                   Operand = parameterExpression,
-                                                  Reinterpret = true,
+                                                  MapPointerCast = true,
                                                   Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } }
                                               };
                 }

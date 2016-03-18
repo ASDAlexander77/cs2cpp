@@ -209,3 +209,11 @@ inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(objec
 {
 	return *cast<_CLASS*>(o);
 }
+
+template <typename D, typename S> 
+inline typename std::enable_if<std::is_member_pointer<D>::value && std::is_member_pointer<S>::value, D>::type map_pointer_cast(S s)
+{
+	union { D d, S s } u;
+	u.s = s;
+	return u.d;
+}

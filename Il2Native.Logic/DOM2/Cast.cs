@@ -20,7 +20,7 @@
 
         public bool CCast { get; set; }
 
-        public bool Reinterpret { get; set; }
+        public bool MapPointerCast { get; set; }
 
         public bool UseEnumUnderlyingType { get; set; }
 
@@ -62,11 +62,10 @@
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
             }
-            else if (this.Reinterpret)
+            else if (this.MapPointerCast)
             {
-                c.TextSpan("reinterpret_cast<");
-                c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
-                c.TextSpan(">(");
+                c.TextSpan("map_pointer_cast");
+                c.TextSpan("(");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
             }
