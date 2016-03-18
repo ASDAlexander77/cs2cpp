@@ -188,7 +188,7 @@ inline typename std::enable_if<is_interface_type<T>::value, object*>::type objec
 }
 
 // cast internals
-template <typename D, typename S> inline typename std::enable_if<!is_value_type<D>::value, D>::type cast(S s)
+template <typename D, typename S> inline typename std::enable_if<!is_value_type<D>::value && !is_interface_type<S>::value, D>::type cast(S s)
 {
 	if (s == nullptr)
 	{
@@ -202,6 +202,33 @@ template <typename D, typename S> inline typename std::enable_if<!is_value_type<
 	}
 
 	return d;
+}
+
+// cast internals
+template <typename D, typename S> inline typename std::enable_if<is_class_type<D>::value && !is_object<D>::value && is_interface_type<S>::value, D>::type cast(S s)
+{
+	if (s == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto d = dynamic_cast<D>(object_cast(s));
+	if (d == nullptr)
+	{
+		throw __new<CoreLib::System::InvalidCastException>();
+	}
+
+	return d;
+}
+
+template <typename D, typename S> inline typename std::enable_if<is_object<D>::value && is_interface_type<S>::value, D>::type cast(S s)
+{
+	if (s == nullptr)
+	{
+		return nullptr;
+	}
+
+	return object_cast(s);
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> 

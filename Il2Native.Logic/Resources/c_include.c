@@ -1,12 +1,13 @@
 #include <cstdint>
+#include <type_traits>
 #include <functional>
 #include <initializer_list>
-#include <type_traits>
 #include <limits>
 #include <cmath>
-#include <atomic>
 #include <cstring>
 #include <cwchar>
+#include <numeric>
+#include <atomic>
 #include <thread>
 
 #ifndef thread_local

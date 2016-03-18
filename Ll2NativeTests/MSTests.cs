@@ -776,12 +776,10 @@ namespace Ll2NativeTests
             
             skip.Add(883); // no Main method
 
-            skip.Add(26); // delegate
-            skip.Add(27);
             skip.Add(33); // reflection
             skip.Add(36); // IntrenalToObject
 
-            foreach (var index in Enumerable.Range(37, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

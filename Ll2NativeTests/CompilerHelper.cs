@@ -220,7 +220,7 @@
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        public static void ExecCompile(string assemblyName, bool justCompile = false, bool opt = false, int returnCode = 0, bool debug = true)
+        public static void ExecCompile(string assemblyName, bool justCompile = false, bool opt = false, int returnCode = 0, bool debug = false)
         {
             Trace.WriteLine("==========================================================================");
             if (justCompile)
@@ -244,13 +244,13 @@
                 ExecCmd(
                     string.Format("{0}.exe", assemblyName.Replace("-", "_")),
                     string.Empty,
-                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_{1}\\Debug\\", assemblyName, debug ? "debug" : "release")),
+                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_{1}\\{2}\\", assemblyName, debug ? "debug" : "release", debug ? "Debug" : "Release")),
                     readOutput: true,
                     returnCode: returnCode);
             }
             else
             {
-                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_{1}\\Debug\\{0}.exe", assemblyName, debug ? "debug" : "release")));
+                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_{1}\\{2}\\{0}.exe", assemblyName, debug ? "debug" : "release", debug ? "Debug" : "Release")));
             }
         }
 

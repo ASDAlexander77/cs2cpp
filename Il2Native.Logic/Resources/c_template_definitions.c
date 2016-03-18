@@ -554,3 +554,11 @@ CoreLib::System::Collections::IEnumerator* __array<T>::__array_ICollection::Syst
 {
     return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
+
+// multi array
+// Array
+template <typename T, int32_t RANK>
+int32_t  __multi_array<T, RANK>::__array_element_size()
+{
+	return sizeof(T);
+}

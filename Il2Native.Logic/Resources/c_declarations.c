@@ -501,4 +501,14 @@ public:
 	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
 	inline operator int32_t() const { return _length; }
+
+	template <typename... Ta> static __multi_array<T, RANK>* __new_array(Ta... boundries)
+	{
+		T tmp[] = {boundries...};
+		auto length = std::accumulate(std::begin(tmp), std::end(tmp), 0);
+		auto size = sizeof(__array<T>) + length * sizeof(T);
+		return new ((int32_t)size) __multi_array<T, RANK>(boundries...);
+	}
+
+	virtual int32_t __array_element_size() override;
 };
