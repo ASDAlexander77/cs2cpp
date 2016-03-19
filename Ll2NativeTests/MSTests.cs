@@ -781,6 +781,7 @@ namespace Ll2NativeTests
             skip.Add(40); // enum to string
             skip.Add(46); // float max
             skip.Add(68); // enum to string
+            skip.Add(77); // enum to string
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
