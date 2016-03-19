@@ -92,7 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="class.cpp" />
-    <Content Include="invoke_member_of_class.cpp" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

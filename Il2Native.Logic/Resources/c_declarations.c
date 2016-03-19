@@ -276,7 +276,6 @@ public:
 	T _data[0];
 
 	typedef CoreLib::System::Array base;
-	// TODO: finish checking boundries
 	__array(int32_t length) { _length = length; }
 	__array(const __array<T>&) = delete;
 	__array(__array<T>&&) = delete;
@@ -301,8 +300,26 @@ public:
 		return instance;
 	}
 
-	inline const T operator [](int32_t index) const { return _data[index]; }
-	inline T& operator [](int32_t index) { return _data[index]; }
+	inline const T operator [](int32_t index) const 
+	{ 
+		if (index < 0 || index > _length)
+		{
+			throw __new<CoreLib::System::IndexOutOfRangeException>();
+		}
+
+		return _data[index]; 
+	}
+
+	inline T& operator [](int32_t index) 
+	{
+		if (index < 0 || index > _length)
+		{
+			throw __new<CoreLib::System::IndexOutOfRangeException>();
+		}
+
+		return _data[index]; 
+	}
+
 	inline operator int32_t() const { return (size_t)_length; }
 
 	// Array
@@ -494,24 +511,91 @@ public:
 
 	typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
-	template <typename... Ta> __multi_array(Ta... boundries) : _lowerBoundries{0}, _upperBoundries{boundries...} {}
-	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
-	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
-	inline operator int32_t() const { return _length; }
-
-	template <typename... Ta> static __multi_array<T, RANK>* __new_array(Ta... boundries)
+	__multi_array(std::initializer_list<int32_t> boundries) : _lowerBoundries{0}
 	{
-		T tmp[] = {boundries...};
-		auto length = std::accumulate(std::begin(tmp), std::end(tmp), 1, std::multiplies<int32_t>());
+		std::copy(std::begin(boundries), std::end(boundries), _upperBoundries);
+	}
+
+	const T operator [](std::initializer_list<int32_t> indexes) const 
+	{ 
+		auto index = 0;
+		auto rank = 0;
+		for (auto levelIndex : indexes)
+		{
+			if (rank >= RANK)
+			{
+				break;
+			}
+
+			if (rank == 0)
+			{
+				index = levelIndex;
+			}
+			else
+			{
+				auto boundryRank = rank - 1;
+				auto lower = _lowerBoundries[boundryRank];
+				auto upper = _upperBoundries[boundryRank];
+				if (levelIndex < lower|| levelIndex > upper)
+				{
+					throw __new<CoreLib::System::IndexOutOfRangeException>();
+				}
+
+				index += levelIndex * (upper - lower);
+			}
+
+			rank++;
+		}
+
+		return _data[index]; 
+	}
+
+	T& operator [](std::initializer_list<int32_t> indexes) 
+	{ 
+		auto index = 0;
+		auto rank = 0;
+		for (auto levelIndex : indexes)
+		{
+			if (rank >= RANK)
+			{
+				break;
+			}
+
+			if (rank == 0)
+			{
+				index = levelIndex;
+			}
+			else
+			{
+				auto boundryRank = rank - 1;
+				auto lower = _lowerBoundries[boundryRank];
+				auto upper = _upperBoundries[boundryRank];
+				if (levelIndex < lower|| levelIndex > upper)
+				{
+					throw __new<CoreLib::System::IndexOutOfRangeException>();
+				}
+
+				index += levelIndex * (upper - lower);
+			}
+
+			rank++;
+		}
+
+		return _data[index];  
+	}
+
+	template <typename... Ta> static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)
+	{
+		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new ((int32_t)size) __multi_array<T, RANK>(boundries...);
+		return new ((int32_t)size) __multi_array<T, RANK>(boundries);
 	}
 
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		auto instance = new ((int32_t)size) __multi_array<T, RANK>(boundries...);
+		auto instance = new ((int32_t)size) __multi_array<T, RANK>(boundries);
 
 		// initialize
 		T tmp[] = {items...};
