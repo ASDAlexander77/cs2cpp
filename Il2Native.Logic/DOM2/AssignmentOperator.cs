@@ -50,7 +50,7 @@
             this.Left = Deserialize(boundAssignmentOperator.Left) as Expression;
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
 
-            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing)
+            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing || boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
             {
                 this.TypeDeclaration = false;
                 this.ApplyAutoType = false;

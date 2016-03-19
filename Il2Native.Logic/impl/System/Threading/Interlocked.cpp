@@ -1,27 +1,46 @@
 #include "CoreLib.h"
+#if _WIN32 && _MSC_VER
+#include <xatomic.h>
+#endif
 
 // Method : System.Threading.Interlocked.Increment(ref int)
 int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location)
 {
-    throw 3221274624U;
+#if _WIN32 && _MSC_VER
+	return std::_Atomic_fetch_add_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
+#else
+	#  error No implementation
+#endif
 }
 
 // Method : System.Threading.Interlocked.Increment(ref long)
 int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location)
 {
-    throw 3221274624U;
+#if _WIN32 && _MSC_VER
+	return std::_Atomic_fetch_add_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
+#else
+	#  error No implementation
+#endif
 }
 
 // Method : System.Threading.Interlocked.Decrement(ref int)
 int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& location)
 {
-    throw 3221274624U;
+#if _WIN32 && _MSC_VER
+	return std::_Atomic_fetch_sub_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
+#else
+	#  error No implementation
+#endif
 }
 
 // Method : System.Threading.Interlocked.Decrement(ref long)
 int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location)
 {
-    throw 3221274624U;
+#if _WIN32 && _MSC_VER
+	return std::_Atomic_fetch_sub_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
+#else
+	#  error No implementation
+#endif
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref int, int)
