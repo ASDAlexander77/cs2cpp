@@ -120,7 +120,7 @@ template <typename T> struct __unbound_generic_type
 {
 };
 
-template< typename T, typename C>
+template< typename T, typename C >
 class __static 
 {
 	T t;
@@ -156,6 +156,54 @@ public:
 		}
 
 		return t;
+	}
+
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		t++;
+
+		return *this;
+	}
+
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator++(int)
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		D tmp(*this);
+		operator++();
+		return tmp;
+	}
+
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator--()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		t--;
+
+		return *this;
+	}
+
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator--(int)
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor();
+		}
+
+		D tmp(*this);
+		operator--();
+		return tmp;
 	}
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
