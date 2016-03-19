@@ -507,7 +507,7 @@ public:
 		return new ((int32_t)size) __multi_array<T, RANK>(boundries...);
 	}
 
-	template <typename... Ta> static __array<T>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
+	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__array<T>) + length * sizeof(T);
