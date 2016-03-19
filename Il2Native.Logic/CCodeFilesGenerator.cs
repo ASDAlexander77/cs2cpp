@@ -333,7 +333,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     }
                 }
 
-                if (unit.MainMethod != null)
+                if (!stubs && unit.MainMethod != null)
                 {
                     WriteSourceMainEntry(c, itw, unit.MainMethod);
                 }
