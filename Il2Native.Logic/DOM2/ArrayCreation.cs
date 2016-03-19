@@ -72,8 +72,13 @@
             c.TextSpan("(");
 
             var any = false;
-            if (arrayInitialization == null || initItems.Count == 0)
+            if (arrayInitialization == null || initItems.Count == 0 || arrayTypeSymbol.Rank > 1)
             {
+                if (arrayTypeSymbol.Rank > 1)
+                {
+                    c.TextSpan("{");
+                }
+
                 foreach (var bound in this.bounds)
                 {
                     if (any)
@@ -95,6 +100,11 @@
                     }
 
                     any = true;
+                }
+
+                if (arrayTypeSymbol.Rank > 1)
+                {
+                    c.TextSpan("}");
                 }
             }
 

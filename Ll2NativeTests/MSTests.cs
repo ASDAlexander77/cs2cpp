@@ -778,6 +778,7 @@ namespace Ll2NativeTests
 
             skip.Add(33); // reflection
             skip.Add(36); // IntrenalToObject
+            skip.Add(40); // enum to string
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {

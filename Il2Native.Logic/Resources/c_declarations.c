@@ -272,13 +272,12 @@ T __create_instance()
 template <typename T> class __array : public CoreLib::System::Array
 {
 public:
-	int32_t _rank;
 	int32_t _length;
 	T _data[0];
 
 	typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
-	__array(int32_t length) : _rank(1) { _length = length; }
+	__array(int32_t length) { _length = length; }
 	__array(const __array<T>&) = delete;
 	__array(__array<T>&&) = delete;
 
@@ -489,15 +488,13 @@ public:
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
 {
 public:
-	int32_t _rank;
-	int32_t _length;
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
 	T _data[0];
 
 	typedef CoreLib::System::Array base;
 	// TODO: finish checking boundries
-	template <typename... Ta> __multi_array(Ta... boundries) : _rank(RANK), _lowerBoundries{0}, _upperBoundries{boundries...} {}
+	template <typename... Ta> __multi_array(Ta... boundries) : _lowerBoundries{0}, _upperBoundries{boundries...} {}
 	inline const T operator [](std::initializer_list<int32_t> indexes) const { return _data[0]; }
 	inline T& operator [](std::initializer_list<int32_t> indexes) { return _data[0]; }
 	inline operator int32_t() const { return _length; }
@@ -505,10 +502,30 @@ public:
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array(Ta... boundries)
 	{
 		T tmp[] = {boundries...};
-		auto length = std::accumulate(std::begin(tmp), std::end(tmp), 0);
+		auto length = std::accumulate(std::begin(tmp), std::end(tmp), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__array<T>) + length * sizeof(T);
 		return new ((int32_t)size) __multi_array<T, RANK>(boundries...);
 	}
 
+	template <typename... Ta> static __array<T>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
+	{
+		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
+		auto size = sizeof(__array<T>) + length * sizeof(T);
+		auto instance = new ((int32_t)size) __multi_array<T, RANK>(boundries...);
+
+		// initialize
+		T tmp[] = {items...};
+		auto data_size =  sizeof...(items) * sizeof(T);
+		memcpy(&instance->_data[0], &tmp, data_size);
+
+		return instance;
+	}
+
 	virtual int32_t __array_element_size() override;
+	////virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+	////virtual int32_t get_Length() override;
+	virtual int32_t GetUpperBound(int32_t dimension) override;
+	virtual int32_t GetLowerBound(int32_t dimension) override;
+	virtual int32_t GetLength(int32_t dimension) override;
+	virtual int32_t get_Rank() override;
 };

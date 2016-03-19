@@ -350,10 +350,15 @@
             // special case for Array
             if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_Array)
             {
-                if (methodSymbol.Name == "InternalGetReference" || methodSymbol.Name == "get_Length" ||
-                    methodSymbol.Name == "get_Rank")
+                switch (methodSymbol.Name)
                 {
-                    return true;
+                    case "InternalGetReference":
+                    case "get_Length":
+                    case "get_Rank":
+                    case "GetUpperBound":
+                    case "GetLowerBound":
+                    case "GetLength":
+                        return true;
                 }
             }
 

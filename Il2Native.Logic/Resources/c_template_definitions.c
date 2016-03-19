@@ -43,7 +43,7 @@ int32_t __array<T>::get_Length()
 template <typename T>
 int32_t __array<T>::get_Rank()
 {
-	return this->_rank;
+	return 1;
 }
 
 // IListT1
@@ -561,4 +561,43 @@ template <typename T, int32_t RANK>
 int32_t  __multi_array<T, RANK>::__array_element_size()
 {
 	return sizeof(T);
+}
+
+template <typename T, int32_t RANK>
+int32_t __multi_array<T, RANK>::GetUpperBound(int32_t dimension)
+{
+	if (dimension >= RANK)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}	
+
+    return this->_upperBoundries[dimension];
+}
+
+template <typename T, int32_t RANK>
+int32_t __multi_array<T, RANK>::GetLowerBound(int32_t dimension)
+{
+	if (dimension >= RANK)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}	
+
+	return this->_lowerBoundries[dimension];
+}
+
+template <typename T, int32_t RANK>
+int32_t __multi_array<T, RANK>::GetLength(int32_t dimension)
+{
+	if (dimension >= RANK)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}	
+
+    return this->_upperBoundries[dimension] - this->_lowerBoundries[dimension];
+}
+
+template <typename T, int32_t RANK>
+int32_t __multi_array<T, RANK>::get_Rank()
+{
+    return RANK;
 }
