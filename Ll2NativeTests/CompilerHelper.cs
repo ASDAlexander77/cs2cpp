@@ -105,10 +105,6 @@
 
         /// <summary>
         /// </summary>
-        public static bool CompactMode = false;
-
-        /// <summary>
-        /// </summary>
         public static bool Stubs = false;
 
         /// <summary>
@@ -200,11 +196,6 @@
             if (NoLineDebugInfo)
             {
                 args.Add("line-");
-            }
-
-            if (CompactMode)
-            {
-                args.Add("compact");
             }
 
             return args.ToArray();

@@ -846,14 +846,29 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestBabylonGlut()
         {
-            CompilerHelper.CompactMode = true;
-
             Il2Converter.Convert(
-                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll"),
+                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\BabylonGlut.csproj"),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true));
         }
 
+        [TestMethod]
+        public void TestBabylonNativeCsLibraryForIl()
+        {
+            Il2Converter.Convert(
+                Path.GetFullPath(@" D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\BabylonNativeCsLibraryForIl.csproj"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false, stubs: true));
+        }
+
+        [TestMethod]
+        public void TestGameLogicForll()
+        {
+            Il2Converter.Convert(
+                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\GameLogicForll\GameLogicForll.csproj"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false, stubs: true));
+        }
 
         /// <summary>
         /// </summary>
