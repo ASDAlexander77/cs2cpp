@@ -73,29 +73,25 @@ namespace Il2Native.Logic.DOM2
                     {
                         case "string.String(char[])":
                             c.TextSpan("string::CtorCharArray");
-                            break;
+                            return;
                         case "string.String(char, int)":
                             c.TextSpan("string::CtorCharCount");
-                            break;
+                            return;
                         case "string.String(char*)":
                             c.TextSpan("string::CtorCharPtr");
-                            break;
+                            return;
                         case "string.String(char*, int, int)":
                             c.TextSpan("string::CtorCharPtrStartLength");
-                            break;
+                            return;
                         case "string.String(char[], int, int)":
                             c.TextSpan("string::CtorCharArrayStartLength");
-                            break;
-                        default:
-                            throw new NotImplementedException();
+                            return;
                     }
                 }
-                else
-                {
-                    c.TextSpan("__new<");
-                    c.WriteType(Type, true, true, true);
-                    c.TextSpan(">");
-                }
+
+                c.TextSpan("__new<");
+                c.WriteType(Type, true, true, true);
+                c.TextSpan(">");
             }
             else
             {
