@@ -208,15 +208,6 @@ namespace Il2Native.Logic
         private HashSet<AssemblyIdentity> LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
         {
             var added = new HashSet<AssemblyIdentity>();
-
-            if (!this.IsCoreLib)
-            {
-                this.AddAsseblyReference(
-                    assemblies,
-                    added,
-                    !string.IsNullOrWhiteSpace(this.CoreLibPath) ? this.CoreLibPath : typeof(int).Assembly.Location);
-            }
-
             if (this.ReferencesList != null)
             {
                 foreach (var refItem in this.ReferencesList)
@@ -237,6 +228,11 @@ namespace Il2Native.Logic
 
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
         {
+            if (added.Contains(assemblyIdentity))
+            {
+                return;
+            }
+
             var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
             if (resolvedFilePath == null)
             {
@@ -248,6 +244,8 @@ namespace Il2Native.Logic
             {
                 var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
                 assemblies.Add(metadataImageReference);
+
+                LoadAssemblySymbol(metadata, true);
 
                 // process nested
                 foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
@@ -265,6 +263,8 @@ namespace Il2Native.Logic
             if (added.Add(metadata.Assembly.Identity))
             {
                 assemblies.Add(metadataImageReference);
+
+                LoadAssemblySymbol(metadata, true);
 
                 // process nested
                 foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
@@ -513,9 +513,9 @@ namespace Il2Native.Logic
 
         private void LoadProject(string firstSource)
         {
-            var folder = Path.GetDirectoryName(firstSource);
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(firstSource);
+            XDocument project = XDocument.Load(firstSource);
+            var folder = Path.GetDirectoryName(firstSource);
             this.Sources =
                 project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
                     .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
@@ -529,10 +529,43 @@ namespace Il2Native.Logic
 
             this.Options = options;
 
-            this.ReferencesList =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Reference")
+            this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
+        }
+
+        private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
+        {
+            var xElement = project.Root;
+            if (xElement != null)
+            {
+                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
                     .Select(e => GetReferenceValue(ns, e))
-                    .ToArray();
+                    .Union(this.GetReferencesFromProject(firstSource, ns, xElement)).ToArray();
+            }
+
+            return null;
+        }
+
+        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XNamespace ns, XElement xElement)
+        {
+            foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
+            {
+                var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
+                var project = XDocument.Load(projectFile);
+                foreach (var reference in this.LoadReferencesFromProject(projectFile, project, ns))
+                {
+                    yield return reference;
+                }
+
+                yield return this.GetReferenceFromProjectValue(projectReference, prjectFullFilePath);
+            }
+        }
+
+        private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
+        {
+            var nestedProject = projectReference.Attribute("Include").Value;
+            var projectFolder = this.GetRealFolderForProject(projectFullFilePath, nestedProject);
+            var projectFile = Path.Combine(projectFolder, Path.GetFileName(nestedProject));
+            return projectFile;
         }
 
         private static string GetReferenceValue(XNamespace ns, XElement element)
@@ -542,8 +575,24 @@ namespace Il2Native.Logic
             {
                 return xElement.Value;
             }
-            
+
             return element.Attribute("Include").Value;
+        }
+
+        private string GetReferenceFromProjectValue(XElement element, string projectFullFilePath)
+        {
+            var referencedProjectFilePath = element.Attribute("Include").Value;
+
+            var filePath = Path.Combine(this.GetRealFolderForProject(projectFullFilePath, referencedProjectFilePath),
+                string.Concat("bin\\", this.Options["Configuration"]),
+                string.Concat(Path.GetFileNameWithoutExtension(referencedProjectFilePath), ".dll"));
+
+            return filePath;
+        }
+
+        public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)
+        {
+            return Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
         }
     }
 }
