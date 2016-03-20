@@ -1,16 +1,17 @@
-﻿namespace Il2Native.Logic.DOM.Synthesized
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Synthesized
 {
-    using System;
     using System.Collections.Immutable;
     using System.Linq;
-
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
 
     public class CCodeBoxForPrimitiveValuesOrEnumsDeclaration : CCodeMethodDeclaration
     {
-        private INamedTypeSymbol type;
+        private readonly INamedTypeSymbol type;
 
         public CCodeBoxForPrimitiveValuesOrEnumsDeclaration(INamedTypeSymbol type)
             : base(new BoxMethod(type))

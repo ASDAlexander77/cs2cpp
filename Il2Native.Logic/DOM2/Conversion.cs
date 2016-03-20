@@ -1,20 +1,22 @@
-﻿ namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+ namespace Il2Native.Logic.DOM2
 {
     using System;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public class Conversion : Expression
     {
+        public bool ExplicitCastIn { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.Conversion; }
         }
 
         public Expression Operand { get; set; }
-
-        public bool ExplicitCastIn { get; set; }
 
         // TODO: get rid of TypeSoure and use Operand.Type for it
         public ITypeSymbol TypeSource { get; set; }
@@ -65,7 +67,7 @@
                 };
             }
 
-            bool parenthesis = false;
+            var parenthesis = false;
             if (this.WriteCast(c, out parenthesis))
             {
                 if (parenthesis)
@@ -100,7 +102,7 @@
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
                     c.TextSpan("(");
-                    c.WriteType(this.Type);
+                    c.WriteType(Type);
                     c.TextSpan(")");
                     c.TextSpan("nullptr");
                     return false;
@@ -109,22 +111,22 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(this.Type, true, false, true);
+                    c.WriteType(Type, true, false, true);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
                 case ConversionKind.ImplicitReference:
 
-                    if (this.Type.TypeKind == TypeKind.TypeParameter)
+                    if (Type.TypeKind == TypeKind.TypeParameter)
                     {
                         c.TextSpan("cast<");
-                        c.WriteType(this.Type);
+                        c.WriteType(Type);
                         c.TextSpan(">");                        
                     }
                     else if (Type.TypeKind == TypeKind.Interface && this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type))
                     {
                         c.TextSpan("interface_cast<");
-                        c.WriteType(this.Type);
+                        c.WriteType(Type);
                         c.TextSpan(">");
                     }
                     else if (Type.TypeKind == TypeKind.Interface)
@@ -133,13 +135,13 @@
                         c.WriteType(Type);
                         c.TextSpan(">");
                     }
-                    else if (TypeSource.IsDerivedFrom(Type))
+                    else if (this.TypeSource.IsDerivedFrom(Type))
                     {
                         c.TextSpan("static_cast<");
                         c.WriteType(Type);
                         c.TextSpan(">");
                     }
-                    else if (TypeSource.TypeKind == TypeKind.Interface && Type.SpecialType == SpecialType.System_Object)
+                    else if (this.TypeSource.TypeKind == TypeKind.Interface && Type.SpecialType == SpecialType.System_Object)
                     {
                         c.TextSpan("object_cast");
                     }
@@ -167,7 +169,7 @@
                     break;
                 case ConversionKind.Identity:
                     // for string
-                    if (TypeSource.SpecialType == SpecialType.System_String && Type.TypeKind == TypeKind.PointerType)
+                    if (this.TypeSource.SpecialType == SpecialType.System_String && Type.TypeKind == TypeKind.PointerType)
                     {
                         c.TextSpan("&");
                         this.Operand.WriteTo(c);

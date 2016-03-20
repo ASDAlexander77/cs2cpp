@@ -1,15 +1,18 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using Microsoft.CodeAnalysis.CSharp;
 
     public class BaseReference : Expression
     {
+        public bool ExplicitType { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.BaseReference; }
         }
-
-        public bool ExplicitType { get; set; }
 
         internal void Parse(BoundBaseReference boundBaseReference)
         {
@@ -19,7 +22,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (ExplicitType)
+            if (this.ExplicitType)
             {
                 c.WriteTypeFullName(Type);
             }

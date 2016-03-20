@@ -1,21 +1,23 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
-
     using Microsoft.CodeAnalysis;
 
     public class TypeDef : Statement
     {
+        public Expression Identifier { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.TypeDef; }
         }
 
-        public TypeExpression TypeExpressionOpt { get; set; }
-
         public IMethodSymbol PointerToMemberOpt { get; set; }
 
-        public Expression Identifier { get; set; }
+        public TypeExpression TypeExpressionOpt { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {

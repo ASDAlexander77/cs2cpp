@@ -1,40 +1,36 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ForEachIteratorStatement : Statement
     {
-        private enum Stages
-        {
-            Initialization,
-            TryBody
-        }
-
-        private readonly IList<Statement> locals = new List<Statement>();
-        
         private Base _initialization;
 
-        public override Kinds Kind
-        {
-            get { return Kinds.ForEachIteratorStatement; }
-        }
+        private readonly IList<Statement> locals = new List<Statement>();
 
         public Base Initialization
         {
             get { return this._initialization; }
             set { this._initialization = value; }
         }
-        
-        public TryStatement TryStatement { get; set; }
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ForEachIteratorStatement; }
+        }
 
         public IList<Statement> Locals
         {
             get { return this.locals; }
         }
+
+        public TryStatement TryStatement { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -89,7 +85,7 @@
                 {
                     case Stages.Initialization:
                         var statement = Deserialize(boundStatement, specialCase: SpecialCases.ForEachBody);
-                        MergeOrSet(ref _initialization, statement);
+                        MergeOrSet(ref this._initialization, statement);
                         break;
                     case Stages.TryBody:
                         this.TryStatement = new TryStatement();
@@ -169,6 +165,12 @@
                 // No normal ending of Statement as we do not need extra ;
                 c.Separate();
             }
+        }
+
+        private enum Stages
+        {
+            Initialization,
+            TryBody
         }
     }
 }

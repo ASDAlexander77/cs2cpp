@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -10,13 +13,10 @@
     using System.Text;
     using System.Threading.Tasks;
     using DOM;
-    using DOM.Implementations;
     using DOM.Synthesized;
     using DOM2;
-    using Il2Native.Logic.Properties;
-
     using Microsoft.CodeAnalysis;
-
+    using Properties;
     using Roslyn.Utilities;
 
     public class CCodeFilesGenerator
@@ -25,23 +25,35 @@
 
         public bool Concurrent { get; set; }
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, string outputFolder)
+        public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity)
         {
-            this.currentFolder = Path.Combine(outputFolder, identity.Name);
-            if (!Directory.Exists(this.currentFolder))
+            itw.Write("#include \"");
+            itw.WriteLine("{0}.h\"", identity.Name);
+        }
+
+        public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
+        {
+            itw.WriteLine();
+            itw.WriteLine("auto main() -> int32_t");
+            itw.WriteLine("{");
+            itw.WriteLine("#ifdef GC_H");
+            itw.Indent++;
+            itw.WriteLine("GC_INIT()");
+            itw.Indent--;
+            itw.WriteLine("#endif");
+            itw.Indent++;
+
+            c.WriteMethodFullName(mainMethod);
+            itw.Write("(");
+            if (mainMethod.Parameters.Length > 0)
             {
-                Directory.CreateDirectory(this.currentFolder);
+                itw.Write("nullptr");
             }
 
-            var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
-
-            this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
-
-            this.WriteCoreLibSource(identity, isCoreLib);
-
-            this.WriteSources(identity, units);
-
-            this.WriteBuildFiles(identity, references, !isCoreLib);
+            itw.WriteLine(");");
+            itw.WriteLine("return 0;");
+            itw.Indent--;
+            itw.WriteLine("}");
         }
 
         public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
@@ -202,191 +214,37 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
         }
 
-        public IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units, bool stubs = false)
+        public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
         {
-            var headersToInclude = new List<string>();
-
-            // write all sources
-            foreach (var unit in units)
+            if (!isCoreLib)
             {
-                int nestedLevel;
-                var root = !stubs ? "src" : "impl";
-
-                if (stubs)
-                {
-                    var path = this.GetPath(unit, out nestedLevel, ".h", root, doNotCreateFolder: true);
-                    if (File.Exists(path))
-                    {
-                        headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
-
-                        // do not overwrite an existing file
-                        continue;
-                    }
-                }
-
-                var anyRecord = false;
-                var text = new StringBuilder();
-                using (var itw = new IndentedTextWriter(new StringWriter(text)))
-                {
-                    var c = new CCodeWriterText(itw);
-                    foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
-                    {
-                        anyRecord = true;
-                        definition.WriteTo(c);
-                    }
-
-                    if (!stubs)
-                    {
-                        var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-                        // write interface wrappers
-                        foreach (var iface in unit.Type.Interfaces)
-                        {
-                            anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
-                        }
-                    }
-
-                    itw.Close();
-                }
-
-                if (anyRecord && text.Length > 0)
-                {
-                    var path = this.GetPath(unit, out nestedLevel, ".h", root);
-                    Debug.Assert(!path.Contains("Decimal.h"));
-
-                    var newText = text.ToString();
-
-                    headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
-
-                    if (IsNothingChanged(path, newText))
-                    {
-                        continue;
-                    }
-
-                    using (var textFile = new StreamWriter(path))
-                    {
-                        textFile.Write(newText);
-                    }
-                }
+                return;
             }
 
-            return headersToInclude;
-        }
-
-        public void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
-        {
-            if (this.Concurrent)
-            {
-                // write all sources
-                Parallel.ForEach(
-                    units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType),
-                    (unit) =>
-                    {
-                        this.WriteSource(identity, unit);
-                        this.WriteSource(identity, unit, true);
-                    });
-            }
-            else
-            {
-                // write all sources
-                foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
-                {
-                    this.WriteSource(identity, unit);
-                    this.WriteSource(identity, unit, true);
-                }
-            }
-        }
-
-        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
-        {
-            int nestedLevel;
-
-            if (stubs)
-            {
-                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl", doNotCreateFolder: true);
-                if (File.Exists(path))
-                {
-                    // do not overwrite an existing file
-                    return;
-                }
-            }
-
-            var anyRecord = false;
+            // write header
             var text = new StringBuilder();
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
-                var c = new CCodeWriterText(itw);
-
                 WriteSourceInclude(itw, identity);
 
-                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
-                {
-                    anyRecord = true;
-                    definition.WriteTo(c);
-                }
-
-                if (!stubs)
-                {
-                    // write interface wrappers
-                    foreach (var iface in unit.Type.Interfaces)
-                    {
-                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
-                    }
-                }
-
-                if (!stubs && unit.MainMethod != null)
-                {
-                    WriteSourceMainEntry(c, itw, unit.MainMethod);
-                }
+                itw.WriteLine(Resources.c_definitions);
+                itw.WriteLine(Resources.decimals);
 
                 itw.Close();
             }
 
-            if (anyRecord && text.Length > 0)
+            var newText = text.ToString();
+            var path = this.GetPath(identity.Name, subFolder: "src", ext: ".cpp");
+
+            if (IsNothingChanged(path, newText))
             {
-                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
-                var newText = text.ToString();
-
-                if (IsNothingChanged(path, newText))
-                {
-                    return;
-                }
-
-                using (var textFile = new StreamWriter(path))
-                {
-                    textFile.Write(newText);
-                }
-            }
-        }
-
-        public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
-        {
-            itw.WriteLine();
-            itw.WriteLine("auto main() -> int32_t");
-            itw.WriteLine("{");
-            itw.WriteLine("#ifdef GC_H");
-            itw.Indent++;
-            itw.WriteLine("GC_INIT()");
-            itw.Indent--;
-            itw.WriteLine("#endif");
-            itw.Indent++;
-
-            c.WriteMethodFullName(mainMethod);
-            itw.Write("(");
-            if (mainMethod.Parameters.Length > 0)
-            {
-                itw.Write("nullptr");
+                return;
             }
 
-            itw.WriteLine(");");
-            itw.WriteLine("return 0;");
-            itw.Indent--;
-            itw.WriteLine("}");
-        }
-
-        public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity)
-        {
-            itw.Write("#include \"");
-            itw.WriteLine("{0}.h\"", identity.Name);
+            using (var textFile = new StreamWriter(path))
+            {
+                textFile.Write(newText);
+            }
         }
 
         public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IEnumerable<string> includeHeaders)
@@ -465,6 +323,189 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
         }
 
+        public void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
+        {
+            if (this.Concurrent)
+            {
+                // write all sources
+                Parallel.ForEach(
+                    units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType),
+                    (unit) =>
+                    {
+                        this.WriteSource(identity, unit);
+                        this.WriteSource(identity, unit, true);
+                    });
+            }
+            else
+            {
+                // write all sources
+                foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
+                {
+                    this.WriteSource(identity, unit);
+                    this.WriteSource(identity, unit, true);
+                }
+            }
+        }
+
+        public IList<string> WriteTemplateSources(IEnumerable<CCodeUnit> units, bool stubs = false)
+        {
+            var headersToInclude = new List<string>();
+
+            // write all sources
+            foreach (var unit in units)
+            {
+                int nestedLevel;
+                var root = !stubs ? "src" : "impl";
+
+                if (stubs)
+                {
+                    var path = this.GetPath(unit, out nestedLevel, ".h", root, doNotCreateFolder: true);
+                    if (File.Exists(path))
+                    {
+                        headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
+
+                        // do not overwrite an existing file
+                        continue;
+                    }
+                }
+
+                var anyRecord = false;
+                var text = new StringBuilder();
+                using (var itw = new IndentedTextWriter(new StringWriter(text)))
+                {
+                    var c = new CCodeWriterText(itw);
+                    foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
+                    {
+                        anyRecord = true;
+                        definition.WriteTo(c);
+                    }
+
+                    if (!stubs)
+                    {
+                        var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                        // write interface wrappers
+                        foreach (var iface in unit.Type.Interfaces)
+                        {
+                            anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
+                        }
+                    }
+
+                    itw.Close();
+                }
+
+                if (anyRecord && text.Length > 0)
+                {
+                    var path = this.GetPath(unit, out nestedLevel, ".h", root);
+                    Debug.Assert(!path.Contains("Decimal.h"));
+
+                    var newText = text.ToString();
+
+                    headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
+
+                    if (IsNothingChanged(path, newText))
+                    {
+                        continue;
+                    }
+
+                    using (var textFile = new StreamWriter(path))
+                    {
+                        textFile.Write(newText);
+                    }
+                }
+            }
+
+            return headersToInclude;
+        }
+
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, string outputFolder)
+        {
+            this.currentFolder = Path.Combine(outputFolder, identity.Name);
+            if (!Directory.Exists(this.currentFolder))
+            {
+                Directory.CreateDirectory(this.currentFolder);
+            }
+
+            var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
+
+            this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
+
+            this.WriteCoreLibSource(identity, isCoreLib);
+
+            this.WriteSources(identity, units);
+
+            this.WriteBuildFiles(identity, references, !isCoreLib);
+        }
+
+        private static string GetRelativePath(CCodeUnit unit, out int nestedLevel)
+        {
+            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
+            nestedLevel = enumNamespaces.Count();
+            return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
+        }
+
+        private static bool IsNothingChanged(string path, string newText)
+        {
+            // check if file exist and overwrite only if different in size of HashCode
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            var fileInfo = new FileInfo(path);
+            if (fileInfo.Length != newText.Length)
+            {
+                return false;
+            }
+
+            // sizes the same, check HashValues
+            using (var hashAlorithm = new SHA1CryptoServiceProvider())
+            using (var textFile = new StreamReader(path))
+            {
+                var newHash = hashAlorithm.ComputeHash(Encoding.UTF8.GetBytes(newText));
+                var originalHash = hashAlorithm.ComputeHash(textFile.BaseStream);
+                var isNothingChanged = StructuralComparisons.StructuralEqualityComparer.Equals(newHash, originalHash);
+                return isNothingChanged;
+            }
+        }
+
+        private static void WriteEnum(IndentedTextWriter itw, CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
+        {
+            itw.WriteLine();
+            itw.Write("enum class ");
+            c.WriteTypeName(namedTypeSymbol, false, true);
+            itw.Write(" : ");
+            c.WriteType(namedTypeSymbol.EnumUnderlyingType);
+
+            c.NewLine();
+            c.OpenBlock();
+
+            var constantValueTypeDiscriminator = namedTypeSymbol.EnumUnderlyingType.SpecialType.GetDiscriminator();
+
+            var any = false;
+            foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
+            {
+                if (any)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
+                c.TextSpan("c_");
+                c.WriteName(constValue);
+                if (constValue.ConstantValue != null)
+                {
+                    c.TextSpan(" = ");
+                    new Literal { Value = ConstantValue.Create(constValue.ConstantValue, constantValueTypeDiscriminator) }
+                        .WriteTo(c);
+                }
+
+                any = true;
+            }
+
+            c.EndBlockWithoutNewLine();
+            c.EndStatement();
+        }
+
         private static void WriteForwardDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
@@ -505,44 +546,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WriteTypeName(namedTypeSymbol);
                 itw.WriteLine(";");
             }
-        }
-
-        private static void WriteEnum(IndentedTextWriter itw, CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
-        {
-            itw.WriteLine();
-            itw.Write("enum class ");
-            c.WriteTypeName(namedTypeSymbol, false, true);
-            itw.Write(" : ");
-            c.WriteType(namedTypeSymbol.EnumUnderlyingType);
-
-            c.NewLine();
-            c.OpenBlock();
-
-            var constantValueTypeDiscriminator = namedTypeSymbol.EnumUnderlyingType.SpecialType.GetDiscriminator();
-
-            var any = false;
-            foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst))
-            {
-                if (any)
-                {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                }
-
-                c.TextSpan("c_");
-                c.WriteName(constValue);
-                if (constValue.ConstantValue != null)
-                {
-                    c.TextSpan(" = ");
-                    new Literal { Value = ConstantValue.Create(constValue.ConstantValue, constantValueTypeDiscriminator) }
-                        .WriteTo(c);
-                }
-
-                any = true;
-            }
-
-            c.EndBlockWithoutNewLine();
-            c.EndStatement();
         }
 
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
@@ -710,39 +713,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return anyRecord;
         }
 
-        public void WriteCoreLibSource(AssemblyIdentity identity, bool isCoreLib)
-        {
-            if (!isCoreLib)
-            {
-                return;
-            }
-
-            // write header
-            var text = new StringBuilder();
-            using (var itw = new IndentedTextWriter(new StringWriter(text)))
-            {
-                WriteSourceInclude(itw, identity);
-
-                itw.WriteLine(Resources.c_definitions);
-                itw.WriteLine(Resources.decimals);
-
-                itw.Close();
-            }
-
-            var newText = text.ToString();
-            var path = this.GetPath(identity.Name, subFolder: "src", ext: ".cpp");
-
-            if (IsNothingChanged(path, newText))
-            {
-                return;
-            }
-
-            using (var textFile = new StreamWriter(path))
-            {
-                textFile.Write(newText);
-            }
-        }
-
         private string GetPath(string name, string ext = ".h", string subFolder = "")
         {
             var fullDirPath = Path.Combine(this.currentFolder, subFolder);
@@ -768,35 +738,65 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return fullPath;
         }
 
-        private static string GetRelativePath(CCodeUnit unit, out int nestedLevel)
+        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
         {
-            var enumNamespaces = unit.Type.ContainingNamespace.EnumNamespaces().Where(n => !n.IsGlobalNamespace).ToList();
-            nestedLevel = enumNamespaces.Count();
-            return String.Join("\\", enumNamespaces.Select(n => n.MetadataName.ToString().CleanUpNameAllUnderscore()));
-        }
+            int nestedLevel;
 
-        private static bool IsNothingChanged(string path, string newText)
-        {
-            // check if file exist and overwrite only if different in size of HashCode
-            if (!File.Exists(path))
+            if (stubs)
             {
-                return false;
+                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl", doNotCreateFolder: true);
+                if (File.Exists(path))
+                {
+                    // do not overwrite an existing file
+                    return;
+                }
             }
 
-            var fileInfo = new FileInfo(path);
-            if (fileInfo.Length != newText.Length)
+            var anyRecord = false;
+            var text = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
-                return false;
+                var c = new CCodeWriterText(itw);
+
+                WriteSourceInclude(itw, identity);
+
+                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
+                {
+                    anyRecord = true;
+                    definition.WriteTo(c);
+                }
+
+                if (!stubs)
+                {
+                    // write interface wrappers
+                    foreach (var iface in unit.Type.Interfaces)
+                    {
+                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                    }
+                }
+
+                if (!stubs && unit.MainMethod != null)
+                {
+                    WriteSourceMainEntry(c, itw, unit.MainMethod);
+                }
+
+                itw.Close();
             }
 
-            // sizes the same, check HashValues
-            using (var hashAlorithm = new SHA1CryptoServiceProvider())
-            using (var textFile = new StreamReader(path))
+            if (anyRecord && text.Length > 0)
             {
-                var newHash = hashAlorithm.ComputeHash(Encoding.UTF8.GetBytes(newText));
-                var originalHash = hashAlorithm.ComputeHash(textFile.BaseStream);
-                var isNothingChanged = StructuralComparisons.StructuralEqualityComparer.Equals(newHash, originalHash);
-                return isNothingChanged;
+                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
+                var newText = text.ToString();
+
+                if (IsNothingChanged(path, newText))
+                {
+                    return;
+                }
+
+                using (var textFile = new StreamWriter(path))
+                {
+                    textFile.Write(newText);
+                }
             }
         }
     }

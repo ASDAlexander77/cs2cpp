@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.CodeDom.Compiler;
@@ -6,7 +9,6 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Security;
     using System.Text;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -16,166 +18,15 @@
     [DebuggerDisplay("{ToString()}")]
     public abstract class Base
     {
+        public enum SpecialCases
+        {
+            None,
+            ForEachBody
+        }
+
         public abstract Kinds Kind { get; }
-        
+
         public IMethodSymbol MethodOwner { get; set; }
-
-        internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
-        {
-            // process locals when not used with assignment operator
-            var boundBlock = boundStatementList as BoundBlock;
-            if (boundBlock != null)
-            {
-                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax);
-            }
-
-            foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
-            {
-                var boundBlock2 = boundStatement as BoundBlock;
-                var deserialize = Deserialize(boundStatement, specialCase: specialCase);
-                var block = deserialize as Block;
-                if (block != null && (block.Kind == Kinds.Block || block.Kind == Kinds.BlockStatement) && (boundBlock2 == null || boundBlock2.Locals.Length == 0))
-                {
-                    foreach (var statement2 in block.Statements.Where(s => s != null))
-                    {
-                        statements.Add(statement2);
-                    }
-
-                    continue;
-                }
-
-                if (block != null)
-                {
-                    var blockStatement = new BlockStatement();
-                    blockStatement.Statements = block;
-                    blockStatement.SuppressEnding = true;
-                    statements.Add(blockStatement);
-                    continue;
-                }
-
-                var statement = deserialize as Statement;
-                if (statement != null)
-                {
-                    statements.Add(statement);
-                }
-            }
-        }
-
-        internal static void ParseLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements, bool noFilter = false)
-        {
-            foreach (var local in locals)
-            {
-                if (statements == null)
-                {
-                    continue;
-                }
-
-                if (!noFilter)
-                {
-                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable
-                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable && !IsDeclarationWithoutInitializer(local))
-                    {
-                        continue;
-                    }
-                }
-
-                var localVariableDeclaration = new VariableDeclaration();
-                localVariableDeclaration.Parse(local);
-                statements.Add(localVariableDeclaration);
-            }
-        }
-
-        internal static void AddLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements)
-        {
-            foreach (var local in locals)
-            {
-                if (statements == null)
-                {
-                    continue;
-                }
-
-                var localVariableDeclaration = new VariableDeclaration();
-                localVariableDeclaration.Parse(local);
-                statements.Add(localVariableDeclaration);
-            }
-        }
-
-        internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
-        {
-            return boundStatementList.Statements.Select(Unwrap).OfType<BoundStatement>().Where(s => s != null);
-        }
-
-        internal static BoundNode Unwrap(BoundNode boundNode)
-        {
-            var boundSequencePoint = boundNode as BoundSequencePoint;
-            if (boundSequencePoint != null)
-            {
-                return boundSequencePoint.StatementOpt;
-            }
-
-            var boundSequencePointWithSpan = boundNode as BoundSequencePointWithSpan;
-            if (boundSequencePointWithSpan != null)
-            {
-                return boundSequencePointWithSpan.StatementOpt;
-            }
-
-            return boundNode;
-        }
-
-        internal static BoundStatementList Unwrap(BoundStatementList boundStatementList)
-        {
-            var current = boundStatementList;
-            BoundStatementList lastFoundBlock = null;
-            do
-            {
-                if (lastFoundBlock != null)
-                {
-                    current = lastFoundBlock;
-                    lastFoundBlock = null;
-                }
-
-                foreach (var item in current.Statements)
-                {
-                    if (lastFoundBlock != null)
-                    {
-                        return current;
-                    }
-
-                    var boundSequencePoint = item as BoundSequencePoint;
-                    if (boundSequencePoint != null)
-                    {
-                        if (boundSequencePoint.StatementOpt != null)
-                        {
-                            return current;
-                        }
-
-                        continue;
-                    }
-
-                    var boundSequencePointWithSpan = item as BoundSequencePointWithSpan;
-                    if (boundSequencePointWithSpan != null)
-                    {
-                        if (boundSequencePointWithSpan.StatementOpt != null)
-                        {
-                            return current;
-                        }
-
-                        continue;
-                    }
-
-                    if (item is BoundBlock)
-                    {
-                        lastFoundBlock = item as BoundStatementList;
-                        continue;
-                    }
-
-                    return current;
-                }
-            }
-            while (lastFoundBlock != null);
-
-            return current;
-        }
 
         public static void MergeOrSet(ref Base variable, Base item)
         {
@@ -212,50 +63,32 @@
             return expression;
         }
 
-        internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)
+        public override string ToString()
         {
-            if (blockOfExpression == null)
+            var sb = new StringBuilder();
+            using (var itw = new IndentedTextWriter(new StringWriter(sb)))
             {
-                return;
+                var writer = new CCodeWriterText(itw);
+                this.WriteTo(writer);
+                itw.Close();
             }
 
-            var expr = blockOfExpression as Expression;
-            if (expr != null)
-            {
-                expr.WriteTo(c);
-                return;
-            }
-
-            var exprFromStatement = blockOfExpression as ExpressionStatement;
-            if (exprFromStatement != null)
-            {
-                exprFromStatement.Expression.WriteTo(c);
-                return;
-            }
-
-            var statement = blockOfExpression as Statement;
-            if (statement != null)
-            {
-                statement.SuppressEnding = true;
-                statement.WriteTo(c);
-                return;
-            }
-
-            var block = blockOfExpression as Block;
-            if (block != null)
-            {
-                block.Sequence = true;
-                block.WriteTo(c);
-                return;
-            }
-
-            throw new NotSupportedException();
+            return sb.ToString();
         }
 
-        public enum SpecialCases
+        internal static void AddLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements)
         {
-            None,
-            ForEachBody
+            foreach (var local in locals)
+            {
+                if (statements == null)
+                {
+                    continue;
+                }
+
+                var localVariableDeclaration = new VariableDeclaration();
+                localVariableDeclaration.Parse(local);
+                statements.Add(localVariableDeclaration);
+            }
         }
 
         internal static Base Deserialize(BoundNode boundBody, IMethodSymbol methodSymbol = null, SpecialCases specialCase = SpecialCases.None)
@@ -786,25 +619,194 @@
             return Deserialize(statemnent);
         }
 
-        internal abstract void WriteTo(CCodeWriterBase c);
+        internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
+        {
+            return boundStatementList.Statements.Select(Unwrap).OfType<BoundStatement>().Where(s => s != null);
+        }
+
+        internal static void ParseBoundStatementList(BoundStatementList boundStatementList, IList<Statement> statements, SpecialCases specialCase = SpecialCases.None)
+        {
+            // process locals when not used with assignment operator
+            var boundBlock = boundStatementList as BoundBlock;
+            if (boundBlock != null)
+            {
+                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax);
+            }
+
+            foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
+            {
+                var boundBlock2 = boundStatement as BoundBlock;
+                var deserialize = Deserialize(boundStatement, specialCase: specialCase);
+                var block = deserialize as Block;
+                if (block != null && (block.Kind == Kinds.Block || block.Kind == Kinds.BlockStatement) && (boundBlock2 == null || boundBlock2.Locals.Length == 0))
+                {
+                    foreach (var statement2 in block.Statements.Where(s => s != null))
+                    {
+                        statements.Add(statement2);
+                    }
+
+                    continue;
+                }
+
+                if (block != null)
+                {
+                    var blockStatement = new BlockStatement();
+                    blockStatement.Statements = block;
+                    blockStatement.SuppressEnding = true;
+                    statements.Add(blockStatement);
+                    continue;
+                }
+
+                var statement = deserialize as Statement;
+                if (statement != null)
+                {
+                    statements.Add(statement);
+                }
+            }
+        }
+
+        internal static void ParseLocals(IEnumerable<LocalSymbol> locals, IList<Statement> statements, bool noFilter = false)
+        {
+            foreach (var local in locals)
+            {
+                if (statements == null)
+                {
+                    continue;
+                }
+
+                if (!noFilter)
+                {
+                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable
+                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable && !IsDeclarationWithoutInitializer(local))
+                    {
+                        continue;
+                    }
+                }
+
+                var localVariableDeclaration = new VariableDeclaration();
+                localVariableDeclaration.Parse(local);
+                statements.Add(localVariableDeclaration);
+            }
+        }
+
+        internal static void PrintStatementAsExpression(CCodeWriterBase c, Base blockOfExpression)
+        {
+            if (blockOfExpression == null)
+            {
+                return;
+            }
+
+            var expr = blockOfExpression as Expression;
+            if (expr != null)
+            {
+                expr.WriteTo(c);
+                return;
+            }
+
+            var exprFromStatement = blockOfExpression as ExpressionStatement;
+            if (exprFromStatement != null)
+            {
+                exprFromStatement.Expression.WriteTo(c);
+                return;
+            }
+
+            var statement = blockOfExpression as Statement;
+            if (statement != null)
+            {
+                statement.SuppressEnding = true;
+                statement.WriteTo(c);
+                return;
+            }
+
+            var block = blockOfExpression as Block;
+            if (block != null)
+            {
+                block.Sequence = true;
+                block.WriteTo(c);
+                return;
+            }
+
+            throw new NotSupportedException();
+        }
+
+        internal static BoundNode Unwrap(BoundNode boundNode)
+        {
+            var boundSequencePoint = boundNode as BoundSequencePoint;
+            if (boundSequencePoint != null)
+            {
+                return boundSequencePoint.StatementOpt;
+            }
+
+            var boundSequencePointWithSpan = boundNode as BoundSequencePointWithSpan;
+            if (boundSequencePointWithSpan != null)
+            {
+                return boundSequencePointWithSpan.StatementOpt;
+            }
+
+            return boundNode;
+        }
+
+        internal static BoundStatementList Unwrap(BoundStatementList boundStatementList)
+        {
+            var current = boundStatementList;
+            BoundStatementList lastFoundBlock = null;
+            do
+            {
+                if (lastFoundBlock != null)
+                {
+                    current = lastFoundBlock;
+                    lastFoundBlock = null;
+                }
+
+                foreach (var item in current.Statements)
+                {
+                    if (lastFoundBlock != null)
+                    {
+                        return current;
+                    }
+
+                    var boundSequencePoint = item as BoundSequencePoint;
+                    if (boundSequencePoint != null)
+                    {
+                        if (boundSequencePoint.StatementOpt != null)
+                        {
+                            return current;
+                        }
+
+                        continue;
+                    }
+
+                    var boundSequencePointWithSpan = item as BoundSequencePointWithSpan;
+                    if (boundSequencePointWithSpan != null)
+                    {
+                        if (boundSequencePointWithSpan.StatementOpt != null)
+                        {
+                            return current;
+                        }
+
+                        continue;
+                    }
+
+                    if (item is BoundBlock)
+                    {
+                        lastFoundBlock = item as BoundStatementList;
+                        continue;
+                    }
+
+                    return current;
+                }
+            }
+            while (lastFoundBlock != null);
+
+            return current;
+        }
 
         internal virtual void Visit(Action<Base> visitor)
         {
             visitor(this);
         }
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            using (var itw = new IndentedTextWriter(new StringWriter(sb)))
-            {
-                var writer = new CCodeWriterText(itw);
-                this.WriteTo(writer);
-                itw.Close();
-            }
-
-            return sb.ToString();
-        }
+        internal abstract void WriteTo(CCodeWriterBase c);
 
         private static bool IsDeclarationWithoutInitializer(LocalSymbol local)
         {

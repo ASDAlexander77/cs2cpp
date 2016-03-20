@@ -1,11 +1,13 @@
-﻿namespace Il2Native.Logic
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic
 {
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
 
     public static class CLangKeywords
     {
-        private static IDictionary<string, bool> keywords;
+        private static readonly IDictionary<string, bool> keywords;
 
         static CLangKeywords()
         {
@@ -111,12 +113,6 @@
             }
         }
 
-        public static bool IsKeyword(string keyword)
-        {
-            bool val;
-            return keywords.TryGetValue(keyword, out val);
-        }
-
         public static string EnsureCompatible(this string value)
         {
             bool val;
@@ -126,6 +122,12 @@
             }
 
             return value;
+        }
+
+        public static bool IsKeyword(string keyword)
+        {
+            bool val;
+            return keywords.TryGetValue(keyword, out val);
         }
     }
 }

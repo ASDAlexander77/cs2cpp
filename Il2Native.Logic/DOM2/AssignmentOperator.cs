@@ -1,14 +1,16 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Diagnostics;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
 
     public class AssignmentOperator : Expression
     {
+        public bool ApplyAutoType { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.AssignmentOperator; }
@@ -17,8 +19,6 @@
         public Expression Left { get; set; }
 
         public Expression Right { get; set; }
-
-        public bool ApplyAutoType { get; set; }
 
         public bool TypeDeclaration { get; set; }
 

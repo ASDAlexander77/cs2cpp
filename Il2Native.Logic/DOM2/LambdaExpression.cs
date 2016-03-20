@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
     using Microsoft.CodeAnalysis;
@@ -15,7 +18,7 @@
 
         public IList<ILocalSymbol> Locals
         {
-            get { return _locals; }
+            get { return this._locals; }
         }
 
         public Base Statements

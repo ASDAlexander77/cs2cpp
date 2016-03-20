@@ -1,6 +1,8 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
-    using System.Collections;
     using System.Collections.Generic;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -8,14 +10,14 @@
     {
         private readonly IList<Expression> arguments = new List<Expression>();
 
-        public override Kinds Kind
-        {
-            get { return Kinds.ArgListOperator; }
-        }
-
         public IList<Expression> Arguments
         {
             get { return this.arguments; }
+        }
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ArgListOperator; }
         }
 
         internal void Parse(BoundArgListOperator boundArgListOperator)
@@ -30,10 +32,10 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (Arguments.Count > 0)
+            if (this.Arguments.Count > 0)
             {
                 var any = false;
-                foreach (var expression in Arguments)
+                foreach (var expression in this.Arguments)
                 {
                     if (any)
                     {

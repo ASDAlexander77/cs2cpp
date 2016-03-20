@@ -1,13 +1,12 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using System.Linq.Expressions;
-
-    using Il2Native.Logic.DOM.Implementations;
-
+    using DOM.Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -15,9 +14,9 @@
     public class SwitchStatement : Statement
     {
         private Expression expression;
-        private IList<SwitchSection> switchCases = new List<SwitchSection>();
+        private readonly IList<Statement> statements = new List<Statement>();
         private MethodSymbol stringEquality;
-        private IList<Statement> statements = new List<Statement>();
+        private readonly IList<SwitchSection> switchCases = new List<SwitchSection>();
 
         public override Kinds Kind
         {
@@ -45,9 +44,9 @@
             foreach (var boundSwitchSection in boundSwitchStatement.SwitchSections)
             {
                 var switchSection = new SwitchSection();
-                switchSection.SwitchType = expression.Type;
+                switchSection.SwitchType = this.expression.Type;
                 switchSection.Parse(boundSwitchSection);
-                switchCases.Add(switchSection);
+                this.switchCases.Add(switchSection);
             }
 
             this.stringEquality = boundSwitchStatement.StringEquality;
@@ -86,7 +85,7 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             Local localCase = null;
-            if (stringEquality != null)
+            if (this.stringEquality != null)
             {
                 c.OpenBlock();
 
@@ -173,7 +172,7 @@
             c.TextSpan("switch");
             c.WhiteSpace();
             c.TextSpan("(");
-            if (stringEquality != null)
+            if (this.stringEquality != null)
             {
                 localCase.WriteTo(c);
             }
@@ -192,7 +191,7 @@
 
             c.EndBlock();
 
-            if (stringEquality != null)
+            if (this.stringEquality != null)
             {
                 c.EndBlock();
             }

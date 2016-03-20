@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -22,53 +25,97 @@
     [Obsolete]
     public class CCodeWriterText : CCodeWriterBase
     {
-        private IndentedTextWriter _itw;
+        private readonly IndentedTextWriter _itw;
+
+        private int saved;
 
         private TextState text = TextState.Empty;
-        
-        private int saved;
 
         public CCodeWriterText(IndentedTextWriter itw)
         {
-            _itw = itw;
+            this._itw = itw;
         }
 
-        public override void OpenBlock()
+        public override void DecrementIndent()
         {
-            TextSpanNewLine("{");
-            _itw.Indent++;
-        }
-
-        public override void EndBlockWithoutNewLine()
-        {
-            _itw.Indent--;
-            NewLine();
-            TextSpan("}");
+            this._itw.Indent--;
         }
 
         public override void EndBlock()
         {
             if (this.text == TextState.RequireEmptyStatement)
             {
-                TextSpan(";");
+                this.TextSpan(";");
             }
 
-            _itw.Indent--;
+            this._itw.Indent--;
             if (this.text == TextState.Separated)
             {
                 this.text = TextState.Any;
             }
             else
             {
-                NewLine();
+                this.NewLine();
             }
 
-            TextSpanNewLine("}");
+            this.TextSpanNewLine("}");
+        }
+
+        public override void EndBlockWithoutNewLine()
+        {
+            this._itw.Indent--;
+            this.NewLine();
+            this.TextSpan("}");
         }
 
         public override void EndStatement()
         {
             this.TextSpanNewLine(";");
+        }
+
+        public override void IncrementIndent()
+        {
+            this._itw.Indent++;
+        }
+
+        public override void NewLine()
+        {
+            if (this.text == TextState.Empty || this.text == TextState.Separated)
+            {
+                this.text = TextState.Empty;
+                return;
+            }
+
+            this._itw.WriteLine();
+
+            this.text = TextState.Empty;
+        }
+
+        public override void OpenBlock()
+        {
+            this.TextSpanNewLine("{");
+            this._itw.Indent++;
+        }
+
+        public override void RequireEmptyStatement()
+        {
+            this.text = TextState.RequireEmptyStatement;
+        }
+
+        public override void RestoreIndent()
+        {
+            this._itw.Indent = this.saved;
+        }
+
+        public override void SaveAndSet0Indent()
+        {
+            this.saved = this._itw.Indent;
+            this._itw.Indent = 0;
+        }
+
+        public override void Separate()
+        {
+            this.text = TextState.Separated;
         }
 
         public override void TextSpan(string line)
@@ -80,11 +127,11 @@
 
             if (this.text == TextState.Separated)
             {
-                _itw.WriteLine();
+                this._itw.WriteLine();
             }
 
             this.text = TextState.Any;
-            _itw.Write(line);
+            this._itw.Write(line);
         }
 
         public override void TextSpanNewLine(string line)
@@ -94,8 +141,8 @@
                 return;
             }
 
-            TextSpan(line);
-            NewLine();
+            this.TextSpan(line);
+            this.NewLine();
         }
 
         public override void WhiteSpace()
@@ -105,52 +152,8 @@
                 return;
             }
 
-            _itw.Write(" ");
+            this._itw.Write(" ");
             this.text = TextState.Whitespace;
-        }
-
-        public override void NewLine()
-        {
-            if (this.text == TextState.Empty || this.text == TextState.Separated)
-            {
-                this.text = TextState.Empty;
-                return;
-            }
-
-            _itw.WriteLine();
-
-            this.text = TextState.Empty;
-        }
-
-        public override void Separate()
-        {
-            this.text = TextState.Separated;
-        }
-
-        public override void RequireEmptyStatement()
-        {
-            this.text = TextState.RequireEmptyStatement;
-        }
-
-        public override void IncrementIndent()
-        {
-            this._itw.Indent++;
-        }
-
-        public override void DecrementIndent()
-        {
-            this._itw.Indent--;
-        }
-
-        public override void SaveAndSet0Indent()
-        {
-            this.saved = this._itw.Indent;
-            this._itw.Indent = 0;
-        }
-
-        public override void RestoreIndent()
-        {
-            this._itw.Indent = this.saved;
         }
     }
 }

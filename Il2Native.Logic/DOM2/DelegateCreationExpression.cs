@@ -1,12 +1,14 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
-    using Il2Native.Logic.DOM;
-    using Il2Native.Logic.DOM.Implementations;
-
+    using DOM;
+    using DOM.Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -41,8 +43,8 @@
             {
                 if (argument.Type != null && argument.Type.TypeKind == TypeKind.Delegate)
                 {
-                    clone = true;
-                    cloneArgument = argument;
+                    this.clone = true;
+                    this.cloneArgument = argument;
                 }
                 else
                 {
@@ -66,7 +68,7 @@
                         Operand =
                             new Call
                                 {
-                                    ReceiverOpt = cloneArgument,
+                                    ReceiverOpt = this.cloneArgument,
                                     Method = new MethodImpl { Name = "__clone", Parameters = ImmutableArray<IParameterSymbol>.Empty }
                                 },
                         Type = Type,
@@ -85,7 +87,7 @@
                 }
 
                 c.WriteMethodName(newDelegateMethod, addTemplate: true);
-                WriteCallArguments(this.Arguments, Method != null ? Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+                WriteCallArguments(Arguments, Method != null ? Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
             }
         }
     }

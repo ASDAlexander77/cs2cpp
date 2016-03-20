@@ -1,8 +1,10 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Text;
-
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -15,15 +17,62 @@
 
         internal ConstantValue Value { get; set; }
 
-        internal void Parse(BoundLiteral boundLiteral)
+        public static string UnicodeChar(char c)
         {
-            base.Parse(boundLiteral);
-            this.Value = boundLiteral.ConstantValue;
+            var code = (uint)c;
+            switch (code)
+            {
+                case 0x07:
+                    return (@"\a");
+                case 0x08:
+                    return (@"\b");
+                case 0x0C:
+                    return (@"\f");
+                case 0x0A:
+                    return (@"\n");
+                case 0x0D:
+                    return (@"\r");
+                case 0x09:
+                    return (@"\t");
+                case 0x0B:
+                    return (@"\v");
+                case 0x5C:
+                    return (@"\\");
+                case 0x27:
+                    return (@"\'");
+                case 0x22:
+                    return (@"\""");
+                case 0x3F:
+                    return (@"\?");
+                default:
+                    if (code >= 0x20 && c <= '~')
+                    {
+                        return c.ToString();
+                    }
+
+                    if (char.IsHighSurrogate(c) || char.IsLowSurrogate(c))
+                    {
+                        return string.Format("\\x{0:X4}", (uint)c);
+                    }
+
+                    return string.Format("\\u{0:X4}", (uint)c);
+            }
+        }
+
+        public static string UnicodeString(string value)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in value.ToCharArray())
+            {
+                sb.Append(UnicodeChar(c));
+            }
+
+            return sb.ToString();
         }
 
         public override string ToString()
         {
-            ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
+            var discriminator = this.Value.Discriminator;
 
             switch (discriminator)
             {
@@ -88,6 +137,12 @@
             }
         }
 
+        internal void Parse(BoundLiteral boundLiteral)
+        {
+            base.Parse(boundLiteral);
+            this.Value = boundLiteral.ConstantValue;
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             if (Type != null && Type.TypeKind == TypeKind.Enum)
@@ -97,7 +152,7 @@
                 c.TextSpan(")");
             }
 
-            ConstantValueTypeDiscriminator discriminator = this.Value.Discriminator;
+            var discriminator = this.Value.Discriminator;
             switch (discriminator)
             {
                 case ConstantValueTypeDiscriminator.Null:
@@ -284,59 +339,6 @@
                     break;
                 default:
                     throw new NotSupportedException();
-            }
-        }
-
-        public static string UnicodeString(string value)
-        {
-            var sb = new StringBuilder();
-            foreach (var c in value.ToCharArray())
-            {
-                sb.Append(UnicodeChar(c));
-            }
-
-            return sb.ToString();
-        }
-
-        public static string UnicodeChar(char c)
-        {
-            var code = (uint)c;
-            switch (code)
-            {
-                case 0x07:
-                    return (@"\a");
-                case 0x08:
-                    return (@"\b");
-                case 0x0C:
-                    return (@"\f");
-                case 0x0A:
-                    return (@"\n");
-                case 0x0D:
-                    return (@"\r");
-                case 0x09:
-                    return (@"\t");
-                case 0x0B:
-                    return (@"\v");
-                case 0x5C:
-                    return (@"\\");
-                case 0x27:
-                    return (@"\'");
-                case 0x22:
-                    return (@"\""");
-                case 0x3F:
-                    return (@"\?");
-                default:
-                    if (code >= 0x20 && c <= '~')
-                    {
-                        return c.ToString();
-                    }
-
-                    if (char.IsHighSurrogate(c) || char.IsLowSurrogate(c))
-                    {
-                        return string.Format("\\x{0:X4}", (uint)c);
-                    }
-
-                    return string.Format("\\u{0:X4}", (uint)c);
             }
         }
     }

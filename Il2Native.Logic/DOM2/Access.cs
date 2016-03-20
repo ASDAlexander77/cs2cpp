@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
 
@@ -11,16 +14,16 @@
             DoubleColon
         }
 
+        public AccessTypes AccessType { get; set; }
+
+        public Expression Expression { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.Access; }
         }
 
-        public AccessTypes AccessType { get; set; }
-
         public Expression ReceiverOpt { get; set; }
-
-        public Expression Expression { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
@@ -35,7 +38,7 @@
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteExpressionInParenthesesIfNeeded(ReceiverOpt);
+            c.WriteExpressionInParenthesesIfNeeded(this.ReceiverOpt);
             switch (this.AccessType)
             {
                 case AccessTypes.Dot:

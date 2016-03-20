@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM
 {
     using System.Collections.Generic;
     using Microsoft.CodeAnalysis;
@@ -11,9 +14,9 @@
             this.Declarations = new List<CCodeDeclaration>();
         }
 
-        public ITypeSymbol Type { get; set; }
-
         public IList<CCodeDeclaration> Declarations { get; private set; }
+
+        public ITypeSymbol Type { get; set; }
 
         public override void WriteTo(CCodeWriterBase c)
         {

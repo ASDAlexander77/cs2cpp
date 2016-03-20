@@ -1,32 +1,35 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using Microsoft.CodeAnalysis;
 
     public class Cast : Expression
     {
+        public bool CCast { get; set; }
+
+        public bool ClassCast { get; set; }
+
+        public bool Constrained { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.Cast; }
         }
-
-        public Expression Operand { get; set; }
-
-        public bool ClassCast { get; set; }
-
-        public bool Reference { get; set; }
-
-        public bool Constrained { get; set; }
-
-        public bool CCast { get; set; }
-
-        public bool UseEnumUnderlyingType { get; set; }
 
         public bool MapPointerCast { get; set; }
 
         public Expression MapPointerCastTypeParameter1 { get; set; }
 
         public Expression MapPointerCastTypeParameter2 { get; set; }
+
+        public Expression Operand { get; set; }
+
+        public bool Reference { get; set; }
+
+        public bool UseEnumUnderlyingType { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
@@ -37,23 +40,23 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             var effectiveType = Type;
-            if (UseEnumUnderlyingType && effectiveType.TypeKind == TypeKind.Enum)
+            if (this.UseEnumUnderlyingType && effectiveType.TypeKind == TypeKind.Enum)
             {
                 effectiveType = ((INamedTypeSymbol)effectiveType).EnumUnderlyingType;
             }
 
-            if (Constrained)
+            if (this.Constrained)
             {
                 c.TextSpan("constrained<");
-                c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
                 c.TextSpan(">(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");                
             }
-            else if (Reference)
+            else if (this.Reference)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
                 c.TextSpan("&)");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -61,7 +64,7 @@
             else if (this.CCast)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, ClassCast, valueTypeAsClass: ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
                 c.TextSpan(")");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -69,16 +72,16 @@
             else if (this.MapPointerCast)
             {
                 c.TextSpan("map_pointer_cast<");
-                MapPointerCastTypeParameter1.WriteTo(c);
+                this.MapPointerCastTypeParameter1.WriteTo(c);
                 c.TextSpan(", ");
-                MapPointerCastTypeParameter2.WriteTo(c);
+                this.MapPointerCastTypeParameter2.WriteTo(c);
                 c.TextSpan(">(");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
             }
             else
             {
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");

@@ -1,17 +1,18 @@
-﻿////#define EMPTY_SKELETON
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
 namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Serialization;
     using DOM;
     using DOM2;
-
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Conversion = DOM2.Conversion;
 
     public abstract class CCodeWriterBase
     {
@@ -21,11 +22,6 @@ namespace Il2Native.Logic
 
         [ThreadStatic]
         private static ObjectIDGenerator ObjectIdGeneratorLocal;
-
-        public static void SetLocalObjectIDGenerator()
-        {
-            ObjectIdGeneratorLocal = new ObjectIDGenerator();
-        }
 
         public static long GetId(object obj, out bool firstTime)
         {
@@ -57,7 +53,12 @@ namespace Il2Native.Logic
             return ObjectIdGeneratorLocal.GetId(obj, out firstTime);
         }
 
-        public abstract void OpenBlock();
+        public static void SetLocalObjectIDGenerator()
+        {
+            ObjectIdGeneratorLocal = new ObjectIDGenerator();
+        }
+
+        public abstract void DecrementIndent();
 
         public abstract void EndBlock();
 
@@ -65,100 +66,250 @@ namespace Il2Native.Logic
 
         public abstract void EndStatement();
 
+        public abstract void IncrementIndent();
+
+        public abstract void NewLine();
+
+        public abstract void OpenBlock();
+
+        public abstract void RequireEmptyStatement();
+
+        public abstract void RestoreIndent();
+
+        public abstract void SaveAndSet0Indent();
+
+        public abstract void Separate();
+
         public abstract void TextSpan(string line);
 
         public abstract void TextSpanNewLine(string line);
 
         public abstract void WhiteSpace();
 
-        public abstract void NewLine();
-
-        public abstract void Separate();
-
-        public abstract void IncrementIndent();
-
-        public abstract void DecrementIndent();
-
-        public abstract void SaveAndSet0Indent();
-
-        public abstract void RestoreIndent();
-
-        public abstract void RequireEmptyStatement();
-
-        internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
+        public void WriteAccess(Expression expression)
         {
-#if EMPTY_SKELETON
-            this.NewLine();
-            this.OpenBlock();
-            this.TextSpanNewLine("throw 0xC000C000;");
-            this.EndBlock();
-#else
-            if (boundBody != null)
-            {
-                var methodBase = Base.Deserialize(boundBody, methodSymbol) as MethodBody;
-                methodBase.WriteTo(this);
-            }
-            else
-            {
-                this.NewLine();
-                this.OpenBlock();
-                this.EndBlock();
-            }
-#endif
-        }
+            var effectiveExpression = expression;
 
-        public void WriteNamespace(INamespaceSymbol namespaceSymbol)
-        {
-            var any = false;
-            foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
+            this.WriteExpressionInParenthesesIfNeeded(effectiveExpression);
+
+            if (effectiveExpression.IsReference)
             {
-                if (any)
+                if (effectiveExpression is BaseReference)
                 {
-                    TextSpan("::");
+                    this.TextSpan("::");
+                    return;
                 }
 
-                any = true;
-
-                WriteNamespaceName(namespaceNode);
+                this.TextSpan("->");
+                return;
             }
+
+            var expressionType = effectiveExpression.Type;
+            if (expressionType.TypeKind == TypeKind.Struct || expressionType.TypeKind == TypeKind.Enum)
+            {
+                if (!effectiveExpression.IsStaticWrapperCall())
+                {
+                    this.TextSpan(".");
+                    return;
+                }
+            }
+
+            // default for Templates
+            this.TextSpan("->");
         }
 
-        public void WriteNamespaceName(INamespaceSymbol namespaceNode)
+        public void WriteBlockOrStatementsAsBlock(Base node, bool noNewLineAtEnd = false)
         {
-            if (namespaceNode.IsGlobalNamespace)
+            var block = node as Block;
+            if (block != null)
             {
-                TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                block.SuppressNewLineAtEnd = noNewLineAtEnd;
+                block.WriteTo(this);
+                return;
+            }
+
+            this.OpenBlock();
+            node.WriteTo(this);
+
+            if (noNewLineAtEnd)
+            {
+                this.EndBlockWithoutNewLine();
             }
             else
             {
-                TextSpan(namespaceNode.MetadataName);
+                this.EndBlock();
             }
         }
 
-        public void WriteName(ISymbol symbol, bool noCleanup = false)
+        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true)
         {
-            var name = symbol.MetadataName ?? symbol.Name;
-            TextSpan(noCleanup ? name : name.CleanUpName());
+            var elementType = arrayTypeSymbol.ElementType;
+
+            if (arrayTypeSymbol.Rank <= 1)
+            {
+                this.TextSpan("__array<");
+                this.WriteType(elementType, allowKeywords: allowKeywords);
+                this.TextSpan(">");
+            }
+            else
+            {
+                this.TextSpan("__multi_array<");
+                this.WriteType(elementType, allowKeywords: allowKeywords);
+                this.TextSpan(",");
+                this.WhiteSpace();
+                this.TextSpan(arrayTypeSymbol.Rank.ToString());
+                this.TextSpan(">");
+            }
+
+            if (reference)
+            {
+                this.TextSpan("*");
+            }
         }
 
-        public void WriteNameEnsureCompatible(ISymbol symbol)
+        public bool WriteExpressionInParenthesesIfNeeded(Expression expression)
         {
-            TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
+            if (expression == null)
+            {
+                throw new ArgumentNullException("expression");
+            }
+
+            var parenthesis = expression is ArrayCreation ||
+                              expression is DelegateCreationExpression || expression is BinaryOperator ||
+                              expression is UnaryOperator || expression is ConditionalOperator ||
+                              expression is AssignmentOperator;
+
+            var conversion = expression as Conversion;
+            if (conversion != null && (conversion.ConversionKind == ConversionKind.PointerToInteger ||
+                                       conversion.ConversionKind == ConversionKind.IntegerToPointer ||
+                                       conversion.ConversionKind == ConversionKind.PointerToPointer))
+            {
+                parenthesis = true;
+            }
+
+            if (parenthesis)
+            {
+                this.TextSpan("(");
+            }
+
+            expression.WriteTo(this);
+
+            if (parenthesis)
+            {
+                this.TextSpan(")");
+            }
+
+            return parenthesis;
         }
 
-        public void WriteUniqueNameByContainingSymbol(ISymbol symbol)
+        public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
-            var name = symbol.MetadataName ?? symbol.Name;
-            var uniqueName = string.Concat(name, GetId((symbol.ContainingSymbol).ToString()));
-            TextSpan(uniqueName.CleanUpName());
+            if (fieldSymbol.IsStatic)
+            {
+                this.TextSpan("static");
+                this.WhiteSpace();
+
+                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+                {
+                    this.TextSpan("thread_local");
+                    this.WhiteSpace();
+                }
+
+                if (!doNotWrapStatic)
+                {
+                    this.TextSpan("__static<");
+                }
+            }
+
+            var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
+            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
+            {
+                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType);
+            }
+            else
+            {
+                this.WriteType(fieldSymbol.Type);
+            }
+
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                this.TextSpan(",");
+                this.WhiteSpace();
+                this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                this.TextSpan(">");
+            }
+
+            this.WhiteSpace();
+            this.WriteName(fieldSymbol);
+
+            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
+            {
+                this.TextSpan("[");
+                this.TextSpan(fieldSymbolOriginal.FixedSize.ToString());
+                this.TextSpan("]");
+            }
         }
 
-        public void WriteNameWithContainingSymbolName(ISymbol symbol)
+        public void WriteFieldDefinition(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
-            var name = symbol.MetadataName ?? symbol.Name;
-            var leadName = symbol.ContainingSymbol.MetadataName ?? symbol.ContainingSymbol.Name;
-            var uniqueName = string.Concat(leadName, "_", name);
-            TextSpan(uniqueName.CleanUpName());
+            if (fieldSymbol.ContainingType.IsGenericType)
+            {
+                this.WriteTemplateDeclaration(fieldSymbol.ContainingType);
+                this.NewLine();
+            }
+
+            if (fieldSymbol.IsStatic && fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+            {
+                this.TextSpan("thread_local");
+                this.WhiteSpace();
+            }
+
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                this.TextSpan("__static<");
+            }
+
+            this.WriteType(fieldSymbol.Type);
+
+            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            {
+                this.TextSpan(",");
+                this.WhiteSpace();
+                this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                this.TextSpan(">");
+            }
+
+            this.WhiteSpace();
+
+            if (fieldSymbol.ContainingNamespace != null)
+            {
+                this.WriteNamespace(fieldSymbol.ContainingNamespace);
+                this.TextSpan("::");
+            }
+
+            var receiverType = fieldSymbol.ContainingType;
+            this.WriteTypeName(receiverType, false);
+            if (receiverType.IsGenericType)
+            {
+                this.WriteTemplateDefinition(fieldSymbol.ContainingType);
+            }
+
+            this.TextSpan("::");
+
+            this.WriteName(fieldSymbol);
+        }
+
+        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
+        {
+            this.WriteMethodPrefixesReturnTypeAndName(methodSymbol, declarationWithingClass);
+            this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody);
+            this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
+        }
+
+        public void WriteMethodFullName(IMethodSymbol methodSymbol)
+        {
+            this.WriteMethodNamespace(methodSymbol);
+            this.WriteMethodName(methodSymbol, false);
         }
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
@@ -175,7 +326,7 @@ namespace Il2Native.Logic
             {
                 if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride)
                 {
-                    TextSpan("T");
+                    this.TextSpan("T");
                     this.TextSpan(methodSymbol.Arity.ToString());
                 }
                 else if (addTemplate)
@@ -183,25 +334,6 @@ namespace Il2Native.Logic
                     this.WriteTypeArguments(methodSymbol.TypeArguments);
                 }
             }
-        }
-
-        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments)
-        {
-            this.TextSpan("<");
-
-            var anyTypeArg = false;
-            foreach (var typeArg in typeArguments)
-            {
-                if (anyTypeArg)
-                {
-                    this.TextSpan(", ");
-                }
-
-                anyTypeArg = true;
-                this.WriteType(typeArg);
-            }
-
-            this.TextSpan(">");
         }
 
         public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
@@ -260,382 +392,41 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeSuffix(ITypeSymbol type)
+        public void WriteMethodNamespace(IMethodSymbol methodSymbol)
         {
-            if (WriteSpecialType(type))
+            // namespace
+            if (methodSymbol.ContainingNamespace != null)
             {
-                return;
+                this.WriteNamespace(methodSymbol.ContainingNamespace);
+                this.TextSpan("::");
             }
 
-            switch (type.TypeKind)
-            {
-                case TypeKind.ArrayType:
-                    var elementType = ((ArrayTypeSymbol)type).ElementType;
-                    WriteTypeSuffix(elementType);
-                    TextSpan("Array");
-                    return;
-                case TypeKind.PointerType:
-                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
-                    WriteTypeSuffix(pointedAtType);
-                    TextSpan("Ptr");
-                    return;
-                case TypeKind.TypeParameter:
-                    WriteName(type);
-                    return;
-                default:
-                    WriteTypeName((INamedTypeSymbol)type);
-                    break;
-            }
-        }
-
-        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true)
-        {
-            if (type.TypeKind == TypeKind.TypeParameter)
-            {
-                WriteName(type);
-                return;
-            }
-
-            var namedType = type as INamedTypeSymbol;
-            if (namedType != null)
-            {
-                WriteTypeFullName(namedType, allowKeywords);
-            }
-        }
-
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
-        {
-            if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
-            {
-                WriteTypeName(type, allowKeywords);
-                return;
-            }
-
-            if (type.ContainingNamespace != null)
-            {
-                WriteNamespace(type.ContainingNamespace);
-                TextSpan("::");
-            }
-
-            WriteTypeName(type, allowKeywords, valueName);
-
-            if (type.IsGenericType)
-            {
-                WriteTemplateDefinition(type);
-            }
-        }
-
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
-        {
-            if (allowKeywords)
-            {
-                if (type.SpecialType == SpecialType.System_Object)
-                {
-                    TextSpan("object");
-                    return;
-                }
-
-                if (type.SpecialType == SpecialType.System_String)
-                {
-                    TextSpan("string");
-                    return;
-                }
-            }
-
-            if (valueName && type.TypeKind == TypeKind.Enum)
-            {
-                TextSpan("enum_");
-            }
-
-            if (type.ContainingType != null)
-            {
-                WriteTypeName(type.ContainingType, false);
-
-                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
-                if (isNestedCppClass && type.ContainingType.IsGenericType)
-                {
-                    WriteTemplateDefinition(type.ContainingType);
-                }
-
-                // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
-                this.TextSpan(isNestedCppClass ? "::" : "_");
-            }
-
-            WriteName(type);
-        }
-
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
-        {
-            if (!valueTypeAsClass && WriteSpecialType(type))
-            {
-                return;
-            }
-
-            switch (type.TypeKind)
-            {
-                case TypeKind.Unknown:
-                    break;
-                case TypeKind.ArrayType:
-                    WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
-                    return;
-                case TypeKind.Delegate:
-                case TypeKind.Interface:
-                case TypeKind.Class:
-                    WriteTypeFullName(type, allowKeywords);
-                    if (type.IsReferenceType && !suppressReference)
-                    {
-                        TextSpan("*");
-                    }
-
-                    return;
-                case TypeKind.DynamicType:
-                    break;
-                case TypeKind.Enum:
-                    if (!valueTypeAsClass)
-                    {
-                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true);
-                    }
-                    else
-                    {
-                        WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
-                        if (!suppressReference && valueTypeAsClass)
-                        {
-                            TextSpan("*");
-                        }
-                    }
-
-                    return;
-                case TypeKind.Error:
-                    // Comment: Unbound Generic in typeof
-                    TextSpan("__unbound_generic_type<void>");
-                    //WriteName(type);
-                    //TextSpan(">");
-                    return;
-                case TypeKind.Module:
-                    break;
-                case TypeKind.PointerType:
-                    var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
-                    TextSpan("*");
-                    return;
-                case TypeKind.Struct:
-                    WriteTypeFullName((INamedTypeSymbol)type);
-                    if (valueTypeAsClass && !suppressReference)
-                    {
-                        TextSpan("*");
-                    }
-
-                    return;
-                case TypeKind.TypeParameter:
-
-                    var methodSymbol = type.ContainingSymbol as IMethodSymbol;
-                    if (methodSymbol != null && methodSymbol.IsVirtualGenericMethod())
-                    {
-                        TextSpan("object*");
-                    }
-                    else
-                    {
-                        if (type.ContainingType != null && type.ContainingType.ContainingType != null)
-                        {
-                            this.WriteNameWithContainingSymbolName(type);
-                        }
-                        else
-                        {
-                            this.WriteName(type);
-                        }
-                    }
-
-                    return;
-                case TypeKind.Submission:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public bool WriteSpecialType(ITypeSymbol type)
-        {
-            switch (type.SpecialType)
-            {
-                case SpecialType.System_Void:
-                    TextSpan("void");
-                    return true;
-                case SpecialType.System_Boolean:
-                    TextSpan("bool");
-                    return true;
-                case SpecialType.System_Char:
-                    TextSpan("wchar_t");
-                    return true;
-                case SpecialType.System_SByte:
-                    TextSpan("int8_t");
-                    return true;
-                case SpecialType.System_Byte:
-                    TextSpan("uint8_t");
-                    return true;
-                case SpecialType.System_Int16:
-                    TextSpan("int16_t");
-                    return true;
-                case SpecialType.System_UInt16:
-                    TextSpan("uint16_t");
-                    return true;
-                case SpecialType.System_Int32:
-                    TextSpan("int32_t");
-                    return true;
-                case SpecialType.System_UInt32:
-                    TextSpan("uint32_t");
-                    return true;
-                case SpecialType.System_Int64:
-                    TextSpan("int64_t");
-                    return true;
-                case SpecialType.System_UInt64:
-                    TextSpan("uint64_t");
-                    return true;
-                case SpecialType.System_Single:
-                    TextSpan("float");
-                    return true;
-                case SpecialType.System_Double:
-                    TextSpan("double");
-                    return true;
-                case SpecialType.System_Object:
-                    if (type.TypeKind == TypeKind.Unknown)
-                    {
-                        TextSpan("object*");
-                        return true;
-                    }
-
-                    break;
-                case SpecialType.System_String:
-                    if (type.TypeKind == TypeKind.Unknown)
-                    {
-                        TextSpan("string*");
-                        return true;
-                    }
-
-                    break;
-            }
-
-            return false;
-        }
-
-        public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
-        {
-            if (fieldSymbol.IsStatic)
-            {
-                TextSpan("static");
-                WhiteSpace();
-
-                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
-                {
-                    TextSpan("thread_local");
-                    WhiteSpace();
-                }
-
-                if (!doNotWrapStatic)
-                {
-                    TextSpan("__static<");
-                }
-            }
-
-            var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
-            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
-            {
-                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType);
-            }
-            else
-            {
-                this.WriteType(fieldSymbol.Type);
-            }
-
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
-            {
-                TextSpan(",");
-                WhiteSpace();
-                this.WriteType(fieldSymbol.ContainingType, true, true, true);
-                TextSpan(">");
-            }
-
-            WhiteSpace();
-            WriteName(fieldSymbol);
-
-            if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
-            {
-                TextSpan("[");
-                TextSpan(fieldSymbolOriginal.FixedSize.ToString());
-                TextSpan("]");
-            }
-        }
-
-        public void WriteFieldDefinition(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
-        {
-            if (fieldSymbol.ContainingType.IsGenericType)
-            {
-                WriteTemplateDeclaration(fieldSymbol.ContainingType);
-                NewLine();
-            }
-
-            if (fieldSymbol.IsStatic && fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
-            {
-                TextSpan("thread_local");
-                WhiteSpace();
-            }
-
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
-            {
-                TextSpan("__static<");
-            }
-
-            this.WriteType(fieldSymbol.Type);
-
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
-            {
-                TextSpan(",");
-                WhiteSpace();
-                this.WriteType(fieldSymbol.ContainingType, true, true, true);
-                TextSpan(">");
-            }
-
-            WhiteSpace();
-
-            if (fieldSymbol.ContainingNamespace != null)
-            {
-                WriteNamespace(fieldSymbol.ContainingNamespace);
-                TextSpan("::");
-            }
-
-            var receiverType = fieldSymbol.ContainingType;
-            WriteTypeName(receiverType, false);
+            var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
+            this.WriteTypeName(receiverType, false);
             if (receiverType.IsGenericType)
             {
-                WriteTemplateDefinition(fieldSymbol.ContainingType);
+                this.WriteTemplateDefinition(receiverType);
             }
 
-            TextSpan("::");
-
-            WriteName(fieldSymbol);
+            this.TextSpan("::");
         }
 
-        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
+        public void WriteMethodNamespace(INamedTypeSymbol typeSymbol)
         {
-            this.WriteMethodPrefixesReturnTypeAndName(methodSymbol, declarationWithingClass);
-            this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody);
-            this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
-        }
-
-        public void WriteMethodSuffixes(IMethodSymbol methodSymbol, bool declarationWithingClass)
-        {
-            if (declarationWithingClass)
+            // namespace
+            if (typeSymbol.ContainingNamespace != null)
             {
-                if (methodSymbol.IsOverride)
-                {
-                    this.TextSpan(" override");
-                }
-                else if (methodSymbol.IsAbstract)
-                {
-                    this.TextSpan(" = 0");
-                }
+                this.WriteNamespace(typeSymbol.ContainingNamespace);
+                this.TextSpan("::");
             }
+
+            this.WriteTypeName(typeSymbol, false);
+            if (typeSymbol.IsGenericType)
+            {
+                this.WriteTemplateDefinition(typeSymbol);
+            }
+
+            this.TextSpan("::");
         }
 
         public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody)
@@ -658,7 +449,7 @@ namespace Il2Native.Logic
                 this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
-                    TextSpan("&");
+                    this.TextSpan("&");
                 }
 
                 if (!declarationWithingClass || hasBody)
@@ -688,21 +479,6 @@ namespace Il2Native.Logic
             }
 
             this.TextSpan(")");
-        }
-
-        public void WriteMethodPrefixesReturnTypeAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
-        {
-            this.WriteMethodPrefixes(methodSymbol, declarationWithingClass);
-            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
-
-            if (!declarationWithingClass)
-            {
-                this.WriteMethodFullName(methodSymbol);
-            }
-            else
-            {
-                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
-            }
         }
 
         public void WriteMethodPrefixes(IMethodSymbol methodSymbol, bool declarationWithingClass)
@@ -748,6 +524,21 @@ namespace Il2Native.Logic
             }
         }
 
+        public void WriteMethodPrefixesReturnTypeAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            this.WriteMethodPrefixes(methodSymbol, declarationWithingClass);
+            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
+
+            if (!declarationWithingClass)
+            {
+                this.WriteMethodFullName(methodSymbol);
+            }
+            else
+            {
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
+            }
+        }
+
         public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
             // type
@@ -763,47 +554,130 @@ namespace Il2Native.Logic
             this.WhiteSpace();
         }
 
-        public void WriteMethodFullName(IMethodSymbol methodSymbol)
+        public void WriteMethodSuffixes(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
-            this.WriteMethodNamespace(methodSymbol);
-            WriteMethodName(methodSymbol, false);
+            if (declarationWithingClass)
+            {
+                if (methodSymbol.IsOverride)
+                {
+                    this.TextSpan(" override");
+                }
+                else if (methodSymbol.IsAbstract)
+                {
+                    this.TextSpan(" = 0");
+                }
+            }
         }
 
-        public void WriteMethodNamespace(IMethodSymbol methodSymbol)
+        public void WriteName(ISymbol symbol, bool noCleanup = false)
         {
-            // namespace
-            if (methodSymbol.ContainingNamespace != null)
-            {
-                this.WriteNamespace(methodSymbol.ContainingNamespace);
-                this.TextSpan("::");
-            }
-
-            var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
-            this.WriteTypeName(receiverType, false);
-            if (receiverType.IsGenericType)
-            {
-                this.WriteTemplateDefinition(receiverType);
-            }
-
-            this.TextSpan("::");
+            var name = symbol.MetadataName ?? symbol.Name;
+            this.TextSpan(noCleanup ? name : name.CleanUpName());
         }
 
-        public void WriteMethodNamespace(INamedTypeSymbol typeSymbol)
+        public void WriteNameEnsureCompatible(ISymbol symbol)
         {
-            // namespace
-            if (typeSymbol.ContainingNamespace != null)
+            this.TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
+        }
+
+        public void WriteNamespace(INamespaceSymbol namespaceSymbol)
+        {
+            var any = false;
+            foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
             {
-                this.WriteNamespace(typeSymbol.ContainingNamespace);
-                this.TextSpan("::");
+                if (any)
+                {
+                    this.TextSpan("::");
+                }
+
+                any = true;
+
+                this.WriteNamespaceName(namespaceNode);
+            }
+        }
+
+        public void WriteNamespaceName(INamespaceSymbol namespaceNode)
+        {
+            if (namespaceNode.IsGlobalNamespace)
+            {
+                this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+            }
+            else
+            {
+                this.TextSpan(namespaceNode.MetadataName);
+            }
+        }
+
+        public void WriteNameWithContainingSymbolName(ISymbol symbol)
+        {
+            var name = symbol.MetadataName ?? symbol.Name;
+            var leadName = symbol.ContainingSymbol.MetadataName ?? symbol.ContainingSymbol.Name;
+            var uniqueName = string.Concat(leadName, "_", name);
+            this.TextSpan(uniqueName.CleanUpName());
+        }
+
+        public bool WriteSpecialType(ITypeSymbol type)
+        {
+            switch (type.SpecialType)
+            {
+                case SpecialType.System_Void:
+                    this.TextSpan("void");
+                    return true;
+                case SpecialType.System_Boolean:
+                    this.TextSpan("bool");
+                    return true;
+                case SpecialType.System_Char:
+                    this.TextSpan("wchar_t");
+                    return true;
+                case SpecialType.System_SByte:
+                    this.TextSpan("int8_t");
+                    return true;
+                case SpecialType.System_Byte:
+                    this.TextSpan("uint8_t");
+                    return true;
+                case SpecialType.System_Int16:
+                    this.TextSpan("int16_t");
+                    return true;
+                case SpecialType.System_UInt16:
+                    this.TextSpan("uint16_t");
+                    return true;
+                case SpecialType.System_Int32:
+                    this.TextSpan("int32_t");
+                    return true;
+                case SpecialType.System_UInt32:
+                    this.TextSpan("uint32_t");
+                    return true;
+                case SpecialType.System_Int64:
+                    this.TextSpan("int64_t");
+                    return true;
+                case SpecialType.System_UInt64:
+                    this.TextSpan("uint64_t");
+                    return true;
+                case SpecialType.System_Single:
+                    this.TextSpan("float");
+                    return true;
+                case SpecialType.System_Double:
+                    this.TextSpan("double");
+                    return true;
+                case SpecialType.System_Object:
+                    if (type.TypeKind == TypeKind.Unknown)
+                    {
+                        this.TextSpan("object*");
+                        return true;
+                    }
+
+                    break;
+                case SpecialType.System_String:
+                    if (type.TypeKind == TypeKind.Unknown)
+                    {
+                        this.TextSpan("string*");
+                        return true;
+                    }
+
+                    break;
             }
 
-            this.WriteTypeName(typeSymbol, false);
-            if (typeSymbol.IsGenericType)
-            {
-                this.WriteTemplateDefinition(typeSymbol);
-            }
-
-            this.TextSpan("::");
+            return false;
         }
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
@@ -813,25 +687,45 @@ namespace Il2Native.Logic
                 return;
             }
 
-            TextSpan("template <");
+            this.TextSpan("template <");
 
             var anyTypeParam = false;
             foreach (var typeParam in namedTypeSymbol.GetTemplateParameters())
             {
                 if (anyTypeParam)
                 {
-                    TextSpan(",");
-                    WhiteSpace();
+                    this.TextSpan(",");
+                    this.WhiteSpace();
                 }
 
-                TextSpan("typename");
-                WhiteSpace();
+                this.TextSpan("typename");
+                this.WhiteSpace();
                 this.WriteType(typeParam);
 
                 anyTypeParam = true;
             }
 
-            TextSpan("> ");
+            this.TextSpan("> ");
+        }
+
+        public void WriteTemplateDeclaration(IMethodSymbol methodSymbol)
+        {
+            this.TextSpan("template <");
+            var anyTypeParam = false;
+            foreach (var typeParam in methodSymbol.TypeParameters)
+            {
+                if (anyTypeParam)
+                {
+                    this.TextSpan(", ");
+                }
+
+                anyTypeParam = true;
+
+                this.TextSpan("typename ");
+                this.WriteType(typeParam);
+            }
+
+            this.TextSpan("> ");
         }
 
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol)
@@ -841,14 +735,14 @@ namespace Il2Native.Logic
                 return;
             }
 
-            TextSpan("<");
+            this.TextSpan("<");
 
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateArguments())
             {
                 if (anyTypeParam)
                 {
-                    TextSpan(", ");
+                    this.TextSpan(", ");
                 }
 
                 this.WriteType(typeParam);
@@ -856,143 +750,250 @@ namespace Il2Native.Logic
                 anyTypeParam = true;
             }
 
-            TextSpan(">");
+            this.TextSpan(">");
         }
 
-        public void WriteTemplateDeclaration(IMethodSymbol methodSymbol)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
         {
-            TextSpan("template <");
-            var anyTypeParam = false;
-            foreach (var typeParam in methodSymbol.TypeParameters)
+            if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
-                if (anyTypeParam)
-                {
-                    TextSpan(", ");
-                }
-
-                anyTypeParam = true;
-
-                TextSpan("typename ");
-                this.WriteType(typeParam);
-            }
-
-            TextSpan("> ");
-        }
-
-        public void WriteAccess(Expression expression)
-        {
-            var effectiveExpression = expression;
-
-            this.WriteExpressionInParenthesesIfNeeded(effectiveExpression);
-
-            if (effectiveExpression.IsReference)
-            {
-                if (effectiveExpression is BaseReference)
-                {
-                    TextSpan("::");
-                    return;
-                }
-
-                TextSpan("->");
                 return;
             }
 
-            var expressionType = effectiveExpression.Type;
-            if (expressionType.TypeKind == TypeKind.Struct || expressionType.TypeKind == TypeKind.Enum)
+            switch (type.TypeKind)
             {
-                if (!effectiveExpression.IsStaticWrapperCall())
+                case TypeKind.Unknown:
+                    break;
+                case TypeKind.ArrayType:
+                    this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
+                    return;
+                case TypeKind.Delegate:
+                case TypeKind.Interface:
+                case TypeKind.Class:
+                    this.WriteTypeFullName(type, allowKeywords);
+                    if (type.IsReferenceType && !suppressReference)
+                    {
+                        this.TextSpan("*");
+                    }
+
+                    return;
+                case TypeKind.DynamicType:
+                    break;
+                case TypeKind.Enum:
+                    if (!valueTypeAsClass)
+                    {
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true);
+                    }
+                    else
+                    {
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
+                        if (!suppressReference && valueTypeAsClass)
+                        {
+                            this.TextSpan("*");
+                        }
+                    }
+
+                    return;
+                case TypeKind.Error:
+                    // Comment: Unbound Generic in typeof
+                    this.TextSpan("__unbound_generic_type<void>");
+                    //WriteName(type);
+                    //TextSpan(">");
+                    return;
+                case TypeKind.Module:
+                    break;
+                case TypeKind.PointerType:
+                    var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
+                    this.TextSpan("*");
+                    return;
+                case TypeKind.Struct:
+                    this.WriteTypeFullName((INamedTypeSymbol)type);
+                    if (valueTypeAsClass && !suppressReference)
+                    {
+                        this.TextSpan("*");
+                    }
+
+                    return;
+                case TypeKind.TypeParameter:
+
+                    var methodSymbol = type.ContainingSymbol as IMethodSymbol;
+                    if (methodSymbol != null && methodSymbol.IsVirtualGenericMethod())
+                    {
+                        this.TextSpan("object*");
+                    }
+                    else
+                    {
+                        if (type.ContainingType != null && type.ContainingType.ContainingType != null)
+                        {
+                            this.WriteNameWithContainingSymbolName(type);
+                        }
+                        else
+                        {
+                            this.WriteName(type);
+                        }
+                    }
+
+                    return;
+                case TypeKind.Submission:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments)
+        {
+            this.TextSpan("<");
+
+            var anyTypeArg = false;
+            foreach (var typeArg in typeArguments)
+            {
+                if (anyTypeArg)
                 {
-                    TextSpan(".");
+                    this.TextSpan(", ");
+                }
+
+                anyTypeArg = true;
+                this.WriteType(typeArg);
+            }
+
+            this.TextSpan(">");
+        }
+
+        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true)
+        {
+            if (type.TypeKind == TypeKind.TypeParameter)
+            {
+                this.WriteName(type);
+                return;
+            }
+
+            var namedType = type as INamedTypeSymbol;
+            if (namedType != null)
+            {
+                this.WriteTypeFullName(namedType, allowKeywords);
+            }
+        }
+
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
+        {
+            if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
+            {
+                this.WriteTypeName(type, allowKeywords);
+                return;
+            }
+
+            if (type.ContainingNamespace != null)
+            {
+                this.WriteNamespace(type.ContainingNamespace);
+                this.TextSpan("::");
+            }
+
+            this.WriteTypeName(type, allowKeywords, valueName);
+
+            if (type.IsGenericType)
+            {
+                this.WriteTemplateDefinition(type);
+            }
+        }
+
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
+        {
+            if (allowKeywords)
+            {
+                if (type.SpecialType == SpecialType.System_Object)
+                {
+                    this.TextSpan("object");
+                    return;
+                }
+
+                if (type.SpecialType == SpecialType.System_String)
+                {
+                    this.TextSpan("string");
                     return;
                 }
             }
 
-            // default for Templates
-            TextSpan("->");
+            if (valueName && type.TypeKind == TypeKind.Enum)
+            {
+                this.TextSpan("enum_");
+            }
+
+            if (type.ContainingType != null)
+            {
+                this.WriteTypeName(type.ContainingType, false);
+
+                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
+                if (isNestedCppClass && type.ContainingType.IsGenericType)
+                {
+                    this.WriteTemplateDefinition(type.ContainingType);
+                }
+
+                // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
+                this.TextSpan(isNestedCppClass ? "::" : "_");
+            }
+
+            this.WriteName(type);
         }
 
-        public bool WriteExpressionInParenthesesIfNeeded(Expression expression)
+        public void WriteTypeSuffix(ITypeSymbol type)
         {
-            if (expression == null)
+            if (this.WriteSpecialType(type))
             {
-                throw new ArgumentNullException("expression");
-            }
-
-            var parenthesis = expression is ArrayCreation ||
-                              expression is DelegateCreationExpression || expression is BinaryOperator ||
-                              expression is UnaryOperator || expression is ConditionalOperator ||
-                              expression is AssignmentOperator;
-
-            var conversion = expression as DOM2.Conversion;
-            if (conversion != null && (conversion.ConversionKind == ConversionKind.PointerToInteger ||
-                                       conversion.ConversionKind == ConversionKind.IntegerToPointer ||
-                                       conversion.ConversionKind == ConversionKind.PointerToPointer))
-            {
-                parenthesis = true;
-            }
-
-            if (parenthesis)
-            {
-                this.TextSpan("(");
-            }
-
-            expression.WriteTo(this);
-
-            if (parenthesis)
-            {
-                this.TextSpan(")");
-            }
-
-            return parenthesis;
-        }
-
-        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true)
-        {
-            var elementType = arrayTypeSymbol.ElementType;
-
-            if (arrayTypeSymbol.Rank <= 1)
-            {
-                TextSpan("__array<");
-                this.WriteType(elementType, allowKeywords: allowKeywords);
-                TextSpan(">");
-            }
-            else
-            {
-                TextSpan("__multi_array<");
-                this.WriteType(elementType, allowKeywords: allowKeywords);
-                TextSpan(",");
-                WhiteSpace();
-                TextSpan(arrayTypeSymbol.Rank.ToString());
-                TextSpan(">");
-            }
-
-            if (reference)
-            {
-                TextSpan("*");
-            }
-        }
-
-        public void WriteBlockOrStatementsAsBlock(Base node, bool noNewLineAtEnd = false)
-        {
-            var block = node as Block;
-            if (block != null)
-            {
-                block.SuppressNewLineAtEnd = noNewLineAtEnd;
-                block.WriteTo(this);
                 return;
             }
 
+            switch (type.TypeKind)
+            {
+                case TypeKind.ArrayType:
+                    var elementType = ((ArrayTypeSymbol)type).ElementType;
+                    this.WriteTypeSuffix(elementType);
+                    this.TextSpan("Array");
+                    return;
+                case TypeKind.PointerType:
+                    var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
+                    this.WriteTypeSuffix(pointedAtType);
+                    this.TextSpan("Ptr");
+                    return;
+                case TypeKind.TypeParameter:
+                    this.WriteName(type);
+                    return;
+                default:
+                    this.WriteTypeName((INamedTypeSymbol)type);
+                    break;
+            }
+        }
+
+        public void WriteUniqueNameByContainingSymbol(ISymbol symbol)
+        {
+            var name = symbol.MetadataName ?? symbol.Name;
+            var uniqueName = string.Concat(name, GetId((symbol.ContainingSymbol).ToString()));
+            this.TextSpan(uniqueName.CleanUpName());
+        }
+
+        internal void WriteMethodBody(BoundStatement boundBody, IMethodSymbol methodSymbol)
+        {
+#if EMPTY_SKELETON
+            this.NewLine();
             this.OpenBlock();
-            node.WriteTo(this);
-
-            if (noNewLineAtEnd)
+            this.TextSpanNewLine("throw 0xC000C000;");
+            this.EndBlock();
+#else
+            if (boundBody != null)
             {
-                this.EndBlockWithoutNewLine();
+                var methodBase = Base.Deserialize(boundBody, methodSymbol) as MethodBody;
+                methodBase.WriteTo(this);
             }
             else
             {
+                this.NewLine();
+                this.OpenBlock();
                 this.EndBlock();
             }
+#endif
         }
     }
 }

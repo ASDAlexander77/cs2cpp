@@ -1,6 +1,8 @@
-﻿namespace Il2Native.Logic.DOM
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM
 {
-    using System.CodeDom.Compiler;
     using Microsoft.CodeAnalysis;
 
     public class CCodeFieldDefinition : CCodeDefinition
@@ -10,9 +12,9 @@
             this.Field = field;
         }
 
-        public IFieldSymbol Field { get; set; }
-
         public bool DoNotWrapStatic { get; set; }
+
+        public IFieldSymbol Field { get; set; }
 
         public override bool IsGeneric
         {

@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Diagnostics;
@@ -15,9 +18,9 @@
             get { return Kinds.PrefixPostfixUnaryExpressionBase; }
         }
 
-        public Expression Value { get; set; }
-
         public SyntaxKind OperatorKind { get; set; }
+
+        public Expression Value { get; set; }
 
         internal bool Parse(BoundSequence boundSequence)
         {
@@ -76,11 +79,6 @@
             this.Value = AdjustEnumType(this.Value, out changed, true);
         }
 
-        private static BoundExpression FindValue(BoundExpression left, BoundExpression right)
-        {
-            return CheckValue(left) ?? CheckValue(right);
-        }
-
         private static BoundExpression CheckValue(BoundExpression left)
         {
             var boundLocal = left as BoundLocal;
@@ -114,6 +112,11 @@
             }
 
             return null;
+        }
+
+        private static BoundExpression FindValue(BoundExpression left, BoundExpression right)
+        {
+            return CheckValue(left) ?? CheckValue(right);
         }
     }
 }

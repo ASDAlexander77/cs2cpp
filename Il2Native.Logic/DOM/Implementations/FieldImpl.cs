@@ -1,9 +1,14 @@
-﻿namespace Il2Native.Logic.DOM.Implementations
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Implementations
 {
+    using System;
     using System.Collections.Immutable;
     using System.Globalization;
     using System.Threading;
     using Microsoft.CodeAnalysis;
+
     public class FieldImpl : IFieldSymbol
     {
         public SymbolKind Kind { get; private set; }
@@ -26,6 +31,7 @@
         public bool CanBeReferencedByName { get; private set; }
         public ImmutableArray<Location> Locations { get; private set; }
         public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences { get; private set; }
+
         public ImmutableArray<AttributeData> GetAttributes()
         {
             return ImmutableArray<AttributeData>.Empty;
@@ -44,22 +50,22 @@
 
         ISymbol ISymbol.OriginalDefinition
         {
-            get { return OriginalDefinition; }
+            get { return this.OriginalDefinition; }
         }
 
         public void Accept(SymbolVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public TResult Accept<TResult>(SymbolVisitor<TResult> visitor)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string GetDocumentationCommentId()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string GetDocumentationCommentXml(
@@ -67,27 +73,27 @@
             bool expandIncludes = false,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string ToDisplayString(SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<SymbolDisplayPart> ToDisplayParts(SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string ToMinimalDisplayString(SemanticModel semanticModel, int position, SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<SymbolDisplayPart> ToMinimalDisplayParts(SemanticModel semanticModel, int position, SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool HasUnsupportedMetadata { get; private set; }

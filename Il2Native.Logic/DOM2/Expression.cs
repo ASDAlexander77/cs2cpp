@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using Microsoft.CodeAnalysis;
@@ -7,6 +10,8 @@
     public abstract class Expression : Base
     {
         private ITypeSymbol _type;
+
+        public virtual bool IsReference { get; set; }
 
         public override Kinds Kind
         {
@@ -17,17 +22,15 @@
         {
             get
             {
-                return _type;
+                return this._type;
             }
 
             set
             {
-                _type = value;
-                this.IsReference = this._type != null ? _type.IsReferenceType : true;
+                this._type = value;
+                this.IsReference = this._type != null ? this._type.IsReferenceType : true;
             }
         }
-
-        public virtual bool IsReference { get; set; }
 
         internal void Parse(BoundExpression boundExpression)
         {

@@ -1,25 +1,26 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ArrayAccess : Expression
     {
         private readonly IList<Expression> _indices = new List<Expression>();
 
-        public override Kinds Kind
-        {
-            get { return Kinds.ArrayAccess; }
-        }
-
         public Expression Expression { get; set; }
 
         public IList<Expression> Indices
         {
             get { return this._indices; }
+        }
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ArrayAccess; }
         }
 
         internal void Parse(BoundArrayAccess boundArrayAccess)

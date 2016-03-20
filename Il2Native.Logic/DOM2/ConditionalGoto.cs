@@ -1,22 +1,23 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ConditionalGoto : Statement
     {
+        public Expression Condition { get; set; }
+
+        public bool JumpIfTrue { get; private set; }
+
         public override Kinds Kind
         {
             get { return Kinds.ConditionalGoto; }
         }
 
-        public Expression Condition { get; set; }
-
         public Label Label { get; set; }
-
-        public bool JumpIfTrue { get; private set; }
 
         internal void Parse(BoundConditionalGoto boundConditionalGoto)
         {

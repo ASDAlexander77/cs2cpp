@@ -1,24 +1,26 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class MethodGroup : Expression
     {
+        public Expression InstanceOpt { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.MethodGroup; }
         }
 
-        public Expression InstanceOpt { get; set; }
+        public IMethodSymbol Method { get; set; }
 
         public Expression ReceiverOpt { get; set; }
-
-        public IMethodSymbol Method { get; set; }
 
         public IList<ITypeSymbol> TypeArgumentsOpt { get; set; }
 

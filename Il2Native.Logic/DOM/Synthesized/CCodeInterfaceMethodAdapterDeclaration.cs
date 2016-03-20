@@ -1,16 +1,16 @@
-﻿namespace Il2Native.Logic.DOM.Synthesized
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Synthesized
 {
     using System.Collections.Generic;
-    using System.Linq;
     using DOM2;
-
-    using Il2Native.Logic.DOM.Implementations;
-
+    using Implementations;
     using Microsoft.CodeAnalysis;
 
     public class CCodeInterfaceMethodAdapterDeclaration : CCodeMethodDeclaration
     {
-        private IList<Statement> typeDefs = new List<Statement>();
+        private readonly IList<Statement> typeDefs = new List<Statement>();
 
         public CCodeInterfaceMethodAdapterDeclaration(IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
             : base(interfaceMethod)
@@ -28,25 +28,25 @@
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan(string.Format("// adapter: {0}", this.Method));
+            c.TextSpan(string.Format("// adapter: {0}", Method));
             c.NewLine();
 
-            foreach (var statement in typeDefs)
+            foreach (var statement in this.typeDefs)
             {
                 statement.WriteTo(c);
             }
 
-            c.WriteMethodReturn(this.Method, true);
-            c.WriteMethodName(this.Method, allowKeywords: false);
-            c.WriteMethodParameters(this.Method, true, this.MethodBodyOpt != null);
+            c.WriteMethodReturn(Method, true);
+            c.WriteMethodName(Method, allowKeywords: false);
+            c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
 
-            if (this.MethodBodyOpt == null)
+            if (MethodBodyOpt == null)
             {
                 c.EndStatement();
             }
             else
             {
-                this.MethodBodyOpt.WriteTo(c);
+                MethodBodyOpt.WriteTo(c);
             }
         }
     }

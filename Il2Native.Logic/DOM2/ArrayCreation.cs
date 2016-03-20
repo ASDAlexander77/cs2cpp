@@ -1,28 +1,29 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class ArrayCreation : Expression
     {
-        private IList<Expression> bounds = new List<Expression>();
-
-        public override Kinds Kind
-        {
-            get { return Kinds.ArrayCreation; }
-        }
-
-        public Expression InitializerOpt { get; set; }
+        private readonly IList<Expression> bounds = new List<Expression>();
 
         public IList<Expression> Bounds
         {
             get { return this.bounds; }
+        }
+
+        public Expression InitializerOpt { get; set; }
+
+        public override Kinds Kind
+        {
+            get { return Kinds.ArrayCreation; }
         }
 
         internal void Parse(BoundArrayCreation boundArrayCreation)

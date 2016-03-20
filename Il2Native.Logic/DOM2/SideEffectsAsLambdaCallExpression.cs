@@ -1,8 +1,11 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-
     using Microsoft.CodeAnalysis.CSharp;
 
     public class SideEffectsAsLambdaCallExpression : Expression
@@ -15,8 +18,6 @@
         {
             get { return Kinds.SideEffectsAsLambdaCallExpression; }
         }
-
-        public Expression Value { get; private set; }
 
         public IList<Statement> Locals
         {
@@ -34,6 +35,8 @@
             }
         }
 
+        public Expression Value { get; private set; }
+
         internal void Parse(BoundSequence boundSequence)
         {
             base.Parse(boundSequence);
@@ -46,6 +49,21 @@
             }
 
             this.Value = Deserialize(boundSequence.Value) as Expression;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            Value.Visit(visitor);
+            foreach (var local in this.locals)
+            {
+                local.Visit(visitor);
+            }
+
+            foreach (var sideEffect in this.SideEffects)
+            {
+                sideEffect.Visit(visitor);
+            }
         }
 
         internal override void WriteTo(CCodeWriterBase c)

@@ -1,6 +1,8 @@
-﻿namespace Il2Native.Logic.DOM.Synthesized
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Synthesized
 {
-    using System;
     using System.Collections.Immutable;
     using DOM2;
     using Implementations;
@@ -8,8 +10,8 @@
 
     public class CCodeInterfaceCastOperatorDeclaration : CCodeMethodDeclaration
     {
-        private readonly INamedTypeSymbol type;
         private readonly ITypeSymbol interfaceSymbol;
+        private readonly INamedTypeSymbol type;
 
         public CCodeInterfaceCastOperatorDeclaration(INamedTypeSymbol type, ITypeSymbol interfaceSymbol)
             : base(new InterfaceCastOperatorMethod(type))

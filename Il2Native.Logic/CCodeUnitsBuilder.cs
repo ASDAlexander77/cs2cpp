@@ -1,4 +1,7 @@
-﻿#define GENERATE_STUBS
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+#define GENERATE_STUBS
 namespace Il2Native.Logic
 {
     using System;
@@ -9,14 +12,11 @@ namespace Il2Native.Logic
     using System.Threading.Tasks;
     using DOM;
     using DOM.Implementations;
-    using Il2Native.Logic.DOM.Synthesized;
-    using Il2Native.Logic.DOM2;
-
+    using DOM.Synthesized;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-
-    using MethodBody = Il2Native.Logic.DOM2.MethodBody;
+    using MethodBody = DOM2.MethodBody;
 
     public class CCodeUnitsBuilder
     {
@@ -31,11 +31,11 @@ namespace Il2Native.Logic
 
         public bool Concurrent { get; set; }
 
+        protected IAssemblySymbol Assembly { get; private set; }
+
         internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol { get; private set; }
 
         internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; private set; }
-
-        protected IAssemblySymbol Assembly { get; private set; }
 
         public IEnumerable<CCodeUnit> Build()
         {
@@ -74,22 +74,6 @@ namespace Il2Native.Logic
             return this._cunits;
         }
 
-        private static IList<ITypeSymbol> BuildOrder(ITypeSymbol[] typeSymbols, IDictionary<string, ITypeSymbol> typesByNames, ISet<string> processedTypes)
-        {
-            var reordered = new List<ITypeSymbol>();
-            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind != TypeKind.Interface))
-            {
-                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
-            }
-
-            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind == TypeKind.Interface))
-            {
-                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
-            }
-
-            return reordered;
-        }
-
         private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, AssemblyIdentity assembly, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
         {
             if (!typeSymbol.ContainingAssembly.Identity.Equals(assembly))
@@ -122,6 +106,65 @@ namespace Il2Native.Logic
             }
         }
 
+        private static IList<ITypeSymbol> BuildOrder(ITypeSymbol[] typeSymbols, IDictionary<string, ITypeSymbol> typesByNames, ISet<string> processedTypes)
+        {
+            var reordered = new List<ITypeSymbol>();
+            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind != TypeKind.Interface))
+            {
+                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
+            }
+
+            foreach (var typeSymbol in typeSymbols.Where(s => s.TypeKind == TypeKind.Interface))
+            {
+                AddTypeIntoOrder(reordered, typeSymbol, typeSymbol.ContainingAssembly.Identity, typesByNames, processedTypes);
+            }
+
+            return reordered;
+        }
+
+        private static void BuildStaticConstructorVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add call flag for static constructor
+            var cctorCalledField = new FieldImpl
+            {
+                Name = "_cctor_called",
+                Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
+        }
+
+        private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add call flag for static constructor
+            var typeHolderField = new FieldImpl
+            {
+                Name = "__type",
+                Type =
+                    new NamedTypeImpl
+                    {
+                        Name = "RuntimeType",
+                        ContainingNamespace =
+                            new NamespaceImpl
+                            {
+                                MetadataName = "System",
+                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true, ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" } }
+                            },
+                        TypeKind = TypeKind.Struct
+                    },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
+        }
+
         private static bool TypesFilter(ITypeSymbol t)
         {
             var namedTypeSymbol = t.ContainingType;
@@ -152,6 +195,100 @@ namespace Il2Native.Logic
             }
 
             return true;
+        }
+
+        private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
+        {
+            if (field.IsConst && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
+            {
+                return;
+            }
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(field) { DoNotWrapStatic = !hasStaticConstructor });
+            if (field.IsStatic)
+            {
+                unit.Definitions.Add(new CCodeFieldDefinition(field) { DoNotWrapStatic = !hasStaticConstructor });
+            }
+        }
+
+        private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
+        {
+            var isDefaultConstructor = method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0;
+            if (isDefaultConstructor)
+            {
+                unit.HasDefaultConstructor = true;
+            }
+
+            if (method.MethodKind == MethodKind.Ordinary && method.IsStatic && method.Name == "Main")
+            {
+                unit.MainMethod = method;
+            }
+
+            var key = ((MethodSymbol)method).ToKeyString();
+            SourceMethodSymbol sourceMethod;
+            var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
+            BoundStatement boundStatement;
+            var boundStatementFound = this.BoundBodyByMethodSymbol.TryGetValue(key, out boundStatement);
+
+            if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
+            {
+                // ignore empty constructor as they should call Object.ctor() only which is empty
+                unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                unit.Definitions.Add(new CCodeMethodDefinition(method));
+                return;
+            }
+
+            Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
+
+            unit.Declarations.Add(new CCodeMethodDeclaration(method));
+            var methodSymbol = sourceMethodFound ? sourceMethod : method;
+            var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
+            // so in case of Delegates you need to complete methods yourself
+            if (boundStatement != null)
+            {
+                unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
+            }
+            else if (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate && !methodSymbol.IsAbstract)
+            {
+                MethodBody body;
+                switch (methodSymbol.Name)
+                {
+                    case "BeginInvoke":
+                        body = MethodBodies.ReturnNull(method);
+                        break;
+                    case "Invoke":
+                        body = MethodBodies.ReturnDefault(method);
+                        break;
+                    case "EndInvoke":
+                        body = MethodBodies.ReturnDefault(method);
+                        break;
+                    default:
+                        body = MethodBodies.Throw(method);
+                        break;
+                }
+
+                unit.Definitions.Add(
+                    new CCodeMethodDefinition(method)
+                    {
+                        MethodBodyOpt = body
+                    });                
+            }
+            else
+            {
+#if GENERATE_STUBS
+                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface 
+                    && !methodSymbol.IsAbstract 
+                    && !(methodSymbol.IsExtern && ((MethodSymbol)method).ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged)))
+                {
+                    unit.Definitions.Add(
+                        new CCodeMethodDefinition(method)
+                        {
+                            IsStub = true,
+                            MethodBodyOpt = MethodBodies.Throw(method)
+                        });
+                }
+#endif
+            }
         }
 
         private CCodeUnit BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
@@ -262,143 +399,6 @@ namespace Il2Native.Logic
             }
 
             return unit;
-        }
-
-        private static void BuildStaticConstructorVariables(ITypeSymbol type, CCodeUnit unit)
-        {
-            // add call flag for static constructor
-            var cctorCalledField = new FieldImpl
-            {
-                Name = "_cctor_called",
-                Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
-                ContainingType = (INamedTypeSymbol)type,
-                ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true
-            };
-
-            unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
-            unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
-        }
-
-        private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)
-        {
-            // add call flag for static constructor
-            var typeHolderField = new FieldImpl
-            {
-                Name = "__type",
-                Type =
-                    new NamedTypeImpl
-                    {
-                        Name = "RuntimeType",
-                        ContainingNamespace =
-                            new NamespaceImpl
-                            {
-                                MetadataName = "System",
-                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true, ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" } }
-                            },
-                        TypeKind = TypeKind.Struct
-                    },
-                ContainingType = (INamedTypeSymbol)type,
-                ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true
-            };
-
-            unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
-            unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
-        }
-
-        private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
-        {
-            if (field.IsConst && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
-            {
-                return;
-            }
-
-            unit.Declarations.Add(new CCodeFieldDeclaration(field) { DoNotWrapStatic = !hasStaticConstructor });
-            if (field.IsStatic)
-            {
-                unit.Definitions.Add(new CCodeFieldDefinition(field) { DoNotWrapStatic = !hasStaticConstructor });
-            }
-        }
-
-        private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
-        {
-            var isDefaultConstructor = method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0;
-            if (isDefaultConstructor)
-            {
-                unit.HasDefaultConstructor = true;
-            }
-
-            if (method.MethodKind == MethodKind.Ordinary && method.IsStatic && method.Name == "Main")
-            {
-                unit.MainMethod = method;
-            }
-
-            var key = ((MethodSymbol)method).ToKeyString();
-            SourceMethodSymbol sourceMethod;
-            var sourceMethodFound = this.SourceMethodByMethodSymbol.TryGetValue(key, out sourceMethod);
-            BoundStatement boundStatement;
-            var boundStatementFound = this.BoundBodyByMethodSymbol.TryGetValue(key, out boundStatement);
-
-            if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
-            {
-                // ignore empty constructor as they should call Object.ctor() only which is empty
-                unit.Declarations.Add(new CCodeMethodDeclaration(method));
-                unit.Definitions.Add(new CCodeMethodDefinition(method));
-                return;
-            }
-
-            Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
-
-            unit.Declarations.Add(new CCodeMethodDeclaration(method));
-            var methodSymbol = sourceMethodFound ? sourceMethod : method;
-            var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
-            // so in case of Delegates you need to complete methods yourself
-            if (boundStatement != null)
-            {
-                unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
-            }
-            else if (requiresCompletion && methodSymbol.ContainingType.TypeKind == TypeKind.Delegate && !methodSymbol.IsAbstract)
-            {
-                MethodBody body;
-                switch (methodSymbol.Name)
-                {
-                    case "BeginInvoke":
-                        body = MethodBodies.ReturnNull(method);
-                        break;
-                    case "Invoke":
-                        body = MethodBodies.ReturnDefault(method);
-                        break;
-                    case "EndInvoke":
-                        body = MethodBodies.ReturnDefault(method);
-                        break;
-                    default:
-                        body = MethodBodies.Throw(method);
-                        break;
-                }
-
-                unit.Definitions.Add(
-                    new CCodeMethodDefinition(method)
-                    {
-                        MethodBodyOpt = body
-                    });                
-            }
-            else
-            {
-#if GENERATE_STUBS
-                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface 
-                    && !methodSymbol.IsAbstract 
-                    && !(methodSymbol.IsExtern && ((MethodSymbol)method).ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged)))
-                {
-                    unit.Definitions.Add(
-                        new CCodeMethodDefinition(method)
-                        {
-                            IsStub = true,
-                            MethodBodyOpt = MethodBodies.Throw(method)
-                        });
-                }
-#endif
-            }
         }
     }
 }

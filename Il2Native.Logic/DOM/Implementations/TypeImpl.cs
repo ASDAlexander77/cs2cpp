@@ -1,9 +1,12 @@
-﻿namespace Il2Native.Logic.DOM.Implementations
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Implementations
 {
+    using System;
     using System.Collections.Immutable;
     using System.Globalization;
     using System.Threading;
-
     using Microsoft.CodeAnalysis;
 
     public class TypeImpl : ITypeSymbol
@@ -50,7 +53,7 @@
 
         public ImmutableArray<AttributeData> GetAttributes()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Accessibility DeclaredAccessibility { get; private set; }
@@ -61,7 +64,7 @@
 
         public ISymbol FindImplementationForInterfaceMember(ISymbol interfaceMember)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public TypeKind TypeKind { get; set; }
@@ -82,76 +85,76 @@
         {
             get
             {
-                return OriginalDefinition;
+                return this.OriginalDefinition;
             }
         }
 
         public void Accept(SymbolVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public TResult Accept<TResult>(SymbolVisitor<TResult> visitor)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string GetDocumentationCommentId()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string GetDocumentationCommentXml(
             CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = new CancellationToken())
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string ToDisplayString(SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<SymbolDisplayPart> ToDisplayParts(SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public string ToMinimalDisplayString(SemanticModel semanticModel, int position, SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<SymbolDisplayPart> ToMinimalDisplayParts(SemanticModel semanticModel, int position, SymbolDisplayFormat format = null)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool HasUnsupportedMetadata { get; private set; }
 
         public ImmutableArray<ISymbol> GetMembers()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<ISymbol> GetMembers(string name)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name, int arity)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool IsNamespace { get; private set; }

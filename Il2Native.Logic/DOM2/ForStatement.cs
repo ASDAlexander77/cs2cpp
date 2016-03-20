@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Diagnostics;
@@ -6,24 +9,16 @@
 
     public class ForStatement : BlockStatement
     {
-        private enum Stages
-        {
-            Initialization,
-            Body,
-            Incrementing,
-            End
-        }
+        public Expression ConditionOpt { get; set; }
+
+        public Base IncrementingOpt { get; set; }
+
+        public Base InitializationOpt { get; set; }
 
         public override Kinds Kind
         {
             get { return Kinds.ForStatement; }
         }
-
-        public Base InitializationOpt { get; set; }
-        
-        public Base IncrementingOpt { get; set; }
-        
-        public Expression ConditionOpt { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -156,6 +151,14 @@
 
             c.NewLine();
             base.WriteTo(c);
+        }
+
+        private enum Stages
+        {
+            Initialization,
+            Body,
+            Incrementing,
+            End
         }
     }
 }

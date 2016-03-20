@@ -1,13 +1,14 @@
-﻿namespace Il2Native.Logic.DOM
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM
 {
     using System.Collections.Immutable;
     using System.Linq;
-
-    using Il2Native.Logic.DOM.Implementations;
-    using Il2Native.Logic.DOM.Synthesized;
-    using Il2Native.Logic.DOM2;
-
+    using DOM2;
+    using Implementations;
     using Microsoft.CodeAnalysis;
+    using Synthesized;
 
     /// <summary>
     /// </summary>
@@ -35,7 +36,7 @@
         /// </returns>
         public IMethodSymbol GetNewMethod(bool @static = false, bool doNotMergeTemplateParameters = false)
         {
-            var typeSymbol = (INamedTypeSymbol)this.Type;
+            var typeSymbol = (INamedTypeSymbol)Type;
             var methodImpl = new MethodImpl
                                  {
                                      Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new", @static ? "_static" : string.Empty), 
@@ -97,7 +98,7 @@
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.WriteTypeFullName(this.Type);
+            c.WriteTypeFullName(Type);
             c.NewLine();
             c.OpenBlock();
 
@@ -128,7 +129,7 @@
             // write clonse
             this.CreateCloneMethod().WriteTo(c);
 
-            foreach (var declaration in this.Declarations)
+            foreach (var declaration in Declarations)
             {
                 declaration.WriteTo(c);
             }
@@ -155,7 +156,7 @@
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.WriteTypeFullName(this.Type);
+            c.WriteTypeFullName(Type);
             c.NewLine();
             c.OpenBlock();
 
@@ -184,7 +185,7 @@
             // write clonse
             this.CreateCloneMethod(true).WriteTo(c);
 
-            foreach (var declaration in this.Declarations)
+            foreach (var declaration in Declarations)
             {
                 declaration.WriteTo(c);
             }
@@ -333,7 +334,7 @@
                               : (Expression)
                                 new Access
                                     {
-                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = this.Type } }, 
+                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = Type } }, 
                                         Expression =
                                             new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
                                     };
@@ -362,7 +363,7 @@
         /// </returns>
         private NamedTypeImpl GetDelegateType(bool @static = false)
         {
-            var typeSymbol = (INamedTypeSymbol)this.Type;
+            var typeSymbol = (INamedTypeSymbol)Type;
             var namedTypeImpl = new NamedTypeImpl
                                     {
                                         TypeKind = TypeKind.Class, 

@@ -1,13 +1,14 @@
-﻿namespace Il2Native.Logic.DOM
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM
 {
     using System.Collections.Generic;
     using System.Linq;
     using DOM2;
-
-    using Il2Native.Logic.DOM.Synthesized;
-
     using Implementations;
     using Microsoft.CodeAnalysis;
+    using Synthesized;
 
     public class CCodeInterfaceWrapperClass : CCodeClass
     {
@@ -27,41 +28,6 @@
                 .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
                 .Select(this.CreateWrapperMethod)
                 .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
-        }
-
-        private void CreateMemebers()
-        {
-            Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
-            {
-                Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
-            }
-        }
-
-        private MethodBody CreateMethodBody(IMethodSymbol method)
-        {
-            var callMethod = new Call()
-            {
-                ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
-                Method = method,
-            };
-
-            foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
-            {
-                callMethod.Arguments.Add(paramExpression);
-            }
-
-            Statement mainStatement;
-            if (!method.ReturnsVoid)
-            {
-                mainStatement = new ReturnStatement { ExpressionOpt = callMethod };
-            }
-            else
-            {
-                mainStatement = new ExpressionStatement { Expression = callMethod };
-            }
-
-            return new MethodBody(method) { Statements = { mainStatement } };
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -105,6 +71,41 @@
             }
 
             c.EndBlockWithoutNewLine();
+        }
+
+        private void CreateMemebers()
+        {
+            Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
+            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
+            {
+                Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
+            }
+        }
+
+        private MethodBody CreateMethodBody(IMethodSymbol method)
+        {
+            var callMethod = new Call()
+            {
+                ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
+                Method = method,
+            };
+
+            foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
+            {
+                callMethod.Arguments.Add(paramExpression);
+            }
+
+            Statement mainStatement;
+            if (!method.ReturnsVoid)
+            {
+                mainStatement = new ReturnStatement { ExpressionOpt = callMethod };
+            }
+            else
+            {
+                mainStatement = new ExpressionStatement { Expression = callMethod };
+            }
+
+            return new MethodBody(method) { Statements = { mainStatement } };
         }
 
         private MethodImpl CreateWrapperMethod(IMethodSymbol method)

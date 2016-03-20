@@ -1,7 +1,9 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -12,11 +14,11 @@
             get { return Kinds.BinaryOperator; }
         }
 
-        internal BinaryOperatorKind OperatorKind { get; set; }
-
         public Expression Left { get; set; }
 
         public Expression Right { get; set; }
+
+        internal BinaryOperatorKind OperatorKind { get; set; }
 
         internal void Parse(BoundBinaryOperator boundBinaryOperator)
         {
@@ -118,6 +120,35 @@
             }
         }
 
+        private static BinaryOperatorKind GetOperatorKind(BinaryOperatorKind kind)
+        {
+            return kind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical);
+        }
+
+        private static BinaryOperatorKind GetOperatorType(BinaryOperatorKind kind)
+        {
+            return kind & BinaryOperatorKind.TypeMask;
+        }
+
+        private static bool IsPointerOperation(BinaryOperatorKind kind)
+        {
+            switch (GetOperatorType(kind))
+            {
+                case BinaryOperatorKind.Pointer:
+                case BinaryOperatorKind.PointerAndInt:
+                case BinaryOperatorKind.PointerAndUInt:
+                case BinaryOperatorKind.PointerAndLong:
+                case BinaryOperatorKind.PointerAndULong:
+                case BinaryOperatorKind.IntAndPointer:
+                case BinaryOperatorKind.UIntAndPointer:
+                case BinaryOperatorKind.LongAndPointer:
+                case BinaryOperatorKind.ULongAndPointer:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private void WriteOperator(CCodeWriterBase c)
         {
             switch (GetOperatorKind(this.OperatorKind))
@@ -196,35 +227,6 @@
 
                 default:
                     throw new NotImplementedException();
-            }
-        }
-
-        private static BinaryOperatorKind GetOperatorKind(BinaryOperatorKind kind)
-        {
-            return kind & (BinaryOperatorKind.OpMask | BinaryOperatorKind.Logical);
-        }
-
-        private static BinaryOperatorKind GetOperatorType(BinaryOperatorKind kind)
-        {
-            return kind & BinaryOperatorKind.TypeMask;
-        }
-
-        private static bool IsPointerOperation(BinaryOperatorKind kind)
-        {
-            switch (GetOperatorType(kind))
-            {
-                case BinaryOperatorKind.Pointer:
-                case BinaryOperatorKind.PointerAndInt:
-                case BinaryOperatorKind.PointerAndUInt:
-                case BinaryOperatorKind.PointerAndLong:
-                case BinaryOperatorKind.PointerAndULong:
-                case BinaryOperatorKind.IntAndPointer:
-                case BinaryOperatorKind.UIntAndPointer:
-                case BinaryOperatorKind.LongAndPointer:
-                case BinaryOperatorKind.ULongAndPointer:
-                    return true;
-                default:
-                    return false;
             }
         }
     }

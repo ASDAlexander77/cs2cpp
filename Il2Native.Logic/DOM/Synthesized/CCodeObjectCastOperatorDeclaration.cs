@@ -1,7 +1,9 @@
-﻿namespace Il2Native.Logic.DOM.Synthesized
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Synthesized
 {
     using System.Collections.Immutable;
-    using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
 

@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
@@ -8,22 +11,13 @@
 
     public class ForEachSimpleArrayStatement : BlockStatement
     {
-        private enum Stages
-        {
-            Initialization,
-            Body,
-            Incrementing,
-            End
-        }
+        private Base _initialization;
 
         private readonly IList<Statement> locals = new List<Statement>();
 
-        private Base _initialization;
+        public Expression Condition { get; set; }
 
-        public override Kinds Kind
-        {
-            get { return Kinds.ForEachSimpleArrayStatement; }
-        }
+        public Base Incrementing { get; set; }
 
         public Base Initialization
         {
@@ -31,9 +25,10 @@
             set { this._initialization = value; }
         }
 
-        public Base Incrementing { get; set; }
-        
-        public Expression Condition { get; set; }
+        public override Kinds Kind
+        {
+            get { return Kinds.ForEachSimpleArrayStatement; }
+        }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -55,13 +50,13 @@
             var mainBlock = boundStatementList as BoundBlock;
             if (mainBlock != null)
             {
-                ParseLocals(mainBlock.Locals, locals);
+                ParseLocals(mainBlock.Locals, this.locals);
             }
 
             var innerBlock = statementList as BoundBlock;
             if (innerBlock != null && (object)mainBlock != (object)innerBlock)
             {
-                ParseLocals(innerBlock.Locals, locals);
+                ParseLocals(innerBlock.Locals, this.locals);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(statementList))
@@ -119,7 +114,7 @@
                     switch (stage)
                     {
                         case Stages.Initialization:
-                            MergeOrSet(ref _initialization, statement);
+                            MergeOrSet(ref this._initialization, statement);
                             break;
                         case Stages.Body:
                             Statements = statement;
@@ -206,6 +201,14 @@
             {
                 c.EndBlock();
             }
+        }
+
+        private enum Stages
+        {
+            Initialization,
+            Body,
+            Incrementing,
+            End
         }
     }
 }

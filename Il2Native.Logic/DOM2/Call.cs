@@ -1,11 +1,10 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
-    using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
-
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -14,9 +13,12 @@
     {
         private readonly IList<Expression> _arguments = new List<Expression>();
 
-        public override Kinds Kind
+        public IList<Expression> Arguments
         {
-            get { return Kinds.Call; }
+            get
+            {
+                return this._arguments;
+            }
         }
 
         public bool IsCallingConstructor
@@ -27,17 +29,14 @@
             }
         }
 
+        public override Kinds Kind
+        {
+            get { return Kinds.Call; }
+        }
+
         public IMethodSymbol Method { get; set; }
 
         public Expression ReceiverOpt { get; set; }
-
-        public IList<Expression> Arguments
-        {
-            get
-            {
-                return this._arguments;
-            }
-        }
 
         internal static void WriteCallArguments(IEnumerable<Expression> arguments, IEnumerable<IParameterSymbol> parameterSymbols, CCodeWriterBase c)
         {
@@ -64,6 +63,61 @@
             }
 
             c.TextSpan(")");
+        }
+
+        internal void Parse(BoundCall boundCall)
+        {
+            base.Parse(boundCall);
+            this.Method = boundCall.Method;
+            if (boundCall.ReceiverOpt != null)
+            {
+                this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+                // special case to avoid calling (*xxx).method() and replace with xxx->method();
+                var pointerIndirectionOperator = this.ReceiverOpt as PointerIndirectionOperator;
+                if (pointerIndirectionOperator != null)
+                {
+                    this.ReceiverOpt = pointerIndirectionOperator.Operand;
+                    this.ReceiverOpt.IsReference = true;
+                }
+            }
+
+            foreach (var expression in boundCall.Arguments)
+            {
+                var argument = Deserialize(expression) as Expression;
+                Debug.Assert(argument != null);
+                this._arguments.Add(argument);
+            }
+        }
+
+        internal override void WriteTo(CCodeWriterBase c)
+        {
+            if (this.Method.IsStaticMethod())
+            {
+                c.WriteTypeFullName(this.Method.ContainingType);
+                c.TextSpan("::");
+                c.WriteMethodName(this.Method, addTemplate: true);
+            }
+            else
+            {
+                var receiverOpt = this.ReceiverOpt;
+                if (receiverOpt != null)
+                {
+                    receiverOpt = this.PrepareMethodReceiver(receiverOpt, this.Method);
+                    // if method name is empty then receiverOpt returns function pointer
+                    if (!string.IsNullOrWhiteSpace(this.Method.Name))
+                    {
+                        c.WriteAccess(receiverOpt);
+                    }
+                    else
+                    {
+                        c.WriteExpressionInParenthesesIfNeeded(receiverOpt);
+                    }
+                }
+
+                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
+            }
+
+            WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
         private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter)
@@ -125,61 +179,6 @@
             }
 
             return effectiveExpression;
-        }
-
-        internal void Parse(BoundCall boundCall)
-        {
-            base.Parse(boundCall);
-            this.Method = boundCall.Method;
-            if (boundCall.ReceiverOpt != null)
-            {
-                this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
-                // special case to avoid calling (*xxx).method() and replace with xxx->method();
-                var pointerIndirectionOperator = this.ReceiverOpt as PointerIndirectionOperator;
-                if (pointerIndirectionOperator != null)
-                {
-                    this.ReceiverOpt = pointerIndirectionOperator.Operand;
-                    this.ReceiverOpt.IsReference = true;
-                }
-            }
-
-            foreach (var expression in boundCall.Arguments)
-            {
-                var argument = Deserialize(expression) as Expression;
-                Debug.Assert(argument != null);
-                this._arguments.Add(argument);
-            }
-        }
-
-        internal override void WriteTo(CCodeWriterBase c)
-        {
-            if (this.Method.IsStaticMethod())
-            {
-                c.WriteTypeFullName(this.Method.ContainingType);
-                c.TextSpan("::");
-                c.WriteMethodName(this.Method, addTemplate: true);
-            }
-            else
-            {
-                var receiverOpt = this.ReceiverOpt;
-                if (receiverOpt != null)
-                {
-                    receiverOpt = this.PrepareMethodReceiver(receiverOpt, this.Method);
-                    // if method name is empty then receiverOpt returns function pointer
-                    if (!string.IsNullOrWhiteSpace(this.Method.Name))
-                    {
-                        c.WriteAccess(receiverOpt);
-                    }
-                    else
-                    {
-                        c.WriteExpressionInParenthesesIfNeeded(receiverOpt);
-                    }
-                }
-
-                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
-            }
-
-            WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
         private Expression PrepareMethodReceiver(Expression receiverOpt, IMethodSymbol methodSymbol)

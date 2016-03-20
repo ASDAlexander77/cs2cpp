@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Diagnostics;
@@ -6,25 +9,16 @@
 
     public class IfStatement : Statement
     {
-        private enum Stages
-        {
-            Condition,
-            IfBody,
-            EndOfIf,
-            ElseBody,
-            EndOfElse
-        }
+        public Expression Condition { get; set; }
+
+        public Base ElseStatementsOpt { get; set; }
+
+        public Base IfStatements { get; set; }
 
         public override Kinds Kind
         {
             get { return Kinds.IfStatement; }
         }
-
-        public Expression Condition { get; set; }
-
-        public Base IfStatements { get; set; }
-
-        public Base ElseStatementsOpt { get; set; }
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -130,6 +124,15 @@
             c.Separate();
 
             // No normal ending of Statement as we do not need extra ;
+        }
+
+        private enum Stages
+        {
+            Condition,
+            IfBody,
+            EndOfIf,
+            ElseBody,
+            EndOfElse
         }
     }
 }

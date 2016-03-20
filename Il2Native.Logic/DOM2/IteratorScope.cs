@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
@@ -8,16 +11,16 @@
     /// TODO: join with lambda expression
     public class IteratorScope : BlockStatement
     {
-        private IList<IFieldSymbol> _fields = new List<IFieldSymbol>();
+        private readonly IList<IFieldSymbol> _fields = new List<IFieldSymbol>();
+
+        public IList<IFieldSymbol> Fields
+        {
+            get { return this._fields; }
+        }
 
         public override Kinds Kind
         {
             get { return Kinds.IteratorScope; }
-        }
-
-        public IList<IFieldSymbol> Fields
-        {
-            get { return _fields; }
         }
 
         internal void Parse(BoundIteratorScope boundIteratorScope)
@@ -41,12 +44,12 @@
             Statements.Visit(visitor);
         }
 
-        ////internal override void WriteTo(CCodeWriterBase c)
-        ////{
-        ////    c.TextSpan("[&]");
-        ////    c.TextSpan("(");
-
         ////    /*
+        ////    c.TextSpan("(");
+        ////    c.TextSpan("[&]");
+        ////{
+
+        ////internal override void WriteTo(CCodeWriterBase c)
         ////    // because all of them are fields, you do not need to make a function call
         ////    var any = false;
         ////    foreach (var field in this.Fields)

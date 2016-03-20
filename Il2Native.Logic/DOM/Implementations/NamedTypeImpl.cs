@@ -1,8 +1,13 @@
-﻿namespace Il2Native.Logic.DOM.Implementations
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM.Implementations
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using Microsoft.CodeAnalysis;
+
     public class NamedTypeImpl : TypeImpl, INamedTypeSymbol
     {
         public int Arity { get; private set; }
@@ -17,14 +22,15 @@
         public IMethodSymbol DelegateInvokeMethod { get; private set; }
         public INamedTypeSymbol EnumUnderlyingType { get; private set; }
         public INamedTypeSymbol ConstructedFrom { get; private set; }
+
         public INamedTypeSymbol Construct(params ITypeSymbol[] typeArguments)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public INamedTypeSymbol ConstructUnboundGenericType()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ImmutableArray<IMethodSymbol> InstanceConstructors { get; private set; }

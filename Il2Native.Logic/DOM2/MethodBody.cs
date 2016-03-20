@@ -1,20 +1,16 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Net.Sockets;
-
     using Microsoft.CodeAnalysis;
 
     public class MethodBody : Block
     {
-        public override Kinds Kind
-        {
-            get { return Kinds.MethodBody; }
-        }
-
         public MethodBody(IMethodSymbol methodSymbol)
         {
             if (methodSymbol == null)
@@ -25,14 +21,33 @@
             this.MethodSymbol = methodSymbol;
         }
 
+        public override Kinds Kind
+        {
+            get { return Kinds.MethodBody; }
+        }
+
         public IMethodSymbol MethodSymbol { get; protected set; }
+
+        public static long GetIdIsolatedByMethod(string obj, IDictionary<string, long> stringIdGenerator)
+        {
+            long id;
+            if (stringIdGenerator.TryGetValue(obj, out id))
+            {
+                return id;
+            }
+
+            id = stringIdGenerator.Count + 1;
+            stringIdGenerator[obj] = id;
+
+            return id;
+        }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             CCodeWriterBase.SetLocalObjectIDGenerator();
 
             // get actual statements
-            var statements = this.Statements;
+            var statements = Statements;
             if (statements.Count == 1 && statements.First().Kind == Kinds.BlockStatement)
             {
                 var blockStatement = statements.First() as BlockStatement;
@@ -72,7 +87,7 @@
 
         private static int ConstructorInitializer(CCodeWriterBase c, IList<Statement> statements)
         {
-            int skip = 0;
+            var skip = 0;
             // call constructors
             var constructorsOrAssignments =
                 statements.TakeWhile(IsConstructorCallOrAssignment).Select(GetCallOrAssignment).ToArray();
@@ -123,74 +138,6 @@
             return skip;
         }
 
-        private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)
-        {
-            var labels = new List<Label>();
-            var usedLabels = new List<Label>();
-            var usedSwitchLabels = new List<SwitchLabel>();
-
-            foreach (var statement in statements)
-            {
-                statement.Visit(
-                    (e) =>
-                    {
-                        e.MethodOwner = this.MethodSymbol;
-
-                        if (e.Kind == Kinds.LabelStatement)
-                        {
-                            var labelStatement = (LabelStatement)e;
-                            labels.Add(labelStatement.Label);
-                        }
-
-                        if (e.Kind == Kinds.GotoStatement)
-                        {
-                            var gotoStatement = (GotoStatement)e;
-                            usedLabels.Add(gotoStatement.Label);
-                        }
-
-                        if (e.Kind == Kinds.ConditionalGoto)
-                        {
-                            var conditionalGoto = (ConditionalGoto)e;
-                            usedLabels.Add(conditionalGoto.Label);
-                        }
-
-                        if (e.Kind == Kinds.SwitchSection)
-                        {
-                            var switchSection = (SwitchSection)e;
-                            usedSwitchLabels.AddRange(switchSection.Labels);
-                        }
-
-                        // set return types
-                        if (e.Kind == Kinds.ReturnStatement)
-                        {
-                            var returnStatement = (ReturnStatement)e;
-                            returnStatement.ReturnType = MethodSymbol.ReturnType;
-                        }
-                    });
-            }
-
-            if (usedLabels.Count > 0)
-            {
-                var dict = new SortedDictionary<string, bool>(usedLabels.Select(i => i.LabelName).Distinct().ToDictionary(i => i, i => true));
-                foreach (var usedSwitchLabel in usedSwitchLabels.Where(usedSwitchLabel => dict.ContainsKey(usedSwitchLabel.LabelName)))
-                {
-                    usedSwitchLabel.GenerateLabel = true;
-                }
-            }
-
-            IDictionary<string, long> stringIdGeneratorByMethod = new SortedDictionary<string, long>();
-            // change label names to make it less random
-            foreach (var label in labels)
-            {
-                FixLabelName(label, stringIdGeneratorByMethod);
-            }
-
-            foreach (var label in usedLabels)
-            {
-                FixLabelName(label, stringIdGeneratorByMethod);
-            }
-        }
-
         private static void FixLabelName(Label label, IDictionary<string, long> stringIdGenerator)
         {
             var index1 = label.LabelName.IndexOf('<');
@@ -213,20 +160,6 @@
             var newLabel = string.Format("{0}_{1}", label.LabelName.Substring(index1, index2 - index1), GetIdIsolatedByMethod(label.LabelName, stringIdGenerator));
 
             label.LabelName = newLabel;
-        }
-
-        public static long GetIdIsolatedByMethod(string obj, IDictionary<string, long> stringIdGenerator)
-        {
-            long id;
-            if (stringIdGenerator.TryGetValue(obj, out id))
-            {
-                return id;
-            }
-
-            id = stringIdGenerator.Count + 1;
-            stringIdGenerator[obj] = id;
-
-            return id;
         }
 
         private static Expression GetCallOrAssignment(Statement s)
@@ -274,6 +207,74 @@
             }
 
             return false;
+        }
+
+        private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)
+        {
+            var labels = new List<Label>();
+            var usedLabels = new List<Label>();
+            var usedSwitchLabels = new List<SwitchLabel>();
+
+            foreach (var statement in statements)
+            {
+                statement.Visit(
+                    (e) =>
+                    {
+                        e.MethodOwner = this.MethodSymbol;
+
+                        if (e.Kind == Kinds.LabelStatement)
+                        {
+                            var labelStatement = (LabelStatement)e;
+                            labels.Add(labelStatement.Label);
+                        }
+
+                        if (e.Kind == Kinds.GotoStatement)
+                        {
+                            var gotoStatement = (GotoStatement)e;
+                            usedLabels.Add(gotoStatement.Label);
+                        }
+
+                        if (e.Kind == Kinds.ConditionalGoto)
+                        {
+                            var conditionalGoto = (ConditionalGoto)e;
+                            usedLabels.Add(conditionalGoto.Label);
+                        }
+
+                        if (e.Kind == Kinds.SwitchSection)
+                        {
+                            var switchSection = (SwitchSection)e;
+                            usedSwitchLabels.AddRange(switchSection.Labels);
+                        }
+
+                        // set return types
+                        if (e.Kind == Kinds.ReturnStatement)
+                        {
+                            var returnStatement = (ReturnStatement)e;
+                            returnStatement.ReturnType = this.MethodSymbol.ReturnType;
+                        }
+                    });
+            }
+
+            if (usedLabels.Count > 0)
+            {
+                var dict = new SortedDictionary<string, bool>(usedLabels.Select(i => i.LabelName).Distinct().ToDictionary(i => i, i => true));
+                foreach (var usedSwitchLabel in usedSwitchLabels.Where(usedSwitchLabel => dict.ContainsKey(usedSwitchLabel.LabelName)))
+                {
+                    usedSwitchLabel.GenerateLabel = true;
+                }
+            }
+
+            IDictionary<string, long> stringIdGeneratorByMethod = new SortedDictionary<string, long>();
+            // change label names to make it less random
+            foreach (var label in labels)
+            {
+                FixLabelName(label, stringIdGeneratorByMethod);
+            }
+
+            foreach (var label in usedLabels)
+            {
+                FixLabelName(label, stringIdGeneratorByMethod);
+            }
         }
     }
 }

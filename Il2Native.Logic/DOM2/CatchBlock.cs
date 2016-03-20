@@ -1,23 +1,24 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
-    using System.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class CatchBlock : BlockStatement
     {
+        public Expression ExceptionFilterOpt { get; set; }
+
+        public Expression ExceptionSourceOpt { get; set; }
+
+        public ITypeSymbol ExceptionTypeOpt { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.CatchBlock; }
         }
-
-        public ITypeSymbol ExceptionTypeOpt { get; set; }
-
-        public Expression ExceptionSourceOpt { get; set; }
-
-        public Expression ExceptionFilterOpt { get; set; }
 
         internal void Parse(BoundCatchBlock boundCatchBlock)
         {
@@ -41,7 +42,7 @@
                 this.ExceptionFilterOpt = Deserialize(boundCatchBlock.ExceptionFilterOpt) as Expression;
             }
 
-            this.Statements = Deserialize(boundCatchBlock.Body);
+            Statements = Deserialize(boundCatchBlock.Body);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

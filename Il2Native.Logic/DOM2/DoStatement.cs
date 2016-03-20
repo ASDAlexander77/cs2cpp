@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Diagnostics;
@@ -6,20 +9,12 @@
 
     public class DoStatement : BlockStatement
     {
-        private enum Stages
-        {
-            Initialization,
-            Body,
-            Condition,
-            End
-        }
+        public Expression Condition { get; set; }
 
         public override Kinds Kind
         {
             get { return Kinds.DoStatement; }
         }
-
-        public Expression Condition { get; set; }        
 
         internal bool Parse(BoundStatementList boundStatementList)
         {
@@ -113,6 +108,14 @@
             c.TextSpan(")");
 
             c.EndStatement();
+        }
+
+        private enum Stages
+        {
+            Initialization,
+            Body,
+            Condition,
+            End
         }
     }
 }

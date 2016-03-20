@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
@@ -9,35 +12,20 @@
     {
         private IList<CatchBlock> catchBlocks = new List<CatchBlock>();
 
-        public override Kinds Kind
-        {
-            get { return Kinds.TryStatement; }
-        }
-
-        public Base TryBlock { get; set; }
-
-        public Base FinallyBlockOpt { get; set; }
-
         public IList<CatchBlock> CatchBlocks
         {
             get { return this.catchBlocks; }
             set { this.catchBlocks = value; }
         }
 
-        internal override void Visit(Action<Base> visitor)
-        {
-            base.Visit(visitor);
-            this.TryBlock.Visit(visitor);
-            foreach (var catchBlock in CatchBlocks)
-            {
-                catchBlock.Visit(visitor);
-            }
+        public Base FinallyBlockOpt { get; set; }
 
-            if (this.FinallyBlockOpt != null)
-            {
-                this.FinallyBlockOpt.Visit(visitor);
-            }
+        public override Kinds Kind
+        {
+            get { return Kinds.TryStatement; }
         }
+
+        public Base TryBlock { get; set; }
 
         internal void Parse(BoundTryStatement boundTryStatement)
         {
@@ -56,6 +44,21 @@
             if (boundTryStatement.FinallyBlockOpt != null)
             {
                 this.FinallyBlockOpt = Deserialize(boundTryStatement.FinallyBlockOpt) as Block;
+            }
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.TryBlock.Visit(visitor);
+            foreach (var catchBlock in this.CatchBlocks)
+            {
+                catchBlock.Visit(visitor);
+            }
+
+            if (this.FinallyBlockOpt != null)
+            {
+                this.FinallyBlockOpt.Visit(visitor);
             }
         }
 

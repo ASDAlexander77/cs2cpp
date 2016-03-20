@@ -1,7 +1,9 @@
-﻿namespace Il2Native.Logic.DOM
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM
 {
-    using Il2Native.Logic.DOM2;
-    using Implementations;
+    using DOM2;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -12,16 +14,16 @@
             this.Method = method;
         }
 
+        public override bool IsGeneric
+        {
+            get { return this.Method.ContainingType.IsGenericType || (this.Method.IsGenericMethod && !this.Method.IsVirtualGenericMethod()); }
+        }
+
         public IMethodSymbol Method { get; set; }
 
         public MethodBody MethodBodyOpt { get; set; }
 
         internal BoundStatement BoundBody { get; set; }
-
-        public override bool IsGeneric
-        {
-            get { return this.Method.ContainingType.IsGenericType || (this.Method.IsGenericMethod && !this.Method.IsVirtualGenericMethod()); }
-        }
 
         public override void WriteTo(CCodeWriterBase c)
         {
@@ -32,9 +34,9 @@
 
             c.WriteMethodDeclaration(this.Method, false);
 
-            if (MethodBodyOpt != null)
+            if (this.MethodBodyOpt != null)
             {
-                MethodBodyOpt.WriteTo(c);
+                this.MethodBodyOpt.WriteTo(c);
             }
             else
             {

@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using Microsoft.CodeAnalysis;
@@ -6,14 +9,14 @@
 
     public class ElementAccessExpression : Expression
     {
+        public Expression Index { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.ElementAccessExpression; }
         }
 
         public Expression Operand { get; set; }
-        
-        public Expression Index { get; set; }
 
         internal bool Parse(BoundPointerIndirectionOperator boundPointerIndirectionOperator)
         {

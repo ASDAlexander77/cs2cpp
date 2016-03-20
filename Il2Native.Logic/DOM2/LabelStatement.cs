@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using Microsoft.CodeAnalysis;
@@ -12,6 +15,21 @@
         }
 
         public Label Label { get; set; }
+
+        public static string GetUniqueLabel(ILabelSymbol label)
+        {
+            var lbl = label.Name;
+
+            if (!lbl.StartsWith("<"))
+            {
+                return label.Name;
+            }
+
+            var firstTime = false;
+            lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
+
+            return lbl;
+        }
 
         internal void Parse(BoundLabelStatement boundLabelStatement)
         {
@@ -40,21 +58,6 @@
             c.NewLine();
 
             c.RequireEmptyStatement();
-        }
-
-        public static string GetUniqueLabel(ILabelSymbol label)
-        {
-            var lbl = label.Name;
-
-            if (!lbl.StartsWith("<"))
-            {
-                return label.Name;
-            }
-
-            var firstTime = false;
-            lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
-
-            return lbl;
         }
     }
 }

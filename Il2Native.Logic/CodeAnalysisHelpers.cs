@@ -1,26 +1,15 @@
-﻿namespace Il2Native.Logic
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public static class CodeAnalysisHelpers
     {
-        public static IEnumerable<ITypeSymbol> EnumAllTypes(this IModuleSymbol module)
-        {
-            foreach (var metadataTypeAdapter in module.GlobalNamespace.EnumAllNamespaces().SelectMany(n => n.GetTypeMembers()))
-            {
-                yield return metadataTypeAdapter;
-                foreach (var nestedType in metadataTypeAdapter.EnumAllNestedTypes())
-                {
-                    yield return nestedType;
-                }
-            }
-        }
-
         public static IEnumerable<INamespaceOrTypeSymbol> EnumAllNamespaces(this INamespaceOrTypeSymbol source)
         {
             yield return source;
@@ -33,6 +22,44 @@
         public static IEnumerable<ITypeSymbol> EnumAllNestedTypes(this INamespaceOrTypeSymbol source)
         {
             return source.GetTypeMembers().SelectMany(nestedType => EnumAllNestedTypes(nestedType));
+        }
+
+        public static IEnumerable<ITypeSymbol> EnumAllTypes(this IModuleSymbol module)
+        {
+            foreach (var metadataTypeAdapter in module.GlobalNamespace.EnumAllNamespaces().SelectMany(n => n.GetTypeMembers()))
+            {
+                yield return metadataTypeAdapter;
+                foreach (var nestedType in metadataTypeAdapter.EnumAllNestedTypes())
+                {
+                    yield return nestedType;
+                }
+            }
+        }
+
+        public static IEnumerable<IMethodSymbol> EnumerateAllMethodsRecursevly(this INamedTypeSymbol type)
+        {
+            /*
+            if (type.TypeKind == TypeKind.Interface)
+            {
+                foreach (var memberBase in type.Interfaces.SelectMany(i => i.EnumerateAllMethodsRecursevly()))
+                {
+                    yield return memberBase;
+                }
+            }
+            */ 
+
+            if (type.BaseType != null)
+            {
+                foreach (var memberBase in type.BaseType.EnumerateAllMethodsRecursevly())
+                {
+                    yield return memberBase;
+                }
+            }
+
+            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
+            {
+                yield return member;
+            }
         }
 
         public static bool IsDerivedFrom(this ITypeSymbol source, ITypeSymbol from)
@@ -49,6 +76,11 @@
         public static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNames(this ITypeSymbol type)
         {
             return IterateAllMethodsWithTheSameNames((INamedTypeSymbol)type);
+        }
+
+        public static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(this ITypeSymbol type)
+        {
+            return IterateAllMethodsWithTheSameNamesTakeOnlyOne((INamedTypeSymbol)type);
         }
 
         private static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNames(INamedTypeSymbol type)
@@ -73,11 +105,6 @@
             }
 
             return methods;
-        }
-
-        public static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(this ITypeSymbol type)
-        {
-            return IterateAllMethodsWithTheSameNamesTakeOnlyOne((INamedTypeSymbol)type);
         }
 
         private static IEnumerable<IMethodSymbol> IterateAllMethodsWithTheSameNamesTakeOnlyOne(INamedTypeSymbol type)
@@ -108,32 +135,6 @@
             return methods;
         }
 
-        public static IEnumerable<IMethodSymbol> EnumerateAllMethodsRecursevly(this INamedTypeSymbol type)
-        {
-            /*
-            if (type.TypeKind == TypeKind.Interface)
-            {
-                foreach (var memberBase in type.Interfaces.SelectMany(i => i.EnumerateAllMethodsRecursevly()))
-                {
-                    yield return memberBase;
-                }
-            }
-            */ 
-
-            if (type.BaseType != null)
-            {
-                foreach (var memberBase in type.BaseType.EnumerateAllMethodsRecursevly())
-                {
-                    yield return memberBase;
-                }
-            }
-
-            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
-            {
-                yield return member;
-            }
-        }
-
         public class KeyStringEqualityComparer : IEqualityComparer<IMethodSymbol>
         {
             public bool Equals(IMethodSymbol x, IMethodSymbol y)
@@ -155,19 +156,6 @@
             }
         }
 
-        public class TypeParameterByReferenceEqualityComparer : IEqualityComparer<ITypeParameterSymbol>
-        {
-            public bool Equals(ITypeParameterSymbol x, ITypeParameterSymbol y)
-            {
-                return x.Name == y.Name;
-            }
-
-            public int GetHashCode(ITypeParameterSymbol obj)
-            {
-                return obj.GetHashCode();
-            }
-        }
-
         public class TypeParameterByNameEqualityComparer : IEqualityComparer<ITypeParameterSymbol>
         {
             public bool Equals(ITypeParameterSymbol x, ITypeParameterSymbol y)
@@ -180,6 +168,19 @@
                 var hash = 17;
                 hash = hash * 31 + obj.Name.GetHashCode();
                 return hash;
+            }
+        }
+
+        public class TypeParameterByReferenceEqualityComparer : IEqualityComparer<ITypeParameterSymbol>
+        {
+            public bool Equals(ITypeParameterSymbol x, ITypeParameterSymbol y)
+            {
+                return x.Name == y.Name;
+            }
+
+            public int GetHashCode(ITypeParameterSymbol obj)
+            {
+                return obj.GetHashCode();
             }
         }
     }

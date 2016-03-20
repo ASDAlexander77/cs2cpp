@@ -1,20 +1,22 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
-
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ReturnStatement : Statement
     {
+        public Expression ExpressionOpt { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.ReturnStatement; }
         }
 
         public ITypeSymbol ReturnType { get; set; }
-
-        public Expression ExpressionOpt { get; set; }
 
         internal void Parse(BoundReturnStatement boundReturnStatement)
         {
@@ -44,7 +46,7 @@
             if (this.ExpressionOpt != null)
             {
                 c.WhiteSpace();
-                if (this.ReturnType != null && this.ReturnType.IsValueType && ExpressionOpt is ThisReference)
+                if (this.ReturnType != null && this.ReturnType.IsValueType && this.ExpressionOpt is ThisReference)
                 {
                     c.TextSpan("*");
                 }

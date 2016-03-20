@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
 
@@ -9,9 +12,9 @@
             get { return Kinds.BlockStatement; }
         }
 
-        public Base Statements { get; set; }
-
         public bool NoSeparation { get; set; }
+
+        public Base Statements { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {

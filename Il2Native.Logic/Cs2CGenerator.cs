@@ -1,9 +1,6 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Cs2CGenerator.cs" company="">
-// </copyright>
-// <summary>
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
 namespace Il2Native.Logic
 {
     using System;
@@ -14,28 +11,24 @@ namespace Il2Native.Logic
     using System.IO;
     using System.Linq;
     using System.Text;
-    using System.Xml;
     using System.Xml.Linq;
-    using System.Xml.XPath;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Emit;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-    using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.Text;
 
     /// <summary>
     /// </summary>
     public class Cs2CGenerator
     {
+        private readonly IDictionary<string, BoundStatement> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatement>();
         private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
-        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-
-        private readonly IDictionary<string, BoundStatement> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatement>();
-
         private readonly IDictionary<string, SourceMethodSymbol> sourceMethodByMethodSymbol = new ConcurrentDictionary<string, SourceMethodSymbol>();
+
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -68,13 +61,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public bool IsCoreLib
-        {
-            get
-            {
-                return this.Options["NoStdLib"] == "true";
-            }
-        }
+        public ISet<AssemblyIdentity> Assemblies { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -86,15 +73,35 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string DefaultDllLocations { get; private set; }
+
+        public bool IsCoreLib
+        {
+            get
+            {
+                return this.Options["NoStdLib"] == "true";
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string[] ReferencesList { get; set; }
 
         /// <summary>
         /// </summary>
-        public string DefaultDllLocations { get; private set; }
+        public string SourceFilePath { get; private set; }
 
         /// <summary>
         /// </summary>
-        public string SourceFilePath { get; private set; }
+        protected string FirstSource { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected IDictionary<string, string> Options { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected string[] Sources { get; private set; }
 
         internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol
         {
@@ -106,24 +113,90 @@ namespace Il2Native.Logic
             get { return this.sourceMethodByMethodSymbol; }
         }
 
-        public ISet<AssemblyIdentity> Assemblies { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected string FirstSource { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected string[] Sources { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected IDictionary<string, string> Options { get; private set; }
+        public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)
+        {
+            return Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
+        }
 
         public IAssemblySymbol Load()
         {
             var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
-            return LoadAssemblySymbol(assemblyMetadata);
+            return this.LoadAssemblySymbol(assemblyMetadata);
+        }
+
+        private static object GetAssemblyHashString(AssemblyIdentity assemblyIdentity)
+        {
+            if (!assemblyIdentity.HasPublicKey)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var @byte in assemblyIdentity.PublicKey)
+            {
+                sb.AppendFormat("{0:N}", @byte);
+            }
+
+            return sb.ToString();
+        }
+
+        private static string GetReferenceValue(XNamespace ns, XElement element)
+        {
+            var xElement = element.Element(ns + "HintPath");
+            if (xElement != null)
+            {
+                return xElement.Value;
+            }
+
+            return element.Attribute("Include").Value;
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
+        {
+            if (added.Contains(assemblyIdentity))
+            {
+                return;
+            }
+
+            var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
+            if (resolvedFilePath == null)
+            {
+                return;
+            }
+
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            if (added.Add(metadata.Assembly.Identity))
+            {
+                var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+                assemblies.Add(metadataImageReference);
+
+                this.LoadAssemblySymbol(metadata, true);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    this.AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
+        }
+
+        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
+        {
+            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+
+            if (added.Add(metadata.Assembly.Identity))
+            {
+                assemblies.Add(metadataImageReference);
+
+                this.LoadAssemblySymbol(metadata, true);
+
+                // process nested
+                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                {
+                    this.AddAsseblyReference(assemblies, added, refAssemblyIdentity);
+                }
+            }
         }
 
         private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
@@ -139,7 +212,7 @@ namespace Il2Native.Logic
                         SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
                             new CSharpParseOptions(
                             LanguageVersion.Experimental,
-                            preprocessorSymbols: Options["DefineConstants"].Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
+                            preprocessorSymbols: this.Options["DefineConstants"].Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
                             s));
 
             var assemblies = new List<MetadataImageReference>();
@@ -159,14 +232,14 @@ namespace Il2Native.Logic
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
                 var key = symbol.ToKeyString();
-                Debug.Assert(!boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
+                Debug.Assert(!this.boundBodyByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 this.boundBodyByMethodSymbol[key] = body;
             };
 
             PEModuleBuilder.OnSourceMethodDelegate peModuleBuilderOnSourceMethod = (symbol, sourceMethod) =>
             {
                 var key = symbol.ToKeyString();
-                Debug.Assert(!sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
+                Debug.Assert(!this.sourceMethodByMethodSymbol.ContainsKey(key), "Check if method is partial");
                 this.sourceMethodByMethodSymbol[key] = sourceMethod;
             };
 
@@ -205,75 +278,6 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromImageStream(dllStream);
         }
 
-        private HashSet<AssemblyIdentity> LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
-        {
-            var added = new HashSet<AssemblyIdentity>();
-            if (this.ReferencesList != null)
-            {
-                foreach (var refItem in this.ReferencesList)
-                {
-                    if (File.Exists(refItem))
-                    {
-                        AddAsseblyReference(assemblies, added, refItem);
-                    }
-                    else
-                    {
-                        this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
-                    }
-                }
-            }
-
-            return added;
-        }
-
-        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
-        {
-            if (added.Contains(assemblyIdentity))
-            {
-                return;
-            }
-
-            var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
-            if (resolvedFilePath == null)
-            {
-                return;
-            }
-
-            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-            if (added.Add(metadata.Assembly.Identity))
-            {
-                var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-                assemblies.Add(metadataImageReference);
-
-                LoadAssemblySymbol(metadata, true);
-
-                // process nested
-                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
-                {
-                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
-                }
-            }
-        }
-
-        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
-        {
-            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-            var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-
-            if (added.Add(metadata.Assembly.Identity))
-            {
-                assemblies.Add(metadataImageReference);
-
-                LoadAssemblySymbol(metadata, true);
-
-                // process nested
-                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
-                {
-                    AddAsseblyReference(assemblies, added, refAssemblyIdentity);
-                }
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="assemblyIdentity">
@@ -289,6 +293,40 @@ namespace Il2Native.Logic
             }
 
             return AssemblyMetadata.CreateFromImageStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
+        }
+
+        private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
+        {
+            var nestedProject = projectReference.Attribute("Include").Value;
+            var projectFolder = this.GetRealFolderForProject(projectFullFilePath, nestedProject);
+            var projectFile = Path.Combine(projectFolder, Path.GetFileName(nestedProject));
+            return projectFile;
+        }
+
+        private string GetReferenceFromProjectValue(XElement element, string projectFullFilePath)
+        {
+            var referencedProjectFilePath = element.Attribute("Include").Value;
+
+            var filePath = Path.Combine(this.GetRealFolderForProject(projectFullFilePath, referencedProjectFilePath),
+                string.Concat("bin\\", this.Options["Configuration"]),
+                string.Concat(Path.GetFileNameWithoutExtension(referencedProjectFilePath), ".dll"));
+
+            return filePath;
+        }
+
+        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XNamespace ns, XElement xElement)
+        {
+            foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
+            {
+                var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
+                var project = XDocument.Load(projectFile);
+                foreach (var reference in this.LoadReferencesFromProject(projectFile, project, ns))
+                {
+                    yield return reference;
+                }
+
+                yield return this.GetReferenceFromProjectValue(projectReference, prjectFullFilePath);
+            }
         }
 
         /// <summary>
@@ -367,6 +405,27 @@ namespace Il2Native.Logic
             return new MissingAssemblySymbol(identity);
         }
 
+        private void LoadProject(string firstSource)
+        {
+            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+            var project = XDocument.Load(firstSource);
+            var folder = Path.GetDirectoryName(firstSource);
+            this.Sources =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
+                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
+                    .ToArray();
+
+            var options = new ProjectProperties();
+            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
+            {
+                options[property.Name.LocalName] = property.Value;
+            }
+
+            this.Options = options;
+
+            this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="assemblyMetadata">
@@ -381,6 +440,40 @@ namespace Il2Native.Logic
                 assemblyMetadata.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(this.unifiedAssemblies));
 
             return moduleReferences;
+        }
+
+        private HashSet<AssemblyIdentity> LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
+        {
+            var added = new HashSet<AssemblyIdentity>();
+            if (this.ReferencesList != null)
+            {
+                foreach (var refItem in this.ReferencesList)
+                {
+                    if (File.Exists(refItem))
+                    {
+                        this.AddAsseblyReference(assemblies, added, refItem);
+                    }
+                    else
+                    {
+                        this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
+                    }
+                }
+            }
+
+            return added;
+        }
+
+        private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
+        {
+            var xElement = project.Root;
+            if (xElement != null)
+            {
+                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
+                    .Select(e => GetReferenceValue(ns, e))
+                    .Union(this.GetReferencesFromProject(firstSource, ns, xElement)).ToArray();
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -450,22 +543,6 @@ namespace Il2Native.Logic
             return null;
         }
 
-        private static object GetAssemblyHashString(AssemblyIdentity assemblyIdentity)
-        {
-            if (!assemblyIdentity.HasPublicKey)
-            {
-                return string.Empty;
-            }
-
-            var sb = new StringBuilder();
-            foreach (var @byte in assemblyIdentity.PublicKey)
-            {
-                sb.AppendFormat("{0:N}", @byte);
-            }
-
-            return sb.ToString();
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="assemblySymbol">
@@ -479,7 +556,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (SetCorLib(assemblySymbol, assemblySymbol))
+            if (this.SetCorLib(assemblySymbol, assemblySymbol))
             {
                 return;
             }
@@ -509,90 +586,6 @@ namespace Il2Native.Logic
             }
 
             return false;
-        }
-
-        private void LoadProject(string firstSource)
-        {
-            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            XDocument project = XDocument.Load(firstSource);
-            var folder = Path.GetDirectoryName(firstSource);
-            this.Sources =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
-                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
-                    .ToArray();
-
-            var options = new ProjectProperties();
-            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
-            {
-                options[property.Name.LocalName] = property.Value;
-            }
-
-            this.Options = options;
-
-            this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
-        }
-
-        private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
-        {
-            var xElement = project.Root;
-            if (xElement != null)
-            {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
-                    .Select(e => GetReferenceValue(ns, e))
-                    .Union(this.GetReferencesFromProject(firstSource, ns, xElement)).ToArray();
-            }
-
-            return null;
-        }
-
-        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XNamespace ns, XElement xElement)
-        {
-            foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
-            {
-                var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
-                var project = XDocument.Load(projectFile);
-                foreach (var reference in this.LoadReferencesFromProject(projectFile, project, ns))
-                {
-                    yield return reference;
-                }
-
-                yield return this.GetReferenceFromProjectValue(projectReference, prjectFullFilePath);
-            }
-        }
-
-        private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
-        {
-            var nestedProject = projectReference.Attribute("Include").Value;
-            var projectFolder = this.GetRealFolderForProject(projectFullFilePath, nestedProject);
-            var projectFile = Path.Combine(projectFolder, Path.GetFileName(nestedProject));
-            return projectFile;
-        }
-
-        private static string GetReferenceValue(XNamespace ns, XElement element)
-        {
-            var xElement = element.Element(ns + "HintPath");
-            if (xElement != null)
-            {
-                return xElement.Value;
-            }
-
-            return element.Attribute("Include").Value;
-        }
-
-        private string GetReferenceFromProjectValue(XElement element, string projectFullFilePath)
-        {
-            var referencedProjectFilePath = element.Attribute("Include").Value;
-
-            var filePath = Path.Combine(this.GetRealFolderForProject(projectFullFilePath, referencedProjectFilePath),
-                string.Concat("bin\\", this.Options["Configuration"]),
-                string.Concat(Path.GetFileNameWithoutExtension(referencedProjectFilePath), ".dll"));
-
-            return filePath;
-        }
-
-        public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)
-        {
-            return Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
         }
     }
 }

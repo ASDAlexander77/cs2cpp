@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
@@ -9,21 +12,21 @@
     {
         private readonly IList<Expression> arguments = new List<Expression>();
 
-        public LambdaExpression Lambda { get; set; }
-
         public IList<Expression> Arguments
         {
             get
             {
-                return arguments;
+                return this.arguments;
             }
         }
+
+        public LambdaExpression Lambda { get; set; }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
             this.Lambda.Visit(visitor);
-            foreach (var expression in Arguments)
+            foreach (var expression in this.Arguments)
             {
                 expression.Visit(visitor);
             }
@@ -32,7 +35,7 @@
         internal override void WriteTo(CCodeWriterBase c)
         {
             this.Lambda.WriteTo(c);
-            WriteCallArguments(this.arguments, Lambda.Locals.Select(l => new ParameterImpl { Type = l.Type } ), c);
+            WriteCallArguments(this.arguments, this.Lambda.Locals.Select(l => new ParameterImpl { Type = l.Type } ), c);
         }
     }
 }

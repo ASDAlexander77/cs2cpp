@@ -1,27 +1,29 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ObjectCreationExpression : Call
     {
+        public Expression InitializerExpressionOpt { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.ObjectCreationExpression; }
         }
-
-        public Expression InitializerExpressionOpt { get; set; }
 
         public bool NewOperator { get; set; }
 
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
         {
             base.Parse(boundObjectCreationExpression);
-            this.Method = boundObjectCreationExpression.Constructor;
+            Method = boundObjectCreationExpression.Constructor;
             if (boundObjectCreationExpression.InitializerExpressionOpt != null)
             {
                 this.InitializerExpressionOpt = Deserialize(boundObjectCreationExpression.InitializerExpressionOpt) as Expression;
@@ -57,7 +59,7 @@
                 this.NewTemplate(c);
             }
 
-            WriteCallArguments(this.Arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+            WriteCallArguments(Arguments, Method != null ? Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
         }
 
         private void NewTemplate(CCodeWriterBase c)

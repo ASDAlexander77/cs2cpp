@@ -1,4 +1,7 @@
-﻿namespace Il2Native.Logic.DOM2
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+// 
+namespace Il2Native.Logic.DOM2
 {
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -7,6 +10,8 @@
     public class Local : Expression
     {
         private ILocalSymbol localSymbol;
+
+        public string CustomName { get; set; }
 
         public override Kinds Kind
         {
@@ -17,13 +22,13 @@
         {
             get
             {
-                return localSymbol;
+                return this.localSymbol;
             }
 
             set
             {
-                localSymbol = value;
-                Parse(localSymbol);
+                this.localSymbol = value;
+                this.Parse(this.localSymbol);
             }
         }
 
@@ -35,8 +40,6 @@
             }
         }
 
-        public string CustomName { get; set; }
-
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
             c.WriteNameEnsureCompatible(local);
@@ -45,22 +48,22 @@
         internal void Parse(BoundLocal boundLocal)
         {
             base.Parse(boundLocal);
-            Parse(boundLocal.LocalSymbol);
+            this.Parse(boundLocal.LocalSymbol);
         }
 
         internal void Parse(LocalSymbol localSymbol)
         {
             Type = localSymbol.Type;
-            IsReference = this.Type.IsReferenceType;
+            IsReference = Type.IsReferenceType;
 
-            ParseName(localSymbol);
+            this.ParseName(localSymbol);
             this.localSymbol = localSymbol;
         }
 
         internal void Parse(ILocalSymbol localSymbol)
         {
             Type = localSymbol.Type;
-            IsReference = this.Type.IsReferenceType;
+            IsReference = Type.IsReferenceType;
         }
 
         internal override void WriteTo(CCodeWriterBase c)
