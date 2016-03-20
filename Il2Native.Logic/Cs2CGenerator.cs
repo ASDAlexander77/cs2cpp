@@ -528,6 +528,22 @@ namespace Il2Native.Logic
             }
 
             this.Options = options;
+
+            this.ReferencesList =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Reference")
+                    .Select(e => GetReferenceValue(ns, e))
+                    .ToArray();
+        }
+
+        private static string GetReferenceValue(XNamespace ns, XElement element)
+        {
+            var xElement = element.Element(ns + "HintPath");
+            if (xElement != null)
+            {
+                return xElement.Value;
+            }
+            
+            return element.Attribute("Include").Value;
         }
     }
 }

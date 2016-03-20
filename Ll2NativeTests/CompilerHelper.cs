@@ -111,18 +111,14 @@
         /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
-        /// <param name="roslyn">
-        /// </param>
+        /// <param name="gc"></param>
+        /// <param name="mt"></param>
+        /// <param name="gctors"></param>
+        /// <param name="debugInfo"></param>
+        /// <param name="stubs"></param>
         /// <returns>
         /// </returns>
-        public static string[] GetConverterArgs(
-            bool includeCoreLib,
-            bool roslyn = UsingRoslyn,
-            bool gc = GcEnabled,
-            bool mt = MultiThreadingEnabled,
-            bool gctors = GctorsEnabled,
-            bool debugInfo = DebugInfo,
-            bool stubs = false)
+        public static string[] GetConverterArgs(bool includeCoreLib, bool gc = GcEnabled, bool mt = MultiThreadingEnabled, bool gctors = GctorsEnabled, bool debugInfo = DebugInfo, bool stubs = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -141,11 +137,6 @@
                 {
                     args.Add("corelib:" + Path.GetFullPath(CoreLibDllPath));
                 }
-            }
-
-            if (roslyn)
-            {
-                args.Add("roslyn");
             }
 
             if (!gc)
