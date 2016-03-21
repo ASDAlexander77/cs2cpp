@@ -79,7 +79,7 @@ namespace Il2Native.Logic
         {
             get
             {
-                return this.Options["NoStdLib"] == "true";
+                return string.IsNullOrWhiteSpace(this.CoreLibPath) && (this.ReferencesList == null || this.ReferencesList.Length == 0);
             }
         }
 
@@ -458,6 +458,11 @@ namespace Il2Native.Logic
                         this.AddAsseblyReference(assemblies, added, new AssemblyIdentity(refItem));
                     }
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
+            {
+                this.AddAsseblyReference(assemblies, added, this.CoreLibPath);
             }
 
             return added;
