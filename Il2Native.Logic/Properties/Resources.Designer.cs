@@ -61,33 +61,26 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Boxing internals
-        ///template &lt;typename T, typename = std::enable_if&lt;std::is_base_of&lt;object, T&gt;::value&gt; &gt; inline T* __box (T* t)
+        ///   Looks up a localized string similar to // interface cast
+        ///template &lt;typename C, typename T&gt; 
+        ///inline typename std::enable_if&lt;!is_value_type&lt;T&gt;::value, C&gt;::type interface_cast (T t)
         ///{
-        ///	return t;
+        ///	if (t == nullptr)
+        ///	{
+        ///		return nullptr;
+        ///	}
+        ///
+        ///	return t-&gt;operator C();
         ///}
         ///
-        ///template &lt;typename T&gt; inline T* __box (T t)
+        ///template &lt;typename C, typename T&gt; 
+        ///inline typename std::enable_if&lt;is_value_type&lt;T&gt;::value, C&gt;::type interface_cast (T t)
         ///{
-        ///	return new T(t);
+        ///	return t-&gt;operator C();
         ///}
         ///
-        ///// Unboxing internals
-        ///template &lt;typename D, typename S&gt; inline D __unbox(S* c)
-        ///{
-        ///	// TODO: finish it
-        ///	D d;
-        ///	return d;
-        ///}
-        ///
-        ///// cast internals
-        ///template &lt;typename D, typename S&gt; inline D as(S s)
-        ///{
-        ///	return dynamic_cast&lt;D&gt;(s);
-        ///}
-        ///
-        ///// cast internals
-        ///template &lt;typename D, typename S&gt;  [rest of string was truncated]&quot;;.
+        ///template &lt;typename C, typename T&gt; 
+        ///inline typename std::enable_if&lt;!is_interface_type&lt;T&gt;::value, C&gt;::type dynamic_interface_cast  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -111,19 +104,20 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to template &lt;typename T&gt; struct is_primitive_type : std::integral_constant&lt;bool, std::is_enum&lt;T&gt;::value || std::is_integral&lt;T&gt;::value || std::is_floating_point&lt;T&gt;::value&gt;
-        ///{
-        ///};
+        ///   Looks up a localized string similar to // map valuetype to class
+        ///template&lt;typename T&gt; 
+        ///struct valuetype_to_class { typedef T type; };
         ///
-        ///template &lt;typename T&gt; struct is_struct_type : std::integral_constant&lt;bool, std::is_object&lt;T&gt;::value &amp;&amp; std::is_base_of&lt;object, T&gt;::value&gt;
-        ///{
-        ///};
+        ///// map class to valuetype
+        ///template&lt;typename T&gt; 
+        ///struct class_to_valuetype { typedef T type; };
         ///
-        ///template &lt;typename T&gt; struct is_value_type : std::integral_constant&lt;bool, is_struct_type&lt;T&gt;::value || is_primitive_type&lt;T&gt;::value&gt;
+        ///template &lt;typename T&gt; struct convert_primitive_type_to_class
         ///{
-        ///};
-        ///
-        ///template &lt;typename T&gt; struct is_class_type :  [rest of string was truncated]&quot;;.
+        ///	typedef
+        ///		typename std::conditional&lt; std::is_same&lt; T, void &gt;::value, CoreLib::System::Void, 
+        ///		typename std::conditional&lt; std::is_same&lt; T, int8_t &gt;::value, CoreLib::System::SByte, 
+        ///		typename std::conditional&lt; std::is_same&lt; T, uint8_t &gt;::value [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_forward_declarations {
             get {
@@ -133,14 +127,15 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to #include &lt;cstdint&gt;
+        ///#include &lt;type_traits&gt;
         ///#include &lt;functional&gt;
         ///#include &lt;initializer_list&gt;
-        ///#include &lt;type_traits&gt;
         ///#include &lt;limits&gt;
         ///#include &lt;cmath&gt;
-        ///#include &lt;atomic&gt;
         ///#include &lt;cstring&gt;
         ///#include &lt;cwchar&gt;
+        ///#include &lt;numeric&gt;
+        ///#include &lt;atomic&gt;
         ///#include &lt;thread&gt;
         ///
         ///#ifndef thread_local
@@ -151,7 +146,7 @@ namespace Il2Native.Logic.Properties {
         ///       defined __ICL || \
         ///       defined __DMC__ || \
         ///       defined __BORLANDC__ )
-        ///#  define thread_local __dec [rest of string was truncated]&quot;;.
+        ///#  defin [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_include {
             get {
@@ -160,28 +155,29 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///// Array
-        ///virtual void __array&lt;T&gt;::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices) override
+        ///   Looks up a localized string similar to // Array
+        ///template &lt;typename T&gt;
+        ///int32_t  __array&lt;T&gt;::__array_element_size()
         ///{
-        ///	auto typedRef = reinterpret_cast&lt;CoreLib::System::TypedReference&amp;&gt;(elemRef);
-        ///	typedRef.
+        ///	return sizeof(T);
         ///}
         ///
-        ///// IListT1
-        ///T __array&lt;T&gt;::System_Collections_Generic_IListT1_get_Item(int32_t) 
+        ///template &lt;typename T&gt;
+        ///void __array&lt;T&gt;::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
         ///{
-        ///	throw 0xC000C000;
-        ///}
+        ///	if (rank != 1)
+        ///	{
+        ///		throw __new&lt;CoreLib::System::InvalidOperationException&gt;(L&quot;rank&quot;_s);
+        ///	}
         ///
-        ///void __array&lt;T&gt;::System_Collections_Generic_IListT1_set_Item(int32_t, T)
-        ///{
-        ///	throw 0xC000C000;
-        ///}
+        ///	if (elemRef == nullptr)
+        ///	{
+        ///		throw __new&lt;CoreLib::System::ArgumentNullException&gt;(L&quot;elemRef&quot;_s);
+        ///	}	
         ///
-        ///int32_t __array&lt;T&gt;::System_Collections_Generic_IListT1_IndexOf(T)
-        ///{
-        ///	throw 0xC000C00 [rest of string was truncated]&quot;;.
+        ///	if (pIndices == nullptr)
+        ///	{
+        ///		throw __new&lt;CoreLib::System::ArgumentNullException&gt;(L&quot;p [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_template_definitions {
             get {
@@ -191,18 +187,18 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to // Decimals
-        ///extern &quot;C&quot; Double pow(Double value, Double power);
-        ///extern &quot;C&quot; Double fabs(Double value);
+        ///extern &quot;C&quot; double pow(double value, double power);
+        ///extern &quot;C&quot; double fabs(double value);
         ///
         ///typedef union {
-        ///	UInt64 int64;
+        ///	uint64_t int64;
         ///	struct {
         ///#if BIGENDIAN
-        ///		UInt32 Hi;
-        ///		UInt32 Lo;
+        ///		uint32_t Hi;
+        ///		uint32_t Lo;
         ///#else            
-        ///		UInt32 Lo;
-        ///		UInt32 Hi;
+        ///		uint32_t Lo;
+        ///		uint32_t Hi;
         ///#endif           
         ///	} u;
         ///} SPLIT64__;
@@ -210,20 +206,29 @@ namespace Il2Native.Logic.Properties {
         ///typedef union{
         ///	struct {
         ///#if BIGENDIAN
-        ///		UInt32 sign : 1;
-        ///		UInt32 exp : 11;
-        ///		UInt32 mantHi : 20;
-        ///		UInt32 mantLo;
+        ///		uint32_t sign : 1;
+        ///		uint32_t exp : 11;
+        ///		uint32_t mantHi : 20;
+        ///		uint32_t mantLo;
         ///#else // BIGENDIAN
-        ///		UInt32 mantLo;
-        ///		UInt32 mantHi : 20;
-        ///		UInt32 exp : 11;
-        ///		UInt32 sign : 1;
-        ///#endif [rest of string was truncated]&quot;;.
+        ///		uint32_t mantLo;
+        ///		uint32_t mantHi : 20;
+        ///		uint32_t exp : 11;
+        ///		 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string decimals {
             get {
                 return ResourceManager.GetString("decimals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Impl {
+            get {
+                object obj = ResourceManager.GetObject("Impl", resourceCulture);
+                return ((byte[])(obj));
             }
         }
     }

@@ -211,6 +211,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Resources\c_declarations.c" />
+    <None Include="Resources\Impl.zip" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_include.c" />
@@ -271,6 +272,9 @@
     <None Include="Resources\c_template_definitions.c" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\Impl.zip') { Remove-Item '$(ProjectDir)Resources\Impl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)Impl', '$(ProjectDir)Resources\Impl.zip'); }"</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
