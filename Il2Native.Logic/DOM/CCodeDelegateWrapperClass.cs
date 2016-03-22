@@ -282,7 +282,7 @@ namespace Il2Native.Logic.DOM
                                                       new Access
                                                           {
                                                               AccessType = Access.AccessTypes.DoubleColon,
-                                                              ReceiverOpt = new TypeExpression { Type = nonStaticType },
+                                                              ReceiverOpt = new TypeExpression { Type = nonStaticType, TypeNameRequred = true },
                                                               Expression = new Parameter { ParameterSymbol = new ParameterImpl { Name = "_Memptr" } }
                                                           },
                                                   MapPointerCastTypeParameter2 = new TypeExpression { Type = new TypeImpl { TypeKind = TypeKind.TypeParameter, Name = "_Memptr" } },

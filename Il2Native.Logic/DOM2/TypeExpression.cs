@@ -7,6 +7,8 @@ namespace Il2Native.Logic.DOM2
 
     public class TypeExpression : Expression
     {
+        public bool TypeNameRequred { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.TypeExpression; }
@@ -19,6 +21,12 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.TypeNameRequred)
+            {
+                c.TextSpan("typename");
+                c.WhiteSpace();
+            }
+
             c.WriteType(Type, valueTypeAsClass: IsReference);
         }
     }
