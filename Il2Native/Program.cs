@@ -1,16 +1,9 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Program.cs" company="">
-//   
-// </copyright>
-// <summary>
-//   
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
+﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
+// If you need the License file, please send an email to duzhar@googlemail.com
+//
 namespace Il2Native
 {
     using System;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using Logic;
@@ -40,18 +33,10 @@ namespace Il2Native
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
                 Console.WriteLine("                          Reference assembly by name or file");
-                Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
-                Console.WriteLine("  /mt-                    Disable Multithreading support");
-                Console.WriteLine("  /gctors-                Disable using global constructors");
-                Console.WriteLine("  /safe-                  Disable throwing exceptions: 'NullPointer' for 'this' pointers, 'ArgumentOutOfRange' for array indexes");
-                Console.WriteLine("  /debug                  Generate debug information");
-                Console.WriteLine("  /line-                  Stop generating #line in C code to map C# source when /debug provided");
-                Console.WriteLine("  /gcdebug                Enable debug mode for Boehm garbage collector");
-                Console.WriteLine("  /verbose                Verbose output");
-                Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
                 Console.WriteLine("  Il2C file1.cs          Compiles one C# file");
+                Console.WriteLine("  Il2C proj1.csproj      Compiles C# project");
                 Console.WriteLine("  Il2C /ref:System.Core file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
                 return 0;
@@ -82,33 +67,6 @@ namespace Il2Native
             Console.WriteLine("Done.");
 
             return 0;
-        }
-
-        private static string ExecCmd(
-            string fileName,
-            string arguments = "",
-            string workingDir = "",
-            bool readOutput = false)
-        {
-            var processStartInfo = new ProcessStartInfo();
-            processStartInfo.WorkingDirectory = string.IsNullOrWhiteSpace(workingDir) ? Environment.CurrentDirectory : workingDir;
-            processStartInfo.FileName = readOutput ? Path.Combine(workingDir, fileName) : fileName;
-            processStartInfo.Arguments = arguments;
-            processStartInfo.CreateNoWindow = true;
-            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            processStartInfo.RedirectStandardOutput = readOutput;
-            processStartInfo.UseShellExecute = false;
-
-            var processCoreLibObj = Process.Start(processStartInfo);
-            var output = string.Empty;
-            if (readOutput)
-            {
-                output = processCoreLibObj.StandardOutput.ReadToEnd();
-            }
-
-            processCoreLibObj.WaitForExit();
-
-            return output;
         }
     }
 }
