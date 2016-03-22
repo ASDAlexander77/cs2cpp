@@ -451,18 +451,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 foreach (var file in archive.Entries)
                 {
                     var completeFileName = Path.Combine(implFolder, file.FullName);
-                    if (string.IsNullOrWhiteSpace(file.Name))
+                    var directoryName = Path.GetDirectoryName(completeFileName);
+                    if (!Directory.Exists(directoryName))
                     {
-                        var directoryName = Path.GetDirectoryName(completeFileName);
-                        if (!Directory.Exists(directoryName))
-                        {
-                            Directory.CreateDirectory(directoryName);
-                        }
-
-                        continue;
+                        Directory.CreateDirectory(directoryName);
+                        file.ExtractToFile(completeFileName);
                     }
-
-                    if (!File.Exists(completeFileName))
+                    else if (!File.Exists(completeFileName))
                     {
                         file.ExtractToFile(completeFileName);
                     }
