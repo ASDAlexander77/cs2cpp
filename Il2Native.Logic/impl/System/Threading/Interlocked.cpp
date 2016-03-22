@@ -9,7 +9,7 @@ int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location
 #if _WIN32 && _MSC_VER
 	return std::_Atomic_fetch_add_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
 #else
-	#  error No implementation
+	return __sync_fetch_and_add ((int32_t*)&location, 1);
 #endif
 }
 
@@ -19,7 +19,7 @@ int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location
 #if _WIN32 && _MSC_VER
 	return std::_Atomic_fetch_add_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
 #else
-	#  error No implementation
+	return __sync_fetch_and_add ((int64_t*)&location, 1);
 #endif
 }
 
@@ -29,7 +29,7 @@ int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& location
 #if _WIN32 && _MSC_VER
 	return std::_Atomic_fetch_sub_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
 #else
-	#  error No implementation
+	return __sync_fetch_and_sub ((int32_t*)&location, 1);
 #endif
 }
 
@@ -39,7 +39,7 @@ int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location
 #if _WIN32 && _MSC_VER
 	return std::_Atomic_fetch_sub_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
 #else
-	#  error No implementation
+	return __sync_fetch_and_sub ((int64_t*)&location, 1);
 #endif
 }
 
