@@ -9,6 +9,7 @@ namespace Il2Native.Logic
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Compression;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -425,6 +426,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 Directory.CreateDirectory(this.currentFolder);
             }
 
+            if (isCoreLib)
+            {
+                this.ExtractCoreLibImpl();
+            }
+
             var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
 
             this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
@@ -434,6 +440,34 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             this.WriteSources(identity, units);
 
             this.WriteBuildFiles(identity, references, !isCoreLib);
+        }
+
+        private void ExtractCoreLibImpl()
+        {
+            var implFolder = Path.Combine(this.currentFolder, "Impl");
+            // extract Impl file
+            using (var archive = new ZipArchive(new MemoryStream(Resources.Impl)))
+            {
+                foreach (var file in archive.Entries)
+                {
+                    var completeFileName = Path.Combine(implFolder, file.FullName);
+                    if (string.IsNullOrWhiteSpace(file.Name))
+                    {
+                        var directoryName = Path.GetDirectoryName(completeFileName);
+                        if (!Directory.Exists(directoryName))
+                        {
+                            Directory.CreateDirectory(directoryName);
+                        }
+
+                        continue;
+                    }
+
+                    if (!File.Exists(completeFileName))
+                    {
+                        file.ExtractToFile(completeFileName);
+                    }
+                }
+            }
         }
 
         private static string GetRelativePath(CCodeUnit unit, out int nestedLevel)
