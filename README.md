@@ -58,9 +58,9 @@ Now you have compiled CoreLib (mscorelib)
 
 * cd ..
 * create file HelloWorld.cs
+```C#
 using System;
 
-```C#
 class X {
 	public static int Main (string [] args)
 	{
