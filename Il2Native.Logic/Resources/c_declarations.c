@@ -54,7 +54,7 @@ template <typename T> inline typename std::enable_if<!is_value_type<T>::value &&
 	return t;
 }
 
-template <typename S, typename D = S> inline typename std::enable_if<is_interface_type<S>::value && std::is_same<D, S>::value, S>::type __box (S s)
+template <typename S, typename D> inline typename std::enable_if<is_interface_type<S>::value && std::is_same<D, S>::value, S>::type __box (S s)
 {
 	return s;
 }
