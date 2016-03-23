@@ -357,17 +357,17 @@ namespace Il2Native.Logic
                 if (dotIndex > 0)
                 {
                     var name = symbol.MetadataName.Substring(dotIndex);
-                    this.TextSpan(name.CleanUpName());
+                    this.TextSpan(name.CleanUpName().EnsureCompatible());
                 }
                 else
                 {
                     this.TextSpan("_");
-                    this.WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                    this.WriteNameEnsureCompatible(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
                 }
             }
             else
             {
-                this.WriteName(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                this.WriteNameEnsureCompatible(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
             }
 
             if (methodSymbol.MetadataName == "op_Explicit")
@@ -575,9 +575,10 @@ namespace Il2Native.Logic
             this.TextSpan(noCleanup ? name : name.CleanUpName());
         }
 
-        public void WriteNameEnsureCompatible(ISymbol symbol)
+        public void WriteNameEnsureCompatible(ISymbol symbol, bool noCleanup = false)
         {
-            this.TextSpan((symbol.MetadataName ?? symbol.Name).CleanUpName().EnsureCompatible());
+            var name = symbol.MetadataName ?? symbol.Name;
+            this.TextSpan((noCleanup ? name : name.CleanUpName()).EnsureCompatible());
         }
 
         public void WriteNamespace(INamespaceSymbol namespaceSymbol)

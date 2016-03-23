@@ -44,6 +44,11 @@ template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T
 	return new T(t);
 }
 
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value, _CLASS>::type* __box (T t)
+{
+	return __new<_CLASS>(t);
+}
+
 template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
 {
 	return t;

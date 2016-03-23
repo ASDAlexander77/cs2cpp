@@ -691,7 +691,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.WriteType(namedTypeSymbol, true, false, true);
                 c.WhiteSpace();
-                c.TextSpan("type; };");
+                c.TextSpanNewLine("type; };");
 
                 // class to value
                 c.TextSpanNewLine("template<>");
@@ -705,14 +705,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.WriteType(namedTypeSymbol);
                 c.WhiteSpace();
-                c.TextSpan("type; };");
-
-                itw.WriteLine();
-                if (namedTypeSymbol.SpecialType != SpecialType.System_Void)
-                {
-                    new CCodeBoxForPrimitiveValuesOrEnumsDeclaration(namedTypeSymbol).WriteTo(c);
-                    itw.WriteLine();
-                }
+                c.TextSpanNewLine("type; };");
             }
         }
 
