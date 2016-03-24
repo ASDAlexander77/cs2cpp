@@ -9,7 +9,26 @@ int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 // Method : System.Threading.Thread.StartInternal(System.Security.Principal.IPrincipal, ref System.Threading.StackCrawlMark)
 void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Security::Principal::IPrincipal* principal, CoreLib::System::Threading::enum_StackCrawlMark& stackMark)
 {
-    throw 3221274624U;
+	auto thread_ptr = __new_set0(sizeof(std::thread));
+	new (thread_ptr) std::thread([=](){
+		auto threadStart = as<CoreLib::System::Threading::ThreadStart*>(this->m_Delegate);
+		if (threadStart != nullptr)
+		{
+			threadStart->Invoke();
+			return;
+		}
+
+		auto parameterizedThreadStart = as<CoreLib::System::Threading::ParameterizedThreadStart*>(this->m_Delegate);
+		if (parameterizedThreadStart != nullptr)
+		{
+			parameterizedThreadStart->Invoke(this->m_ThreadStartArg);
+			return;
+		}
+
+		throw __new<CoreLib::System::InvalidOperationException>();
+	});
+
+	this->DONT_USE_InternalThread.m_value = thread_ptr;
 }
 
 // Method : System.Threading.Thread.InternalGetCurrentThread()
@@ -87,7 +106,7 @@ uint64_t CoreLib::System::Threading::Thread::GetProcessDefaultStackSize()
 // Method : System.Threading.Thread.SetStart(System.Delegate, int)
 void CoreLib::System::Threading::Thread::SetStart(CoreLib::System::Delegate* start, int32_t maxStackSize)
 {
-    throw 3221274624U;
+    this->m_Delegate = start;
 }
 
 // Method : System.Threading.Thread.InternalFinalize()
