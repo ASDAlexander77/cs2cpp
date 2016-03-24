@@ -121,7 +121,7 @@ namespace Il2Native.Logic.DOM
 
             // write default constructor
             c.WriteTypeName(nonStaticType);
-            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) {}");
+            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) { CoreLib::System::Delegate::_target = object_cast(t); }");
 
             // write invoke
             this.CreateInvokeMethod().WriteTo(c);
