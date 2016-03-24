@@ -49,9 +49,14 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 	return __new<_CLASS>(t);
 }
 
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value, T>::type __box (T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
 {
 	return t;
+}
+
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box (T t)
+{
+	return object_cast(t);
 }
 
 // Unboxing internals
