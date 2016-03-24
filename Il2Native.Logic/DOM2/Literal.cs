@@ -303,6 +303,14 @@ namespace Il2Native.Logic.DOM2
                     {
                         c.TextSpan("std::numeric_limits<float>::quiet_NaN()");
                     }
+                    else if (float.MaxValue == this.Value.SingleValue)
+                    {
+                        c.TextSpan("std::numeric_limits<float>::max()");
+                    }
+                    else if (float.MinValue == this.Value.SingleValue)
+                    {
+                        c.TextSpan("std::numeric_limits<float>::min()");
+                    }
                     else
                     {
                         var line = this.Value.SingleValue.ToString();
@@ -323,6 +331,14 @@ namespace Il2Native.Logic.DOM2
                     else if (double.IsNaN(this.Value.DoubleValue))
                     {
                         c.TextSpan("std::numeric_limits<double>::quiet_NaN()");
+                    }
+                    else if (double.MaxValue == this.Value.DoubleValue)
+                    {
+                        c.TextSpan("std::numeric_limits<double>::max()");
+                    }
+                    else if (double.MinValue == this.Value.DoubleValue)
+                    {
+                        c.TextSpan("std::numeric_limits<double>::min()");
                     }
                     else
                     {
