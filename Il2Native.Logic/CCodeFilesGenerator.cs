@@ -177,7 +177,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_mingw32_<%build_type_lowercase%>_bdwgc 
 cd __build_mingw32_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake -f ../bdwgc -G ""MinGW Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 mingw32-make -j 8 2>log";
 
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_mingw32_debug", ".bat"))))
@@ -197,7 +197,7 @@ mingw32-make -j 8 2>log";
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 

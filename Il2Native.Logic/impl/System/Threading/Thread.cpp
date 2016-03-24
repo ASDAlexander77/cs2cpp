@@ -6,6 +6,10 @@ int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 	throw 3221274624U;
 }
 
+#ifdef GC_H
+extern "C" void GC_init_parallel();
+#endif
+
 // Method : System.Threading.Thread.StartInternal(System.Security.Principal.IPrincipal, ref System.Threading.StackCrawlMark)
 void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Security::Principal::IPrincipal* principal, CoreLib::System::Threading::enum_StackCrawlMark& stackMark)
 {
@@ -102,7 +106,7 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 	}
 
 	auto threadPtr = reinterpret_cast<std::thread*>(voidPtr);
-	if (!threadPtr->joinable())
+	if (threadPtr->joinable())
 	{
 		threadPtr->join();
 		return true;
