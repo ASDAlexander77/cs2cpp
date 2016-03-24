@@ -676,8 +676,10 @@ namespace Il2Native.Logic.DOM2
 
                 if (!noFilter)
                 {
-                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None && local.DeclarationKind != LocalDeclarationKind.FixedVariable
-                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable && !IsDeclarationWithoutInitializer(local))
+                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None 
+                        && local.DeclarationKind != LocalDeclarationKind.FixedVariable
+                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable 
+                        && !IsDeclarationWithoutInitializer(local))
                     {
                         continue;
                     }

@@ -4,11 +4,14 @@
 namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ForStatement : BlockStatement
     {
+        private readonly IList<Statement> locals = new List<Statement>();
+
         public Expression ConditionOpt { get; set; }
 
         public Base IncrementingOpt { get; set; }
@@ -25,6 +28,12 @@ namespace Il2Native.Logic.DOM2
             if (boundStatementList == null)
             {
                 throw new ArgumentNullException();
+            }
+
+            var mainBlock = boundStatementList as BoundBlock;
+            if (mainBlock != null)
+            {
+                ParseLocals(mainBlock.Locals, this.locals);
             }
 
             var stage = Stages.Initialization;
@@ -128,6 +137,16 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.locals.Count > 0)
+            {
+                c.OpenBlock();
+
+                foreach (var statement in this.locals)
+                {
+                    statement.WriteTo(c);
+                }
+            }
+
             c.TextSpan("for");
             c.WhiteSpace();
             c.TextSpan("(");
@@ -151,6 +170,11 @@ namespace Il2Native.Logic.DOM2
 
             c.NewLine();
             base.WriteTo(c);
+
+            if (this.locals.Count > 0)
+            {
+                c.EndBlock();
+            }
         }
 
         private enum Stages
