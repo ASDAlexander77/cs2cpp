@@ -254,6 +254,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             var text = new StringBuilder();
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
+                itw.WriteLine("#ifndef HEADER_{0}", identity.Name.CleanUpName());
+                itw.WriteLine("#define HEADER_{0}", identity.Name.CleanUpName());
+
                 var c = new CCodeWriterText(itw);
 
                 if (isCoreLib)
@@ -306,6 +309,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 {
                     itw.WriteLine("#include \"{0}\"", includeHeader);
                 }
+
+                itw.WriteLine("#endif");
 
                 itw.Close();
             }
@@ -375,6 +380,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 using (var itw = new IndentedTextWriter(new StringWriter(text)))
                 {
                     var c = new CCodeWriterText(itw);
+                    itw.WriteLine("#ifndef HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
+                    itw.WriteLine("#define HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
+
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
                     {
                         anyRecord = true;
@@ -391,14 +399,14 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         }
                     }
 
+                    itw.WriteLine("#endif");
+
                     itw.Close();
                 }
 
                 if (anyRecord && text.Length > 0)
                 {
                     var path = this.GetPath(unit, out nestedLevel, ".h", root);
-                    Debug.Assert(!path.Contains("Decimal.h"));
-
                     var newText = text.ToString();
 
                     headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));

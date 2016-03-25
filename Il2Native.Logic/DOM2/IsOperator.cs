@@ -33,7 +33,21 @@ namespace Il2Native.Logic.DOM2
             this.TargetType.WriteTo(c);
             c.TextSpan(">");
             c.TextSpan("(");
-            this.Operand.WriteTo(c);
+            if (this.Operand.IsStaticWrapperCall())
+            {
+                new Cast
+                {
+                    Type = this.Operand.Type,
+                    Operand = this.Operand,
+                    CCast = true,
+                    UseEnumUnderlyingType = true,
+                }.WriteTo(c);
+            }
+            else
+            {
+                this.Operand.WriteTo(c);
+            } 
+            
             c.TextSpan(")");
         }
     }
