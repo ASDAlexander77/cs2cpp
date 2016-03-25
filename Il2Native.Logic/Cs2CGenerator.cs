@@ -83,6 +83,14 @@ namespace Il2Native.Logic
             }
         }
 
+        public bool IsLibrary
+        {
+            get
+            {
+                return this.Options.ContainsKey("OutputType") && this.Options["OutputType"] == "Library";
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string[] ReferencesList { get; set; }

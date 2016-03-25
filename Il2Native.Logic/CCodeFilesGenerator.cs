@@ -418,7 +418,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return headersToInclude;
         }
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, string outputFolder)
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<CCodeUnit> units, string outputFolder)
         {
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
             if (!Directory.Exists(this.currentFolder))
@@ -439,7 +439,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             this.WriteSources(identity, units);
 
-            this.WriteBuildFiles(identity, references, !isCoreLib);
+            this.WriteBuildFiles(identity, references, !isLibrary);
         }
 
         private void ExtractCoreLibImpl()
