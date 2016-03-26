@@ -587,6 +587,16 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
+            // write extern declaration
+            foreach (var declaration in unit.Declarations)
+            {
+                var codeMethodDeclaration = declaration as CCodeMethodDeclaration;
+                if (codeMethodDeclaration != null && codeMethodDeclaration.IsExternDeclaration)
+                {
+                    declaration.WriteTo(c);
+                }
+            }
+
             var any = false;
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -658,7 +668,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             foreach (var declaration in unit.Declarations)
             {
-                declaration.WriteTo(c);
+                var codeMethodDeclaration = declaration as CCodeMethodDeclaration;
+                if (codeMethodDeclaration != null && !codeMethodDeclaration.IsExternDeclaration)
+                {
+                    declaration.WriteTo(c);
+                }
             }
 
             // write interface wrappers

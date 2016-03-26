@@ -3,8 +3,10 @@
 // 
 namespace Il2Native.Logic.DOM
 {
-    using DOM2;
+    using System.Reflection;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using MethodBody = DOM2.MethodBody;
 
     public class CCodeMethodDeclaration : CCodeDeclaration
     {
@@ -16,6 +18,14 @@ namespace Il2Native.Logic.DOM
         public IMethodSymbol Method { get; set; }
 
         public MethodBody MethodBodyOpt { get; set; }
+
+        public bool IsExternDeclaration
+        {
+            get
+            {
+                return Method.IsExternDeclaration();
+            }
+        }
 
         public override void WriteTo(CCodeWriterBase c)
         {

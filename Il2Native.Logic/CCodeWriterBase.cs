@@ -510,16 +510,24 @@ namespace Il2Native.Logic
 
             if (declarationWithingClass)
             {
-                if (methodSymbol.IsStaticMethod())
+                if (methodSymbol.IsExternDeclaration())
                 {
-                    this.TextSpan("static");
-                    this.WhiteSpace();
+                    this.TextSpan("extern \"C\"");
+                    this.WhiteSpace();                    
                 }
-
-                if (methodSymbol.IsVirtualMethod())
+                else
                 {
-                    this.TextSpan("virtual");
-                    this.WhiteSpace();
+                    if (methodSymbol.IsStaticMethod())
+                    {
+                        this.TextSpan("static");
+                        this.WhiteSpace();
+                    }
+
+                    if (methodSymbol.IsVirtualMethod())
+                    {
+                        this.TextSpan("virtual");
+                        this.WhiteSpace();
+                    }
                 }
             }
         }

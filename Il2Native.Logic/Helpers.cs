@@ -5,11 +5,14 @@ namespace Il2Native.Logic
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
+    using System.Reflection.Metadata;
     using System.Text;
     using DOM;
     using DOM2;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     public static class Helpers
     {
@@ -330,6 +333,28 @@ namespace Il2Native.Logic
             }
 
             return methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride;
+        }
+
+        public static bool IsExternDeclaration(this IMethodSymbol methodSymbol)
+        {
+            var peMethodSymbol = methodSymbol as PEMethodSymbol;
+            if (peMethodSymbol != null)
+            {
+                var methodImplAttributes = peMethodSymbol.ImplementationAttributes & MethodImplAttributes.ManagedMask;
+                if (methodImplAttributes.HasFlag(MethodImplAttributes.Unmanaged) &&
+                    !methodImplAttributes.HasFlag(MethodImplAttributes.InternalCall))
+                {
+                    return true;
+                }
+
+                var dllImportData = peMethodSymbol.GetDllImportData();
+                if (dllImportData != null && dllImportData.ModuleName == " ")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         internal static ConstantValueTypeDiscriminator GetDiscriminator(this SpecialType st)
