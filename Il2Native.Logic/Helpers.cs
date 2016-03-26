@@ -335,23 +335,23 @@ namespace Il2Native.Logic
             return methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride;
         }
 
-        public static bool IsExternDeclaration(this IMethodSymbol methodSymbol)
+        public static bool IsExternDeclaration(this IMethodSymbol iMethodSymbol)
         {
-            var peMethodSymbol = methodSymbol as PEMethodSymbol;
-            if (peMethodSymbol != null)
+            var methodSymbol = iMethodSymbol as MethodSymbol;
+            if (methodSymbol != null)
             {
-                var methodImplAttributes = peMethodSymbol.ImplementationAttributes & MethodImplAttributes.ManagedMask;
+                var methodImplAttributes = methodSymbol.ImplementationAttributes & MethodImplAttributes.ManagedMask;
                 if (methodImplAttributes.HasFlag(MethodImplAttributes.Unmanaged) &&
                     !methodImplAttributes.HasFlag(MethodImplAttributes.InternalCall))
                 {
                     return true;
                 }
+            }
 
-                var dllImportData = peMethodSymbol.GetDllImportData();
-                if (dllImportData != null && dllImportData.ModuleName == " ")
-                {
-                    return true;
-                }
+            var dllImportData = iMethodSymbol.GetDllImportData();
+            if (dllImportData != null && dllImportData.ModuleName == " ")
+            {
+                return true;
             }
 
             return false;

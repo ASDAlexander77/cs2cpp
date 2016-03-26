@@ -7,6 +7,7 @@ namespace Il2Native.Logic.DOM.Implementations
     using System.Collections.Immutable;
     using System.Globalization;
     using System.Threading;
+    using Microsoft.Cci;
     using Microsoft.CodeAnalysis;
 
     public class MethodImpl : IMethodSymbol
@@ -73,7 +74,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public DllImportData GetDllImportData()
         {
-            throw new NotImplementedException();
+            return new DllImportData(string.Empty, string.Empty, PInvokeAttributes.CallConvStdcall);
         }
 
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }

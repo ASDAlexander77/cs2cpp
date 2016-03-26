@@ -508,26 +508,18 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (declarationWithingClass)
+            if (declarationWithingClass && !methodSymbol.IsExternDeclaration())
             {
-                if (methodSymbol.IsExternDeclaration())
+                if (methodSymbol.IsStaticMethod())
                 {
-                    this.TextSpan("extern \"C\"");
-                    this.WhiteSpace();                    
+                    this.TextSpan("static");
+                    this.WhiteSpace();
                 }
-                else
-                {
-                    if (methodSymbol.IsStaticMethod())
-                    {
-                        this.TextSpan("static");
-                        this.WhiteSpace();
-                    }
 
-                    if (methodSymbol.IsVirtualMethod())
-                    {
-                        this.TextSpan("virtual");
-                        this.WhiteSpace();
-                    }
+                if (methodSymbol.IsVirtualMethod())
+                {
+                    this.TextSpan("virtual");
+                    this.WhiteSpace();
                 }
             }
         }

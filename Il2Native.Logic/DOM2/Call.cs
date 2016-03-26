@@ -93,8 +93,12 @@ namespace Il2Native.Logic.DOM2
         {
             if (this.Method.IsStaticMethod())
             {
-                c.WriteTypeFullName(this.Method.ContainingType);
-                c.TextSpan("::");
+                if (!this.Method.IsExternDeclaration())
+                {
+                    c.WriteTypeFullName(this.Method.ContainingType);
+                    c.TextSpan("::");
+                }
+                
                 c.WriteMethodName(this.Method, addTemplate: true);
             }
             else

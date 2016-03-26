@@ -278,7 +278,7 @@ namespace Il2Native.Logic
 #if GENERATE_STUBS
                 if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface 
                     && !methodSymbol.IsAbstract 
-                    && !(methodSymbol.IsExtern && ((MethodSymbol)method).ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged)))
+                    && !methodSymbol.IsExternDeclaration())
                 {
                     unit.Definitions.Add(
                         new CCodeMethodDefinition(method)

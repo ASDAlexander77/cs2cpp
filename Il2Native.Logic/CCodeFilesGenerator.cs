@@ -588,13 +588,22 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
             // write extern declaration
-            foreach (var declaration in unit.Declarations)
+            var externDeclarations = unit.Declarations.Select(
+                declaration => new { declaration, codeMethodDeclaration = declaration as CCodeMethodDeclaration })
+                .Where(@t => @t.codeMethodDeclaration != null && @t.codeMethodDeclaration.IsExternDeclaration)
+                .Select(@t => @t.declaration).ToList();
+
+            if (externDeclarations.Any())
             {
-                var codeMethodDeclaration = declaration as CCodeMethodDeclaration;
-                if (codeMethodDeclaration != null && codeMethodDeclaration.IsExternDeclaration)
+                itw.Write("extern \"C\"");
+                c.OpenBlock();
+
+                foreach (var declaration in externDeclarations)
                 {
                     declaration.WriteTo(c);
                 }
+
+                c.EndBlock();
             }
 
             var any = false;
@@ -669,7 +678,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             foreach (var declaration in unit.Declarations)
             {
                 var codeMethodDeclaration = declaration as CCodeMethodDeclaration;
-                if (codeMethodDeclaration != null && !codeMethodDeclaration.IsExternDeclaration)
+                if (codeMethodDeclaration == null || !codeMethodDeclaration.IsExternDeclaration)
                 {
                     declaration.WriteTo(c);
                 }
