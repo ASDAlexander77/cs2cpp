@@ -290,7 +290,6 @@
         public const int SCALE_INF = 0x7FFFFFFF;
         public const int DECIMAL_PRECISION = 29;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double modf(double x, ref double intpart);
 
         public static unsafe String FormatDecimal(Decimal value, String format, NumberFormatInfo info)

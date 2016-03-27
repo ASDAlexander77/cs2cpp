@@ -19,7 +19,6 @@ namespace System.IO
         private const string PrintIntNewLine = "%ld\r\n";
         private const string PrintCharNewLine = "%c\r\n";
 
-        [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* format, __arglist);
 
         public override Encoding Encoding
