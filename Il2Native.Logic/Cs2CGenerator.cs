@@ -424,14 +424,88 @@ namespace Il2Native.Logic
                     .ToArray();
 
             var options = new ProjectProperties();
-            foreach (var property in project.Root.Elements(ns + "PropertyGroup").Elements())
+            foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
             {
-                options[property.Name.LocalName] = property.Value;
+                if (!ProjectCondition(elements, options))
+                {
+                    continue;
+                }
+
+                foreach (var property in elements.Elements())
+                {
+                    if (!ProjectCondition(property, options))
+                    {
+                        continue;
+                    }
+
+                    options[property.Name.LocalName] = property.Value;
+                }
             }
 
             this.Options = options;
 
             this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
+        }
+
+        private bool ProjectCondition(XElement element, ProjectProperties options)
+        {
+            var conditionAttribute = element.Attribute("Condition");
+            if (conditionAttribute == null)
+            {
+                return true;
+            }
+
+            return ExecuteCondition(this.FillProperties(conditionAttribute.Value, options));
+        }
+
+        private bool ExecuteCondition(string condition)
+        {
+            // TODO: finish it properly
+            var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
+            if (equalOperator == -1)
+            {
+                return true;
+            }
+
+            var left = condition.Substring(0, equalOperator).Trim();
+            var right = condition.Substring(equalOperator + 2).Trim();
+            return left.Equals(right);
+        }
+
+        private string FillProperties(string conditionValue, ProjectProperties options)
+        {
+            var processed = new StringBuilder();
+
+            var lastIndex = 0;
+            var poisition = 0;
+            while (poisition < conditionValue.Length)
+            {
+                poisition = conditionValue.IndexOf('$', lastIndex);
+                if (poisition == -1)
+                {
+                    processed.Append(conditionValue.Substring(lastIndex));
+                    break;
+                }
+                else
+                {
+                    processed.Append(conditionValue.Substring(lastIndex, poisition - lastIndex));
+                }
+
+                var left = conditionValue.IndexOf('(', poisition);
+                var right = conditionValue.IndexOf(')', poisition);
+                if (left == -1 || right == -1)
+                {
+                    ////throw new IndexOutOfRangeException("Condition is not correct");
+                    break;
+                }
+
+                var propertyName = conditionValue.Substring(left + 1, right - left - 1);
+                processed.Append(options[propertyName]);
+
+                lastIndex = right + 1;
+            }
+
+            return processed.ToString();
         }
 
         /// <summary>
