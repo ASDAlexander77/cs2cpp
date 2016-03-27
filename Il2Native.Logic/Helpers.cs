@@ -361,7 +361,7 @@ namespace Il2Native.Logic
         public static bool IsDllExport(this IMethodSymbol iMethodSymbol)
         {
             var dllImportData = iMethodSymbol.GetDllImportData();
-            if (dllImportData != null && !string.IsNullOrEmpty(dllImportData.ModuleName))
+            if (dllImportData != null && !string.IsNullOrWhiteSpace(dllImportData.ModuleName))
             {
                 return true;
             }

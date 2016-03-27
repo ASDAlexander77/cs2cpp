@@ -532,6 +532,12 @@ namespace Il2Native.Logic
                     }
                 }
 
+                if (methodSymbol.IsExternDeclaration())
+                {
+                    this.TextSpan("extern");
+                    this.WhiteSpace();
+                }
+
                 if (methodSymbol.IsDllExport())
                 {
                     this.TextSpan("__declspec(dllimport)");
