@@ -7,6 +7,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Metadata;
+    using System.Runtime.InteropServices;
     using System.Text;
     using DOM;
     using DOM2;
@@ -355,6 +356,28 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        public static bool IsDllExport(this IMethodSymbol iMethodSymbol)
+        {
+            var dllImportData = iMethodSymbol.GetDllImportData();
+            if (dllImportData != null && !string.IsNullOrEmpty(dllImportData.ModuleName))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static CallingConvention GetCallingConvention(this IMethodSymbol iMethodSymbol)
+        {
+            var dllImportData = iMethodSymbol.GetDllImportData();
+            if (dllImportData != null)
+            {
+                return dllImportData.CallingConvention;
+            }
+
+            return CallingConvention.Cdecl;
         }
 
         internal static ConstantValueTypeDiscriminator GetDiscriminator(this SpecialType st)

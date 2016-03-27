@@ -6,6 +6,7 @@ namespace Il2Native.Logic
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
     using DOM;
     using DOM2;
@@ -338,14 +339,20 @@ namespace Il2Native.Logic
 
         public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
         {
+            // name
+            var symbol = methodSymbolForName ?? methodSymbol;
+            if (methodSymbol.IsExternDeclaration())
+            {
+                this.WriteNameEnsureCompatible(symbol, true);
+                return;
+            }
+
             if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
                 this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
                 this.TextSpan("_");
             }
 
-            // name
-            var symbol = methodSymbolForName ?? methodSymbol;
             var explicitInterfaceImplementation =
                 symbol.ExplicitInterfaceImplementations != null
                     ? symbol.ExplicitInterfaceImplementations.FirstOrDefault()
@@ -507,18 +514,27 @@ namespace Il2Native.Logic
                     this.NewLine();
                 }
             }
-
-            if (declarationWithingClass && !methodSymbol.IsExternDeclaration())
+            
+            if (declarationWithingClass)
             {
-                if (methodSymbol.IsStaticMethod())
+                if (!methodSymbol.IsExternDeclaration())
                 {
-                    this.TextSpan("static");
-                    this.WhiteSpace();
+                    if (methodSymbol.IsStaticMethod())
+                    {
+                        this.TextSpan("static");
+                        this.WhiteSpace();
+                    }
+
+                    if (methodSymbol.IsVirtualMethod())
+                    {
+                        this.TextSpan("virtual");
+                        this.WhiteSpace();
+                    }
                 }
 
-                if (methodSymbol.IsVirtualMethod())
+                if (methodSymbol.IsDllExport())
                 {
-                    this.TextSpan("virtual");
+                    this.TextSpan("__declspec(dllimport)");
                     this.WhiteSpace();
                 }
             }
@@ -528,6 +544,7 @@ namespace Il2Native.Logic
         {
             this.WriteMethodPrefixes(methodSymbol, declarationWithingClass);
             this.WriteMethodReturn(methodSymbol, declarationWithingClass);
+            this.WriteMethodAttributes(methodSymbol, declarationWithingClass);
 
             if (!declarationWithingClass)
             {
@@ -536,6 +553,31 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
+            }
+        }
+
+        private void WriteMethodAttributes(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        {
+            if (!declarationWithingClass)
+            {
+                return;
+            }
+
+            switch (methodSymbol.GetCallingConvention())
+            {
+                case CallingConvention.Winapi:
+                case CallingConvention.StdCall:
+                    this.TextSpan("__stdcall");
+                    this.WhiteSpace();
+                    break;
+                case CallingConvention.ThisCall:
+                    this.TextSpan("__thiscall");
+                    this.WhiteSpace();
+                    break;
+                case CallingConvention.FastCall:
+                    this.TextSpan("__fastcall");
+                    this.WhiteSpace();
+                    break;
             }
         }
 

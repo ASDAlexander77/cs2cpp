@@ -74,7 +74,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public DllImportData GetDllImportData()
         {
-            return new DllImportData(string.Empty, string.Empty, PInvokeAttributes.CallConvStdcall);
+            return new DllImportData(string.Empty, string.Empty, PInvokeAttributes.CallConvCdecl);
         }
 
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
