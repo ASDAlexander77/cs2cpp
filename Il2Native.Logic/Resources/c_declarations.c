@@ -91,16 +91,43 @@ inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(obj
 }
 
 // cast internals
-template <typename D, typename S> inline D as(S s)
+template <typename D, typename S> 
+inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, D>::type as(S s)
 {
 	return dynamic_cast<D>(s);
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<is_value_type<D>::value || is_value_type<S>::value, D>::type as(S s)
+{
+	return nullptr;
+}
+
+// special case for interfaces
+// add flag to each interface to be able to create is_interface<T>::value
+template <typename D, typename S> 
+inline typename std::enable_if<is_interface_type<D>::value && is_class_type<S>::value, D>::type as(S s)
+{
+	return dynamic_interface_cast<D>(s);
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<is_class_type<D>::value && is_interface_type<S>::value, D>::type as(S s)
+{
+	return dynamic_cast<D>(object_cast(s));
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<is_interface_type<D>::value && is_interface_type<S>::value, D>::type as(S s)
+{
+	return dynamic_interface_cast<D>(object_cast(s));
 }
 
 // cast internals
 template <typename D, typename S> 
 inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, bool>::type is(S s)
 {
-	return as<D>(s) != nullptr;
+	return dynamic_cast<D>(s) != nullptr;
 }
 
 template <typename D, typename S> 
@@ -121,6 +148,12 @@ template <typename D, typename S>
 inline typename std::enable_if<is_class_type<D>::value && is_interface_type<S>::value, bool>::type is(S s)
 {
 	return dynamic_cast<D>(object_cast(s)) != nullptr;
+}
+
+template <typename D, typename S> 
+inline typename std::enable_if<is_interface_type<D>::value && is_interface_type<S>::value, bool>::type is(S s)
+{
+	return dynamic_interface_cast<D>(object_cast(s)) != nullptr;
 }
 
 // Constrained internals (for templates)
