@@ -1,6 +1,8 @@
 ﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
 // If you need the License file, please send an email to duzhar@googlemail.com
 // 
+////#define SUPPORT_CUSTOM_EXTERN
+
 namespace Il2Native.Logic
 {
     using System.Collections.Generic;
@@ -338,6 +340,7 @@ namespace Il2Native.Logic
 
         public static bool IsExternDeclaration(this IMethodSymbol iMethodSymbol)
         {
+#if SUPPORT_CUSTOM_EXTERN
             var methodSymbol = iMethodSymbol as MethodSymbol;
             if (methodSymbol != null)
             {
@@ -354,12 +357,13 @@ namespace Il2Native.Logic
             {
                 return true;
             }
-
+#endif
             return false;
         }
 
         public static bool IsExternForwardRef(this IMethodSymbol iMethodSymbol)
         {
+#if SUPPORT_CUSTOM_EXTERN
             var methodSymbol = iMethodSymbol as MethodSymbol;
             if (methodSymbol != null)
             {
@@ -369,18 +373,19 @@ namespace Il2Native.Logic
                     return true;
                 }
             }
-
+#endif
             return false;
         }
 
         public static bool IsDllExport(this IMethodSymbol iMethodSymbol)
         {
+#if SUPPORT_CUSTOM_EXTERN
             var dllImportData = iMethodSymbol.GetDllImportData();
             if (dllImportData != null && !string.IsNullOrWhiteSpace(dllImportData.ModuleName))
             {
                 return true;
             }
-
+#endif
             return false;
         }
 
