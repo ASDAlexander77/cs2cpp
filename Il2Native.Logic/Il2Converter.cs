@@ -38,7 +38,7 @@ namespace Il2Native.Logic
 
             var codeSerializer = new CCodeFilesGenerator();
             codeSerializer.Concurrent = concurrent;
-            codeSerializer.WriteTo(assemblySymbol.Identity, cs2CGenerator.Assemblies, cs2CGenerator.IsCoreLib, cs2CGenerator.IsLibrary, units, outputFolder);
+            codeSerializer.WriteTo(assemblySymbol.Identity, cs2CGenerator.Assemblies, cs2CGenerator.IsCoreLib, cs2CGenerator.IsLibrary, units, outputFolder, cs2CGenerator.Impl);
         }
     }
 }

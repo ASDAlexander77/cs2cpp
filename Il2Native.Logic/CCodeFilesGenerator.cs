@@ -426,7 +426,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return headersToInclude;
         }
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<CCodeUnit> units, string outputFolder)
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<CCodeUnit> units, string outputFolder, string[] impl)
         {
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
             if (!Directory.Exists(this.currentFolder))
@@ -437,6 +437,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             if (isCoreLib)
             {
                 this.ExtractCoreLibImpl();
+            }
+
+            if (impl != null && impl.Any())
+            {
+                this.PopulateImpl(impl);
             }
 
             var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
@@ -470,6 +475,22 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         file.ExtractToFile(completeFileName);
                     }
                 }
+            }
+        }
+
+        private void PopulateImpl(string[] impl)
+        {
+            var delimeterFolder = "\\Impl\\";
+            foreach (var file in impl)
+            {
+                var completeFileName = string.Concat(this.currentFolder, file.Substring(file.IndexOf(delimeterFolder, StringComparison.OrdinalIgnoreCase)));
+                var directoryName = Path.GetDirectoryName(completeFileName);
+                if (!Directory.Exists(directoryName))
+                {
+                    Directory.CreateDirectory(directoryName);
+                }
+
+                File.Copy(file, completeFileName, true);
             }
         }
 

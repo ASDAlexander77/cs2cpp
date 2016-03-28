@@ -100,6 +100,11 @@ namespace Il2Native.Logic
         public string SourceFilePath { get; private set; }
 
         /// <summary>
+        /// C++ files which contain implementations
+        /// </summary>
+        public string[] Impl { get; private set; }
+
+        /// <summary>
         /// </summary>
         protected string FirstSource { get; private set; }
 
@@ -421,6 +426,12 @@ namespace Il2Native.Logic
             this.Sources =
                 project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
                     .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
+                    .ToArray();
+
+            this.Impl =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Content")
+                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
+                    .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
                     .ToArray();
 
             var options = new ProjectProperties();
