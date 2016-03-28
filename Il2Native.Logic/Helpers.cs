@@ -1,7 +1,7 @@
 ﻿// Mr Oleksandr Duzhar licenses this file to you under the MIT license.
 // If you need the License file, please send an email to duzhar@googlemail.com
 // 
-////#define SUPPORT_CUSTOM_EXTERN
+#define SUPPORT_CUSTOM_EXTERN
 
 namespace Il2Native.Logic
 {
