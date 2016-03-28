@@ -3,5 +3,8 @@
 // Method : System.DateTime.GetSystemTimeAsFileTime()
 int64_t CoreLib::System::DateTime::GetSystemTimeAsFileTime()
 {
-    throw 3221274624U;
+	auto now = std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
+	auto epoch = now.time_since_epoch();
+	auto value = std::chrono::duration_cast<std::chrono::nanoseconds>(epoch);
+    return (int64_t) value.count();
 }
