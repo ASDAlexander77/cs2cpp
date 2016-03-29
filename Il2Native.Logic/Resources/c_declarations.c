@@ -647,5 +647,5 @@ public:
 	virtual int32_t get_Rank() override;
 };
 
-unordered_map<void*, timed_mutex> __locks;
-unordered_map<void*, condition_variable> __conditions;
+std::unordered_map<void*, std::timed_mutex> __locks;
+std::unordered_map<void*, std::condition_variable> __conditions;
