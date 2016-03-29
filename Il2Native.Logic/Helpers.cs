@@ -361,22 +361,6 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public static bool IsExternForwardRef(this IMethodSymbol iMethodSymbol)
-        {
-#if SUPPORT_CUSTOM_EXTERN
-            var methodSymbol = iMethodSymbol as MethodSymbol;
-            if (methodSymbol != null)
-            {
-                var methodImplAttributes = methodSymbol.ImplementationAttributes;
-                if (methodImplAttributes.HasFlag(MethodImplAttributes.ForwardRef))
-                {
-                    return true;
-                }
-            }
-#endif
-            return false;
-        }
-
         public static bool IsDllExport(this IMethodSymbol iMethodSymbol)
         {
 #if SUPPORT_CUSTOM_EXTERN

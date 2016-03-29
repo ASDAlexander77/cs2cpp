@@ -313,7 +313,7 @@ namespace Il2Native.Logic
             this.WriteMethodName(methodSymbol, false);
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null, bool declaration = false)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null)
             {
@@ -321,7 +321,7 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName, declaration);
+            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName);
 
             if (methodSymbol.IsGenericMethod)
             {
@@ -337,24 +337,13 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null, bool declaration = false)
+        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
         {
             // name
             var symbol = methodSymbolForName ?? methodSymbol;
             if (methodSymbol.IsExternDeclaration())
             {
-                var forwardRef = methodSymbol.IsExternForwardRef();
-                if (declaration && forwardRef)
-                {
-                    this.TextSpan("(*");
-                }
-
                 this.WriteNameEnsureCompatible(symbol, true);
-                if (declaration && forwardRef)
-                {
-                    this.TextSpan(")");
-                }
-
                 return;
             }
 
@@ -568,7 +557,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass, declaration: true);
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
             }
         }
 

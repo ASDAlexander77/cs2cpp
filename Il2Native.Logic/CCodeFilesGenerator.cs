@@ -608,25 +608,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
-            // write extern declaration
-            var externDeclarations = unit.Declarations.Select(
-                declaration => new { declaration, codeMethodDeclaration = declaration as CCodeMethodDeclaration })
-                .Where(@t => @t.codeMethodDeclaration != null && @t.codeMethodDeclaration.IsExternDeclaration)
-                .Select(@t => @t.declaration).ToList();
-
-            if (externDeclarations.Any())
-            {
-                itw.Write("extern \"C\"");
-                c.OpenBlock();
-
-                foreach (var declaration in externDeclarations)
-                {
-                    declaration.WriteTo(c);
-                }
-
-                c.EndBlock();
-            }
-
             var any = false;
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -641,6 +622,25 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             {
                 itw.Indent++;
                 itw.WriteLine();
+            }
+
+            // write extern declaration
+            var externDeclarations = unit.Declarations.Select(
+                declaration => new { declaration, codeMethodDeclaration = declaration as CCodeMethodDeclaration })
+                .Where(@t => @t.codeMethodDeclaration != null && @t.codeMethodDeclaration.IsExternDeclaration)
+                .Select(@t => @t.declaration).ToList();
+            if (externDeclarations.Any())
+            {
+                itw.Write("extern \"C\"");
+                c.WhiteSpace();
+                c.OpenBlock();
+
+                foreach (var declaration in externDeclarations)
+                {
+                    declaration.WriteTo(c);
+                }
+
+                c.EndBlock();
             }
 
             if (namedTypeSymbol.IsGenericType)

@@ -98,6 +98,11 @@ namespace Il2Native.Logic.DOM2
                     c.WriteTypeFullName(this.Method.ContainingType);
                     c.TextSpan("::");
                 }
+                else
+                {
+                    c.WriteNamespace(this.Method.ContainingType.ContainingNamespace);
+                    c.TextSpan("::");
+                }
                 
                 c.WriteMethodName(this.Method, addTemplate: true);
             }
