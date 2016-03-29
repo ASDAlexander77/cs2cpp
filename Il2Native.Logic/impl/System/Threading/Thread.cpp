@@ -206,7 +206,7 @@ void CoreLib::System::Threading::Thread::InformThreadNameChange(CoreLib::System:
 // Method : System.Threading.Thread.MemoryBarrier()
 void CoreLib::System::Threading::Thread::MemoryBarrier()
 {
-	throw 3221274624U;
+	std::atomic_thread_fence(std::memory_order_relaxed);
 }
 
 // Method : System.Threading.Thread.SetAbortReason(object)

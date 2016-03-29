@@ -20,9 +20,9 @@ T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T v
 {
 #ifdef _MSC_VER
     static_assert(sizeof(long) == sizeof(T), "Size of long must be the same as size of T");
-    return _InterlockedCompareExchange((long volatile*)destination, value, comparand);
+    return _InterlockedCompareExchange((long volatile*)location1, value, comparand);
 #else
-    return __sync_val_compare_and_swap((T volatile*)destination, comparand, value);
+    return __sync_val_compare_and_swap((T volatile*)location1, comparand, value);
 #endif
 
 }
