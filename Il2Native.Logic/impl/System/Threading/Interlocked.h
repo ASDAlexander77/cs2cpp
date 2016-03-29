@@ -25,7 +25,7 @@ inline T _interlocked_exchange<4>(T volatile* location1, T value)
 template < typename T >
 inline T _interlocked_exchange<8>(T volatile* location1, T value)
 {
-	return (T) _InterlockedExchange8((int64_t volatile*)location1, (int64_t)value);
+	return (T) _InterlockedExchange((int64_t volatile*)location1, (int64_t)value);
 }
 
 template < typename T >
