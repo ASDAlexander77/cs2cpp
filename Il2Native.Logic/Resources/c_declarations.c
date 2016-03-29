@@ -646,3 +646,6 @@ public:
 	virtual int32_t GetLength(int32_t dimension) override;
 	virtual int32_t get_Rank() override;
 };
+
+unordered_map<void*, timed_mutex> __locks;
+unordered_map<void*, condition_variable> __conditions;

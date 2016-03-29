@@ -10,6 +10,10 @@
 #include <atomic>
 #include <thread>
 #include <chrono> 
+#include <unordered_map>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 #ifndef thread_local
 # if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
