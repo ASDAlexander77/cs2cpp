@@ -1,110 +1,159 @@
 #include "CoreLib.h"
-#if _WIN32 && _MSC_VER
-#include <xatomic.h>
-#endif
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif // _MSC_VER
 
 // Method : System.Threading.Interlocked.Increment(ref int)
-int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location)
+inline int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location)
 {
-#if _WIN32 && _MSC_VER
-	return std::_Atomic_fetch_add_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
+#ifdef _MSC_VER
+    return _InterlockedIncrement((int32_t volatile*)location);
 #else
-	return __sync_fetch_and_add ((int32_t*)&location, 1);
+    return __sync_add_and_fetch((int32_t volatile*)location, 1);
 #endif
 }
 
 // Method : System.Threading.Interlocked.Increment(ref long)
-int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location)
+inline int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location)
 {
-#if _WIN32 && _MSC_VER
-	return std::_Atomic_fetch_add_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
+#ifdef _MSC_VER
+    return _InterlockedIncrement((int64_t volatile*)location);
 #else
-	return __sync_fetch_and_add ((int64_t*)&location, 1);
+    return __sync_add_and_fetch((int64_t volatile*)location, 1);
 #endif
 }
 
 // Method : System.Threading.Interlocked.Decrement(ref int)
-int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& location)
+inline int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& location)
 {
-#if _WIN32 && _MSC_VER
-	return std::_Atomic_fetch_sub_4((volatile std::_Uint4_t*)&location, 1, std::memory_order_relaxed);
+#ifdef _MSC_VER
+    return _InterlockedDecrement((int32_t volatile*)location);
 #else
-	return __sync_fetch_and_sub ((int32_t*)&location, 1);
+    return __sync_sub_and_fetch((int32_t volatile*)location, 1);
 #endif
 }
 
 // Method : System.Threading.Interlocked.Decrement(ref long)
-int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location)
+inline int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location)
 {
-#if _WIN32 && _MSC_VER
-	return std::_Atomic_fetch_sub_8((volatile std::_Uint8_t*)&location, 1, std::memory_order_relaxed);
+#ifdef _MSC_VER
+    return _InterlockedDecrement((int64_t volatile*)location);
 #else
-	return __sync_fetch_and_sub ((int64_t*)&location, 1);
+    return __sync_sub_and_fetch((int64_t volatile*)location, 1);
 #endif
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref int, int)
-int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int32_t& location1, int32_t value)
+inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int32_t& location1, int32_t value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchange((int32_t volatile*)location1, value);
+#else
+    return __sync_swap((int32_t volatile*)location1, value);
+#endif
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref long, long)
-int64_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int64_t& location1, int64_t value)
+inline int64_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int64_t& location1, int64_t value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchange((int64_t volatile*)location1, value);
+#else
+    return __sync_swap((int64_t volatile*)location1, value);
+#endif
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref object, object)
-object* CoreLib::System::Threading::Interlocked::Exchange_Ref(object*& location1, object* value)
+inline object* CoreLib::System::Threading::Interlocked::Exchange_Ref(object*& location1, object* value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchangePointer((void* volatile*)location1, value);
+#else
+    return __sync_swap((void* volatile*)location1, value);
+#endif
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref System.IntPtr, System.IntPtr)
-int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value)
+inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchange((int64_t volatile*)location1, value);
+#else
+    return __sync_swap((int64_t volatile*)location1, value);
+#endif
 }
 
 // Method : System.Threading.Interlocked.CompareExchange(ref int, int, int)
-int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int32_t& location1, int32_t value, int32_t comparand)
+inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int32_t& location1, int32_t value, int32_t comparand)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedCompareExchange((int32_t volatile*)location1, exchange, comparand);
+#else
+    return __sync_val_compare_and_swap((int32_t volatile*)location1, comparand, exchange);
+#endif
 }
 
 // Method : System.Threading.Interlocked.CompareExchange(ref long, long, long)
-int64_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int64_t& location1, int64_t value, int64_t comparand)
+inline int64_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int64_t& location1, int64_t value, int64_t comparand)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedCompareExchange((int64_t volatile*)location1, exchange, comparand);
+#else
+    return __sync_val_compare_and_swap((int64_t volatile*)location1, comparand, exchange);
+#endif
 }
 
 // Method : System.Threading.Interlocked.CompareExchange(ref object, object, object)
-object* CoreLib::System::Threading::Interlocked::CompareExchange_Ref(object*& location1, object* value, object* comparand)
+inline object* CoreLib::System::Threading::Interlocked::CompareExchange_Ref(object*& location1, object* value, object* comparand)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedCompareExchangePointer((void* volatile*)location1, exchange, comparand);
+#else
+    return __sync_val_compare_and_swap((void* volatile*)location1, comparand, exchange);
+#endif
 }
 
 // Method : System.Threading.Interlocked.CompareExchange(ref System.IntPtr, System.IntPtr, System.IntPtr)
-CoreLib::System::IntPtr CoreLib::System::Threading::Interlocked::CompareExchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
+inline CoreLib::System::IntPtr CoreLib::System::Threading::Interlocked::CompareExchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedCompareExchange((int64_t volatile*)location1, exchange, comparand);
+#else
+    return __sync_val_compare_and_swap((int64_t volatile*)location1, comparand, exchange);
+#endif
 }
 
 // Method : System.Threading.Interlocked.CompareExchange(ref int, int, int, ref bool)
-int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(int32_t& location1, int32_t value, int32_t comparand, bool& succeeded)
+inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(int32_t& location1, int32_t value, int32_t comparand, bool& succeeded)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+	auto val = (int32_t*)location1;
+    auto val_after = _InterlockedCompareExchange((int32_t volatile*)location1, exchange, comparand);
+	succeeded = val != val_after;
+	return val_after;
+#else
+	auto val = (int32_t*)location1;
+    succeeded = __sync_bool_compare_and_swap((int32_t volatile*)location1, comparand, exchange);
+	return val;
+#endif
 }
 
 // Method : System.Threading.Interlocked.ExchangeAdd(ref int, int)
-int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t& location1, int32_t value)
+inline int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t& location1, int32_t value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchangeAdd((int32_t volatile*)addend, value);
+#else
+    return __sync_fetch_and_add((int32_t volatile*)addend, value);
+#endif
 }
 
 // Method : System.Threading.Interlocked.ExchangeAdd(ref long, long)
-int64_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int64_t& location1, int64_t value)
+inline int64_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int64_t& location1, int64_t value)
 {
-    throw 3221274624U;
+#ifdef _MSC_VER
+    return _InterlockedExchangeAdd((int64_t volatile*)addend, value);
+#else
+    return __sync_fetch_and_add((int64_t volatile*)addend, value);
+#endif
 }
