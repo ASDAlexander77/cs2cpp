@@ -5,25 +5,25 @@ template < typename T, int S = sizeof(T) >
 T _interlocked_exchange(T volatile* location1, T value);
 
 template < typename T >
-inline T _interlocked_exchange<1>(T volatile* location1, T value)
+inline T _interlocked_exchange<T, 1>(T volatile* location1, T value)
 {
 	return (T) _InterlockedExchange1((int8_t volatile*)location1, (int8_t)value);
 }
 
 template < typename T >
-inline T _interlocked_exchange<2>(T volatile* location1, T value)
+inline T _interlocked_exchange<T, 2>(T volatile* location1, T value)
 {
 	return (T) _InterlockedExchange2((int16_t volatile*)location1, (int16_t)value);
 }
 
 template < typename T >
-inline T _interlocked_exchange<4>(T volatile* location1, T value)
+inline T _interlocked_exchange<T, 4>(T volatile* location1, T value)
 {
 	return (T) _InterlockedExchange4((int32_t volatile*)location1, (int32_t)value);
 }
 
 template < typename T >
-inline T _interlocked_exchange<8>(T volatile* location1, T value)
+inline T _interlocked_exchange<T, 8>(T volatile* location1, T value)
 {
 	return (T) _InterlockedExchange((int64_t volatile*)location1, (int64_t)value);
 }
