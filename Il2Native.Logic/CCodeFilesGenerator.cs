@@ -383,6 +383,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     itw.WriteLine("#ifndef HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
                     itw.WriteLine("#define HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
 
+                    WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);
+
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
                     {
                         anyRecord = true;
@@ -398,6 +400,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                             anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
                         }
                     }
+
+                    WriteNamespaceClose((INamedTypeSymbol)unit.Type, itw);
 
                     itw.WriteLine("#endif");
 
@@ -608,21 +612,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
-            var any = false;
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
-            {
-                itw.Write("namespace ");
-                c.WriteNamespaceName(namespaceNode);
-                itw.Write(" { ");
-                any = true;
-            }
-
-            if (any)
-            {
-                itw.Indent++;
-                itw.WriteLine();
-            }
+            WriteNamespaceOpen(namedTypeSymbol, itw, c);
 
             // write extern declaration
             var externDeclarations = unit.Declarations.Select(
@@ -721,13 +712,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.WriteLine();
             }
 
-            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
-            {
-                itw.Indent--;
-                itw.Write("}");
-            }
-
-            itw.WriteLine();
+            WriteNamespaceClose(namedTypeSymbol, itw);
 
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum || namedTypeSymbol.SpecialType == SpecialType.System_Void)
             {
@@ -759,6 +744,35 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.TextSpanNewLine("type; };");
             }
+        }
+
+        private static void WriteNamespaceOpen(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw, CCodeWriterText c)
+        {
+            bool any = false;
+            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+            {
+                itw.Write("namespace ");
+                c.WriteNamespaceName(namespaceNode);
+                itw.Write(" { ");
+                any = true;
+            }
+
+            if (any)
+            {
+                itw.Indent++;
+                itw.WriteLine();
+            }
+        }
+
+        private static void WriteNamespaceClose(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw)
+        {
+            foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
+            {
+                itw.Indent--;
+                itw.Write("}");
+            }
+
+            itw.WriteLine();
         }
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
@@ -834,6 +848,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
                 WriteSourceInclude(itw, identity);
 
+                WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);
+
                 foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
                 {
                     anyRecord = true;
@@ -848,6 +864,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         anyRecord |= WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
                     }
                 }
+
+                WriteNamespaceClose((INamedTypeSymbol)unit.Type, itw);
 
                 if (!stubs && unit.MainMethod != null)
                 {

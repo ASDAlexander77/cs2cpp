@@ -282,11 +282,13 @@ namespace Il2Native.Logic
 
             this.WhiteSpace();
 
+            /*
             if (fieldSymbol.ContainingNamespace != null)
             {
                 this.WriteNamespace(fieldSymbol.ContainingNamespace);
                 this.TextSpan("::");
             }
+            */ 
 
             var receiverType = fieldSymbol.ContainingType;
             this.WriteTypeName(receiverType, false);
@@ -307,9 +309,9 @@ namespace Il2Native.Logic
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
 
-        public void WriteMethodFullName(IMethodSymbol methodSymbol)
+        public void WriteMethodFullName(IMethodSymbol methodSymbol, bool excludeNamespace = false)
         {
-            this.WriteMethodNamespace(methodSymbol);
+            this.WriteMethodNamespace(methodSymbol, excludeNamespace);
             this.WriteMethodName(methodSymbol, false);
         }
 
@@ -399,10 +401,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodNamespace(IMethodSymbol methodSymbol)
+        public void WriteMethodNamespace(IMethodSymbol methodSymbol, bool excludeNamespace)
         {
             // namespace
-            if (methodSymbol.ContainingNamespace != null)
+            if (!excludeNamespace && methodSymbol.ContainingNamespace != null)
             {
                 this.WriteNamespace(methodSymbol.ContainingNamespace);
                 this.TextSpan("::");
@@ -553,7 +555,7 @@ namespace Il2Native.Logic
 
             if (!declarationWithingClass)
             {
-                this.WriteMethodFullName(methodSymbol);
+                this.WriteMethodFullName(methodSymbol, true);
             }
             else
             {
