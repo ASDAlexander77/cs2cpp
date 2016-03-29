@@ -648,4 +648,4 @@ public:
 };
 
 std::unordered_map<void*, std::timed_mutex> __locks;
-std::unordered_map<void*, std::condition_variable> __conditions;
+std::unordered_map<void*, std::condition_variable_any> __conditions;

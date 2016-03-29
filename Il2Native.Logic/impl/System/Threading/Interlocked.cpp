@@ -7,17 +7,17 @@
 inline int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location)
 {
 #ifdef _MSC_VER
-	return _InterlockedIncrement4((int32_t volatile*)location);
+	return (int32_t) _InterlockedIncrement((long volatile*)location);
 #else
 	return __sync_add_and_fetch((int32_t volatile*)location, 1);
 #endif
 }
 
 // Method : System.Threading.Interlocked.Increment(ref long)
-inline int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location)
+inline int64_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& location)
 {
 #ifdef _MSC_VER
-	return _InterlockedIncrement((int64_t volatile*)location);
+	return _InterlockedAddLargeStatistic((int64_t volatile*)location, 1);
 #else
 	return __sync_add_and_fetch((int64_t volatile*)location, 1);
 #endif
@@ -27,7 +27,7 @@ inline int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int64_t& l
 inline int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& location)
 {
 #ifdef _MSC_VER
-	return _InterlockedDecrement4((int32_t volatile*)location);
+	return (int32_t) _InterlockedDecrement((long volatile*)location);
 #else
 	return __sync_sub_and_fetch((int32_t volatile*)location, 1);
 #endif
@@ -37,7 +37,7 @@ inline int32_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int32_t& l
 inline int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location)
 {
 #ifdef _MSC_VER
-	return _InterlockedDecrement((int64_t volatile*)location);
+	return _InterlockedAddLargeStatistic((int64_t volatile*)location, -1);
 #else
 	return __sync_sub_and_fetch((int64_t volatile*)location, 1);
 #endif
@@ -47,7 +47,7 @@ inline int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& l
 inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int32_t& location1, int32_t value)
 {
 #ifdef _MSC_VER
-	return _InterlockedExchange4((int32_t volatile*)location1, value);
+	return _InterlockedExchange((long volatile*)location1, value);
 #else
 	__sync_synchronize();
 	return __sync_lock_test_and_set((int32_t volatile*)location1, value);
@@ -58,7 +58,8 @@ inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int32_t& lo
 inline int64_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int64_t& location1, int64_t value)
 {
 #ifdef _MSC_VER
-	return _InterlockedExchange((int64_t volatile*)location1, value);
+	////return _InterlockedExchange64((int64_t volatile*)location1, value);
+	throw __new<CoreLib::System::NotImplementedException>();
 #else
 	__sync_synchronize();
 	return __sync_lock_test_and_set((int64_t volatile*)location1, value);
@@ -77,13 +78,13 @@ inline object* CoreLib::System::Threading::Interlocked::Exchange_Ref(object*& lo
 }
 
 // Method : System.Threading.Interlocked.Exchange(ref System.IntPtr, System.IntPtr)
-inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value)
+inline CoreLib::System::IntPtr CoreLib::System::Threading::Interlocked::Exchange_Ref(CoreLib::System::IntPtr& location1, CoreLib::System::IntPtr value)
 {
 #ifdef _MSC_VER
-	return (int32_t)_InterlockedExchangePointer((void* volatile*)&location1->m_value, value->m_value);
+	return __init<CoreLib::System::IntPtr>(_InterlockedExchangePointer((void* volatile*)&location1->m_value, value->m_value));
 #else
 	__sync_synchronize();
-	return (int32_t)__sync_lock_test_and_set((void* volatile*)&location1->m_value, value->m_value);
+	return __init<CoreLib::System::IntPtr>(__sync_lock_test_and_set((void* volatile*)&location1->m_value, value->m_value));
 #endif
 }
 
@@ -91,7 +92,7 @@ inline int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(CoreLib::Sy
 inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int32_t& location1, int32_t value, int32_t comparand)
 {
 #ifdef _MSC_VER
-	return _InterlockedCompareExchange4((int32_t volatile*)location1, value, comparand);
+	return _InterlockedCompareExchange((long volatile*)location1, value, comparand);
 #else
 	return __sync_val_compare_and_swap((int32_t volatile*)location1, comparand, value);
 #endif
@@ -101,7 +102,8 @@ inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int3
 inline int64_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int64_t& location1, int64_t value, int64_t comparand)
 {
 #ifdef _MSC_VER
-	return _InterlockedCompareExchange((int64_t volatile*)location1, value, comparand);
+	////return _InterlockedCompareExchange64((int64_t volatile*)location1, value, comparand);
+	throw __new<CoreLib::System::NotImplementedException>();
 #else
 	return __sync_val_compare_and_swap((int64_t volatile*)location1, comparand, value);
 #endif
@@ -131,8 +133,8 @@ inline CoreLib::System::IntPtr CoreLib::System::Threading::Interlocked::CompareE
 inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(int32_t& location1, int32_t value, int32_t comparand, bool& succeeded)
 {
 #ifdef _MSC_VER
-	auto val = *(int32_t*)location1;
-	auto val_after = _InterlockedCompareExchange4((int32_t volatile*)location1, value, comparand);
+	int32_t val = *(int32_t*)location1;
+	int32_t val_after = _InterlockedCompareExchange((long volatile*)location1, value, comparand);
 	succeeded = val != val_after;
 	return val_after;
 #else
@@ -146,7 +148,7 @@ inline int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(
 inline int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t& location1, int32_t value)
 {
 #ifdef _MSC_VER
-	return _InterlockedExchangeAdd4((int32_t volatile*)location1, value);
+	return _InterlockedExchangeAdd((long volatile*)location1, value);
 #else
 	return __sync_fetch_and_add((int32_t volatile*)location1, value);
 #endif
@@ -156,7 +158,8 @@ inline int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t&
 inline int64_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int64_t& location1, int64_t value)
 {
 #ifdef _MSC_VER
-	return _InterlockedExchangeAdd((int64_t volatile*)location1, value);
+	////return _InterlockedExchangeAdd64((int64_t volatile*)location1, value);
+	throw __new<CoreLib::System::NotImplementedException>();
 #else
 	return __sync_fetch_and_add((int64_t volatile*)location1, value);
 #endif

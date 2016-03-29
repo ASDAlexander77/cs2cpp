@@ -39,20 +39,20 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
 // Method : System.Threading.Monitor.ObjWait(bool, int, object)
 bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t millisecondsTimeout, object* obj)
 {
-    std::unique_lock<std::mutex> unique_lock(__locks[(void*)obj]);
+    std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
 	__conditions[(void*)obj].wait(unique_lock);
 }
 
 // Method : System.Threading.Monitor.ObjPulse(object)
 void CoreLib::System::Threading::Monitor::ObjPulse(object* obj)
 {
-    std::unique_lock<std::mutex> unique_lock(__locks[(void*)obj]);
+    std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
 	__conditions[(void*)obj].notify_one(unique_lock);
 }
 
 // Method : System.Threading.Monitor.ObjPulseAll(object)
 void CoreLib::System::Threading::Monitor::ObjPulseAll(object* obj)
 {
-    std::unique_lock<std::mutex> unique_lock(__locks[(void*)obj]);
+    std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
 	__conditions[(void*)obj].notify_all(unique_lock);
 }
