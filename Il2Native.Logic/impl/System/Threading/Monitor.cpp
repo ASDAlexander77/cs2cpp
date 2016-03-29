@@ -40,19 +40,19 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
 bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t millisecondsTimeout, object* obj)
 {
     std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
-	__conditions[(void*)obj].wait(unique_lock);
+	return __conditions[(void*)obj].wait_for(unique_lock, std::chrono::milliseconds(millisecondsTimeout)) == std::cv_status::no_timeout;
 }
 
 // Method : System.Threading.Monitor.ObjPulse(object)
 void CoreLib::System::Threading::Monitor::ObjPulse(object* obj)
 {
     std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
-	__conditions[(void*)obj].notify_one(unique_lock);
+	__conditions[(void*)obj].notify_one();
 }
 
 // Method : System.Threading.Monitor.ObjPulseAll(object)
 void CoreLib::System::Threading::Monitor::ObjPulseAll(object* obj)
 {
     std::unique_lock<std::timed_mutex> unique_lock(__locks[(void*)obj]);
-	__conditions[(void*)obj].notify_all(unique_lock);
+	__conditions[(void*)obj].notify_all();
 }
