@@ -72,11 +72,6 @@ namespace Il2Native.Logic.DOM2
             c.NewLine();
             c.OpenBlock();
 
-            if (this.MethodSymbol.MethodKind == MethodKind.StaticConstructor)
-            {
-                c.TextSpanNewLine("_cctor_called = true;");
-            }
-
             foreach (var statement in statements.Skip(skip))
             {
                 statement.WriteTo(c);

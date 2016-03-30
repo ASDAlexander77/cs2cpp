@@ -128,7 +128,7 @@ namespace Il2Native.Logic
             var cctorCalledField = new FieldImpl
             {
                 Name = "_cctor_called",
-                Type = new TypeImpl { SpecialType = SpecialType.System_Boolean },
+                Type = new NamedTypeImpl { Name = "once_flag", TypeKind = TypeKind.Struct, ContainingNamespace = new NamespaceImpl { MetadataName = "std" } },
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
                 IsStatic = true
