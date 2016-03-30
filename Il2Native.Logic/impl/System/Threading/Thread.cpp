@@ -84,7 +84,7 @@ void CoreLib::System::Threading::Thread::AbortInternal()
 #if _MSC_VER
 	CloseHandle((HANDLE)voidPtr);
 #else
-	pthread_detach((pthread_t*)voidPtr);
+	pthread_detach(*(pthread_t*)voidPtr);
 #endif
 }
 
@@ -130,7 +130,7 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 #if _MSC_VER
 	return WaitForSingleObject((HANDLE)voidPtr, millisecondsTimeout == -1 ? INFINITE : millisecondsTimeout) == WAIT_OBJECT_0;
 #else
-	return pthread_join((pthread_t*)voidPtr, 0) == 0;
+	return pthread_join(*(pthread_t*)voidPtr, 0) == 0;
 #endif
 }
 
