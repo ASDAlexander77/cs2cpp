@@ -21,11 +21,6 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 
 	auto thread_ptr = __new_set0(sizeof(std::thread));
 	new (thread_ptr) std::thread([=](){
-
-#ifdef GC_H
-		GC_init_parallel();
-#endif
-
 		auto threadStart = as<CoreLib::System::Threading::ThreadStart*>(this->m_Delegate);
 		if (threadStart != nullptr)
 		{
