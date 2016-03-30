@@ -121,7 +121,7 @@ template <typename T> struct __unbound_generic_type
 };
 
 template< typename T, typename C >
-class __static 
+struct __static 
 {
 	T t;
 public:
@@ -129,6 +129,12 @@ public:
 	inline __static<T, C>& operator=(const T& value)
 	{
 		std::call_once(C::_cctor_called, C::_cctor);
+		t = value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator=(const T&& value)
+	{
 		t = value;
 		return *this;
 	}

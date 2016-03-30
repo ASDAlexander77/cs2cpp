@@ -22,6 +22,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool TypeDeclaration { get; set; }
 
+        public bool MoveOperator { get; set; }
+
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
             base.Parse(boundAssignmentOperator);
@@ -90,7 +92,17 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("*");
             }
 
+            if (this.MoveOperator)
+            {
+                c.TextSpan("std::move(");
+            }
+
             this.Right.WriteTo(c);
+
+            if (this.MoveOperator)
+            {
+                c.TextSpan(")");
+            }
         }
     }
 }
