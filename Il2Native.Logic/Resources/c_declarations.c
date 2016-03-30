@@ -219,49 +219,6 @@ public:
 	~Finally() { _dtor(); }
 };
 
-template< typename T >
-class __lazy
-{
-	typedef std::function<T()> initializer;
-
-	T t;
-	initializer _init;
-	bool _created;
-public:
-	__lazy(initializer init)
-	{
-		_created = false;
-		_init = init;
-	}
-
-	inline T& operator=(const T& value)
-	{
-		_created = true;
-		t = value;
-	}
-
-	inline operator T()
-	{
-		if (!_created)
-		{			
-			t = _init();
-			_created = true;
-		}
-
-		return t;
-	}
-
-	inline T operator ->()
-	{
-		if (!_created)
-		{			
-			t = _init();
-		}
-
-		return t;
-	}
-};
-
 // Default
 template <typename T> 
 inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()

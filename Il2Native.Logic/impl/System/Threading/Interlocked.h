@@ -70,10 +70,10 @@ template <typename T>
 T CoreLib::System::Threading::Interlocked::Exchange_Ref(T& location1, T value)
 {
 #ifdef _MSC_VER
-    return _interlocked_exchange((T volatile*)location1, value);
+    return _interlocked_exchange((T volatile*)&location1, value);
 #else
 	__sync_synchronize();
-	return __sync_lock_test_and_set((T volatile*)location1, value);
+	return __sync_lock_test_and_set((T volatile*)&location1, value);
 
 #endif
 }
@@ -83,9 +83,9 @@ template <typename T>
 T CoreLib::System::Threading::Interlocked::CompareExchange_Ref(T& location1, T value, T comparand)
 {
 #ifdef _MSC_VER
-    return _interlocked_compare_exchange((T volatile*)location1, value, comparand);
+    return _interlocked_compare_exchange((T volatile*)&location1, value, comparand);
 #else
-    return __sync_val_compare_and_swap((T volatile*)location1, comparand, value);
+    return __sync_val_compare_and_swap((T volatile*)&location1, comparand, value);
 #endif
 
 }
