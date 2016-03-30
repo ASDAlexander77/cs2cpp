@@ -39,7 +39,11 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
 // Method : System.Threading.Monitor.ObjWait(bool, int, object)
 bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t millisecondsTimeout, object* obj)
 {
-	return __conditions[(void*)obj].wait_for(__locks[(void*)obj], std::chrono::milliseconds(millisecondsTimeout)) == std::cv_status::no_timeout;
+	return __conditions[(void*)obj].wait_for(
+		__locks[(void*)obj], 
+		millisecondsTimeout == -1 
+			? std::chrono::milliseconds::max() 
+			: std::chrono::milliseconds(millisecondsTimeout)) == std::cv_status::no_timeout;
 }
 
 // Method : System.Threading.Monitor.ObjPulse(object)
