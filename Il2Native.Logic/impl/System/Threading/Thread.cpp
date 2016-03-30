@@ -60,9 +60,9 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		0,                      // use default creation flags 
 		(LPDWORD)&threadId);	// returns the thread identifier 
 #else
-	pthread_t t;
-	pthread_create(&t, 0, __thread_inner_proc, 0);
-	this->DONT_USE_InternalThread.m_value = &t;
+	auto t = __new_set0(sizeof(pthread_t));
+	pthread_create(t, 0, __thread_inner_proc, this);
+	this->DONT_USE_InternalThread.m_value = t;
 #endif
 }
 
@@ -128,7 +128,7 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 	}
 
 #if _MSC_VER
-	return WaitForSingleObject((HANDLE)voidPtr, INFINITE) == WAIT_OBJECT_0;
+	return WaitForSingleObject((HANDLE)voidPtr, millisecondsTimeout == -1 ? INFINITE : millisecondsTimeout) == WAIT_OBJECT_0;
 #else
 	return pthread_join((pthread_t*)voidPtr, 0) == 0;
 #endif
