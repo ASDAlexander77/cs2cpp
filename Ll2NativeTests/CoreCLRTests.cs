@@ -7,7 +7,7 @@
     using System.Linq;
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using PdbReader;
+
     namespace @baseservices.@compilerservices.@dynamicobjectproperties
     {
         [TestClass]

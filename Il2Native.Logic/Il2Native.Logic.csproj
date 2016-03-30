@@ -204,10 +204,6 @@
       <Project>{b501a547-c911-4a05-ac6e-274a50dff30e}</Project>
       <Name>CSharpCodeAnalysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PdbReader\PdbReader.csproj">
-      <Project>{68d11523-23ec-405f-adb0-c2f2c0538589}</Project>
-      <Name>PdbReader</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

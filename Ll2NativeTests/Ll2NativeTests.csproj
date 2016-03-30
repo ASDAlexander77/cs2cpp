@@ -25,7 +25,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;_DISK_D_</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;_DISK_C_</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -59,11 +59,6 @@
   <ItemGroup>
     <Compile Include="CompilerHelper.cs" />
     <Compile Include="CoreCLRTests.cs" />
-    <Compile Include="DummySymbolWriter\DummyCompileUnitEntry.cs" />
-    <Compile Include="DummySymbolWriter\DummySourceFile.cs" />
-    <Compile Include="DummySymbolWriter\DummySourceFileEntry.cs" />
-    <Compile Include="DummySymbolWriter\DummySourceMethodBuilder.cs" />
-    <Compile Include="DummySymbolWriter\DummySymbolWriter.cs" />
     <Compile Include="MonoLibTests.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
@@ -81,10 +76,6 @@
     <ProjectReference Include="..\Il2Native.Logic\Il2Native.Logic.csproj">
       <Project>{8F2A92D0-8862-4CF7-9C95-120681F5A689}</Project>
       <Name>Il2Native.Logic</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PdbReader\PdbReader.csproj">
-      <Project>{68d11523-23ec-405f-adb0-c2f2c0538589}</Project>
-      <Name>PdbReader</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
