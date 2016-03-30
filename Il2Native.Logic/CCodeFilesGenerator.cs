@@ -39,8 +39,7 @@ namespace Il2Native.Logic
             itw.WriteLine("{");
             itw.WriteLine("#ifdef GC_H");
             itw.Indent++;
-            itw.WriteLine("GC_use_threads_discovery()");
-            itw.WriteLine("GC_INIT()");
+            itw.WriteLine("GC_INIT();");
             itw.Indent--;
             itw.WriteLine("#endif");
             itw.Indent++;

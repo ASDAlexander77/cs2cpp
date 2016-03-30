@@ -38,4 +38,3 @@
 # define GC_DEBUG
 #endif
 
-#include "gc.h"

@@ -1,14 +1,45 @@
 #include "CoreLib.h"
 
+#ifdef _MSC_VER
+# include <windows.h>
+# define __ATTR __stdcall
+#else
+# include <pthread.h>
+# define __ATTR 
+#endif
+
+#ifndef GC_THREADS
+# define GC_THREADS
+#endif
+
+#include "gc.h"
+
 // Method : System.Threading.Thread.ManagedThreadId.get
 int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 {
 	throw 3221274624U;
 }
 
-#ifdef GC_H
-extern "C" void GC_init_parallel();
-#endif
+int32_t __ATTR __thread_inner_proc(void* params)
+{
+	auto __this = (CoreLib::System::Threading::Thread*)params;
+
+	auto threadStart = as<CoreLib::System::Threading::ThreadStart*>(__this->m_Delegate);
+	if (threadStart != nullptr)
+	{
+		threadStart->Invoke();
+		return 0;
+	}
+
+	auto parameterizedThreadStart = as<CoreLib::System::Threading::ParameterizedThreadStart*>(__this->m_Delegate);
+	if (parameterizedThreadStart != nullptr)
+	{
+		parameterizedThreadStart->Invoke(__this->m_ThreadStartArg);
+		return 0;
+	}
+
+	throw __new<CoreLib::System::InvalidOperationException>();
+}
 
 // Method : System.Threading.Thread.StartInternal(System.Security.Principal.IPrincipal, ref System.Threading.StackCrawlMark)
 void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Security::Principal::IPrincipal* principal, CoreLib::System::Threading::enum_StackCrawlMark& stackMark)
@@ -19,26 +50,20 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		throw __new<CoreLib::System::Threading::ThreadStateException>();
 	}
 
-	auto thread_ptr = __new_set0(sizeof(std::thread));
-	new (thread_ptr) std::thread([=](){
-		auto threadStart = as<CoreLib::System::Threading::ThreadStart*>(this->m_Delegate);
-		if (threadStart != nullptr)
-		{
-			threadStart->Invoke();
-			return;
-		}
-
-		auto parameterizedThreadStart = as<CoreLib::System::Threading::ParameterizedThreadStart*>(this->m_Delegate);
-		if (parameterizedThreadStart != nullptr)
-		{
-			parameterizedThreadStart->Invoke(this->m_ThreadStartArg);
-			return;
-		}
-
-		throw __new<CoreLib::System::InvalidOperationException>();
-	});
-
-	this->DONT_USE_InternalThread.m_value = thread_ptr;
+	int32_t threadId;
+#if _MSC_VER
+	this->DONT_USE_InternalThread.m_value = CreateThread( 
+		nullptr,                // default security attributes
+		0,                      // use default stack size  
+		(LPTHREAD_START_ROUTINE)__thread_inner_proc,    // thread function name
+		this,					// argument to thread function 
+		0,                      // use default creation flags 
+		(LPDWORD)&threadId);	// returns the thread identifier 
+#else
+	pthread_t t;
+	pthread_create(&t, 0, __thread_inner_proc, 0);
+	this->DONT_USE_InternalThread.m_value = &t;
+#endif
 }
 
 // Method : System.Threading.Thread.InternalGetCurrentThread()
@@ -56,8 +81,11 @@ void CoreLib::System::Threading::Thread::AbortInternal()
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-	auto threadPtr = reinterpret_cast<std::thread*>(voidPtr);
-	return threadPtr->detach();
+#if _MSC_VER
+	CloseHandle((HANDLE)voidPtr);
+#else
+	pthread_detach((pthread_t*)voidPtr);
+#endif
 }
 
 // Method : System.Threading.Thread.GetPriorityNative()
@@ -81,8 +109,7 @@ bool CoreLib::System::Threading::Thread::get_IsAlive()
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-	auto threadPtr = reinterpret_cast<std::thread*>(voidPtr);
-	return threadPtr->joinable();
+	return true;
 }
 
 // Method : System.Threading.Thread.IsThreadPoolThread.get
@@ -100,14 +127,11 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-	auto threadPtr = reinterpret_cast<std::thread*>(voidPtr);
-	if (threadPtr->joinable())
-	{
-		threadPtr->join();
-		return true;
-	}
-
-	return false;
+#if _MSC_VER
+	return WaitForSingleObject((HANDLE)voidPtr, INFINITE) == WAIT_OBJECT_0;
+#else
+	return pthread_join((pthread_t*)voidPtr, 0) == 0;
+#endif
 }
 
 // Method : System.Threading.Thread.SleepInternal(int)
@@ -199,6 +223,7 @@ void CoreLib::System::Threading::Thread::InformThreadNameChange(CoreLib::System:
 }
 
 // Method : System.Threading.Thread.MemoryBarrier()
+#undef MemoryBarrier
 void CoreLib::System::Threading::Thread::MemoryBarrier()
 {
 	std::atomic_thread_fence(std::memory_order_relaxed);
