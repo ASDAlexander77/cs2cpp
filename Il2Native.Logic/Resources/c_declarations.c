@@ -618,13 +618,19 @@ public:
 
 	__object_extras* operator[] (object* obj)
 	{
-		std::lock_guard<std::mutex> guard(mutex);
+		std::shared_lock<std::shared_timed_mutex> lock(mutex);
 		map::const_iterator got = __extras.find (obj);
 		if (got != __extras.end())
 		{
 			return got->second;
 		}
 
+		return allocate(obj);
+	}
+
+	__object_extras* allocate(object* obj)
+	{
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
 		auto new_object_extras = new __object_extras();
 		__extras[obj] = new_object_extras;
 		return new_object_extras;
@@ -632,7 +638,7 @@ public:
 
 	void free(object* obj)
 	{
-		std::lock_guard<std::mutex> guard(mutex);
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
 		map::const_iterator got = __extras.find (obj);
 		if (got != __extras.end())
 		{
@@ -643,7 +649,7 @@ public:
 
 	~__object_extras_storage()
 	{
-		std::lock_guard<std::mutex> guard(mutex);
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
 		for (auto item : __extras) 
 		{
 			delete item.second;
@@ -651,7 +657,7 @@ public:
 	}
 
 	map __extras;
-	std::mutex mutex;
+	mutable std::shared_timed_mutex mutex;
 };
 
 extern __object_extras_storage __object_extras_storage_instance;
