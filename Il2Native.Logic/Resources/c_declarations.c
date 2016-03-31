@@ -605,4 +605,4 @@ public:
 };
 
 extern std::unordered_map<void*, std::timed_mutex> __locks;
-extern std::unordered_map<void*, std::condition_variable> __conditions;
+extern std::unordered_map<void*, std::condition_variable_any> __conditions;
