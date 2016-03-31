@@ -64,8 +64,7 @@ bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t mill
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	std::unique_lock<std::timed_mutex> lk(__locks[(void*)obj]);
-	return std::cv_status::no_timeout == __conditions[(void*)obj].wait_for(lk, millisecondsTimeout == -1 ? std::chrono::milliseconds::max() : std::chrono::milliseconds(millisecondsTimeout));
+	return std::cv_status::no_timeout == __conditions[(void*)obj].wait_for(__locks[(void*)obj], millisecondsTimeout == -1 ? std::chrono::milliseconds::max() : std::chrono::milliseconds(millisecondsTimeout));
 }
 
 // Method : System.Threading.Monitor.ObjPulse(object)
