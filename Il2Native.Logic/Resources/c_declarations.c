@@ -627,12 +627,18 @@ public:
 			}
 		}
 
-		return allocate(obj);
+		return get_or_allocate(obj);
 	}
 
-	__object_extras* allocate(object* obj)
+	__object_extras* get_or_allocate(object* obj)
 	{
 		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		map::const_iterator got = __extras.find (obj);
+		if (got != __extras.end())
+		{
+			return got->second;
+		}
+
 		auto new_object_extras = new __object_extras();
 		__extras[obj] = new_object_extras;
 		return new_object_extras;
