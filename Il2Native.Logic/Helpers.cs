@@ -6,6 +6,7 @@
 namespace Il2Native.Logic
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Metadata;
@@ -305,7 +306,7 @@ namespace Il2Native.Logic
 
         public static bool IsStaticWrapperCall(this IFieldSymbol fieldSymbol)
         {
-            return fieldSymbol.IsStatic && fieldSymbol.ContainingType.StaticConstructors.Any();
+            return fieldSymbol.IsStatic/* && fieldSymbol.ContainingType.StaticConstructors.Any()*/;
         }
 
         public static bool IsStringCtorReplacement(this IMethodSymbol methodSymbol)

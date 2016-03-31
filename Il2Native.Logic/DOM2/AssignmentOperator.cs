@@ -95,6 +95,12 @@ namespace Il2Native.Logic.DOM2
             if (this.MoveOperator)
             {
                 c.TextSpan("std::move(");
+                if (this.Right.IsStaticWrapperCall())
+                {
+                    c.TextSpan("(");
+                    c.WriteType(Type);
+                    c.TextSpan(")");
+                }
             }
 
             this.Right.WriteTo(c);
