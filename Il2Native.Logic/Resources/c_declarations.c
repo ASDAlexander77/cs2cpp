@@ -630,6 +630,26 @@ public:
 		return new_object_extras;
 	}
 
+	void free(object* obj)
+	{
+		std::lock_guard<std::mutex> guard(mutex);
+		map::const_iterator got = __extras.find (obj);
+		if (got != __extras.end())
+		{
+			delete got->second;
+			__extras.erase(got);
+		}
+	}
+
+	~__object_extras_storage()
+	{
+		std::lock_guard<std::mutex> guard(mutex);
+		for (auto item : __extras) 
+		{
+			delete item.second;
+		}  
+	}
+
 	map __extras;
 	std::mutex mutex;
 };
