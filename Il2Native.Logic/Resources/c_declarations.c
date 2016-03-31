@@ -604,5 +604,35 @@ public:
 	virtual int32_t get_Rank() override;
 };
 
-extern std::unordered_map<void*, std::timed_mutex> __locks;
-extern std::unordered_map<void*, std::condition_variable_any> __conditions;
+struct __object_extras
+{
+	std::timed_mutex mutex;
+	std::condition_variable_any cond;
+};
+
+class __object_extras_storage
+{
+public:
+
+	typedef std::unordered_map<object*, __object_extras*> map;
+
+	__object_extras* operator[] (object* obj)
+	{
+		std::lock_guard<std::mutex> guard(mutex);
+		map::const_iterator got = __extras.find (obj);
+		if (got != __extras.end())
+		{
+			return got->second;
+		}
+
+		auto new_object_extras = new __object_extras();
+		__extras[obj] = new_object_extras;
+		return new_object_extras;
+	}
+
+	map __extras;
+	std::mutex mutex;
+};
+
+extern __object_extras_storage __object_extras_storage_instance;
+
