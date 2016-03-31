@@ -618,11 +618,13 @@ public:
 
 	__object_extras* operator[] (object* obj)
 	{
-		std::shared_lock<std::shared_timed_mutex> lock(mutex);
-		map::const_iterator got = __extras.find (obj);
-		if (got != __extras.end())
 		{
-			return got->second;
+			std::shared_lock<std::shared_timed_mutex> lock(mutex);
+			map::const_iterator got = __extras.find (obj);
+			if (got != __extras.end())
+			{
+				return got->second;
+			}
 		}
 
 		return allocate(obj);
