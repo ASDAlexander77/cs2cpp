@@ -8,6 +8,8 @@ int64_t CoreLib::System::DateTime::GetSystemTimeAsFileTime()
 	auto value = std::chrono::duration_cast<std::chrono::nanoseconds>(epoch);
 	auto val = (int64_t) value.count();
 
-	auto val_system = (val / 100) + 116436096000000000 + 8639999870000;
-	return val_system;
+	auto val_ticksSince1Jan1970 = val / 10; // ticks since 1 Jan 1970
+	auto val_since0 = val_ticksSince1Jan1970 + 621671328000000000;
+	auto val_since1601 = val_since0 - 504911232000000000;
+	return val_since1601 / 10; // 100-nano seconds
 }
