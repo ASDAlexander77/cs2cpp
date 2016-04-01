@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax;
@@ -23,6 +24,10 @@ namespace Il2Native.Logic.DOM2
         public bool TypeDeclaration { get; set; }
 
         public bool MoveOperator { get; set; }
+
+        public bool IsRef { get; set; }
+
+        public bool IsOut { get; set; }
 
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
@@ -52,10 +57,18 @@ namespace Il2Native.Logic.DOM2
             this.Left = Deserialize(boundAssignmentOperator.Left) as Expression;
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
 
-            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing || boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
+            if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing ||
+                boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
             {
                 this.TypeDeclaration = false;
                 this.ApplyAutoType = false;
+            }
+
+            this.IsRef = boundAssignmentOperator.RefKind.HasFlag(RefKind.Ref);
+            this.IsOut = boundAssignmentOperator.RefKind.HasFlag(RefKind.Out);
+            if (this.IsRef || this.IsOut)
+            {
+                this.TypeDeclaration = true;
             }
         }
 
@@ -70,6 +83,11 @@ namespace Il2Native.Logic.DOM2
                 else if (Type != null)
                 {
                     c.WriteType(Type);
+                }
+
+                if (this.IsRef || this.IsOut)
+                {
+                    c.TextSpan("&");
                 }
 
                 c.WhiteSpace();

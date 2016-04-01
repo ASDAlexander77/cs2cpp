@@ -40,6 +40,10 @@ namespace Il2Native.Logic.DOM2
             }
         }
 
+        public bool IsRef { get; set; }
+
+        public bool IsOut { get; set; }
+
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
             c.WriteNameEnsureCompatible(local);
@@ -58,6 +62,9 @@ namespace Il2Native.Logic.DOM2
 
             this.ParseName(localSymbol);
             this.localSymbol = localSymbol;
+
+            this.IsRef = localSymbol.RefKind.HasFlag(RefKind.Ref);
+            this.IsOut = localSymbol.RefKind.HasFlag(RefKind.Out);
         }
 
         internal void Parse(ILocalSymbol localSymbol)

@@ -687,6 +687,12 @@ namespace Il2Native.Logic.DOM2
 
                 var localVariableDeclaration = new VariableDeclaration();
                 localVariableDeclaration.Parse(local);
+                var localVar = localVariableDeclaration.Local;
+                if (localVar.IsRef || localVar.IsOut)
+                {
+                    continue;
+                }
+
                 statements.Add(localVariableDeclaration);
             }
         }
