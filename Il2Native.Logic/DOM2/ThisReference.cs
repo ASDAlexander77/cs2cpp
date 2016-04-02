@@ -19,6 +19,8 @@ namespace Il2Native.Logic.DOM2
             }
         }
 
+        public bool ValueAsReference { get; set; }
+
         public override Kinds Kind
         {
             get { return Kinds.ThisReference; }
