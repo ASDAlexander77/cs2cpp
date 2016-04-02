@@ -58,7 +58,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                 Arguments =
                                 {
                                     new ThisReference { Type = type, IsReference = true },
-                                    new SizeOfOperator { SourceType = new TypeExpression { Type = type, SuppressReference = true } },
+                                    new SizeOfOperator { SourceType = new TypeExpression { Type = type, SuppressReference = true, IsReference = true } },
                                     new Parameter
                                     {
                                         ParameterSymbol =
@@ -68,7 +68,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                                 Type = new TypeImpl { SpecialType = SpecialType.System_Object }
                                             }
                                     },
-                                    new SizeOfOperator { SourceType = new TypeExpression { Type = type, SuppressReference = true } }
+                                    new SizeOfOperator { SourceType = new TypeExpression { Type = type, SuppressReference = true, IsReference = true } }
                                 }
                             }
                     }

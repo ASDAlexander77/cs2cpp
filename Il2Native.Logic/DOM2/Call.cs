@@ -158,7 +158,8 @@ namespace Il2Native.Logic.DOM2
                 }
             }
 
-            if (typeDestination.IsValueType && expression is ThisReference)
+            var thisRef = expression as ThisReference;
+            if (typeDestination.IsValueType && thisRef != null && !thisRef.IsReference)
             {
                 effectiveExpression = new PointerIndirectionOperator { Operand = expression };
             }
