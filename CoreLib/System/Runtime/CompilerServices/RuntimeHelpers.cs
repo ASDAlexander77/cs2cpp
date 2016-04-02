@@ -60,11 +60,11 @@ namespace System.Runtime.CompilerServices
         {
         }
 
-        //  will be replaced
-        public static int GetHashCode(Object o)
-        {
-            throw new NotImplementedException();
-        }
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern int GetHashCode(Object o);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public new static extern bool Equals(Object o1, Object o2);
 
         public static bool TryEnsureSufficientExecutionStack()
         {

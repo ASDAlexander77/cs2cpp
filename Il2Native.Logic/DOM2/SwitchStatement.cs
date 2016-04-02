@@ -97,6 +97,10 @@ namespace Il2Native.Logic.DOM2
 
                 new VariableDeclaration { Local = localCase }.WriteTo(c);
                 new VariableDeclaration { Local = local }.WriteTo(c);
+                new ExpressionStatement
+                {
+                    Expression = new AssignmentOperator { Left = local, Right = this.expression }
+                }.WriteTo(c);
 
                 // first if
                 IfStatement first = null;

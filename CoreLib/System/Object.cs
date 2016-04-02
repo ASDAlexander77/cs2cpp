@@ -48,12 +48,12 @@ namespace System
 
         public virtual bool Equals(Object obj)
         {
-            throw new NotImplementedException();
+            return RuntimeHelpers.Equals(this, obj);
         }
 
         public virtual int GetHashCode()
         {
-            throw new NotImplementedException();
+            return RuntimeHelpers.GetHashCode(this);
         }
 
         public extern Type GetType();

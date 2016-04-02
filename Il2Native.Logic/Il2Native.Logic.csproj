@@ -165,6 +165,8 @@
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeUnboxForPrimitiveValuesOrEnumsDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeHashVirtualMethod.cs" />
+    <Compile Include="DOM\Synthesized\CCodeEqualsVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />

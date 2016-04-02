@@ -352,6 +352,8 @@ namespace Il2Native.Logic
                 if (!type.IsAbstract)
                 {
                     unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
+                    unit.Declarations.Add(new CCodeHashVirtualMethod((INamedTypeSymbol)type));
+                    unit.Declarations.Add(new CCodeEqualsVirtualMethod((INamedTypeSymbol)type));
                 }
             }
 
