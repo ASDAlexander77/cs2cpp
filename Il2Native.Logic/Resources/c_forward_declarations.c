@@ -262,3 +262,13 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 	u.s = s;
 	return u.d;
 }
+
+int __hash_code(object* _obj, int32_t _size)
+{
+	return 0;
+}
+
+bool __equals_helper(object* _obj1, int32_t _size1, object* _obj2, int32_t _size2)
+{
+	return false;
+}

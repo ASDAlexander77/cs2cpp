@@ -258,16 +258,6 @@ T __create_instance()
 	return __init<T>();
 }
 
-int __hash_code(object* _obj, int32_t _size)
-{
-	return 0;
-}
-
-bool __equals_helper(object* _obj1, int32_t _size1, object* _obj2, int32_t _size2)
-{
-	return false;
-}
-
 // Arrays internals
 template <typename T> class __array : public CoreLib::System::Array
 {

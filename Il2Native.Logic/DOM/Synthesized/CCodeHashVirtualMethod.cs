@@ -43,7 +43,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     },
                                 Arguments =
                                 {
-                                    new ThisReference { Type = type },
+                                    new ThisReference { Type = type, IsReference = true },
                                     new SizeOfOperator { SourceType = new TypeExpression { Type = type, SuppressReference = true } }
                                 }
                             }
