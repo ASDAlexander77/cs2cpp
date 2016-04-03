@@ -43,7 +43,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     },
                                 Arguments =
                                 {
-                                    new ThisReference { Type = new ValueTypeAsClassTypeImpl(type) },
+                                    new ThisReference { Type = type, ValueAsReference = true },
                                     new SizeOfOperator { SourceType = new TypeExpression { Type = new ValueTypeAsClassTypeImpl(type), SuppressReference = true } }
                                 }
                             }

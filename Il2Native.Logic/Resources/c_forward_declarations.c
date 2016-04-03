@@ -21,8 +21,8 @@ template <typename T> struct convert_primitive_type_to_class
 		typename std::conditional< std::is_same< T, uint64_t >::value, CoreLib::System::UInt64, 
 		typename std::conditional< std::is_same< T, float >::value, CoreLib::System::Single, 
 		typename std::conditional< std::is_same< T, double >::value, CoreLib::System::Double, 
-			 T 
-			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
+		T 
+		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
 
 template <typename T> struct convert_class_to_primitive_type
@@ -40,8 +40,8 @@ template <typename T> struct convert_class_to_primitive_type
 		typename std::conditional< std::is_same< T, CoreLib::System::UInt64 >::value, uint64_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Single >::value, float, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Double >::value, double, 
-			 T 
-			 >::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
+		T 
+		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
 
 template <typename T> struct is_primitive_type : std::integral_constant<bool, std::is_enum<T>::value || std::is_integral<T>::value || std::is_floating_point<T>::value>
@@ -126,9 +126,23 @@ struct __static
 	T t;
 public:
 
+	inline void ensure_cctor_called()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor_lock.lock();
+			if (!C::_cctor_called && !C::_cctor_being_called)
+			{
+				C::_cctor();
+			}
+
+			C::_cctor_lock.unlock();
+		}
+	}
+
 	inline __static<T, C>& operator=(const T& value)
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		t = value;
 		return *this;
 	}
@@ -141,26 +155,26 @@ public:
 
 	inline operator const T&()
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		return t;
 	}
 
 	inline T& operator ->()
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		return t;
 	}
 
 	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		t++;
 		return *this;
 	}
 
 	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator++(int)
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		D tmp(*this);
 		operator++();
 		return tmp;
@@ -168,14 +182,14 @@ public:
 
 	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator--()
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		t--;
 		return *this;
 	}
 
 	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator--(int)
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		D tmp(*this);
 		operator--();
 		return tmp;
@@ -183,7 +197,7 @@ public:
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
 	{
-		std::call_once(C::_cctor_called, C::_cctor);
+		ensure_cctor_called();
 		return (D)t;
 	}
 };

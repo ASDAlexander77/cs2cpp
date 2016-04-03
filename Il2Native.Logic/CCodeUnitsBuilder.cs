@@ -125,10 +125,23 @@ namespace Il2Native.Logic
         private static void BuildStaticConstructorVariables(ITypeSymbol type, CCodeUnit unit)
         {
             // add call flag for static constructor
+            var cctorBeingCalledField = new FieldImpl
+            {
+                Name = "_cctor_being_called",
+                Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(cctorBeingCalledField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(cctorBeingCalledField) { DoNotWrapStatic = true });
+            
+            // add call flag for static constructor
             var cctorCalledField = new FieldImpl
             {
                 Name = "_cctor_called",
-                Type = new NamedTypeImpl { Name = "once_flag", TypeKind = TypeKind.Struct, ContainingNamespace = new NamespaceImpl { MetadataName = "std" } },
+                Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
                 IsStatic = true
@@ -136,6 +149,18 @@ namespace Il2Native.Logic
 
             unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledField) { DoNotWrapStatic = true });
+
+            var cctorCalledLock = new FieldImpl
+            {
+                Name = "_cctor_lock",
+                Type = new NamedTypeImpl { Name = "recursive_mutex", TypeKind = TypeKind.Struct, ContainingNamespace = new NamespaceImpl { MetadataName = "std" } },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledLock) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledLock) { DoNotWrapStatic = true });
         }
 
         private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)

@@ -16,7 +16,7 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.OffsetToStringData.get
     int32_t RuntimeHelpers::get_OffsetToStringData()
     {
-        throw 3221274624U;
+        return 0;
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(object)
