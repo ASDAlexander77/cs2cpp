@@ -15,6 +15,13 @@
 #include <shared_mutex>
 #include <condition_variable>
 #include <atomic>
+#if _MSC_VER
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
+
+namespace fs = std::experimental::filesystem;
 
 #ifndef thread_local
 # if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
