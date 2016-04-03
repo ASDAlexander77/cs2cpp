@@ -29,20 +29,20 @@ namespace Il2Native.Logic.DOM2
             if (IsPointerOperation(this.OperatorKind))
             {
                 var left = true;
-                var boundBinaryOperator2 = boundBinaryOperator.Right as BoundBinaryOperator;
+                var boundBinaryOperator2 = FindBinaryOperatorForPointerOperation(boundBinaryOperator.Right);
                 if (boundBinaryOperator2 == null)
                 {
                     left = false;
-                    boundBinaryOperator2 = boundBinaryOperator.Left as BoundBinaryOperator;
+                    boundBinaryOperator2 = FindBinaryOperatorForPointerOperation(boundBinaryOperator.Left);
                 }
 
                 if (boundBinaryOperator2 != null)
                 {
-                    if (boundBinaryOperator2.Left is BoundSizeOfOperator)
+                    if (HasSizeOfOperator(boundBinaryOperator2.Left))
                     {
                         this.Right = Deserialize(boundBinaryOperator2.Right) as Expression;
                     }
-                    else if (boundBinaryOperator2.Right is BoundSizeOfOperator)
+                    else if (HasSizeOfOperator(boundBinaryOperator2.Right))
                     {
                         this.Right = Deserialize(boundBinaryOperator2.Left) as Expression;
                     }
@@ -147,6 +147,43 @@ namespace Il2Native.Logic.DOM2
                 default:
                     return false;
             }
+        }
+
+        private static BoundBinaryOperator FindBinaryOperatorForPointerOperation(BoundExpression boundExpression)
+        {
+            var boundBinaryOperator = boundExpression as BoundBinaryOperator;
+            if (boundBinaryOperator != null)
+            {
+                return boundBinaryOperator;
+            }
+
+            var boundConversion = boundExpression as BoundConversion;
+            if (boundConversion != null && boundConversion.ConversionKind == ConversionKind.IntegerToPointer)
+            {
+                var boundBinaryOperator2 = boundConversion.Operand as BoundBinaryOperator;
+                if (boundBinaryOperator2 != null)
+                {
+                    return boundBinaryOperator2;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool HasSizeOfOperator(BoundExpression boundExpression)
+        {
+            if (boundExpression is BoundSizeOfOperator)
+            {
+                return true;
+            }
+
+            var boundConversion = boundExpression as BoundConversion;
+            if (boundConversion != null && boundConversion.ConversionKind == ConversionKind.ExplicitNumeric)
+            {
+                return boundConversion.Operand is BoundSizeOfOperator;
+            }
+
+            return false;
         }
 
         private void WriteOperator(CCodeWriterBase c)
