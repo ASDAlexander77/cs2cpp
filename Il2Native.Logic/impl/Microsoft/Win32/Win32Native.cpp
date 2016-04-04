@@ -67,7 +67,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 	auto byteCount = utf8Enc->GetByteCount(path, path_length);
 	auto relative_path_ascii = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
-	auto bytesReceived = utf8Enc->GetBytes(path, path_length), relative_path_ascii, byteCount);
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length, relative_path_ascii, byteCount);
 	auto resolved_path_ascii = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
 	auto result = realpath(relative_path_ascii, resolved_path_ascii);
 	if (result != 0)
