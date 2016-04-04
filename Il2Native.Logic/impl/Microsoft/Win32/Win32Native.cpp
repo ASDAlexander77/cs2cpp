@@ -64,14 +64,15 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 	return GetFullPathName(path, numBufferChars, buffer, nullptr);
 #else
 	auto path_length = std::wcslen(path);
-	auto byteCount = CoreLib::System::Text::Encoding::get_UTF8()->GetByteCount(path, path_length);
+	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+	auto byteCount = utf8Enc->GetByteCount(path, path_length);
 	auto relative_path_ascii = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
-	auto bytesReceived = CoreLib::System::Text::Encoding::get_UTF8()->GetBytes(path, path_length), relative_path_ascii, byteCount);
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length), relative_path_ascii, byteCount);
 	auto resolved_path_ascii = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
 	auto result = realpath(relative_path_ascii, resolved_path_ascii);
 	if (result != 0)
 	{
-		CoreLib::System::Text::Encoding::get_UTF8()->GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
+		utf8Enc->GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
 		return static_cast<int32_t>(test_1::Utils::wcslen(buffer));
 	}
 
