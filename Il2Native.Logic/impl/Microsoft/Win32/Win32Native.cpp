@@ -1,8 +1,14 @@
 #include "CoreLib.h"
-#if _MS_VER
-#include <io.h>
+#if _MSC_VER
+#include <windows.h>
+#undef CreateEvent
+#undef GetFullPathName
+#undef CreateFile
+#undef INVALID_HANDLE_VALUE
 #else
 #include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
 #endif
 
 #define O_RDONLY 0x0000	/* open for reading only */
@@ -24,8 +30,10 @@
 #define S_IWUSR 0000200			/* W for owner */
 #define S_IROTH 0000004			/* R for other */
 #define S_IRGRP 0000040			/* R for group */
-#define GENERIC_READ 0x80000000
-#define GENERIC_WRITE 0x40000000
+#if !_MSC_VER
+	#define GENERIC_READ 0x80000000
+	#define GENERIC_WRITE 0x40000000
+#endif
 #define FILE_ATTRIBUTE_HIDDEN 0x00000002
 #define FILE_ATTRIBUTE_SYSTEM 0x00000004
 #define FILE_ATTRIBUTE_DIRECTORY 0x00000010
@@ -60,8 +68,10 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 		throw __new<CoreLib::System::ArgumentNullException>(L"path"_s, L"path"_s);
 	}
 
-#if _MS_VER
-	return GetFullPathName(path, numBufferChars, buffer, nullptr);
+#if _MSC_VER
+	return GetFullPathNameW(path, numBufferChars, buffer, nullptr);
+#elif _WIN32 || _WIN64
+	return std::wcslen(_wfullpath(buffer, path, numBufferChars));
 #else
 	auto path_length = std::wcslen(path);
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
@@ -89,8 +99,8 @@ CoreLib::System::IntPtr CoreLib::Microsoft::Win32::Win32Native::GetStdHandle(int
 // Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
 CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win32::Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::enum_FileShare dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::enum_FileMode dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
 {
-#if _MS_VER
-	auto hFile = CreateFile(&lpFileName->m_firstChar,    // name of the write
+#if _MSC_VER
+	auto hFile = CreateFileW(&lpFileName->m_firstChar,    // name of the write
 		(int32_t)dwDesiredAccess,						 // open for writing
 		(int32_t)dwShareMode,							 // do not share
 		(LPSECURITY_ATTRIBUTES )securityAttrs,			 // default security
@@ -98,7 +108,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 		(int32_t)dwFlagsAndAttributes,					 // normal file
 		(void*)hTemplateFile);							 // no attr. template
 
-	if (hFile == INVALID_HANDLE_VALUE) 
+	if (hFile == (HANDLE)-1) 
 	{ 
 		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 	}
@@ -115,6 +125,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 	}
 
+	auto path = &lpFileName->m_firstChar;
 	auto path_length = std::wcslen(path);
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 	auto byteCount = utf8Enc->GetByteCount(path, path_length);
@@ -154,7 +165,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 		/* don't need to do anything here */
 		break;
 	case CoreLib::System::IO::enum_FileMode::c_OpenOrCreate:
-		if (_waccess(path_urf8, F_OK) == 0)
+		if (access(path_urf8, F_OK) == 0)
 		{
 			fFileExists = true;
 		}
@@ -198,7 +209,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #else
-#error Insufficient support for uncached I/O on this platform
+////#error Insufficient support for uncached I/O on this platform
 #endif
 	}
 #endif
@@ -226,9 +237,11 @@ bool CoreLib::Microsoft::Win32::Win32Native::CloseHandle(CoreLib::System::IntPtr
 // Method : Microsoft.Win32.Win32Native.GetFileType(Microsoft.Win32.SafeHandles.SafeFileHandle)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle)
 {
+#if !_MSC_VER
 	const int FILE_TYPE_DISK = 0x0001;
 	const int FILE_TYPE_CHAR = 0x0002;
 	const int FILE_TYPE_PIPE = 0x0003;
+#endif
 
 	auto stdId = handle->DangerousGetHandle()->ToInt32();
 	if (stdId == -11 || stdId == -12)
@@ -255,6 +268,9 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft:
 int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToWrite, int32_t& numBytesWritten, CoreLib::System::IntPtr mustBeZero)
 {
 	auto fd = handle->DangerousGetHandle()->ToInt32();
+#if _MSC_VER
+	return (int32_t) ::WriteFile((HANDLE)fd, (LPCVOID) bytes, numBytesToWrite, (LPDWORD)&numBytesWritten, nullptr);
+#else
 	if (fd == -11)
 	{
 		numBytesWritten = _write(STDOUT_FILENO, bytes, numBytesToWrite);
@@ -277,6 +293,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft
 
 	numBytesWritten = 0;
 	return 0;
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.GetFileAttributesEx(string, int, ref Microsoft.Win32.Win32Native.WIN32_FILE_ATTRIBUTE_DATA)
