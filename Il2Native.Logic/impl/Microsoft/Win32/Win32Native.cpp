@@ -66,14 +66,14 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 	auto path_length = std::wcslen(path);
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 	auto byteCount = utf8Enc->GetByteCount(path, path_length);
-	auto relative_path_ascii = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
-	auto bytesReceived = utf8Enc->GetBytes(path, path_length, relative_path_ascii, byteCount);
-	auto resolved_path_ascii = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
-	auto result = realpath(relative_path_ascii, resolved_path_ascii);
+	auto relative_path_utf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length, relative_path_utf8, byteCount);
+	auto resolved_path_utf8 = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
+	auto result = realpath(relative_path_utf8, resolved_path_utf8);
 	if (result != 0)
 	{
 		utf8Enc->GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
-		return static_cast<int32_t>(test_1::Utils::wcslen(buffer));
+		return static_cast<int32_t>(std::wcslen(buffer));
 	}
 
 	return result;
@@ -89,6 +89,22 @@ CoreLib::System::IntPtr CoreLib::Microsoft::Win32::Win32Native::GetStdHandle(int
 // Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
 CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win32::Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::enum_FileShare dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::enum_FileMode dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
 {
+#if _MS_VER
+	auto hFile = CreateFile(&lpFileName->m_firstChar,    // name of the write
+		(int32_t)dwDesiredAccess,						 // open for writing
+		(int32_t)dwShareMode,							 // do not share
+		(LPSECURITY_ATTRIBUTES )securityAttrs,			 // default security
+		(int32_t)dwCreationDisposition,					 // create new file only
+		(int32_t)dwFlagsAndAttributes,					 // normal file
+		(void*)hTemplateFile);							 // no attr. template
+
+	if (hFile == INVALID_HANDLE_VALUE) 
+	{ 
+		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+	}
+
+	return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(hFile), false);
+#else
 	int32_t filed = -1;
 	int32_t create_flags = (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	int32_t open_flags = 0;
@@ -98,6 +114,12 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 	{
 		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 	}
+
+	auto path_length = std::wcslen(path);
+	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+	auto byteCount = utf8Enc->GetByteCount(path, path_length);
+	auto path_urf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length, path_urf8, byteCount);
 
 	switch ((uint32_t)dwDesiredAccess)
 	{
@@ -118,7 +140,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 	{
 	case CoreLib::System::IO::enum_FileMode::c_Create:
 		// check whether the file exists
-		if (_waccess(&lpFileName->m_firstChar, F_OK) == 0)
+		if (access(path_urf8, F_OK) == 0)
 		{
 			fFileExists = true;
 		}
@@ -132,7 +154,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 		/* don't need to do anything here */
 		break;
 	case CoreLib::System::IO::enum_FileMode::c_OpenOrCreate:
-		if (_waccess(&lpFileName->m_firstChar, F_OK) == 0)
+		if (_waccess(path_urf8, F_OK) == 0)
 		{
 			fFileExists = true;
 		}
@@ -153,7 +175,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 
 	open_flags |= O_BINARY;
 
-	filed = _wopen(&lpFileName->m_firstChar, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
+	filed = open(path_urf8, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
 	if (filed < 0)
 	{
 		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(0), false);
@@ -176,7 +198,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #else
-		////#error Insufficient support for uncached I/O on this platform
+#error Insufficient support for uncached I/O on this platform
 #endif
 	}
 #endif
@@ -192,6 +214,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 #endif
 
 	return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(filed), false);
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.CloseHandle(System.IntPtr)
