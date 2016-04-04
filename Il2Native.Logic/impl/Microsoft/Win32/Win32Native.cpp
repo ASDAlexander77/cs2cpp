@@ -1,9 +1,6 @@
 #include "CoreLib.h"
-#if _WIN32 || _WIN64
+#if _MS_VER
 #include <io.h>
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
 #else
 #include <unistd.h>
 #endif
@@ -58,10 +55,28 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* CoreLib::Microsoft::Win3
 // Method : Microsoft.Win32.Win32Native.GetFullPathName(char*, int, char*, System.IntPtr)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, int32_t numBufferChars, wchar_t* buffer, CoreLib::System::IntPtr mustBeZero)
 {
-	auto p = fs::path(path);
-	auto full = fs::canonical(p);
-	std::wcscpy(buffer, full.c_str());
-	return p.wstring().length();
+	if (static_cast<void*>(path) == (void*)nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>(L"path"_s, L"path"_s);
+	}
+
+#if _MS_VER
+	return GetFullPathName(path, numBufferChars, buffer, nullptr);
+#else
+	auto path_length = std::wcslen(path);
+	auto byteCount = CoreLib::System::Text::Encoding::get_UTF8()->GetByteCount(path, path_length);
+	auto relative_path_ascii = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
+	auto bytesReceived = CoreLib::System::Text::Encoding::get_UTF8()->GetBytes(path, path_length), relative_path_ascii, byteCount);
+	auto resolved_path_ascii = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
+	auto result = realpath(relative_path_ascii, resolved_path_ascii);
+	if (result != 0)
+	{
+		CoreLib::System::Text::Encoding::get_UTF8()->GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
+		return static_cast<int32_t>(test_1::Utils::wcslen(buffer));
+	}
+
+	return result;
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.GetStdHandle(int)
@@ -160,7 +175,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #else
-////#error Insufficient support for uncached I/O on this platform
+		////#error Insufficient support for uncached I/O on this platform
 #endif
 	}
 #endif
