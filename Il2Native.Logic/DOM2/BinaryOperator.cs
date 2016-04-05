@@ -55,6 +55,21 @@ namespace Il2Native.Logic.DOM2
                         return;
                     }
                 }
+
+                // to support <pointer> +/- sizeof()
+                if (boundBinaryOperator2 == null && boundBinaryOperator.Right is BoundSizeOfOperator)
+                {
+                    this.Left = Deserialize(boundBinaryOperator.Left) as Expression;
+                    this.Right = new Literal { Value = ConstantValue.Create(1) };
+                    return;
+                }
+                
+                if (boundBinaryOperator2 == null && boundBinaryOperator.Left is BoundSizeOfOperator)
+                {
+                    this.Left = new Literal { Value = ConstantValue.Create(1) };
+                    this.Right = Deserialize(boundBinaryOperator.Right) as Expression;
+                    return;
+                }
             }
 
             // special case for PointerSubtraction 
