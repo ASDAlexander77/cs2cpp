@@ -47,3 +47,5 @@
 #undef ZeroMemory
 #undef Yield
 #undef MemoryBarrier
+#undef min
+#undef max
