@@ -43,9 +43,12 @@
 # define GC_THREADS
 #endif
 #include "gc.h"
+#undef min
+#undef max
 #undef INVALID_HANDLE_VALUE
 #undef ZeroMemory
 #undef Yield
 #undef MemoryBarrier
-#undef min
-#undef max
+#undef CreateEvent
+#undef GetFullPathName
+#undef CreateFile

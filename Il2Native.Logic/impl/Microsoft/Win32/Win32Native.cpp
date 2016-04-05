@@ -1,10 +1,6 @@
 #include "CoreLib.h"
 #if _MSC_VER
 #include <windows.h>
-#undef CreateEvent
-#undef GetFullPathName
-#undef CreateFile
-#undef INVALID_HANDLE_VALUE
 #else
 #include <unistd.h>
 #include <limits.h>
