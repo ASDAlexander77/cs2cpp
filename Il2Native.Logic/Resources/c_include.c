@@ -39,3 +39,7 @@
 # define GC_DEBUG
 #endif
 
+#ifndef GC_THREADS
+# define GC_THREADS
+#endif
+#include "gc.h"
