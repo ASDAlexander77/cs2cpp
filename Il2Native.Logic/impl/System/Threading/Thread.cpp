@@ -8,12 +8,6 @@
 # define __ATTR 
 #endif
 
-#ifndef GC_THREADS
-# define GC_THREADS
-#endif
-
-#include "gc.h"
-
 // Method : System.Threading.Thread.ManagedThreadId.get
 int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 {

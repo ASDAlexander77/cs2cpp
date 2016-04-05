@@ -237,12 +237,6 @@ bool CoreLib::Microsoft::Win32::Win32Native::CloseHandle(CoreLib::System::IntPtr
 // Method : Microsoft.Win32.Win32Native.GetFileType(Microsoft.Win32.SafeHandles.SafeFileHandle)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle)
 {
-#if !_MSC_VER
-	const int FILE_TYPE_DISK = 0x0001;
-	const int FILE_TYPE_CHAR = 0x0002;
-	const int FILE_TYPE_PIPE = 0x0003;
-#endif
-
 	auto stdId = handle->DangerousGetHandle()->ToInt32();
 	if (stdId == -11 || stdId == -12)
 	{
