@@ -1,13 +1,25 @@
 #include "CoreLib.h"
 
+#if !_MSC_VER	
+int32_t __last_error = 0;
+#endif
+
 // Method : System.Runtime.InteropServices.Marshal.GetLastWin32Error()
 int32_t CoreLib::System::Runtime::InteropServices::Marshal::GetLastWin32Error()
 {
-    throw 3221274624U;
+#if _MSC_VER	
+	return GetLastError();
+#else
+	return __last_error;
+#endif
 }
 
 // Method : System.Runtime.InteropServices.Marshal.SetLastWin32Error(int)
 void CoreLib::System::Runtime::InteropServices::Marshal::SetLastWin32Error(int32_t error)
 {
-    throw 3221274624U;
+#if _MSC_VER	
+	SetLastError(error);
+#else
+	__last_error = error;
+#endif
 }

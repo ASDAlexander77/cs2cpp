@@ -27,8 +27,8 @@
 #define S_IROTH 0000004			/* R for other */
 #define S_IRGRP 0000040			/* R for group */
 #if !_MSC_VER
-	#define GENERIC_READ 0x80000000
-	#define GENERIC_WRITE 0x40000000
+#define GENERIC_READ 0x80000000
+#define GENERIC_WRITE 0x40000000
 #endif
 #define FILE_ATTRIBUTE_HIDDEN 0x00000002
 #define FILE_ATTRIBUTE_SYSTEM 0x00000004
@@ -37,6 +37,28 @@
 #define FILE_ATTRIBUTE_DEVICE 0x00000040
 #define FILE_ATTRIBUTE_NORMAL 0x00000080
 #define FILE_FLAG_NO_BUFFERING 0x20000000
+
+struct stat_data
+{
+	int32_t st_dev;     /* ID of device containing file */
+	int32_t st_ino;     /* inode number */
+	uint8_t st_mode;    /* protection */
+	int8_t st_nlink;   /* number of hard links */
+	int8_t st_uid;     /* user ID of owner */
+	int8_t st_gid;     /* group ID of owner */
+	int32_t st_rdev;    /* device ID (if special file) */
+	int32_t st_size;    /* total size, in bytes */
+	int32_t st_atime;   /* time of last access */
+	int32_t st_mtime;   /* time of last modification */
+	int32_t st_ctime;   /* time of last status change */
+	int32_t reserved0;
+	int32_t reserved1;
+	int32_t reserved2;
+	int32_t reserved3;
+	int32_t reserved4;
+	int32_t reserved5;
+	int32_t reserved6;
+};
 
 // Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 bool CoreLib::Microsoft::Win32::Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
@@ -205,7 +227,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #else
-////#error Insufficient support for uncached I/O on this platform
+		////#error Insufficient support for uncached I/O on this platform
 #endif
 	}
 #endif
@@ -227,7 +249,12 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 // Method : Microsoft.Win32.Win32Native.CloseHandle(System.IntPtr)
 bool CoreLib::Microsoft::Win32::Win32Native::CloseHandle(CoreLib::System::IntPtr handle)
 {
-	throw 0xC000C000;
+#if _MSC_VER
+	return ::CloseHandle((HANDLE)handle.ToInt32());
+#else
+	_close(handle.ToInt32());
+	return true;
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.GetFileType(Microsoft.Win32.SafeHandles.SafeFileHandle)
@@ -245,13 +272,38 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::
 // Method : Microsoft.Win32.Win32Native.GetFileSize(Microsoft.Win32.SafeHandles.SafeFileHandle, out int)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileSize_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* hFile, int32_t& highSize)
 {
-	throw 0xC000C000;
+#if _MSC_VER
+	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD) highSize);
+#else
+	highSize = 0;
+	auto data = new stat_data();
+	auto returnCode = _fstat(hFile->DangerousGetHandle()->ToInt32(), &data.st_dev);
+	if (returnCode != 0)
+	{
+		return 0;
+	}
+
+	return data.st_size;
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.ReadFile(Microsoft.Win32.SafeHandles.SafeFileHandle, byte*, int, out int, System.IntPtr)
 int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToRead, int32_t& numBytesRead, CoreLib::System::IntPtr mustBeZero)
 {
-	throw 0xC000C000;
+	auto fd = handle->DangerousGetHandle()->ToInt32();
+#if _MSC_VER
+	return (int32_t) ::ReadFile((HANDLE)fd, (LPVOID) bytes, numBytesToRead, (LPDWORD)&numBytesRead, nullptr);
+#else
+	auto r = _read(fd, bytes, numBytesToRead);
+	if (r == -1)
+	{
+		numBytesRead = 0;
+		return 0;
+	}
+
+	numBytesRead = r;
+	return 1;
+#endif
 }
 
 // Method : Microsoft.Win32.Win32Native.WriteFile(Microsoft.Win32.SafeHandles.SafeFileHandle, byte*, int, out int, System.IntPtr)
