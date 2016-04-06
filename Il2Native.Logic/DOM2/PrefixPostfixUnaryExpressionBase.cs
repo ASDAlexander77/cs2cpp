@@ -26,7 +26,7 @@ namespace Il2Native.Logic.DOM2
         {
             base.Parse(boundSequence);
 
-            if (boundSequence.SideEffects.Length > 2 || !boundSequence.SideEffects.All(se => se is BoundAssignmentOperator))
+            if (boundSequence.SideEffects.Length > 2 || !boundSequence.SideEffects.All(se => se is BoundAssignmentOperator) || !boundSequence.Locals.Any())
             {
                 return false;
             }
