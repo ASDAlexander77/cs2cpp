@@ -29,7 +29,7 @@ Prerequisite: CMake, .NET 4.6, GCC 5.0+ or Microsoft Visual C++ 2015
 1) Build Project
 
 * cd Il2Native
-* MSBuild CoreLib.csproj /p:Configuration=Debug /p:Platform="Any CPU"
+* MSBuild Il2Native.sln /p:Configuration=Debug /p:Platform="Any CPU"
 
 2) Build CoreLib (aka mscorlib)
 

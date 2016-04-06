@@ -57,14 +57,14 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 // to support <pointer> +/- sizeof()
-                if (boundBinaryOperator2 == null && boundBinaryOperator.Right is BoundSizeOfOperator)
+                if (boundBinaryOperator2 == null && HasSizeOfOperator(boundBinaryOperator.Right))
                 {
                     this.Left = Deserialize(boundBinaryOperator.Left) as Expression;
                     this.Right = new Literal { Value = ConstantValue.Create(1) };
                     return;
                 }
                 
-                if (boundBinaryOperator2 == null && boundBinaryOperator.Left is BoundSizeOfOperator)
+                if (boundBinaryOperator2 == null && HasSizeOfOperator(boundBinaryOperator.Left))
                 {
                     this.Left = new Literal { Value = ConstantValue.Create(1) };
                     this.Right = Deserialize(boundBinaryOperator.Right) as Expression;
