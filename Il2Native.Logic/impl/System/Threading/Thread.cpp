@@ -8,10 +8,16 @@
 # define __ATTR 
 #endif
 
+thread_local CoreLib::System::Threading::Thread* __current_thread;
+
 // Method : System.Threading.Thread.ManagedThreadId.get
 int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 {
-	throw 3221274624U;
+#if _MSC_VER
+	return (int32_t) GetCurrentThreadId();
+#else
+	return (int32_t) pthread_self();
+#endif
 }
 
 int32_t __ATTR __thread_inner_proc(void* params)
@@ -44,6 +50,8 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		throw __new<CoreLib::System::Threading::ThreadStateException>();
 	}
 
+	__current_thread = this;
+
 	int32_t threadId;
 #if _MSC_VER
 	this->DONT_USE_InternalThread.m_value = CreateThread( 
@@ -63,7 +71,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 // Method : System.Threading.Thread.InternalGetCurrentThread()
 CoreLib::System::IntPtr CoreLib::System::Threading::Thread::InternalGetCurrentThread()
 {
-	throw 3221274624U;
+	return __current_thread->DONT_USE_InternalThread;
 }
 
 // Method : System.Threading.Thread.AbortInternal()
@@ -153,7 +161,7 @@ bool CoreLib::System::Threading::Thread::YieldInternal()
 // Method : System.Threading.Thread.GetCurrentThreadNative()
 CoreLib::System::Threading::Thread* CoreLib::System::Threading::Thread::GetCurrentThreadNative()
 {
-	throw 3221274624U;
+	return __current_thread;
 }
 
 // Method : System.Threading.Thread.GetProcessDefaultStackSize()
