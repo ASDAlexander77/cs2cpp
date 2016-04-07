@@ -453,6 +453,12 @@ namespace Il2Native.Logic
                     this.TextSpan(", ");
                 }
 
+                if (parameterIndex == 0 && methodSymbol.IsLambdaStaticMethod())
+                {
+                    parameterIndex++;
+                    continue;
+                }
+
                 anyParameter = true;
 
                 this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass);

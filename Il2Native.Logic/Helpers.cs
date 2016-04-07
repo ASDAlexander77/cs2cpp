@@ -385,6 +385,12 @@ namespace Il2Native.Logic
             return CallingConvention.Cdecl;
         }
 
+        public static bool IsLambdaStaticMethod(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.IsStatic && methodSymbol.Name.StartsWith("<") && methodSymbol.Parameters.Any()
+                   && methodSymbol.Parameters.First().Type.SpecialType == SpecialType.System_Object;
+        }
+
         internal static ConstantValueTypeDiscriminator GetDiscriminator(this SpecialType st)
         {
             switch (st)
