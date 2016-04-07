@@ -30,6 +30,18 @@
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
 
+            var boundMethodGroup = boundConversion.Operand as BoundMethodGroup;
+            if (boundMethodGroup != null)
+            {
+                var methodGroup = new MethodGroup
+                {
+                    ReceiverOpt = Deserialize(boundMethodGroup.ReceiverOpt) as Expression,
+                    Method = boundConversion.ExpressionSymbol as IMethodSymbol
+                };
+
+                this.Operand = methodGroup;
+            }
+
             ////var castExpression = boundConversion.Syntax.Green as CastExpressionSyntax;
             ////if (castExpression != null)
             ////{
