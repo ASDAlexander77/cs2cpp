@@ -12,11 +12,17 @@ namespace Il2Native.Logic.DOM2
     {
         private readonly IList<Statement> locals = new List<Statement>();
 
+        private Base _initialization;
+
         public Expression ConditionOpt { get; set; }
 
         public Base IncrementingOpt { get; set; }
 
-        public Base InitializationOpt { get; set; }
+        public Base InitializationOpt
+        {
+            get { return this._initialization; }
+            set { this._initialization = value; }
+        }
 
         public override Kinds Kind
         {
@@ -99,7 +105,7 @@ namespace Il2Native.Logic.DOM2
                     switch (stage)
                     {
                         case Stages.Initialization:
-                            this.InitializationOpt = statement;
+                            MergeOrSet(ref this._initialization, statement);
                             break;
                         case Stages.Body:
                             Statements = statement;
