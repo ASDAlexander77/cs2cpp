@@ -529,7 +529,14 @@ namespace Il2Native.Logic
 
             if (metadata)
             {
-                sb.Append(typeSymbol.MetadataName);
+                if (string.IsNullOrWhiteSpace(typeSymbol.MetadataName))
+                {
+                    sb.Append(typeSymbol);
+                }
+                else
+                {
+                    sb.Append(typeSymbol.MetadataName);
+                }
             }
             else
             {
@@ -563,7 +570,14 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    sb.Append(typeSymbol.Name);
+                    if (string.IsNullOrWhiteSpace(typeSymbol.Name))
+                    {
+                        sb.Append(typeSymbol);
+                    }
+                    else
+                    {
+                        sb.Append(typeSymbol.Name);
+                    }
                 }
 
                 if (namedTypeSymbol != null)
