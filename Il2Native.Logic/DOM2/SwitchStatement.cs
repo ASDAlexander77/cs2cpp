@@ -95,11 +95,39 @@ namespace Il2Native.Logic.DOM2
                 var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
                 localCase = new Local { LocalSymbol = localImplCase };
 
-                new VariableDeclaration { Local = localCase }.WriteTo(c);
-                new VariableDeclaration { Local = local }.WriteTo(c);
-                new ExpressionStatement
+                new VariableDeclaration
                 {
-                    Expression = new AssignmentOperator { Left = local, Right = this.expression }
+                    Statements =
+                    {
+                        new ExpressionStatement
+                        {
+                            Expression =
+                                new AssignmentOperator
+                                {
+                                    TypeDeclaration = true,
+                                    Type = new TypeImpl { SpecialType = SpecialType.System_Int32 },
+                                    Left = localCase,
+                                    Right = new Literal { Value = ConstantValue.Create(0) }
+                                }
+                        }
+                    }
+                }.WriteTo(c);
+                new VariableDeclaration
+                {
+                    Statements =
+                    {
+                        new ExpressionStatement
+                        {
+                            Expression =
+                                new AssignmentOperator
+                                {
+                                    TypeDeclaration = true,
+                                    Type = new TypeImpl { SpecialType = SpecialType.System_String },
+                                    Left = local,
+                                    Right = this.expression
+                                }
+                        }
+                    }
                 }.WriteTo(c);
 
                 // first if
@@ -137,13 +165,7 @@ namespace Il2Native.Logic.DOM2
 
                         var ifStatement = new IfStatement
                                               {
-                                                  Condition =
-                                                      new BinaryOperator
-                                                          {
-                                                              OperatorKind = BinaryOperatorKind.Equal,
-                                                              Left = new Literal { Value = ConstantValue.Create(0) },
-                                                              Right = callEqual
-                                                          },
+                                                  Condition = callEqual,
                                                   IfStatements = setExpr
                                               };
 

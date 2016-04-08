@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM2
 
     internal class VariableDeclaration : Statement
     {
-        private readonly IList<Statement> statements = new List<Statement>();
+        private readonly IList<Statement> _statements = new List<Statement>();
 
         public override Kinds Kind
         {
@@ -20,6 +20,11 @@ namespace Il2Native.Logic.DOM2
 
         public Local Local { get; set; }
 
+        public IList<Statement> Statements
+        {
+            get { return this._statements; }
+        }
+
         public void Parse(BoundStatementList boundStatementList)
         {
             if (boundStatementList == null)
@@ -27,10 +32,10 @@ namespace Il2Native.Logic.DOM2
                 throw new ArgumentNullException();
             }
 
-            ParseBoundStatementList(boundStatementList, this.statements);
+            ParseBoundStatementList(boundStatementList, this._statements);
 
             // suppress autoType in all but first declaration
-            foreach (var statement in this.statements.Skip(1).OfType<ExpressionStatement>().Select(es => es.Expression).OfType<AssignmentOperator>())
+            foreach (var statement in this._statements.Skip(1).OfType<ExpressionStatement>().Select(es => es.Expression).OfType<AssignmentOperator>())
             {
                 statement.TypeDeclaration = false;
             }
@@ -51,7 +56,7 @@ namespace Il2Native.Logic.DOM2
                 this.Local.Visit(visitor);
             }
 
-            foreach (var statement in this.statements)
+            foreach (var statement in this._statements)
             {
                 statement.Visit(visitor);
             }
@@ -67,7 +72,7 @@ namespace Il2Native.Logic.DOM2
             }
 
             var any = false;
-            foreach (var statement in this.statements)
+            foreach (var statement in this._statements)
             {
                 if (any)
                 {
