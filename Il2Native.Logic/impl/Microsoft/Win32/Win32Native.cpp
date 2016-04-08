@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #endif
 
 #define O_RDONLY 0x0000	/* open for reading only */
@@ -37,28 +38,6 @@
 #define FILE_ATTRIBUTE_DEVICE 0x00000040
 #define FILE_ATTRIBUTE_NORMAL 0x00000080
 #define FILE_FLAG_NO_BUFFERING 0x20000000
-
-struct stat_data
-{
-	int32_t st_dev;     /* ID of device containing file */
-	int32_t st_ino;     /* inode number */
-	uint8_t st_mode;    /* protection */
-	int8_t st_nlink;   /* number of hard links */
-	int8_t st_uid;     /* user ID of owner */
-	int8_t st_gid;     /* group ID of owner */
-	int32_t st_rdev;    /* device ID (if special file) */
-	int32_t st_size;    /* total size, in bytes */
-	int32_t st_atime;   /* time of last access */
-	int32_t st_mtime;   /* time of last modification */
-	int32_t st_ctime;   /* time of last status change */
-	int32_t reserved0;
-	int32_t reserved1;
-	int32_t reserved2;
-	int32_t reserved3;
-	int32_t reserved4;
-	int32_t reserved5;
-	int32_t reserved6;
-};
 
 // Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 bool CoreLib::Microsoft::Win32::Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
@@ -276,8 +255,8 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileSize_Out(CoreLib::Microso
 	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD) highSize);
 #else
 	highSize = 0;
-	auto data = new stat_data();
-	auto returnCode = _fstat(hFile->DangerousGetHandle()->ToInt32(), &data.st_dev);
+	struct _stat data;
+	auto returnCode = _fstat(hFile->DangerousGetHandle()->ToInt32(), &data);
 	if (returnCode != 0)
 	{
 		return 0;
