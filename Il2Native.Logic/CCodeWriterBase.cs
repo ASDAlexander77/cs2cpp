@@ -853,8 +853,6 @@ namespace Il2Native.Logic
                 case TypeKind.Error:
                     // Comment: Unbound Generic in typeof
                     this.TextSpan("__unbound_generic_type<void>");
-                    //WriteName(type);
-                    //TextSpan(">");
                     return;
                 case TypeKind.Module:
                     break;
@@ -950,7 +948,7 @@ namespace Il2Native.Logic
 
             this.WriteTypeName(type, allowKeywords, valueName);
 
-            if (type.IsGenericType)
+            if (type.IsGenericType || type.IsAnonymousType)
             {
                 this.WriteTemplateDefinition(type);
             }
@@ -992,7 +990,14 @@ namespace Il2Native.Logic
                 this.TextSpan(isNestedCppClass ? "::" : "_");
             }
 
-            this.WriteName(type);
+            if (type.IsAnonymousType())
+            {
+                this.TextSpan(type.GetAnonymousTypeName().CleanUpName());
+            }
+            else
+            {
+                this.WriteName(type);
+            }
         }
 
         public void WriteTypeSuffix(ITypeSymbol type)

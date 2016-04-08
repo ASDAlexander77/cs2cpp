@@ -34,7 +34,7 @@ namespace Il2Native.Logic.DOM2
             base.Parse(boundAssignmentOperator);
 
             var boundLocal = boundAssignmentOperator.Left as BoundLocal;
-            if (boundLocal != null)
+            if (boundLocal != null && boundLocal.Syntax.Parent != null)
             {
                 var variableDeclarationSyntax = boundLocal.Syntax.Parent.Green as VariableDeclarationSyntax;
                 if (variableDeclarationSyntax != null)

@@ -212,6 +212,11 @@ namespace Il2Native.Logic
 
         public static IEnumerable<ITypeSymbol> GetTemplateArguments(this INamedTypeSymbol namedTypeSymbol)
         {
+            if (namedTypeSymbol.IsAnonymousType)
+            {
+                return namedTypeSymbol.Constructors.First().Parameters.Select(p => p.Type).ToArray();
+            }
+
             return namedTypeSymbol.EnumerateTemplateArgumentsRecusive();
         }
 
@@ -244,7 +249,14 @@ namespace Il2Native.Logic
                 return type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
             }
 
-            return type.MetadataName.CleanUpName();
+            if (type.IsAnonymousType())
+            {
+                return ((INamedTypeSymbol)type).GetAnonymousTypeName().CleanUpName();
+            }
+            else
+            {
+                return type.MetadataName.CleanUpName();
+            }
         }
 
         public static bool IsIntPtrType(this ITypeSymbol type)
@@ -420,13 +432,13 @@ namespace Il2Native.Logic
         {
             var sb = new StringBuilder();
 
-            sb.Append(methodSymbol.ReturnType);
+            sb.Append(methodSymbol.ReturnType.ToKeyString(false));
             sb.Append(" ");                
 
             var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
             if (containingNamespaceOrType != null)
             {
-                sb.Append(containingNamespaceOrType);
+                sb.Append(((TypeSymbol)containingNamespaceOrType).ToKeyString(false));
                 sb.Append(".");
             }
 
@@ -434,7 +446,7 @@ namespace Il2Native.Logic
             if (methodSymbol.IsGenericMethod)
             {
                 sb.Append("<");
-                sb.Append(string.Join(",", methodSymbol.TypeParameters));
+                sb.Append(string.Join(",", methodSymbol.TypeParameters.OfType<TypeSymbol>().Select(t => t.ToKeyString(false))));
                 sb.Append(">");
             }
 
@@ -459,7 +471,7 @@ namespace Il2Native.Logic
                         sb.Append("ref ");
                     }
 
-                    sb.Append(parameter.Type);
+                    sb.Append(parameter.Type.ToKeyString(false));
                     any = true;
                 }
             }
@@ -475,7 +487,29 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
-        internal static string ToKeyString(this TypeSymbol typeSymbol)
+        public static bool IsAnonymousType(this ITypeSymbol type)
+        {
+            return type.IsAnonymousType || type.Name.StartsWith("<>f__AnonymousType");
+        }
+
+        public static string GetAnonymousTypeName(this INamedTypeSymbol type)
+        {
+            var sb = new StringBuilder();
+            sb.Append("__anonymous_type");
+            if (type.IsAnonymousType)
+            {
+                var parameterTypes = type.Constructors.First().Parameters;
+                sb.Append((parameterTypes.Count()).ToString());
+            }
+            else
+            {
+                sb.Append(type.TypeArguments.Length.ToString());
+            }
+
+            return sb.ToString();
+        }
+
+        internal static string ToKeyString(this TypeSymbol typeSymbol, bool metadata = true)
         {
             var sb = new StringBuilder();
 
@@ -493,7 +527,66 @@ namespace Il2Native.Logic
                 }
             }
 
-            sb.Append(typeSymbol.MetadataName);
+            if (metadata)
+            {
+                sb.Append(typeSymbol.MetadataName);
+            }
+            else
+            {
+                var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
+                if (typeSymbol.IsAnonymousType())
+                {
+                    sb.Append("<>f__AnonymousType");
+                    if (typeSymbol.IsAnonymousType)
+                    {
+                        var parameterTypes = ((NamedTypeSymbol)typeSymbol).Constructors.First().ParameterTypes;
+                        sb.Append(parameterTypes.Length);
+                        sb.Append("<");
+                        var any = false;
+                        foreach (var typeArgument in parameterTypes)
+                        {
+                            if (any)
+                            {
+                                sb.Append(", ");
+                            }
+
+                            sb.Append(typeArgument.ToKeyString(metadata));
+                            any = true;
+                        }
+
+                        sb.Append(">");
+                    }
+                    else
+                    {
+                        sb.Append(namedTypeSymbol.TypeArguments.Length);
+                    }
+                }
+                else
+                {
+                    sb.Append(typeSymbol.Name);
+                }
+
+                if (namedTypeSymbol != null)
+                {
+                    if (namedTypeSymbol.Arity > 0)
+                    {
+                        sb.Append("<");
+                        var any = false;
+                        foreach (var typeArgument in namedTypeSymbol.TypeArguments)
+                        {
+                            if (any)
+                            {
+                                sb.Append(", ");
+                            }
+
+                            sb.Append(typeArgument.ToKeyString(metadata));
+                            any = true;
+                        }
+
+                        sb.Append(">");
+                    }
+                }
+            }
 
             return sb.ToString();
         }
