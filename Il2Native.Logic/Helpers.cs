@@ -432,9 +432,6 @@ namespace Il2Native.Logic
         {
             var sb = new StringBuilder();
 
-            sb.Append(methodSymbol.ReturnType.ToKeyString(false));
-            sb.Append(" ");                
-
             var containingNamespaceOrType = methodSymbol.ContainingNamespaceOrType();
             if (containingNamespaceOrType != null)
             {
@@ -483,6 +480,9 @@ namespace Il2Native.Logic
             }
 
             sb.Append(")");
+
+            sb.Append(" : ");
+            sb.Append(methodSymbol.ReturnType.ToKeyString(false));
 
             return sb.ToString();
         }
