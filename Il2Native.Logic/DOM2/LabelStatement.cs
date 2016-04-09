@@ -20,7 +20,7 @@ namespace Il2Native.Logic.DOM2
         {
             var lbl = label.Name;
 
-            if (!lbl.StartsWith("<"))
+            if (!RequiresUniqueName(lbl))
             {
                 return label.Name;
             }
@@ -29,6 +29,26 @@ namespace Il2Native.Logic.DOM2
             lbl += string.Format("_{0}", CCodeWriterBase.GetId(label, out firstTime));
 
             return lbl;
+        }
+
+        private static bool RequiresUniqueName(string lbl)
+        {
+            if (lbl.StartsWith("<"))
+            {
+                return true;
+            }
+
+            switch (lbl)
+            {
+                case "stateMachine":
+                case "continue":
+                case "break":
+                case "afterif":
+                case "alternative":
+                    return true;
+            }
+
+            return false;
         }
 
         internal void Parse(BoundLabelStatement boundLabelStatement)
