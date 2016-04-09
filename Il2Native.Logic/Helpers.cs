@@ -509,6 +509,28 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
+        internal static bool NeedsLabel(this LabelSymbol label, string name)
+        {
+            var labelName = label.Name;
+            if (labelName.StartsWith("<"))
+            {
+                labelName = labelName.Substring(1);
+            }
+
+            return labelName.StartsWith(name);
+        }
+
+        internal static bool NeedsLabel(this LabelSymbol label, string name1, string name2)
+        {
+            var labelName = label.Name;
+            if (labelName.StartsWith("<"))
+            {
+                labelName = labelName.Substring(1);
+            }
+
+            return labelName.StartsWith(name1) || labelName.StartsWith(name2);
+        }
+
         internal static string ToKeyString(this TypeSymbol typeSymbol, bool metadata = true)
         {
             var sb = new StringBuilder();

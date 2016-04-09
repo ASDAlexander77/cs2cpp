@@ -20,7 +20,7 @@ namespace Il2Native.Logic.DOM2
                 throw new ArgumentNullException();
             }
 
-            if (boundGotoStatement.Label.Name.StartsWith("<continue"))
+            if (boundGotoStatement.Label.NeedsLabel("continue"))
             {
                 return true;
             }

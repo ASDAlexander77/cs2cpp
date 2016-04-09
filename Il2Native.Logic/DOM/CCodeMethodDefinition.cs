@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM
 {
+    using System.Diagnostics;
     using DOM2;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;

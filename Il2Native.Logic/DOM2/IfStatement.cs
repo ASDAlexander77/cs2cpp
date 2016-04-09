@@ -33,7 +33,7 @@ namespace Il2Native.Logic.DOM2
                 if (stage == Stages.Condition)
                 {
                     var boundConditionalGoto = boundStatement as BoundConditionalGoto;
-                    if (boundConditionalGoto != null && (boundConditionalGoto.Label.Name.StartsWith("<afterif-") || boundConditionalGoto.Label.Name.StartsWith("<alternative-")))
+                    if (boundConditionalGoto != null && boundConditionalGoto.Label.NeedsLabel("afterif", "alternative"))
                     {
                         this.Condition = Deserialize(boundConditionalGoto.Condition) as Expression;
                         Debug.Assert(this.Condition != null);
@@ -45,7 +45,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 var boundGotoStatement = boundStatement as BoundGotoStatement;
-                if (boundGotoStatement != null && boundGotoStatement.Label.Name.StartsWith("<afterif-") && stage == Stages.IfBody)
+                if (boundGotoStatement != null && boundGotoStatement.Label.NeedsLabel("afterif") && stage == Stages.IfBody)
                 {
                     stage = Stages.EndOfIf;
                     continue;
@@ -53,7 +53,7 @@ namespace Il2Native.Logic.DOM2
 
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null
-                    && boundLabelStatement.Label.Name.StartsWith("<alternative-")
+                    && boundLabelStatement.Label.NeedsLabel("alternative")
                     && stage == Stages.EndOfIf)
                 {
                     stage = Stages.ElseBody;
@@ -61,7 +61,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 if (boundLabelStatement != null
-                    && boundLabelStatement.Label.Name.StartsWith("<afterif-")
+                    && boundLabelStatement.Label.NeedsLabel("afterif")
                     && (stage == Stages.IfBody || stage == Stages.ElseBody))
                 {
                     stage = stage == Stages.IfBody ? Stages.EndOfIf : Stages.EndOfElse;

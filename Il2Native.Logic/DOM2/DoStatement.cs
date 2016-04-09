@@ -29,19 +29,19 @@ namespace Il2Native.Logic.DOM2
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null)
                 {
-                    if (boundLabelStatement.Label.Name.StartsWith("<start") && stage == Stages.Initialization)
+                    if (boundLabelStatement.Label.NeedsLabel("start") && stage == Stages.Initialization)
                     {
                         stage = Stages.Body;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<continue") && stage == Stages.Body)
+                    if (boundLabelStatement.Label.NeedsLabel("continue") && stage == Stages.Body)
                     {
                         stage = Stages.Condition;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<break") && stage == Stages.Condition)
+                    if (boundLabelStatement.Label.NeedsLabel("break") && stage == Stages.Condition)
                     {
                         stage = Stages.End;
                         continue;

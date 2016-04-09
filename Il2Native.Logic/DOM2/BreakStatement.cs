@@ -20,7 +20,7 @@ namespace Il2Native.Logic.DOM2
                 throw new ArgumentNullException();
             }
 
-            if (boundGotoStatement.Label.Name.StartsWith("<break"))
+            if (boundGotoStatement.Label.NeedsLabel("break"))
             {
                 return true;
             }

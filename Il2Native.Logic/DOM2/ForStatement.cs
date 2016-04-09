@@ -48,25 +48,26 @@ namespace Il2Native.Logic.DOM2
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null)
                 {
-                    if (boundLabelStatement.Label.Name.StartsWith("<start") && stage == Stages.Initialization)
+                    var labelSymbol = boundLabelStatement.Label;
+                    if (labelSymbol.NeedsLabel("start") && stage == Stages.Initialization)
                     {
                         stage = Stages.Body;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<continue") && stage == Stages.Body)
+                    if (labelSymbol.NeedsLabel("continue") && stage == Stages.Body)
                     {
                         stage = Stages.Incrementing;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<end") && stage == Stages.Incrementing)
+                    if (labelSymbol.NeedsLabel("end") && stage == Stages.Incrementing)
                     {
                         stage = Stages.End;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<break") && stage == Stages.End)
+                    if (labelSymbol.NeedsLabel("break") && stage == Stages.End)
                     {
                         continue;
                     }

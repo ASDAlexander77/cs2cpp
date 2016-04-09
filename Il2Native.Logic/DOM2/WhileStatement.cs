@@ -29,19 +29,20 @@ namespace Il2Native.Logic.DOM2
                 var boundLabelStatement = boundStatement as BoundLabelStatement;
                 if (boundLabelStatement != null)
                 {
-                    if (boundLabelStatement.Label.Name.StartsWith("<start") && stage == Stages.Initialization)
+                    var labelSymbol = boundLabelStatement.Label;
+                    if (labelSymbol.NeedsLabel("start") && stage == Stages.Initialization)
                     {
                         stage = Stages.Body;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<continue") && stage == Stages.Body)
+                    if (labelSymbol.NeedsLabel("continue") && stage == Stages.Body)
                     {
                         stage = Stages.Condition;
                         continue;
                     }
 
-                    if (boundLabelStatement.Label.Name.StartsWith("<break") && stage == Stages.Condition)
+                    if (labelSymbol.NeedsLabel("break") && stage == Stages.Condition)
                     {
                         stage = Stages.End;
                         continue;
@@ -51,7 +52,7 @@ namespace Il2Native.Logic.DOM2
                 if (stage == Stages.Initialization)
                 {
                     var boundGotoStatement = boundStatement as BoundGotoStatement;
-                    if (boundGotoStatement != null && boundGotoStatement.Label.Name.StartsWith("<continue"))
+                    if (boundGotoStatement != null && boundGotoStatement.Label.NeedsLabel("continue"))
                     {
                         continue;
                     }
@@ -91,6 +92,9 @@ namespace Il2Native.Logic.DOM2
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
+            
+            Trace.Assert(this.Condition != null);
+
             this.Condition.Visit(visitor);
         }
 

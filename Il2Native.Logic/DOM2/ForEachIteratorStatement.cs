@@ -5,6 +5,7 @@ namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -92,7 +93,11 @@ namespace Il2Native.Logic.DOM2
 
                         // apply special parsing to block of try
                         var whileStatement = new WhileStatement();
-                        whileStatement.Parse(boundTryStatement.TryBlock.Statements.OfType<BoundStatementList>().First());
+                        if (!whileStatement.Parse(
+                                boundTryStatement.TryBlock.Statements.OfType<BoundStatementList>().First()))
+                        {
+                            Trace.Assert(false, "Can't parse while statement");
+                        }
 
                         this.TryStatement.TryBlock = whileStatement;
                         if (boundTryStatement.FinallyBlockOpt != null)
