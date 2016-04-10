@@ -10,6 +10,11 @@ string* operator "" _s(const wchar_t* ptr, size_t length)
 
 int32_t __hash_code(object* _obj, int32_t _size)
 {
+	if (_obj == nullptr)
+	{
+		return 0;
+	}
+
 	auto bytes = (int8_t*) _obj;
 
 	const int32_t p = 16777619;
@@ -32,6 +37,11 @@ int32_t __hash_code(object* _obj, int32_t _size)
 bool __equals_helper(object* _obj1, int32_t _size1, object* _obj2, int32_t _size2)
 {
 	if (_size1 != _size2)
+	{
+		return false;
+	}
+
+	if ((_obj1 == nullptr || _obj2 == nullptr) && _obj1 != _obj2)
 	{
 		return false;
 	}
