@@ -24,8 +24,10 @@ namespace Il2Native.Logic.DOM2
         {
             c.TextSpan("reinterpret_cast<");
             c.WriteType(Type);
-            c.TextSpan(">(alloca");
+            c.TextSpan(">(std::memset(alloca");
             c.TextSpan("("); 
+            this.Count.WriteTo(c);
+            c.TextSpan("), 0, ");
             this.Count.WriteTo(c);
             c.TextSpan("))");
         }
