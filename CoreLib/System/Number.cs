@@ -336,7 +336,8 @@ namespace System
             public NumberBuffer(Byte* stackBuffer)
             {
                 this.baseAddress = stackBuffer;
-                this.digits = (((Char*)stackBuffer) + 6);
+                //// Originally: this.digits = (((Char*)stackBuffer) + 6);
+                this.digits = (((Char*)stackBuffer) + 8);
                 this.precision = 0;
                 this.scale = 0;
                 this.sign = false;
