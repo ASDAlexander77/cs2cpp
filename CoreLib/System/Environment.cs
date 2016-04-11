@@ -75,17 +75,23 @@
             get;
         }
 
+        private static int __exit;
+        public static int Exit
+        {
+            get { return __exit; }
+
+            set
+            {
+                __exit = value; 
+                _Exit(value); 
+            }
+        }
+
         // Terminates this process with the given exit code.
         [System.Security.SecurityCritical]  // auto-generated
         [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
         [SuppressUnmanagedCodeSecurity]
         internal static extern void _Exit(int exitCode);
-
-
-        public static void Exit(int exitCode)
-        {
-            _Exit(exitCode);
-        }
 
         public static string GetResourceString(string name)
         {
