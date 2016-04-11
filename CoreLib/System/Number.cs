@@ -346,7 +346,8 @@ namespace System
             [System.Security.SecurityCritical]  // auto-generated
             public Byte* PackForNative()
             {
-                Int32* baseInteger = (Int32*)baseAddress;
+                //// Originally: Int32* baseInteger = (Int32*)baseAddress;
+                Int32* baseInteger = ((Int32*)baseAddress + 1);
                 baseInteger[0] = precision;
                 baseInteger[1] = scale;
                 baseInteger[2] = sign ? 1 : 0;
