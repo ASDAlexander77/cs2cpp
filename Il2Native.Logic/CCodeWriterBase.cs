@@ -391,7 +391,7 @@ namespace Il2Native.Logic
             }
 
             // write suffixes for ref & out parameters
-            if (methodSymbol.MethodKind != MethodKind.Constructor)
+            if (!string.IsNullOrWhiteSpace(methodSymbol.Name ?? methodSymbol.MetadataName) && methodSymbol.MethodKind != MethodKind.Constructor)
             {
                 foreach (var parameter in methodSymbol.Parameters.Where(p => p.RefKind != RefKind.None))
                 {

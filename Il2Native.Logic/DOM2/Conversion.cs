@@ -4,6 +4,9 @@
  namespace Il2Native.Logic.DOM2
 {
     using System;
+
+    using Il2Native.Logic.DOM.Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
@@ -80,6 +83,17 @@
                     Operand = effectiveExpression,
                     CCast = true,
                     UseEnumUnderlyingType = true,
+                };
+            }
+
+            if (this.ConversionKind == ConversionKind.Unboxing && this.Operand.Type.TypeKind == TypeKind.Interface)
+            {
+                effectiveExpression = new Conversion
+                {
+                    Type = new NamedTypeImpl { SpecialType = SpecialType.System_Object },
+                    TypeSource = this.TypeSource,
+                    Operand = effectiveExpression,
+                    ConversionKind = ConversionKind.ImplicitReference
                 };
             }
 
