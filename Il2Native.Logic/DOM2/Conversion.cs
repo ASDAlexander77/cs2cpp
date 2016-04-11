@@ -175,6 +175,12 @@
                     {
                         c.TextSpan("object_cast");
                     }
+                    else if (this.TypeSource.TypeKind == TypeKind.ArrayType && Type.TypeKind == TypeKind.ArrayType)
+                    {
+                        c.TextSpan("reinterpret_cast<");
+                        c.WriteType(Type);
+                        c.TextSpan(">");
+                    }
                     else
                     {
                         c.TextSpan("cast<");

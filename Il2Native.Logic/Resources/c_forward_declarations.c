@@ -165,6 +165,12 @@ public:
 		return t;
 	}
 
+	inline T* operator &()
+	{
+		ensure_cctor_called();
+		return &t;
+	}
+
 	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
 	{
 		ensure_cctor_called();
