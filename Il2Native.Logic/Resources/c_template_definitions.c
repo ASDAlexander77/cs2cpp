@@ -571,7 +571,7 @@ int32_t __multi_array<T, RANK>::GetUpperBound(int32_t dimension)
 		throw __new<CoreLib::System::IndexOutOfRangeException>();
 	}	
 
-    return this->_upperBoundries[dimension];
+    return this->_upperBoundries[dimension] - 1;
 }
 
 template <typename T, int32_t RANK>

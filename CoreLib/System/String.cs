@@ -33,6 +33,7 @@ namespace System
             }
         }
 
+        [System.Runtime.CompilerServices.IndexerName("Chars")]
         public unsafe char this[int index]
         {
             get
