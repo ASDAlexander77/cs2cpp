@@ -812,7 +812,21 @@ namespace Ll2NativeTests
             // fix it using SafeInt class, should throw overflow exception
             skip.Add(653);
 
-            foreach (var index in Enumerable.Range(686, 907).Where(n => !skip.Contains(n)))
+            skip.Add(731); // enum to string
+            skip.Add(788); // using "new" on method
+
+            // fix it. command line args are not passed
+            skip.Add(849);
+
+            skip.Add(856); // using "new" on method
+
+            skip.Add(859); // scope labels
+
+            skip.Add(885); // using custom attributes
+            skip.Add(890); // reflection
+            skip.Add(899); // reflection
+
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
