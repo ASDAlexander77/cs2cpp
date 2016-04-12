@@ -577,14 +577,14 @@ public:
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
-		auto size = sizeof(__array<T>) + length * sizeof(T);
+		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		return new ((int32_t)size) __multi_array<T, RANK>(boundries);
 	}
 
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
-		auto size = sizeof(__array<T>) + length * sizeof(T);
+		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto instance = new ((int32_t)size) __multi_array<T, RANK>(boundries);
 
 		// initialize
