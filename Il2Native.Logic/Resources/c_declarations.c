@@ -274,7 +274,7 @@ public:
 	static __array<T>* __new_array(int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new ((int32_t)size) __array<T>(length);
+		return new ((int32_t)size, is_primitive_type<T>::value) __array<T>(length);
 	}
 
 	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
@@ -282,7 +282,7 @@ public:
 		auto count = sizeof...(items);
 		auto data_size = count * sizeof(T);
 		auto size = sizeof(__array<T>) + data_size;
-		auto instance = new ((int32_t)size) __array<T>(count);
+		auto instance = new ((int32_t)size, is_primitive_type<T>::value) __array<T>(count);
 
 		// initialize
 		T tmp[] = {items...};
@@ -579,14 +579,14 @@ public:
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		return new ((int32_t)size) __multi_array<T, RANK>(boundries);
+		return new ((int32_t)size, is_primitive_type<T>::value) __multi_array<T, RANK>(boundries);
 	}
 
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		auto instance = new ((int32_t)size) __multi_array<T, RANK>(boundries);
+		auto instance = new ((int32_t)size, is_primitive_type<T>::value) __multi_array<T, RANK>(boundries);
 
 		// initialize
 		T tmp[] = {items...};

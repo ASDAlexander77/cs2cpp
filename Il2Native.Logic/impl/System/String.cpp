@@ -46,7 +46,7 @@ void CoreLib::System::String::_ctor(int8_t* src, int32_t startIndex, int32_t len
 string* CoreLib::System::String::FastAllocateString(int32_t length)
 {
 	auto size = sizeof(string) + (length + 1) * sizeof(wchar_t);
-	auto str = new ((int32_t)size) string;
+	auto str = new ((int32_t)size, true) string;
 	str->m_stringLength = length;
 	return str;
 }

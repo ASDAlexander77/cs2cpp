@@ -68,10 +68,16 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 {
 };
 
-inline void* __new_set0(size_t _size)
+inline void* __new_set0(size_t _size, bool _is_atomic = false)
 {
 #ifdef GC_H
-	auto mem = GC_MALLOC(_size);
+	auto mem = _size > 102400 
+		? _is_atomic 
+			? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
+			: GC_MALLOC_IGNORE_OFF_PAGE(_size) 
+		: _is_atomic 
+			? GC_MALLOC_ATOMIC(_size) 
+			: GC_MALLOC(_size);
 #else
 	auto mem = ::operator new(_size);
 	std::memset(mem, 0, _size);
@@ -81,7 +87,7 @@ inline void* __new_set0(size_t _size)
 
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {
-	auto t = new T();		
+	auto t = new (sizeof(T), is_primitive_type<T>::value) T();		
 	t->_ctor(params...);
 	return t;
 } 

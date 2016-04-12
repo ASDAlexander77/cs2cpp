@@ -348,6 +348,7 @@ namespace Il2Native.Logic
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
                 unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagDeclaration((INamedTypeSymbol)type));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
