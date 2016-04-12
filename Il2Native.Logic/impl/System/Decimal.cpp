@@ -89,13 +89,27 @@ void CoreLib::System::Decimal::FCallFloor_Ref(CoreLib::System::Decimal& d)
 // Method : decimal.FCallMultiply(ref decimal, ref decimal)
 void CoreLib::System::Decimal::FCallMultiply_Ref_Ref(CoreLib::System::Decimal& d1, CoreLib::System::Decimal& d2)
 {
-    throw 0xC000C000;
+	CoreLib::System::Decimal res;
+	int code;
+	if ((code = DecMul(&d1.flags, &d2.flags, &res.flags)) != 0)
+	{
+		throw __new<CoreLib::System::OverflowException>();
+	}
+
+	d1 = res;
 }
 
 // Method : decimal.FCallMultiplyOverflowed(ref decimal, ref decimal, ref bool)
 void CoreLib::System::Decimal::FCallMultiplyOverflowed_Ref_Ref_Ref(CoreLib::System::Decimal& d1, CoreLib::System::Decimal& d2, bool& overflowed)
 {
-    throw 0xC000C000;
+	CoreLib::System::Decimal res;
+	int code;
+	if ((code = DecMul(&d1.flags, &d2.flags, &res.flags)) != 0)
+	{
+		overflowed = true;
+	}
+
+	d1 = res;
 }
 
 // Method : decimal.FCallRound(ref decimal, int)

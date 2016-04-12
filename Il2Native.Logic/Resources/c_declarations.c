@@ -208,6 +208,7 @@ int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign);
 int32_t DecCmp(int32_t* d1, int32_t* d2);
 int32_t DecFromR4(float fltIn, int32_t* pdec);
 int32_t DecFromR8(double dblIn, int32_t* pdec);
+int32_t DecMul(int32_t* d1, int32_t* d2, int32_t* res);
 int32_t DecDiv(int32_t* d1, int32_t* d2, int32_t* res);
 
 // Finally block

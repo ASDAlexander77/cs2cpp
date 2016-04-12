@@ -807,7 +807,9 @@ namespace Ll2NativeTests
 
             skip.Add(579); // conflict of label names in scopes
 
-            foreach (var index in Enumerable.Range(579, 907).Where(n => !skip.Contains(n)))
+            skip.Add(599); // reflection
+
+            foreach (var index in Enumerable.Range(599, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
