@@ -70,7 +70,6 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 
 inline void* __new_set0(size_t _size, bool _is_atomic = false)
 {
-#ifdef GC_H
 	auto mem = _size > 102400 
 		? _is_atomic 
 			? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
@@ -78,10 +77,11 @@ inline void* __new_set0(size_t _size, bool _is_atomic = false)
 		: _is_atomic 
 			? GC_MALLOC_ATOMIC(_size) 
 			: GC_MALLOC(_size);
-#else
-	auto mem = ::operator new(_size);
-	std::memset(mem, 0, _size);
-#endif
+	if (_is_atomic)
+	{
+		std::memset(mem, 0, _size);
+	}
+
 	return mem;
 }
 

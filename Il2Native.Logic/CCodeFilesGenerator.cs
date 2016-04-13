@@ -37,11 +37,7 @@ namespace Il2Native.Logic
             itw.WriteLine();
             itw.WriteLine("auto main() -> int32_t");
             itw.WriteLine("{");
-            itw.WriteLine("#ifdef GC_H");
-            itw.Indent++;
             itw.WriteLine("GC_INIT();");
-            itw.Indent--;
-            itw.WriteLine("#endif");
             itw.Indent++;
 
             c.WriteMethodFullName(mainMethod);
