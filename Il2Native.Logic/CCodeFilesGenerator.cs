@@ -45,9 +45,7 @@ namespace Il2Native.Logic
                 itw.Write("auto main()");
             }
 
-            itw.Write(" -> ");
-            c.WriteType(mainMethod.ReturnType);
-            itw.WriteLine(string.Empty);
+            itw.WriteLine(" -> int32_t");
             itw.WriteLine("{");
             itw.Indent++;
 
@@ -80,10 +78,14 @@ namespace Il2Native.Logic
             }
 
             itw.WriteLine(");");
-            itw.Write("return");
+            itw.Write("return ");
             if (!mainMethod.ReturnsVoid)
             {
-                itw.Write(" exit_code");
+                itw.Write("exit_code");
+            }
+            else
+            {
+                itw.Write("0");
             }
 
             itw.WriteLine(";");
