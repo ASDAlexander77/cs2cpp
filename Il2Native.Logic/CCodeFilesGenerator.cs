@@ -35,21 +35,59 @@ namespace Il2Native.Logic
         public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
         {
             itw.WriteLine();
-            itw.WriteLine("auto main() -> int32_t");
+            var mainHasParameters = mainMethod.Parameters.Length > 0;
+            if (mainHasParameters)
+            {
+                itw.Write("auto main(int32_t argc, char* argv[])");
+            }
+            else
+            {
+                itw.Write("auto main()");
+            }
+
+            itw.Write(" -> ");
+            c.WriteType(mainMethod.ReturnType);
+            itw.WriteLine(string.Empty);
             itw.WriteLine("{");
             itw.Indent++;
 
             itw.WriteLine("GC_INIT();");
+            if (mainHasParameters)
+            {
+                itw.WriteLine("auto arguments_count = argc > 0 ? argc - 1 : 0;");
+                itw.WriteLine("auto args = __array<string*>::__new_array(arguments_count);");
+                itw.WriteLine("for( auto i = 0; i < arguments_count; i++ )");
+                itw.WriteLine("{");
+                itw.Indent++;
+                itw.WriteLine("auto argv1 = argv[i + 1];");
+                itw.WriteLine(
+                    "args->operator[](i) = string::CreateStringFromEncoding((uint8_t*)argv1, std::strlen(argv1), CoreLib::System::Text::Encoding::get_UTF8());");
+                itw.Indent--;
+                itw.WriteLine("}");
+                itw.WriteLine(string.Empty);
+            }
+
+            if (!mainMethod.ReturnsVoid)
+            {
+                itw.Write("auto exit_code = ");
+            }
 
             c.WriteMethodFullName(mainMethod);
             itw.Write("(");
-            if (mainMethod.Parameters.Length > 0)
+            if (mainHasParameters)
             {
-                itw.Write("nullptr");
+                itw.Write("args");
             }
 
             itw.WriteLine(");");
-            itw.WriteLine("return 0;");
+            itw.Write("return");
+            if (!mainMethod.ReturnsVoid)
+            {
+                itw.Write(" exit_code");
+            }
+
+            itw.WriteLine(";");
+
             itw.Indent--;
             itw.WriteLine("}");
         }
