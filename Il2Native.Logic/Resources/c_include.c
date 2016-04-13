@@ -35,18 +35,17 @@
 # endif
 #endif
 
+#ifdef HAVE_CONFIG_H
+  /* For PARALLEL_MARK */
+# include "config.h"
+#endif
+
 #ifdef DEBUG
 # define GC_DEBUG
 #endif
 
 #ifndef GC_THREADS
 # define GC_THREADS
-#endif
-
-#if !_MSC_VER
-# ifndef GC_PTHREADS
-#  define GC_PTHREADS
-# endif
 #endif
 
 #include "gc.h"

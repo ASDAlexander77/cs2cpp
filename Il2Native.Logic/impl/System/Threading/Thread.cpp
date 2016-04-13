@@ -1,7 +1,6 @@
 #include "CoreLib.h"
 
 #ifdef _MSC_VER
-# include <windows.h>
 # define __ATTR __stdcall
 #else
 # define __ATTR 
