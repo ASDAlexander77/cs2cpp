@@ -200,9 +200,6 @@ template <typename T> inline CoreLib::System::Type* _typeof()
 	return &_T::__type;
 }
 
-// String literal
-string* operator "" _s(const wchar_t* ptr, size_t length);
-
 // Decimals
 int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign);
 int32_t DecCmp(int32_t* d1, int32_t* d2);
@@ -671,3 +668,69 @@ public:
 
 extern __object_extras_storage __object_extras_storage_instance;
 
+class __strings_storage
+{
+public:
+
+	typedef std::unordered_map<const wchar_t*, string*> map;
+
+	string* operator() (const wchar_t* str, size_t length)
+	{
+		{
+			std::shared_lock<std::shared_timed_mutex> lock(mutex);
+			map::const_iterator got = __strings.find (str);
+			if (got != __strings.end())
+			{
+				return got->second;
+			}
+		}
+
+		return get_or_allocate(str, length);
+	}
+
+	string* get_or_allocate(const wchar_t* str, size_t length)
+	{
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		map::const_iterator got = __strings.find (str);
+		if (got != __strings.end())
+		{
+			return got->second;
+		}
+
+		auto _new_string = string::FastAllocateString(length);
+		std::wcsncpy(&_new_string->m_firstChar, str, length);
+		__strings[str] = _new_string;
+		return _new_string;
+	}
+
+	void free(const wchar_t* str)
+	{
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		map::const_iterator got = __strings.find (str);
+		if (got != __strings.end())
+		{
+			delete got->second;
+			__strings.erase(got);
+		}
+	}
+
+	~__strings_storage()
+	{
+		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		for (auto item : __strings) 
+		{
+			delete item.second;
+		}  
+	}
+
+	map __strings;
+	mutable std::shared_timed_mutex mutex;
+};
+
+extern __strings_storage __strings_storage_instance;
+
+// String literal
+inline string* operator "" _s(const wchar_t* ptr, size_t length)
+{
+	return __strings_storage_instance(ptr, length);
+}
