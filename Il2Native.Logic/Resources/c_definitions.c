@@ -1,7 +1,7 @@
 __object_extras_storage __object_extras_storage_instance;
 __strings_storage __strings_storage_instance;
 
-int32_t __hash_code(object* _obj, int32_t _size)
+int32_t __hash_code(object* _obj, size_t _size)
 {
 	if (_obj == nullptr)
 	{
@@ -27,7 +27,7 @@ int32_t __hash_code(object* _obj, int32_t _size)
 	return hash;
 }
 
-bool __equals_helper(object* _obj1, int32_t _size1, object* _obj2, int32_t _size2)
+bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2)
 {
 	if (_size1 != _size2)
 	{

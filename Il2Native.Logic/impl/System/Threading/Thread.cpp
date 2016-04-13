@@ -11,7 +11,7 @@ thread_local CoreLib::System::Threading::Thread* __current_thread;
 // Method : System.Threading.Thread.ManagedThreadId.get
 int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 {
-#if _MSC_VER
+#if !GC_PTHREADS
 	return (int32_t) GetCurrentThreadId();
 #else
 	return (int32_t) pthread_self();
@@ -51,7 +51,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 	__current_thread = this;
 
 	int32_t threadId;
-#if _MSC_VER
+#if !GC_PTHREADS
 	this->DONT_USE_InternalThread.m_value = CreateThread( 
 		nullptr,                // default security attributes
 		0,                      // use default stack size  
@@ -61,7 +61,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		(LPDWORD)&threadId);	// returns the thread identifier 
 #else
 	auto t = __new_set0(sizeof(pthread_t));
-	GC_pthread_create(t, 0, __thread_inner_proc, this);
+	pthread_create(t, 0, __thread_inner_proc, this);
 	this->DONT_USE_InternalThread.m_value = t;
 #endif
 }
@@ -81,7 +81,7 @@ void CoreLib::System::Threading::Thread::AbortInternal()
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-#if _MSC_VER
+#if !GC_PTHREADS
 	CloseHandle((HANDLE)voidPtr);
 #else
 	pthread_detach(*(pthread_t*)voidPtr);
@@ -127,7 +127,7 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-#if _MSC_VER
+#if !GC_PTHREADS
 	return WaitForSingleObject((HANDLE)voidPtr, millisecondsTimeout == -1 ? INFINITE : millisecondsTimeout) == WAIT_OBJECT_0;
 #else
 	return pthread_join(*(pthread_t*)voidPtr, 0) == 0;
