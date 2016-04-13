@@ -4,7 +4,6 @@
 # include <windows.h>
 # define __ATTR __stdcall
 #else
-# include <pthread.h>
 # define __ATTR 
 #endif
 
@@ -63,7 +62,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		(LPDWORD)&threadId);	// returns the thread identifier 
 #else
 	auto t = __new_set0(sizeof(pthread_t));
-	pthread_create(t, 0, __thread_inner_proc, this);
+	GC_pthread_create(t, 0, __thread_inner_proc, this);
 	this->DONT_USE_InternalThread.m_value = t;
 #endif
 }
