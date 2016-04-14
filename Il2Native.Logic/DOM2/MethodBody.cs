@@ -214,7 +214,7 @@ namespace Il2Native.Logic.DOM2
             return false;
         }
 
-        private void SanitizeCaseLabelsAndSetReturnTypes(IList<Statement> statements)
+        private void SanitizeCaseLabelsAndSetReturnTypes(IEnumerable<Statement> statements)
         {
             var labels = new List<Label>();
             var usedLabels = new List<Label>();

@@ -96,6 +96,13 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
+            {
+                c.TextSpan("((");
+                c.WriteType(this.Method.ReturnType);
+                c.TextSpan(")");
+            }
+
             if (this.Method.IsStaticMethod())
             {
                 if (!this.Method.IsExternDeclaration())
@@ -132,6 +139,11 @@ namespace Il2Native.Logic.DOM2
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method);
+
+            if (this.Method.IsVirtualGenericMethod())
+            {
+                c.TextSpan(")");
+            }
         }
 
         private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter, IMethodSymbol method)
@@ -197,13 +209,7 @@ namespace Il2Native.Logic.DOM2
             // to support virtual generics it is required to sync. types
             if (method != null && method.IsVirtualGenericMethod())
             {
-                var namedTypeImpl = new NamedTypeImpl((INamedTypeSymbol)parameter.Type);
-                namedTypeImpl.ContainingSymbol = parameter.ContainingSymbol;
-                namedTypeImpl.TypeArguments =
-                    ImmutableArray.Create(
-                    namedTypeImpl.TypeArguments.Select(ta => method.TypeArguments.Contains(ta) ? new TypeImpl(ta) { ContainingSymbol = parameter.ContainingSymbol } : ta)
-                                     .OfType<ITypeSymbol>()
-                                     .ToArray());
+                var namedTypeImpl = GetTypeForVirtualGenericMethod(parameter, method);
 
                 effectiveExpression = new Cast
                 {
@@ -216,6 +222,24 @@ namespace Il2Native.Logic.DOM2
             }
 
             return effectiveExpression;
+        }
+
+        private static NamedTypeImpl GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
+        {
+            return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
+        }
+
+        private static NamedTypeImpl GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
+        {
+            var namedTypeImpl = new NamedTypeImpl((INamedTypeSymbol)type);
+            namedTypeImpl.ContainingSymbol = containingSymbol;
+            namedTypeImpl.TypeArguments =
+                ImmutableArray.Create(
+                    namedTypeImpl.TypeArguments.Select(
+                        ta => method.TypeArguments.Contains(ta) ? new TypeImpl(ta) { ContainingSymbol = containingSymbol } : ta)
+                                 .OfType<ITypeSymbol>()
+                                 .ToArray());
+            return namedTypeImpl;
         }
 
         private Expression PrepareMethodReceiver(Expression receiverOpt, IMethodSymbol methodSymbol)
