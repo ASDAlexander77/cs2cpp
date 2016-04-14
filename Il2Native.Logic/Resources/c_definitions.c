@@ -1,6 +1,16 @@
 __object_extras_storage __object_extras_storage_instance;
 __strings_storage __strings_storage_instance;
 
+void GC_CALLBACK __finalizer(void * obj, void * client_data)
+{
+	if (obj == nullptr)
+	{
+		return;
+	}
+
+	((object*)obj)->Finalize();
+}
+
 int32_t __hash_code(object* _obj, size_t _size)
 {
 	if (_obj == nullptr)
