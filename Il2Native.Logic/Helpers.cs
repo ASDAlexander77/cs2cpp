@@ -358,7 +358,7 @@ namespace Il2Native.Logic
 
         public static bool IsOverrideMethod(this IMethodSymbol methodSymbol)
         {
-            if (methodSymbol.MethodKind == MethodKind.Destructor)
+            if (methodSymbol.MethodKind == MethodKind.Destructor && methodSymbol.ContainingType.BaseType != null)
             {
                 return true;
             }

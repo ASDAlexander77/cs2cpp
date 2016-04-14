@@ -629,7 +629,7 @@ namespace Il2Native.Logic
                 {
                     this.TextSpan(" = 0");
                 }
-                else if (methodSymbol.IsOverride || (methodSymbol.IsOverrideMethod() && methodSymbol.ContainingType.BaseType != null))
+                else if (methodSymbol.IsOverrideMethod())
                 {
                     this.TextSpan(" override");
                 }
