@@ -35,7 +35,7 @@ namespace Il2Native.Logic.DOM2
         internal override void WriteTo(CCodeWriterBase c)
         {
             this.Lambda.WriteTo(c);
-            WriteCallArguments(this.arguments, this.Lambda.Locals.Select(l => new ParameterImpl { Type = l.Type } ), c);
+            WriteCallArguments(c, this.Lambda.Locals.Select(l => new ParameterImpl { Type = l.Type } ), this.arguments);
         }
     }
 }

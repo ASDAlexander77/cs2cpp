@@ -10,6 +10,32 @@ namespace Il2Native.Logic.DOM.Implementations
 
     public class NamedTypeImpl : TypeImpl, INamedTypeSymbol
     {
+        public NamedTypeImpl()
+        {
+        }
+
+        public NamedTypeImpl(INamedTypeSymbol typeSymbol)
+            : base(typeSymbol)
+        {
+            Arity = typeSymbol.Arity;
+            IsGenericType = typeSymbol.IsGenericType;
+            IsUnboundGenericType = typeSymbol.IsUnboundGenericType;
+            IsScriptClass = typeSymbol.IsScriptClass;
+            IsImplicitClass = typeSymbol.IsImplicitClass;
+            MemberNames = typeSymbol.MemberNames;
+            TypeParameters = typeSymbol.TypeParameters;
+            TypeArguments = typeSymbol.TypeArguments;
+            OriginalDefinition = typeSymbol.OriginalDefinition;
+            DelegateInvokeMethod = typeSymbol.DelegateInvokeMethod;
+            EnumUnderlyingType = typeSymbol.EnumUnderlyingType;
+            ConstructedFrom = typeSymbol.ConstructedFrom;
+            InstanceConstructors = typeSymbol.InstanceConstructors;
+            StaticConstructors = typeSymbol.StaticConstructors;
+            Constructors = typeSymbol.Constructors;
+            AssociatedSymbol = typeSymbol.AssociatedSymbol;
+            MightContainExtensionMethods = typeSymbol.MightContainExtensionMethods;
+        }
+
         public int Arity { get; private set; }
         public bool IsGenericType { get; set; }
         public bool IsUnboundGenericType { get; private set; }

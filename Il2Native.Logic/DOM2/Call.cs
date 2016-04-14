@@ -4,7 +4,12 @@
 namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Diagnostics;
+    using System.Linq;
+
+    using Il2Native.Logic.DOM.Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -38,7 +43,7 @@ namespace Il2Native.Logic.DOM2
 
         public Expression ReceiverOpt { get; set; }
 
-        internal static void WriteCallArguments(IEnumerable<Expression> arguments, IEnumerable<IParameterSymbol> parameterSymbols, CCodeWriterBase c)
+        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null)
         {
             c.TextSpan("(");
             var anyArgs = false;
@@ -58,7 +63,7 @@ namespace Il2Native.Logic.DOM2
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null).WriteTo(c);
+                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method).WriteTo(c);
                 anyArgs = true;
             }
 
@@ -126,10 +131,10 @@ namespace Il2Native.Logic.DOM2
                 c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/);
             }
 
-            WriteCallArguments(this._arguments, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method);
         }
 
-        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter)
+        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter, IMethodSymbol method)
         {
             if (parameter == null)
             {
@@ -176,7 +181,8 @@ namespace Il2Native.Logic.DOM2
                 };
             }
 
-            if (effectiveExpression.IsReference && (effectiveExpression.Type.TypeKind == TypeKind.Interface) && parameter.Type.SpecialType == SpecialType.System_Object)
+            if (effectiveExpression.IsReference && (effectiveExpression.Type.TypeKind == TypeKind.Interface) 
+                && parameter.Type.SpecialType == SpecialType.System_Object)
             {
                 effectiveExpression = new Conversion
                 {
@@ -185,6 +191,27 @@ namespace Il2Native.Logic.DOM2
                     Operand = expression,
                     TypeSource = effectiveExpression.Type,
                     Type = parameter.Type
+                };
+            }
+
+            // to support virtual generics it is required to sync. types
+            if (method != null && method.IsVirtualGenericMethod())
+            {
+                var namedTypeImpl = new NamedTypeImpl((INamedTypeSymbol)parameter.Type);
+                namedTypeImpl.ContainingSymbol = parameter.ContainingSymbol;
+                namedTypeImpl.TypeArguments =
+                    ImmutableArray.Create(
+                    namedTypeImpl.TypeArguments.Select(ta => method.TypeArguments.Contains(ta) ? new TypeImpl(ta) { ContainingSymbol = parameter.ContainingSymbol } : ta)
+                                     .OfType<ITypeSymbol>()
+                                     .ToArray());
+
+                effectiveExpression = new Cast
+                {
+                    Type = namedTypeImpl,
+                    Operand = effectiveExpression,
+                    Reference = parameter.RefKind.HasFlag(RefKind.Ref) || parameter.RefKind.HasFlag(RefKind.Out),
+                    CCast = true,
+                    UseEnumUnderlyingType = true,
                 };
             }
 

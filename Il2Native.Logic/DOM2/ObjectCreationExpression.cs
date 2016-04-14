@@ -59,7 +59,7 @@ namespace Il2Native.Logic.DOM2
                 this.NewTemplate(c);
             }
 
-            WriteCallArguments(Arguments, Method != null ? Method.Parameters : (IEnumerable<IParameterSymbol>)null, c);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
         }
 
         private void NewTemplate(CCodeWriterBase c)

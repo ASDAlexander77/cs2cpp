@@ -11,6 +11,41 @@ namespace Il2Native.Logic.DOM.Implementations
 
     public class TypeImpl : ITypeSymbol
     {
+        public TypeImpl()
+        {
+        }
+
+        public TypeImpl(ITypeSymbol typeSymbol)
+        {
+            Kind = typeSymbol.Kind;
+            Name = typeSymbol.Name;
+            MetadataName = typeSymbol.MetadataName;
+            ContainingSymbol = typeSymbol.ContainingSymbol;
+            ContainingAssembly = typeSymbol.ContainingAssembly;
+            ContainingModule = typeSymbol.ContainingModule;
+            ContainingType = typeSymbol.ContainingType;
+            ContainingNamespace = typeSymbol.ContainingNamespace;
+            IsDefinition = typeSymbol.IsDefinition;
+            IsStatic = typeSymbol.IsStatic;
+            IsVirtual = typeSymbol.IsVirtual;
+            IsOverride = typeSymbol.IsOverride;
+            IsAbstract = typeSymbol.IsAbstract;
+            IsSealed = typeSymbol.IsSealed;
+            IsExtern = typeSymbol.IsExtern;
+            DeclaredAccessibility = typeSymbol.DeclaredAccessibility;
+            OriginalDefinition = typeSymbol.OriginalDefinition;
+            SpecialType = typeSymbol.SpecialType;
+            TypeKind = typeSymbol.TypeKind;
+            BaseType = typeSymbol.BaseType;
+            Interfaces = typeSymbol.Interfaces;
+            AllInterfaces = typeSymbol.AllInterfaces;
+            IsReferenceType = typeSymbol.IsReferenceType;
+            IsValueType = typeSymbol.IsValueType;
+            IsAnonymousType = typeSymbol.IsAnonymousType;
+            IsNamespace = typeSymbol.IsNamespace;
+            IsType = typeSymbol.IsType;
+        }
+
         public SymbolKind Kind { get; set; }
 
         public string Language { get; set; }

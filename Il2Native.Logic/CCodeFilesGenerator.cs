@@ -49,6 +49,7 @@ namespace Il2Native.Logic
             itw.WriteLine("{");
             itw.Indent++;
 
+            itw.WriteLine("GC_set_all_interior_pointers(1);");
             itw.WriteLine("GC_INIT();");
             if (mainHasParameters)
             {
