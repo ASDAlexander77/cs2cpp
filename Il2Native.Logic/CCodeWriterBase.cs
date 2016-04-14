@@ -603,11 +603,6 @@ namespace Il2Native.Logic
 
         public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
-            if (methodSymbol.MethodKind == MethodKind.Destructor)
-            {
-                return;
-            }
-
             // type
             if (methodSymbol.ReturnsVoid)
             {

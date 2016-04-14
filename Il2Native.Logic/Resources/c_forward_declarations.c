@@ -70,7 +70,7 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
-inline void* __new_set0(size_t _size, bool _is_atomic = false, bool _register_finalizer = false)
+inline void* __new_set0(size_t _size, bool _is_atomic = false)
 {
 	auto mem = _size > 102400 
 		? _is_atomic 
@@ -84,17 +84,20 @@ inline void* __new_set0(size_t _size, bool _is_atomic = false, bool _register_fi
 		std::memset(mem, 0, _size);
 	}
 
-	if (_register_finalizer)
-	{
-        GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
-	}
-
 	return mem;
 }
 
+inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic = false)
+{
+	auto mem = __new_set0(_size, _is_atomic);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {
-	auto t = new (sizeof(T), is_primitive_type<T>::value, std::is_base_of<object, T>::value) T();		
+	auto t = new (sizeof(T), is_primitive_type<T>::value) T();		
 	t->_ctor(params...);
 	return t;
 } 

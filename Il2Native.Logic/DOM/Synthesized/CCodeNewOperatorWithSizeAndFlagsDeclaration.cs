@@ -17,21 +17,19 @@ namespace Il2Native.Logic.DOM.Synthesized
             var parameterSize = new Parameter { ParameterSymbol = parameterSymbolSize };
             var parameterSymbolIsAtomic = new ParameterImpl { Name = "_is_atomic" };
             var parameterIsAtomic = new Parameter { ParameterSymbol = parameterSymbolIsAtomic };
-            var parameterSymbolRegFinalizer = new ParameterImpl { Name = "_register_finalizer" };
-            var parameterRegFinalizer = new Parameter { ParameterSymbol = parameterSymbolRegFinalizer };
-            var methodSymbol = new MethodImpl { Name = "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbolSize, parameterSymbolIsAtomic, parameterSymbolRegFinalizer) };
+            var methodSymbol = new MethodImpl { Name = "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbolSize, parameterSymbolIsAtomic) };
             MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =
                 {
-                    new ReturnStatement { ExpressionOpt = new Call { Method = methodSymbol, Arguments = { parameterSize, parameterIsAtomic, parameterRegFinalizer } } }
+                    new ReturnStatement { ExpressionOpt = new Call { Method = methodSymbol, Arguments = { parameterSize, parameterIsAtomic } } }
                 }
             };
         }
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("void* operator new (size_t _size, int32_t _customSize, bool _is_atomic = false, bool _register_finalizer = false)");
+            c.TextSpan("void* operator new (size_t _size, int32_t _customSize, bool _is_atomic)");
             MethodBodyOpt.WriteTo(c);
         }
 
