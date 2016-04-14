@@ -333,6 +333,11 @@ namespace Il2Native.Logic
 
         public static bool IsVirtualMethod(this IMethodSymbol methodSymbol)
         {
+            if (methodSymbol.MethodKind == MethodKind.Destructor)
+            {
+                return true;
+            }
+
             // special case for Array
             if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_Array)
             {
@@ -349,6 +354,16 @@ namespace Il2Native.Logic
             }
 
             return methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride;
+        }
+
+        public static bool IsOverrideMethod(this IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol.MethodKind == MethodKind.Destructor)
+            {
+                return true;
+            }
+
+            return methodSymbol.IsOverride;
         }
 
         public static bool IsExternDeclaration(this IMethodSymbol iMethodSymbol)

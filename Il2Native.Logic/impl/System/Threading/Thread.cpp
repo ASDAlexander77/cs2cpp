@@ -6,6 +6,12 @@
 # define __ATTR 
 #endif
 
+#if !GC_PTHREADS
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 thread_local CoreLib::System::Threading::Thread* __current_thread;
 
 // Method : System.Threading.Thread.ManagedThreadId.get

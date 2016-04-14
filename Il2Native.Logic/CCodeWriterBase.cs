@@ -342,6 +342,13 @@ namespace Il2Native.Logic
         public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
         {
             // name
+            ////if (methodSymbol.MethodKind == MethodKind.Destructor)
+            ////{
+            ////    this.TextSpan("~");
+            ////    this.WriteTypeName((methodSymbolForName ?? methodSymbol).ContainingType, false, false);
+            ////    return;
+            ////}
+
             var symbol = methodSymbolForName ?? methodSymbol;
             if (methodSymbol.IsExternDeclaration())
             {
@@ -596,6 +603,11 @@ namespace Il2Native.Logic
 
         public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
+            if (methodSymbol.MethodKind == MethodKind.Destructor)
+            {
+                return;
+            }
+
             // type
             if (methodSymbol.ReturnsVoid)
             {
@@ -613,13 +625,13 @@ namespace Il2Native.Logic
         {
             if (declarationWithingClass)
             {
-                if (methodSymbol.IsOverride)
-                {
-                    this.TextSpan(" override");
-                }
-                else if (methodSymbol.IsAbstract)
+                if (methodSymbol.IsAbstract)
                 {
                     this.TextSpan(" = 0");
+                }
+                else if (methodSymbol.IsOverride || (methodSymbol.IsOverrideMethod() && methodSymbol.ContainingType.BaseType != null))
+                {
+                    this.TextSpan(" override");
                 }
             }
         }

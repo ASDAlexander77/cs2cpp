@@ -56,7 +56,9 @@ namespace Il2Native.Logic
                 }
             }
 
-            foreach (var member in type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor))
+            foreach (var member in type.GetMembers()
+                        .OfType<IMethodSymbol>()
+                        .Where(m => m.MethodKind != MethodKind.Constructor && m.MethodKind != MethodKind.StaticConstructor && m.MethodKind != MethodKind.Destructor))
             {
                 yield return member;
             }
