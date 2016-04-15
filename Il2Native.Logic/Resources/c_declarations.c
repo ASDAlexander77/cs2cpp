@@ -506,70 +506,34 @@ public:
 
 	const T operator [](std::initializer_list<int32_t> indexes) const 
 	{ 
-		auto index = 0;
-		auto rank = 0;
-		for (auto levelIndex : indexes)
-		{
-			if (rank >= RANK)
-			{
-				break;
-			}
-
-			if (rank == 0)
-			{
-				index = levelIndex;
-			}
-			else
-			{
-				auto boundryRank = rank - 1;
-				auto lower = _lowerBoundries[boundryRank];
-				auto upper = _upperBoundries[boundryRank];
-				if (levelIndex < lower|| levelIndex > upper)
-				{
-					throw __new<CoreLib::System::IndexOutOfRangeException>();
-				}
-
-				index += levelIndex * (upper - lower);
-			}
-
-			rank++;
-		}
-
-		return _data[index]; 
+		return _data[calculate_index(indexes)]; 
 	}
 
 	T& operator [](std::initializer_list<int32_t> indexes) 
 	{ 
+		return _data[calculate_index(indexes)];  
+	}
+
+	int32_t calculate_index(std::initializer_list<int32_t>& indexes)
+	{
 		auto index = 0;
+		auto index_multiplier = 1;
 		auto rank = 0;
 		for (auto levelIndex : indexes)
 		{
-			if (rank >= RANK)
+			index += levelIndex * index_multiplier;
+			auto lower = _lowerBoundries[rank];
+			auto upper = _upperBoundries[rank];
+			if (levelIndex < lower || levelIndex >= upper)
 			{
-				break;
+				throw __new<CoreLib::System::IndexOutOfRangeException>();
 			}
 
-			if (rank == 0)
-			{
-				index = levelIndex;
-			}
-			else
-			{
-				auto boundryRank = rank - 1;
-				auto lower = _lowerBoundries[boundryRank];
-				auto upper = _upperBoundries[boundryRank];
-				if (levelIndex < lower|| levelIndex > upper)
-				{
-					throw __new<CoreLib::System::IndexOutOfRangeException>();
-				}
-
-				index += levelIndex * (upper - lower);
-			}
-
+			index_multiplier *= (upper - lower);
 			rank++;
 		}
 
-		return _data[index];  
+		return index;
 	}
 
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)

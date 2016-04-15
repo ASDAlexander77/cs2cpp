@@ -5,6 +5,8 @@ namespace Il2Native.Logic.DOM2
 {
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
+
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ArrayAccess : Expression
@@ -46,7 +48,7 @@ namespace Il2Native.Logic.DOM2
             }
 
             var any = false;
-            foreach (var index in this._indices)
+            foreach (var index in this._indices.Reverse())
             {
                 if (any)
                 {

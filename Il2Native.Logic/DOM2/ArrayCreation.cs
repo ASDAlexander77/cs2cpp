@@ -81,7 +81,7 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("{");
                 }
 
-                foreach (var bound in this.bounds)
+                foreach (var bound in this.bounds.Reverse())
                 {
                     if (any)
                     {
