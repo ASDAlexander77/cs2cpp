@@ -79,6 +79,7 @@ namespace Il2Native.Logic
             }
 
             itw.WriteLine(");");
+            itw.WriteLine("GC_finalize_all();");            
             itw.Write("return ");
             if (!mainMethod.ReturnsVoid)
             {

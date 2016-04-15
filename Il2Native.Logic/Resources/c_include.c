@@ -50,6 +50,7 @@
 
 #include "gc.h"
 #include "gc_backptr.h"
+#include "javaxfc.h"
 #undef min
 #undef max
 #undef INVALID_HANDLE_VALUE
