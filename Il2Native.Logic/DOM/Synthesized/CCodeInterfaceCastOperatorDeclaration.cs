@@ -38,7 +38,7 @@ namespace Il2Native.Logic.DOM.Synthesized
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("operator");
+            c.TextSpan("virtual operator");
             c.WhiteSpace();
             c.WriteType(this.interfaceSymbol);
             c.TextSpan("()");
