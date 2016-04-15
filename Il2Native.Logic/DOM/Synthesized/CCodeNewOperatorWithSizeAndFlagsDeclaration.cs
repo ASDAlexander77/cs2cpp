@@ -10,14 +10,14 @@ namespace Il2Native.Logic.DOM.Synthesized
 
     public class CCodeNewOperatorWithSizeAndFlagsDeclaration : CCodeMethodDeclaration
     {
-        public CCodeNewOperatorWithSizeAndFlagsDeclaration(INamedTypeSymbol type)
+        public CCodeNewOperatorWithSizeAndFlagsDeclaration(INamedTypeSymbol type, bool withFinalization = false)
             : base(new NewOperatorMethod(type))
         {
             var parameterSymbolSize = new ParameterImpl { Name = "_customSize" };
             var parameterSize = new Parameter { ParameterSymbol = parameterSymbolSize };
             var parameterSymbolIsAtomic = new ParameterImpl { Name = "_is_atomic" };
             var parameterIsAtomic = new Parameter { ParameterSymbol = parameterSymbolIsAtomic };
-            var methodSymbol = new MethodImpl { Name = "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbolSize, parameterSymbolIsAtomic) };
+            var methodSymbol = new MethodImpl { Name = withFinalization ? "__new_set0_with_finalizer" : "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbolSize, parameterSymbolIsAtomic) };
             MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =

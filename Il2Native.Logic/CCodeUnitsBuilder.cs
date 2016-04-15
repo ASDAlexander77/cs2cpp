@@ -351,6 +351,13 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type));
             }
 
+            if (type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor))
+            {
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, true));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type, true));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type, true));
+            }
+
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));

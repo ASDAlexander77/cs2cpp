@@ -10,12 +10,12 @@ namespace Il2Native.Logic.DOM.Synthesized
 
     public class CCodeNewOperatorWithSizeDeclaration : CCodeMethodDeclaration
     {
-        public CCodeNewOperatorWithSizeDeclaration(INamedTypeSymbol type)
+        public CCodeNewOperatorWithSizeDeclaration(INamedTypeSymbol type, bool withFinalization = false)
             : base(new NewOperatorMethod(type))
         {
             var parameterSymbol = new ParameterImpl { Name = "_customSize" };
             var parameter = new Parameter { ParameterSymbol = parameterSymbol };
-            var methodSymbol = new MethodImpl { Name = "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
+            var methodSymbol = new MethodImpl { Name = withFinalization ? "__new_set0_with_finalizer" : "__new_set0", MethodKind = MethodKind.BuiltinOperator, Parameters = ImmutableArray.Create<IParameterSymbol>(parameterSymbol) };
             MethodBodyOpt = new MethodBody(Method)
             {
                 Statements =
