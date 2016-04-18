@@ -192,6 +192,11 @@ public:
 		return &t;
 	}
 
+	inline bool operator==(T other)
+	{
+		return t == other;
+	}
+
 	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
 	{
 		t++;

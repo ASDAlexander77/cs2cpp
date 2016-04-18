@@ -203,6 +203,18 @@ namespace Il2Native.Logic
             return parenthesis;
         }
 
+        public bool WriteExpressionForWrappersIfNeeded(Expression expression)
+        {
+            if (expression.IsStaticOrSupportedVolatileWrapperCall())
+            {
+                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = true, }.WriteTo(this);
+                return true;
+            }
+
+            this.WriteExpressionInParenthesesIfNeeded(expression);
+            return false;
+        }
+
         public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
             if (fieldSymbol.IsStatic)

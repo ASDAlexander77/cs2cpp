@@ -51,20 +51,7 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("*");
                 }
 
-                if (this.ExpressionOpt.IsStaticOrSupportedVolatileWrapperCall())
-                {
-                    new Cast
-                    {
-                        Type = this.ExpressionOpt.Type,
-                        Operand = this.ExpressionOpt,
-                        CCast = true,
-                        UseEnumUnderlyingType = true,
-                    }.WriteTo(c);
-                }
-                else
-                {
-                    this.ExpressionOpt.WriteTo(c);
-                }
+                c.WriteExpressionForWrappersIfNeeded(this.ExpressionOpt);
             }
 
             base.WriteTo(c);

@@ -72,15 +72,7 @@ namespace Il2Native.Logic.DOM2
                     receiverOpt = new ThisReference();
                 }
 
-                if (this.ReceiverOpt.IsStaticOrSupportedVolatileWrapperCall())
-                {
-                    new Cast { Type = receiverOpt.Type, CCast = true, Operand = receiverOpt }.WriteTo(c);
-                }
-                else
-                {
-                    receiverOpt.WriteTo(c);
-                }
-
+                c.WriteExpressionForWrappersIfNeeded(receiverOpt);
                 c.TextSpan(",");
                 c.WhiteSpace();
             }
