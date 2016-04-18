@@ -203,11 +203,11 @@ namespace Il2Native.Logic
             return parenthesis;
         }
 
-        public bool WriteExpressionForWrappersIfNeeded(Expression expression)
+        public bool WriteExpressionForWrappersIfNeeded(Expression expression, bool useEnumUnderlyingType = false)
         {
             if (expression.IsStaticOrSupportedVolatileWrapperCall())
             {
-                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = true, }.WriteTo(this);
+                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = useEnumUnderlyingType, }.WriteTo(this);
                 return true;
             }
 
