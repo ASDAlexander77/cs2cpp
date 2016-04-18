@@ -136,17 +136,42 @@ template <typename T> struct __unbound_generic_type
 {
 };
 
+// Default
+template <typename T> 
+inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
+{
+	return nullptr;
+}
+
+template <typename T> 
+inline typename std::enable_if<is_struct_type<T>::value, T>::type __default()
+{
+	return __init<T>();
+}
+
+template <typename T> 
+inline typename std::enable_if<is_primitive_type<T>::value, T>::type __default()
+{
+	return T();
+}
+
+template <typename T> 
+inline typename std::enable_if<std::is_void<T>::value, T>::type __default()
+{
+	return;
+}
+
 template< typename T >
 struct __volatile_t 
 {
 	T t;
 public:
 
+	inline __volatile_t() : t(__default<T>()) {}
+
 	inline __volatile_t(T _t) : t(_t) {}
 
-	inline __volatile_t(const T& _t) : t(_t) {}
-
-	inline __volatile_t<T>& operator=(const T& value)
+	inline __volatile_t<T>& operator=(T value)
 	{
 		t = value;
 		return *this;
