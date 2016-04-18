@@ -56,7 +56,7 @@ namespace Il2Native.Logic.DOM2
                     throw new NotImplementedException();
             }
 
-            c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+            c.WriteExpressionForWrappersIfNeeded(this.Operand);
         }
     }
 }
