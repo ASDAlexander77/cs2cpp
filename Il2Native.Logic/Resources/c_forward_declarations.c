@@ -136,6 +136,69 @@ template <typename T> struct __unbound_generic_type
 {
 };
 
+template< typename T >
+struct __volatile_t 
+{
+	T t;
+public:
+
+	inline __volatile_t(T _t) : t(_t) {}
+
+	inline __volatile_t(const T& _t) : t(_t) {}
+
+	inline __volatile_t<T>& operator=(const T& value)
+	{
+		t = value;
+		return *this;
+	}
+
+	inline operator const T&()
+	{
+		return t;
+	}
+
+	inline T& operator ->()
+	{
+		return t;
+	}
+
+	inline T* operator &()
+	{
+		return &t;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
+	{
+		t++;
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D operator++(int)
+	{
+		D tmp(*this);
+		operator++();
+		return tmp;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator--()
+	{
+		t--;
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D operator--(int)
+	{
+		D tmp(*this);
+		operator--();
+		return tmp;
+	}
+
+	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
+	{
+		return (D)t;
+	}
+};
+
 template< typename T, typename C >
 struct __static 
 {
@@ -159,12 +222,6 @@ public:
 	inline __static<T, C>& operator=(const T& value)
 	{
 		ensure_cctor_called();
-		t = value;
-		return *this;
-	}
-
-	inline __static<T, C>& operator=(const T&& value)
-	{
 		t = value;
 		return *this;
 	}

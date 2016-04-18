@@ -108,7 +108,7 @@ namespace Il2Native.Logic
             var expressionType = effectiveExpression.Type;
             if (expressionType.TypeKind == TypeKind.Struct || expressionType.TypeKind == TypeKind.Enum)
             {
-                if (!effectiveExpression.IsStaticWrapperCall())
+                if (!effectiveExpression.IsStaticOrSupportedVolatileWrapperCall())
                 {
                     this.TextSpan(".");
                     return;
@@ -222,6 +222,11 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (fieldSymbol.IsSupportedVolatile())
+            {
+                this.TextSpan("__volatile_t<");
+            }
+
             var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
             if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
             {
@@ -230,6 +235,11 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteType(fieldSymbol.Type);
+            }
+
+            if (fieldSymbol.IsSupportedVolatile())
+            {
+                this.TextSpan(">");
             }
 
             if (fieldSymbol.IsStatic && !doNotWrapStatic)
@@ -270,7 +280,17 @@ namespace Il2Native.Logic
                 this.TextSpan("__static<");
             }
 
+            if (fieldSymbol.IsSupportedVolatile())
+            {
+                this.TextSpan("__volatile_t<");
+            }
+
             this.WriteType(fieldSymbol.Type);
+
+            if (fieldSymbol.IsSupportedVolatile())
+            {
+                this.TextSpan(">");
+            }
 
             if (fieldSymbol.IsStatic && !doNotWrapStatic)
             {

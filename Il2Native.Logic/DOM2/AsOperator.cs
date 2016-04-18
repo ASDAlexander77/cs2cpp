@@ -35,7 +35,7 @@ namespace Il2Native.Logic.DOM2
             c.TextSpan(">");
             c.TextSpan("(");
 
-            if (this.Operand.IsStaticWrapperCall())
+            if (this.Operand.IsStaticOrSupportedVolatileWrapperCall())
             {
                 new Cast
                 {

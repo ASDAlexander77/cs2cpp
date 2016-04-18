@@ -89,7 +89,7 @@ namespace Il2Native.Logic.DOM2
                         c.WhiteSpace();
                     }
 
-                    var isStaticWrapperCall = bound.IsStaticWrapperCall();
+                    var isStaticWrapperCall = bound.IsStaticOrSupportedVolatileWrapperCall();
                     if (isStaticWrapperCall)
                     {
                         c.TextSpan("(int32_t)(");

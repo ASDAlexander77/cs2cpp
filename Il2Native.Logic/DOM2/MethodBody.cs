@@ -259,12 +259,14 @@ namespace Il2Native.Logic.DOM2
                         }
 
                         // fix operator for static constructors
+                        /*
                         if (this.MethodSymbol.MethodKind == MethodKind.StaticConstructor &&
                             e.Kind == Kinds.AssignmentOperator)
                         {
                             var assignmentOperator = (AssignmentOperator)e;
                             assignmentOperator.MoveOperator = true;
                         }
+                        */ 
                     });
             }
 

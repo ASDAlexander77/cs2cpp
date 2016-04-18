@@ -181,7 +181,7 @@ namespace Il2Native.Logic.DOM2
                 effectiveExpression = new PointerIndirectionOperator { Operand = expression };
             }
 
-            if (expression.IsStaticWrapperCall())
+            if (expression.IsStaticOrSupportedVolatileWrapperCall())
             {
                 effectiveExpression = new Cast
                 {

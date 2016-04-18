@@ -113,7 +113,7 @@ namespace Il2Native.Logic.DOM2
             if (this.MoveOperator)
             {
                 c.TextSpan("std::move(");
-                if (this.Right.IsStaticWrapperCall())
+                if (this.Right.IsStaticOrSupportedVolatileWrapperCall())
                 {
                     c.TextSpan("(");
                     c.WriteType(Type);

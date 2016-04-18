@@ -305,6 +305,17 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsSupportedVolatile(this IFieldSymbol fieldSymbol)
+        {
+            return fieldSymbol.IsVolatile;
+        }
+
+        public static bool IsSupportedVolatileWrapperCall(this Expression expression)
+        {
+            var fieldAccess = expression as FieldAccess;
+            return fieldAccess != null && fieldAccess.Field.IsSupportedVolatile();
+        }
+
         public static bool IsStaticMethod(this IMethodSymbol methodSymbol)
         {
             return methodSymbol.IsStatic || (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor"));
@@ -319,6 +330,12 @@ namespace Il2Native.Logic
         public static bool IsStaticWrapperCall(this IFieldSymbol fieldSymbol)
         {
             return fieldSymbol.IsStatic/* && fieldSymbol.ContainingType.StaticConstructors.Any()*/;
+        }
+
+        public static bool IsStaticOrSupportedVolatileWrapperCall(this Expression expression)
+        {
+            var fieldAccess = expression as FieldAccess;
+            return fieldAccess != null && (fieldAccess.Field.IsStaticWrapperCall() || fieldAccess.Field.IsSupportedVolatile());
         }
 
         public static bool IsStringCtorReplacement(this IMethodSymbol methodSymbol)
