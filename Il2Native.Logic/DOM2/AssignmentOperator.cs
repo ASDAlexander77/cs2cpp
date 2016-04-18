@@ -108,7 +108,7 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("*");
             }
 
-            this.Right.WriteTo(c);
+            c.WriteExpressionForWrappersIfNeeded(this.Right);
         }
     }
 }
