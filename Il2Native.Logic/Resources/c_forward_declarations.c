@@ -74,11 +74,11 @@ inline void* __new_set0(size_t _size, bool _is_atomic = false)
 {
 	auto mem = _size > 102400 
 		? _is_atomic 
-			? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
-			: GC_MALLOC_IGNORE_OFF_PAGE(_size) 
+		? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
+		: GC_MALLOC_IGNORE_OFF_PAGE(_size) 
 		: _is_atomic 
-			? GC_MALLOC_ATOMIC(_size) 
-			: GC_MALLOC(_size);
+		? GC_MALLOC_ATOMIC(_size) 
+		: GC_MALLOC(_size);
 	if (_is_atomic)
 	{
 		std::memset(mem, 0, _size);
@@ -180,8 +180,6 @@ struct __volatile_t
 public:
 
 	inline __volatile_t() { this->operator=(__default<T>()); }
-
-	inline __volatile_t(T _t) { this->operator=(_t); }
 
 	inline __volatile_t<T>& operator=(T value)
 	{
@@ -289,9 +287,10 @@ struct __static_volatile
 	T t;
 public:
 
-	inline __static_volatile() { this->operator=(__default<T>()); }
-
-	inline __static_volatile(T _t) { this->operator=(_t); }
+	inline __static_volatile() 
+	{ 
+		_interlocked_compare_exchange(&t,  __default<T>(), __default<T>()); 
+	}
 
 	inline void ensure_cctor_called()
 	{
