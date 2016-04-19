@@ -27,7 +27,7 @@ inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>:
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_exchange(T volatile* location1, T value)
 {
-	return (T) _InterlockedExchange((int32_t volatile*)location1, (int32_t)value);
+	return (T) _InterlockedExchange((long  volatile*)location1, (long)value);
 }
 
 template < typename T >
@@ -58,7 +58,7 @@ inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>:
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_compare_exchange(T volatile* location1, T value, T comparand)
 {
-	return (T) _InterlockedCompareExchange((uint32_t volatile*)location1, (uint32_t)value, (uint32_t)comparand);
+	return (T) _InterlockedCompareExchange((long volatile*)location1, (long)value, (long)comparand);
 }
 
 template < typename T >
