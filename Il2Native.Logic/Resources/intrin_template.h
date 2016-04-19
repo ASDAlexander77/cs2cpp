@@ -15,7 +15,7 @@ extern CoreLib::System::UIntPtr _interlocked_compare_exchange(CoreLib::System::U
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_exchange(T volatile* location1, T value)
 {
-	return (T) _InterlockedExchange8((int8_t volatile*)location1, (int8_t)value);
+	return (T) _InterlockedExchange8((uint8_t volatile*)location1, (uint8_t)value);
 }
 
 template < typename T >
@@ -46,7 +46,7 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type _interlocked_
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_compare_exchange(T volatile* location1, T value, T comparand)
 {
-	return (T) _InterlockedCompareExchange8((int8_t volatile*)location1, (int8_t)value, (int8_t)comparand);
+	return (T) _InterlockedCompareExchange8((uint8_t volatile*)location1, (uint8_t)value, (uint8_t)comparand);
 }
 
 template < typename T >
