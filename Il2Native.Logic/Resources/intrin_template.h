@@ -10,7 +10,6 @@ extern CoreLib::System::UIntPtr _interlocked_exchange(CoreLib::System::UIntPtr v
 extern CoreLib::System::UIntPtr _interlocked_compare_exchange(CoreLib::System::UIntPtr volatile* location1, CoreLib::System::UIntPtr value, CoreLib::System::UIntPtr comparand);
 
 #ifdef _MSC_VER
-#include <intrin.h>
 
 // InterlockedExchange
 template < typename T >
