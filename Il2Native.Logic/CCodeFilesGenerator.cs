@@ -268,6 +268,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 WriteSourceInclude(itw, identity);
 
                 itw.WriteLine(Resources.c_definitions);
+                itw.WriteLine(Resources.intrin);
                 itw.WriteLine(Resources.decimals);
 
                 itw.Close();
@@ -301,7 +302,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (isCoreLib)
                 {
                     itw.WriteLine(Resources.c_include);
-                    itw.WriteLine(Resources.intrin);
+                    itw.WriteLine(Resources.intrin_template);
                 }
                 else
                 {

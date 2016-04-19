@@ -269,6 +269,7 @@
     <Content Include="impl\System\TypedReference.cpp" />
     <Content Include="impl\System\TypeLoadException.cpp" />
     <Content Include="impl\System\Utf8String.cpp" />
+    <Content Include="Resources\intrin_template.h" />
     <None Include="Resources\intrin.cpp" />
     <None Include="Resources\c_template_definitions.c" />
   </ItemGroup>

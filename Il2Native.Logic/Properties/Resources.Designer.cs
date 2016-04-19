@@ -256,39 +256,46 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Decimals
-        ///extern &quot;C&quot; double pow(double value, double power);
-        ///extern &quot;C&quot; double fabs(double value);
+        ///   Looks up a localized string similar to #ifdef _MSC_VER
+        ///#include &lt;intrin.h&gt;
         ///
-        ///typedef union {
-        ///	uint64_t int64;
-        ///	struct {
-        ///#if BIGENDIAN
-        ///		uint32_t Hi;
-        ///		uint32_t Lo;
-        ///#else            
-        ///		uint32_t Lo;
-        ///		uint32_t Hi;
-        ///#endif           
-        ///	} u;
-        ///} SPLIT64__;
+        ///// InterlockedExchange
+        ///template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;sizeof(T) == 1 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///{
+        ///	return (T) _InterlockedExchange8((int8_t volatile*)location1, (int8_t)value);
+        ///}
         ///
-        ///typedef union{
-        ///	struct {
-        ///#if BIGENDIAN
-        ///		uint32_t sign : 1;
-        ///		uint32_t exp : 11;
-        ///		uint32_t mantHi : 20;
-        ///		uint32_t mantLo;
-        ///#else // BIGENDIAN
-        ///		uint32_t mantLo;
-        ///		uint32_t mantHi : 20;
-        ///		uint32_t exp : 11;
-        ///		 [rest of string was truncated]&quot;;.
+        ///template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;sizeof(T) == 2 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///{
+        ///	return (T) _InterlockedE [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin {
             get {
                 return ResourceManager.GetString("intrin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #ifdef _MSC_VER
+        ///#include &lt;intrin.h&gt;
+        ///
+        ///// InterlockedExchange
+        ///template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;sizeof(T) == 1 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///{
+        ///	return (T) _InterlockedExchange8((int8_t volatile*)location1, (int8_t)value);
+        ///}
+        ///
+        ///template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;sizeof(T) == 2 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///{
+        ///	return (T) _InterlockedE [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string intrin_template {
+            get {
+                return ResourceManager.GetString("intrin_template", resourceCulture);
             }
         }
     }
