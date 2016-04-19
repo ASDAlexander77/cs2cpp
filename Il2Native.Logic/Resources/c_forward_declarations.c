@@ -130,6 +130,18 @@ public:
 		operator++();
 		return tmp;
 	}
+	inline __enum& operator--()
+	{
+		// actual decrement takes place here
+		_value--;
+		return *this;
+	}
+	inline __enum operator--(int)
+	{
+		__enum tmp(*this);
+		operator--();
+		return tmp;
+	}
 };
 
 template <typename T> struct __unbound_generic_type
@@ -177,7 +189,7 @@ public:
 		return *this;
 	}
 
-	inline operator const T&()
+	inline operator T()
 	{
 		return t;
 	}
@@ -187,31 +199,26 @@ public:
 		return t;
 	}
 
-	inline T* operator &()
-	{
-		return &t;
-	}
-
-	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
 	{
 		t++;
 		return *this;
 	}
 
-	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D operator++(int)
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D operator++(int)
 	{
 		D tmp(*this);
 		operator++();
 		return tmp;
 	}
 
-	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator--()
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
 	{
 		t--;
 		return *this;
 	}
 
-	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<D>::value> > D operator--(int)
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D operator--(int)
 	{
 		D tmp(*this);
 		operator--();
@@ -269,14 +276,14 @@ public:
 		return &t;
 	}
 
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator++()
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
 	{
 		ensure_cctor_called();
 		t++;
 		return *this;
 	}
 
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator++(int)
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator++(int)
 	{
 		ensure_cctor_called();
 		D tmp(*this);
@@ -284,14 +291,14 @@ public:
 		return tmp;
 	}
 
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D& operator--()
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
 	{
 		ensure_cctor_called();
 		t--;
 		return *this;
 	}
 
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<D>::value> > D operator--(int)
+	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator--(int)
 	{
 		ensure_cctor_called();
 		D tmp(*this);
