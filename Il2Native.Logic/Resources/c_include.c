@@ -36,7 +36,6 @@
 #endif
 
 #ifdef HAVE_CONFIG_H
-  /* For PARALLEL_MARK */
 # include "config.h"
 #endif
 
@@ -49,7 +48,6 @@
 #endif
 
 #include "gc.h"
-#include "gc_backptr.h"
 #include "javaxfc.h"
 #undef min
 #undef max

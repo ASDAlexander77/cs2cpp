@@ -179,24 +179,24 @@ struct __volatile_t
 	T t;
 public:
 
-	inline __volatile_t() : t(__default<T>()) {}
+	inline __volatile_t() { this->operator=(__default<T>()); }
 
-	inline __volatile_t(T _t) : t(_t) {}
+	inline __volatile_t(T _t) { this->operator=(_t); }
 
 	inline __volatile_t<T>& operator=(T value)
 	{
-		t = value;
+		_interlocked_compare_exchange(&t, value, __default<T>());
 		return *this;
 	}
 
 	inline operator T()
 	{
-		return t;
+		return _interlocked_exchange(&t, __default<T>());
 	}
 
-	inline T& operator ->()
+	inline T operator ->()
 	{
-		return t;
+		return _interlocked_exchange(&t, __default<T>());
 	}
 
 	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
@@ -227,7 +227,7 @@ public:
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
 	{
-		return (D)t;
+		return (D) operator T();
 	}
 };
 
@@ -264,7 +264,7 @@ public:
 		return t;
 	}
 
-	inline T& operator ->()
+	inline T operator ->()
 	{
 		ensure_cctor_called();
 		return t;
@@ -274,36 +274,6 @@ public:
 	{
 		ensure_cctor_called();
 		return &t;
-	}
-
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
-	{
-		ensure_cctor_called();
-		t++;
-		return *this;
-	}
-
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator++(int)
-	{
-		ensure_cctor_called();
-		D tmp(*this);
-		operator++();
-		return tmp;
-	}
-
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
-	{
-		ensure_cctor_called();
-		t--;
-		return *this;
-	}
-
-	template <typename D = __static<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator--(int)
-	{
-		ensure_cctor_called();
-		D tmp(*this);
-		operator--();
-		return tmp;
 	}
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()

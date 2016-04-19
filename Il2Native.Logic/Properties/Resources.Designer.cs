@@ -89,13 +89,35 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // String literal
-        ///string* operator &quot;&quot; _s(const wchar_t* ptr, size_t length)
+        ///   Looks up a localized string similar to __object_extras_storage __object_extras_storage_instance;
+        ///__strings_storage __strings_storage_instance;
+        ///
+        ///void GC_CALLBACK __finalizer(void * obj, void * client_data)
         ///{
-        ///	auto result = string::FastAllocateString(length);
-        ///	std::wcsncpy(&amp;result-&gt;m_firstChar, ptr, length);
-        ///	return result;
-        ///}.
+        ///	if (obj == nullptr)
+        ///	{
+        ///		return;
+        ///	}
+        ///
+        ///	((object*)obj)-&gt;Finalize();
+        ///}
+        ///
+        ///int32_t __hash_code(object* _obj, size_t _size)
+        ///{
+        ///	if (_obj == nullptr)
+        ///	{
+        ///		return 0;
+        ///	}
+        ///
+        ///	auto bytes = (int8_t*) _obj;
+        ///
+        ///	const int32_t p = 16777619;
+        ///	auto hash = 2166136261;
+        ///
+        ///	for (int i = 0; i &lt; _size; i++)
+        ///	{
+        ///		hash = (hash ^ bytes[i]) * p;
+        ///	 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_definitions {
             get {
@@ -137,16 +159,17 @@ namespace Il2Native.Logic.Properties {
         ///#include &lt;numeric&gt;
         ///#include &lt;atomic&gt;
         ///#include &lt;thread&gt;
+        ///#include &lt;chrono&gt; 
+        ///#include &lt;unordered_map&gt;
+        ///#include &lt;mutex&gt;
+        ///#include &lt;shared_mutex&gt;
+        ///#include &lt;condition_variable&gt;
+        ///#include &lt;atomic&gt;
         ///
         ///#ifndef thread_local
         ///# if __STDC_VERSION__ &gt;= 201112 &amp;&amp; !defined __STDC_NO_THREADS__
         ///#  define thread_local _Thread_local
-        ///# elif defined _WIN32 &amp;&amp; ( \
-        ///       defined _MSC_VER || \
-        ///       defined __ICL || \
-        ///       defined __DMC__ || \
-        ///       defined __BORLANDC__ )
-        ///#  defin [rest of string was truncated]&quot;;.
+        ///# elif defined _ [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_include {
             get {
@@ -229,6 +252,43 @@ namespace Il2Native.Logic.Properties {
             get {
                 object obj = ResourceManager.GetObject("Impl", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to // Decimals
+        ///extern &quot;C&quot; double pow(double value, double power);
+        ///extern &quot;C&quot; double fabs(double value);
+        ///
+        ///typedef union {
+        ///	uint64_t int64;
+        ///	struct {
+        ///#if BIGENDIAN
+        ///		uint32_t Hi;
+        ///		uint32_t Lo;
+        ///#else            
+        ///		uint32_t Lo;
+        ///		uint32_t Hi;
+        ///#endif           
+        ///	} u;
+        ///} SPLIT64__;
+        ///
+        ///typedef union{
+        ///	struct {
+        ///#if BIGENDIAN
+        ///		uint32_t sign : 1;
+        ///		uint32_t exp : 11;
+        ///		uint32_t mantHi : 20;
+        ///		uint32_t mantLo;
+        ///#else // BIGENDIAN
+        ///		uint32_t mantLo;
+        ///		uint32_t mantHi : 20;
+        ///		uint32_t exp : 11;
+        ///		 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string intrin {
+            get {
+                return ResourceManager.GetString("intrin", resourceCulture);
             }
         }
     }
