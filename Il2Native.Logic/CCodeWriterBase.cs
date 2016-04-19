@@ -230,11 +230,21 @@ namespace Il2Native.Logic
 
                 if (!doNotWrapStatic)
                 {
-                    this.TextSpan("__static<");
+                    if (fieldSymbol.IsSupportedVolatile())
+                    {
+                        this.TextSpan("__static_volatile<");
+                    }
+                    else
+                    {
+                        this.TextSpan("__static<");
+                    }
+                }
+                else if (fieldSymbol.IsSupportedVolatile())
+                {
+                    this.TextSpan("__volatile_t<");
                 }
             }
-
-            if (fieldSymbol.IsSupportedVolatile())
+            else if (fieldSymbol.IsSupportedVolatile())
             {
                 this.TextSpan("__volatile_t<");
             }
@@ -249,16 +259,22 @@ namespace Il2Native.Logic
                 this.WriteType(fieldSymbol.Type);
             }
 
-            if (fieldSymbol.IsSupportedVolatile())
+            if (fieldSymbol.IsStatic)
             {
-                this.TextSpan(">");
+                if (!doNotWrapStatic)
+                {
+                    this.TextSpan(",");
+                    this.WhiteSpace();
+                    this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                    this.TextSpan(">");
+                }
+                else if (fieldSymbol.IsSupportedVolatile())
+                {
+                    this.TextSpan(">");
+                }
             }
-
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            else if (fieldSymbol.IsSupportedVolatile())
             {
-                this.TextSpan(",");
-                this.WhiteSpace();
-                this.WriteType(fieldSymbol.ContainingType, true, true, true);
                 this.TextSpan(">");
             }
 
@@ -287,28 +303,46 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            if (fieldSymbol.IsStatic)
             {
-                this.TextSpan("__static<");
+                if (!doNotWrapStatic)
+                {
+                    if (fieldSymbol.IsSupportedVolatile())
+                    {
+                        this.TextSpan("__static_volatile<");
+                    }
+                    else
+                    {
+                        this.TextSpan("__static<");
+                    }
+                }
+                else if (fieldSymbol.IsSupportedVolatile())
+                {
+                    this.TextSpan("__volatile_t<");
+                }
             }
-
-            if (fieldSymbol.IsSupportedVolatile())
+            else if (fieldSymbol.IsSupportedVolatile())
             {
                 this.TextSpan("__volatile_t<");
             }
 
             this.WriteType(fieldSymbol.Type);
-
-            if (fieldSymbol.IsSupportedVolatile())
+            if (fieldSymbol.IsStatic)
             {
-                this.TextSpan(">");
+                if (!doNotWrapStatic)
+                {
+                    this.TextSpan(",");
+                    this.WhiteSpace();
+                    this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                    this.TextSpan(">");
+                }
+                else if (fieldSymbol.IsSupportedVolatile())
+                {
+                    this.TextSpan(">");
+                }
             }
-
-            if (fieldSymbol.IsStatic && !doNotWrapStatic)
+            else if (fieldSymbol.IsSupportedVolatile())
             {
-                this.TextSpan(",");
-                this.WhiteSpace();
-                this.WriteType(fieldSymbol.ContainingType, true, true, true);
                 this.TextSpan(">");
             }
 
@@ -320,7 +354,7 @@ namespace Il2Native.Logic
                 this.WriteNamespace(fieldSymbol.ContainingNamespace);
                 this.TextSpan("::");
             }
-            */ 
+            */
 
             var receiverType = fieldSymbol.ContainingType;
             this.WriteTypeName(receiverType, false);
@@ -561,7 +595,7 @@ namespace Il2Native.Logic
                     this.NewLine();
                 }
             }
-            
+
             if (declarationWithingClass)
             {
                 if (!methodSymbol.IsExternDeclaration())

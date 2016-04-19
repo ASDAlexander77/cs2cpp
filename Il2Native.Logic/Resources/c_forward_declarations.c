@@ -283,6 +283,82 @@ public:
 	}
 };
 
+template< typename T, typename C >
+struct __static_volatile
+{
+	T t;
+public:
+
+	inline __static_volatile() { this->operator=(__default<T>()); }
+
+	inline __static_volatile(T _t) { this->operator=(_t); }
+
+	inline void ensure_cctor_called()
+	{
+		if (!C::_cctor_called)
+		{
+			C::_cctor_lock.lock();
+			if (!C::_cctor_called && !C::_cctor_being_called)
+			{
+				C::_cctor();
+			}
+
+			C::_cctor_lock.unlock();
+		}
+	}
+
+	inline __static_volatile<T, C>& operator=(T value)
+	{
+		ensure_cctor_called();
+		_interlocked_compare_exchange(&t, value, __default<T>());
+		return *this;
+	}
+
+	inline operator T()
+	{
+		ensure_cctor_called();
+		return _interlocked_exchange(&t, __default<T>());
+	}
+
+	inline T operator ->()
+	{
+		ensure_cctor_called();
+		return _interlocked_exchange(&t, __default<T>());
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
+	{
+		t++;
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator++(int)
+	{
+		D tmp(*this);
+		operator++();
+		return tmp;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
+	{
+		t--;
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D operator--(int)
+	{
+		D tmp(*this);
+		operator--();
+		return tmp;
+	}
+
+	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
+	{
+		ensure_cctor_called();
+		return (D) operator T();
+	}
+};
+
 // object cast (interface etc)
 template <typename T> 
 inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
