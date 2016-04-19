@@ -15,7 +15,7 @@ extern CoreLib::System::UIntPtr _interlocked_compare_exchange(CoreLib::System::U
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_exchange(T volatile* location1, T value)
 {
-	return (T) _InterlockedExchange8((uint8_t volatile*)location1, (uint8_t)value);
+	return (T) _InterlockedExchange8((char volatile*)location1, (char)value);
 }
 
 template < typename T >
@@ -46,7 +46,7 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type _interlocked_
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_compare_exchange(T volatile* location1, T value, T comparand)
 {
-	return (T) _InterlockedCompareExchange8((uint8_t volatile*)location1, (uint8_t)value, (uint8_t)comparand);
+	return (T) _InterlockedCompareExchange8((char volatile*)location1, (char)value, (char)comparand);
 }
 
 template < typename T >
@@ -58,7 +58,7 @@ inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>:
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_compare_exchange(T volatile* location1, T value, T comparand)
 {
-	return (T) _InterlockedCompareExchange((int32_t volatile*)location1, (int32_t)value, (int32_t)comparand);
+	return (T) _InterlockedCompareExchange((uint32_t volatile*)location1, (uint32_t)value, (uint32_t)comparand);
 }
 
 template < typename T >
