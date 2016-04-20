@@ -43,7 +43,7 @@ int64_t CoreLib::System::Threading::Interlocked::Decrement_Ref(int64_t& location
 int32_t CoreLib::System::Threading::Interlocked::Exchange_Ref(int32_t& location1, int32_t value)
 {
 #ifdef _MSC_VER
-	return InterlockedExchange((int32_t volatile*)&location1, value);
+	return InterlockedExchange((LONG volatile*)&location1, value);
 #else
 	__sync_synchronize();
 	return __sync_lock_test_and_set((int32_t volatile*)&location1, value);
@@ -87,7 +87,7 @@ CoreLib::System::IntPtr CoreLib::System::Threading::Interlocked::Exchange_Ref(Co
 int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref(int32_t& location1, int32_t value, int32_t comparand)
 {
 #ifdef _MSC_VER
-	return InterlockedCompareExchange((int32_t volatile*)&location1, value, comparand);
+	return InterlockedCompareExchange((LONG volatile*)&location1, value, comparand);
 #else
 	return __sync_val_compare_and_swap((int32_t volatile*)&location1, comparand, value);
 #endif
@@ -128,7 +128,7 @@ int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(int32_t
 {
 #ifdef _MSC_VER
 	int32_t val = *(int32_t*)location1;
-	int32_t val_after = InterlockedCompareExchange((int32_t volatile*)&location1, value, comparand);
+	int32_t val_after = InterlockedCompareExchange((LONG volatile*)&location1, value, comparand);
 	succeeded = val != val_after;
 	return val_after;
 #else
@@ -142,7 +142,7 @@ int32_t CoreLib::System::Threading::Interlocked::CompareExchange_Ref_Ref(int32_t
 int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t& location1, int32_t value)
 {
 #ifdef _MSC_VER
-	return InterlockedExchangeAdd((int32_t volatile*)&location1, value);
+	return InterlockedExchangeAdd((LONG volatile*)&location1, value);
 #else
 	return __sync_fetch_and_add((int32_t volatile*)&location1, value);
 #endif
