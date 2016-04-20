@@ -61,7 +61,7 @@ namespace Il2Native.Logic.DOM2
                     var pointerIndirect = this.ReceiverOpt as PointerIndirectionOperator;
                     if (pointerIndirect != null)
                     {
-                        c.WriteExpressionInParenthesesIfNeeded(pointerIndirect.Operand);
+                        c.WriteWrappedExpressionIfNeeded(pointerIndirect.Operand);
                         c.TextSpan("->");
                         c.WriteName(this.Field);
                         return;
@@ -76,7 +76,7 @@ namespace Il2Native.Logic.DOM2
                                                                ((Conversion)this.ReceiverOpt).ConversionKind == ConversionKind.Unboxing;
                     if (primitiveValueAccess)
                     {
-                        c.WriteExpressionInParenthesesIfNeeded(this.ReceiverOpt);
+                        c.WriteWrappedExpressionIfNeeded(this.ReceiverOpt);
                         return;
                     }
                     else

@@ -114,19 +114,19 @@ namespace Il2Native.Logic.DOM2
             if (reminder)
             {
                 c.TextSpan("std::remainder(");
-                c.WriteExpressionForWrappersIfNeeded(this.Left);
+                c.WriteWrappedExpressionIfNeeded(this.Left);
                 c.TextSpan(",");
                 c.WhiteSpace();
-                c.WriteExpressionForWrappersIfNeeded(this.Right);
+                c.WriteWrappedExpressionIfNeeded(this.Right);
                 c.TextSpan(")");
             }
             else
             {
-                c.WriteExpressionForWrappersIfNeeded(this.Left);
+                c.WriteWrappedExpressionIfNeeded(this.Left);
                 c.WhiteSpace();
                 this.WriteOperator(c);
                 c.WhiteSpace();
-                c.WriteExpressionForWrappersIfNeeded(this.Right);
+                c.WriteWrappedExpressionIfNeeded(this.Right);
             }
 
             if (castOfResult)

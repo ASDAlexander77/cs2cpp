@@ -67,7 +67,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+            c.WriteWrappedExpressionIfNeeded(this.Operand);
             c.TextSpan("[");
             this.Index.WriteTo(c);
             c.TextSpan("]");

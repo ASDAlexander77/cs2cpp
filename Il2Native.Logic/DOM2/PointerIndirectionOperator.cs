@@ -24,7 +24,7 @@ namespace Il2Native.Logic.DOM2
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("*");
-            c.WriteExpressionInParenthesesIfNeeded(this.Operand);
+            c.WriteWrappedExpressionIfNeeded(this.Operand);
         }
     }
 }

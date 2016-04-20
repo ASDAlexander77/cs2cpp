@@ -33,7 +33,7 @@ namespace Il2Native.Logic.DOM2
             this.TargetType.WriteTo(c);
             c.TextSpan(">");
             c.TextSpan("(");
-            c.WriteExpressionForWrappersIfNeeded(this.Operand);
+            c.WriteWrappedExpressionIfNeeded(this.Operand);
             c.TextSpan(")");
         }
     }

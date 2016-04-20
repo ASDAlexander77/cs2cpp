@@ -38,7 +38,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteExpressionInParenthesesIfNeeded(this.ReceiverOpt);
+            c.WriteWrappedExpressionIfNeeded(this.ReceiverOpt);
             switch (this.AccessType)
             {
                 case AccessTypes.Dot:

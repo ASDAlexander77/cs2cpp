@@ -50,7 +50,7 @@ namespace Il2Native.Logic.DOM2
             if (!this.JumpIfTrue)
             {
                 c.TextSpan("!");
-                c.WriteExpressionInParenthesesIfNeeded(this.Condition);
+                c.WriteWrappedExpressionIfNeeded(this.Condition);
             }
             else
             {

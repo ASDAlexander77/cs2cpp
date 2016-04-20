@@ -131,7 +131,7 @@ namespace Il2Native.Logic.DOM2
                     }
                     else
                     {
-                        c.WriteExpressionInParenthesesIfNeeded(receiverOpt);
+                        c.WriteWrappedExpressionIfNeeded(receiverOpt);
                     }
                 }
 

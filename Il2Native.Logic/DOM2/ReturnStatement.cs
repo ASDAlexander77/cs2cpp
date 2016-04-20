@@ -51,7 +51,7 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("*");
                 }
 
-                c.WriteExpressionForWrappersIfNeeded(this.ExpressionOpt);
+                c.WriteWrappedExpressionIfNeeded(this.ExpressionOpt);
             }
 
             base.WriteTo(c);

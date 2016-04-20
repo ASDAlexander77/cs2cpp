@@ -28,19 +28,19 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteExpressionInParenthesesIfNeeded(this.Condition);
+            c.WriteWrappedExpressionIfNeeded(this.Condition);
 
             c.WhiteSpace();
             c.TextSpan("?");
             c.WhiteSpace();
 
-            this.Consequence.WriteTo(c);
+            c.WriteWrappedExpressionIfNeeded(this.Consequence);
 
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
 
-            this.Alternative.WriteTo(c);
+            c.WriteWrappedExpressionIfNeeded(this.Alternative);
         }
     }
 }

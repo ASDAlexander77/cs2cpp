@@ -72,7 +72,7 @@ namespace Il2Native.Logic.DOM2
                     receiverOpt = new ThisReference();
                 }
 
-                c.WriteExpressionForWrappersIfNeeded(receiverOpt);
+                c.WriteWrappedExpressionIfNeeded(receiverOpt);
                 c.TextSpan(",");
                 c.WhiteSpace();
             }
