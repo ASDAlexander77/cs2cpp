@@ -149,7 +149,6 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type _interlocked_
 }
 
 // InterlockedCompareExchange
-template < typename T >
 inline bool _interlocked_compare_exchange(bool volatile* location1, bool value, bool comparand)
 {
 	return (bool) InterlockedCompareExchange16((int16_t volatile*)location1, (int16_t)value, (int16_t)comparand);

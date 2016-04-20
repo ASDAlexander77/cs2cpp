@@ -176,7 +176,7 @@ inline typename std::enable_if<std::is_void<T>::value, T>::type __default()
 template< typename T >
 struct __volatile_t 
 {
-	T t;
+	volatile T t;
 public:
 
 	inline __volatile_t() { this->operator=(__default<T>()); }
@@ -314,7 +314,7 @@ public:
 template< typename T, typename C >
 struct __static_volatile
 {
-	T t;
+	volatile T t;
 public:
 
 	inline __static_volatile() 
