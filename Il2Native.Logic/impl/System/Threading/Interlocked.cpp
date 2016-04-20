@@ -3,7 +3,7 @@
 int32_t CoreLib::System::Threading::Interlocked::Increment_Ref(int32_t& location)
 {
 #ifdef _MSC_VER
-	return (int32_t) InterlockedIncrement((int32_t volatile*)&location);
+	return (int32_t) InterlockedIncrement((LONG volatile*)&location);
 #else
 	return __sync_add_and_fetch((int32_t volatile*)&location, 1);
 #endif

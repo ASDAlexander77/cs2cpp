@@ -304,6 +304,62 @@ public:
 		return &t;
 	}
 
+	inline __static<T, C>& operator+=(T value)
+	{
+		ensure_cctor_called();
+		t += value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator-=(T value)
+	{
+		ensure_cctor_called();
+		t -= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator*=(T value)
+	{
+		ensure_cctor_called();
+		t *= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator/=(T value)
+	{
+		ensure_cctor_called();
+		t /= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator%=(T value)
+	{
+		ensure_cctor_called();
+		t %= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator|=(T value)
+	{
+		ensure_cctor_called();
+		t |= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator&=(T value)
+	{
+		ensure_cctor_called();
+		t &= value;
+		return *this;
+	}
+
+	inline __static<T, C>& operator^=(T value)
+	{
+		ensure_cctor_called();
+		t ^= value;
+		return *this;
+	}
+
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
 	{
 		ensure_cctor_called();
