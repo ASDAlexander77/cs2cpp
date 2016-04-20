@@ -125,6 +125,7 @@
     <Compile Include="DOM2\TypeDefStatement.cs" />
     <Compile Include="DOM2\TypeExpression.cs" />
     <Compile Include="DOM2\TypeOfOperator.cs" />
+    <Compile Include="DOM2\UnaryAssignmentOperator.cs" />
     <Compile Include="DOM2\UnaryOperator.cs" />
     <Compile Include="DOM2\VariableDeclaration.cs" />
     <Compile Include="DOM2\WhileStatement.cs" />

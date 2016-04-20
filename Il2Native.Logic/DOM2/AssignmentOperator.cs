@@ -3,6 +3,8 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -68,6 +70,13 @@ namespace Il2Native.Logic.DOM2
             {
                 this.TypeDeclaration = true;
             }
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Left.Visit(visitor);
+            this.Right.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

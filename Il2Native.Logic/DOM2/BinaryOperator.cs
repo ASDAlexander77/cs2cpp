@@ -20,6 +20,87 @@ namespace Il2Native.Logic.DOM2
 
         internal BinaryOperatorKind OperatorKind { get; set; }
 
+        internal static void WriteOperator(CCodeWriterBase c, BinaryOperatorKind binaryOperatorKind)
+        {
+            switch (GetOperatorKind(binaryOperatorKind))
+            {
+                case BinaryOperatorKind.Multiplication:
+                    c.TextSpan("*");
+                    break;
+
+                case BinaryOperatorKind.Addition:
+                    c.TextSpan("+");
+                    break;
+
+                case BinaryOperatorKind.Subtraction:
+                    c.TextSpan("-");
+                    break;
+
+                case BinaryOperatorKind.Division:
+                    c.TextSpan("/");
+                    break;
+
+                case BinaryOperatorKind.Remainder:
+                    c.TextSpan("%");
+                    break;
+
+                case BinaryOperatorKind.LeftShift:
+                    c.TextSpan("<<");
+                    break;
+
+                case BinaryOperatorKind.RightShift:
+                    c.TextSpan(">>");
+                    break;
+
+                case BinaryOperatorKind.Equal:
+                    c.TextSpan("==");
+                    break;
+
+                case BinaryOperatorKind.NotEqual:
+                    c.TextSpan("!=");
+                    break;
+
+                case BinaryOperatorKind.GreaterThan:
+                    c.TextSpan(">");
+                    break;
+
+                case BinaryOperatorKind.LessThan:
+                    c.TextSpan("<");
+                    break;
+
+                case BinaryOperatorKind.GreaterThanOrEqual:
+                    c.TextSpan(">=");
+                    break;
+
+                case BinaryOperatorKind.LessThanOrEqual:
+                    c.TextSpan("<=");
+                    break;
+
+                case BinaryOperatorKind.And:
+                    c.TextSpan("&");
+                    break;
+
+                case BinaryOperatorKind.Xor:
+                    c.TextSpan("^");
+                    break;
+
+                case BinaryOperatorKind.Or:
+                    c.TextSpan("|");
+                    break;
+
+                case BinaryOperatorKind.LogicalAnd:
+                    c.TextSpan("&&");
+                    break;
+
+                case BinaryOperatorKind.LogicalOr:
+                    c.TextSpan("||");
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         internal void Parse(BoundBinaryOperator boundBinaryOperator)
         {
             base.Parse(boundBinaryOperator);
@@ -203,83 +284,7 @@ namespace Il2Native.Logic.DOM2
 
         private void WriteOperator(CCodeWriterBase c)
         {
-            switch (GetOperatorKind(this.OperatorKind))
-            {
-                case BinaryOperatorKind.Multiplication:
-                    c.TextSpan("*");
-                    break;
-
-                case BinaryOperatorKind.Addition:
-                    c.TextSpan("+");
-                    break;
-
-                case BinaryOperatorKind.Subtraction:
-                    c.TextSpan("-");
-                    break;
-
-                case BinaryOperatorKind.Division:
-                    c.TextSpan("/");
-                    break;
-
-                case BinaryOperatorKind.Remainder:
-                    c.TextSpan("%");
-                    break;
-
-                case BinaryOperatorKind.LeftShift:
-                    c.TextSpan("<<");
-                    break;
-
-                case BinaryOperatorKind.RightShift:
-                    c.TextSpan(">>");
-                    break;
-
-                case BinaryOperatorKind.Equal:
-                    c.TextSpan("==");
-                    break;
-
-                case BinaryOperatorKind.NotEqual:
-                    c.TextSpan("!=");
-                    break;
-
-                case BinaryOperatorKind.GreaterThan:
-                    c.TextSpan(">");
-                    break;
-
-                case BinaryOperatorKind.LessThan:
-                    c.TextSpan("<");
-                    break;
-
-                case BinaryOperatorKind.GreaterThanOrEqual:
-                    c.TextSpan(">=");
-                    break;
-
-                case BinaryOperatorKind.LessThanOrEqual:
-                    c.TextSpan("<=");
-                    break;
-
-                case BinaryOperatorKind.And:
-                    c.TextSpan("&");
-                    break;
-
-                case BinaryOperatorKind.Xor:
-                    c.TextSpan("^");
-                    break;
-
-                case BinaryOperatorKind.Or:
-                    c.TextSpan("|");
-                    break;
-
-                case BinaryOperatorKind.LogicalAnd:
-                    c.TextSpan("&&");
-                    break;
-
-                case BinaryOperatorKind.LogicalOr:
-                    c.TextSpan("||");
-                    break;
-
-                default:
-                    throw new NotImplementedException();
-            }
+            WriteOperator(c, this.OperatorKind);
         }
     }
 }

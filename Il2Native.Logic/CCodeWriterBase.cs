@@ -177,7 +177,7 @@ namespace Il2Native.Logic
 
             var parenthesis = expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
-                              expression is UnaryOperator || expression is ConditionalOperator ||
+                              expression is UnaryOperator || expression is UnaryAssignmentOperator || expression is ConditionalOperator ||
                               expression is AssignmentOperator;
 
             var conversion = expression as Conversion;

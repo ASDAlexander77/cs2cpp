@@ -199,7 +199,7 @@ public:
 
 	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
 	{
-		t++;
+		_interlocked_add(&t, 1);
 		return *this;
 	}
 
@@ -212,7 +212,7 @@ public:
 
 	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
 	{
-		t--;
+		_interlocked_sub(&t, 1);
 		return *this;
 	}
 
@@ -327,7 +327,7 @@ public:
 
 	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
 	{
-		t++;
+		_interlocked_add(&t, 1);
 		return *this;
 	}
 
@@ -340,7 +340,7 @@ public:
 
 	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
 	{
-		t--;
+		_interlocked_sub(&t, 1);
 		return *this;
 	}
 

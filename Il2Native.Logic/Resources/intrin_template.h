@@ -11,6 +11,32 @@ extern CoreLib::System::UIntPtr _interlocked_compare_exchange(CoreLib::System::U
 
 #ifdef _MSC_VER
 
+// InterlockedAdd
+template < typename T >
+inline typename std::enable_if<sizeof(T) <= 4 && !std::is_pointer<T>::value, T>::type _interlocked_add(T volatile* location1, T value)
+{
+	return (T) _InterlockedAdd((long  volatile*)location1, (long)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>::type _interlocked_add(T volatile* location1, T value)
+{
+	return (T) _InterlockedAddLargeStatistic((int64_t volatile*)location1, (int64_t)value);
+}
+
+// InterlockedSub
+template < typename T >
+inline typename std::enable_if<sizeof(T) <= 4 && !std::is_pointer<T>::value, T>::type _interlocked_sub(T volatile* location1, T value)
+{
+	return (T) _InterlockedAdd((long  volatile*)location1, -((long)value));
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>::type _interlocked_sub(T volatile* location1, T value)
+{
+	return (T) _InterlockedAddLargeStatistic((int64_t volatile*)location1, -((int64_t)value));
+}
+
 // InterlockedExchange
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_exchange(T volatile* location1, T value)
@@ -76,10 +102,22 @@ inline typename std::enable_if<std::is_pointer<T>::value, T>::type _interlocked_
 #else // _MSC_VER
 
 template < typename T >
+inline T _interlocked_add(T volatile* location1, T value)
+{
+	return (T) __sync_add_and_fetch(location1, value);
+}
+
+template < typename T >
+inline T _interlocked_sub(T volatile* location1, T value)
+{
+	return (T) __sync_add_and_fetch(location1, -value);
+}
+
+template < typename T >
 inline T _interlocked_exchange(T volatile* location1, T value)
 {
 	__sync_synchronize();
-	return __sync_lock_test_and_set(location1, (T)value);
+	return __sync_lock_test_and_set(location1, value);
 }
 
 template < typename T >

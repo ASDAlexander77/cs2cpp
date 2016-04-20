@@ -301,6 +301,12 @@ namespace Il2Native.Logic.DOM2
             var boundAssignmentOperator = boundBody as BoundAssignmentOperator;
             if (boundAssignmentOperator != null)
             {
+                var unaryAssignmentOperator = new UnaryAssignmentOperator();
+                if (unaryAssignmentOperator.Parse(boundAssignmentOperator))
+                {
+                    return unaryAssignmentOperator;
+                }
+
                 var assignmentOperator = new AssignmentOperator();
                 assignmentOperator.Parse(boundAssignmentOperator);
                 return assignmentOperator;
