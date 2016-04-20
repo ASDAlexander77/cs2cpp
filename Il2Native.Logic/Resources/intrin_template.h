@@ -37,6 +37,81 @@ inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>:
 	return (T) _InterlockedAddLargeStatistic((int64_t volatile*)location1, -((int64_t)value));
 }
 
+// InterlockedAnd
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_and(T volatile* location1, T value)
+{
+	return (T) _InterlockedAnd8((char volatile*)location1, (char)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>::type _interlocked_and(T volatile* location1, T value)
+{
+	return (T) _InterlockedAnd16((int16_t volatile*)location1, (int16_t)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_and(T volatile* location1, T value)
+{
+	return (T) _InterlockedAnd((long  volatile*)location1, (long)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>::type _interlocked_and(T volatile* location1, T value)
+{
+	return (T) _InterlockedAnd64((int64_t volatile*)location1, (int64_t)value);
+}
+
+// InterlockedOr
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_or(T volatile* location1, T value)
+{
+	return (T) _InterlockedOr8((char volatile*)location1, (char)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>::type _interlocked_or(T volatile* location1, T value)
+{
+	return (T) _InterlockedOr16((int16_t volatile*)location1, (int16_t)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_or(T volatile* location1, T value)
+{
+	return (T) _InterlockedOr((long  volatile*)location1, (long)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>::type _interlocked_or(T volatile* location1, T value)
+{
+	return (T) _InterlockedOr64((int64_t volatile*)location1, (int64_t)value);
+}
+
+// InterlockedXor
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_xor(T volatile* location1, T value)
+{
+	return (T) _InterlockedXor8((char volatile*)location1, (char)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 2 && !std::is_pointer<T>::value, T>::type _interlocked_xor(T volatile* location1, T value)
+{
+	return (T) _InterlockedXor16((int16_t volatile*)location1, (int16_t)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 4 && !std::is_pointer<T>::value, T>::type _interlocked_xor(T volatile* location1, T value)
+{
+	return (T) _InterlockedXor((long  volatile*)location1, (long)value);
+}
+
+template < typename T >
+inline typename std::enable_if<sizeof(T) == 8 && !std::is_pointer<T>::value, T>::type _interlocked_xor(T volatile* location1, T value)
+{
+	return (T) _InterlockedXor64((int64_t volatile*)location1, (int64_t)value);
+}
+
 // InterlockedExchange
 template < typename T >
 inline typename std::enable_if<sizeof(T) == 1 && !std::is_pointer<T>::value, T>::type _interlocked_exchange(T volatile* location1, T value)
@@ -111,6 +186,24 @@ template < typename T >
 inline T _interlocked_sub(T volatile* location1, T value)
 {
 	return (T) __sync_add_and_fetch(location1, -value);
+}
+
+template < typename T >
+inline T _interlocked_and(T volatile* location1, T value)
+{
+	return (T) __sync_and_and_fetch(location1, -value);
+}
+
+template < typename T >
+inline T _interlocked_or(T volatile* location1, T value)
+{
+	return (T) __sync_or_and_fetch(location1, -value);
+}
+
+template < typename T >
+inline T _interlocked_xor(T volatile* location1, T value)
+{
+	return (T) __sync_xor_and_fetch(location1, -value);
 }
 
 template < typename T >
