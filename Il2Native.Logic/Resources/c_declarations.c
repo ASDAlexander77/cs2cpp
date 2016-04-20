@@ -702,3 +702,24 @@ inline T operator ~(T left)
 	typedef typename std::underlying_type<T>::type U;
 	return (T) ~((U) left);
 }
+
+template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
+inline T operator |=(T& left, T right)
+{
+	typedef typename std::underlying_type<T>::type U;
+	return left = (T) (left | right);
+}
+
+template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
+inline T operator &=(T& left, T right)
+{
+	typedef typename std::underlying_type<T>::type U;
+	return left = (T) (left & right);
+}
+
+template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
+inline T operator ^=(T& left, T right)
+{
+	typedef typename std::underlying_type<T>::type U;
+	return left = (T) (left ^ right);
+}

@@ -223,6 +223,36 @@ public:
 		return tmp;
 	}
 
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator+=(T other)
+	{
+		_interlocked_add(&t, other);
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator-=(T other)
+	{
+		_interlocked_sub(&t, other);
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator|=(T other)
+	{
+		_interlocked_or(&t, other);
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator&=(T other)
+	{
+		_interlocked_and(&t, other);
+		return *this;
+	}
+
+	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator^=(T other)
+	{
+		_interlocked_xor(&t, other);
+		return *this;
+	}
+
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
 	{
 		return (D) operator T();
@@ -327,6 +357,7 @@ public:
 
 	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
 	{
+		ensure_cctor_called();
 		_interlocked_add(&t, 1);
 		return *this;
 	}
@@ -340,6 +371,7 @@ public:
 
 	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator--()
 	{
+		ensure_cctor_called();
 		_interlocked_sub(&t, 1);
 		return *this;
 	}
@@ -349,6 +381,41 @@ public:
 		D tmp(*this);
 		operator--();
 		return tmp;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator+=(T other)
+	{
+		ensure_cctor_called();
+		_interlocked_add(&t, other);
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator-=(T other)
+	{
+		ensure_cctor_called();
+		_interlocked_sub(&t, other);
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator|=(T other)
+	{
+		ensure_cctor_called();
+		_interlocked_or(&t, other);
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator&=(T other)
+	{
+		ensure_cctor_called();
+		_interlocked_and(&t, other);
+		return *this;
+	}
+
+	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator^=(T other)
+	{
+		ensure_cctor_called();
+		_interlocked_xor(&t, other);
+		return *this;
 	}
 
 	template <typename D, class = typename std::enable_if<std::is_enum<T>::value && std::is_integral<D>::value> > inline explicit operator D()
