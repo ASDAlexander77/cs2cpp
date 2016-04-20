@@ -17,7 +17,7 @@
 #include <atomic>
 
 #ifdef _MSC_VER
-#include <intrin.h>
+#include <Windows.h>
 #endif
 
 #ifndef thread_local
