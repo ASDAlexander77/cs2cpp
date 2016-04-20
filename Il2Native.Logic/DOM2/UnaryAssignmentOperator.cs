@@ -5,6 +5,7 @@ namespace Il2Native.Logic.DOM2
 {
     using System;
 
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class UnaryAssignmentOperator : Expression
@@ -61,6 +62,17 @@ namespace Il2Native.Logic.DOM2
 
             c.WhiteSpace();
 
+            bool changedRight;
+            this.Right = AdjustEnumType(this.Right, out changedRight);
+
+            var castOfResult = changedRight && Type.TypeKind == TypeKind.Enum;
+            if (castOfResult)
+            {
+                c.TextSpan("((");
+                c.WriteType(Type);
+                c.TextSpan(")(");
+            }
+
             var leftType = this.Left.Type;
             if (leftType != null && leftType.IsValueType && this.Right is ThisReference)
             {
@@ -68,6 +80,11 @@ namespace Il2Native.Logic.DOM2
             }
 
             c.WriteWrappedExpressionIfNeeded(this.Right);
+
+            if (castOfResult)
+            {
+                c.TextSpan("))");
+            }
         }
     }
 }
