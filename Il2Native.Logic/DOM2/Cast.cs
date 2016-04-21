@@ -40,10 +40,10 @@ namespace Il2Native.Logic.DOM2
         internal override void WriteTo(CCodeWriterBase c)
         {
             var effectiveType = Type;
-            if (this.UseEnumUnderlyingType && effectiveType.TypeKind == TypeKind.Enum)
-            {
-                effectiveType = ((INamedTypeSymbol)effectiveType).EnumUnderlyingType;
-            }
+            ////if (this.UseEnumUnderlyingType && effectiveType.TypeKind == TypeKind.Enum)
+            ////{
+            ////    effectiveType = ((INamedTypeSymbol)effectiveType).EnumUnderlyingType;
+            ////}
 
             if (this.Constrained)
             {
