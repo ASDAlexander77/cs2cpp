@@ -46,6 +46,35 @@ namespace Il2Native.Logic.DOM2
             return false;
         }
 
+        internal static void WriteCheckedOperator(CCodeWriterBase c, BinaryOperatorKind operatorKind)
+        {
+            switch (GetOperatorKind(operatorKind))
+            {
+                case BinaryOperatorKind.Multiplication:
+                    c.TextSpan("__mul_ovf");
+                    break;
+
+                case BinaryOperatorKind.Addition:
+                    c.TextSpan("__add_ovf");
+                    break;
+
+                case BinaryOperatorKind.Subtraction:
+                    c.TextSpan("__sub_ovf");
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+
+            switch (operatorKind & BinaryOperatorKind.TypeMask)
+            {
+                case BinaryOperatorKind.UInt:
+                case BinaryOperatorKind.ULong:
+                    c.TextSpan("_un");
+                    break;
+            }
+        }
+
         internal static void WriteOperator(CCodeWriterBase c, BinaryOperatorKind binaryOperatorKind)
         {
             switch (GetOperatorKind(binaryOperatorKind))
@@ -226,6 +255,16 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
                 c.WriteWrappedExpressionIfNeeded(this.Right);
                 c.TextSpan(")");
+            }
+            else if (IsChecked(this.OperatorKind))
+            {
+                WriteCheckedOperator(c, this.OperatorKind);
+                c.TextSpan("(");
+                c.WriteWrappedExpressionIfNeeded(this.Left);
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.WriteWrappedExpressionIfNeeded(this.Right);
+                c.TextSpan(")");                
             }
             else
             {

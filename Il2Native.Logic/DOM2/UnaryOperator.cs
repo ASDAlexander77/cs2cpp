@@ -5,6 +5,8 @@ namespace Il2Native.Logic.DOM2
 {
     using System;
     using System.Diagnostics;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class UnaryOperator : Expression
@@ -54,6 +56,62 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (IsChecked(this.OperatorKind))
+            {
+                this.WriteCheckedOperator(c);
+                // special case to end unary minus
+                c.TextSpan("(");
+                if ((this.OperatorKind & UnaryOperatorKind.OpMask) == UnaryOperatorKind.UnaryMinus)
+                {
+                    new Literal { Value = this.Is64Bit() ? ConstantValue.Create((long)-1) : ConstantValue.Create(-1) }.WriteTo(c);
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
+                c.WriteWrappedExpressionIfNeeded(this.Operand);
+                c.TextSpan(")");
+            }
+            else
+            {
+                this.WriteOperator(c);
+                c.WriteWrappedExpressionIfNeeded(this.Operand);
+            }
+        }
+
+        private void WriteCheckedOperator(CCodeWriterBase c)
+        {
+            switch (this.OperatorKind & UnaryOperatorKind.OpMask)
+            {
+                case UnaryOperatorKind.UnaryMinus:
+                    c.TextSpan("__mul_ovf");
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            switch (this.OperatorKind & UnaryOperatorKind.TypeMask)
+            {
+                case UnaryOperatorKind.UInt:
+                case UnaryOperatorKind.ULong:
+                    c.TextSpan("_un");
+                    break;
+            }
+        }
+
+        private bool Is64Bit()
+        {
+            switch (this.OperatorKind & UnaryOperatorKind.TypeMask)
+            {
+                case UnaryOperatorKind.Long:
+                case UnaryOperatorKind.ULong:
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void WriteOperator(CCodeWriterBase c)
+        {
             switch (this.OperatorKind & UnaryOperatorKind.OpMask)
             {
                 case UnaryOperatorKind.UnaryPlus:
@@ -75,8 +133,6 @@ namespace Il2Native.Logic.DOM2
                 default:
                     throw new NotImplementedException();
             }
-
-            c.WriteWrappedExpressionIfNeeded(this.Operand);
         }
     }
 }
