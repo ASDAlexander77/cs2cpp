@@ -399,6 +399,7 @@ namespace Ll2NativeTests
             // 120 - not implemented Attribute
             // 127 - IsDefined not implemented
             // 128 - using Attributes
+            // 129 - int type selected instead of long, (and using typeof().ToString())
             // 132 - Reflection
             // 135 - Reflection
             // 157 - reflection, attributes
@@ -585,6 +586,7 @@ namespace Ll2NativeTests
                         120,
                         127,
                         128,
+                        129,
                         132,
                         135,
                         157,
@@ -826,7 +828,7 @@ namespace Ll2NativeTests
             skip.Add(890); // reflection
             skip.Add(899); // reflection
 
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(129, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

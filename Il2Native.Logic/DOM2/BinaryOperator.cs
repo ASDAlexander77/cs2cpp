@@ -28,6 +28,24 @@ namespace Il2Native.Logic.DOM2
             }
         }
 
+        internal static bool IsChecked(BinaryOperatorKind kind)
+        {
+            if (0 == (kind & BinaryOperatorKind.Checked))
+            {
+                return false;
+            }
+
+            switch (kind & BinaryOperatorKind.OpMask)
+            {
+                case BinaryOperatorKind.Addition:
+                case BinaryOperatorKind.Subtraction:
+                case BinaryOperatorKind.Multiplication:
+                    return true;
+            }
+
+            return false;
+        }
+
         internal static void WriteOperator(CCodeWriterBase c, BinaryOperatorKind binaryOperatorKind)
         {
             switch (GetOperatorKind(binaryOperatorKind))

@@ -273,6 +273,7 @@
     <Content Include="Resources\intrin_template.h" />
     <None Include="Resources\intrin.cpp" />
     <None Include="Resources\c_template_definitions.c" />
+    <None Include="Resources\overflow.h" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

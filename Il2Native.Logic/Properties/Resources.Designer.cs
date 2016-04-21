@@ -166,10 +166,13 @@ namespace Il2Native.Logic.Properties {
         ///#include &lt;condition_variable&gt;
         ///#include &lt;atomic&gt;
         ///
+        ///#ifdef _MSC_VER
+        ///#include &lt;Windows.h&gt;
+        ///#endif
+        ///
         ///#ifndef thread_local
         ///# if __STDC_VERSION__ &gt;= 201112 &amp;&amp; !defined __STDC_NO_THREADS__
-        ///#  define thread_local _Thread_local
-        ///# elif defined _ [rest of string was truncated]&quot;;.
+        ///#  de [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_include {
             get {
@@ -257,19 +260,15 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to #ifdef _MSC_VER
-        ///#include &lt;intrin.h&gt;
         ///
-        ///// InterlockedExchange
-        ///template &lt; typename T &gt;
-        ///inline typename std::enable_if&lt;sizeof(T) == 1 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value)
         ///{
-        ///	return (T) _InterlockedExchange8((int8_t volatile*)location1, (int8_t)value);
+        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
         ///}
         ///
-        ///template &lt; typename T &gt;
-        ///inline typename std::enable_if&lt;sizeof(T) == 2 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
+        ///CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
         ///{
-        ///	return (T) _InterlockedE [rest of string was truncated]&quot;;.
+        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin {
             get {
@@ -278,24 +277,37 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #ifdef _MSC_VER
-        ///#include &lt;intrin.h&gt;
+        ///   Looks up a localized string similar to namespace CoreLib { namespace System {
+        ///	struct IntPtr;
+        ///	struct UIntPtr;
+        ///}}
         ///
-        ///// InterlockedExchange
-        ///template &lt; typename T &gt;
-        ///inline typename std::enable_if&lt;sizeof(T) == 1 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
-        ///{
-        ///	return (T) _InterlockedExchange8((int8_t volatile*)location1, (int8_t)value);
-        ///}
+        ///extern CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value);
+        ///extern CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand);
         ///
-        ///template &lt; typename T &gt;
-        ///inline typename std::enable_if&lt;sizeof(T) == 2 &amp;&amp; !std::is_pointer&lt;T&gt;::value, T&gt;::type _interlocked_exchange(T volatile* location1, T value)
-        ///{
-        ///	return (T) _InterlockedE [rest of string was truncated]&quot;;.
+        ///extern CoreLib::System::UIntPtr _interlocked_exchange(CoreLib::System::UIntPtr volatile* location1, CoreLib::System::UIntPtr [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin_template {
             get {
                 return ResourceManager.GetString("intrin_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #ifdef _MSC_VER
+        ///
+        ///CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value)
+        ///{
+        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
+        ///}
+        ///
+        ///CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
+        ///{
+        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string overflow {
+            get {
+                return ResourceManager.GetString("overflow", resourceCulture);
             }
         }
     }

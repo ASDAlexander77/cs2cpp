@@ -18,6 +18,26 @@ namespace Il2Native.Logic.DOM2
 
         internal UnaryOperatorKind OperatorKind { get; private set; }
 
+        internal static bool IsChecked(UnaryOperatorKind kind)
+        {
+            if (0 == (kind & UnaryOperatorKind.Checked))
+            {
+                return false;
+            }
+
+            switch (kind & UnaryOperatorKind.OpMask)
+            {
+                case UnaryOperatorKind.PrefixIncrement:
+                case UnaryOperatorKind.PostfixIncrement:
+                case UnaryOperatorKind.PrefixDecrement:
+                case UnaryOperatorKind.PostfixDecrement:
+                case UnaryOperatorKind.UnaryMinus:
+                    return true;
+            }
+
+            return false;
+        }
+
         internal void Parse(BoundUnaryOperator boundUnaryOperator)
         {
             base.Parse(boundUnaryOperator);

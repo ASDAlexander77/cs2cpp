@@ -337,13 +337,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 {
                     itw.WriteLine();
                     itw.WriteLine(Resources.c_declarations);
-                }
-
-                itw.WriteLine();
-
-                if (isCoreLib)
-                {
                     itw.WriteLine(Resources.c_template_definitions);
+                    itw.WriteLine(Resources.overflow);
                 }
 
                 foreach (var includeHeader in includeHeaders)
