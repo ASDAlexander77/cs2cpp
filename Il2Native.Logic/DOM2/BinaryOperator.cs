@@ -28,6 +28,14 @@ namespace Il2Native.Logic.DOM2
             }
         }
 
+        public bool IsLogical
+        {
+            get
+            {
+                return this.OperatorKind.HasFlag(BinaryOperatorKind.Logical);
+            }
+        }
+
         internal static bool IsChecked(BinaryOperatorKind kind)
         {
             if (0 == (kind & BinaryOperatorKind.Checked))
