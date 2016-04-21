@@ -193,7 +193,7 @@ public:
 
 	inline __volatile_t<T>& operator=(T value)
 	{
-		__write(value)
+		__write(value);
 		return *this;
 	}
 
@@ -443,7 +443,7 @@ public:
 	inline __static_volatile<T, C>& operator=(T value)
 	{
 		ensure_cctor_called();
-		__write(value)
+		__write(value);
 		return *this;
 	}
 
