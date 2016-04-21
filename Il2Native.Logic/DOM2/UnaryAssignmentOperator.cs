@@ -34,6 +34,11 @@ namespace Il2Native.Logic.DOM2
                 return false;
             }
 
+            if (binaryOperator.IsRealRemainder)
+            {
+                return false;
+            }
+
             if (this.Left.ToString() != binaryOperator.Left.ToString())
             {
                 return false;

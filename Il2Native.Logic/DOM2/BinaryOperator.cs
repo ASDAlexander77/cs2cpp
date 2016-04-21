@@ -20,6 +20,14 @@ namespace Il2Native.Logic.DOM2
 
         internal BinaryOperatorKind OperatorKind { get; set; }
 
+        public bool IsRealRemainder
+        {
+            get
+            {
+                return GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Remainder && (this.Left.Type.IsRealValueType() || this.Right.Type.IsRealValueType());
+            }
+        }
+
         internal static void WriteOperator(CCodeWriterBase c, BinaryOperatorKind binaryOperatorKind)
         {
             switch (GetOperatorKind(binaryOperatorKind))
@@ -191,7 +199,7 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan(")(");
             }
 
-            var reminder = GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Remainder && (this.Left.Type.IsRealValueType() || this.Right.Type.IsRealValueType());
+            var reminder = this.IsRealRemainder;
             if (reminder)
             {
                 c.TextSpan("std::remainder(");
