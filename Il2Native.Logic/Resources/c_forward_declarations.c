@@ -179,22 +179,32 @@ struct __volatile_t
 	volatile T t;
 public:
 
+	inline T __read()
+	{
+		return _interlocked_compare_exchange(&t, __default<T>(), __default<T>());
+	}
+
+	inline void __write(T value)
+	{
+		_interlocked_exchange(&t, value);
+	}
+
 	inline __volatile_t() { this->operator=(__default<T>()); }
 
 	inline __volatile_t<T>& operator=(T value)
 	{
-		_interlocked_compare_exchange(&t, value, __default<T>());
+		__write(value)
 		return *this;
 	}
 
 	inline operator T()
 	{
-		return _interlocked_exchange(&t, __default<T>());
+		return __read();
 	}
 
 	inline T operator ->()
 	{
-		return _interlocked_exchange(&t, __default<T>());
+		return __read();
 	}
 
 	template <typename D = __volatile_t<T>, class = typename std::enable_if<std::is_integral<T>::value> > D& operator++()
@@ -401,9 +411,19 @@ struct __static_volatile
 	volatile T t;
 public:
 
+	inline T __read()
+	{
+		return _interlocked_compare_exchange(&t, __default<T>(), __default<T>());
+	}
+
+	inline void __write(T value)
+	{
+		_interlocked_exchange(&t, value);
+	}
+
 	inline __static_volatile() 
 	{ 
-		_interlocked_compare_exchange(&t,  __default<T>(), __default<T>()); 
+		__write(__default<T>()); 
 	}
 
 	inline void ensure_cctor_called()
@@ -423,20 +443,20 @@ public:
 	inline __static_volatile<T, C>& operator=(T value)
 	{
 		ensure_cctor_called();
-		_interlocked_compare_exchange(&t, value, __default<T>());
+		__write(value)
 		return *this;
 	}
 
 	inline operator T()
 	{
 		ensure_cctor_called();
-		return _interlocked_exchange(&t, __default<T>());
+		return __read();
 	}
 
 	inline T operator ->()
 	{
 		ensure_cctor_called();
-		return _interlocked_exchange(&t, __default<T>());
+		return __read();
 	}
 
 	template <typename D = __static_volatile<T, C>, class = typename std::enable_if<std::is_integral<T>::value> > inline D& operator++()
