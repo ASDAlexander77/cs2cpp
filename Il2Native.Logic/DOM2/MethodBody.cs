@@ -162,7 +162,7 @@ namespace Il2Native.Logic.DOM2
                 return;
             }
 
-            var newLabel = string.Format("{0}_{1}", label.LabelName.Substring(index1, index2 - index1), GetIdIsolatedByMethod(label.LabelName, stringIdGenerator));
+            var newLabel = string.Format("{0}_{1}", label.LabelName.Substring(index1 + 1, index2 - index1 - 1), GetIdIsolatedByMethod(label.LabelName, stringIdGenerator));
 
             label.LabelName = newLabel;
         }

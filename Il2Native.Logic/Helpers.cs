@@ -162,6 +162,23 @@ namespace Il2Native.Logic
             return new string(s);
         }
 
+        private static string ExtractName(this string name)
+        {
+            var index1 = name.IndexOf('<');
+            if (index1 == -1)
+            {
+                return name;
+            }
+
+            var index2 = name.LastIndexOf('>');
+            if (index2 == -1)
+            {
+                return name;
+            }
+
+            return name.Substring(index1 + 1, index2 - index1 - 1);
+        }
+
         public static ITypeSymbol GetFirstConstraintType(this ITypeSymbol typeSymbol)
         {
             if (typeSymbol.TypeKind == TypeKind.TypeParameter)
@@ -528,14 +545,23 @@ namespace Il2Native.Logic
         {
             var sb = new StringBuilder();
             sb.Append("__anonymous_type");
+
             if (type.IsAnonymousType)
             {
-                var parameterTypes = type.Constructors.First().Parameters;
-                sb.Append((parameterTypes.Count()).ToString());
+                var parameters = type.Constructors.First().Parameters;
+                foreach (var parameterSymbol in parameters)
+                {
+                    sb.Append("_");
+                    sb.Append(parameterSymbol.Name.CleanUpName());
+                }
             }
             else
             {
-                sb.Append(type.TypeArguments.Length.ToString());
+                foreach (var typeArgument in type.TypeArguments)
+                {
+                    sb.Append("_");
+                    sb.Append(typeArgument.Name.ExtractName().CleanUpName());
+                }
             }
 
             return sb.ToString();
