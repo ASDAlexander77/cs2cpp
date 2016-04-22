@@ -12,7 +12,7 @@
 
     public class Conversion : Expression
     {
-        public bool ExplicitCastIn { get; set; }
+        public bool Checked { get; set; }
 
         public override Kinds Kind
         {
@@ -32,6 +32,7 @@
             this.TypeSource = boundConversion.Operand.Type;
             this.Operand = Deserialize(boundConversion.Operand) as Expression;
             this.ConversionKind = boundConversion.ConversionKind;
+            this.Checked = boundConversion.Checked;
 
             var methodGroupOperand = this.Operand as MethodGroup;
             if (methodGroupOperand != null && methodGroupOperand.Method == null)
@@ -48,12 +49,6 @@
                     this.Operand = methodGroup;
                 }
             }
-
-            ////var castExpression = boundConversion.Syntax.Green as CastExpressionSyntax;
-            ////if (castExpression != null)
-            ////{
-            ////    // TODO: finish it
-            ////}
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -215,6 +210,11 @@
 
                     return true;
                 default:
+                    if (this.Checked)
+                    {
+                        c.TextSpan("checked_");
+                    }
+
                     c.TextSpan("static_cast<");
                     c.WriteType(Type);
                     c.TextSpan(">");

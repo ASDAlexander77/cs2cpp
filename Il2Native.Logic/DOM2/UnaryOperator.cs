@@ -61,13 +61,6 @@ namespace Il2Native.Logic.DOM2
                 this.WriteCheckedOperator(c);
                 // special case to end unary minus
                 c.TextSpan("(");
-                if ((this.OperatorKind & UnaryOperatorKind.OpMask) == UnaryOperatorKind.UnaryMinus)
-                {
-                    new Literal { Value = this.Is64Bit() ? ConstantValue.Create((long)-1) : ConstantValue.Create(-1) }.WriteTo(c);
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                }
-
                 c.WriteWrappedExpressionIfNeeded(this.Operand);
                 c.TextSpan(")");
             }
@@ -83,18 +76,10 @@ namespace Il2Native.Logic.DOM2
             switch (this.OperatorKind & UnaryOperatorKind.OpMask)
             {
                 case UnaryOperatorKind.UnaryMinus:
-                    c.TextSpan("__mul_ovf");
+                    c.TextSpan("checked_unary_minus");
                     break;
                 default:
                     throw new NotImplementedException();
-            }
-
-            switch (this.OperatorKind & UnaryOperatorKind.TypeMask)
-            {
-                case UnaryOperatorKind.UInt:
-                case UnaryOperatorKind.ULong:
-                    c.TextSpan("_un");
-                    break;
             }
         }
 

@@ -1,3 +1,31 @@
+template < typename T >
+inline typename std::enable_if<std::is_signed<T>::value && std::is_integral<T>::value, T>::type checked_unary_minus(T operand)
+{
+	if (operand == std::numeric_limits<T>::min())
+	{
+		throw __new<CoreLib::System::OverflowException>();
+	}
+
+	return -operand;
+}
+
+template < typename T >
+inline typename std::enable_if<!std::is_signed<T>::value || !std::is_integral<T>::value, T>::type checked_unary_minus(T operand)
+{
+	return -operand;
+}
+
+template < typename D, typename S >
+inline D checked_static_cast(S operand)
+{
+	if (operand > std::numeric_limits<D>::max())
+	{
+		throw __new<CoreLib::System::OverflowException>();
+	}
+
+	return static_cast<D>(operand);
+}
+
 inline int8_t __add_ovf(int8_t a, int8_t b)
 {
 	int8_t s = (uint8_t) a + (uint8_t) b;
