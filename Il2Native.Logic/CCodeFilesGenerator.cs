@@ -341,6 +341,18 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     itw.WriteLine(Resources.overflow);
                 }
 
+                foreach (var unit in units)
+                {
+                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                    if (namedTypeSymbol.TypeKind == TypeKind.Delegate)
+                    {
+                        itw.WriteLine();
+                        WriteNamespaceOpen(namedTypeSymbol, itw, c);
+                        new CCodeDelegateWrapperClass(namedTypeSymbol).WriteTo(c);
+                        WriteNamespaceClose(namedTypeSymbol, itw);
+                    }
+                }
+
                 foreach (var includeHeader in includeHeaders)
                 {
                     itw.WriteLine("#include \"{0}\"", includeHeader);
@@ -741,13 +753,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.Indent--;
             itw.WriteLine("};");
 
-            if (namedTypeSymbol.TypeKind == TypeKind.Delegate)
-            {
-                itw.WriteLine();
-                new CCodeDelegateWrapperClass(namedTypeSymbol).WriteTo(c);
-                itw.WriteLine();
-            }
-
             WriteNamespaceClose(namedTypeSymbol, itw);
 
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum || namedTypeSymbol.SpecialType == SpecialType.System_Void)
@@ -884,7 +889,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
                 WriteSourceInclude(itw, identity);
 
-                WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);
+                var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                WriteNamespaceOpen(namedTypeSymbol, itw, c);
 
                 foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
                 {
@@ -897,11 +903,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     // write interface wrappers
                     foreach (var iface in unit.Type.Interfaces)
                     {
-                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, (INamedTypeSymbol)unit.Type);
+                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol);
                     }
                 }
 
-                WriteNamespaceClose((INamedTypeSymbol)unit.Type, itw);
+                WriteNamespaceClose(namedTypeSymbol, itw);
 
                 if (!stubs && unit.MainMethod != null)
                 {

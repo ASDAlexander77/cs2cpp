@@ -10,6 +10,7 @@ namespace Il2Native.Logic.DOM
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
     using Synthesized;
 
     /// <summary>
@@ -41,11 +42,11 @@ namespace Il2Native.Logic.DOM
             var typeSymbol = (INamedTypeSymbol)Type;
             var methodImpl = new MethodImpl
                                  {
-                                     Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new", @static ? "_static" : string.Empty), 
-                                     ReturnType = typeSymbol, 
-                                     ReturnsVoid = false, 
+                                     Name = string.Concat(typeSymbol.GetTypeName(), "_delegate_new", @static ? "_static" : string.Empty),
+                                     ReturnType = typeSymbol,
+                                     ReturnsVoid = false,
                                      IsGenericMethod = typeSymbol.IsGenericType,
-                                     ContainingNamespace = typeSymbol.ContainingNamespace
+                                     ContainingNamespace = typeSymbol.ContainingNamespace,
                                  };
 
             if (@static)
@@ -58,7 +59,7 @@ namespace Il2Native.Logic.DOM
             {
                 methodImpl.Parameters =
                     ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } }, 
+                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } },
                         new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
             }
 
@@ -205,6 +206,156 @@ namespace Il2Native.Logic.DOM
         /// </param>
         /// <returns>
         /// </returns>
+        public CCodeMethodDeclaration CreateInvokeMethod(bool @static = false)
+        {
+            var methodImpl = new MethodImpl
+            {
+                Name = this.invoke.Name,
+                IsVirtual = true,
+                IsOverride = true,
+                ReturnType = this.invoke.ReturnType,
+                ReturnsVoid = this.invoke.ReturnsVoid,
+                Parameters = this.invoke.Parameters,
+                ContainingType = this.GetDelegateType(@static),
+                ReceiverType = this.GetDelegateType(@static)
+            };
+
+            // invoke
+            var invokeMethod = new CCodeMethodDeclaration(methodImpl);
+
+            var operand = @static
+                              ? new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
+                              : (Expression)
+                                new Access
+                                {
+                                    ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = Type } },
+                                    Expression =
+                                        new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
+                                };
+
+            var callExpr = new Call
+            {
+                ReceiverOpt = new Parenthesis { Operand = operand, Type = new TypeImpl { } },
+                Method = new MethodImpl { Name = string.Empty, Parameters = this.invoke.Parameters }
+            };
+            foreach (var p in this.invoke.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
+            {
+                callExpr.Arguments.Add(p);
+            }
+
+            // if for multiple delegate
+            var zero = new Literal { Value = ConstantValue.Create(0) };
+            var invocationCountLocal = new Local { CustomName = "invocationCount", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+            var invocationCount = new AssignmentOperator
+            {
+                TypeDeclaration = true,
+                ApplyAutoType = true,
+                Left = invocationCountLocal,
+                Right = new Call
+                {
+                    Method = new MethodImpl { Name = "ToInt32", Parameters = ImmutableArray<IParameterSymbol>.Empty },
+                    ReceiverOpt = new FieldAccess
+                    {
+                        ReceiverOpt = new ThisReference() { Type = new TypeImpl { } },
+                        Field = new FieldImpl { Name = "_invocationCount", Type = new TypeImpl { } },
+                        Type = new TypeImpl { }
+                    }
+                }
+            };
+
+            var invocationCountStatement = new ExpressionStatement
+            {
+                Expression = invocationCount
+            };
+
+            var iLocal = new Local { CustomName = "i", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+
+            // call for 'for'
+            var callExprInstance = new Call
+            {
+                ReceiverOpt = new Cast
+                {
+                    Type = Type,
+                    CCast = true,
+                    Operand =
+                        new ArrayAccess
+                        {
+                            Expression = new FieldAccess
+                            {
+                                ReceiverOpt = new ThisReference { Type = new TypeImpl { } },
+                                Field = new FieldImpl { Name = "_invocationList", Type = new TypeImpl { } }
+                            },
+                            Indices =
+                            {
+                                iLocal
+                            },
+                            Type = new TypeImpl { }
+                        }
+                },
+                Method = new MethodImpl { Name = "Invoke", Parameters = this.invoke.Parameters }
+            };
+            foreach (var p in this.invoke.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
+            {
+                callExprInstance.Arguments.Add(p);
+            }
+
+            var block = new Block
+            {
+                Statements =
+                {
+                    new ForStatement
+                    {
+                        InitializationOpt =
+                            new AssignmentOperator
+                            {
+                                ApplyAutoType = true,
+                                TypeDeclaration = true,
+                                Left = iLocal,
+                                Right = zero
+                            },
+                        ConditionOpt = new BinaryOperator
+                        {
+                            Left = iLocal,
+                            Right = invocationCountLocal,
+                            OperatorKind = BinaryOperatorKind.IntLessThan
+                        },
+                        IncrementingOpt = new PrefixUnaryExpression { Value = iLocal, OperatorKind = SyntaxKind.PlusPlusToken },
+                        Statements = new ExpressionStatement
+                        {
+                            Expression = callExprInstance
+                        }
+                    },
+                    new ReturnStatement()
+                }
+            };
+
+            var ifInvokeListCountGreaterThen0 = new IfStatement
+            {
+                Condition =
+                    new BinaryOperator
+                    {
+                        Left = invocationCountLocal,
+                        Right = zero,
+                        OperatorKind = BinaryOperatorKind.IntGreaterThan
+                    },
+                IfStatements = block
+            };
+
+            var returnStatement = new ReturnStatement { ExpressionOpt = callExpr };
+            invokeMethod.MethodBodyOpt = new MethodBody(methodImpl)
+            {
+                Statements = { invocationCountStatement, ifInvokeListCountGreaterThen0, returnStatement }
+            };
+
+            return invokeMethod;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="static">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static TypeImpl[] GetNewMethodTypeGeneric(bool @static)
         {
             if (@static)
@@ -317,60 +468,14 @@ namespace Il2Native.Logic.DOM
         /// </param>
         /// <returns>
         /// </returns>
-        private CCodeMethodDeclaration CreateInvokeMethod(bool @static = false)
-        {
-            var methodImpl = new MethodImpl
-                                 {
-                                     Name = this.invoke.Name, 
-                                     IsVirtual = true, 
-                                     IsOverride = true, 
-                                     ReturnType = this.invoke.ReturnType, 
-                                     ReturnsVoid = this.invoke.ReturnsVoid, 
-                                     Parameters = this.invoke.Parameters
-                                 };
-
-            var invokeMethod = new CCodeMethodDeclaration(methodImpl);
-
-            var operand = @static
-                              ? new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
-                              : (Expression)
-                                new Access
-                                    {
-                                        ReceiverOpt = new FieldAccess { Field = new FieldImpl { Name = "_t", Type = Type } }, 
-                                        Expression =
-                                            new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }
-                                    };
-
-            var callExpr = new Call
-                               {
-                                   ReceiverOpt = new Parenthesis { Operand = operand, Type = new TypeImpl { } }, 
-                                   Method = new MethodImpl { Name = string.Empty, Parameters = this.invoke.Parameters }
-                               };
-            foreach (var p in this.invoke.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
-            {
-                callExpr.Arguments.Add(p);
-            }
-
-            var returnStatement = new ReturnStatement { ExpressionOpt = callExpr };
-            invokeMethod.MethodBodyOpt = new MethodBody(methodImpl) { Statements = { returnStatement } };
-
-            return invokeMethod;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="static">
-        /// </param>
-        /// <returns>
-        /// </returns>
         private NamedTypeImpl GetDelegateType(bool @static = false)
         {
             var typeSymbol = (INamedTypeSymbol)Type;
             var namedTypeImpl = new NamedTypeImpl
                                     {
-                                        TypeKind = TypeKind.Class, 
-                                        Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty), 
-                                        ContainingNamespace = typeSymbol.ContainingNamespace, 
+                                        TypeKind = TypeKind.Class,
+                                        Name = string.Concat(typeSymbol.GetTypeName(), "_delegate", @static ? "_static" : string.Empty),
+                                        ContainingNamespace = typeSymbol.ContainingNamespace,
                                         IsGenericType = typeSymbol.IsGenericType
                                     };
 
