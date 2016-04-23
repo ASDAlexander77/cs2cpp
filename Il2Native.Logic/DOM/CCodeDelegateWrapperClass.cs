@@ -269,6 +269,7 @@ namespace Il2Native.Logic.DOM
             };
 
             var iLocal = new Local { CustomName = "i", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+            var invokeResult = new Local { CustomName = "invokeResult", Type = this.invoke.ReturnType };
 
             // call for 'for'
             var callExprInstance = new Call
@@ -319,15 +320,24 @@ namespace Il2Native.Logic.DOM
                             Right = invocationCountLocal,
                             OperatorKind = BinaryOperatorKind.IntLessThan
                         },
-                        IncrementingOpt = new PrefixUnaryExpression { Value = iLocal, OperatorKind = SyntaxKind.PlusPlusToken },
+                        IncrementingOpt =
+                            new PrefixUnaryExpression { Value = iLocal, OperatorKind = SyntaxKind.PlusPlusToken },
                         Statements = new ExpressionStatement
                         {
-                            Expression = callExprInstance
+                            Expression =
+                                this.invoke.ReturnsVoid
+                                    ? (Expression)callExprInstance
+                                    : (Expression)new AssignmentOperator { Left = invokeResult, Right = callExprInstance }
                         }
                     },
-                    new ReturnStatement()
+                    new ReturnStatement { ExpressionOpt  = !this.invoke.ReturnsVoid ? invokeResult : null }
                 }
             };
+
+            if (!this.invoke.ReturnsVoid)
+            {
+                block.Statements.Insert(0, new VariableDeclaration { Local = invokeResult });
+            }
 
             var ifInvokeListCountGreaterThen0 = new IfStatement
             {
@@ -341,10 +351,16 @@ namespace Il2Native.Logic.DOM
                 IfStatements = block
             };
 
-            var returnStatement = new ReturnStatement { ExpressionOpt = callExpr };
             invokeMethod.MethodBodyOpt = new MethodBody(methodImpl)
             {
-                Statements = { invocationCountStatement, ifInvokeListCountGreaterThen0, returnStatement }
+                Statements =
+                {
+                    invocationCountStatement,
+                    ifInvokeListCountGreaterThen0,
+                    this.invoke.ReturnsVoid
+                        ? (Statement)new ExpressionStatement { Expression = callExpr }
+                        : (Statement)new ReturnStatement { ExpressionOpt = callExpr }
+                }
             };
 
             return invokeMethod;
