@@ -97,7 +97,7 @@ inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic = false)
 
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {
-	auto t = new (sizeof(T), is_primitive_type<T>::value) T();		
+	auto t = new (sizeof(T), is_primitive_type<class_to_valuetype<T>::type>::value) T();		
 	t->_ctor(params...);
 	return t;
 } 
