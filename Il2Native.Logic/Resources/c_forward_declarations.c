@@ -6,6 +6,10 @@ struct valuetype_to_class { typedef T type; };
 template<typename T> 
 struct class_to_valuetype { typedef T type; };
 
+// for atomic allocation
+template<typename T> 
+struct is_atomic { constexpr static bool value = false; };
+
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
@@ -97,7 +101,7 @@ inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic = false)
 
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {
-	auto t = new (sizeof(T), is_primitive_type<class_to_valuetype<T>::type>::value) T();		
+	auto t = new (sizeof(T), is_atomic<T>::value) T();		
 	t->_ctor(params...);
 	return t;
 } 

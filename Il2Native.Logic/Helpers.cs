@@ -322,6 +322,11 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsAtomicType(this ITypeSymbol type)
+        {
+            return !type.GetMembers().OfType<IFieldSymbol>().Any(f => f.Type.IsReferenceType);
+        }
+
         public static bool IsSupportedVolatile(this IFieldSymbol fieldSymbol)
         {
             return fieldSymbol.IsVolatile;

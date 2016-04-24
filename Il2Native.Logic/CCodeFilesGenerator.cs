@@ -785,6 +785,18 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.TextSpanNewLine("type; };");
             }
+
+            if (namedTypeSymbol.IsAtomicType() && !namedTypeSymbol.IsGenericType)
+            {
+                c.TextSpanNewLine("template<>");
+                c.TextSpan("struct");
+                c.WhiteSpace();
+                c.TextSpan("is_atomic<");
+                c.WriteType(namedTypeSymbol, true, false, true);
+                c.TextSpan(">");
+                c.WhiteSpace();
+                c.TextSpanNewLine("{ constexpr static bool value = true; };");
+            }
         }
 
         private static void WriteNamespaceOpen(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw, CCodeWriterText c)
