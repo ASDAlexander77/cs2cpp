@@ -20,7 +20,15 @@ namespace Il2Native.Logic.DOM.Synthesized
             {
                 Statements =
                 {
-                    new ReturnStatement { ExpressionOpt = new Call { Method = methodSymbol, Arguments = { parameter } } }
+                    new ReturnStatement
+                    {
+                        ExpressionOpt =
+                            new Call
+                            {
+                                Method = methodSymbol,
+                                Arguments = { parameter, new Literal { Value = ConstantValue.Create(false) } }
+                            }
+                    }
                 }
             };
         }

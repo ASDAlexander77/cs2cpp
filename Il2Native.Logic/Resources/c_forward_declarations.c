@@ -74,7 +74,7 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
-inline void* __new_set0(size_t _size, bool _is_atomic = false)
+inline void* __new_set0(size_t _size, bool _is_atomic)
 {
 	auto mem = _size > 102400 
 		? _is_atomic 
@@ -91,13 +91,41 @@ inline void* __new_set0(size_t _size, bool _is_atomic = false)
 	return mem;
 }
 
-inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic = false)
+inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic)
 {
 	auto mem = __new_set0(_size, _is_atomic);
 	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
 	return mem;
 }
 
+// debug versions
+inline void* __new_set0(size_t _size, bool _is_atomic, char* _file, int _line)
+{
+#ifdef GC_DEBUG
+	auto mem = _size > 102400 
+		? _is_atomic 
+		? GC_debug_malloc_atomic_ignore_off_page(_size, _file, _line) 
+		: GC_debug_malloc_ignore_off_page(_size, _file, _line) 
+		: _is_atomic 
+		? GC_debug_malloc_atomic(_size, _file, _line) 
+		: GC_debug_malloc(_size, _file, _line);
+	if (_is_atomic)
+	{
+		std::memset(mem, 0, _size);
+	}
+
+	return mem;
+#else
+	return __new_set0(_size, _is_atomic);
+#endif
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, char* _file, int _line)
+{
+	auto mem = __new_set0(_size, _is_atomic, _file, _line);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
 
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {

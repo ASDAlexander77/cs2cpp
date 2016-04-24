@@ -88,7 +88,7 @@ namespace Il2Native.Logic
                 {
                     AddTypeIntoOrder(reordered, typeSymbol.BaseType, assembly, bankOfTypes, added);
                 }
-                
+
                 foreach (var item in typeSymbol.Interfaces)
                 {
                     AddTypeIntoOrder(reordered, item, assembly, bankOfTypes, added);
@@ -136,7 +136,7 @@ namespace Il2Native.Logic
 
             unit.Declarations.Add(new CCodeFieldDeclaration(cctorBeingCalledField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(cctorBeingCalledField) { DoNotWrapStatic = true });
-            
+
             // add call flag for static constructor
             var cctorCalledField = new FieldImpl
             {
@@ -296,13 +296,13 @@ namespace Il2Native.Logic
                     new CCodeMethodDefinition(method)
                     {
                         MethodBodyOpt = body
-                    });                
+                    });
             }
             else
             {
 #if GENERATE_STUBS
-                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface 
-                    && !methodSymbol.IsAbstract 
+                if (methodSymbol.ContainingType.TypeKind != TypeKind.Interface
+                    && !methodSymbol.IsAbstract
                     && !methodSymbol.IsExternDeclaration())
                 {
                     unit.Definitions.Add(
@@ -344,18 +344,13 @@ namespace Il2Native.Logic
                 this.BuildMethod(method, unit);
             }
 
+            var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
             if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
             {
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type));
-            }
-
-            if (type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor))
-            {
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, true));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type, true));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type, true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDebugDeclaration((INamedTypeSymbol)type, finalizationRequired));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)

@@ -66,7 +66,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		0,                      // use default creation flags 
 		(LPDWORD)&threadId);	// returns the thread identifier 
 #else
-	auto t = __new_set0(sizeof(pthread_t));
+	auto t = __new_set0(sizeof(pthread_t), true);
 	pthread_create(t, 0, __thread_inner_proc, this);
 	this->DONT_USE_InternalThread.m_value = t;
 #endif

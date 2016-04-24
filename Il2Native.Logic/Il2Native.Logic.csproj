@@ -163,6 +163,7 @@
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeNewOperatorWithSizeAndFlagsDebugDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeUnboxForPrimitiveValuesOrEnumsDeclaration.cs" />
