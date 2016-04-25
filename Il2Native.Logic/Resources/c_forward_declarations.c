@@ -134,6 +134,13 @@ template <typename T, typename... Tp> inline T* __new(Tp... params)
 	return t;
 } 
 
+template <typename T, typename... Tp> inline T* __new_debug(const char* _file, int _line, Tp... params) 
+{
+	auto t = new (sizeof(T), is_atomic<T>::value, _file, _line) T();		
+	t->_ctor(params...);
+	return t;
+} 
+
 template <typename T, typename... Tp> inline T __init(Tp... params) 
 {
 	auto t = T();		

@@ -41,7 +41,8 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 // Boxing internals
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
 {
-	return new T(t);
+	// we do not need to call __new here as it already constructed
+	return new (sizeof(T), is_atomic<T>::value) T(t);
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box (T t)
@@ -55,6 +56,28 @@ template <typename T> inline typename std::enable_if<!is_value_type<T>::value &&
 }
 
 template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box (T t)
+{
+	return object_cast(t);
+}
+
+// box - DEBUG
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug (const char* _file, int _line, T t)
+{
+	// we do not need to call __new here as it already constructed
+	return new (sizeof(T), is_atomic<T>::value) T(_file, _line, t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug (const char* _file, int _line, T t)
+{
+	return __new<_CLASS>(_file, _line, t);
+}
+
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
+{
+	return t;
+}
+
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
 {
 	return object_cast(t);
 }
