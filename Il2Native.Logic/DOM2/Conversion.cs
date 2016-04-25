@@ -102,6 +102,11 @@
                 else
                 {
                     c.TextSpan("(");
+                    if (this.ConversionKind == ConversionKind.Boxing && Cs2CGenerator.IsSuppportDebugOutput)
+                    {
+                        c.TextSpan("__FILE__, __LINE__, ");
+                    }
+
                     effectiveExpression.WriteTo(c);
                     c.TextSpan(")");
                 }
@@ -133,6 +138,11 @@
                     return false;
                 case ConversionKind.Boxing:
                     c.TextSpan("__box");
+                    if (Cs2CGenerator.IsSuppportDebugOutput)
+                    {
+                        c.TextSpan("_debug");
+                    }
+
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");

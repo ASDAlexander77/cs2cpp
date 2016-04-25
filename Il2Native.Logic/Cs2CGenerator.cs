@@ -30,6 +30,8 @@ namespace Il2Native.Logic
 
         private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
+        public const bool IsSuppportDebugOutput = true;
+
         /// <summary>
         /// </summary>
         public Cs2CGenerator()

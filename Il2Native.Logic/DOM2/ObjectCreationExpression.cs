@@ -53,16 +53,33 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("new");
                 c.WhiteSpace();
                 c.WriteType(Type, true, true, true);
+                WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
             }
             else
             {
-                this.NewTemplate(c);
-            }
+                if (this.NewTemplate(c))
+                {
+                    c.TextSpan("(__FILE__, __LINE__");
 
-            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
+                    WriteCallArgumentsWithoutParenthesis(
+                        c,
+                        this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
+                        this.Arguments,
+                        anyArgs: true);
+
+                    c.TextSpan(")");
+                }
+                else
+                {
+                    WriteCallArguments(
+                        c,
+                        this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
+                        this.Arguments);
+                }
+            }
         }
 
-        private void NewTemplate(CCodeWriterBase c)
+        private bool NewTemplate(CCodeWriterBase c)
         {
             if (!Type.IsValueType || IsReference)
             {
@@ -73,25 +90,36 @@ namespace Il2Native.Logic.DOM2
                     {
                         case "string.String(char[])":
                             c.TextSpan("string::CtorCharArray");
-                            return;
+                            return false;
                         case "string.String(char, int)":
                             c.TextSpan("string::CtorCharCount");
-                            return;
+                            return false;
                         case "string.String(char*)":
                             c.TextSpan("string::CtorCharPtr");
-                            return;
+                            return false;
                         case "string.String(char*, int, int)":
                             c.TextSpan("string::CtorCharPtrStartLength");
-                            return;
+                            return false;
                         case "string.String(char[], int, int)":
                             c.TextSpan("string::CtorCharArrayStartLength");
-                            return;
+                            return false;
                     }
                 }
 
-                c.TextSpan("__new<");
+                if (Cs2CGenerator.IsSuppportDebugOutput)
+                {
+                    c.TextSpan("__new_debug");
+                }
+                else
+                {
+                    c.TextSpan("__new");
+                }
+
+                c.TextSpan("<");
                 c.WriteType(Type, true, true, true);
                 c.TextSpan(">");
+
+                return true;
             }
             else
             {
@@ -99,6 +127,8 @@ namespace Il2Native.Logic.DOM2
                 c.WriteType(Type, true, true, true);
                 c.TextSpan(">");
             }
+
+            return false;
         }
     }
 }

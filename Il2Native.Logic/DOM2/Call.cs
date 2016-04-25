@@ -46,8 +46,12 @@ namespace Il2Native.Logic.DOM2
         internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null)
         {
             c.TextSpan("(");
-            var anyArgs = false;
+            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method);
+            c.TextSpan(")");
+        }
 
+        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false)
+        {         
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
@@ -66,8 +70,6 @@ namespace Il2Native.Logic.DOM2
                 PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method).WriteTo(c);
                 anyArgs = true;
             }
-
-            c.TextSpan(")");
         }
 
         internal void Parse(BoundCall boundCall)
