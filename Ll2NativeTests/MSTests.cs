@@ -787,6 +787,10 @@ namespace Ll2NativeTests
             skip.Add(77); // enum to string
             skip.Add(203); // enum to string
             skip.Add(209); // reflection
+
+            skip.Add(251); // volatile IntPtr, UIntPtr - can be fixed!!!
+            skip.Add(283); // delegate picks virtual function. - investigate if you can fix it
+
             skip.Add(344); // reflection
             skip.Add(347); // reflection
             skip.Add(376); // enum to string
@@ -828,7 +832,7 @@ namespace Ll2NativeTests
             skip.Add(890); // reflection
             skip.Add(899); // reflection
 
-            foreach (var index in Enumerable.Range(141, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

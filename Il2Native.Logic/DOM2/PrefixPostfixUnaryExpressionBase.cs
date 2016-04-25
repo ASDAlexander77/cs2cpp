@@ -84,7 +84,10 @@ namespace Il2Native.Logic.DOM2
             var boundLocal = left as BoundLocal;
             if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
             {
-                return boundLocal;
+                if (boundLocal.Type.TypeKind != TypeKind.Class)
+                {
+                    return boundLocal;
+                }
             }
 
             var boundFieldAccess = left as BoundFieldAccess;
