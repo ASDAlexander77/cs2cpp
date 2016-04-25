@@ -99,7 +99,7 @@ inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic)
 }
 
 // debug versions
-inline void* __new_set0(size_t _size, bool _is_atomic, char* _file, int _line)
+inline void* __new_set0(size_t _size, bool _is_atomic, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
 	auto mem = _size > 102400 
@@ -120,7 +120,7 @@ inline void* __new_set0(size_t _size, bool _is_atomic, char* _file, int _line)
 #endif
 }
 
-inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, char* _file, int _line)
+inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, const char* _file, int _line)
 {
 	auto mem = __new_set0(_size, _is_atomic, _file, _line);
 	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);

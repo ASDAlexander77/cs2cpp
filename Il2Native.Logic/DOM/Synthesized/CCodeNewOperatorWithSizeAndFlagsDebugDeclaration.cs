@@ -51,7 +51,7 @@ namespace Il2Native.Logic.DOM.Synthesized
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("void* operator new (size_t _size, int32_t _customSize, bool _is_atomic, char* _file, int _line)");
+            c.TextSpan("void* operator new (size_t _size, int32_t _customSize, bool _is_atomic, const char* _file, int _line)");
             MethodBodyOpt.WriteTo(c);
         }
 

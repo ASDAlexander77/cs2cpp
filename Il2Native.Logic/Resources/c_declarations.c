@@ -64,12 +64,12 @@ template <typename T> inline typename std::enable_if<is_interface_type<T>::value
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug (const char* _file, int _line, T t)
 {
 	// we do not need to call __new here as it already constructed
-	return new (sizeof(T), is_atomic<T>::value) T(_file, _line, t);
+	return new (sizeof(T), is_atomic<T>::value, _file, _line) T(t);
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug (const char* _file, int _line, T t)
 {
-	return __new<_CLASS>(_file, _line, t);
+	return __new_debug<_CLASS>(_file, _line, t);
 }
 
 template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
