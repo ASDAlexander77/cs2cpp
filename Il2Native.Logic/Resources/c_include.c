@@ -43,7 +43,7 @@
 # include "config.h"
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
 # define GC_DEBUG
 #endif
 

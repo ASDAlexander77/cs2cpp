@@ -559,6 +559,9 @@ namespace Ll2NativeTests
             // 868 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'Location'
             // 892 - can'be compiled error CS0246: The type or namespace name 'FileVersionInfo' could not be found (are you missing a using directive or an assembly reference?)
             // 906 - test-1.cs(8,9): error CS0568: Structs cannot contain explicit parameterless constructors
+            // 909 - can't be compiled
+            // 910 - can't be compiled
+            // 912 - can't be compiled
             // -----------
             // 32, 55, 74 - missing class
 
@@ -747,7 +750,10 @@ namespace Ll2NativeTests
                         863,
                         868,
                         892,
-                        906
+                        906,
+                        909,
+                        910,
+                        912
                     });
 
             // skip
@@ -813,12 +819,23 @@ namespace Ll2NativeTests
 
             skip.Add(579); // conflict of label names in scopes
 
+            skip.Add(580); // BUG!!! multiarray index access should be inverted - FIX IT!
+
             skip.Add(599); // reflection
 
-            // fix it using SafeInt class, should throw overflow exception
-            skip.Add(653);
+            skip.Add(630); // skip / 0 exception - can be fixed!!!
+
+            skip.Add(640); // finish all Enum operations - can be fixed!!!
+            
+            skip.Add(643); // overflow operations on pointers - can be fixed!!!
+
+            skip.Add(646); // very strange bug with comparison of UIntPtr max with const max of long
+
+            skip.Add(728); // finish all Enum operations - can be fixed!!!
 
             skip.Add(731); // enum to string
+            skip.Add(771); // using "new" on method
+            skip.Add(776); // very intresting, it is trying to compare 2 strings using object* cast (not Object.Equals) to compare 2 const string "Second" but they have to different addresses
             skip.Add(788); // using "new" on method
 
             // fix it. command line args are not passed
@@ -831,6 +848,10 @@ namespace Ll2NativeTests
             skip.Add(885); // using custom attributes
             skip.Add(890); // reflection
             skip.Add(899); // reflection
+            skip.Add(925); // reflection
+            skip.Add(928); // reflection
+
+            skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {

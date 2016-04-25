@@ -93,18 +93,25 @@ namespace Il2Native.Logic.DOM2
             var boundFieldAccess = left as BoundFieldAccess;
             if (boundFieldAccess != null)
             {
-                return boundFieldAccess;
+                if (boundFieldAccess.FieldSymbol.Type.TypeKind != TypeKind.Class)
+                {
+                    return boundFieldAccess;
+                }
             }
 
             var boundParameter = left as BoundParameter;
             if (boundParameter != null)
             {
-                return boundParameter;
+                if (boundParameter.ParameterSymbol.Type.TypeKind != TypeKind.Class)
+                {
+                    return boundParameter;
+                }
             }
 
             var boundArrayAccess = left as BoundArrayAccess;
             if (boundArrayAccess != null)
             {
+                // TODO: finish it as for boundLocal  boundFieldAccess boundParameter etc
                 return boundArrayAccess;
             }
 
