@@ -278,31 +278,31 @@ public:
 
 	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
 	{
-		auto instance = __allocate_array(sizeof...(items));
+		auto instance = allocate_array(sizeof...(items));
 		__init_array(instance, items...);
 		return instance;
 	}
 
 	template <typename... Ta> static __array<T>* __new_array_init_debug(const char* _file, int _line, Ta... items)
 	{
-		auto instance = __allocate_array_debug(_file, _line, sizeof...(items));
+		auto instance = allocate_array_debug(_file, _line, sizeof...(items));
 		__init_array(instance, items...);
 		return instance;
 	}
 
-	inline __array<T>* allocate_array(int32_t length)
+	inline static __array<T>* allocate_array(int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
 		return new ((int32_t)size, is_atomic<T>::value) __array<T>(length);
 	}
 
-	inline __array<T>* allocate_array_debug(const char* _file, int _line, int32_t length)
+	inline static __array<T>* allocate_array_debug(const char* _file, int _line, int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
 		return new ((int32_t)size, is_atomic<T>::value, _file, _line) __array<T>(length);
 	}
 
-	template <typename... Ta> inline void __init_array(__array<T>* instance, Ta... items)
+	template <typename... Ta> inline static void __init_array(__array<T>* instance, Ta... items)
 	{
 		T tmp[] = {items...};
 		auto data_size = sizeof...(items) * sizeof(T);
@@ -581,21 +581,21 @@ public:
 		return instance;
 	}
 
-	inline __multi_array<T, RANK>* allocate_multiarray(std::initializer_list<int32_t> boundries)
+	inline static __multi_array<T, RANK>* allocate_multiarray(std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto instance = new ((int32_t)size, is_atomic<T>::value) __multi_array<T, RANK>(boundries);
 	}
 
-	inline __multi_array<T, RANK>* allocate_multiarray_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
+	inline static __multi_array<T, RANK>* allocate_multiarray_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto instance = new ((int32_t)size, is_atomic<T>::value, _file, _line) __multi_array<T, RANK>(boundries);
 	}
 
-	template <typename... Ta> static void __init_array(__multi_array<T, RANK>* instance, Ta... items)
+	template <typename... Ta> inline static void __init_array(__multi_array<T, RANK>* instance, Ta... items)
 	{
 		// initialize
 		T tmp[] = {items...};
