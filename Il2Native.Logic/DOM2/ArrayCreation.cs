@@ -71,9 +71,20 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("_init");
             }
 
+            if (Cs2CGenerator.IsSuppportDebugOutput)
+            {
+                c.TextSpan("_debug");
+            }
+
             c.TextSpan("(");
 
             var any = false;
+
+            if (Cs2CGenerator.IsSuppportDebugOutput)
+            {
+                c.TextSpan("__FILE__, __LINE__, ");
+            }
+
             if (!arrayInit || arrayTypeSymbol.Rank > 1)
             {
                 if (arrayTypeSymbol.Rank > 1)
