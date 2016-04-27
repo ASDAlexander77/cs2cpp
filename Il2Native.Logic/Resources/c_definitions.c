@@ -11,6 +11,11 @@ void GC_CALLBACK __finalizer(void * obj, void * client_data)
 	((object*)obj)->Finalize();
 }
 
+void __at_exit()
+{
+	GC_finalize_all();
+}
+
 int32_t __hash_code(object* _obj, size_t _size)
 {
 	if (_obj == nullptr)

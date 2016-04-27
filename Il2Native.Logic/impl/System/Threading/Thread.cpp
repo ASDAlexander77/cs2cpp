@@ -189,13 +189,12 @@ void CoreLib::System::Threading::Thread::InternalFinalize()
 // Method : System.Threading.Thread.IsBackgroundNative()
 bool CoreLib::System::Threading::Thread::IsBackgroundNative()
 {
-	throw 3221274624U;
+	return false;
 }
 
 // Method : System.Threading.Thread.SetBackgroundNative(bool)
 void CoreLib::System::Threading::Thread::SetBackgroundNative(bool isBackground)
 {
-	throw 3221274624U;
 }
 
 // Method : System.Threading.Thread.GetThreadStateNative()

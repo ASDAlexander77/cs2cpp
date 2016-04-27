@@ -794,3 +794,6 @@ inline T operator ^=(T& left, T right)
 	typedef typename std::underlying_type<T>::type U;
 	return left = (T) (left ^ right);
 }
+
+// support functions
+void __at_exit();

@@ -49,6 +49,7 @@ namespace Il2Native.Logic
             itw.WriteLine("{");
             itw.Indent++;
 
+            itw.WriteLine("atexit(__at_exit);");
             itw.WriteLine("GC_set_all_interior_pointers(1);");
             itw.WriteLine("GC_INIT();");
             if (mainHasParameters)
@@ -79,7 +80,6 @@ namespace Il2Native.Logic
             }
 
             itw.WriteLine(");");
-            itw.WriteLine("GC_finalize_all();");            
             itw.Write("return ");
             if (!mainMethod.ReturnsVoid)
             {
