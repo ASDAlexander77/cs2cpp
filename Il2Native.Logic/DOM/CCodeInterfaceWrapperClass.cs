@@ -63,7 +63,10 @@ namespace Il2Native.Logic.DOM
             c.WhiteSpace();
             c.TextSpanNewLine("{}");
 
-            new CCodeObjectCastOperatorDefinition((INamedTypeSymbol)Type).WriteTo(c);
+            // add new method
+            var namedTypeSymbol = (INamedTypeSymbol)Type;
+            new CCodeNewOperatorDeclaration(namedTypeSymbol).WriteTo(c);
+            new CCodeObjectCastOperatorDefinition(namedTypeSymbol).WriteTo(c);
 
             foreach (var declaration in Declarations)
             {
