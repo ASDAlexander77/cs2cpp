@@ -15,6 +15,7 @@
 #include <shared_mutex>
 #include <condition_variable>
 #include <atomic>
+#include <cstdlib>
 
 #ifdef _MSC_VER
 #include <Windows.h>

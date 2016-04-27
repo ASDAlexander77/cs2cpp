@@ -49,17 +49,11 @@ namespace System
     // http://serendipity.nofadz.com/hermetic/cal_stud.htm.
     // 
     // 
-    public enum DateTimeKind
-    {
-        Unspecified = 0,
-        Utc = 1,
-        Local = 2,
-    }
-
     [StructLayout(LayoutKind.Auto)]
     [Serializable]
     public struct DateTime : IComparable, IFormattable, IConvertible, IComparable<DateTime>, IEquatable<DateTime>
     {
+
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
@@ -574,7 +568,6 @@ namespace System
                 // Convert the ticks back to local. If the UTC ticks are out of range, we need to default to
                 // the UTC offset from MinValue and MaxValue to be consistent with Parse. 
                 Boolean isAmbiguousLocalDst = false;
-                Int64 offsetTicks;
                 // Another behaviour of parsing is to cause small times to wrap around, so that they can be used
                 // to compare times of day
                 if (ticks < 0)
@@ -646,11 +639,45 @@ namespace System
         }        
 #endif
 
+        public Boolean IsDaylightSavingTime()
+        {
+            return false;
+        }
+
         public static DateTime SpecifyKind(DateTime value, DateTimeKind kind)
         {
             return new DateTime(value.InternalTicks, kind);
         }
-        
+
+        public Int64 ToBinary()
+        {
+            if (Kind == DateTimeKind.Local)
+            {
+                // Local times need to be adjusted as you move from one time zone to another, 
+                // just as they are when serializing in text. As such the format for local times
+                // changes to store the ticks of the UTC time, but with flags that look like a 
+                // local date.
+
+                // To match serialization in text we need to be able to handle cases where
+                // the UTC value would be out of range. Unused parts of the ticks range are
+                // used for this, so that values just past max value are stored just past the
+                // end of the maximum range, and values just below minimum value are stored
+                // at the end of the ticks area, just below 2^62.
+                TimeSpan offset = new TimeSpan(0);
+                Int64 ticks = Ticks;
+                Int64 storedTicks = ticks - offset.Ticks;
+                if (storedTicks < 0)
+                {
+                    storedTicks = TicksCeiling + storedTicks;
+                }
+                return storedTicks | (unchecked((Int64)LocalMask));
+            }
+            else
+            {
+                return (Int64)dateData;
+            }
+        }
+
         // Return the underlying data, without adjust local times to the right time zone. Needed if performance
         // or compatibility are important.
         internal Int64 ToBinaryRaw()
@@ -1064,6 +1091,24 @@ namespace System
             return TicksToOADate(InternalTicks);
         }
 
+        public long ToFileTime()
+        {
+            // Treats the input as local if it is not specified
+            return this.InternalTicks;
+        }
+
+        public long ToFileTimeUtc()
+        {
+            // Treats the input as universal if it is not specified
+            long ticks = this.InternalTicks;
+            ticks -= FileTimeOffset;
+            if (ticks < 0)
+            {
+                throw new ArgumentOutOfRangeException(null, Environment.GetResourceString("ArgumentOutOfRange_FileTimeInvalid"));
+            }
+            return ticks;
+        }
+
         public DateTime ToLocalTime()
         {
             return ToLocalTime(false);
@@ -1094,6 +1139,11 @@ namespace System
                     return new DateTime(DateTime.MinTicks, DateTimeKind.Local);
             }
             return new DateTime(tick, DateTimeKind.Local, isAmbiguousLocalDst);
+        }
+
+        public DateTime ToUniversalTime()
+        {
+            return new DateTime(Ticks, DateTimeKind.Utc);
         }
 
         public String ToLongDateString()
@@ -1142,6 +1192,29 @@ namespace System
         {
             Contract.Ensures(Contract.Result<String>() != null);
             return DateTimeFormat.Format(this, format, DateTimeFormatInfo.GetInstance(provider));
+        }
+
+        public static Boolean TryParse(String s, out DateTime result)
+        {
+            return DateTimeParse.TryParse(s, DateTimeFormatInfo.CurrentInfo, DateTimeStyles.None, out result);
+        }
+
+        public static Boolean TryParse(String s, IFormatProvider provider, DateTimeStyles styles, out DateTime result)
+        {
+            DateTimeFormatInfo.ValidateStyles(styles, "styles");
+            return DateTimeParse.TryParse(s, DateTimeFormatInfo.GetInstance(provider), styles, out result);
+        }
+
+        public static Boolean TryParseExact(String s, String format, IFormatProvider provider, DateTimeStyles style, out DateTime result)
+        {
+            DateTimeFormatInfo.ValidateStyles(style, "style");
+            return DateTimeParse.TryParseExact(s, format, DateTimeFormatInfo.GetInstance(provider), style, out result);
+        }
+
+        public static Boolean TryParseExact(String s, String[] formats, IFormatProvider provider, DateTimeStyles style, out DateTime result)
+        {
+            DateTimeFormatInfo.ValidateStyles(style, "style");
+            return DateTimeParse.TryParseExactMultiple(s, formats, DateTimeFormatInfo.GetInstance(provider), style, out result);
         }
 
         public static DateTime operator +(DateTime d, TimeSpan t)
@@ -1199,6 +1272,44 @@ namespace System
         public static bool operator >=(DateTime t1, DateTime t2)
         {
             return t1.InternalTicks >= t2.InternalTicks;
+        }
+
+
+        // Returns a string array containing all of the known date and time options for the 
+        // current culture.  The strings returned are properly formatted date and 
+        // time strings for the current instance of DateTime.
+        public String[] GetDateTimeFormats()
+        {
+            Contract.Ensures(Contract.Result<String[]>() != null);
+            return (GetDateTimeFormats(CultureInfo.CurrentCulture));
+        }
+
+        // Returns a string array containing all of the known date and time options for the 
+        // using the information provided by IFormatProvider.  The strings returned are properly formatted date and 
+        // time strings for the current instance of DateTime.
+        public String[] GetDateTimeFormats(IFormatProvider provider)
+        {
+            Contract.Ensures(Contract.Result<String[]>() != null);
+            throw new NotImplementedException();
+        }
+
+
+        // Returns a string array containing all of the date and time options for the 
+        // given format format and current culture.  The strings returned are properly formatted date and 
+        // time strings for the current instance of DateTime.
+        public String[] GetDateTimeFormats(char format)
+        {
+            Contract.Ensures(Contract.Result<String[]>() != null);
+            return (GetDateTimeFormats(format, CultureInfo.CurrentCulture));
+        }
+
+        // Returns a string array containing all of the date and time options for the 
+        // given format format and given culture.  The strings returned are properly formatted date and 
+        // time strings for the current instance of DateTime.
+        public String[] GetDateTimeFormats(char format, IFormatProvider provider)
+        {
+            Contract.Ensures(Contract.Result<String[]>() != null);
+            throw new NotImplementedException();
         }
 
         //
@@ -1333,16 +1444,6 @@ namespace System
             }
             result = new DateTime(ticks, DateTimeKind.Unspecified);
             return true;
-        }
-
-        public DateTime ToUniversalTime()
-        {
-            return this;
-        }
-
-        public long ToFileTimeUtc()
-        {
-            return (long) this.dateData;
         }
     }
 }

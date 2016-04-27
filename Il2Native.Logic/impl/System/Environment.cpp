@@ -3,7 +3,7 @@
 // Method : System.Environment.GetProcessorCount()
 int32_t CoreLib::System::Environment::GetProcessorCount()
 {
-    throw 3221274624U;
+	return std::thread::hardware_concurrency();
 }
 
 // Method : System.Environment.TickCount.get
@@ -23,5 +23,5 @@ int32_t CoreLib::System::Environment::get_TickCount()
 // Method : System.Environment._Exit(int)
 void CoreLib::System::Environment::_Exit(int32_t exitCode)
 {
-    throw 3221274624U;
+	std::exit(exitCode);
 }
