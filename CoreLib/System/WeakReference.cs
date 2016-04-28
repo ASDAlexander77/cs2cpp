@@ -10,7 +10,7 @@ namespace System
     [Serializable()]
     public class WeakReference
     {
-
+        internal IntPtr m_handle;
         
         public WeakReference(Object target)
         {
