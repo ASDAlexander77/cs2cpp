@@ -163,13 +163,12 @@
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeNewOperatorWithSizeAndFlagsDebugDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeNewOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeUnboxForPrimitiveValuesOrEnumsDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeHashVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\CCodeEqualsVirtualMethod.cs" />
-    <Compile Include="DOM\Synthesized\CCodeNewOperatorWithSizeAndFlagsDeclaration.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />
@@ -177,8 +176,6 @@
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeSpecialTypeOrEnumConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDefinition.cs" />
-    <Compile Include="DOM\Synthesized\CCodeNewOperatorWithSizeDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeNewOperatorDeclaration.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>

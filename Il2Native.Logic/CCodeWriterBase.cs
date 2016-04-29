@@ -366,6 +366,21 @@ namespace Il2Native.Logic
             this.TextSpan("::");
 
             this.WriteName(fieldSymbol);
+
+            if (fieldSymbol.HasConstantValue && !fieldSymbol.IsConst)
+            {
+                this.WhiteSpace();
+                this.TextSpan("=");
+                this.WhiteSpace();
+                if (fieldSymbol.ConstantValue == null)
+                {
+                    this.TextSpan("nullptr");
+                }
+                else
+                {
+                    this.TextSpan(fieldSymbol.ConstantValue.ToString());
+                }
+            }
         }
 
         public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)

@@ -44,8 +44,8 @@ namespace Il2Native.Logic.DOM.Implementations
         public bool IsReadOnly { get; private set; }
         public bool IsVolatile { get; private set; }
         public ITypeSymbol Type { get; set; }
-        public bool HasConstantValue { get; private set; }
-        public object ConstantValue { get; private set; }
+        public bool HasConstantValue { get; set; }
+        public object ConstantValue { get; set; }
         public ImmutableArray<CustomModifier> CustomModifiers { get; private set; }
 
         ISymbol ISymbol.OriginalDefinition

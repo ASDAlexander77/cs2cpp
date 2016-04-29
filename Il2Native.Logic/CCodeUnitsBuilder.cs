@@ -131,7 +131,9 @@ namespace Il2Native.Logic
                 Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true
+                IsStatic = true,
+                HasConstantValue = true,
+                ConstantValue = "false"
             };
 
             unit.Declarations.Add(new CCodeFieldDeclaration(cctorBeingCalledField) { DoNotWrapStatic = true });
@@ -144,7 +146,9 @@ namespace Il2Native.Logic
                 Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true
+                IsStatic = true,
+                HasConstantValue = true,
+                ConstantValue = "false"
             };
 
             unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledField) { DoNotWrapStatic = true });
@@ -188,6 +192,27 @@ namespace Il2Native.Logic
 
             unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
+
+            // add type descriptor
+            // add call flag for static constructor
+            var typeDescriptorHolderField = new FieldImpl
+            {
+                Name = "__type_descriptor",
+                Type =
+                    new NamedTypeImpl
+                    {
+                        Name = "GC_descr",
+                        TypeKind = TypeKind.TypeParameter
+                    },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true,
+                HasConstantValue = true,
+                ConstantValue = 0
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(typeDescriptorHolderField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(typeDescriptorHolderField) { DoNotWrapStatic = true });
         }
 
         private static bool TypesFilter(ITypeSymbol t)
@@ -348,9 +373,8 @@ namespace Il2Native.Logic
             if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeDeclaration((INamedTypeSymbol)type, finalizationRequired));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDeclaration((INamedTypeSymbol)type, finalizationRequired));
-                unit.Declarations.Add(new CCodeNewOperatorWithSizeAndFlagsDebugDeclaration((INamedTypeSymbol)type, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)

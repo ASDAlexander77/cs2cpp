@@ -53,6 +53,7 @@
 #endif
 
 #include "gc.h"
+#include "gc_typed.h"
 #include "javaxfc.h"
 #undef min
 #undef max
