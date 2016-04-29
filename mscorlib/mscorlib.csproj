@@ -56,9 +56,6 @@
     <Compile Include="..\CoreLib\Impl\Environment.cs">
       <Link>Impl\Environment.cs</Link>
     </Compile>
-    <Compile Include="..\CoreLib\Impl\GC.cs">
-      <Link>Impl\GC.cs</Link>
-    </Compile>
     <Compile Include="..\CoreLib\Impl\Globalization\CultureInfo.cs">
       <Link>Impl\Globalization\CultureInfo.cs</Link>
     </Compile>

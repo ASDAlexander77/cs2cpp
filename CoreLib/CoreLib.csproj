@@ -46,7 +46,6 @@
     <Compile Include="Impl\Console.cs" />
     <Compile Include="Impl\Decimal.cs" />
     <Compile Include="Impl\Delegate.cs" />
-    <Compile Include="Impl\GC.cs" />
     <Compile Include="Impl\Globalization\CultureInfo.cs" />
     <Compile Include="Impl\IO\__ConsoleStream.cs" />
     <Compile Include="Impl\Number.cs" />

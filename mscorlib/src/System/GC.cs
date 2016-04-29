@@ -315,6 +315,9 @@ namespace System {
     
         // Indicates that the system should not call the Finalize() method on
         // an object that would normally require this call.
+        [System.Security.SecurityCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        private static extern void _SuppressFinalize(Object o);
 
         [System.Security.SecuritySafeCritical]  // auto-generated
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
