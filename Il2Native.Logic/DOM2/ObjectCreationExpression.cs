@@ -52,6 +52,13 @@ namespace Il2Native.Logic.DOM2
             {
                 c.TextSpan("new");
                 c.WhiteSpace();
+
+                if (Cs2CGenerator.IsSuppportDebugOutput)
+                {
+                    c.TextSpan("(__FILE__, __LINE__)");
+                    c.WhiteSpace();
+                }
+
                 c.WriteType(Type, true, true, true);
                 WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
             }
