@@ -71,7 +71,7 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("_init");
             }
 
-            if (Cs2CGenerator.IsSuppportDebugOutput)
+            if (Cs2CGenerator.DebugOutput)
             {
                 c.TextSpan("_debug");
             }
@@ -80,7 +80,7 @@ namespace Il2Native.Logic.DOM2
 
             var any = false;
 
-            if (Cs2CGenerator.IsSuppportDebugOutput)
+            if (Cs2CGenerator.DebugOutput)
             {
                 c.TextSpan("__FILE__, __LINE__, ");
             }

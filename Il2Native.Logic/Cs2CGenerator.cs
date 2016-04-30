@@ -24,13 +24,12 @@ namespace Il2Native.Logic
     public class Cs2CGenerator
     {
         private readonly IDictionary<string, BoundStatement> boundBodyByMethodSymbol = new ConcurrentDictionary<string, BoundStatement>();
+
         private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         private readonly IDictionary<string, SourceMethodSymbol> sourceMethodByMethodSymbol = new ConcurrentDictionary<string, SourceMethodSymbol>();
 
         private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-
-        public const bool IsSuppportDebugOutput = true;
 
         /// <summary>
         /// </summary>
@@ -49,6 +48,16 @@ namespace Il2Native.Logic
         {
             this.Sources = source;
             this.FirstSource = this.Sources.First();
+
+            this.Options = new ProjectProperties();
+
+            DebugOutput = true;
+            if (args != null && args.Contains("release"))
+            {
+                this.Options["Configuration"] = "Release";
+                DebugOutput = false;
+            }
+
             if (this.FirstSource.EndsWith(".csproj"))
             {
                 this.LoadProject(this.FirstSource);
@@ -58,20 +67,20 @@ namespace Il2Native.Logic
                 var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
                 this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
                 this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
-                this.DebugInfo = args != null && args.Contains("debug");
-                this.Options = new ProjectProperties();
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public static bool DebugOutput { get; set; }
+
+        /// <summary>
+        /// </summary>
         public ISet<AssemblyIdentity> Assemblies { get; private set; }
 
         /// <summary>
         /// </summary>
         public string CoreLibPath { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool DebugInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -236,7 +245,7 @@ namespace Il2Native.Logic
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
-                                                                                 .WithOptimizations(!this.DebugInfo)
+                                                                                 .WithOptimizations(!DebugOutput)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
             var compilation = CSharpCompilation.Create(assemblyName, syntaxTrees, assemblies.ToArray(), options);
@@ -436,7 +445,8 @@ namespace Il2Native.Logic
                     .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
                     .ToArray();
 
-            var options = new ProjectProperties();
+            var options = this.Options;
+
             foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
             {
                 if (!ProjectCondition(elements, options))
@@ -455,12 +465,11 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.Options = options;
-
             this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
+            DebugOutput = this.Options["Configuration"] != "Release";
         }
 
-        private bool ProjectCondition(XElement element, ProjectProperties options)
+        private bool ProjectCondition(XElement element, IDictionary<string, string> options)
         {
             var conditionAttribute = element.Attribute("Condition");
             if (conditionAttribute == null)
@@ -485,7 +494,7 @@ namespace Il2Native.Logic
             return left.Equals(right);
         }
 
-        private string FillProperties(string conditionValue, ProjectProperties options)
+        private string FillProperties(string conditionValue, IDictionary<string, string> options)
         {
             var processed = new StringBuilder();
 

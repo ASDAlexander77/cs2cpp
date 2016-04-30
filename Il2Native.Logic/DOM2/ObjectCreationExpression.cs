@@ -53,7 +53,7 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan("new");
                 c.WhiteSpace();
 
-                if (Cs2CGenerator.IsSuppportDebugOutput)
+                if (Cs2CGenerator.DebugOutput)
                 {
                     c.TextSpan("(__FILE__, __LINE__)");
                     c.WhiteSpace();
@@ -66,13 +66,17 @@ namespace Il2Native.Logic.DOM2
             {
                 if (this.NewTemplate(c))
                 {
-                    c.TextSpan("(__FILE__, __LINE__");
+                    c.TextSpan("(");
+                    if (Cs2CGenerator.DebugOutput)
+                    {
+                        c.TextSpan("__FILE__, __LINE__");
+                    }
 
                     WriteCallArgumentsWithoutParenthesis(
                         c,
                         this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
                         this.Arguments,
-                        anyArgs: true);
+                        anyArgs: Cs2CGenerator.DebugOutput);
 
                     c.TextSpan(")");
                 }
@@ -113,7 +117,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                if (Cs2CGenerator.IsSuppportDebugOutput)
+                if (Cs2CGenerator.DebugOutput)
                 {
                     c.TextSpan("__new_debug");
                 }

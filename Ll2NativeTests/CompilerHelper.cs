@@ -48,52 +48,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool Android = false;
-
-        /// <summary>
-        /// </summary>
-        public const bool Emscripten = false;
-
-        /// <summary>
-        /// </summary>
-        public const bool UsingRoslyn = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool GcEnabled = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool MultiThreadingEnabled = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool GcDebugEnabled = false;
-
-        /// <summary>
-        /// </summary>
-        public const bool GctorsEnabled = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool DebugInfo = false;
-
-        /// <summary>
-        /// </summary>
-        public const bool NoLineDebugInfo = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool MultiCore = false;
-
-        /// <summary>
-        ///     ex. llc -O2 'file'.ll
-        /// </summary>
-        public const bool CompileWithOptimization = true;
-
-        /// <summary>
-        /// </summary>
-        public const bool VerboseOutput = false;
+        public static bool GcDebugEnabled = true;
 
         /// <summary>
         /// </summary>
@@ -118,7 +73,7 @@
         /// <param name="stubs"></param>
         /// <returns>
         /// </returns>
-        public static string[] GetConverterArgs(bool includeCoreLib, bool gc = GcEnabled, bool mt = MultiThreadingEnabled, bool gctors = GctorsEnabled, bool debugInfo = DebugInfo, bool stubs = false)
+        public static string[] GetConverterArgs(bool includeCoreLib, bool stubs = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -139,54 +94,14 @@
                 }
             }
 
-            if (!gc)
+            if (!GcDebugEnabled)
             {
-                args.Add("gc-");
-            }
-
-            if (!mt)
-            {
-                args.Add("mt-");
-            }
-
-            if (!gctors)
-            {
-                args.Add("gctors-");
-            }
-
-            if (debugInfo)
-            {
-                args.Add("debug");
-            }
-
-            if (MultiCore)
-            {
-                args.Add("multi");
-            }
-
-            if (Android)
-            {
-                args.Add("android");
-            }
-
-            if (VerboseOutput)
-            {
-                args.Add("verbose");
+                args.Add("release");
             }
 
             if (stubs || Stubs)
             {
                 args.Add("stubs");
-            }
-
-            if (GcDebugEnabled)
-            {
-                args.Add("gcdebug");
-            }
-
-            if (NoLineDebugInfo)
-            {
-                args.Add("line-");
             }
 
             return args.ToArray();
@@ -317,7 +232,7 @@
                 return;
             }
 
-            ExecCompile(fileName, true, opt: CompileWithOptimization, returnCode: returnCode);
+            ExecCompile(fileName, true, returnCode: returnCode);
         }
 
         /// <summary>
@@ -361,7 +276,7 @@
                 return;
             }
 
-            ExecCompile(fileName, opt: CompileWithOptimization, returnCode: returnCode);
+            ExecCompile(fileName, returnCode: returnCode);
 
             Thread.Sleep(400);
 

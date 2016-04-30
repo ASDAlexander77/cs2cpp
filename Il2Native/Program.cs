@@ -30,6 +30,7 @@ namespace Il2Native
                 Console.WriteLine("  .csproj                 C# project file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Options:");
+                Console.WriteLine("  /release                Release mode");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
                 Console.WriteLine("                          Reference assembly by name or file");
