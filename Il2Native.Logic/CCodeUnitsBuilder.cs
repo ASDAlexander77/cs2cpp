@@ -370,9 +370,10 @@ namespace Il2Native.Logic
             }
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
-            if (type.TypeKind != TypeKind.Interface && type.BaseType == null && type.Name != "<Module>")
+            if (type.TypeKind != TypeKind.Interface && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, debugVersion:true));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
             }

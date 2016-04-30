@@ -1,3 +1,13 @@
+enum class GCNormal
+{
+	Default
+};
+
+enum class GCAtomic
+{
+	Default
+};
+
 // map valuetype to class
 template<typename T> 
 struct valuetype_to_class { typedef T type; };
@@ -72,55 +82,58 @@ extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
 inline void* __new_set0(size_t _size)
 {
-	return _size > 102400 ? GC_MALLOC_IGNORE_OFF_PAGE(_size) : GC_MALLOC(_size);
+	auto mem = _size > 102400 
+		? GC_MALLOC_IGNORE_OFF_PAGE(_size) 
+		: GC_MALLOC(_size);
+	return mem;
 }
 
-inline void* __new_set0(size_t _size, bool _is_atomic, GC_descr _type_descriptor)
+inline void* __new_set0(size_t _size, GCNormal)
+{
+	return __new_set0(_size);
+}
+
+inline void* __new_set0(size_t _size, GCAtomic)
 {
 	auto mem = _size > 102400 
-		? _is_atomic 
-			? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
-			: _type_descriptor 
-				? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descriptor) 
-				: GC_MALLOC_IGNORE_OFF_PAGE(_size)
-		: _is_atomic 
-			? GC_MALLOC_ATOMIC(_size) 
-			: _type_descriptor 
-				? GC_MALLOC_EXPLICITLY_TYPED(_size, _type_descriptor) 
-				: GC_MALLOC(_size)
-	if (_is_atomic)
-	{
-		std::memset(mem, 0, _size);
-	}
-
+		? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
+		: GC_MALLOC_ATOMIC(_size);
+	std::memset(mem, 0, _size);
 	return mem;
 }
 
-inline void* __new_set0(size_t _size, size_t _count, bool _is_atomic, GC_descr _type_descriptor)
+inline void* __new_set0(size_t _size, GC_descr _type_descr)
 {
-	auto actual_size = _size * _count;
-	auto mem = actual_size > 102400 
-		? _is_atomic 
-			? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(actual_size) 
-			: _type_descriptor 
-				? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descriptor) 
-				: GC_MALLOC_IGNORE_OFF_PAGE(actual_size)
-		: _is_atomic 
-			? GC_MALLOC_ATOMIC(_size) 
-			: _type_descriptor 
-				? GC_MALLOC_EXPLICITLY_TYPED(_size, _type_descriptor) 
-				: GC_MALLOC(_size)
-	if (_is_atomic)
-	{
-		std::memset(mem, 0, _size);
-	}
-
+	auto mem = _size > 102400 
+		? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descr) 
+		: GC_MALLOC_EXPLICITLY_TYPED(_size, _type_descr);
 	return mem;
 }
 
-inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, GC_descr _type_descriptor)
+inline void* __new_set0_with_finalizer(size_t _size)
 {
-	auto mem = __new_set0(_size, _is_atomic, _type_descriptor);
+	auto mem = __new_set0(_size);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GCNormal _is_normal)
+{
+	auto mem = __new_set0(_size, _is_normal);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GCAtomic _is_atomic)
+{
+	auto mem = __new_set0(_size, _is_atomic);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GC_descr _type_descr)
+{
+	auto mem = __new_set0(_size, _type_descr);
 	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
 	return mem;
 }
@@ -129,36 +142,72 @@ inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, GC_descr _
 inline void* __new_set0(size_t _size, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
-	return _size > 102400 ? GC_debug_malloc_atomic_ignore_off_page(_size, _file, _line) : GC_debug_malloc(_size, _file, _line);
+	auto mem = _size > 102400 
+		? GC_debug_malloc_ignore_off_page(_size, _file, _line) 
+		: GC_debug_malloc(_size, _file, _line);
+	return mem;
 #else
 	return __new_set0(_size);
 #endif
 }
 
-inline void* __new_set0(size_t _size, bool _is_atomic, GC_descr _type_descriptor, const char* _file, int _line)
+inline void* __new_set0(size_t _size, GCNormal, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
-	auto mem = _size > 102400 
-		? _is_atomic 
-			? GC_debug_malloc_atomic_ignore_off_page(_size, _file, _line) 
-			: GC_debug_malloc_ignore_off_page(_size, _file, _line) 
-		: _is_atomic 
-			? GC_debug_malloc_atomic(_size, _file, _line) 
-			: GC_debug_malloc(_size, _file, _line);
-	if (_is_atomic)
-	{
-		std::memset(mem, 0, _size);
-	}
-
-	return mem;
+	return __new_set0(_size, _file, _line);
 #else
-	return __new_set0(_size, _is_atomic);
+	return __new_set0(_size);
 #endif
 }
 
-inline void* __new_set0_with_finalizer(size_t _size, bool _is_atomic, GC_descr _type_descriptor, const char* _file, int _line)
+inline void* __new_set0(size_t _size, GCAtomic, const char* _file, int _line)
 {
-	auto mem = __new_set0(_size, _is_atomic, _type_descriptor, _file, _line);
+#ifdef GC_DEBUG
+	auto mem = _size > 102400 
+		? GC_debug_malloc_atomic_ignore_off_page(_size, _file, _line) 
+		: GC_debug_malloc_atomic(_size, _file, _line);
+	return mem;
+#else
+	return __new_set0(_size, GCAtomic::Default);
+#endif
+}
+
+inline void* __new_set0(size_t _size, GC_descr _type_descr, const char* _file, int _line)
+{
+#ifdef GC_DEBUG
+	auto mem = _size > 102400 
+		? GC_debug_malloc_ignore_off_page(_size, _file, _line) 
+		: GC_debug_malloc(_size, _file, _line);
+	return mem;
+#else
+	return __new_set0(_size, _type_descr);
+#endif
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, const char* _file, int _line)
+{
+	auto mem = __new_set0(_size, _file, _line);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GCNormal, const char* _file, int _line)
+{
+	auto mem = __new_set0(_size, _file, _line);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GCAtomic, const char* _file, int _line)
+{
+	auto mem = __new_set0(_size, GCAtomic::Default, _file, _line);
+	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
+	return mem;
+}
+
+inline void* __new_set0_with_finalizer(size_t _size, GC_descr _type_descr, const char* _file, int _line)
+{
+	auto mem = __new_set0(_size, _type_descr, _file, _line);
 	GC_REGISTER_FINALIZER((void *)mem, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
 	return mem;
 }
@@ -172,7 +221,7 @@ template <typename T, typename... Tp> inline T* __new(Tp... params)
 
 template <typename T, typename... Tp> inline T* __new_debug(const char* _file, int _line, Tp... params) 
 {
-	auto t = new T();		
+	auto t = new (_file, _line) T();		
 	t->_ctor(params...);
 	return t;
 } 

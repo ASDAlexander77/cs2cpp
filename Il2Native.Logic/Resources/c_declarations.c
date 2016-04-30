@@ -42,7 +42,7 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
 {
 	// we do not need to call __new here as it already constructed
-	return new (sizeof(T), is_atomic<T>::value) T(t);
+	return new T(t);
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box (T t)
@@ -64,7 +64,7 @@ template <typename T> inline typename std::enable_if<is_interface_type<T>::value
 template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug (const char* _file, int _line, T t)
 {
 	// we do not need to call __new here as it already constructed
-	return new (sizeof(T), is_atomic<T>::value, _file, _line) T(t);
+	return new (_file, _line) T(t);
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug (const char* _file, int _line, T t)
@@ -293,13 +293,13 @@ public:
 	inline static __array<T>* allocate_array(int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new ((int32_t)size, is_atomic<T>::value) __array<T>(length);
+		return new (size) __array<T>(length);
 	}
 
 	inline static __array<T>* allocate_array_debug(const char* _file, int _line, int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new ((int32_t)size, is_atomic<T>::value, _file, _line) __array<T>(length);
+		return new (size, _file, _line) __array<T>(length);
 	}
 
 	template <typename... Ta> inline static void __init_array(__array<T>* instance, Ta... items)
@@ -585,14 +585,14 @@ public:
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		auto instance = new ((int32_t)size, is_atomic<T>::value) __multi_array<T, RANK>(boundries);
+		auto instance = new (size) __multi_array<T, RANK>(boundries);
 	}
 
 	inline static __multi_array<T, RANK>* allocate_multiarray_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		auto instance = new ((int32_t)size, is_atomic<T>::value, _file, _line) __multi_array<T, RANK>(boundries);
+		auto instance = new (size, _file, _line) __multi_array<T, RANK>(boundries);
 	}
 
 	template <typename... Ta> inline static void __init_array(__multi_array<T, RANK>* instance, Ta... items)

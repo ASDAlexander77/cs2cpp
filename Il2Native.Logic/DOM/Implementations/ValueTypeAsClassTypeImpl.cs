@@ -275,7 +275,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public ImmutableArray<ISymbol> GetMembers()
         {
-            throw new NotImplementedException();
+            return this.typeSymbol.GetMembers();
         }
 
         public ImmutableArray<ISymbol> GetMembers(string name)

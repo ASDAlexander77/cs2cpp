@@ -26,27 +26,31 @@ namespace Il2Native.Logic.DOM.Synthesized
             var arguments = new List<Expression>();
 
             var parameterSymbolSize = new ParameterImpl { Name = "_size" };
-            var parameterSize = new Parameter { ParameterSymbol = parameterSymbolSize };
-
             parameterSymbols.Add(parameterSymbolSize);
-            arguments.Add(parameterSize);
 
-            if (withExtraParams)
+            if (!withExtraParams)
+            {
+                var parameterSize = new Parameter { ParameterSymbol = parameterSymbolSize };
+                arguments.Add(parameterSize);
+            }
+            else
             {
                 var parameterSymbolCustomSize = new ParameterImpl { Name = "_customSize" };
                 var parameterCustomSize = new Parameter { ParameterSymbol = parameterSymbolCustomSize };
-                var parameterSymbolIsAtomic = new ParameterImpl { Name = "_is_atomic" };
-                var parameterIsAtomic = new Parameter { ParameterSymbol = parameterSymbolIsAtomic };
-                var parameterSymbolTypeDescr = new ParameterImpl { Name = "_type_descr" };
-                var parameterTypeDescr = new Parameter { ParameterSymbol = parameterSymbolTypeDescr };
 
                 parameterSymbols.Add(parameterSymbolCustomSize);
-                parameterSymbols.Add(parameterSymbolIsAtomic);
-                parameterSymbols.Add(parameterSymbolTypeDescr);
-
                 arguments.Add(parameterCustomSize);
-                arguments.Add(parameterIsAtomic);
-                arguments.Add(parameterTypeDescr);
+            }
+
+            if (type.IsAtomicType())
+            {
+                var parameterSymbolIsAtomicOrTypeDescr = new ParameterImpl { Name = "_is_atomic_or_type_descr" };
+                parameterSymbols.Add(parameterSymbolIsAtomicOrTypeDescr);
+                arguments.Add(
+                    new FieldAccess
+                    {
+                        Field = new FieldImpl { ContainingType = new NamedTypeImpl { Name = "GCAtomic" }, Name = "Default", IsStatic = true }
+                    });
             }
 
             if (debugVersion)
@@ -84,7 +88,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             c.TextSpan("void* operator new (size_t _size");
             if (this.withExtraParams)
             {
-                c.TextSpan(", int32_t _customSize, bool _is_atomic, GC_descr _type_descr");
+                c.TextSpan(", int32_t _customSize");
             }
 
             if (this.debugVersion)

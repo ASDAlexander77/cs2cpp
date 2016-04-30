@@ -5,6 +5,7 @@
 
 namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -324,7 +325,64 @@ namespace Il2Native.Logic
 
         public static bool IsAtomicType(this ITypeSymbol type)
         {
-            return !type.GetMembers().OfType<IFieldSymbol>().Any(f => f.Type.IsReferenceType) && (type.BaseType == null || type.BaseType.IsAtomicType());
+            if (type.TypeKind == TypeKind.Interface)
+            {
+                return false;
+            }
+
+            return
+                !type.GetMembers().OfType<IFieldSymbol>().Any(f => !f.IsStatic && !f.IsConst && f.Type.IsReferenceType()) &&
+                (type.BaseType == null || type.BaseType.IsAtomicType());
+        }
+
+        public static bool IsReferenceType(this ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.Interface)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.PointerType)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.ArrayType)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.DynamicType)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.Class)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.Delegate)
+            {
+                return true;
+            }
+
+            if (type.TypeKind == TypeKind.Struct)
+            {
+                return false;
+            }
+
+            if (type.TypeKind == TypeKind.Enum)
+            {
+                return false;
+            }
+
+            if (type.TypeKind == TypeKind.TypeParameter)
+            {
+                return true;
+            }
+
+            throw new NotSupportedException();
         }
 
         public static bool IsSupportedVolatile(this IFieldSymbol fieldSymbol)
