@@ -65,7 +65,8 @@ namespace Il2Native.Logic.DOM
 
             // add new method
             var namedTypeSymbol = (INamedTypeSymbol)Type;
-            new CCodeNewOperatorDeclaration(@interface).WriteTo(c);
+            // not needed as we use global normal allocator
+            ////new CCodeNewOperatorDeclaration(@interface).WriteTo(c);
             new CCodeObjectCastOperatorDefinition(namedTypeSymbol).WriteTo(c);
 
             foreach (var declaration in Declarations)

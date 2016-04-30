@@ -16,6 +16,10 @@ struct valuetype_to_class { typedef T type; };
 template<typename T> 
 struct class_to_valuetype { typedef T type; };
 
+// map class to valuetype
+template<typename T> 
+struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
+
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef

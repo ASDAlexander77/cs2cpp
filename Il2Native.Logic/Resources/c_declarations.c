@@ -293,13 +293,15 @@ public:
 	inline static __array<T>* allocate_array(int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new (size) __array<T>(length);
+		auto pointer = ::operator new (size, gc_traits<T>::value);
+		return new (pointer) __array<T>(length);
 	}
 
 	inline static __array<T>* allocate_array_debug(const char* _file, int _line, int32_t length)
 	{
 		auto size = sizeof(__array<T>) + length * sizeof(T);
-		return new (size, _file, _line) __array<T>(length);
+		auto pointer = ::operator new (size, gc_traits<T>::value, _file, _line);
+		return new (pointer) __array<T>(length);
 	}
 
 	template <typename... Ta> inline static void __init_array(__array<T>* instance, Ta... items)
@@ -585,14 +587,16 @@ public:
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		auto instance = new (size) __multi_array<T, RANK>(boundries);
+		auto pointer = ::operator new (size, gc_traits<T>::value);
+		auto instance = new (pointer) __multi_array<T, RANK>(boundries);
 	}
 
 	inline static __multi_array<T, RANK>* allocate_multiarray_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
-		auto instance = new (size, _file, _line) __multi_array<T, RANK>(boundries);
+		auto pointer = ::operator new (size, gc_traits<T>::value, _file, _line);
+		auto instance = new (pointer) __multi_array<T, RANK>(boundries);
 	}
 
 	template <typename... Ta> inline static void __init_array(__multi_array<T, RANK>* instance, Ta... items)

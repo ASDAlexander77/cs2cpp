@@ -378,6 +378,11 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
             }
 
+            if (type.SpecialType == SpecialType.System_Array)
+            {
+                unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration((INamedTypeSymbol)type));
+            }
+
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));

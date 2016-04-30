@@ -784,6 +784,15 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WriteType(namedTypeSymbol);
                 c.WhiteSpace();
                 c.TextSpanNewLine("type; };");
+
+                // map class to valuetype
+                if (namedTypeSymbol.IsAtomicType())
+                {
+                    c.TextSpanNewLine("template<>");
+                    c.TextSpanNewLine("struct gc_traits<");
+                    c.WriteType(namedTypeSymbol, true, false, true);
+                    c.TextSpanNewLine("> { constexpr static const GCAtomic value = GCAtomic::Default; };");
+                }
             }
         }
 
