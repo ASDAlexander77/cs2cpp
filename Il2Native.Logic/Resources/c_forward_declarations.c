@@ -212,6 +212,86 @@ inline void* __new_set0_with_finalizer(size_t _size, GC_descr _type_descr, const
 	return mem;
 }
 
+inline void* operator new (size_t _size)
+{
+    return __new_set0(_size);
+}
+
+inline void* operator new (size_t _size, const char* _file, int _line)
+{
+    return __new_set0(_size, _file, _line);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize)
+{
+    return __new_set0(_customSize);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, const char* _file, int _line)
+{
+    return __new_set0(_customSize, _file, _line);
+}
+
+inline void* operator new (size_t _size, GCNormal)
+{
+    return __new_set0(_size, GCNormal::Default);
+}
+
+inline void* operator new (size_t _size, GCNormal, const char* _file, int _line)
+{
+    return __new_set0(_size, GCNormal::Default, _file, _line);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GCNormal)
+{
+    return __new_set0(_customSize, GCNormal::Default);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GCNormal, const char* _file, int _line)
+{
+    return __new_set0(_customSize, GCAtomic::Default, _file, _line);
+}
+
+inline void* operator new (size_t _size, GCAtomic)
+{
+    return __new_set0(_size, GCAtomic::Default);
+}
+
+inline void* operator new (size_t _size, GCAtomic, const char* _file, int _line)
+{
+    return __new_set0(_size, GCAtomic::Default, _file, _line);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GCAtomic)
+{
+    return __new_set0(_customSize, GCAtomic::Default);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GCAtomic, const char* _file, int _line)
+{
+    return __new_set0(_customSize, GCAtomic::Default, _file, _line);
+}
+
+inline void* operator new (size_t _size, GC_descr _type_descr)
+{
+    return __new_set0(_size, _type_descr);
+}
+
+inline void* operator new (size_t _size, GC_descr _type_descr, const char* _file, int _line)
+{
+    return __new_set0(_size, _type_descr, _file, _line);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr)
+{
+    return __new_set0(_customSize, _type_descr);
+}
+
+inline void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr, const char* _file, int _line)
+{
+    return __new_set0(_customSize, _type_descr, _file, _line);
+}
+
 template <typename T, typename... Tp> inline T* __new(Tp... params) 
 {
 	auto t = new T();		
