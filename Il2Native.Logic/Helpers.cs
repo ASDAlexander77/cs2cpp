@@ -331,27 +331,27 @@ namespace Il2Native.Logic
             }
 
             return
-                !type.GetMembers().OfType<IFieldSymbol>().Any(f => !f.IsStatic && !f.IsConst && f.Type.IsReferenceType()) &&
+                !type.GetMembers().OfType<IFieldSymbol>().Any(f => !f.IsStatic && !f.IsConst && f.Type.IsPossibleReferenceType()) &&
                 (type.BaseType == null || type.BaseType.IsAtomicType());
         }
 
-        public static IEnumerable<IFieldSymbol> EnumReferenceFields(this ITypeSymbol type)
+        public static IEnumerable<IFieldSymbol> EnumPossibleReferenceFields(this ITypeSymbol type)
         {
             if (type.BaseType != null)
             {
-                foreach (var field in type.BaseType.EnumReferenceFields())
+                foreach (var field in type.BaseType.EnumPossibleReferenceFields())
                 {
                     yield return field;
                 }                
             }
 
-            foreach (var field in type.GetMembers().OfType<IFieldSymbol>().Where(f => !f.IsStatic && !f.IsConst && f.Type.IsReferenceType()))
+            foreach (var field in type.GetMembers().OfType<IFieldSymbol>().Where(f => !f.IsStatic && !f.IsConst && f.Type.IsPossibleReferenceType()))
             {
                 yield return field;
             }
         }
 
-        public static bool IsReferenceType(this ITypeSymbol type)
+        public static bool IsPossibleReferenceType(this ITypeSymbol type)
         {
             if (type.TypeKind == TypeKind.Interface)
             {

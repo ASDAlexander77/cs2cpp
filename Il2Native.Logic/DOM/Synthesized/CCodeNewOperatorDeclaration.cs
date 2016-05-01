@@ -52,6 +52,31 @@ namespace Il2Native.Logic.DOM.Synthesized
                         Field = new FieldImpl { ContainingType = new NamedTypeImpl { Name = "GCAtomic" }, Name = "Default", IsStatic = true }
                     });
             }
+            else
+            {
+                // get or create type descriptor
+                var parameterSymbolIsAtomicOrTypeDescr = new ParameterImpl { Name = "_is_atomic_or_type_descr" };
+                parameterSymbols.Add(parameterSymbolIsAtomicOrTypeDescr);
+
+
+                var local = new Local { CustomName = "__type_descriptor" };
+                arguments.Add(
+                    new ConditionalOperator
+                    {
+                        Condition = local,
+                        Consequence = local,
+                        Alternative =
+                            new AssignmentOperator
+                            {
+                                Right = local,
+                                Left =
+                                    new Call
+                                    {
+                                        Method = new CCodeGetTypeDescriptorDeclaration.GetTypeDescriptorMethod(type)
+                                    }
+                            }
+                    });
+            } 
 
             if (debugVersion)
             {

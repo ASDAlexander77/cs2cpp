@@ -31,7 +31,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             c.TextSpanNewLine("GC_word bitmap[GC_BITMAP_SIZE(__type)] = {0};");
             
             // set fields
-            foreach (var field in this.Type.EnumReferenceFields())
+            foreach (var field in this.Type.EnumPossibleReferenceFields())
             {
                 c.TextSpan("GC_set_bit(bitmap, GC_WORD_OFFSET(__type,");
                 c.WhiteSpace();
@@ -48,6 +48,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             public GetTypeDescriptorMethod(INamedTypeSymbol type)
             {
+                Name = "__get_type_descriptor";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;

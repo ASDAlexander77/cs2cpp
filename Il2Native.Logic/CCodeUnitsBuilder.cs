@@ -193,26 +193,29 @@ namespace Il2Native.Logic
             unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
 
-            // add type descriptor
-            // add call flag for static constructor
-            var typeDescriptorHolderField = new FieldImpl
+            if (!type.IsAtomicType())
             {
-                Name = "__type_descriptor",
-                Type =
-                    new NamedTypeImpl
-                    {
-                        Name = "GC_descr",
-                        TypeKind = TypeKind.TypeParameter
-                    },
-                ContainingType = (INamedTypeSymbol)type,
-                ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true,
-                HasConstantValue = true,
-                ConstantValue = 0
-            };
+                // add type descriptor
+                // add call flag for static constructor
+                var typeDescriptorHolderField = new FieldImpl
+                {
+                    Name = "__type_descriptor",
+                    Type =
+                        new NamedTypeImpl
+                        {
+                            Name = "GC_descr",
+                            TypeKind = TypeKind.TypeParameter
+                        },
+                    ContainingType = (INamedTypeSymbol)type,
+                    ContainingNamespace = type.ContainingNamespace,
+                    IsStatic = true,
+                    HasConstantValue = true,
+                    ConstantValue = 0
+                };
 
-            unit.Declarations.Add(new CCodeFieldDeclaration(typeDescriptorHolderField) { DoNotWrapStatic = true });
-            unit.Definitions.Add(new CCodeFieldDefinition(typeDescriptorHolderField) { DoNotWrapStatic = true });
+                unit.Declarations.Add(new CCodeFieldDeclaration(typeDescriptorHolderField) { DoNotWrapStatic = true });
+                unit.Definitions.Add(new CCodeFieldDefinition(typeDescriptorHolderField) { DoNotWrapStatic = true });
+            }
         }
 
         private static bool TypesFilter(ITypeSymbol t)
@@ -388,8 +391,6 @@ namespace Il2Native.Logic
             {
                 unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration((INamedTypeSymbol)type));
             }
-
-
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
