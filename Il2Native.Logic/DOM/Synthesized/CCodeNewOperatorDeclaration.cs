@@ -68,8 +68,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                         Alternative =
                             new AssignmentOperator
                             {
-                                Right = local,
-                                Left =
+                                Left = local,
+                                Right =
                                     new Call
                                     {
                                         Method = new CCodeGetTypeDescriptorDeclaration.GetTypeDescriptorMethod(type)
