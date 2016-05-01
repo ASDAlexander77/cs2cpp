@@ -21,7 +21,7 @@ namespace Il2Native.Logic.DOM.Synthesized
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpanNewLine("inline GC_descr __get_type_descriptor()");
+            c.TextSpanNewLine("inline static GC_descr __get_type_descriptor()");
             c.OpenBlock();
             c.TextSpan("typedef");
             c.WhiteSpace();
@@ -53,6 +53,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                IsStatic = true;
             }
         }
     }

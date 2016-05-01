@@ -22,7 +22,7 @@ namespace Il2Native.Logic.DOM.Implementations
         public INamedTypeSymbol ContainingType { get; set; }
         public INamespaceSymbol ContainingNamespace { get; set; }
         public bool IsDefinition { get; private set; }
-        public bool IsStatic { get; private set; }
+        public bool IsStatic { get; set; }
         public bool IsVirtual { get; set; }
         public bool IsOverride { get; set; }
         public bool IsAbstract { get; set; }
