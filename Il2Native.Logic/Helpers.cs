@@ -335,6 +335,22 @@ namespace Il2Native.Logic
                 (type.BaseType == null || type.BaseType.IsAtomicType());
         }
 
+        public static IEnumerable<IFieldSymbol> EnumReferenceFields(this ITypeSymbol type)
+        {
+            if (type.BaseType != null)
+            {
+                foreach (var field in type.BaseType.EnumReferenceFields())
+                {
+                    yield return field;
+                }                
+            }
+
+            foreach (var field in type.GetMembers().OfType<IFieldSymbol>().Where(f => !f.IsStatic && !f.IsConst && f.Type.IsReferenceType()))
+            {
+                yield return field;
+            }
+        }
+
         public static bool IsReferenceType(this ITypeSymbol type)
         {
             if (type.TypeKind == TypeKind.Interface)

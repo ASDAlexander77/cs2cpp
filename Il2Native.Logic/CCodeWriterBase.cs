@@ -356,16 +356,7 @@ namespace Il2Native.Logic
             }
             */
 
-            var receiverType = fieldSymbol.ContainingType;
-            this.WriteTypeName(receiverType, false);
-            if (receiverType.IsGenericType)
-            {
-                this.WriteTemplateDefinition(fieldSymbol.ContainingType);
-            }
-
-            this.TextSpan("::");
-
-            this.WriteName(fieldSymbol);
+            this.WriteFieldAccessAsStaticField(fieldSymbol);
 
             if (fieldSymbol.HasConstantValue && !fieldSymbol.IsConst)
             {
@@ -381,6 +372,20 @@ namespace Il2Native.Logic
                     this.TextSpan(fieldSymbol.ConstantValue.ToString());
                 }
             }
+        }
+
+        public void WriteFieldAccessAsStaticField(IFieldSymbol fieldSymbol)
+        {
+            var receiverType = fieldSymbol.ContainingType;
+            this.WriteTypeName(receiverType, false);
+            if (receiverType.IsGenericType)
+            {
+                this.WriteTemplateDefinition(fieldSymbol.ContainingType);
+            }
+
+            this.TextSpan("::");
+
+            this.WriteName(fieldSymbol);
         }
 
         public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)

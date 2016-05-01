@@ -370,6 +370,7 @@ namespace Il2Native.Logic
             }
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
+            var isAtomicType = type.IsAtomicType();
             if (type.TypeKind != TypeKind.Interface && type.Name != "<Module>")
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
@@ -378,10 +379,17 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
             }
 
+            if (!isAtomicType && type.TypeKind != TypeKind.Interface)
+            {
+                unit.Declarations.Add(new CCodeGetTypeDescriptorDeclaration((INamedTypeSymbol)type));
+            }
+
             if (type.SpecialType == SpecialType.System_Array)
             {
                 unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration((INamedTypeSymbol)type));
             }
+
+
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
