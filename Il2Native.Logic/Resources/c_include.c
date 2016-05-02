@@ -52,6 +52,10 @@
 # define GC_THREADS
 #endif
 
+#ifdef _MSC_VER
+#define GC_NOT_DLL
+#endif
+
 #include "gc.h"
 #include "gc_typed.h"
 #include "javaxfc.h"
