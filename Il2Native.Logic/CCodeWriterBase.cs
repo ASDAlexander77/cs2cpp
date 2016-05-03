@@ -327,7 +327,7 @@ namespace Il2Native.Logic
                 this.TextSpan("__volatile_t<");
             }
 
-            this.WriteType(fieldSymbol.Type);
+            this.WriteType(fieldSymbol.Type, dependantScope: true);
             if (fieldSymbol.IsStatic)
             {
                 if (!doNotWrapStatic)
@@ -903,7 +903,7 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -913,7 +913,7 @@ namespace Il2Native.Logic
             switch (type.TypeKind)
             {
                 case TypeKind.Unknown:
-                    this.WriteTypeFullName((INamedTypeSymbol)type);
+                    this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope);
                     return;
                 case TypeKind.ArrayType:
                     this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
@@ -1027,7 +1027,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -1041,7 +1041,7 @@ namespace Il2Native.Logic
                 this.TextSpan("::");
             }
 
-            this.WriteTypeName(type, allowKeywords, valueName);
+            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope);
 
             if (type.IsGenericType || type.IsAnonymousType)
             {
@@ -1049,7 +1049,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false)
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false)
         {
             if (allowKeywords)
             {
@@ -1073,11 +1073,17 @@ namespace Il2Native.Logic
 
             if (type.ContainingType != null)
             {
+                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
+                var isGeneric = isNestedCppClass && type.ContainingType.IsGenericType;
+                if (isGeneric && dependantScope)
+                {
+                    this.TextSpan("typename");
+                    this.WhiteSpace();
+                }
+
                 // HACK; to support C++ nested class access
                 this.WriteTypeName(type.ContainingType, false);
-
-                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
-                if (isNestedCppClass && type.ContainingType.IsGenericType)
+                if (isGeneric)
                 {
                     this.WriteTemplateDefinition(type.ContainingType);
                 }
