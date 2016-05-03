@@ -750,11 +750,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 WriteInterfaceWrapper(c, iface, namedTypeSymbol);
             }
 
-            if (namedTypeSymbol.TypeKind != TypeKind.Interface)
-            {
-                WriteTableMethods(c, namedTypeSymbol);
-            }
-
             itw.Indent--;
             itw.WriteLine("};");
 
@@ -835,12 +830,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
             c.EndStatement();
             new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
-        }
-
-        private static void WriteTableMethods(CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
-        {
-            new CCodeMethodsTableClass(namedTypeSymbol).WriteTo(c);
-            c.EndStatement();
         }
 
         private static bool WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol, bool genericHeaderFile = false)

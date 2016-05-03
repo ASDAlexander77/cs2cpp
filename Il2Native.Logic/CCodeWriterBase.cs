@@ -5,6 +5,7 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
@@ -912,7 +913,8 @@ namespace Il2Native.Logic
             switch (type.TypeKind)
             {
                 case TypeKind.Unknown:
-                    break;
+                    this.WriteTypeFullName((INamedTypeSymbol)type);
+                    return;
                 case TypeKind.ArrayType:
                     this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
                     return;
@@ -1071,6 +1073,7 @@ namespace Il2Native.Logic
 
             if (type.ContainingType != null)
             {
+                // HACK; to support C++ nested class access
                 this.WriteTypeName(type.ContainingType, false);
 
                 var isNestedCppClass = type.TypeKind == TypeKind.Unknown;

@@ -3,6 +3,8 @@
 // 
 namespace Il2Native.Logic.DOM
 {
+    using System.Diagnostics;
+
     using Microsoft.CodeAnalysis;
 
     public class CCodeFieldDefinition : CCodeDefinition

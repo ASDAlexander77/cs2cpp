@@ -131,6 +131,7 @@
     <Compile Include="DOM2\WhileStatement.cs" />
     <Compile Include="DOM\CCodeBase.cs" />
     <Compile Include="DOM\CCodeClass.cs" />
+    <Compile Include="DOM\CCodeClassDeclaration.cs" />
     <Compile Include="DOM\CCodeDeclaration.cs" />
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeUnitsBuilder.cs" />
