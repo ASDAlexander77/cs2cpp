@@ -812,7 +812,7 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 	return u.d;
 }
 
-class __type_methods
+class __methods_table
 {
 public:
 	// TODO: add new, unbox methods as virtual and/or abstract
@@ -821,7 +821,7 @@ public:
 	{
 		// default implementation for references;
 		// TODO: you should overwrite it for value types
-		return ref;
+		return (object*)ref;
 	}
 };
 
