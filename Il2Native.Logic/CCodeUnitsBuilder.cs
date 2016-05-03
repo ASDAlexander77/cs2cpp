@@ -165,6 +165,22 @@ namespace Il2Native.Logic
 
             unit.Declarations.Add(new CCodeFieldDeclaration(cctorCalledLock) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(cctorCalledLock) { DoNotWrapStatic = true });
+
+            if (unit.Type.TypeKind != TypeKind.Interface)
+            {
+                // add call flag for static constructor
+                var tableMethodsField = new FieldImpl
+                {
+                    Name = "_methods_table",
+                    Type = new NamedTypeImpl { Name = "__type_methods_table", ContainingSymbol = type },
+                    ContainingType = (INamedTypeSymbol)type,
+                    ContainingNamespace = type.ContainingNamespace,
+                    IsStatic = true
+                };
+
+                unit.Declarations.Add(new CCodeFieldDeclaration(tableMethodsField) { DoNotWrapStatic = true });
+                unit.Definitions.Add(new CCodeFieldDefinition(tableMethodsField) { DoNotWrapStatic = true });                
+            }
         }
 
         private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)

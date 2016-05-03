@@ -183,7 +183,7 @@ void CoreLib::System::Threading::Thread::SetStart(CoreLib::System::Delegate* sta
 // Method : System.Threading.Thread.InternalFinalize()
 void CoreLib::System::Threading::Thread::InternalFinalize()
 {
-	throw 3221274624U;
+    // This function is intentionally blank.
 }
 
 // Method : System.Threading.Thread.IsBackgroundNative()

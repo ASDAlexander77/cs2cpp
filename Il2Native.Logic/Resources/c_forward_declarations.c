@@ -812,6 +812,19 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 	return u.d;
 }
 
+class __type_methods
+{
+public:
+	// TODO: add new, unbox methods as virtual and/or abstract
+
+	virtual object* __box_ref(void* ref)
+	{
+		// default implementation for references;
+		// TODO: you should overwrite it for value types
+		return ref;
+	}
+};
+
 int32_t __hash_code(object* _obj, size_t _size);
 
 bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2);

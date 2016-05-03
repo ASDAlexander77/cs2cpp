@@ -141,6 +141,7 @@
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\CCodeFieldDefinition.cs" />
     <Compile Include="DOM\CCodeDelegateWrapperClass.cs" />
+    <Compile Include="DOM\CCodeMethodsTableClass.cs" />
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
     <Compile Include="DOM\Implementations\FieldImpl.cs" />
