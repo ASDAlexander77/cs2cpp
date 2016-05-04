@@ -253,11 +253,11 @@ namespace Il2Native.Logic
             var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
             if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
             {
-                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType, dependantScope: true, shortNested: true);
+                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType, dependantScope: true, shortNested: false);
             }
             else
             {
-                this.WriteType(fieldSymbol.Type, dependantScope: true, shortNested: true);
+                this.WriteType(fieldSymbol.Type, dependantScope: true, shortNested: false);
             }
 
             if (fieldSymbol.IsStatic)
