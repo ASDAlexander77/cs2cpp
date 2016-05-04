@@ -450,8 +450,7 @@ namespace Il2Native.Logic
                 this.BuildMethod(method, unit);
             }
 
-
-            if (isNotInterfaceOrModule)
+            if (isNotModule)
             {
                 // add methods table
                 unit.Declarations.Add(new CCodeClassDeclaration(new CCodeMethodsTableClass((INamedTypeSymbol)type)));
@@ -474,7 +473,10 @@ namespace Il2Native.Logic
 
                 unit.Declarations.Add(new CCodeFieldDeclaration(tableMethodsField) { DoNotWrapStatic = true });
                 unit.Definitions.Add(new CCodeFieldDefinition(tableMethodsField) { DoNotWrapStatic = true });
+            }
 
+            if (isNotInterfaceOrModule)
+            {
                 // append interface calls
                 foreach (var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
                 {

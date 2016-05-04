@@ -4,5 +4,5 @@
 object* CoreLib::System::TypedReference::InternalToObject(void* value)
 {
 	auto trPtr = (CoreLib::System::TypedReference*)value;
-    ((__methods_table*)(void*)(trPtr->Type))->__unbox_ref((void*)(trPtr->Value));
+    ((__methods_table*)(void*)(trPtr->Type))->__box_ref((void*)(trPtr->Value));
 }
