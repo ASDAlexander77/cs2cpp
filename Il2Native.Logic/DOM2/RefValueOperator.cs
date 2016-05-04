@@ -12,14 +12,29 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.RefValueOperator; }
         }
 
+        public Expression Operand { get; set; }
+
         internal void Parse(BoundRefValueOperator boundRefValueOperator)
         {
             base.Parse(boundRefValueOperator);
+            this.Operand = Deserialize(boundRefValueOperator.Operand) as Expression;
+        }
+
+        internal override void Visit(System.Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.Operand.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("__refvalue");
+            c.TextSpan("<");
+            c.WriteType(Type);
+            c.TextSpan(">");
+            c.TextSpan("(");
+            this.Operand.WriteTo(c);
+            c.TextSpan(")");
         }
     }
 }

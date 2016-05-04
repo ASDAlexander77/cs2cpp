@@ -815,27 +815,20 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 class __methods_table
 {
 public:
-	// TODO: add new, unbox methods as virtual and/or abstract
 
+	// TODO: add new, unbox methods as virtual and/or abstract
 	virtual object* __box_ref(void* ref)
 	{
 		// default implementation for references;
 		// TODO: you should overwrite it for value types
 		return (object*)ref;
 	}
+
+	virtual CoreLib::System::Type* __get_type()
+	{
+		throw __new<CoreLib::System::NotImplementedException>();
+	}
 };
-
-template <typename T> inline CoreLib::System::TypedReference __makeref(T t)
-{
-}
-
-template <typename T> inline CoreLib::System::TypedReference __refvalue(CoreLib::System::TypedReference tr)
-{
-}
-
-template <typename T> inline CoreLib::System::TypedReference __refvalue(CoreLib::System::TypedReference tr)
-{
-}
 
 int32_t __hash_code(object* _obj, size_t _size);
 
