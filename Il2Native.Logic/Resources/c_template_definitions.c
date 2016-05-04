@@ -10,7 +10,7 @@ template <typename T> inline CoreLib::System::TypedReference __makeref(T* t)
 
 template <typename T> inline T& __refvalue(CoreLib::System::TypedReference tr)
 {
-	return (T&)(void*)tr.Value;
+	return (T&)*(T*)((void*)tr.Value);
 }
 
 template <typename T> inline CoreLib::System::Type* __reftype(CoreLib::System::TypedReference tr)
