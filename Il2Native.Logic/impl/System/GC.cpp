@@ -4,25 +4,25 @@ namespace CoreLib { namespace System {
 	// Method : System.GC.GetGCLatencyMode()
 	int32_t GC::GetGCLatencyMode()
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC.SetGCLatencyMode(int)
 	int32_t GC::SetGCLatencyMode(int32_t newLatencyMode)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC.GetLOHCompactionMode()
 	int32_t GC::GetLOHCompactionMode()
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC.SetLOHCompactionMode(int)
 	void GC::SetLOHCompactionMode(int32_t newLOHCompactionyMode)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC.GetGenerationWR(System.IntPtr)
@@ -64,13 +64,13 @@ namespace CoreLib { namespace System {
 	// Method : System.GC._AddMemoryPressure(ulong)
 	void GC::_AddMemoryPressure(uint64_t bytesAllocated)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC._RemoveMemoryPressure(ulong)
 	void GC::_RemoveMemoryPressure(uint64_t bytesAllocated)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC.GetGeneration(object)
@@ -103,24 +103,24 @@ namespace CoreLib { namespace System {
 	// Method : System.GC._RegisterForFullGCNotification(int, int)
 	bool GC::_RegisterForFullGCNotification(int32_t maxGenerationPercentage, int32_t largeObjectHeapPercentage)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC._CancelFullGCNotification()
 	bool GC::_CancelFullGCNotification()
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC._WaitForFullGCApproach(int)
 	int32_t GC::_WaitForFullGCApproach(int32_t millisecondsTimeout)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 
 	// Method : System.GC._WaitForFullGCComplete(int)
 	int32_t GC::_WaitForFullGCComplete(int32_t millisecondsTimeout)
 	{
-		throw 3221274624U;
+		throw 0xC000C000;
 	}
 }}

@@ -81,7 +81,7 @@ double CoreLib::System::Math::Round(double a)
 // Method : System.Math.SplitFractionDouble(double*)
 double CoreLib::System::Math::SplitFractionDouble(double* value)
 {
-    throw 3221274624U;
+    throw 0xC000C000;
 }
 
 // Method : System.Math.Sqrt(double)

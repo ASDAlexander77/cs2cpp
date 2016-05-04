@@ -97,13 +97,13 @@ void CoreLib::System::Threading::Thread::AbortInternal()
 // Method : System.Threading.Thread.GetPriorityNative()
 int32_t CoreLib::System::Threading::Thread::GetPriorityNative()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.SetPriorityNative(int)
 void CoreLib::System::Threading::Thread::SetPriorityNative(int32_t priority)
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.IsAlive.get
@@ -121,7 +121,7 @@ bool CoreLib::System::Threading::Thread::get_IsAlive()
 // Method : System.Threading.Thread.IsThreadPoolThread.get
 bool CoreLib::System::Threading::Thread::get_IsThreadPoolThread()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.JoinInternal(int)
@@ -171,7 +171,7 @@ CoreLib::System::Threading::Thread* CoreLib::System::Threading::Thread::GetCurre
 // Method : System.Threading.Thread.GetProcessDefaultStackSize()
 uint64_t CoreLib::System::Threading::Thread::GetProcessDefaultStackSize()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.SetStart(System.Delegate, int)
@@ -200,31 +200,31 @@ void CoreLib::System::Threading::Thread::SetBackgroundNative(bool isBackground)
 // Method : System.Threading.Thread.GetThreadStateNative()
 int32_t CoreLib::System::Threading::Thread::GetThreadStateNative()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.nativeInitCultureAccessors()
 void CoreLib::System::Threading::Thread::nativeInitCultureAccessors()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.GetDomainInternal()
 CoreLib::System::AppDomain* CoreLib::System::Threading::Thread::GetDomainInternal()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.GetFastDomainInternal()
 CoreLib::System::AppDomain* CoreLib::System::Threading::Thread::GetFastDomainInternal()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.InformThreadNameChange(System.Threading.ThreadHandle, string, int)
 void CoreLib::System::Threading::Thread::InformThreadNameChange(CoreLib::System::Threading::ThreadHandle t, string* name, int32_t len)
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.MemoryBarrier()
@@ -237,17 +237,17 @@ void CoreLib::System::Threading::Thread::MemoryBarrier()
 // Method : System.Threading.Thread.SetAbortReason(object)
 void CoreLib::System::Threading::Thread::SetAbortReason(object* o)
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.GetAbortReason()
 object* CoreLib::System::Threading::Thread::GetAbortReason()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }
 
 // Method : System.Threading.Thread.ClearAbortReason()
 void CoreLib::System::Threading::Thread::ClearAbortReason()
 {
-	throw 3221274624U;
+	throw 0xC000C000;
 }

@@ -4,13 +4,13 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(object)
     object* RuntimeHelpers::GetObjectValue(object* obj)
     {
-        throw 3221274624U;
+        throw 0xC000C000;
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(System.RuntimeTypeHandle)
     void RuntimeHelpers::RunClassConstructor(CoreLib::System::RuntimeTypeHandle type)
     {
-        throw 3221274624U;
+        throw 0xC000C000;
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.OffsetToStringData.get

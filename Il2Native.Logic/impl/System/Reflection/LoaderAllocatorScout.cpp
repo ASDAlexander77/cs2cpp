@@ -3,5 +3,5 @@
 // Method : System.Reflection.LoaderAllocatorScout.Destroy(System.IntPtr)
 bool CoreLib::System::Reflection::LoaderAllocatorScout::Destroy(CoreLib::System::IntPtr nativeLoaderAllocator)
 {
-    throw 3221274624U;
+    throw 0xC000C000;
 }
