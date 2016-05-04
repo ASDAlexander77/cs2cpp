@@ -4,7 +4,7 @@ template <typename T> inline CoreLib::System::TypedReference __makeref(T* t)
 	CoreLib::System::TypedReference __MakeRef;
 	__MakeRef = __init<CoreLib::System::TypedReference>();
 	__MakeRef.Value = __init<CoreLib::System::IntPtr>((void*)t);
-	__MakeRef.Type = __init<CoreLib::System::IntPtr>((void*)&valuetype_to_class<std::remove_pointer<T>>::type::_methods_table);
+	__MakeRef.Type = __init<CoreLib::System::IntPtr>((void*)_typeMT<T>());
 	return __MakeRef;
 }
 
@@ -51,7 +51,7 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 
 	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(elemRef);
 	typedRef->Value = __init<CoreLib::System::IntPtr>((void*)&this->_data[index]);
-	typedRef->Type = __init<CoreLib::System::IntPtr>((void*)&T::_methods_table);
+	typedRef->Type = __init<CoreLib::System::IntPtr>((void*)_typeMT<T>());
 }
 
 template <typename T>

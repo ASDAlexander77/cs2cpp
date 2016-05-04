@@ -223,6 +223,12 @@ template <typename T> inline CoreLib::System::Type* _typeof()
 	return &_T::__type;
 }
 
+template <typename T> inline __methods_table* _typeMT()
+{
+	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
+	return &_T::__methods_table;
+}
+
 // Decimals
 int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign);
 int32_t DecCmp(int32_t* d1, int32_t* d2);
