@@ -50,7 +50,15 @@ namespace Il2Native.Logic.DOM2
         {
             if (this.Field.IsStatic)
             {
-                c.WriteTypeFullName(this.Field.ContainingType);
+                if (this.Field.ContainingType == null && this.Field.ContainingSymbol is ITypeSymbol)
+                {
+                    c.WriteTypeFullName((ITypeSymbol)this.Field.ContainingSymbol);
+                }
+                else
+                {
+                    c.WriteTypeFullName(this.Field.ContainingType);
+                }
+
                 c.TextSpan("::");
                 c.WriteName(this.Field);
             }

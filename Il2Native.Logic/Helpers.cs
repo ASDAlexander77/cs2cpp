@@ -617,7 +617,7 @@ namespace Il2Native.Logic
 
         public static bool IsAnonymousType(this ITypeSymbol type)
         {
-            return type.IsAnonymousType || type.Name.StartsWith("<>f__AnonymousType");
+            return type.IsAnonymousType || (type.Name != null && type.Name.StartsWith("<>f__AnonymousType"));
         }
 
         public static string GetAnonymousTypeName(this INamedTypeSymbol type)

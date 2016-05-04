@@ -112,7 +112,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public bool IsReferenceType { get; private set; }
 
-        public bool IsValueType { get; private set; }
+        public bool IsValueType { get; set; }
 
         public bool IsAnonymousType { get; private set; }
 

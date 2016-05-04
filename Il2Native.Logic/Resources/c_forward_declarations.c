@@ -821,9 +821,21 @@ public:
 	{
 		// default implementation for references;
 		// TODO: you should overwrite it for value types
-		return *(object**)ref;
+		return (object*)ref;
 	}
 };
+
+template <typename T> inline CoreLib::System::TypedReference __makeref(T t)
+{
+}
+
+template <typename T> inline CoreLib::System::TypedReference __refvalue(CoreLib::System::TypedReference tr)
+{
+}
+
+template <typename T> inline CoreLib::System::TypedReference __refvalue(CoreLib::System::TypedReference tr)
+{
+}
 
 int32_t __hash_code(object* _obj, size_t _size);
 

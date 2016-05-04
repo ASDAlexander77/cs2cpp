@@ -348,6 +348,8 @@ namespace Il2Native.Logic
         {
             var unit = new CCodeUnit(type);
 
+            var isNotModule = type.Name != "<Module>";
+            var isNotInterfaceOrModule = isNotModule && type.TypeKind != TypeKind.Interface;
             var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
             var hasStaticConstructor = methodSymbols.Any(m => m.MethodKind == MethodKind.StaticConstructor);
 
@@ -361,7 +363,7 @@ namespace Il2Native.Logic
                 BuildStaticConstructorVariables(type, unit);
             }
 
-            if (type.Name != "<Module>")
+            if (isNotModule)
             {
                 BuildTypeHolderVariables(type, unit);
             }
@@ -374,7 +376,7 @@ namespace Il2Native.Logic
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
             var isAtomicType = type.IsAtomicType();
-            if (type.TypeKind != TypeKind.Interface && type.Name != "<Module>")
+            if (isNotInterfaceOrModule)
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, debugVersion:true));
@@ -407,7 +409,7 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeArrowOperatorDeclaration((INamedTypeSymbol)type));
             }
 
-            if (type.Name != "<Module>" && type.TypeKind != TypeKind.Interface)
+            if (isNotInterfaceOrModule)
             {
                 // add internal infrustructure
                 unit.Declarations.Add(new CCodeGetTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
@@ -449,7 +451,7 @@ namespace Il2Native.Logic
             }
 
 
-            if (unit.Type.TypeKind != TypeKind.Interface)
+            if (isNotInterfaceOrModule)
             {
                 // add methods table
                 unit.Declarations.Add(new CCodeClassDeclaration(new CCodeMethodsTableClass((INamedTypeSymbol)type)));

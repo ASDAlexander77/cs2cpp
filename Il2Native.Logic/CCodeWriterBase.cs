@@ -770,6 +770,8 @@ namespace Il2Native.Logic
         {
             switch (type.SpecialType)
             {
+                case SpecialType.None:
+                    return false;
                 case SpecialType.System_Void:
                     this.TextSpan("void");
                     return true;
@@ -821,6 +823,16 @@ namespace Il2Native.Logic
                     if (type.TypeKind == TypeKind.Unknown)
                     {
                         this.TextSpan("string*");
+                        return true;
+                    }
+
+                    break;
+
+                default:
+                    if (type.TypeKind == TypeKind.Unknown)
+                    {
+                        this.TextSpan("CoreLib::");
+                        this.TextSpan(type.SpecialType.ToString().Replace("_", "::"));
                         return true;
                     }
 
@@ -913,7 +925,11 @@ namespace Il2Native.Logic
             switch (type.TypeKind)
             {
                 case TypeKind.Unknown:
-                    this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope);
+                    if (!this.WriteSpecialType(type))
+                    {
+                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope);
+                    }
+
                     return;
                 case TypeKind.ArrayType:
                     this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
