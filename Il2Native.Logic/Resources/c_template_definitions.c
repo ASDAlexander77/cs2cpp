@@ -51,7 +51,7 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 
 	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(elemRef);
 	typedRef->Value = __init<CoreLib::System::IntPtr>((void*)&this->_data[index]);
-	typedRef->Type = __init<CoreLib::System::IntPtr>((void*)_&T::_methods_table);
+	typedRef->Type = __init<CoreLib::System::IntPtr>((void*)&T::_methods_table);
 }
 
 template <typename T>

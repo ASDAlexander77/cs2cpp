@@ -826,7 +826,7 @@ public:
 
 	virtual CoreLib::System::Type* __get_type()
 	{
-		throw __new<CoreLib::System::NotImplementedException>();
+		throw 0xC000C000;
 	}
 };
 
