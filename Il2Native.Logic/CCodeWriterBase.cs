@@ -253,11 +253,11 @@ namespace Il2Native.Logic
             var fieldSymbolOriginal = fieldSymbol as FieldSymbol;
             if (fieldSymbolOriginal != null && fieldSymbolOriginal.IsFixed)
             {
-                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType);
+                this.WriteType(((IPointerTypeSymbol)fieldSymbol.Type).PointedAtType, dependantScope: true, shortNested: true);
             }
             else
             {
-                this.WriteType(fieldSymbol.Type);
+                this.WriteType(fieldSymbol.Type, dependantScope: true, shortNested: true);
             }
 
             if (fieldSymbol.IsStatic)
@@ -915,7 +915,7 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -927,7 +927,7 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     if (!this.WriteSpecialType(type))
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested);
                     }
 
                     return;
@@ -1043,7 +1043,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -1057,7 +1057,7 @@ namespace Il2Native.Logic
                 this.TextSpan("::");
             }
 
-            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope);
+            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested);
 
             if (type.IsGenericType || type.IsAnonymousType)
             {
@@ -1065,7 +1065,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false)
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false)
         {
             if (allowKeywords)
             {
@@ -1097,15 +1097,18 @@ namespace Il2Native.Logic
                     this.WhiteSpace();
                 }
 
-                // HACK; to support C++ nested class access
-                this.WriteTypeName(type.ContainingType, false);
-                if (isGeneric)
+                if (!shortNested)
                 {
-                    this.WriteTemplateDefinition(type.ContainingType);
-                }
+                    // HACK; to support C++ nested class access
+                    this.WriteTypeName(type.ContainingType, false);
+                    if (isGeneric)
+                    {
+                        this.WriteTemplateDefinition(type.ContainingType);
+                    }
 
-                // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
-                this.TextSpan(isNestedCppClass ? "::" : "_");
+                    // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
+                    this.TextSpan(isNestedCppClass ? "::" : "_");
+                }
             }
 
             if (type.IsAnonymousType())
