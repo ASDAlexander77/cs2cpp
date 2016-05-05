@@ -152,7 +152,7 @@ int32_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int32_t& locati
 int64_t CoreLib::System::Threading::Interlocked::ExchangeAdd_Ref(int64_t& location1, int64_t value)
 {
 #ifdef _MSC_VER
-	return InterlockedExchangeAdd64((int64_t volatile*)location1, value);
+	return InterlockedExchangeAdd64((int64_t volatile*)&location1, value);
 #else
 	return __sync_fetch_and_add((int64_t volatile*)&location1, value);
 #endif
