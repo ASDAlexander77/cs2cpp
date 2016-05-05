@@ -821,7 +821,7 @@ public:
 	{
 		// default implementation for references;
 		// TODO: you should overwrite it for value types
-		return (object*)ref;
+		return *(object**)ref;
 	}
 
 	virtual CoreLib::System::Type* __get_type()
