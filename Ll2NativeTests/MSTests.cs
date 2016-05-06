@@ -900,7 +900,7 @@ namespace Ll2NativeTests
             // you need to compile GC property to include GC_pthread_create etc.
             // read Readme.win32 how to compile it for MinGW
 
-            CompilerHelper.GcDebugEnabled = false;
+            CompilerHelper.GcDebugEnabled = true;
 
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibCSProjPath),

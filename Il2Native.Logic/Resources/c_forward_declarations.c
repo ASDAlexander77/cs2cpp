@@ -221,6 +221,21 @@ inline void* operator new (size_t _size)
     return __new_set0(_size);
 }
 
+inline void* operator new(size_t _size, const std::nothrow_t& tag)
+{
+	return __new_set0(_size);
+}
+
+inline void operator delete(void* ptr)
+{
+	GC_FREE(ptr);
+}
+
+inline void operator delete(void* ptr, const std::nothrow_t& tag)
+{
+	GC_FREE(ptr);
+}
+
 inline void* operator new (size_t _size, const char* _file, int _line)
 {
     return __new_set0(_size, _file, _line);
