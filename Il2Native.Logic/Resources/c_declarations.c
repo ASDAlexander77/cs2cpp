@@ -636,21 +636,7 @@ public:
 
 	__object_extras* operator[] (object* obj)
 	{
-		{
-			std::shared_lock<std::shared_timed_mutex> lock(mutex);
-			map::const_iterator got = __extras.find (obj);
-			if (got != __extras.end())
-			{
-				return got->second;
-			}
-		}
-
-		return get_or_allocate(obj);
-	}
-
-	__object_extras* get_or_allocate(object* obj)
-	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __extras.find (obj);
 		if (got != __extras.end())
 		{
@@ -664,7 +650,7 @@ public:
 
 	void free(object* obj)
 	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __extras.find (obj);
 		if (got != __extras.end())
 		{
@@ -675,7 +661,7 @@ public:
 
 	~__object_extras_storage()
 	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		for (auto item : __extras) 
 		{
 			delete item.second;
@@ -683,7 +669,7 @@ public:
 	}
 
 	map __extras;
-	mutable std::shared_timed_mutex mutex;
+	mutable std::mutex mutex;
 };
 
 extern __object_extras_storage __object_extras_storage_instance;
@@ -696,21 +682,7 @@ public:
 
 	string* operator() (const wchar_t* str, size_t length)
 	{
-		{
-			std::shared_lock<std::shared_timed_mutex> lock(mutex);
-			map::const_iterator got = __strings.find (str);
-			if (got != __strings.end())
-			{
-				return got->second;
-			}
-		}
-
-		return get_or_allocate(str, length);
-	}
-
-	string* get_or_allocate(const wchar_t* str, size_t length)
-	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __strings.find (str);
 		if (got != __strings.end())
 		{
@@ -725,7 +697,7 @@ public:
 
 	void free(const wchar_t* str)
 	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __strings.find (str);
 		if (got != __strings.end())
 		{
@@ -736,7 +708,7 @@ public:
 
 	~__strings_storage()
 	{
-		std::unique_lock<std::shared_timed_mutex> lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		for (auto item : __strings) 
 		{
 			delete item.second;
@@ -744,7 +716,7 @@ public:
 	}
 
 	map __strings;
-	mutable std::shared_timed_mutex mutex;
+	mutable std::mutex mutex;
 };
 
 extern __strings_storage __strings_storage_instance;
