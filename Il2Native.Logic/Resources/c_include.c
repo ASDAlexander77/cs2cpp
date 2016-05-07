@@ -71,3 +71,9 @@
 #undef CreateEvent
 #undef GetFullPathName
 #undef CreateFile
+
+#ifdef GC_ADD_CALLER
+# define GC_ALLOC_PARAMS GC_RETURN_ADDR, _file, _line
+#else
+# define GC_ALLOC_PARAMS _file, _line
+#endif

@@ -147,8 +147,8 @@ inline void* __new_set0(size_t _size, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
 	auto mem = _size > 102400 
-		? GC_debug_malloc_ignore_off_page(_size, _file, _line) 
-		: GC_debug_malloc(_size, _file, _line);
+		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
 	return mem;
 #else
 	return __new_set0(_size);
@@ -168,8 +168,8 @@ inline void* __new_set0(size_t _size, GCAtomic, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
 	auto mem = _size > 102400 
-		? GC_debug_malloc_atomic_ignore_off_page(_size, _file, _line) 
-		: GC_debug_malloc_atomic(_size, _file, _line);
+		? GC_debug_malloc_atomic_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+		: GC_debug_malloc_atomic(_size, GC_ALLOC_PARAMS);
 	return mem;
 #else
 	return __new_set0(_size, GCAtomic::Default);
@@ -180,8 +180,8 @@ inline void* __new_set0(size_t _size, GC_descr _type_descr, const char* _file, i
 {
 #ifdef GC_DEBUG
 	auto mem = _size > 102400 
-		? GC_debug_malloc_ignore_off_page(_size, _file, _line) 
-		: GC_debug_malloc(_size, _file, _line);
+		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
 	return mem;
 #else
 	return __new_set0(_size, _type_descr);
