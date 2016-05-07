@@ -111,23 +111,31 @@ file(GLOB_RECURSE <%name%>_IMPL
 
 include_directories(""./"" ""./src"" ""./impl"" <%include%>)
 
+if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
+    SET(BUILD_TYPE ""debug"")
+else()
+    SET(BUILD_TYPE ""release"")
+endif()
+
 if (MSVC)
-    if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
-        link_directories(""./"" <%link_msvc_debug%>)
-    else()
-        link_directories(""./"" <%link_msvc_release%>)
-    endif()
+    SET(BUILD_ARCH ""win32"")
+
+    link_directories(""./"" <%links%>)
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /DDEBUG /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
     set(CMAKE_EXE_LINKER_FLAGS ""${CMAKE_EXE_LINKER_FLAGS} /ignore:4006 /ignore:4049 /ignore:4217"")
 else()
-    if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
-        link_directories(""./"" <%link_other_debug%>)
+    if (CMAKE_SYSTEM_NAME STREQUAL ""Android"")
+        SET(EXTRA_CXX_FLAGS ""-std=gnu++11"")
+        SET(BUILD_ARCH ""vs_android"")
     else()
-        link_directories(""./"" <%link_other_release%>)
+        SET(EXTRA_CXX_FLAGS ""-std=gnu++14 -march=native"")
+        SET(BUILD_ARCH ""mingw32"")
     endif()
-    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -DDEBUG -march=native -std=gnu++14 -fpermissive -Wno-invalid-offsetof"")
-    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 -march=native -std=gnu++14 -fpermissive -Wno-invalid-offsetof"")
+
+    link_directories(""./"" <%links%>)
+    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -DDEBUG ${EXTRA_CXX_FLAGS} -fpermissive -Wno-invalid-offsetof"")
+    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -fpermissive -Wno-invalid-offsetof"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
@@ -143,10 +151,7 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_debug\" \"../{0}/__build_win32_debug_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_debug = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_debug\" \"../{0}/__build_mingw32_debug_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_msvc_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_win32_release\" \"../{0}/__build_win32_release_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
-            var link_other_release = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_mingw32_release\" \"../{0}/__build_mingw32_release_bdwgc\"", a.Name.CleanUpNameAllUnderscore())));
+            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}\" \"../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}")));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             if (references.Any())
@@ -165,10 +170,7 @@ endif()";
                          .Replace("<%type%>", type)
                          .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())
                          .Replace("<%include%>", include)
-                         .Replace("<%link_msvc_debug%>", link_msvc_debug)
-                         .Replace("<%link_other_debug%>", link_other_debug)
-                         .Replace("<%link_msvc_release%>", link_msvc_release)
-                         .Replace("<%link_other_release%>", link_other_release));
+                         .Replace("<%links%>", links));
                 itw.Close();
             }
 
@@ -206,6 +208,25 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs2015_release", ".bat"))))
             {
                 itw.Write(buildVS2015.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                itw.Close();
+            }
+
+            // build Visual Studio .bat
+            var buildVS2015TegraAndroid = @"md __build_vs_android_<%build_type_lowercase%>
+cd __build_vs_android_<%build_type_lowercase%>
+cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
+call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
+MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs_android_debug", ".bat"))))
+            {
+                itw.Write(buildVS2015TegraAndroid.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
+                itw.Close();
+            }
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_vs_android_release", ".bat"))))
+            {
+                itw.Write(buildVS2015TegraAndroid.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                 itw.Close();
             }
 

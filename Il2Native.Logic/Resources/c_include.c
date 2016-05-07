@@ -20,6 +20,10 @@
 #include <Windows.h>
 #endif
 
+#ifndef _WIN32 // or something like that...
+#define __stdcall
+#endif
+
 #ifndef thread_local
 # if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
 #  define thread_local _Thread_local
