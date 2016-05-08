@@ -4,7 +4,7 @@ define walk
 endef
 
 LOCAL_PATH := $(call my-dir)
-SRC_PATH := $(LOCAL_PATH)/../../src
+SRC_PATH := $(LOCAL_PATH)/../../src $(LOCAL_PATH)/../../Impl
 
 include $(CLEAR_VARS)
 
@@ -15,10 +15,8 @@ FILE_LIST := $(filter %.cpp, $(ALLFILES))
 
 LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
-LOCAL_C_INCLUDES := $(SRC_PATH)
+LOCAL_C_INCLUDES := $(SRC_PATH) $(LOCAL_PATH)/../../bdwgc/include
 				   
-LOCAL_CPPFLAGS += -Wno-write-strings -Wno-conversion-null
-
-LOCAL_CPP_FEATURES := rtti exceptions
+LOCAL_CPPFLAGS += -Wno-write-strings -Wno-conversion-null -Wno-invalid-offsetof -fpermissive
 
 include $(BUILD_STATIC_LIBRARY)
