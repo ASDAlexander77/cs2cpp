@@ -75,7 +75,9 @@ namespace Il2Native.Logic.DOM2
 
             foreach (var localDecl in extraLocalDecls)
             {
+                var loadState = localDecl.Suppressed;
                 localDecl.WriteTo(c);
+                localDecl.Suppressed = loadState;
             }
 
             if (MethodSymbol.MethodKind == MethodKind.StaticConstructor)
@@ -305,6 +307,20 @@ namespace Il2Native.Logic.DOM2
                                         localVarDeclaration.Add(new VariableDeclaration { Local = local });
                                     }
                                 }
+                            }
+                        }
+
+                        if (isBodyOfStateMachine && e.Kind == Kinds.VariableDeclaration)
+                        {
+                            var variableDeclaration = (VariableDeclaration)e;
+                            if (variableDeclaration.Statements == null || !variableDeclaration.Statements.Any())
+                            {
+                                variableDeclaration.Suppressed = true;
+                                localVarDeclaration.Add(variableDeclaration);
+                            }
+                            else
+                            {
+                                Debug.Assert(false, "Review it");
                             }
                         }
                     });

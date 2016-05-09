@@ -64,6 +64,11 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.Suppressed)
+            {
+                return;
+            }
+
             if (this.Local != null)
             {
                 c.WriteType(this.Local.Type);

@@ -26,6 +26,8 @@ namespace Il2Native.Logic.DOM2
 
         public abstract Kinds Kind { get; }
 
+        public bool Suppressed { get; set; }
+
         public IMethodSymbol MethodOwner { get; set; }
 
         public static void MergeOrSet(ref Base variable, Base item)
