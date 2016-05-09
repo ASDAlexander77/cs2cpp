@@ -54,6 +54,7 @@ namespace Il2Native.Logic.DOM2
         BinaryOperator,
         BaseReference,
         AssignmentOperator,
+        UnaryAssignmentOperator,
         AsOperator,
         ArrayLength,
         ArrayInitialization,

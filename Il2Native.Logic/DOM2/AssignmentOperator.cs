@@ -25,6 +25,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool TypeDeclaration { get; set; }
 
+        public bool TypeDeclarationSplit { get; set; }
+
         public bool IsRef { get; set; }
 
         public bool IsOut { get; set; }
@@ -83,7 +85,7 @@ namespace Il2Native.Logic.DOM2
         {
             if (this.TypeDeclaration)
             {
-                if (this.ApplyAutoType)
+                if (this.ApplyAutoType && !this.TypeDeclarationSplit)
                 {
                     c.TextSpan("auto");
                 }
@@ -98,6 +100,11 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.WhiteSpace();
+                if (this.TypeDeclarationSplit)
+                {
+                    this.Left.WriteTo(c);
+                    c.EndStatement();
+                }
             }
 
             var rightType = this.Right.Type;

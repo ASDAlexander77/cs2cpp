@@ -216,6 +216,10 @@ namespace Il2Native.Logic.DOM2
 
         private void SanitizeCaseLabelsAndSetReturnTypes(IEnumerable<Statement> statements)
         {
+            var isBodyOfStateMechine = this.MethodSymbol.Name == "MoveNext" 
+                                       && this.MethodSymbol.ContainingType.Name.StartsWith("<")
+                                       && this.MethodSymbol.ExplicitInterfaceImplementations.Length == 1;
+
             var labels = new List<Label>();
             var usedLabels = new List<Label>();
             var usedSwitchLabels = new List<SwitchLabel>();
@@ -251,22 +255,17 @@ namespace Il2Native.Logic.DOM2
                             usedSwitchLabels.AddRange(switchSection.Labels);
                         }
 
-                        // set return types
                         if (e.Kind == Kinds.ReturnStatement)
                         {
                             var returnStatement = (ReturnStatement)e;
                             returnStatement.ReturnType = this.MethodSymbol.ReturnType;
                         }
 
-                        // fix operator for static constructors
-                        /*
-                        if (this.MethodSymbol.MethodKind == MethodKind.StaticConstructor &&
-                            e.Kind == Kinds.AssignmentOperator)
+                        if (e.Kind == Kinds.AssignmentOperator)
                         {
-                            var assignmentOperator = (AssignmentOperator)e;
-                            assignmentOperator.MoveOperator = true;
+                            var asignmentOperator = (AssignmentOperator)e;
+                            asignmentOperator.TypeDeclarationSplit = isBodyOfStateMechine;
                         }
-                        */ 
                     });
             }
 

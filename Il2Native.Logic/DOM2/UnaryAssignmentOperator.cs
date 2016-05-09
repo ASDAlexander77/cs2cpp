@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM2
     {
         public override Kinds Kind
         {
-            get { return Kinds.AssignmentOperator; }
+            get { return Kinds.UnaryAssignmentOperator; }
         }
 
         public Expression Left { get; set; }
