@@ -62,7 +62,7 @@ namespace Il2Native.Logic.DOM2
                 }
             }
 
-            var extraLocalDecls = this.SanitizeCaseLabelsAndSetReturnTypes(statements);
+            var extraLocalDecls = this.SanitizeCode(statements);
 
             var skip = 0;
             ////if (this.MethodSymbol.MethodKind == MethodKind.Constructor)
@@ -76,6 +76,7 @@ namespace Il2Native.Logic.DOM2
             foreach (var localDecl in extraLocalDecls)
             {
                 var loadState = localDecl.Suppressed;
+                localDecl.Suppressed = false;
                 localDecl.WriteTo(c);
                 localDecl.Suppressed = loadState;
             }
@@ -223,7 +224,7 @@ namespace Il2Native.Logic.DOM2
             return false;
         }
 
-        private IEnumerable<Statement> SanitizeCaseLabelsAndSetReturnTypes(IEnumerable<Statement> statements)
+        private IEnumerable<Statement> SanitizeCode(IEnumerable<Statement> statements)
         {
             var isBodyOfStateMachine = false;
 
@@ -315,8 +316,11 @@ namespace Il2Native.Logic.DOM2
                             var variableDeclaration = (VariableDeclaration)e;
                             if (variableDeclaration.Statements == null || !variableDeclaration.Statements.Any())
                             {
-                                variableDeclaration.Suppressed = true;
-                                localVarDeclaration.Add(variableDeclaration);
+                                if (localsAdded.Add(variableDeclaration.Local.ToString()))
+                                {
+                                    variableDeclaration.Suppressed = true;
+                                    localVarDeclaration.Add(variableDeclaration);
+                                }
                             }
                             else
                             {

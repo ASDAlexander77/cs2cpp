@@ -126,8 +126,8 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 	auto path_length = std::wcslen(path);
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 	auto byteCount = utf8Enc->GetByteCount(path, path_length);
-	auto path_urf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
-	auto bytesReceived = utf8Enc->GetBytes(path, path_length, path_urf8, byteCount);
+	auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length, (uint8_t*) path_urf8, byteCount);
 
 	switch ((uint32_t)dwDesiredAccess)
 	{
