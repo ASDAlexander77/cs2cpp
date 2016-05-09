@@ -224,6 +224,9 @@ namespace Il2Native.Logic.DOM2
             var usedLabels = new List<Label>();
             var usedSwitchLabels = new List<SwitchLabel>();
 
+            var labelsByName = new HashSet<string>();
+            var activeGotoLabel = new HashSet<string>();
+
             foreach (var statement in statements)
             {
                 statement.Visit(
@@ -235,12 +238,25 @@ namespace Il2Native.Logic.DOM2
                         {
                             var labelStatement = (LabelStatement)e;
                             labels.Add(labelStatement.Label);
+
+                            var labelName = labelStatement.Label.LabelName;
+                            labelsByName.Add(labelName);
+                            if (!activeGotoLabel.Contains(labelName))
+                            {
+                                activeGotoLabel.Remove(labelName);
+                            }
                         }
 
                         if (e.Kind == Kinds.GotoStatement)
                         {
                             var gotoStatement = (GotoStatement)e;
                             usedLabels.Add(gotoStatement.Label);
+
+                            var labelName = gotoStatement.Label.LabelName;
+                            if (!labelsByName.Contains(labelName))
+                            {
+                                activeGotoLabel.Add(labelName);
+                            }
                         }
 
                         if (e.Kind == Kinds.ConditionalGoto)
@@ -264,7 +280,7 @@ namespace Il2Native.Logic.DOM2
                         if (e.Kind == Kinds.AssignmentOperator)
                         {
                             var asignmentOperator = (AssignmentOperator)e;
-                            asignmentOperator.TypeDeclarationSplit = isBodyOfStateMechine;
+                            asignmentOperator.TypeDeclarationSplit = isBodyOfStateMechine || activeGotoLabel.Count > 0;
                         }
                     });
             }
