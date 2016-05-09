@@ -1,17 +1,5 @@
 #include "CoreLib.h"
 
-#ifdef _MSC_VER
-# define __ATTR __stdcall
-#else
-# define __ATTR 
-#endif
-
-#if !GC_PTHREADS
-#include <windows.h>
-#else
-#include <pthread.h>
-#endif
-
 thread_local CoreLib::System::Threading::Thread* __current_thread;
 
 // Method : System.Threading.Thread.ManagedThreadId.get
@@ -24,7 +12,7 @@ int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 #endif
 }
 
-int32_t __ATTR __thread_inner_proc(void* params)
+int32_t __stdcall __thread_inner_proc(void* params)
 {
 	auto __this = (CoreLib::System::Threading::Thread*)params;
 

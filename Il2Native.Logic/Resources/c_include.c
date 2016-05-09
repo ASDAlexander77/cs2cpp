@@ -16,14 +16,6 @@
 #include <atomic>
 #include <cstdlib>
 
-#ifdef _MSC_VER
-#include <Windows.h>
-#endif
-
-#ifndef _WIN32 // or something like that...
-#define __stdcall
-#endif
-
 #ifndef thread_local
 # if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
 #  define thread_local _Thread_local
@@ -76,4 +68,12 @@
 # define GC_ALLOC_PARAMS GC_RETURN_ADDR, _file, _line
 #else
 # define GC_ALLOC_PARAMS _file, _line
+#endif
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
+
+#ifndef _WIN32
+#define __stdcall
 #endif

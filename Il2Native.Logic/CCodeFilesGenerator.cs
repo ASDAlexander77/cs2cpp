@@ -134,8 +134,8 @@ else()
     endif()
 
     link_directories(""./"" <%links%>)
-    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -DDEBUG ${EXTRA_CXX_FLAGS} -fpermissive -Wno-invalid-offsetof"")
-    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -fpermissive -Wno-invalid-offsetof"")
+    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -DDEBUG ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
+    SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
