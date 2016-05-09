@@ -20,3 +20,4 @@ StyleCop.Cache
 /packages
 /PdbReader/obj
 /PdbReader/bin
+/Il2Native.Logic/Resources/Impl.zip
