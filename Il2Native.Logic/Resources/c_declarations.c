@@ -623,7 +623,7 @@ public:
 };
 
 #ifdef NO_TIMED_MUTEX
-#if !GC_PTHREADS
+#ifndef GC_PTHREADS
 struct __monitor
 {
 	HANDLE	_mutex;
@@ -651,13 +651,13 @@ public:
 
 	bool try_lock()
 	{
-		return false;
+		return WaitForSingleObject(_mutex, 10) ==  WAIT_OBJECT_0;
 	}
 
 	template< class Rep, class Period >
 	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
 	{
-		return false;
+		return WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration)) ==  WAIT_OBJECT_0;;
 	}
 
 	void unlock()
@@ -667,19 +667,19 @@ public:
 
 	void notify_one()
 	{
-		if (_waiting > 0)
+		if (_interlocked_compare_exchange(&_waiting, 0, 0) > 0)
 		{
-			--_waiting;
+			_interlocked_sub(_waiting, 1);
 			ReleaseSemaphore(_cond, 1, NULL);
 		}
 	}
 
 	void notify_all()
 	{
-		auto _count = _waiting;
+		auto _count = _interlocked_compare_exchange(&_waiting, 0, 0);
 		if (_count > 0)
 		{
-			_waiting = 0;
+			_interlocked_exchange(&_waiting, 0);
 			ReleaseSemaphore(_cond, _count, NULL);
 		}
 	}
@@ -731,7 +731,15 @@ public:
 	template< class Rep, class Period >
 	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
 	{
-		return false;
+        struct timespec timestruct;
+		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration);
+
+        clock_gettime(CLOCK_REALTIME, &timestruct);
+
+        timestruct.tv_sec += millisecondsTimeout / 1000;
+        timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
+
+		return pthread_cond_timedwait(&_cond, &_mutex, &timestruct);
 	}
 
 	void unlock()
@@ -758,7 +766,7 @@ public:
 	std::cv_status wait_for( const std::chrono::duration<Rep, Period>& rel_time)
 	{
         struct timespec timestruct;
-		millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time);
+		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time);
 
         clock_gettime(CLOCK_REALTIME, &timestruct);
 
@@ -766,7 +774,7 @@ public:
         timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
 
 		auto result = pthread_cond_timedwait(&_cond, &_mutex, &timestruct);
-		return result == ETIMEDOUT ? cv_status::timeout : cv_status::no_timeout;
+		return result == ETIMEDOUT ? std::cv_status::timeout : std::cv_status::no_timeout;
 	}
 };
 #endif

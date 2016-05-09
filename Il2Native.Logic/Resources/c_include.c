@@ -47,7 +47,7 @@
 # define GC_THREADS
 #endif
 
-#ifdef _MSC_VER
+#if defined _WIN32 || defined _WIN64 || defined PLATFORM_ANDROID || defined __ANDROID__
 #define GC_NOT_DLL
 #endif
 

@@ -5,7 +5,7 @@ thread_local CoreLib::System::Threading::Thread* __current_thread;
 // Method : System.Threading.Thread.ManagedThreadId.get
 int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 {
-#if !GC_PTHREADS
+#ifndef GC_PTHREADS
 	return (int32_t) GetCurrentThreadId();
 #else
 	return (int32_t) pthread_self();
@@ -45,7 +45,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 	__current_thread = this;
 
 	int32_t threadId;
-#if !GC_PTHREADS
+#ifndef GC_PTHREADS
 	this->DONT_USE_InternalThread.m_value = CreateThread( 
 		nullptr,                // default security attributes
 		0,                      // use default stack size  
@@ -75,7 +75,7 @@ void CoreLib::System::Threading::Thread::AbortInternal()
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-#if !GC_PTHREADS
+#ifndef GC_PTHREADS
 	CloseHandle((HANDLE)voidPtr);
 #else
 	pthread_detach(*(pthread_t*)voidPtr);
@@ -121,7 +121,7 @@ bool CoreLib::System::Threading::Thread::JoinInternal(int32_t millisecondsTimeou
 		throw __new<CoreLib::System::InvalidOperationException>();
 	}
 
-#if !GC_PTHREADS
+#ifndef GC_PTHREADS
 	return WaitForSingleObject((HANDLE)voidPtr, millisecondsTimeout == -1 ? INFINITE : millisecondsTimeout) == WAIT_OBJECT_0;
 #else
 	return pthread_join(*(pthread_t*)voidPtr, 0) == 0;
@@ -171,7 +171,7 @@ void CoreLib::System::Threading::Thread::SetStart(CoreLib::System::Delegate* sta
 // Method : System.Threading.Thread.InternalFinalize()
 void CoreLib::System::Threading::Thread::InternalFinalize()
 {
-    // This function is intentionally blank.
+	// This function is intentionally blank.
 }
 
 // Method : System.Threading.Thread.IsBackgroundNative()

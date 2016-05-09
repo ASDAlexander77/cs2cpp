@@ -28,7 +28,7 @@ void CoreLib::System::Threading::Monitor::Exit(object* obj)
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-    object_extras->mutex.unlock();
+    object_extras->monitor.unlock();
 }
 
 // Method : System.Threading.Monitor.ReliableEnterTimeout(object, int, ref bool)
@@ -55,7 +55,7 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
     auto lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds(1));
 	if (lockTaken)
 	{
-		object_extras->mutex.unlock();
+		object_extras->monitor.unlock();
 	}
 
 	return !lockTaken;
