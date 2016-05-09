@@ -257,7 +257,7 @@ namespace Il2Native.Logic.DOM2
             var reminder = this.IsRealRemainder;
             if (reminder)
             {
-                c.TextSpan("std::remainder(");
+                c.TextSpan("std::fmod(");
                 c.WriteWrappedExpressionIfNeeded(this.Left);
                 c.TextSpan(",");
                 c.WhiteSpace();
