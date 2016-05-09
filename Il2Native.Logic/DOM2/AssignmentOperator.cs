@@ -4,6 +4,7 @@
 namespace Il2Native.Logic.DOM2
 {
     using System;
+    using System.Diagnostics;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -102,6 +103,8 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
                 if (this.TypeDeclarationSplit)
                 {
+                    Debug.Assert(!this.IsRef && !this.IsOut, "reference initialization");
+
                     this.Left.WriteTo(c);
                     c.EndStatement();
                 }

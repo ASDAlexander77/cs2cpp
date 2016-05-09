@@ -241,7 +241,7 @@ namespace Il2Native.Logic.DOM2
 
                             var labelName = labelStatement.Label.LabelName;
                             labelsByName.Add(labelName);
-                            if (!activeGotoLabel.Contains(labelName))
+                            if (activeGotoLabel.Contains(labelName))
                             {
                                 activeGotoLabel.Remove(labelName);
                             }
