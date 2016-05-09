@@ -8,6 +8,7 @@ namespace Il2Native.Logic.DOM2
     using System.Diagnostics;
     using System.Linq;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class MethodBody : Block
     {
@@ -61,7 +62,7 @@ namespace Il2Native.Logic.DOM2
                 }
             }
 
-            this.SanitizeCaseLabelsAndSetReturnTypes(statements);
+            var extraLocalDecls = this.SanitizeCaseLabelsAndSetReturnTypes(statements);
 
             var skip = 0;
             ////if (this.MethodSymbol.MethodKind == MethodKind.Constructor)
@@ -71,6 +72,11 @@ namespace Il2Native.Logic.DOM2
 
             c.NewLine();
             c.OpenBlock();
+
+            foreach (var localDecl in extraLocalDecls)
+            {
+                localDecl.WriteTo(c);
+            }
 
             if (MethodSymbol.MethodKind == MethodKind.StaticConstructor)
             {
@@ -82,6 +88,7 @@ namespace Il2Native.Logic.DOM2
                 if (MethodSymbol.MethodKind == MethodKind.StaticConstructor && statement.Kind == Kinds.ReturnStatement)
                 {
                     c.TextSpanNewLine("_cctor_called = true;");
+                    c.TextSpanNewLine("_cctor_being_called = false;");
                 }
 
                 statement.WriteTo(c);
@@ -214,11 +221,9 @@ namespace Il2Native.Logic.DOM2
             return false;
         }
 
-        private void SanitizeCaseLabelsAndSetReturnTypes(IEnumerable<Statement> statements)
+        private IEnumerable<Statement> SanitizeCaseLabelsAndSetReturnTypes(IEnumerable<Statement> statements)
         {
-            var isBodyOfStateMechine = this.MethodSymbol.Name == "MoveNext" 
-                                       && this.MethodSymbol.ContainingType.Name.StartsWith("<")
-                                       && this.MethodSymbol.ExplicitInterfaceImplementations.Length == 1;
+            var isBodyOfStateMachine = false;
 
             var labels = new List<Label>();
             var usedLabels = new List<Label>();
@@ -226,6 +231,9 @@ namespace Il2Native.Logic.DOM2
 
             var labelsByName = new HashSet<string>();
             var activeGotoLabel = new HashSet<string>();
+
+            var localVarDeclaration = new List<Statement>();
+            var localsAdded = new HashSet<string>();
 
             foreach (var statement in statements)
             {
@@ -279,8 +287,25 @@ namespace Il2Native.Logic.DOM2
 
                         if (e.Kind == Kinds.AssignmentOperator)
                         {
-                            var asignmentOperator = (AssignmentOperator)e;
-                            asignmentOperator.TypeDeclarationSplit = isBodyOfStateMechine || activeGotoLabel.Count > 0;
+                            var assignmentOperator = (AssignmentOperator)e;
+                            assignmentOperator.TypeDeclarationSplit = activeGotoLabel.Count > 0;
+                            if (assignmentOperator.Left.Kind == Kinds.Local)
+                            {
+                                var local = (Local)assignmentOperator.Left;
+                                if (local.SynthesizedLocalKind == SynthesizedLocalKind.StateMachineCachedState)
+                                {
+                                    isBodyOfStateMachine = true;
+                                }
+
+                                if (isBodyOfStateMachine && assignmentOperator.TypeDeclaration)
+                                {
+                                    assignmentOperator.TypeDeclaration = false;
+                                    if (localsAdded.Add(local.ToString()))
+                                    {
+                                        localVarDeclaration.Add(new VariableDeclaration { Local = local });
+                                    }
+                                }
+                            }
                         }
                     });
             }
@@ -305,6 +330,8 @@ namespace Il2Native.Logic.DOM2
             {
                 FixLabelName(label, stringIdGeneratorByMethod);
             }
+
+            return localVarDeclaration;
         }
     }
 }

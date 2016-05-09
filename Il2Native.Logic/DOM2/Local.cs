@@ -13,6 +13,11 @@ namespace Il2Native.Logic.DOM2
 
         public string CustomName { get; set; }
 
+        public Local()
+        {
+            this.SynthesizedLocalKind = SynthesizedLocalKind.None;
+        }
+
         public override Kinds Kind
         {
             get { return Kinds.Local; }
@@ -43,6 +48,8 @@ namespace Il2Native.Logic.DOM2
         public bool IsRef { get; set; }
 
         public bool IsOut { get; set; }
+
+        internal SynthesizedLocalKind SynthesizedLocalKind { get; set; }
 
         internal static void WriteLocal(ILocalSymbol local, CCodeWriterBase c)
         {
@@ -89,6 +96,8 @@ namespace Il2Native.Logic.DOM2
         {
             if (local.SynthesizedLocalKind != SynthesizedLocalKind.None)
             {
+                this.SynthesizedLocalKind = local.SynthesizedLocalKind;
+
                 var lbl = string.Empty;
                 if (local.SynthesizedLocalKind > SynthesizedLocalKind.ForEachArrayIndex0 &&
                     local.SynthesizedLocalKind < SynthesizedLocalKind.ForEachArrayLimit0)
