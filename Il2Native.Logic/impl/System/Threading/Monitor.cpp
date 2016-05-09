@@ -4,7 +4,7 @@
 void CoreLib::System::Threading::Monitor::Enter(object* obj)
 {
 	auto object_extras = __object_extras_storage_instance[obj];
-    object_extras->mutex.lock();  
+    object_extras->monitor.lock();  
 }
 
 // Method : System.Threading.Monitor.ReliableEnter(object, ref bool)
@@ -16,7 +16,7 @@ void CoreLib::System::Threading::Monitor::ReliableEnter_Ref(object* obj, bool& l
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-	lockTaken = object_extras->mutex.try_lock_for(std::chrono::milliseconds::max());
+	lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds::max());
 }
 
 // Method : System.Threading.Monitor.Exit(object)
@@ -40,7 +40,7 @@ void CoreLib::System::Threading::Monitor::ReliableEnterTimeout_Ref(object* obj, 
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-    lockTaken = object_extras->mutex.try_lock_for(std::chrono::milliseconds(timeout));
+    lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds(timeout));
 }
 
 // Method : System.Threading.Monitor.IsEnteredNative(object)
@@ -52,7 +52,7 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-    auto lockTaken = object_extras->mutex.try_lock_for(std::chrono::milliseconds(1));
+    auto lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds(1));
 	if (lockTaken)
 	{
 		object_extras->mutex.unlock();
@@ -70,7 +70,7 @@ bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t mill
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-	return std::cv_status::no_timeout == object_extras->cond.wait_for(object_extras->mutex, millisecondsTimeout == -1 ? std::chrono::milliseconds::max() : std::chrono::milliseconds(millisecondsTimeout));
+	return std::cv_status::no_timeout == object_extras->monitor.wait_for(millisecondsTimeout == -1 ? std::chrono::milliseconds::max() : std::chrono::milliseconds(millisecondsTimeout));
 }
 
 // Method : System.Threading.Monitor.ObjPulse(object)
@@ -82,7 +82,7 @@ void CoreLib::System::Threading::Monitor::ObjPulse(object* obj)
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-	object_extras->cond.notify_one();
+	object_extras->monitor.notify_one();
 }
 
 // Method : System.Threading.Monitor.ObjPulseAll(object)
@@ -94,5 +94,5 @@ void CoreLib::System::Threading::Monitor::ObjPulseAll(object* obj)
 	}
 
 	auto object_extras = __object_extras_storage_instance[obj];
-	object_extras->cond.notify_all();
+	object_extras->monitor.notify_all();
 }

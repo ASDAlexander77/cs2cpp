@@ -622,10 +622,212 @@ public:
 	virtual int32_t get_Rank() override;
 };
 
+#ifdef NO_TIMED_MUTEX
+#if !GC_PTHREADS
+struct __monitor
+{
+	HANDLE	_mutex;
+	HANDLE	_cond;
+	LONG volatile _waiting;
+
+public:
+	__monitor()
+	{
+		_mutex = CreateMutex(NULL, FALSE, NULL);
+		_cond = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
+		_waiting = 0;
+	}
+
+	~__monitor()
+	{
+		CloseHandle(_cond);
+		CloseHandle(_mutex);
+	}
+
+	void lock()
+	{
+		WaitForSingleObject(_mutex, INFINITE);
+	}
+
+	bool try_lock()
+	{
+		return false;
+	}
+
+	template< class Rep, class Period >
+	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
+	{
+		return false;
+	}
+
+	void unlock()
+	{
+		ReleaseMutex(_mutex);
+	}
+
+	void notify_one()
+	{
+		if (_waiting > 0)
+		{
+			--_waiting;
+			ReleaseSemaphore(_cond, 1, NULL);
+		}
+	}
+
+	void notify_all()
+	{
+		auto _count = _waiting;
+		if (_count > 0)
+		{
+			_waiting = 0;
+			ReleaseSemaphore(_cond, _count, NULL);
+		}
+	}
+
+	void wait()
+	{
+		WaitForSingleObject(_mutex, INFINITE);
+	}
+
+	template< class Rep, class Period >
+	std::cv_status wait_for(const std::chrono::duration<Rep, Period>& rel_time)
+	{
+		auto result = WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(rel_time));
+		return result == WAIT_OBJECT_0 ? cv_status::no_timeout : cv_status::timeout;
+	}
+};
+#else
+
+#include <time.h>
+
+struct __monitor
+{
+	pthread_mutex_t	_mutex;
+	pthread_cond_t	_cond;
+
+public:
+	__monitor()
+	{
+		pthread_mutex_init(&_mutex, 0);
+		pthread_cond_init(&_cond, 0);
+	}
+
+	~__monitor()
+	{
+		pthread_cond_destroy(&_cond);
+		pthread_mutex_destroy(&_mutex);
+	}
+
+	void lock()
+	{
+		pthread_mutex_lock(&_mutex);
+	}
+
+	bool try_lock()
+	{
+		return pthread_mutex_trylock(&_mutex) == 0;
+	}
+
+	template< class Rep, class Period >
+	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
+	{
+		return false;
+	}
+
+	void unlock()
+	{
+		pthread_mutex_unlock(&_mutex);
+	}
+
+	void notify_one()
+	{
+		pthread_cond_signal(&_cond);
+	}
+
+	void notify_all()
+	{
+		pthread_cond_broadcast(&_cond);
+	}
+
+	void wait()
+	{
+		pthread_cond_wait(&_cond, &_mutex);
+	}
+
+	template< class Rep, class Period >
+	std::cv_status wait_for( const std::chrono::duration<Rep, Period>& rel_time)
+	{
+        struct timespec timestruct;
+		millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time);
+
+        clock_gettime(CLOCK_REALTIME, &timestruct);
+
+        timestruct.tv_sec += millisecondsTimeout / 1000;
+        timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
+
+		auto result = pthread_cond_timedwait(&_cond, &_mutex, &timestruct);
+		return result == ETIMEDOUT ? cv_status::timeout : cv_status::no_timeout;
+	}
+};
+#endif
+#else
+struct __monitor
+{
+	std::timed_mutex _mutex;
+	std::condition_variable_any	_cond;
+
+public:
+	__monitor()
+	{
+	}
+
+	void lock()
+	{
+		_mutex.lock();
+	}
+
+	bool try_lock()
+	{
+		return _mutex.try_lock();
+	}
+
+	template< class Rep, class Period >
+	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
+	{
+		return _mutex.try_lock_for(timeout_duration);
+	}
+
+	void unlock()
+	{
+		_mutex.unlock();
+	}
+
+	void notify_one()
+	{
+		_cond.notify_one();
+	}
+
+	void notify_all()
+	{
+		_cond.notify_all();
+	}
+
+	void wait()
+	{
+		_cond.wait(_mutex);
+	}
+
+	template< class Rep, class Period >
+	std::cv_status wait_for(const std::chrono::duration<Rep, Period>& rel_time)
+	{
+		return _cond.wait_for(_mutex, rel_time);
+	}
+};
+#endif
+
 struct __object_extras
 {
-	std::timed_mutex mutex;
-	std::condition_variable_any cond;
+	__monitor monitor;
 };
 
 class __object_extras_storage

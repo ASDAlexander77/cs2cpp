@@ -77,3 +77,8 @@
 #ifndef _WIN32
 #define __stdcall
 #endif
+
+#if defined PLATFORM_ANDROID || defined __ANDROID__
+// timed_mutex not supported
+#define NO_TIMED_MUTEX
+#endif
