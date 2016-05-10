@@ -12,7 +12,7 @@ int32_t CoreLib::System::Threading::Thread::get_ManagedThreadId()
 #endif
 }
 
-int32_t __stdcall __thread_inner_proc(void* params)
+void* __stdcall __thread_inner_proc(void* params)
 {
 	auto __this = (CoreLib::System::Threading::Thread*)params;
 
@@ -55,7 +55,7 @@ void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Secu
 		(LPDWORD)&threadId);	// returns the thread identifier 
 #else
 	auto t = __new_set0(sizeof(pthread_t), true);
-	pthread_create(t, 0, __thread_inner_proc, this);
+	pthread_create((pthread_t *)t, 0, __thread_inner_proc, this);
 	this->DONT_USE_InternalThread.m_value = t;
 #endif
 }
