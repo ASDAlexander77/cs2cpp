@@ -65,7 +65,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 		throw __new<CoreLib::System::ArgumentNullException>(L"path"_s, L"path"_s);
 	}
 
-#if _MSC_VER
+#ifndef GC_PTHREADS
 	return GetFullPathNameW(path, numBufferChars, buffer, nullptr);
 #elif _WIN32 || _WIN64
 	return std::wcslen(_wfullpath(buffer, path, numBufferChars));
@@ -96,7 +96,7 @@ CoreLib::System::IntPtr CoreLib::Microsoft::Win32::Win32Native::GetStdHandle(int
 // Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
 CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win32::Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::enum_FileShare dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::enum_FileMode dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
 {
-#if _MSC_VER
+#ifndef GC_PTHREADS
 	auto hFile = CreateFileW(&lpFileName->m_firstChar,    // name of the write
 		(int32_t)dwDesiredAccess,						 // open for writing
 		(int32_t)dwShareMode,							 // do not share
@@ -228,10 +228,10 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 // Method : Microsoft.Win32.Win32Native.CloseHandle(System.IntPtr)
 bool CoreLib::Microsoft::Win32::Win32Native::CloseHandle(CoreLib::System::IntPtr handle)
 {
-#if _MSC_VER
+#ifndef GC_PTHREADS
 	return ::CloseHandle((HANDLE)handle.ToInt32());
 #else
-	_close(handle.ToInt32());
+	close(handle.ToInt32());
 	return true;
 #endif
 }
@@ -251,12 +251,12 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::
 // Method : Microsoft.Win32.Win32Native.GetFileSize(Microsoft.Win32.SafeHandles.SafeFileHandle, out int)
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileSize_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* hFile, int32_t& highSize)
 {
-#if _MSC_VER
+#ifndef GC_PTHREADS
 	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD) highSize);
 #else
 	highSize = 0;
 	struct _stat data;
-	auto returnCode = _fstat(hFile->DangerousGetHandle()->ToInt32(), &data);
+	auto returnCode = fstat(hFile->DangerousGetHandle()->ToInt32(), &data);
 	if (returnCode != 0)
 	{
 		return 0;
@@ -289,22 +289,22 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft:
 int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToWrite, int32_t& numBytesWritten, CoreLib::System::IntPtr mustBeZero)
 {
 	auto fd = handle->DangerousGetHandle()->ToInt32();
-#if _MSC_VER
+#ifndef GC_PTHREADS
 	return (int32_t) ::WriteFile((HANDLE)fd, (LPCVOID) bytes, numBytesToWrite, (LPDWORD)&numBytesWritten, nullptr);
 #else
 	if (fd == -11)
 	{
-		numBytesWritten = _write(STDOUT_FILENO, bytes, numBytesToWrite);
+		numBytesWritten = write(STDOUT_FILENO, bytes, numBytesToWrite);
 		return numBytesWritten < numBytesToWrite ? 0 : 1;
 	}
 	else if (fd == -12)
 	{
-		numBytesWritten = _write(STDERR_FILENO, bytes, numBytesToWrite);
+		numBytesWritten = write(STDERR_FILENO, bytes, numBytesToWrite);
 		return numBytesWritten < numBytesToWrite ? 0 : 1;
 	}
 	else
 	{
-		auto r = _write(fd, bytes, numBytesToWrite);
+		auto r = write(fd, bytes, numBytesToWrite);
 		if (r != -1)
 		{
 			numBytesWritten = r;
