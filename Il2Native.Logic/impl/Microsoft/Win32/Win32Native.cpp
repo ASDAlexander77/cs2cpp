@@ -6,27 +6,16 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+
+#define FILE_TYPE_CHAR 0x0002
+#define FILE_TYPE_DISK 0x0001
+#define FILE_TYPE_PIPE 0x0003
+#define FILE_TYPE_REMOTE 0x8000
+#define FILE_TYPE_UNKNOWN 0x0000
+
 #endif
 
-#define O_RDONLY 0x0000	/* open for reading only */
-#define O_WRONLY 0x0001	/* open for writing only */
-#define O_RDWR 0x0002	/* open for reading and writing */
-#define O_CREAT 0x0100		/* create if nonexistant */
-#define O_TRUNC 0x0200		/* truncate to zero length */
-#define O_EXCL 0x0040		/* error if already exists */
-#define F_SETFD 2		/* set file descriptor flags */
-#define LOCK_SH 0x01		/* shared file lock */
-#define LOCK_EX 0x02		/* exclusive file lock */
-#define LOCK_NB 0x04		/* don't block when locking */
-#define LOCK_UN 0x08		/* unlock file */
-/* access function */
-#define F_OK 0	/* test for existence of file */
-#define O_DIRECT 00040000
-#define O_BINARY 0x8000
-#define S_IRUSR 0000400			/* R for owner */
-#define S_IWUSR 0000200			/* W for owner */
-#define S_IROTH 0000004			/* R for other */
-#define S_IRGRP 0000040			/* R for group */
 #if !_MSC_VER
 #define GENERIC_READ 0x80000000
 #define GENERIC_WRITE 0x40000000
@@ -76,14 +65,14 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFullPathName(wchar_t* path, i
 	auto relative_path_utf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
 	auto bytesReceived = utf8Enc->GetBytes(path, path_length, relative_path_utf8, byteCount);
 	auto resolved_path_utf8 = reinterpret_cast<uint8_t*>(alloca(numBufferChars));
-	auto result = realpath(relative_path_utf8, resolved_path_utf8);
+	auto result = realpath(reinterpret_cast<const char*>(relative_path_utf8), reinterpret_cast<char*>(resolved_path_utf8));
 	if (result != 0)
 	{
-		utf8Enc->GetChars(resolved_path_ascii, numBufferChars, buffer, numBufferChars);
+		utf8Enc->GetChars(resolved_path_utf8, numBufferChars, buffer, numBufferChars);
 		return static_cast<int32_t>(std::wcslen(buffer));
 	}
 
-	return result;
+	return 0;
 #endif
 }
 
@@ -181,8 +170,6 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 		open_flags |= O_DIRECT;
 	}
 
-	open_flags |= O_BINARY;
-
 	filed = open(path_urf8, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
 	if (filed < 0)
 	{
@@ -255,7 +242,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileSize_Out(CoreLib::Microso
 	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD) highSize);
 #else
 	highSize = 0;
-	struct _stat data;
+	struct stat data;
 	auto returnCode = fstat(hFile->DangerousGetHandle()->ToInt32(), &data);
 	if (returnCode != 0)
 	{
@@ -273,7 +260,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft:
 #if _MSC_VER
 	return (int32_t) ::ReadFile((HANDLE)fd, (LPVOID) bytes, numBytesToRead, (LPDWORD)&numBytesRead, nullptr);
 #else
-	auto r = _read(fd, bytes, numBytesToRead);
+	auto r = read(fd, bytes, numBytesToRead);
 	if (r == -1)
 	{
 		numBytesRead = 0;
