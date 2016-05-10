@@ -657,7 +657,7 @@ public:
 	template< class Rep, class Period >
 	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
 	{
-		return WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration)) ==  WAIT_OBJECT_0;;
+		return WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration).count()) ==  WAIT_OBJECT_0;;
 	}
 
 	void unlock()
@@ -692,7 +692,7 @@ public:
 	template< class Rep, class Period >
 	std::cv_status wait_for(const std::chrono::duration<Rep, Period>& rel_time)
 	{
-		auto result = WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(rel_time));
+		auto result = WaitForSingleObject(_mutex, std::chrono::duration_cast<std::chrono::milliseconds>(rel_time).count());
 		return result == WAIT_OBJECT_0 ? cv_status::no_timeout : cv_status::timeout;
 	}
 };
@@ -732,7 +732,7 @@ public:
 	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
 	{
         struct timespec timestruct;
-		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration);
+		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration).count();
 
         clock_gettime(CLOCK_REALTIME, &timestruct);
 
@@ -766,7 +766,7 @@ public:
 	std::cv_status wait_for( const std::chrono::duration<Rep, Period>& rel_time)
 	{
         struct timespec timestruct;
-		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time);
+		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time).count();
 
         clock_gettime(CLOCK_REALTIME, &timestruct);
 
