@@ -75,17 +75,7 @@
             get;
         }
 
-        private static int __exit;
-        public static int ExitCode
-        {
-            get { return __exit; }
-
-            set
-            {
-                __exit = value; 
-                _Exit(value); 
-            }
-        }
+        public static int ExitCode { get; set; }
 
         // Terminates this process with the given exit code.
         [System.Security.SecurityCritical]  // auto-generated
