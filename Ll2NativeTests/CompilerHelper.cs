@@ -20,7 +20,7 @@
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
         public static string MscorlibDllPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
-        public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
+        public const string SscliSourcePath = @"C:\Dev\Unzipped\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
         public const string CoreCLRDlls = @"C:\Dev\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
         

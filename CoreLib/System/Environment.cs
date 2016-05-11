@@ -76,7 +76,7 @@
         }
 
         private static int __exit;
-        public static int Exit
+        public static int ExitCode
         {
             get { return __exit; }
 
@@ -92,6 +92,12 @@
         [DllImport(JitHelpers.QCall, CharSet = CharSet.Unicode)]
         [SuppressUnmanagedCodeSecurity]
         internal static extern void _Exit(int exitCode);
+
+        public static void Exit(int exitCode)
+        {
+            ExitCode = exitCode;
+            _Exit(exitCode);
+        }
 
         public static string GetResourceString(string name)
         {
