@@ -379,7 +379,7 @@ namespace Il2Native.Logic
             if (isNotInterfaceOrModule)
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, debugVersion:true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, debugVersion: true));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
             }
@@ -396,7 +396,20 @@ namespace Il2Native.Logic
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
-                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type, false));
+            }
+
+            /*
+            if (type.IsIntPtrType())
+            {
+                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type, true));
+            }
+            */ 
+
+            // to support RuntimeType initialization
+            if (type.IsRuntimeType())
+            {
+                unit.Declarations.Add(new CCodeRuntimeTypeConstructorDeclaration((INamedTypeSymbol)type, true));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum || type.IsIntPtrType())

@@ -748,8 +748,14 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.WriteLine(" m_value;");
             }
 
+            if (namedTypeSymbol.IsRuntimeType())
+            {
+                c.WriteTypeName(namedTypeSymbol, false);
+                itw.WriteLine("() = default;");
+            }
+
             /*
-            if (!unit.HasDefaultConstructor)
+            if (namedTypeSymbol.IsIntPtrType())
             {
                 c.WriteTypeName(namedTypeSymbol, false);
                 itw.WriteLine("() = default;");

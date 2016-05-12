@@ -567,7 +567,6 @@
     <Compile Include="System\Threading\WaitHandle.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ImplPAL\Win32\" />
     <Folder Include="Impl\Runtime\CompilerServices\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

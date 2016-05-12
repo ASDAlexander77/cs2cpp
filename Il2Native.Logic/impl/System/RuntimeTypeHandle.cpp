@@ -129,7 +129,8 @@ void CoreLib::System::RuntimeTypeHandle::GetConstraints(CoreLib::System::Runtime
 // Method : System.RuntimeTypeHandle.GetGCHandle(System.RuntimeTypeHandle, System.Runtime.InteropServices.GCHandleType)
 CoreLib::System::IntPtr CoreLib::System::RuntimeTypeHandle::GetGCHandle(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::Runtime::InteropServices::enum_GCHandleType type)
 {
-    throw 0xC000C000;
+    auto gcHandle = __init<CoreLib::System::Runtime::InteropServices::GCHandle>(handle.m_type, type);
+	return gcHandle.m_handle;
 }
 
 // Method : System.RuntimeTypeHandle.GetNumVirtuals(System.RuntimeType)
@@ -285,7 +286,7 @@ void CoreLib::System::RuntimeTypeHandle::MakePointer(CoreLib::System::RuntimeTyp
 // Method : System.RuntimeTypeHandle.IsCollectible(System.RuntimeTypeHandle)
 bool CoreLib::System::RuntimeTypeHandle::IsCollectible(CoreLib::System::RuntimeTypeHandle handle)
 {
-    throw 0xC000C000;
+    return true;
 }
 
 // Method : System.RuntimeTypeHandle.HasInstantiation(System.RuntimeType)

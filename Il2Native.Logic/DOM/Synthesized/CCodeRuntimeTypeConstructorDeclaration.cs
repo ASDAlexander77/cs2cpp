@@ -10,10 +10,10 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeSpecialTypeOrEnumConstructorDeclaration : CCodeMethodDeclaration
+    public class CCodeRuntimeTypeConstructorDeclaration : CCodeMethodDeclaration
     {
-        public CCodeSpecialTypeOrEnumConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
-            : base(new SpecialTypeConstructorMethod(type, cppConst))
+        public CCodeRuntimeTypeConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
+            : base(new RuntimeTypeConstructorMethod(type, cppConst))
         {
             MethodBodyOpt = new MethodBody(Method)
             {
@@ -28,18 +28,23 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     new FieldAccess
                                     {
                                         ReceiverOpt = new ThisReference { Type = type },
-                                        Field = new FieldImpl { Name = "m_value" }
+                                        Field = new FieldImpl { Name = "m_handle" }
                                     },
-                                Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } }
+                                Right = 
+                                    new ObjectCreationExpression
+                                    {
+                                        Type = type.GetMembers().OfType<IFieldSymbol>().First(f => f.Name == "m_handle").Type,
+                                        Arguments = { new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } } }
+                                    }
                             }
                     }
                 }
             };
         }
 
-        public class SpecialTypeConstructorMethod : MethodImpl
+        public class RuntimeTypeConstructorMethod : MethodImpl
         {
-            public SpecialTypeConstructorMethod(INamedTypeSymbol type, bool cppConst)
+            public RuntimeTypeConstructorMethod(INamedTypeSymbol type, bool cppConst)
             {
                 MethodKind = MethodKind.Constructor;
                 Name = cppConst ? type.GetTypeName() : "_ctor";
@@ -52,10 +57,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                         new ParameterImpl
                             {
                                 Name = "value",
-                                Type =
-                                    type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum
-                                        ? type
-                                        : type.GetMembers().OfType<IFieldSymbol>().First().Type
+                                Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } }
                             });
             }
         }

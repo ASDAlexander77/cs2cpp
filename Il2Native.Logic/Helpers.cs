@@ -277,6 +277,11 @@ namespace Il2Native.Logic
             }
         }
 
+        public static bool IsRuntimeType(this ITypeSymbol type)
+        {
+            return type.Name == "RuntimeType" && type.ContainingNamespace.Name == "System";
+        }
+
         public static bool IsIntPtrType(this ITypeSymbol type)
         {
             switch (type.SpecialType)

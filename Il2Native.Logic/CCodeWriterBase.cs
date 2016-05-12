@@ -690,6 +690,12 @@ namespace Il2Native.Logic
 
         public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
         {
+            if (methodSymbol.MethodKind == MethodKind.Constructor && methodSymbol.ReturnType == null)
+            {
+                // native C++ construcor
+                return;
+            }
+
             // type
             if (methodSymbol.ReturnsVoid)
             {
