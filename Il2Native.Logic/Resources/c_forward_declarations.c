@@ -845,6 +845,13 @@ public:
 	}
 };
 
+struct __runtimetype_info
+{
+	CoreLib::System::Reflection::RuntimeAssembly* __assembly;
+	CoreLib::System::Reflection::RuntimeModule* __module;
+	string* __name;
+};
+
 int32_t __hash_code(object* _obj, size_t _size);
 
 bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2);

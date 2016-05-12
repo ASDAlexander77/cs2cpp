@@ -486,6 +486,26 @@ namespace Il2Native.Logic
 
                 unit.Declarations.Add(new CCodeFieldDeclaration(tableMethodsField) { DoNotWrapStatic = true });
                 unit.Definitions.Add(new CCodeFieldDefinition(tableMethodsField) { DoNotWrapStatic = true });
+
+                // add runtimeinfo
+                var rtInfoField = new FieldImpl
+                {
+                    Name = "__rt_info",
+                    Type =
+                        new NamedTypeImpl
+                        {
+                            Name = "__runtimetype_info",
+                            ContainingSymbol = type,
+                            TypeKind = TypeKind.Unknown,
+                            ContainingType = (INamedTypeSymbol)type
+                        },
+                    ContainingType = (INamedTypeSymbol)type,
+                    ContainingNamespace = type.ContainingNamespace,
+                    IsStatic = true
+                };
+
+                unit.Declarations.Add(new CCodeFieldDeclaration(rtInfoField) { DoNotWrapStatic = true });
+                unit.Definitions.Add(new CCodeFieldDefinition(rtInfoField) { DoNotWrapStatic = true });
             }
 
             if (isNotInterfaceOrModule)
