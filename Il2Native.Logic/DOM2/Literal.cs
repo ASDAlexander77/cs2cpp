@@ -15,6 +15,8 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.Literal; }
         }
 
+        public bool CppConstString { get; set; }
+
         internal ConstantValue Value { get; set; }
 
         public static string UnicodeChar(char c)
@@ -348,7 +350,12 @@ namespace Il2Native.Logic.DOM2
 
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    c.TextSpan(string.Format("L\"{0}\"_s", UnicodeString(this.Value.StringValue)));
+                    c.TextSpan(string.Format("L\"{0}\"", UnicodeString(this.Value.StringValue)));
+                    if (!CppConstString)
+                    {
+                        c.TextSpan("_s");
+                    }
+
                     break;
                 case ConstantValueTypeDiscriminator.Boolean:
                     c.TextSpan(this.Value.BooleanValue.ToString().ToLowerInvariant());

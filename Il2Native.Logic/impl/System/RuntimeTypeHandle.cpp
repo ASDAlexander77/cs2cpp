@@ -42,16 +42,20 @@ CoreLib::System::Reflection::enum_CorElementType CoreLib::System::RuntimeTypeHan
     throw 0xC000C000;
 }
 
+CoreLib::System::Reflection::RuntimeAssembly ra;
+
 // Method : System.RuntimeTypeHandle.GetAssembly(System.RuntimeType)
 CoreLib::System::Reflection::RuntimeAssembly* CoreLib::System::RuntimeTypeHandle::GetAssembly(CoreLib::System::RuntimeType* type)
 {
-    throw 0xC000C000;
+    return &ra;
 }
+
+CoreLib::System::Reflection::RuntimeModule rm;
 
 // Method : System.RuntimeTypeHandle.GetModule(System.RuntimeType)
 CoreLib::System::Reflection::RuntimeModule* CoreLib::System::RuntimeTypeHandle::GetModule(CoreLib::System::RuntimeType* type)
 {
-    throw 0xC000C000;
+    return &rm;
 }
 
 // Method : System.RuntimeTypeHandle.GetBaseType(System.RuntimeType)
@@ -208,7 +212,7 @@ bool CoreLib::System::RuntimeTypeHandle::IsValueType(CoreLib::System::RuntimeTyp
 // Method : System.RuntimeTypeHandle.ConstructName(System.RuntimeTypeHandle, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)
 void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::enum_TypeNameFormatFlags formatFlags, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
 {
-    throw 0xC000C000;
+	(string**)((void*)StringHandleOnStack.m_ptr) = string::CtorCharPtr(((__runtimetype_info*)(void*)handle.m_type.m_handle)->__name);
 }
 
 // Method : System.RuntimeTypeHandle._GetUtf8Name(System.RuntimeType)

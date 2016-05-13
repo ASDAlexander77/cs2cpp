@@ -847,9 +847,10 @@ public:
 
 struct __runtimetype_info
 {
-	CoreLib::System::Reflection::RuntimeAssembly* __assembly;
-	CoreLib::System::Reflection::RuntimeModule* __module;
-	string* __name;
+	// TODO: finish it
+	////CoreLib::System::Reflection::RuntimeAssembly* __assembly;
+	////CoreLib::System::Reflection::RuntimeModule* __module;
+	wchar_t* __name;
 };
 
 int32_t __hash_code(object* _obj, size_t _size);

@@ -13,6 +13,9 @@ namespace Il2Native.Logic
     using DOM;
     using DOM.Implementations;
     using DOM.Synthesized;
+
+    using Il2Native.Logic.DOM2;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -170,24 +173,42 @@ namespace Il2Native.Logic
         private static void BuildTypeHolderVariables(ITypeSymbol type, CCodeUnit unit)
         {
             // add call flag for static constructor
+            var namedTypeSymbol = (INamedTypeSymbol)type;
+            var runtimeType = new NamedTypeImpl
+                                  {
+                                      Name = "RuntimeType",
+                                      ContainingNamespace =
+                                          new NamespaceImpl
+                                              {
+                                                  MetadataName = "System",
+                                                  ContainingNamespace =
+                                                      new NamespaceImpl
+                                                          {
+                                                              IsGlobalNamespace = true,
+                                                              ContainingAssembly =
+                                                                  new AssemblySymbolImpl { MetadataName = "CoreLib" }
+                                                          }
+                                              },
+                                      TypeKind = TypeKind.Struct
+                                  };
             var typeHolderField = new FieldImpl
             {
                 Name = "__type",
                 Type =
-                    new NamedTypeImpl
-                    {
-                        Name = "RuntimeType",
-                        ContainingNamespace =
-                            new NamespaceImpl
-                            {
-                                MetadataName = "System",
-                                ContainingNamespace = new NamespaceImpl { IsGlobalNamespace = true, ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" } }
-                            },
-                        TypeKind = TypeKind.Struct
-                    },
-                ContainingType = (INamedTypeSymbol)type,
+                    runtimeType,
+                ContainingType = namedTypeSymbol,
                 ContainingNamespace = type.ContainingNamespace,
-                IsStatic = true
+                IsStatic = true,
+                HasConstantValue = true,
+                ConstantValue = new ObjectCreationExpression
+                {
+                    Type = runtimeType,
+                    Arguments = 
+                    {
+                        new AddressOfOperator { Operand = new FieldAccess { Field = new FieldImpl { ContainingType = namedTypeSymbol, Name = "__rt_info", IsStatic = true } } }
+                    },
+                    CppClassInitialization = true
+                }
             };
 
             unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
@@ -206,7 +227,7 @@ namespace Il2Native.Logic
                             Name = "GC_descr",
                             TypeKind = TypeKind.TypeParameter
                         },
-                    ContainingType = (INamedTypeSymbol)type,
+                    ContainingType = namedTypeSymbol,
                     ContainingNamespace = type.ContainingNamespace,
                     IsStatic = true,
                     HasConstantValue = true,
@@ -216,6 +237,61 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeFieldDeclaration(typeDescriptorHolderField) { DoNotWrapStatic = true });
                 unit.Definitions.Add(new CCodeFieldDefinition(typeDescriptorHolderField) { DoNotWrapStatic = true });
             }
+        }
+
+        private static void BuildRuntimeInfoVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add runtimeinfo
+            var runtimeInfoField = new FieldImpl
+                                       {
+                                           Name = "__rt_info",
+                                           Type = new NamedTypeImpl { Name = "__runtimetype_info", TypeKind = TypeKind.Unknown, },
+                                           ContainingType = (INamedTypeSymbol)type,
+                                           ContainingNamespace = type.ContainingNamespace,
+                                           IsStatic = true,
+                                           HasConstantValue = true,
+                                           ConstantValue = CreateRuntimeInfoInitialization(type)
+                                       };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(runtimeInfoField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(runtimeInfoField) { DoNotWrapStatic = true });
+        }
+
+        private static ArrayInitialization CreateRuntimeInfoInitialization(ITypeSymbol type)
+        {
+            return new ArrayInitialization 
+                    { 
+                        Initializers =
+                        {
+                            // Name
+                            new Literal { Value = ConstantValue.Create(type.Name) }
+                        } 
+                    };
+        }
+
+        private static void BuildMethodTableVariables(ITypeSymbol type, CCodeUnit unit)
+        {
+            // add methods table
+            unit.Declarations.Add(new CCodeClassDeclaration(new CCodeMethodsTableClass((INamedTypeSymbol)type)));
+
+            var tableMethodsField = new FieldImpl
+            {
+                Name = "_methods_table",
+                Type =
+                    new NamedTypeImpl
+                    {
+                        Name = "__type_methods_table",
+                        ContainingSymbol = type,
+                        TypeKind = TypeKind.Unknown,
+                        ContainingType = (INamedTypeSymbol)type
+                    },
+                ContainingType = (INamedTypeSymbol)type,
+                ContainingNamespace = type.ContainingNamespace,
+                IsStatic = true
+            };
+
+            unit.Declarations.Add(new CCodeFieldDeclaration(tableMethodsField) { DoNotWrapStatic = true });
+            unit.Definitions.Add(new CCodeFieldDefinition(tableMethodsField) { DoNotWrapStatic = true });
         }
 
         private static bool TypesFilter(ITypeSymbol t)
@@ -465,47 +541,8 @@ namespace Il2Native.Logic
 
             if (isNotModule)
             {
-                // add methods table
-                unit.Declarations.Add(new CCodeClassDeclaration(new CCodeMethodsTableClass((INamedTypeSymbol)type)));
-
-                var tableMethodsField = new FieldImpl
-                                            {
-                                                Name = "_methods_table",
-                                                Type =
-                                                    new NamedTypeImpl
-                                                        {
-                                                            Name = "__type_methods_table",
-                                                            ContainingSymbol = type,
-                                                            TypeKind = TypeKind.Unknown,
-                                                            ContainingType = (INamedTypeSymbol)type
-                                                        },
-                                                ContainingType = (INamedTypeSymbol)type,
-                                                ContainingNamespace = type.ContainingNamespace,
-                                                IsStatic = true
-                                            };
-
-                unit.Declarations.Add(new CCodeFieldDeclaration(tableMethodsField) { DoNotWrapStatic = true });
-                unit.Definitions.Add(new CCodeFieldDefinition(tableMethodsField) { DoNotWrapStatic = true });
-
-                // add runtimeinfo
-                var rtInfoField = new FieldImpl
-                {
-                    Name = "__rt_info",
-                    Type =
-                        new NamedTypeImpl
-                        {
-                            Name = "__runtimetype_info",
-                            ContainingSymbol = type,
-                            TypeKind = TypeKind.Unknown,
-                            ContainingType = (INamedTypeSymbol)type
-                        },
-                    ContainingType = (INamedTypeSymbol)type,
-                    ContainingNamespace = type.ContainingNamespace,
-                    IsStatic = true
-                };
-
-                unit.Declarations.Add(new CCodeFieldDeclaration(rtInfoField) { DoNotWrapStatic = true });
-                unit.Definitions.Add(new CCodeFieldDefinition(rtInfoField) { DoNotWrapStatic = true });
+                BuildMethodTableVariables(type, unit);
+                BuildRuntimeInfoVariables(type, unit);
             }
 
             if (isNotInterfaceOrModule)

@@ -20,6 +20,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool NewOperator { get; set; }
 
+        public bool CppClassInitialization  { get; set; }
+
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
         {
             base.Parse(boundObjectCreationExpression);
@@ -48,15 +50,18 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (this.NewOperator)
+            if (this.NewOperator || this.CppClassInitialization)
             {
-                c.TextSpan("new");
-                c.WhiteSpace();
-
-                if (Cs2CGenerator.DebugOutput)
+                if (!this.CppClassInitialization)
                 {
-                    c.TextSpan("(__FILE__, __LINE__)");
+                    c.TextSpan("new");
                     c.WhiteSpace();
+
+                    if (Cs2CGenerator.DebugOutput)
+                    {
+                        c.TextSpan("(__FILE__, __LINE__)");
+                        c.WhiteSpace();
+                    }
                 }
 
                 c.WriteType(Type, true, true, true);
