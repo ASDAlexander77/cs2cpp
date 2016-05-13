@@ -212,7 +212,8 @@ bool CoreLib::System::RuntimeTypeHandle::IsValueType(CoreLib::System::RuntimeTyp
 // Method : System.RuntimeTypeHandle.ConstructName(System.RuntimeTypeHandle, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)
 void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::enum_TypeNameFormatFlags formatFlags, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
 {
-	(string**)((void*)StringHandleOnStack.m_ptr) = string::CtorCharPtr(((__runtimetype_info*)(void*)handle.m_type.m_handle)->__name);
+	auto ref = (string**)(void*)retString.m_ptr;
+	*ref = string::CtorCharPtr(((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 }
 
 // Method : System.RuntimeTypeHandle._GetUtf8Name(System.RuntimeType)

@@ -264,7 +264,7 @@ namespace Il2Native.Logic
                         Initializers =
                         {
                             // Name
-                            new Literal { Value = ConstantValue.Create(type.Name) }
+                            new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true }
                         } 
                     };
         }
