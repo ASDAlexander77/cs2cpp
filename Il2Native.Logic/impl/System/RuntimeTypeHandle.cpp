@@ -213,7 +213,7 @@ bool CoreLib::System::RuntimeTypeHandle::IsValueType(CoreLib::System::RuntimeTyp
 void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::enum_TypeNameFormatFlags formatFlags, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
 {
 	auto ref = (string**)(void*)retString.m_ptr;
-	*ref = string::CtorCharPtr(((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+	*ref = string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 }
 
 // Method : System.RuntimeTypeHandle._GetUtf8Name(System.RuntimeType)
