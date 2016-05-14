@@ -282,13 +282,13 @@ cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_para
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
-                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_debug", ".bat"))))
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs_android_debug", ".bat"))))
                 {
                     itw.Write(buildVS2015TegraAndroidBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
                     itw.Close();
                 }
 
-                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_release", ".bat"))))
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs_android_release", ".bat"))))
                 {
                     itw.Write(buildVS2015TegraAndroidBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                     itw.Close();
