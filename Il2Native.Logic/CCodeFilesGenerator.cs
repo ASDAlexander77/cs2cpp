@@ -271,7 +271,28 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 {
                     itw.Write(buildVS2015Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
                     itw.Close();
-                }                
+                }
+
+                // build Visual Studio .bat
+                var buildVS2015TegraAndroidBdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+md __build_vs_android_<%build_type_lowercase%>_bdwgc
+cd __build_vs_android_<%build_type_lowercase%>_bdwgc
+cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
+call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
+MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_debug", ".bat"))))
+                {
+                    itw.Write(buildVS2015TegraAndroidBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug"));
+                    itw.Close();
+                }
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_vs2015_release", ".bat"))))
+                {
+                    itw.Write(buildVS2015TegraAndroidBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                    itw.Close();
+                } 
             }
         }
 
