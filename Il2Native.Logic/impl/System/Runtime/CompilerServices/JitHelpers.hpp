@@ -6,7 +6,7 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     template <typename T> 
     T JitHelpers::UnsafeCast(object* o)
     {
-        return reinterpret_cast<T>(val);
+        return reinterpret_cast<T>(o);
     }
     
     // Method : System.Runtime.CompilerServices.JitHelpers.UnsafeEnumCast<T>(T)
