@@ -1,7 +1,5 @@
-#ifndef HEADER_System_Runtime_CompilerServices_JitHelpers
-#define HEADER_System_Runtime_CompilerServices_JitHelpers
 namespace CoreLib { namespace System { namespace Runtime { namespace CompilerServices { 
-    
+   
     // Method : System.Runtime.CompilerServices.JitHelpers.UnsafeCast<T>(object)
     template <typename T> 
     T JitHelpers::UnsafeCast(object* o)
@@ -30,4 +28,3 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
         return __init<CoreLib::System::IntPtr>((void*)&val);
     }
 }}}}
-#endif
