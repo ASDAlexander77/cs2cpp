@@ -452,10 +452,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             {
                 int nestedLevel;
                 var root = !stubs ? "src" : "impl";
-
+                var ext = stubs ? ".hpp" : ".h";
                 if (stubs)
                 {
-                    var path = this.GetPath(unit, out nestedLevel, ".h", root, doNotCreateFolder: true);
+                    var path = this.GetPath(unit, out nestedLevel, ext, root, doNotCreateFolder: true);
                     if (File.Exists(path))
                     {
                         headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
@@ -470,8 +470,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 using (var itw = new IndentedTextWriter(new StringWriter(text)))
                 {
                     var c = new CCodeWriterText(itw);
-                    itw.WriteLine("#ifndef HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
-                    itw.WriteLine("#define HEADER_{0}", unit.Type.GetTypeFullName().CleanUpName());
+                    if (!stubs)
+                    {
+                        var typeFullNameClean = unit.Type.GetTypeFullName().CleanUpName();
+                        itw.WriteLine("#ifndef HEADER_{0}{1}", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
+                        itw.WriteLine("#define HEADER_{0}{1}", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
+                    }
 
                     WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);
 
@@ -493,14 +497,17 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
                     WriteNamespaceClose((INamedTypeSymbol)unit.Type, itw);
 
-                    itw.WriteLine("#endif");
+                    if (!stubs)
+                    {
+                        itw.WriteLine("#endif");
+                    }
 
                     itw.Close();
                 }
 
                 if (anyRecord && text.Length > 0)
                 {
-                    var path = this.GetPath(unit, out nestedLevel, ".h", root);
+                    var path = this.GetPath(unit, out nestedLevel, ext, root);
                     var newText = text.ToString();
 
                     headersToInclude.Add(path.Substring(string.Concat(root, "\\").Length + this.currentFolder.Length + 1));
