@@ -1,4 +1,5 @@
 #include "CoreLib.h"
+
 namespace CoreLib { namespace System { 
 
 	// Method : System.GC.GetGCLatencyMode()
@@ -121,6 +122,6 @@ namespace CoreLib { namespace System {
 	// Method : System.GC._WaitForFullGCComplete(int)
 	int32_t GC::_WaitForFullGCComplete(int32_t millisecondsTimeout)
 	{
-		GC_wait_for_gc_completion();
+		throw 0xC000C000;
 	}
 }}

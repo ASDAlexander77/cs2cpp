@@ -373,7 +373,7 @@ namespace Il2Native.Logic
             var methodSymbol = sourceMethodFound ? sourceMethod : method;
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
-            if (boundStatement != null)
+            if (boundStatement != null && !ExcludeBodies(method))
             {
                 unit.Definitions.Add(new CCodeMethodDefinition(method) { BoundBody = boundStatement });
             }
@@ -418,6 +418,18 @@ namespace Il2Native.Logic
                 }
 #endif
             }
+        }
+
+        private bool ExcludeBodies(IMethodSymbol method)
+        {
+            if (method.ContainingType.Name == "JitHelpers"
+                && method.ContainingType.ContainingNamespace.GetNamespaceFullName() == "System.Runtime.CompilerServices"
+                && method.Name.StartsWith("Unsafe"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private CCodeUnit BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
