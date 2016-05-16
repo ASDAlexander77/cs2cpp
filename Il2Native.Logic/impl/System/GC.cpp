@@ -121,6 +121,6 @@ namespace CoreLib { namespace System {
 	// Method : System.GC._WaitForFullGCComplete(int)
 	int32_t GC::_WaitForFullGCComplete(int32_t millisecondsTimeout)
 	{
-		throw 0xC000C000;
+		GC_wait_for_gc_completion();
 	}
 }}
