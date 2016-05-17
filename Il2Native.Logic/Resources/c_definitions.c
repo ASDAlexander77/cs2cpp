@@ -1,5 +1,5 @@
-__object_extras_storage __object_extras_storage_instance;
-__strings_storage __strings_storage_instance;
+__object_extras_storage* __object_extras_storage_instance = nullptr;
+__strings_storage* __strings_storage_instance = nullptr;
 
 void GC_CALLBACK __finalizer(void * obj, void * client_data)
 {
@@ -9,11 +9,6 @@ void GC_CALLBACK __finalizer(void * obj, void * client_data)
 	}
 
 	((object*)obj)->Finalize();
-}
-
-void __at_exit()
-{
-	GC_finalize_all();
 }
 
 int32_t __hash_code(object* _obj, size_t _size)
@@ -57,3 +52,39 @@ bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2)
 	return std::memcmp((const void*)_obj1, (const void*)_obj2, _size1) == 0;
 }
 
+
+bool __shutdown_called = false;
+void __shutdown()
+{
+	if (__shutdown_called = true)
+	{
+		return;
+	}
+
+	delete __object_extras_storage_instance;
+	delete __strings_storage_instance;
+
+	GC_finalize_all();
+}
+
+void __startup()
+{
+    atexit(__shutdown);
+    GC_set_all_interior_pointers(1);
+    GC_INIT();
+	__object_extras_storage_instance = new __object_extras_storage();
+	__strings_storage_instance = new __strings_storage();
+}
+
+__array<string*>* __get_arguments(int32_t argc, char* argv[])
+{
+    auto arguments_count = argc > 0 ? argc - 1 : 0;
+    auto args = __array<string*>::__new_array(arguments_count);
+    for( auto i = 0; i < arguments_count; i++ )
+    {
+        auto argv1 = argv[i + 1];
+        args->operator[](i) = string::CreateStringFromEncoding((uint8_t*)argv1, std::strlen(argv1), CoreLib::System::Text::Encoding::get_UTF8());
+    }
+    
+    return args;
+}

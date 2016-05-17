@@ -882,7 +882,7 @@ public:
 	mutable std::mutex mutex;
 };
 
-extern __object_extras_storage __object_extras_storage_instance;
+extern __object_extras_storage* __object_extras_storage_instance;
 
 class __strings_storage
 {
@@ -929,12 +929,12 @@ public:
 	mutable std::mutex mutex;
 };
 
-extern __strings_storage __strings_storage_instance;
+extern __strings_storage* __strings_storage_instance;
 
 // String literal
 inline string* operator "" _s(const wchar_t* ptr, size_t length)
 {
-	return __strings_storage_instance(ptr, length);
+	return __strings_storage_instance->operator()(ptr, length);
 }
 
 // Enum operators
@@ -988,4 +988,6 @@ inline T operator ^=(T& left, T right)
 }
 
 // support functions
-void __at_exit();
+void __startup();
+void __shutdown();
+__array<string*>* __get_arguments(int32_t argc, char* argv[]);

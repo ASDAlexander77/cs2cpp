@@ -49,24 +49,7 @@ namespace Il2Native.Logic
             itw.WriteLine("{");
             itw.Indent++;
 
-            itw.WriteLine("atexit(__at_exit);");
-            itw.WriteLine("GC_set_all_interior_pointers(1);");
-            itw.WriteLine("GC_INIT();");
-            if (mainHasParameters)
-            {
-                itw.WriteLine("auto arguments_count = argc > 0 ? argc - 1 : 0;");
-                itw.WriteLine("auto args = __array<string*>::__new_array(arguments_count);");
-                itw.WriteLine("for( auto i = 0; i < arguments_count; i++ )");
-                itw.WriteLine("{");
-                itw.Indent++;
-                itw.WriteLine("auto argv1 = argv[i + 1];");
-                itw.WriteLine(
-                    "args->operator[](i) = string::CreateStringFromEncoding((uint8_t*)argv1, std::strlen(argv1), CoreLib::System::Text::Encoding::get_UTF8());");
-                itw.Indent--;
-                itw.WriteLine("}");
-                itw.WriteLine(string.Empty);
-            }
-
+            itw.WriteLine("__startup();");
             if (!mainMethod.ReturnsVoid)
             {
                 itw.Write("auto exit_code = ");
@@ -76,10 +59,11 @@ namespace Il2Native.Logic
             itw.Write("(");
             if (mainHasParameters)
             {
-                itw.Write("args");
+                itw.Write("__get_arguments(argc, argv)");
             }
 
             itw.WriteLine(");");
+            itw.WriteLine("__shutdown();");
             itw.Write("return ");
             if (!mainMethod.ReturnsVoid)
             {
@@ -473,8 +457,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     if (!stubs)
                     {
                         var typeFullNameClean = unit.Type.GetTypeFullName().CleanUpName();
-                        itw.WriteLine("#ifndef HEADER_{0}{1}", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
-                        itw.WriteLine("#define HEADER_{0}{1}", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
+                        var varName = string.Concat("HEADER_", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
+                        itw.WriteLine("#ifndef {0}", varName);
+                        itw.WriteLine("#define {0}", varName);
                     }
 
                     WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);

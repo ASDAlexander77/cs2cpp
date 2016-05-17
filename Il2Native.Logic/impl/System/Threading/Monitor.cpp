@@ -3,7 +3,7 @@
 // Method : System.Threading.Monitor.Enter(object)
 void CoreLib::System::Threading::Monitor::Enter(object* obj)
 {
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
     object_extras->monitor.lock();  
 }
 
@@ -15,7 +15,7 @@ void CoreLib::System::Threading::Monitor::ReliableEnter_Ref(object* obj, bool& l
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
 	lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds::max());
 }
 
@@ -27,7 +27,7 @@ void CoreLib::System::Threading::Monitor::Exit(object* obj)
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
     object_extras->monitor.unlock();
 }
 
@@ -39,7 +39,7 @@ void CoreLib::System::Threading::Monitor::ReliableEnterTimeout_Ref(object* obj, 
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
     lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds(timeout));
 }
 
@@ -51,7 +51,7 @@ bool CoreLib::System::Threading::Monitor::IsEnteredNative(object* obj)
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
     auto lockTaken = object_extras->monitor.try_lock_for(std::chrono::milliseconds(1));
 	if (lockTaken)
 	{
@@ -69,7 +69,7 @@ bool CoreLib::System::Threading::Monitor::ObjWait(bool exitContext, int32_t mill
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
 	return std::cv_status::no_timeout == object_extras->monitor.wait_for(millisecondsTimeout == -1 ? std::chrono::milliseconds::max() : std::chrono::milliseconds(millisecondsTimeout));
 }
 
@@ -81,7 +81,7 @@ void CoreLib::System::Threading::Monitor::ObjPulse(object* obj)
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
 	object_extras->monitor.notify_one();
 }
 
@@ -93,6 +93,6 @@ void CoreLib::System::Threading::Monitor::ObjPulseAll(object* obj)
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	auto object_extras = __object_extras_storage_instance[obj];
+	auto object_extras = __object_extras_storage_instance->operator[](obj);
 	object_extras->monitor.notify_all();
 }
