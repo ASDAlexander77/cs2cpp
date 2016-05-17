@@ -21,6 +21,46 @@ namespace Il2Native.Logic
 
     public static class Helpers
     {
+        public enum CorElementType : byte
+        {
+            End = (byte)0,
+            Void = (byte)1,
+            Boolean = (byte)2,
+            Char = (byte)3,
+            I1 = (byte)4,
+            U1 = (byte)5,
+            I2 = (byte)6,
+            U2 = (byte)7,
+            I4 = (byte)8,
+            U4 = (byte)9,
+            I8 = (byte)10,
+            U8 = (byte)11,
+            R4 = (byte)12,
+            R8 = (byte)13,
+            String = (byte)14,
+            Ptr = (byte)15,
+            ByRef = (byte)16,
+            ValueType = (byte)17,
+            Class = (byte)18,
+            Var = (byte)19,
+            Array = (byte)20,
+            GenericInst = (byte)21,
+            TypedByRef = (byte)22,
+            I = (byte)24,
+            U = (byte)25,
+            FnPtr = (byte)27,
+            Object = (byte)28,
+            SzArray = (byte)29,
+            MVar = (byte)30,
+            CModReqd = (byte)31,
+            CModOpt = (byte)32,
+            Internal = (byte)33,
+            Max = (byte)34,
+            Modifier = (byte)64,
+            Sentinel = (byte)65,
+            Pinned = (byte)69,
+        }
+
         public static string CleanUpName(this string name)
         {
             if (name == null)
@@ -649,6 +689,73 @@ namespace Il2Native.Logic
             }
 
             return sb.ToString();
+        }
+
+        public static CorElementType GetCorElementType(this ITypeSymbol type)
+        {
+            switch (type.SpecialType)
+            {
+                case SpecialType.System_Object:
+                    return CorElementType.Object;
+                case SpecialType.System_MulticastDelegate:
+                    return CorElementType.FnPtr;
+                case SpecialType.System_Delegate:
+                    return CorElementType.FnPtr;
+                case SpecialType.System_ValueType:
+                    return CorElementType.ValueType;
+                case SpecialType.System_Void:
+                    return CorElementType.Object;
+                case SpecialType.System_Boolean:
+                    return CorElementType.Boolean;
+                case SpecialType.System_Char:
+                    return CorElementType.Char;
+                case SpecialType.System_SByte:
+                    return CorElementType.I1;
+                case SpecialType.System_Byte:
+                    return CorElementType.U1;
+                case SpecialType.System_Int16:
+                    return CorElementType.I2;
+                case SpecialType.System_UInt16:
+                    return CorElementType.U2;
+                case SpecialType.System_Int32:
+                    return CorElementType.I4;
+                case SpecialType.System_UInt32:
+                    return CorElementType.U4;
+                case SpecialType.System_Int64:
+                    return CorElementType.I8;
+                case SpecialType.System_UInt64:
+                    return CorElementType.U8;
+                case SpecialType.System_Single:
+                    return CorElementType.R4;
+                case SpecialType.System_Double:
+                    return CorElementType.R8;
+                case SpecialType.System_String:
+                    return CorElementType.String;
+                case SpecialType.System_IntPtr:
+                    return CorElementType.I;
+                case SpecialType.System_UIntPtr:
+                    return CorElementType.U;
+                case SpecialType.System_Array:
+                    return CorElementType.Array;
+            }
+
+            switch (type.TypeKind)
+            {
+                case TypeKind.ArrayType:
+                    return CorElementType.Array;
+                case TypeKind.Class:
+                    return CorElementType.Class;
+                case TypeKind.Delegate:
+                    return CorElementType.FnPtr;
+                case TypeKind.PointerType:
+                    return CorElementType.Ptr;
+                case TypeKind.Struct:
+                    return CorElementType.ValueType;
+                case TypeKind.TypeParameter:
+                    return CorElementType.GenericInst;
+            }
+
+            return CorElementType.End;
         }
 
         internal static bool NeedsLabel(this LabelSymbol label, string name)
