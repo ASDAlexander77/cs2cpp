@@ -216,15 +216,18 @@ void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeT
 {
 	auto ref = (string**)(void*)retString.m_ptr;
 
-	switch (formatFlags)
+	switch ((int32_t)formatFlags)
 	{
-	case enum_TypeNameFormatFlags::c_FormatBasic:
+		// enum_TypeNameFormatFlags::c_FormatBasic
+	case 1:
 		*ref = string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 		break;
-	case enum_TypeNameFormatFlags::c_FormatNamespace:
+		// enum_TypeNameFormatFlags::c_FormatNamespace
+	case 2:
 		*ref = string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 		break;
-	case enum_TypeNameFormatFlags::c_FormatFullInst:
+		// enum_TypeNameFormatFlags::c_FormatNamespace | enum_TypeNameFormatFlags::c_FormatFullInst
+	case 3:
 		*ref = string::Concat(string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace), L"."_s, string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
 		break;
 	}
