@@ -28,6 +28,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                         ExpressionOpt = new ObjectCreationExpression
                         {
                             NewOperator = true,
+                            AllocatorPrefix = true,
                             Type = new NamedTypeImpl { Name = string.Concat(this.type.MetadataName, "_", this.interfaceSymbol.MetadataName), TypeKind = TypeKind.Class },
                             Arguments = { new ThisReference { Type = type } }
                         }

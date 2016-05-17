@@ -20,6 +20,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool NewOperator { get; set; }
 
+        public bool AllocatorPrefix { get; set; }
+
         public bool CppClassInitialization  { get; set; }
 
         internal void Parse(BoundObjectCreationExpression boundObjectCreationExpression)
@@ -57,10 +59,26 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("new");
                     c.WhiteSpace();
 
-                    if (Cs2CGenerator.DebugOutput)
+                    if (this.AllocatorPrefix)
                     {
-                        c.TextSpan("(__FILE__, __LINE__)");
-                        c.WhiteSpace();
+                        if (Cs2CGenerator.DebugOutput)
+                        {
+                            c.TextSpan("(GCNormal::Default, __FILE__, __LINE__)");
+                            c.WhiteSpace();
+                        }
+                        else
+                        {
+                            c.TextSpan("(GCNormal::Default)");
+                            c.WhiteSpace();
+                        }
+                    }
+                    else
+                    {
+                        if (Cs2CGenerator.DebugOutput)
+                        {
+                            c.TextSpan("(__FILE__, __LINE__)");
+                            c.WhiteSpace();
+                        }
                     }
                 }
 

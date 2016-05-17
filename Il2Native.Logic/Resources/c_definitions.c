@@ -1,6 +1,66 @@
 __object_extras_storage* __object_extras_storage_instance = nullptr;
 __strings_storage* __strings_storage_instance = nullptr;
 
+void* operator new (size_t _size, GCNormal)
+{
+    return __new_set0(_size, GCNormal::Default);
+}
+
+void* operator new (size_t _size, GCNormal, const char* _file, int _line)
+{
+    return __new_set0(_size, GCNormal::Default, _file, _line);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GCNormal)
+{
+    return __new_set0(_customSize, GCNormal::Default);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GCNormal, const char* _file, int _line)
+{
+    return __new_set0(_customSize, GCAtomic::Default, _file, _line);
+}
+
+void* operator new (size_t _size, GCAtomic)
+{
+    return __new_set0(_size, GCAtomic::Default);
+}
+
+void* operator new (size_t _size, GCAtomic, const char* _file, int _line)
+{
+    return __new_set0(_size, GCAtomic::Default, _file, _line);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GCAtomic)
+{
+    return __new_set0(_customSize, GCAtomic::Default);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GCAtomic, const char* _file, int _line)
+{
+    return __new_set0(_customSize, GCAtomic::Default, _file, _line);
+}
+
+void* operator new (size_t _size, GC_descr _type_descr)
+{
+    return __new_set0(_size, _type_descr);
+}
+
+void* operator new (size_t _size, GC_descr _type_descr, const char* _file, int _line)
+{
+    return __new_set0(_size, _type_descr, _file, _line);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr)
+{
+    return __new_set0(_customSize, _type_descr);
+}
+
+void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr, const char* _file, int _line)
+{
+    return __new_set0(_customSize, _type_descr, _file, _line);
+}
+
 void GC_CALLBACK __finalizer(void * obj, void * client_data)
 {
 	if (obj == nullptr)
