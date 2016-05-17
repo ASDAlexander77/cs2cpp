@@ -242,29 +242,32 @@ namespace Il2Native.Logic
         private static void BuildRuntimeInfoVariables(ITypeSymbol type, CCodeUnit unit)
         {
             // add runtimeinfo
+            var namedTypeSymbol = (INamedTypeSymbol)type;
             var runtimeInfoField = new FieldImpl
                                        {
                                            Name = "__rt_info",
                                            Type = new NamedTypeImpl { Name = "__runtimetype_info", TypeKind = TypeKind.Unknown, },
-                                           ContainingType = (INamedTypeSymbol)type,
+                                           ContainingType = namedTypeSymbol,
                                            ContainingNamespace = type.ContainingNamespace,
                                            IsStatic = true,
                                            HasConstantValue = true,
-                                           ConstantValue = CreateRuntimeInfoInitialization(type)
+                                           ConstantValue = CreateRuntimeInfoInitialization(namedTypeSymbol)
                                        };
 
             unit.Declarations.Add(new CCodeFieldDeclaration(runtimeInfoField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(runtimeInfoField) { DoNotWrapStatic = true });
         }
 
-        private static ArrayInitialization CreateRuntimeInfoInitialization(ITypeSymbol type)
+        private static ArrayInitialization CreateRuntimeInfoInitialization(INamedTypeSymbol type)
         {
             return new ArrayInitialization 
                     { 
                         Initializers =
                         {
                             // Name
-                            new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true }
+                            new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true },
+                            new Literal { Value = ConstantValue.Create((int)type.SpecialType) },
+                            new Literal { Value = ConstantValue.Create(type.IsGenericType) }
                         } 
                     };
         }

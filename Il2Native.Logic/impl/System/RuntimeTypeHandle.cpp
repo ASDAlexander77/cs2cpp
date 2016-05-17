@@ -39,7 +39,7 @@ object* CoreLib::System::RuntimeTypeHandle::CreateInstanceForAnotherGenericParam
 // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)
 CoreLib::System::Reflection::enum_CorElementType CoreLib::System::RuntimeTypeHandle::GetCorElementType(CoreLib::System::RuntimeType* type)
 {
-    throw 0xC000C000;
+	return CoreLib::System::Reflection::enum_CorElementType(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
 }
 
 // TODO: temporary solution
@@ -311,7 +311,7 @@ void CoreLib::System::RuntimeTypeHandle::GetGenericTypeDefinition(CoreLib::Syste
 // Method : System.RuntimeTypeHandle.IsGenericTypeDefinition(System.RuntimeType)
 bool CoreLib::System::RuntimeTypeHandle::IsGenericTypeDefinition(CoreLib::System::RuntimeType* type)
 {
-    throw 0xC000C000;
+	return ((__runtimetype_info*)(void*)type->m_handle)->__is_generic_type_definition;
 }
 
 // Method : System.RuntimeTypeHandle.IsGenericVariable(System.RuntimeType)
@@ -329,7 +329,7 @@ int32_t CoreLib::System::RuntimeTypeHandle::GetGenericVariableIndex(CoreLib::Sys
 // Method : System.RuntimeTypeHandle.ContainsGenericVariables(System.RuntimeType)
 bool CoreLib::System::RuntimeTypeHandle::ContainsGenericVariables(CoreLib::System::RuntimeType* handle)
 {
-    throw 0xC000C000;
+	return false;
 }
 
 // Method : System.RuntimeTypeHandle.SatisfiesConstraints(System.RuntimeType, System.IntPtr*, int, System.IntPtr*, int, System.RuntimeType)

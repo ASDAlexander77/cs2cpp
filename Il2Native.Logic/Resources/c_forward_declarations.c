@@ -851,6 +851,8 @@ struct __runtimetype_info
 	////CoreLib::System::Reflection::RuntimeAssembly* __assembly;
 	////CoreLib::System::Reflection::RuntimeModule* __module;
 	const wchar_t* __name;
+	int __cor_element_type;
+	bool __is_generic_type_definition;
 };
 
 int32_t __hash_code(object* _obj, size_t _size);
