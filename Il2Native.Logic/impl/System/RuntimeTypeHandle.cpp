@@ -42,6 +42,7 @@ CoreLib::System::Reflection::enum_CorElementType CoreLib::System::RuntimeTypeHan
     throw 0xC000C000;
 }
 
+// TODO: temporary solution
 CoreLib::System::Reflection::RuntimeAssembly ra;
 
 // Method : System.RuntimeTypeHandle.GetAssembly(System.RuntimeType)
@@ -50,6 +51,7 @@ CoreLib::System::Reflection::RuntimeAssembly* CoreLib::System::RuntimeTypeHandle
     return &ra;
 }
 
+// TODO: temporary solution
 CoreLib::System::Reflection::RuntimeModule rm;
 
 // Method : System.RuntimeTypeHandle.GetModule(System.RuntimeType)

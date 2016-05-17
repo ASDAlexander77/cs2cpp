@@ -231,7 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="impl\Microsoft\Win32\Win32Native.cpp" />
-    <Content Include="impl\System\Activator.h" />
+    <Content Include="impl\System\Activator.hpp" />
     <Content Include="impl\System\AppDomain.cpp" />
     <Content Include="impl\System\Array.cpp" />
     <Content Include="impl\System\Buffer.cpp" />
@@ -260,6 +260,7 @@
     <Content Include="impl\System\RuntimeType.cpp" />
     <Content Include="impl\System\RuntimeTypeHandle.cpp" />
     <Content Include="impl\System\Runtime\CompilerServices\JitHelpers.cpp" />
+    <Content Include="impl\System\Runtime\CompilerServices\JitHelpers.hpp" />
     <Content Include="impl\System\Runtime\CompilerServices\RuntimeHelpers.cpp" />
     <Content Include="impl\System\Runtime\InteropServices\Marshal.cpp" />
     <Content Include="impl\System\Runtime\InteropServices\SafeBuffer.cpp" />
@@ -267,7 +268,7 @@
     <Content Include="impl\System\Signature.cpp" />
     <Content Include="impl\System\String.cpp" />
     <Content Include="impl\System\Threading\Interlocked.cpp" />
-    <Content Include="impl\System\Threading\Interlocked.h" />
+    <Content Include="impl\System\Threading\Interlocked.hpp" />
     <Content Include="impl\System\Threading\Monitor.cpp" />
     <Content Include="impl\System\Threading\Thread.cpp" />
     <Content Include="impl\System\Threading\WaitHandle.cpp" />

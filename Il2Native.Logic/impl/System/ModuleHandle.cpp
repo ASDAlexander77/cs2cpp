@@ -36,10 +36,13 @@ void CoreLib::System::ModuleHandle::GetAssembly(CoreLib::System::Reflection::Run
     throw 0xC000C000;
 }
 
+// TODO: temporary solution
+CoreLib::System::RuntimeType rmt;
+
 // Method : System.ModuleHandle.GetModuleType(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)
 void CoreLib::System::ModuleHandle::GetModuleType(CoreLib::System::Reflection::RuntimeModule* handle, CoreLib::System::Runtime::CompilerServices::ObjectHandleOnStack type)
 {
-    throw 0xC000C000;
+    *((CoreLib::System::RuntimeType**)(void*)type.m_ptr) = &rmt;
 }
 
 // Method : System.ModuleHandle._GetMetadataImport(System.Reflection.RuntimeModule)
