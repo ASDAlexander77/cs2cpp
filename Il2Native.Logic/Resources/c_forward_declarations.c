@@ -851,6 +851,7 @@ struct __runtimetype_info
 	////CoreLib::System::Reflection::RuntimeAssembly* __assembly;
 	////CoreLib::System::Reflection::RuntimeModule* __module;
 	const wchar_t* __name;
+	const wchar_t* __namespace;
 	int __cor_element_type;
 	bool __is_generic_type_definition;
 };

@@ -260,15 +260,16 @@ namespace Il2Native.Logic
 
         private static ArrayInitialization CreateRuntimeInfoInitialization(INamedTypeSymbol type)
         {
-            return new ArrayInitialization 
-                    { 
+            return new ArrayInitialization
+                    {
                         Initializers =
                         {
                             // Name
                             new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true },
+                            new Literal { Value = ConstantValue.Create(type.ContainingNamespace != null ? type.ContainingNamespace.GetNamespaceFullName() : string.Empty), CppConstString = true },
                             new Literal { Value = ConstantValue.Create((int)type.SpecialType) },
                             new Literal { Value = ConstantValue.Create(type.IsGenericType) }
-                        } 
+                        }
                     };
         }
 
@@ -495,7 +496,7 @@ namespace Il2Native.Logic
             {
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type, true));
             }
-            */ 
+            */
 
             // to support RuntimeType initialization
             if (type.IsRuntimeType())
