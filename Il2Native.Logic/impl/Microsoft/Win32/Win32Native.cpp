@@ -315,7 +315,7 @@ bool CoreLib::Microsoft::Win32::Win32Native::GetFileAttributesEx_Ref(string* nam
 	auto filename_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
 	auto bytesReceived = utf8Enc->GetBytes(filename, filename_length, (uint8_t*)filename_urf8, byteCount);
 
-	struct stat_data data;
+	struct stat data;
 	auto return_code = stat(filename_urf8, &data);
 	if (return_code != 0)
 	{

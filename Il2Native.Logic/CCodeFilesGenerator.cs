@@ -36,16 +36,13 @@ namespace Il2Native.Logic
         {
             itw.WriteLine();
             var mainHasParameters = mainMethod.Parameters.Length > 0;
+            itw.Write("auto __main(");
             if (mainHasParameters)
             {
-                itw.Write("auto main(int32_t argc, char* argv[])");
-            }
-            else
-            {
-                itw.Write("auto main()");
+                itw.Write("int32_t argc, char* argv[]");
             }
 
-            itw.WriteLine(" -> int32_t");
+            itw.WriteLine(") -> int32_t");
             itw.WriteLine("{");
             itw.Indent++;
 
@@ -76,6 +73,20 @@ namespace Il2Native.Logic
 
             itw.WriteLine(";");
 
+            itw.Indent--;
+            itw.WriteLine("}");
+            itw.WriteLine();
+
+            // main
+            itw.Write("auto main(int32_t argc, char* argv[]) -> int32_t");
+            itw.WriteLine("{");
+            itw.Indent++;
+            itw.Write("return __main(");
+            if (mainHasParameters)
+            {
+                itw.Write("argc, argv");
+            }
+            itw.WriteLine(");");
             itw.Indent--;
             itw.WriteLine("}");
         }

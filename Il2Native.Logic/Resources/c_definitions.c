@@ -132,6 +132,11 @@ void __startup()
     atexit(__shutdown);
     GC_set_all_interior_pointers(1);
     GC_INIT();
+#if (defined(PLATFORM_ANDROID) || defined(__ANDROID__))
+	GC_allow_register_threads();
+	struct GC_stack_base sb;
+	GC_register_my_thread(&sb);
+#endif
 	__object_extras_storage_instance = new __object_extras_storage();
 	__strings_storage_instance = new __strings_storage();
 }
