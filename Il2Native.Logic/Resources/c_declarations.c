@@ -319,7 +319,7 @@ public:
 
 	inline const T operator [](int32_t index) const 
 	{ 
-		if (index < 0 || index > _length)
+		if (index < 0 || index >= _length)
 		{
 			throw __new<CoreLib::System::IndexOutOfRangeException>();
 		}
@@ -329,7 +329,7 @@ public:
 
 	inline T& operator [](int32_t index) 
 	{
-		if (index < 0 || index > _length)
+		if (index < 0 || index >= _length)
 		{
 			throw __new<CoreLib::System::IndexOutOfRangeException>();
 		}
