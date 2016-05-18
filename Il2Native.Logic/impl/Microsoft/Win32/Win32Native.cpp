@@ -7,19 +7,16 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#endif
 
+#ifdef GC_PTHREADS
 #define FILE_TYPE_CHAR 0x0002
 #define FILE_TYPE_DISK 0x0001
 #define FILE_TYPE_PIPE 0x0003
 #define FILE_TYPE_REMOTE 0x8000
 #define FILE_TYPE_UNKNOWN 0x0000
-
-#endif
-
-#if !_MSC_VER
 #define GENERIC_READ 0x80000000
 #define GENERIC_WRITE 0x40000000
-#endif
 #define FILE_ATTRIBUTE_HIDDEN 0x00000002
 #define FILE_ATTRIBUTE_SYSTEM 0x00000004
 #define FILE_ATTRIBUTE_DIRECTORY 0x00000010
@@ -27,6 +24,7 @@
 #define FILE_ATTRIBUTE_DEVICE 0x00000040
 #define FILE_ATTRIBUTE_NORMAL 0x00000080
 #define FILE_FLAG_NO_BUFFERING 0x20000000
+#endif
 
 // Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 bool CoreLib::Microsoft::Win32::Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
@@ -89,13 +87,13 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 	auto hFile = CreateFileW(&lpFileName->m_firstChar,    // name of the write
 		(int32_t)dwDesiredAccess,						 // open for writing
 		(int32_t)dwShareMode,							 // do not share
-		(LPSECURITY_ATTRIBUTES )securityAttrs,			 // default security
+		(LPSECURITY_ATTRIBUTES)securityAttrs,			 // default security
 		(int32_t)dwCreationDisposition,					 // create new file only
 		(int32_t)dwFlagsAndAttributes,					 // normal file
 		(void*)hTemplateFile);							 // no attr. template
 
-	if (hFile == (HANDLE)-1) 
-	{ 
+	if (hFile == (HANDLE)-1)
+	{
 		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 	}
 
@@ -116,7 +114,7 @@ CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* CoreLib::Microsoft::Win3
 	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 	auto byteCount = utf8Enc->GetByteCount(path, path_length);
 	auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
-	auto bytesReceived = utf8Enc->GetBytes(path, path_length, (uint8_t*) path_urf8, byteCount);
+	auto bytesReceived = utf8Enc->GetBytes(path, path_length, (uint8_t*)path_urf8, byteCount);
 
 	switch ((uint32_t)dwDesiredAccess)
 	{
@@ -239,7 +237,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileType(CoreLib::Microsoft::
 int32_t CoreLib::Microsoft::Win32::Win32Native::GetFileSize_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* hFile, int32_t& highSize)
 {
 #ifndef GC_PTHREADS
-	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD) highSize);
+	return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD)highSize);
 #else
 	highSize = 0;
 	struct stat data;
@@ -258,7 +256,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::ReadFile_Out(CoreLib::Microsoft:
 {
 	auto fd = handle->DangerousGetHandle()->ToInt32();
 #if _MSC_VER
-	return (int32_t) ::ReadFile((HANDLE)fd, (LPVOID) bytes, numBytesToRead, (LPDWORD)&numBytesRead, nullptr);
+	return (int32_t) ::ReadFile((HANDLE)fd, (LPVOID)bytes, numBytesToRead, (LPDWORD)&numBytesRead, nullptr);
 #else
 	auto r = read(fd, bytes, numBytesToRead);
 	if (r == -1)
@@ -277,7 +275,7 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft
 {
 	auto fd = handle->DangerousGetHandle()->ToInt32();
 #ifndef GC_PTHREADS
-	return (int32_t) ::WriteFile((HANDLE)fd, (LPCVOID) bytes, numBytesToWrite, (LPDWORD)&numBytesWritten, nullptr);
+	return (int32_t) ::WriteFile((HANDLE)fd, (LPCVOID)bytes, numBytesToWrite, (LPDWORD)&numBytesWritten, nullptr);
 #else
 	if (fd == -11)
 	{
@@ -307,5 +305,35 @@ int32_t CoreLib::Microsoft::Win32::Win32Native::WriteFile_Out(CoreLib::Microsoft
 // Method : Microsoft.Win32.Win32Native.GetFileAttributesEx(string, int, ref Microsoft.Win32.Win32Native.WIN32_FILE_ATTRIBUTE_DATA)
 bool CoreLib::Microsoft::Win32::Win32Native::GetFileAttributesEx_Ref(string* name, int32_t fileInfoLevel, CoreLib::Microsoft::Win32::Win32Native_WIN32_FILE_ATTRIBUTE_DATA& lpFileInformation)
 {
-	throw 0xC000C000;
+#ifndef GC_PTHREADS
+	return ::GetFileAttributesExW(&name->m_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
+#else
+	auto filename = &name->m_firstChar;
+	auto filename_length = std::wcslen(filename);
+	auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+	auto byteCount = utf8Enc->GetByteCount(filename, filename_length);
+	auto filename_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
+	auto bytesReceived = utf8Enc->GetBytes(filename, filename_length, (uint8_t*)filename_urf8, byteCount);
+
+	struct stat_data data;
+	auto return_code = stat(filename_urf8, &data);
+	if (return_code != 0)
+	{
+		return false;
+	}
+
+	auto fileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+	// if this is folder, return false
+	if ((data.st_mode & S_IFMT) == S_IFDIR)
+	{
+		fileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	lpFileInformation.fileAttributes = (int)fileAttributes;
+	lpFileInformation.fileSizeLow = data.st_size;
+	lpFileInformation.fileSizeHigh = 0;
+
+	return true;
+#endif
 }
