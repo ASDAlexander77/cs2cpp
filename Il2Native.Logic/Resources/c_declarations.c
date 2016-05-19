@@ -341,6 +341,7 @@ public:
 
 	// Array
 	virtual int32_t __array_element_size() override;
+	virtual bool __is_primitive_type_array() override;
 	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
 	virtual int32_t get_Length() override;
 	virtual int32_t get_Rank() override;
@@ -614,6 +615,7 @@ public:
 	}
 
 	virtual int32_t __array_element_size() override;
+	virtual bool __is_primitive_type_array() override;
 	////virtual void InternalGetReference(void*, int32_t, int32_t*) override;
 	////virtual int32_t get_Length() override;
 	virtual int32_t GetUpperBound(int32_t dimension) override;

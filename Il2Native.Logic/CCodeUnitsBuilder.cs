@@ -468,27 +468,28 @@ namespace Il2Native.Logic
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
             var isAtomicType = type.IsAtomicType();
+            var namedTypeSymbol = (INamedTypeSymbol)type;
             if (isNotInterfaceOrModule)
             {
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired));
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, debugVersion: true));
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true));
-                unit.Declarations.Add(new CCodeNewOperatorDeclaration((INamedTypeSymbol)type, finalizationRequired, true, true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired, debugVersion: true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired, true));
+                unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired, true, true));
             }
 
             if (!isAtomicType && type.TypeKind != TypeKind.Interface)
             {
-                unit.Declarations.Add(new CCodeGetTypeDescriptorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeGetTypeDescriptorDeclaration(namedTypeSymbol));
             }
 
             if (type.SpecialType == SpecialType.System_Array)
             {
-                unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration(namedTypeSymbol));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
-                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration((INamedTypeSymbol)type, false));
+                unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration(namedTypeSymbol, false));
             }
 
             /*
@@ -501,44 +502,45 @@ namespace Il2Native.Logic
             // to support RuntimeType initialization
             if (type.IsRuntimeType())
             {
-                unit.Declarations.Add(new CCodeRuntimeTypeConstructorDeclaration((INamedTypeSymbol)type, true));
+                unit.Declarations.Add(new CCodeRuntimeTypeConstructorDeclaration(namedTypeSymbol, true));
             }
 
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum || type.IsIntPtrType())
             {
-                unit.Declarations.Add(new CCodeCastOperatorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeCastOperatorDeclaration(namedTypeSymbol));
             }
 
             if (type.TypeKind == TypeKind.Struct)
             {
-                unit.Declarations.Add(new CCodeArrowOperatorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeArrowOperatorDeclaration(namedTypeSymbol));
             }
 
             if (isNotInterfaceOrModule)
             {
                 // add internal infrustructure
-                unit.Declarations.Add(new CCodeGetTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
-                unit.Definitions.Add(new CCodeGetTypeVirtualMethodDefinition((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeIsTypeVirtualMethodDeclaration((INamedTypeSymbol)type));
-                unit.Definitions.Add(new CCodeIsTypeVirtualMethodDefinition((INamedTypeSymbol)type));
-                unit.Declarations.Add(new CCodeGetInterfaceVirtualMethodDeclaration((INamedTypeSymbol)type));
-                unit.Definitions.Add(new CCodeGetInterfaceVirtualMethodDefinition((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeGetTypeVirtualMethodDeclaration(namedTypeSymbol));
+                unit.Definitions.Add(new CCodeGetTypeVirtualMethodDefinition(namedTypeSymbol));
+                unit.Declarations.Add(new CCodeIsTypeVirtualMethodDeclaration(namedTypeSymbol));
+                unit.Definitions.Add(new CCodeIsTypeVirtualMethodDefinition(namedTypeSymbol));
+                unit.Declarations.Add(new CCodeGetInterfaceVirtualMethodDeclaration(namedTypeSymbol));
+                unit.Definitions.Add(new CCodeGetInterfaceVirtualMethodDefinition(namedTypeSymbol));
                 if (!type.IsAbstract)
                 {
-                    unit.Declarations.Add(new CCodeCloneVirtualMethod((INamedTypeSymbol)type));
-                    unit.Declarations.Add(new CCodeHashVirtualMethod((INamedTypeSymbol)type));
-                    unit.Declarations.Add(new CCodeEqualsVirtualMethod((INamedTypeSymbol)type));
+                    unit.Declarations.Add(new CCodeCloneVirtualMethod(namedTypeSymbol));
+                    unit.Declarations.Add(new CCodeHashVirtualMethod(namedTypeSymbol));
+                    unit.Declarations.Add(new CCodeEqualsVirtualMethod(namedTypeSymbol));
                 }
             }
 
             if (type.TypeKind == TypeKind.Interface)
             {
-                unit.Declarations.Add(new CCodeObjectCastOperatorDeclaration((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeObjectCastOperatorDeclaration(namedTypeSymbol));
             }
 
             if (type.SpecialType == SpecialType.System_Array)
             {
-                unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod((INamedTypeSymbol)type));
+                unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod(namedTypeSymbol));
+                unit.Declarations.Add(new CCodeIsPrimitiveTypeArrayVirtualMethod(namedTypeSymbol));
             }
 
             if (type.TypeKind == TypeKind.Interface)
