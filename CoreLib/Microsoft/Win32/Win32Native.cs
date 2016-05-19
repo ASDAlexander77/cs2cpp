@@ -1433,13 +1433,9 @@ namespace Microsoft.Win32
         }
 #endif // FEATURE_CORESYSTEM
 
-
-        internal static bool CreateDirectory(
-                    String path, SECURITY_ATTRIBUTES lpSecurityAttributes)
-        {
-            throw new NotImplementedException();
-        }
-
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
+        internal static extern bool CreateDirectory(
+                    String path, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
         internal static bool DeleteFile(String path)
         {
@@ -1486,13 +1482,10 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
-
-        internal static int GetCurrentDirectory(
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
+        internal static extern int GetCurrentDirectory(
                   int nBufferLength,
-                  [Out]StringBuilder lpBuffer)
-        {
-            throw new NotImplementedException();
-        }
+                  [Out]StringBuilder lpBuffer);
 
         [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
         internal static extern bool GetFileAttributesEx(String name, int fileInfoLevel, ref WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
@@ -1536,18 +1529,11 @@ namespace Microsoft.Win32
             throw new NotImplementedException();
         }
 
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
+        internal static extern bool RemoveDirectory(String path);
 
-        internal static bool RemoveDirectory(String path)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        internal static bool SetCurrentDirectory(String path)
-        {
-            throw new NotImplementedException();
-        }
-
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto, BestFitMapping = false)]
+        internal static extern bool SetCurrentDirectory(String path);
 
         private static int _errorMode;
 

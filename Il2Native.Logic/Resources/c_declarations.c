@@ -731,13 +731,13 @@ public:
 	template< class Rep, class Period >
 	bool try_lock_for( const std::chrono::duration<Rep,Period>& timeout_duration )
 	{
-        struct timespec timestruct;
+		struct timespec timestruct;
 		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration).count();
 
-        clock_gettime(CLOCK_REALTIME, &timestruct);
+		clock_gettime(CLOCK_REALTIME, &timestruct);
 
-        timestruct.tv_sec += millisecondsTimeout / 1000;
-        timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
+		timestruct.tv_sec += millisecondsTimeout / 1000;
+		timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
 
 		return pthread_cond_timedwait(&_cond, &_mutex, &timestruct);
 	}
@@ -765,13 +765,13 @@ public:
 	template< class Rep, class Period >
 	std::cv_status wait_for( const std::chrono::duration<Rep, Period>& rel_time)
 	{
-        struct timespec timestruct;
+		struct timespec timestruct;
 		auto millisecondsTimeout = std::chrono::duration_cast<std::chrono::milliseconds>(rel_time).count();
 
-        clock_gettime(CLOCK_REALTIME, &timestruct);
+		clock_gettime(CLOCK_REALTIME, &timestruct);
 
-        timestruct.tv_sec += millisecondsTimeout / 1000;
-        timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
+		timestruct.tv_sec += millisecondsTimeout / 1000;
+		timestruct.tv_nsec += (millisecondsTimeout % 1000) * 1000000;
 
 		auto result = pthread_cond_timedwait(&_cond, &_mutex, &timestruct);
 		return result == ETIMEDOUT ? std::cv_status::timeout : std::cv_status::no_timeout;
@@ -985,6 +985,22 @@ inline T operator ^=(T& left, T right)
 {
 	typedef typename std::underlying_type<T>::type U;
 	return left = (T) (left ^ right);
+}
+
+// string helpers
+inline string* __utf8_to_string(char* str)
+{
+	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), CoreLib::System::Text::Encoding::get_UTF8());
+}
+
+inline string* __ascii_to_string(char* str)
+{
+	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), CoreLib::System::Text::Encoding::get_ASCII());
+}
+
+inline string* __wchar_t_to_string(wchar_t* str)
+{
+	return string::CtorCharPtr(str);
 }
 
 // support functions

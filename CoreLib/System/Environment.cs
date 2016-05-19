@@ -1,6 +1,7 @@
 ﻿namespace System
 {
     using System.Diagnostics.Contracts;
+    using System.IO;
 
     using Runtime.CompilerServices;
     using Runtime.InteropServices;
@@ -16,7 +17,21 @@
 
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
 
-        public static string CurrentDirectory { get; set; }
+        public static String CurrentDirectory
+        {
+            get
+            {
+                return Directory.GetCurrentDirectory();
+            }
+
+#if FEATURE_CORECLR
+            [System.Security.SecurityCritical] // auto-generated
+#endif
+            set
+            {
+                Directory.SetCurrentDirectory(value);
+            }
+        }
 
         private static OperatingSystem _os;
 

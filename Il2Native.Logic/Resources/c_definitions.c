@@ -148,7 +148,7 @@ __array<string*>* __get_arguments(int32_t argc, char* argv[])
     for( auto i = 0; i < arguments_count; i++ )
     {
         auto argv1 = argv[i + 1];
-        args->operator[](i) = string::CreateStringFromEncoding((uint8_t*)argv1, std::strlen(argv1), CoreLib::System::Text::Encoding::get_UTF8());
+        args->operator[](i) = __utf8_to_string(argv1);
     }
     
     return args;
