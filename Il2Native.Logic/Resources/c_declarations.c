@@ -236,6 +236,7 @@ int32_t DecFromR4(float fltIn, int32_t* pdec);
 int32_t DecFromR8(double dblIn, int32_t* pdec);
 int32_t DecMul(int32_t* d1, int32_t* d2, int32_t* res);
 int32_t DecDiv(int32_t* d1, int32_t* d2, int32_t* res);
+int32_t R8FromDec(int32_t* pdec, double* pdblOut);
 
 // Finally block
 class Finally

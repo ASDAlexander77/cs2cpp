@@ -324,8 +324,8 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 		return result;
 #else
-		int dwDirLen = 0;
-		DWORD dwLastError = 0;
+		auto dwDirLen = 0;
+		auto dwLastError = 0;
 
 		char  *current_dir;
 
@@ -334,7 +334,8 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 		if ( !current_dir )
 		{
-			dwLastError = ERROR_INTERNAL_ERROR;
+			// TODO: finish it
+			////dwLastError = ERROR_INTERNAL_ERROR;
 			goto done;
 		}
 
@@ -357,7 +358,8 @@ done:
 
 		if ( dwLastError )
 		{
-			SetLastError(dwLastError);
+			// TODO: finish it
+			////SetLastError(dwLastError);
 		}
 
 		return dwDirLen;

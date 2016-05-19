@@ -1121,8 +1121,10 @@ int32_t DecFromR8(double dblIn, int32_t* pdec)
 	return NOERROR__;
 }
 
-int32_t R8FromDec(DECIMAL__* pdecIn, double* pdblOut)
+int32_t R8FromDec(int32_t* pdec, double* pdblOut)
 {
+	DECIMAL__* pdecIn = (DECIMAL__*)pdec;
+
     SPLIT64__  sdlTmp;
     double   dbl;
 
@@ -1131,11 +1133,11 @@ int32_t R8FromDec(DECIMAL__* pdecIn, double* pdblOut)
     sdlTmp.u.Lo = DECIMAL_LO32__(*pdecIn);
     sdlTmp.u.Hi = DECIMAL_MID32__(*pdecIn);
 
-    if ( (LONG)DECIMAL_MID32__(*pdecIn) < 0 )
-      dbl = (ds2to64.dbl + (double)(LONGLONG)sdlTmp.int64 +
+    if ( (int32_t)DECIMAL_MID32__(*pdecIn) < 0 )
+      dbl = (ds2to64.dbl + (double)(int64_t)sdlTmp.int64 +
              (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE__(*pdecIn)) ;
     else
-      dbl = ((double)(LONGLONG)sdlTmp.int64 +
+      dbl = ((double)(int64_t)sdlTmp.int64 +
              (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE__(*pdecIn));
 
     if (DECIMAL_SIGN__(*pdecIn))

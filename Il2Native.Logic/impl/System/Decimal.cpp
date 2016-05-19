@@ -78,7 +78,7 @@ void CoreLib::System::Decimal::FCallDivideOverflowed_Ref_Ref_Ref(CoreLib::System
 int32_t CoreLib::System::Decimal::GetHashCode()
 {
 	double dbl;
-	R8FromDec(d, &dbl);
+	R8FromDec(&this->flags, &dbl);
 	if (dbl == 0.0) 
 	{
 		// Ensure 0 and -0 have the same hash code
