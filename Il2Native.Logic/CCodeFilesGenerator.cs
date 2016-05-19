@@ -68,7 +68,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                itw.Write("0");
+                itw.Write("CoreLib::System::Environment::get_ExitCode()");
             }
 
             itw.WriteLine(";");

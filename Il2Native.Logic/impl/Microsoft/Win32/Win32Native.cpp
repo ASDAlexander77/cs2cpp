@@ -409,6 +409,17 @@ done:
 	// Method : Microsoft.Win32.Win32Native.SetCurrentDirectory(string)
 	bool Win32Native::SetCurrentDirectory(string* path)
 	{
-		throw 3221274624U;
+#ifndef GC_PTHREADS
+		return ::SetCurrentDirectoryW(&path->m_firstChar) > 0;
+#else
+		auto path_ptr = &path->m_firstChar;
+		auto path_length = std::wcslen(path_ptr);
+		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+		auto byteCount = utf8Enc->GetByteCount(path_ptr, path_length);
+		auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
+		auto bytesReceived = utf8Enc->GetBytes(path_ptr, path_length, (uint8_t*)path_urf8, byteCount);
+
+		return chdir(path_urf8) == 0;
+#endif
 	}
 }}}

@@ -1240,7 +1240,7 @@ namespace System
 
         public String Trim()
         {
-            return TrimHelper(TrimBoth);  
+            return TrimHelper(TrimBoth);
         }
 
         private String TrimHelper(int trimType)
@@ -1715,12 +1715,22 @@ namespace System
 
         public bool EndsWith(char endChar, StringComparison stringComparison = StringComparison.Ordinal)
         {
-            throw new NotImplementedException();
+            if (Length < 1)
+            {
+                return false;
+            }
+
+            return endChar == this[Length - 1];
         }
 
         public bool EndsWith(string end, StringComparison stringComparison = StringComparison.Ordinal)
         {
-            throw new NotImplementedException();
+            if (Length < end.Length)
+            {
+                return false;
+            }
+
+            return string.CompareOrdinal(this, Length - end.Length - 1, end, 0, end.Length) == 0;
         }
     }
 
