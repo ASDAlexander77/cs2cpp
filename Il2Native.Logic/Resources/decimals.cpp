@@ -32,6 +32,13 @@ typedef union{
 	double dbl;
 } DBLSTRUCT__;
 
+// Intializer for a DBLSTRUCT
+#if BIGENDIAN
+#define DEFDS__(Lo, Hi, exp, sign) { {sign, exp, Hi, Lo } }
+#else
+#define DEFDS__(Lo, Hi, exp, sign) { {Lo, Hi, exp, sign} }
+#endif
+
 typedef struct {
 #if BIGENDIAN
 	uint32_t sign : 1;
@@ -42,7 +49,7 @@ typedef struct {
 	uint32_t exp : 8;
 	uint32_t sign : 1;
 #endif
-} SNGSTRUCT;
+} SNGSTRUCT__;
 
 #define OVFL_MAX_1_HI   429496729
 #define DEC_SCALE_MAX   28
@@ -65,6 +72,8 @@ typedef struct {
 #define DECIMAL_LO64_GET__(dec)       ((uint64_t)(((uint64_t)DECIMAL_MID32__(dec) << 32) | DECIMAL_LO32__(dec)))
 #define DECIMAL_LO64_SET__(dec,value)   {uint64_t _Value = value; DECIMAL_MID32__(dec) = (uint32_t)(_Value >> 32); DECIMAL_LO32__(dec) = (uint32_t)_Value; }
 #define DECIMAL_SETZERO__(dec) {DECIMAL_LO32__(dec) = 0; DECIMAL_MID32__(dec) = 0; DECIMAL_HI32__(dec) = 0; DECIMAL_SIGNSCALE__(dec) = 0;}
+
+#define DBLBIAS__ 1022
 
 const SPLIT64__    sdlTenToEighteen = { uint64_t(1000000000000000000) };
 
@@ -191,7 +200,7 @@ static const uint32_t ulTenToNine = 1000000000;
 #define Div64by32__(num, den) ((uint32_t)((uint64_t)(num) / (uint32_t)(den)))
 #define Mod64by32__(num, den) ((uint32_t)((uint64_t)(num) % (uint32_t)(den)))
 
-const DBLSTRUCT ds2to64 = DEFDS(0, 0, DBLBIAS + 65, 0);
+const DBLSTRUCT__ ds2to64 = DEFDS__(0, 0, DBLBIAS__ + 65, 0);
 
 template <class T> const T& min(const T& a, const T& b)
 {
@@ -834,7 +843,7 @@ int32_t DecFromR4(float fltIn, int32_t* pdec)
 	// than 2^93.  So a float with an exponent of -94 could just
 	// barely reach 0.5, but smaller exponents will always round to zero.
 	//
-	if ((iExp = ((SNGSTRUCT *)&fltIn)->exp - SNGBIAS) < -94)
+	if ((iExp = ((SNGSTRUCT__ *)&fltIn)->exp - SNGBIAS) < -94)
 	{
 		DECIMAL_SETZERO__(*pdecOut);
 		return NOERROR__;
@@ -958,7 +967,7 @@ int32_t DecFromR4(float fltIn, int32_t* pdec)
 		DECIMAL_SCALE__(*pdecOut) = iPower;
 	}
 
-	DECIMAL_SIGN__(*pdecOut) = (uint8_t)((SNGSTRUCT *)&fltIn)->sign << 7;
+	DECIMAL_SIGN__(*pdecOut) = (uint8_t)((SNGSTRUCT__ *)&fltIn)->sign << 7;
 	return NOERROR__;
 }
 
@@ -1124,10 +1133,10 @@ int32_t R8FromDec(DECIMAL__* pdecIn, double* pdblOut)
 
     if ( (LONG)DECIMAL_MID32__(*pdecIn) < 0 )
       dbl = (ds2to64.dbl + (double)(LONGLONG)sdlTmp.int64 +
-             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE(*pdecIn)) ;
+             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE__(*pdecIn)) ;
     else
       dbl = ((double)(LONGLONG)sdlTmp.int64 +
-             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE(*pdecIn));
+             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE__(*pdecIn));
 
     if (DECIMAL_SIGN__(*pdecIn))
       dbl = -dbl;
