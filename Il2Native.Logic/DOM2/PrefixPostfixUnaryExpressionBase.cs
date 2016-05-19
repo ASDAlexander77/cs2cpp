@@ -63,6 +63,11 @@ namespace Il2Native.Logic.DOM2
             {
                 return false;
             }
+
+            if (this.Value.Type.SpecialType == SpecialType.System_Decimal)
+            {
+                return false;
+            }
             
             return true;
         }

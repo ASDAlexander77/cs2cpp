@@ -71,6 +71,11 @@ const SPLIT64__    sdlTenToEighteen = { uint64_t(1000000000000000000) };
 #define NOERROR__ 0
 #define DISP_E_OVERFLOW__ 1
 #define DISP_E_DIVBYZERO__ 2
+#define E_INVALIDARG__ (0x80070057L)
+
+#define VALIDATEDECIMAL__(dec) \
+    if (DECIMAL_SCALE__(dec) > DECMAX || (DECIMAL_SIGN__(dec) & ~DECIMAL_NEG__) != 0) \
+        return E_INVALIDARG__;
 
 typedef union tagCY__ {
 	struct {
@@ -1103,6 +1108,30 @@ int32_t DecFromR8(double dblIn, int32_t* pdec)
 
 	DECIMAL_SIGN__(*pdecOut) = (uint8_t)((DBLSTRUCT__ *)&dblIn)->u.sign << 7;
 	return NOERROR__;
+}
+
+int32_t R8FromDec(DECIMAL__* pdecIn, double* pdblOut)
+{
+    SPLIT64__  sdlTmp;
+    double   dbl;
+
+    VALIDATEDECIMAL(*pdecIn); // E_INVALIDARG check
+
+    sdlTmp.u.Lo = DECIMAL_LO32__(*pdecIn);
+    sdlTmp.u.Hi = DECIMAL_MID32__(*pdecIn);
+
+    if ( (LONG)DECIMAL_MID32__(*pdecIn) < 0 )
+      dbl = (ds2to64.dbl + (double)(LONGLONG)sdlTmp.int64 +
+             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE(*pdecIn)) ;
+    else
+      dbl = ((double)(LONGLONG)sdlTmp.int64 +
+             (double)DECIMAL_HI32__(*pdecIn) * ds2to64.dbl) / fnDblPower10(DECIMAL_SCALE(*pdecIn));
+
+    if (DECIMAL_SIGN__(*pdecIn))
+      dbl = -dbl;
+
+    *pdblOut = dbl;
+    return NOERROR__;
 }
 
 int32_t DecMul(int32_t* d1, int32_t* d2, int32_t* res)
