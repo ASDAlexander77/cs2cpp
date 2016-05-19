@@ -3,7 +3,7 @@
 // Method : System.Buffer.BlockCopy(System.Array, int, System.Array, int, int)
 void CoreLib::System::Buffer::BlockCopy(CoreLib::System::Array* src, int32_t srcOffset, CoreLib::System::Array* dst, int32_t dstOffset, int32_t count)
 {
-	CoreLib::System::Array::Copy(src, srcOffset, dst, dstOffset, int32_t count, true);
+	CoreLib::System::Array::Copy(src, srcOffset, dst, dstOffset, count, true);
 }
 
 // Method : System.Buffer.InternalBlockCopy(System.Array, int, System.Array, int, int)
