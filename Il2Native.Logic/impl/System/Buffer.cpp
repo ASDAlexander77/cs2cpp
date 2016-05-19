@@ -3,7 +3,7 @@
 // Method : System.Buffer.BlockCopy(System.Array, int, System.Array, int, int)
 void CoreLib::System::Buffer::BlockCopy(CoreLib::System::Array* src, int32_t srcOffset, CoreLib::System::Array* dst, int32_t dstOffset, int32_t count)
 {
-	CoreLib::System::Array::Copy(src, srcOffset, dst, dstOffset, count, true);
+	InternalBlockCopy(src, srcOffset, dst, dstOffset, count);
 }
 
 // Method : System.Buffer.InternalBlockCopy(System.Array, int, System.Array, int, int)
@@ -21,16 +21,26 @@ void CoreLib::System::Buffer::InternalBlockCopy(CoreLib::System::Array* src, int
 
 	if (byteCount < 0 || srcOffsetBytes < 0 || dstOffsetBytes < 0)
 	{
-		throw __new<CoreLib::System::InvalidOperationException>();
+		throw __new<CoreLib::System::ArgumentException>();
+	}
+
+	if (byteCount > (_ByteLength(src) - srcOffsetBytes) || byteCount > (_ByteLength(dst) - dstOffsetBytes))
+	{
+		throw __new<CoreLib::System::ArgumentException>();
+	}
+
+	if (!CoreLib::System::Buffer::IsPrimitiveTypeArray(src) || !CoreLib::System::Buffer::IsPrimitiveTypeArray(dst))
+	{
+		throw __new<CoreLib::System::ArgumentException>();
 	}
 
 	CoreLib::System::TypedReference elemref;
 
-	int32_t index = 0;
-	src->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto zero_index = 0;
+	src->InternalGetReference(static_cast<void*>(&elemref), 1, &zero_index);
 	auto pSrc = (int8_t*) (void*)elemref.Value;
 
-	dst->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	dst->InternalGetReference(static_cast<void*>(&elemref), 1, &zero_index);
 	auto pDest = (int8_t*) (void*)elemref.Value;
 
 	std::memcpy(pDest + dstOffsetBytes, pSrc + srcOffsetBytes, byteCount);
@@ -56,7 +66,8 @@ uint8_t CoreLib::System::Buffer::_GetByte(CoreLib::System::Array* array, int32_t
 	}
 
 	CoreLib::System::TypedReference elemref;
-	array->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto zero_index = 0;
+	array->InternalGetReference(static_cast<void*>(&elemref), 1, &zero_index);
 	return *((int8_t*)(void*)elemref.Value + index);
 }
 
@@ -69,7 +80,8 @@ void CoreLib::System::Buffer::_SetByte(CoreLib::System::Array* array, int32_t in
 	}
 
 	CoreLib::System::TypedReference elemref;
-	array->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto zero_index = 0;
+	array->InternalGetReference(static_cast<void*>(&elemref), 1, &zero_index);
 	*((int8_t*)(void*)elemref.Value + index) = value;
 }
 
