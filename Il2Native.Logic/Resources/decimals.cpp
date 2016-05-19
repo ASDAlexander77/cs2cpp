@@ -191,6 +191,8 @@ static const uint32_t ulTenToNine = 1000000000;
 #define Div64by32__(num, den) ((uint32_t)((uint64_t)(num) / (uint32_t)(den)))
 #define Mod64by32__(num, den) ((uint32_t)((uint64_t)(num) % (uint32_t)(den)))
 
+const DBLSTRUCT ds2to64 = DEFDS(0, 0, DBLBIAS + 65, 0);
+
 template <class T> const T& min(const T& a, const T& b)
 {
 	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
@@ -1115,7 +1117,7 @@ int32_t R8FromDec(DECIMAL__* pdecIn, double* pdblOut)
     SPLIT64__  sdlTmp;
     double   dbl;
 
-    VALIDATEDECIMAL(*pdecIn); // E_INVALIDARG check
+    VALIDATEDECIMAL__(*pdecIn); // E_INVALIDARG check
 
     sdlTmp.u.Lo = DECIMAL_LO32__(*pdecIn);
     sdlTmp.u.Hi = DECIMAL_MID32__(*pdecIn);
