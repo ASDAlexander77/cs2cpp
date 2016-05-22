@@ -56,7 +56,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		}
 
 #ifndef GC_PTHREADS
-		return GetFullPathNameW(path, numBufferChars, buffer, nullptr);
+		return GetFullPathNameW((LPCWSTR)path, numBufferChars, (LPWSTR)buffer, nullptr);
 #elif _WIN32 || _WIN64
 		return string::wcslen(_wfullpath(buffer, path, numBufferChars));
 #else
@@ -87,7 +87,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::enum_FileShare dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::enum_FileMode dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
 	{
 #ifndef GC_PTHREADS
-		auto hFile = CreateFileW(&lpFileName->m_firstChar,    // name of the write
+		auto hFile = CreateFileW((LPCWSTR)&lpFileName->m_firstChar,    // name of the write
 			(int32_t)dwDesiredAccess,						 // open for writing
 			(int32_t)dwShareMode,							 // do not share
 			(LPSECURITY_ATTRIBUTES)securityAttrs,			 // default security
@@ -316,7 +316,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	{
 #ifndef GC_PTHREADS
 		auto buffer = reinterpret_cast<char16_t*>(alloca(nBufferLength + 1));
-		auto result = ::GetCurrentDirectoryW(nBufferLength, buffer);
+		auto result = ::GetCurrentDirectoryW(nBufferLength, (LPWSTR)buffer);
 		if (result != 0)
 		{
 			lpBuffer->Append(__wchar_t_to_string(buffer));
@@ -370,7 +370,7 @@ done:
 	bool Win32Native::GetFileAttributesEx_Ref(string* name, int32_t fileInfoLevel, CoreLib::Microsoft::Win32::Win32Native_WIN32_FILE_ATTRIBUTE_DATA& lpFileInformation)
 	{
 #ifndef GC_PTHREADS
-		return ::GetFileAttributesExW(&name->m_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
+		return ::GetFileAttributesExW((LPCWSTR)&name->m_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
 #else
 		auto filename = &name->m_firstChar;
 		auto filename_length = string::wcslen(filename);
@@ -412,7 +412,7 @@ done:
 	bool Win32Native::SetCurrentDirectory(string* path)
 	{
 #ifndef GC_PTHREADS
-		return ::SetCurrentDirectoryW(&path->m_firstChar) > 0;
+		return ::SetCurrentDirectoryW((LPCWSTR)&path->m_firstChar) > 0;
 #else
 		auto path_ptr = &path->m_firstChar;
 		auto path_length = string::wcslen(path_ptr);

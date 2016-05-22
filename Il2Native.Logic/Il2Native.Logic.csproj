@@ -242,6 +242,7 @@
     <Content Include="impl\System\Diagnostics\Debugger.cpp" />
     <Content Include="impl\System\Environment.cpp" />
     <Content Include="impl\System\GC.cpp" />
+    <Content Include="impl\System\IO\__DebugOutputTextWriter.cpp" />
     <Content Include="impl\System\Math.cpp" />
     <Content Include="impl\System\MissingMemberException.cpp" />
     <Content Include="impl\System\ModuleHandle.cpp" />
