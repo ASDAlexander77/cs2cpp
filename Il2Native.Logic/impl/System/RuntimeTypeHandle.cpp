@@ -220,15 +220,15 @@ void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeT
 	{
 		// enum_TypeNameFormatFlags::c_FormatBasic
 	case 1:
-		*ref = string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+		*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 		break;
 		// enum_TypeNameFormatFlags::c_FormatNamespace
 	case 2:
-		*ref = string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
+		*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 		break;
 		// enum_TypeNameFormatFlags::c_FormatNamespace | enum_TypeNameFormatFlags::c_FormatFullInst
 	case 3:
-		*ref = string::Concat(string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace), L"."_s, string::CtorCharPtr((wchar_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
+		*ref = string::Concat(string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace), L"."_s, string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
 		break;
 	}
 }

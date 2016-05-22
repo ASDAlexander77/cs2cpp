@@ -891,9 +891,9 @@ class __strings_storage
 {
 public:
 
-	typedef std::unordered_map<const wchar_t*, string*> map;
+	typedef std::unordered_map<const char16_t*, string*> map;
 
-	string* operator() (const wchar_t* str, size_t length)
+	string* operator() (const char16_t* str, size_t length)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __strings.find (str);
@@ -903,12 +903,12 @@ public:
 		}
 
 		auto _new_string = string::FastAllocateString(length);
-		std::wcsncpy(&_new_string->m_firstChar, str, length);
+		string::wstrcpy(&_new_string->m_firstChar, (char16_t*)str, length);
 		__strings[str] = _new_string;
 		return _new_string;
 	}
 
-	void free(const wchar_t* str)
+	void free(const char16_t* str)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
 		map::const_iterator got = __strings.find (str);
@@ -935,7 +935,7 @@ public:
 extern __strings_storage* __strings_storage_instance;
 
 // String literal
-inline string* operator "" _s(const wchar_t* ptr, size_t length)
+inline string* operator "" _s(const char16_t* ptr, size_t length)
 {
 	return __strings_storage_instance->operator()(ptr, length);
 }
@@ -1001,7 +1001,7 @@ inline string* __ascii_to_string(char* str)
 	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), CoreLib::System::Text::Encoding::get_ASCII());
 }
 
-inline string* __wchar_t_to_string(wchar_t* str)
+inline string* __wchar_t_to_string(char16_t* str)
 {
 	return string::CtorCharPtr(str);
 }

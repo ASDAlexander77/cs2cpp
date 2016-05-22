@@ -28,7 +28,7 @@ template <typename T> struct convert_primitive_type_to_class
 		typename std::conditional< std::is_same< T, uint8_t >::value, CoreLib::System::Byte, 
 		typename std::conditional< std::is_same< T, int16_t >::value, CoreLib::System::Int16, 
 		typename std::conditional< std::is_same< T, uint16_t >::value, CoreLib::System::UInt16, 
-		typename std::conditional< std::is_same< T, wchar_t >::value, CoreLib::System::Char, 
+		typename std::conditional< std::is_same< T, char16_t >::value, CoreLib::System::Char, 
 		typename std::conditional< std::is_same< T, int32_t >::value, CoreLib::System::Int32, 
 		typename std::conditional< std::is_same< T, uint32_t >::value, CoreLib::System::UInt32, 
 		typename std::conditional< std::is_same< T, int64_t >::value, CoreLib::System::Int64, 
@@ -47,7 +47,7 @@ template <typename T> struct convert_class_to_primitive_type
 		typename std::conditional< std::is_same< T, CoreLib::System::Byte >::value, uint8_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Int16 >::value, int16_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::UInt16 >::value, uint16_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Char >::value, wchar_t, 
+		typename std::conditional< std::is_same< T, CoreLib::System::Char >::value, char16_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Int32 >::value, int32_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::UInt32 >::value, uint32_t, 
 		typename std::conditional< std::is_same< T, CoreLib::System::Int64 >::value, int64_t, 
@@ -768,8 +768,8 @@ struct __runtimetype_info
 	// TODO: finish it
 	////CoreLib::System::Reflection::RuntimeAssembly* __assembly;
 	////CoreLib::System::Reflection::RuntimeModule* __module;
-	const wchar_t* __name;
-	const wchar_t* __namespace;
+	const char16_t* __name;
+	const char16_t* __namespace;
 	int __cor_element_type;
 	bool __is_generic_type_definition;
 };

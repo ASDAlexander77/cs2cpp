@@ -785,7 +785,7 @@ namespace Il2Native.Logic
                     this.TextSpan("bool");
                     return true;
                 case SpecialType.System_Char:
-                    this.TextSpan("wchar_t");
+                    this.TextSpan("char16_t");
                     return true;
                 case SpecialType.System_SByte:
                     this.TextSpan("int8_t");

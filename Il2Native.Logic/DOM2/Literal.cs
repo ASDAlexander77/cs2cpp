@@ -89,7 +89,7 @@ namespace Il2Native.Logic.DOM2
                 case ConstantValueTypeDiscriminator.UInt16:
                     return this.Value.UInt16Value.ToString();
                 case ConstantValueTypeDiscriminator.Char:
-                    return string.Format("L'{0}'", UnicodeChar(this.Value.CharValue));
+                    return string.Format("u'{0}'", UnicodeChar(this.Value.CharValue));
                 case ConstantValueTypeDiscriminator.Int32:
                     return this.Value.Int32Value.ToString();
                 case ConstantValueTypeDiscriminator.UInt32:
@@ -131,7 +131,7 @@ namespace Il2Native.Logic.DOM2
                     line = this.Value.DoubleValue.ToString();
                     return line.IndexOf('.') != -1 || line.IndexOf('E') != -1 ? line : string.Concat(line, ".0");
                 case ConstantValueTypeDiscriminator.String:
-                    return string.Format("L\"{0}\"", UnicodeString(this.Value.StringValue));
+                    return string.Format("u\"{0}\"", UnicodeString(this.Value.StringValue));
                 case ConstantValueTypeDiscriminator.Boolean:
                     return this.Value.BooleanValue.ToString().ToLowerInvariant();
                 default:
@@ -224,7 +224,7 @@ namespace Il2Native.Logic.DOM2
                     }
                     break;
                 case ConstantValueTypeDiscriminator.Char:
-                    c.TextSpan(string.Format("L'{0}'", UnicodeChar(this.Value.CharValue)));
+                    c.TextSpan(string.Format("u'{0}'", UnicodeChar(this.Value.CharValue)));
                     break;
                 case ConstantValueTypeDiscriminator.Int32:
                     if (int.MaxValue == this.Value.Int32Value)
@@ -350,7 +350,7 @@ namespace Il2Native.Logic.DOM2
 
                     break;
                 case ConstantValueTypeDiscriminator.String:
-                    c.TextSpan(string.Format("L\"{0}\"", UnicodeString(this.Value.StringValue)));
+                    c.TextSpan(string.Format("u\"{0}\"", UnicodeString(this.Value.StringValue)));
                     if (!CppConstString)
                     {
                         c.TextSpan("_s");

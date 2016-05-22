@@ -36,17 +36,17 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 {
 	if (rank != 1)
 	{
-		throw __new<CoreLib::System::InvalidOperationException>(L"rank"_s);
+		throw __new<CoreLib::System::InvalidOperationException>(u"rank"_s);
 	}
 
 	if (elemRef == nullptr)
 	{
-		throw __new<CoreLib::System::ArgumentNullException>(L"elemRef"_s);
+		throw __new<CoreLib::System::ArgumentNullException>(u"elemRef"_s);
 	}	
 
 	if (pIndices == nullptr)
 	{
-		throw __new<CoreLib::System::ArgumentNullException>(L"pIndices"_s);
+		throw __new<CoreLib::System::ArgumentNullException>(u"pIndices"_s);
 	}	
 
 	auto index = pIndices[0];

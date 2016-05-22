@@ -48,19 +48,19 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFullPathName(char*, int, char*, System.IntPtr)
-	int32_t Win32Native::GetFullPathName(wchar_t* path, int32_t numBufferChars, wchar_t* buffer, CoreLib::System::IntPtr mustBeZero)
+	int32_t Win32Native::GetFullPathName(char16_t* path, int32_t numBufferChars, char16_t* buffer, CoreLib::System::IntPtr mustBeZero)
 	{
 		if (static_cast<void*>(path) == (void*)nullptr)
 		{
-			throw __new<CoreLib::System::ArgumentNullException>(L"path"_s, L"path"_s);
+			throw __new<CoreLib::System::ArgumentNullException>(u"path"_s, u"path"_s);
 		}
 
 #ifndef GC_PTHREADS
 		return GetFullPathNameW(path, numBufferChars, buffer, nullptr);
 #elif _WIN32 || _WIN64
-		return std::wcslen(_wfullpath(buffer, path, numBufferChars));
+		return string::wcslen(_wfullpath(buffer, path, numBufferChars));
 #else
-		auto path_length = std::wcslen(path);
+		auto path_length = string::wcslen(path);
 		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path, path_length);
 		auto relative_path_utf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
@@ -70,7 +70,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		if (result != 0)
 		{
 			utf8Enc->GetChars(resolved_path_utf8, numBufferChars, buffer, numBufferChars);
-			return static_cast<int32_t>(std::wcslen(buffer));
+			return static_cast<int32_t>(string::wcslen(buffer));
 		}
 
 		return 0;
@@ -113,7 +113,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		}
 
 		auto path = &lpFileName->m_firstChar;
-		auto path_length = std::wcslen(path);
+		auto path_length = string::wcslen(path);
 		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path, path_length);
 		auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
@@ -315,7 +315,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	int32_t Win32Native::GetCurrentDirectory(int32_t nBufferLength, CoreLib::System::Text::StringBuilder* lpBuffer)
 	{
 #ifndef GC_PTHREADS
-		auto buffer = reinterpret_cast<wchar_t*>(alloca(nBufferLength + 1));
+		auto buffer = reinterpret_cast<char16_t*>(alloca(nBufferLength + 1));
 		auto result = ::GetCurrentDirectoryW(nBufferLength, buffer);
 		if (result != 0)
 		{
@@ -373,7 +373,7 @@ done:
 		return ::GetFileAttributesExW(&name->m_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
 #else
 		auto filename = &name->m_firstChar;
-		auto filename_length = std::wcslen(filename);
+		auto filename_length = string::wcslen(filename);
 		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(filename, filename_length);
 		auto filename_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
@@ -415,7 +415,7 @@ done:
 		return ::SetCurrentDirectoryW(&path->m_firstChar) > 0;
 #else
 		auto path_ptr = &path->m_firstChar;
-		auto path_length = std::wcslen(path_ptr);
+		auto path_length = string::wcslen(path_ptr);
 		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path_ptr, path_length);
 		auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));

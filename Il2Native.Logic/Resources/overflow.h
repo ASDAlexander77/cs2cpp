@@ -172,7 +172,7 @@ inline int16_t __sub_ovf(int16_t a, int16_t b)
 	return s;
 }
 
-inline wchar_t __sub_ovf(wchar_t a, wchar_t b)
+inline char16_t __sub_ovf(char16_t a, char16_t b)
 {
 	if (a < b)
 	{
