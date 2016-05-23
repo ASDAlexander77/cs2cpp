@@ -706,6 +706,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         private static void WriteFullDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+
+            WriteTemplateTraits(c, namedTypeSymbol);
+
             WriteNamespaceOpen(namedTypeSymbol, itw, c);
 
             // write extern declaration
@@ -805,7 +808,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.WriteLine("};");
 
             WriteNamespaceClose(namedTypeSymbol, itw);
+        }
 
+        private static void WriteTemplateTraits(CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
+        {
             if (namedTypeSymbol.IsPrimitiveValueType() || namedTypeSymbol.TypeKind == TypeKind.Enum || namedTypeSymbol.SpecialType == SpecialType.System_Void)
             {
                 // value to class
@@ -840,7 +846,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (namedTypeSymbol.IsAtomicType())
                 {
                     c.TextSpanNewLine("template<>");
-                    c.TextSpanNewLine("struct gc_traits<");
+                    c.TextSpan("struct gc_traits<");
                     c.WriteType(namedTypeSymbol, true, false, true);
                     c.TextSpanNewLine("> { constexpr static const GCAtomic value = GCAtomic::Default; };");
                 }

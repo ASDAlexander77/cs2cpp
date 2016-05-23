@@ -3,29 +3,16 @@
 // 
 namespace Il2Native.Logic.DOM
 {
-    using System.Collections.Generic;
-    using System.Linq;
-    using DOM2;
-    using Implementations;
+    using Il2Native.Logic.DOM.Synthesized;
+
     using Microsoft.CodeAnalysis;
 
     public class CCodeMethodsTableClass : CCodeClass
     {
-        private readonly INamedTypeSymbol @interface;
-
         public CCodeMethodsTableClass(INamedTypeSymbol type)
-            : base(type.IsValueType ? new ValueTypeAsClassTypeImpl(type) : type)
+            : base(type)
         {
             this.CreateMemebers();
-        }
-
-        public IEnumerable<CCodeMethodDefinition> GetMembersImplementation()
-        {
-            return Type.GetMembers()
-                .OfType<IMethodSymbol>()
-                .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
-                .Select(this.CreateWrapperMethod)
-                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -57,47 +44,10 @@ namespace Il2Native.Logic.DOM
 
         private void CreateMemebers()
         {
-            foreach (var method in Type.GetMembers().Where(m => m.Name == "__box_ref").OfType<IMethodSymbol>())
+            if (Type.IsValueType && Type.SpecialType != SpecialType.System_Void)
             {
-                Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
+                Declarations.Add(new CCodeBoxRefDeclaration(Type as INamedTypeSymbol));
             }
-        }
-
-        private MethodBody CreateMethodBody(IMethodSymbol method)
-        {
-            var callMethod = new Call()
-            {
-                Method = method,
-            };
-
-            foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
-            {
-                callMethod.Arguments.Add(paramExpression);
-            }
-
-            Statement mainStatement;
-            if (!method.ReturnsVoid)
-            {
-                mainStatement = new ReturnStatement { ExpressionOpt = callMethod };
-            }
-            else
-            {
-                mainStatement = new ExpressionStatement { Expression = callMethod };
-            }
-
-            return new MethodBody(method) { Statements = { mainStatement } };
-        }
-
-        private MethodImpl CreateWrapperMethod(IMethodSymbol method)
-        {
-            return new MethodImpl
-            {
-                Name = method.Name,
-                Parameters = method.Parameters,
-                ReturnType = method.ReturnType,
-                ContainingType = method.ContainingType,
-                ContainingNamespace = Type.ContainingNamespace,
-            };
         }
 
         private void Name(CCodeWriterBase c)

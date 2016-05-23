@@ -482,11 +482,6 @@ namespace Il2Native.Logic
                 unit.Declarations.Add(new CCodeGetTypeDescriptorDeclaration(namedTypeSymbol));
             }
 
-            if (type.SpecialType == SpecialType.System_Array)
-            {
-                unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration(namedTypeSymbol));
-            }
-
             if (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum)
             {
                 unit.Declarations.Add(new CCodeSpecialTypeOrEnumConstructorDeclaration(namedTypeSymbol, false));
@@ -539,6 +534,7 @@ namespace Il2Native.Logic
 
             if (type.SpecialType == SpecialType.System_Array)
             {
+                unit.Declarations.Add(new CCodeNewOperatorPointerDeclaration(namedTypeSymbol));
                 unit.Declarations.Add(new CCodeGetArrayElementSizeVirtualMethod(namedTypeSymbol));
                 unit.Declarations.Add(new CCodeIsPrimitiveTypeArrayVirtualMethod(namedTypeSymbol));
             }

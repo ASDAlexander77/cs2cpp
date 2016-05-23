@@ -4,7 +4,8 @@
 namespace Il2Native.Logic.DOM2
 {
     using System;
-    using Microsoft.CodeAnalysis;
+
+    using Il2Native.Logic.DOM.Implementations;
 
     public class Cast : Expression
     {
@@ -20,6 +21,8 @@ namespace Il2Native.Logic.DOM2
         }
 
         public bool MapPointerCast { get; set; }
+
+        public bool BoxByRef { get; set; }
 
         public Expression MapPointerCastTypeParameter1 { get; set; }
 
@@ -78,6 +81,13 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan(">(");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
+            }
+            else if (this.BoxByRef)
+            {
+                c.TextSpan("__box_ref_t");
+                c.TextSpan("(");
+                new Cast { CCast = true, Type = new PointerTypeImpl { PointedAtType = Type }, Operand = Operand }.WriteTo(c);
+                c.TextSpan(")");                   
             }
             else
             {

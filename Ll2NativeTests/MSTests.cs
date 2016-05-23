@@ -756,10 +756,6 @@ namespace Ll2NativeTests
                         912
                     });
 
-            // skip
-            //skip.Add(77); // remove, it can't be compiled
-            //skip.Add(450); // remove, it can't be compiled
-
             skip.Add(126); // no Main method
             skip.Add(315); // using "new" on method (can be solved by removing 'Using' or new method etc
             skip.Add(317); // using "new" on method
@@ -785,8 +781,6 @@ namespace Ll2NativeTests
             skip.Add(883); // no Main method
 
             ///// Remove it when finish reflection, enum to string etc
-            skip.Add(33); // reflection
-            skip.Add(36); // IntrenalToObject
             skip.Add(40); // enum to string
             skip.Add(46); // float max
             skip.Add(68); // enum to string
@@ -853,7 +847,8 @@ namespace Ll2NativeTests
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            ////foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(36, 2).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

@@ -16,7 +16,6 @@ struct valuetype_to_class { typedef T type; };
 template<typename T> 
 struct class_to_valuetype { typedef T type; };
 
-// map class to valuetype
 template<typename T> 
 struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
 
@@ -743,6 +742,28 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 	union { D d; S s; } u;
 	u.s = s;
 	return u.d;
+}
+
+// box - by ref
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_ref_t (T* t)
+{
+	// we do not need to call __new here as it already constructed
+	return new T(*t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_ref_t (T* t)
+{
+	return __new<_CLASS>(*t);
+}
+
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_ref_t (T* t)
+{
+	return *t;
+}
+
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_ref_t (T* t)
+{
+	return object_cast(*t);
 }
 
 class __methods_table
