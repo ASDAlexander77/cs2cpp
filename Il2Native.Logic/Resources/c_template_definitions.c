@@ -282,7 +282,7 @@ bool __array<T>::System_Collections_ICollection_get_IsSynchronized()
 template <typename T>
 CoreLib::System::Collections::IEnumerator* __array<T>::System_Collections_IEnumerable_GetEnumerator()	
 {
-	return new (GCNormal::Default) __array<T>::ArrayEnumerator_IEnumeratorT1(this);
+	return GetEnumerator();
 }
 
 // Method : 
