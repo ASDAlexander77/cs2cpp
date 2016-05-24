@@ -74,182 +74,214 @@ int32_t __array<T>::get_Rank()
 
 // IListT1
 template <typename T>
-T __array<T>::System_Collections_Generic_IListT1_get_Item(int32_t) 
+T __array<T>::System_Collections_Generic_IListT1_get_Item(int32_t pos) 
 {
-	throw 0xC000C000;
+	return this->_data[pos];
 }
 
 template <typename T>
-void __array<T>::System_Collections_Generic_IListT1_set_Item(int32_t, T)
+void __array<T>::System_Collections_Generic_IListT1_set_Item(int32_t pos, T t)
 {
-	throw 0xC000C000;
+	this->_data[pos] = t;
 }
 
 template <typename T>
-int32_t __array<T>::System_Collections_Generic_IListT1_IndexOf(T)
+int32_t __array<T>::System_Collections_Generic_IListT1_IndexOf(T t)
 {
-	throw 0xC000C000;
+	for (auto index = 0; index < _length; index++)
+	{
+		if (t == this->_data[index])
+		{
+			return index;
+		}
+	}
+
+	return -1;
 }
 
 template <typename T>
-void __array<T>::System_Collections_Generic_IListT1_Insert(int32_t, T)
+void __array<T>::System_Collections_Generic_IListT1_Insert(int32_t pos, T t)
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
-void __array<T>::System_Collections_Generic_IListT1_RemoveAt(int32_t)
+void __array<T>::System_Collections_Generic_IListT1_RemoveAt(int32_t pos)
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 // ICollectionT1
 template <typename T>
 int32_t __array<T>::System_Collections_Generic_ICollectionT1_get_Count() 
 {
-	throw 0xC000C000;
+	return get_Length();
 }
 
 template <typename T>
 bool __array<T>::System_Collections_Generic_ICollectionT1_get_IsReadOnly() 
 {
-	throw 0xC000C000;
+	return get_IsReadOnly();
 }
 
 template <typename T>
-void __array<T>::System_Collections_Generic_ICollectionT1_Add(T) 
+void __array<T>::System_Collections_Generic_ICollectionT1_Add(T t) 
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
 void __array<T>::System_Collections_Generic_ICollectionT1_Clear() 
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
-bool __array<T>::System_Collections_Generic_ICollectionT1_Contains(T) 
+bool __array<T>::System_Collections_Generic_ICollectionT1_Contains(T t) 
 {
-	throw 0xC000C000;
+	for (auto index = 0; index < _length; index++)
+	{
+		if (t == this->_data[index])
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 template <typename T>
-void __array<T>::System_Collections_Generic_ICollectionT1_CopyTo(__array<T>*, int32_t) 
+void __array<T>::System_Collections_Generic_ICollectionT1_CopyTo(__array<T>* dest, int32_t pos) 
 {
-	throw 0xC000C000;
+	CopyTo(dest, pos);
 }
 
 template <typename T>
-bool __array<T>::System_Collections_Generic_ICollectionT1_Remove(T) 
+bool __array<T>::System_Collections_Generic_ICollectionT1_Remove(T t) 
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 // IEnumerableT1
 template <typename T>
 CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::System_Collections_Generic_IEnumerableT1_GetEnumerator()
 {
-	throw 0xC000C000;
+	return GetEnumerator();
 }
 
 // IList
 template <typename T>
-CoreLib::System::Object* __array<T>::System_Collections_IList_get_Item(int32_t)
+CoreLib::System::Object* __array<T>::System_Collections_IList_get_Item(int32_t pos)
 {
-	throw 0xC000C000;
+	return __box(this->_data[pos]);
 }
 
 template <typename T>
-void __array<T>::System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*)
+void __array<T>::System_Collections_IList_set_Item(int32_t pos, CoreLib::System::Object* obj)
 {
-	throw 0xC000C000;
+	this->_data[pos] = __unbox<T>(obj);
 }
 
 template <typename T>
-int32_t __array<T>::System_Collections_IList_Add(CoreLib::System::Object*) 
+int32_t __array<T>::System_Collections_IList_Add(CoreLib::System::Object* obj) 
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
-bool __array<T>::System_Collections_IList_Contains(CoreLib::System::Object*) 
+bool __array<T>::System_Collections_IList_Contains(CoreLib::System::Object* obj) 
 {
-	throw 0xC000C000;
+	for (auto index = 0; index < _length; index++)
+	{
+		if (__box(this->_data[index])->Equals(obj))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 template <typename T>
 void __array<T>::System_Collections_IList_Clear()
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
 bool __array<T>::System_Collections_IList_get_IsReadOnly()
 {
-	throw 0xC000C000;
+	return get_IsReadOnly();
 }
 
 template <typename T>
 bool __array<T>::System_Collections_IList_get_IsFixedSize() 
 {
-	throw 0xC000C000;
+	return get_IsFixedSize();
 }
 
 template <typename T>
-int32_t __array<T>::System_Collections_IList_IndexOf(CoreLib::System::Object*) 
+int32_t __array<T>::System_Collections_IList_IndexOf(CoreLib::System::Object* obj)
 {
-	throw 0xC000C000;
+	for (auto index = 0; index < _length; index++)
+	{
+		if (__box(this->_data[index])->Equals(obj))
+		{
+			return index;
+		}
+	}
+
+	return -1;
 }
 
 template <typename T>
-void __array<T>::System_Collections_IList_Insert(int32_t, CoreLib::System::Object*)
+void __array<T>::System_Collections_IList_Insert(int32_t, CoreLib::System::Object* obj)
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
-void __array<T>::System_Collections_IList_Remove(CoreLib::System::Object*)
+void __array<T>::System_Collections_IList_Remove(CoreLib::System::Object* obj)
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 template <typename T>
-void __array<T>::System_Collections_IList_RemoveAt(int32_t) 
+void __array<T>::System_Collections_IList_RemoveAt(int32_t pos) 
 {
-	throw 0xC000C000;
+	throw __new<CoreLib::System::NotSupportedException>();
 }
 
 // ICollection
 template <typename T>
-void __array<T>::System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t) 	
+void __array<T>::System_Collections_ICollection_CopyTo(CoreLib::System::Array* dest, int32_t length) 	
 {
-	throw 0xC000C000;
+	CopyTo(dest, length);
 }
 
 template <typename T>
 int32_t __array<T>::System_Collections_ICollection_get_Count() 	
 {
-	throw 0xC000C000;
+	return get_Length();
 }
 
 template <typename T>
 CoreLib::System::Object* __array<T>::System_Collections_ICollection_get_SyncRoot() 	
 {
-	throw 0xC000C000;
+	return get_SyncRoot();
 }
 
 template <typename T>
 bool __array<T>::System_Collections_ICollection_get_IsSynchronized() 	
 {
-	throw 0xC000C000;
+	return get_IsSynchronized();
 }
 
 // IEnumerable
 template <typename T>
 CoreLib::System::Collections::IEnumerator* __array<T>::System_Collections_IEnumerable_GetEnumerator()	
 {
-	throw 0xC000C000;
+	return GetEnumerator();
 }
 
 // Method : 

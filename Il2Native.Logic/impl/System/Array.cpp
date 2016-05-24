@@ -55,9 +55,19 @@ void CoreLib::System::Array::Copy(CoreLib::System::Array* sourceArray, int32_t s
 		throw __new<CoreLib::System::ArgumentNullException>();
 	}
 
-	if (length < 0 || sourceIndex < 0 || destinationIndex < 0)
+	if (length < 0)
 	{
 		throw __new<CoreLib::System::InvalidOperationException>();
+	}
+
+	if (sourceIndex < 0 || destinationIndex < 0)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}
+
+	if (sourceIndex + length > sourceArray->get_Length() || destinationIndex + length > destinationArray->get_Length())
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
 	}
 
 	CoreLib::System::TypedReference elemref;

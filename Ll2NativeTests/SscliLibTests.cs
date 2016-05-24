@@ -9787,7 +9787,7 @@
             public void @co1030_compare_strstrbool()
             {
                 var file = Path.Combine(CompilerHelper.SscliSourcePath, @"string", "co1030compare_strstrbool.cs");
-                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, false);
+                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, additionalFilesFolder: Path.Combine(CompilerHelper.SscliSourcePath, @"..\..\utilities"), additionalFilesPattern: new [] { "genstrings.cs" });
             }
 
             [TestMethod]
