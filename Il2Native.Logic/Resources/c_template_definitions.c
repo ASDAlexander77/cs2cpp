@@ -166,7 +166,8 @@ bool __array<T>::System_Collections_Generic_ICollectionT1_Remove(T t)
 template <typename T>
 CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::System_Collections_Generic_IEnumerableT1_GetEnumerator()
 {
-	return GetEnumerator();
+	// TODO: finish it
+	throw __new<CoreLib::System::NotImplementedException>();
 }
 
 // IList
@@ -281,7 +282,7 @@ bool __array<T>::System_Collections_ICollection_get_IsSynchronized()
 template <typename T>
 CoreLib::System::Collections::IEnumerator* __array<T>::System_Collections_IEnumerable_GetEnumerator()	
 {
-	return GetEnumerator();
+	return new (GCNormal::Default) __array<T>::ArrayEnumerator_IEnumeratorT1(this);
 }
 
 // Method : 

@@ -388,7 +388,7 @@ public:
 	// IEnumerable
 	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
 
-	class __array_IListT1 : public virtual CoreLib::System::Collections::Generic::IListT1<T>
+	class __array_IListT1 : public CoreLib::System::Collections::Generic::IListT1<T>
 	{
 	public:
 		__array_IListT1(__array<T>* class_) : _class{class_} {}
@@ -414,9 +414,9 @@ public:
 	};
 	operator CoreLib::System::Collections::Generic::IListT1<T>*()
 	{
-		return new __array_IListT1(this);
+		return new (GCNornal::Default) __array_IListT1(this);
 	}
-	class __array_ICollectionT1 : public virtual CoreLib::System::Collections::Generic::ICollectionT1<T>
+	class __array_ICollectionT1 : public CoreLib::System::Collections::Generic::ICollectionT1<T>
 	{
 	public:
 		__array_ICollectionT1(__array<T>* class_) : _class{class_} {}
@@ -437,9 +437,9 @@ public:
 	};
 	operator CoreLib::System::Collections::Generic::ICollectionT1<T>*()
 	{
-		return new __array_ICollectionT1(this);
+		return new (GCNornal::Default) __array_ICollectionT1(this);
 	}
-	class __array_IEnumerableT1 : public virtual CoreLib::System::Collections::Generic::IEnumerableT1<T>
+	class __array_IEnumerableT1 : public CoreLib::System::Collections::Generic::IEnumerableT1<T>
 	{
 	public:
 		__array_IEnumerableT1(__array<T>* class_) : _class{class_} {}
@@ -453,9 +453,9 @@ public:
 	};
 	operator CoreLib::System::Collections::Generic::IEnumerableT1<T>*()
 	{
-		return new __array_IEnumerableT1(this);
+		return new (GCNornal::Default) __array_IEnumerableT1(this);
 	}
-	class __array_IEnumerable : public virtual CoreLib::System::Collections::IEnumerable
+	class __array_IEnumerable : public CoreLib::System::Collections::IEnumerable
 	{
 	public:
 		__array_IEnumerable(__array<T>* class_) : _class{class_} {}
@@ -470,7 +470,7 @@ public:
 	{
 		return new __array_IEnumerable(this);
 	}
-	class __array_IList : public virtual CoreLib::System::Collections::IList
+	class __array_IList : public CoreLib::System::Collections::IList
 	{
 	public:
 		__array_IList(__array<T>* class_) : _class{class_} {}
@@ -498,9 +498,9 @@ public:
 	};
 	operator CoreLib::System::Collections::IList*()
 	{
-		return new __array_IList(this);
+		return new (GCNornal::Default) __array_IList(this);
 	}
-	class __array_ICollection : public virtual CoreLib::System::Collections::ICollection
+	class __array_ICollection : public CoreLib::System::Collections::ICollection
 	{
 	public:
 		__array_ICollection(__array<T>* class_) : _class{class_} {}
@@ -517,7 +517,7 @@ public:
 	};
 	operator CoreLib::System::Collections::ICollection*()
 	{
-		return new __array_ICollection(this);
+		return new (GCNornal::Default) __array_ICollection(this);
 	}
 };
 
