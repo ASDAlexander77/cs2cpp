@@ -990,6 +990,13 @@ inline T operator ^=(T& left, T right)
 	return left = (T) (left ^ right);
 }
 
+// Equals helper
+template < typename T, class = typename std::enable_if<is_struct_type<T>::value, T>::type >
+inline bool operator ==(const T& left, const T& right)
+{
+	return std::memcmp((void*)&left, (void*)&right, sizeof(T)) == 0;
+}
+
 // string helpers
 inline string* __utf8_to_string(char* str)
 {
