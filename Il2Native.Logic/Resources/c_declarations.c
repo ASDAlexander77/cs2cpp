@@ -340,10 +340,19 @@ public:
 
 	inline operator int32_t() const { return (size_t)_length; }
 
+	virtual object* __clone()
+	{
+		auto instance = allocate_array(this->_length);
+		auto data_size = this->_length * sizeof(T);
+		memcpy(&instance->_data[0], &this->_data[0], data_size);		
+		return instance;
+	}
+
 	// Array
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
 	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+	virtual void InternalSetValue(void* target, object* value) override;
 	virtual int32_t get_Length() override;
 	virtual int32_t get_Rank() override;
 
@@ -594,6 +603,11 @@ public:
 	inline static __multi_array<T, RANK>* allocate_multiarray(std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
+		return allocate_multiarray(length);
+	}
+
+	inline static __multi_array<T, RANK>* allocate_multiarray(size_t length)
+	{
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto pointer = ::operator new (size, gc_traits<T>::value);
 		return new (pointer) __multi_array<T, RANK>(boundries);
@@ -615,9 +629,26 @@ public:
 		memcpy(&instance->_data[0], &tmp, data_size);
 	}
 
+	virtual object* __clone() override
+	{
+		auto length = 1;
+		for (auto rank = 0; rank < RANK; rank++)
+		{
+			length *= _data[rank];
+		}
+
+		auto instance = allocate_multiarray(length);
+		auto data_size = length * sizeof(T);
+		memcpy(&instance->_lowerBoundries[0], &this->_lowerBoundries[0], sizeof(int32_t) * RANK);
+		memcpy(&instance->_upperBoundries[0], &this->_upperBoundries[0], sizeof(int32_t) * RANK);
+		memcpy(&instance->_data[0], &this->_data[0], data_size);		
+		return instance;
+	}
+
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
 	////virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+	////virtual void InternalSetValue(void* target, object* value) override;
 	////virtual int32_t get_Length() override;
 	virtual int32_t GetUpperBound(int32_t dimension) override;
 	virtual int32_t GetLowerBound(int32_t dimension) override;
