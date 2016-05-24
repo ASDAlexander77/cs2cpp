@@ -9,7 +9,13 @@ void CoreLib::System::Array::InternalGetReference(void* elemRef, int32_t rank, i
 // Method : System.Array.InternalSetValue(void*, object)
 void CoreLib::System::Array::InternalSetValue(void* target, object* value)
 {
-    throw 0xC000C000;
+	if (target == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>(u"target"_s);
+	}	
+
+	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(target);
+	((__methods_table*)(void*)(typedRef->Type))->__unbox_to((void*)typedRef->Value, value);
 }
 
 // Method : System.Array.GetUpperBound(int)

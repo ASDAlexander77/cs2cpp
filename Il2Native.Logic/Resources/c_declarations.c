@@ -352,7 +352,6 @@ public:
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
 	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
-	virtual void InternalSetValue(void* target, object* value) override;
 	virtual int32_t get_Length() override;
 	virtual int32_t get_Rank() override;
 
@@ -539,6 +538,10 @@ public:
 
 	typedef CoreLib::System::Array base;
 
+	__multi_array()
+	{
+	}
+
 	__multi_array(std::initializer_list<int32_t> boundries) : _lowerBoundries{0}
 	{
 		std::copy(std::begin(boundries), std::end(boundries), _upperBoundries);
@@ -603,14 +606,16 @@ public:
 	inline static __multi_array<T, RANK>* allocate_multiarray(std::initializer_list<int32_t> boundries)
 	{
 		auto length = std::accumulate(std::begin(boundries), std::end(boundries), 1, std::multiplies<int32_t>());
-		return allocate_multiarray(length);
+		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
+		auto pointer = ::operator new (size, gc_traits<T>::value);
+		return new (pointer) __multi_array<T, RANK>(boundries);
 	}
 
 	inline static __multi_array<T, RANK>* allocate_multiarray(size_t length)
 	{
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto pointer = ::operator new (size, gc_traits<T>::value);
-		return new (pointer) __multi_array<T, RANK>(boundries);
+		return new (pointer) __multi_array<T, RANK>();
 	}
 
 	inline static __multi_array<T, RANK>* allocate_multiarray_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
@@ -648,7 +653,6 @@ public:
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
 	////virtual void InternalGetReference(void*, int32_t, int32_t*) override;
-	////virtual void InternalSetValue(void* target, object* value) override;
 	////virtual int32_t get_Length() override;
 	virtual int32_t GetUpperBound(int32_t dimension) override;
 	virtual int32_t GetLowerBound(int32_t dimension) override;

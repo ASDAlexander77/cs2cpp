@@ -61,18 +61,6 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 }
 
 template <typename T>
-void void __array<T>::InternalSetValue(void* target, object* value)
-{
-	if (target == nullptr)
-	{
-		throw __new<CoreLib::System::ArgumentNullException>(u"target"_s);
-	}	
-
-	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(target);
-	*((T*)(void*)typedRef->Value) = __unbox<T>(value);
-}
-
-template <typename T>
 int32_t __array<T>::get_Length()
 {
 	return this->_length;

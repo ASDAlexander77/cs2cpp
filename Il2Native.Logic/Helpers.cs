@@ -502,7 +502,6 @@ namespace Il2Native.Logic
                 switch (methodSymbol.Name)
                 {
                     case "InternalGetReference":
-                    case "InternalSetValue":
                     case "get_Length":
                     case "get_Rank":
                     case "GetUpperBound":

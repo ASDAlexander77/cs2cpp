@@ -770,17 +770,22 @@ class __methods_table
 {
 public:
 
+	virtual CoreLib::System::Type* __get_type()
+	{
+		throw 0xC000C000;
+	}
+
 	// TODO: add new, unbox methods as virtual and/or abstract
 	virtual object* __box_ref(void* ref)
 	{
 		// default implementation for references;
-		// TODO: you should overwrite it for value types
 		return *(object**)ref;
 	}
 
-	virtual CoreLib::System::Type* __get_type()
+	virtual void __unbox_to(void* ref, object* value)
 	{
-		throw 0xC000C000;
+		// default implementation for references;
+		*(object**)ref = value;
 	}
 };
 
