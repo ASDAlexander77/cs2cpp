@@ -78,7 +78,7 @@ namespace Il2Native.Logic
             itw.WriteLine();
 
             // main
-            itw.Write("auto main(int32_t argc, char* argv[]) -> int32_t");
+            itw.WriteLine("auto main(int32_t argc, char* argv[]) -> int32_t");
             itw.WriteLine("{");
             itw.Indent++;
             itw.Write("return __main(");
