@@ -81,6 +81,10 @@ template <typename T> struct is_object : std::integral_constant<bool, std::is_po
 {
 };
 
+template <typename T> struct is_pointer_type : std::integral_constant<bool, std::is_pointer<T>::value && !is_interface_type<T>::value && !std::is_base_of<object, typename std::remove_pointer<T>::type>::value>
+{
+};
+
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
 inline void* __new_set0(size_t _size)
@@ -789,7 +793,7 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 	return __new<_CLASS>(t);
 }
 
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box (T t)
 {
 	return t;
 }
@@ -797,6 +801,12 @@ template <typename T> inline typename std::enable_if<!is_value_type<T>::value &&
 template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box (T t)
 {
 	return object_cast(t);
+}
+
+object* __box_pointer(void* p);
+template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box (T t)
+{
+	return __box_pointer((void*)t);
 }
 
 // box - DEBUG
@@ -811,7 +821,7 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 	return __new_debug<_CLASS>(_file, _line, t);
 }
 
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
 {
 	return t;
 }
@@ -819,6 +829,11 @@ template <typename T> inline typename std::enable_if<!is_value_type<T>::value &&
 template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
 {
 	return object_cast(t);
+}
+
+template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
+{
+	return __box_pointer((void*)t);
 }
 
 // Unboxing internals
@@ -841,7 +856,7 @@ inline typename std::enable_if<is_value_type<T>::value, _VAL>::type __unbox(obje
 }
 
 template <typename T> 
-inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(T t)
+inline typename std::enable_if<is_interface_type<T>::value || is_pointer_type<T>::value, T>::type __unbox(T t)
 {
 	return t;
 }
@@ -850,6 +865,13 @@ template <typename T>
 inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(object* o)
 {
 	return dynamic_interface_cast<T>(o);
+}
+
+void* __unbox_pointer(object* obj);
+template <typename T> 
+inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(object* o)
+{
+	return (T) __unbox_pointer(o);
 }
 
 // box - by ref

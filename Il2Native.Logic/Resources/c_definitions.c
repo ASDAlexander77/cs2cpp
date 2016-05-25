@@ -112,6 +112,15 @@ bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2)
 	return std::memcmp((const void*)_obj1, (const void*)_obj2, _size1) == 0;
 }
 
+object* __box_pointer(void* p)
+{
+	return __box(static_cast<int32_t>(p));
+}
+
+void* __unbox_pointer(object* obj)
+{
+	return static_cast<void*>(__unbox<valuetype_to_class<int32_t>::type>(p));
+}
 
 bool __shutdown_called = false;
 void __shutdown()
