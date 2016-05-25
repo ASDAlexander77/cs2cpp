@@ -680,7 +680,7 @@ void __multi_array<T, RANK>::InternalGetReference(void* elemRef, int32_t rank, i
 	}	
 
 	auto index = calculate_index(pIndices);
-	if (index < 0 || index >= this->_length)
+	if (index < 0 || index >= this->get_Length())
 	{
 		throw __new<CoreLib::System::IndexOutOfRangeException>();
 	}	
