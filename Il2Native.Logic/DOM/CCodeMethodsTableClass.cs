@@ -46,7 +46,9 @@ namespace Il2Native.Logic.DOM
         {
             if (Type.IsValueType && Type.SpecialType != SpecialType.System_Void)
             {
-                Declarations.Add(new CCodeBoxRefDeclaration(Type as INamedTypeSymbol));
+                var namedTypeSymbol = (INamedTypeSymbol)Type;
+                Declarations.Add(new CCodeBoxRefDeclaration(namedTypeSymbol));
+                Declarations.Add(new CCodeUnboxToDeclaration(namedTypeSymbol));
             }
         }
 

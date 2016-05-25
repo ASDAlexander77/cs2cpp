@@ -669,6 +669,46 @@ public:
 	}
 };
 
+// interface cast
+template <typename C, typename T> 
+inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast (T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return t->operator C();
+}
+
+template <typename C, typename T> 
+inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast (T t)
+{
+	return t->operator C();
+}
+
+template <typename C, typename T> 
+inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return reinterpret_cast<C>(t->__get_interface(&std::remove_pointer<C>::type::__type));
+}
+
+template <typename C, typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
+}
+
 // object cast (interface etc)
 template <typename T> 
 inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
@@ -737,33 +777,99 @@ inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(objec
 	return *cast<_CLASS*>(o);
 }
 
+// Boxing internals
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
+{
+	// we do not need to call __new here as it already constructed
+	return new T(t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box (T t)
+{
+	return __new<_CLASS>(t);
+}
+
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box (T t)
+{
+	return t;
+}
+
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box (T t)
+{
+	return object_cast(t);
+}
+
+// box - DEBUG
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug (const char* _file, int _line, T t)
+{
+	// we do not need to call __new here as it already constructed
+	return new (_file, _line) T(t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug (const char* _file, int _line, T t)
+{
+	return __new_debug<_CLASS>(_file, _line, t);
+}
+
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
+{
+	return t;
+}
+
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
+{
+	return object_cast(t);
+}
+
+// Unboxing internals
+template <typename T> 
+inline T __unbox(T* t)
+{
+	return *t;
+}
+
+template <typename T> 
+inline typename std::enable_if<is_class_type<T>::value, T>::type __unbox(object* o)
+{
+	return cast<T>(o);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_valuetype<T>::type> 
+inline typename std::enable_if<is_value_type<T>::value, _VAL>::type __unbox(object* o)
+{
+	return *cast<_CLASS*>(o);
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(T t)
+{
+	return t;
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(object* o)
+{
+	return dynamic_interface_cast<T>(o);
+}
+
+// box - by ref
+template <typename T> inline object* __box_ref_t (T* t)
+{
+	return __box(*t);
+}
+
+// unbox - to address
+template <typename T> 
+inline void __unbox_to_t(T* t, object* val)
+{
+	*t = __unbox<T>(val);
+}
+
 template <typename D, typename S> inline D map_pointer_cast(S s)
 {
 	union { D d; S s; } u;
 	u.s = s;
 	return u.d;
-}
-
-// box - by ref
-template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_ref_t (T* t)
-{
-	// we do not need to call __new here as it already constructed
-	return new T(*t);
-}
-
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_ref_t (T* t)
-{
-	return __new<_CLASS>(*t);
-}
-
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value, T>::type __box_ref_t (T* t)
-{
-	return *t;
-}
-
-template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_ref_t (T* t)
-{
-	return object_cast(*t);
 }
 
 class __methods_table
