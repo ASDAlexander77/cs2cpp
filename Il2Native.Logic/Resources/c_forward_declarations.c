@@ -669,6 +669,24 @@ public:
 	}
 };
 
+// object cast (interface etc)
+template <typename T> 
+inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
+{
+	return static_cast<object*>(t);
+}
+
+template <typename T> 
+inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast (T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	return t->operator object*();
+}
+
 // interface cast
 template <typename C, typename T> 
 inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast (T t)
@@ -707,24 +725,6 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 	}
 
 	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
-}
-
-// object cast (interface etc)
-template <typename T> 
-inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
-{
-	return static_cast<object*>(t);
-}
-
-template <typename T> 
-inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast (T t)
-{
-	if (t == nullptr)
-	{
-		return nullptr;
-	}
-
-	return t->operator object*();
 }
 
 // cast internals
