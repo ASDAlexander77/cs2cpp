@@ -114,12 +114,12 @@ bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2)
 
 object* __box_pointer(void* p)
 {
-	return __box(static_cast<int32_t>(p));
+	return __box((int32_t)p);
 }
 
 void* __unbox_pointer(object* obj)
 {
-	return static_cast<void*>(__unbox<valuetype_to_class<int32_t>::type>(p));
+	return (void*) __unbox<valuetype_to_class<int32_t>::type>(obj);
 }
 
 bool __shutdown_called = false;
