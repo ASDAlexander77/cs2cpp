@@ -8,29 +8,29 @@ namespace Il2Native.Logic.DOM2
 
     public class TypeOfOperator : Expression
     {
-        private Expression sourceType;
-
         public override Kinds Kind
         {
             get { return Kinds.TypeOfOperator; }
         }
 
+        public Expression SourceType { get; set; }
+
         internal void Parse(BoundTypeOfOperator boundTypeOfOperator)
         {
             base.Parse(boundTypeOfOperator);
-            this.sourceType = Deserialize(boundTypeOfOperator.SourceType) as Expression;
+            this.SourceType = Deserialize(boundTypeOfOperator.SourceType) as Expression;
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             base.Visit(visitor);
-            this.sourceType.Visit(visitor);
+            this.SourceType.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("_typeof<");
-            this.sourceType.WriteTo(c);
+            this.SourceType.WriteTo(c);
             c.TextSpan(">()");
         }
     }

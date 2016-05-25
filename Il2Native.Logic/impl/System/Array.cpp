@@ -15,7 +15,15 @@ void CoreLib::System::Array::InternalSetValue(void* target, object* value)
 	}	
 
 	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(target);
-	((__methods_table*)(void*)(typedRef->Type))->__unbox_to((void*)typedRef->Value, value);
+
+	try
+	{
+		((__methods_table*)(void*)(typedRef->Type))->__unbox_to((void*)typedRef->Value, value);
+	}
+	catch (CoreLib::System::InvalidCastException*)
+	{
+		throw __new<CoreLib::System::ArgumentException>();
+	}
 }
 
 // Method : System.Array.GetUpperBound(int)

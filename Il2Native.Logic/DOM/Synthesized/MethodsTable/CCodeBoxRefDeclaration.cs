@@ -25,7 +25,6 @@ namespace Il2Native.Logic.DOM.Synthesized
                 Name = "__box_ref";
                 MetadataName = Name;
                 MethodKind = MethodKind.Ordinary;
-                ContainingType = type;
                 IsVirtual = true;
                 IsOverride = true;
                 ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };

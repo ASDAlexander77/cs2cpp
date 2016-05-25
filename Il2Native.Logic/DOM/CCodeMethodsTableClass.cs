@@ -44,9 +44,11 @@ namespace Il2Native.Logic.DOM
 
         private void CreateMemebers()
         {
+            var namedTypeSymbol = (INamedTypeSymbol)Type;
+            Declarations.Add(new CCodeGetTypeDeclaration(namedTypeSymbol));
+
             if (Type.IsValueType && Type.SpecialType != SpecialType.System_Void)
             {
-                var namedTypeSymbol = (INamedTypeSymbol)Type;
                 Declarations.Add(new CCodeBoxRefDeclaration(namedTypeSymbol));
                 Declarations.Add(new CCodeUnboxToDeclaration(namedTypeSymbol));
             }

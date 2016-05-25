@@ -101,19 +101,6 @@ inline typename std::enable_if<is_interface_type<S>::value && is_class_type<D>::
 	return object_cast(s);
 }
 
-// Typeof internals
-template <typename T> inline CoreLib::System::Type* _typeof()
-{
-	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
-	return &_T::__type;
-}
-
-template <typename T> inline __methods_table* _typeMT()
-{
-	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
-	return &_T::_methods_table;
-}
-
 // Decimals
 int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign);
 int32_t DecCmp(int32_t* d1, int32_t* d2);
@@ -464,6 +451,29 @@ public:
 		return index;
 	}
 
+	int32_t calculate_index(int32_t* indexes)
+	{
+		auto index = 0;
+		auto index_multiplier = 1;
+		auto rank = 0;
+		for (auto index = 0; index < RANK; index++)
+		{
+			auto levelIndex = *(indexes + index);
+			index += levelIndex * index_multiplier;
+			auto lower = _lowerBoundries[rank];
+			auto upper = _upperBoundries[rank];
+			if (levelIndex < lower || levelIndex >= upper)
+			{
+				throw __new<CoreLib::System::IndexOutOfRangeException>();
+			}
+
+			index_multiplier *= (upper - lower);
+			rank++;
+		}
+
+		return index;
+	}
+
 	template <typename... Ta> static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)
 	{
 		return allocate_multiarray(boundries);
@@ -537,8 +547,8 @@ public:
 
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
-	////virtual void InternalGetReference(void*, int32_t, int32_t*) override;
-	////virtual int32_t get_Length() override;
+	virtual void InternalGetReference(void*, int32_t, int32_t*) override;
+	virtual int32_t get_Length() override;
 	virtual int32_t GetUpperBound(int32_t dimension) override;
 	virtual int32_t GetLowerBound(int32_t dimension) override;
 	virtual int32_t GetLength(int32_t dimension) override;

@@ -895,6 +895,19 @@ public:
 	}
 };
 
+// Typeof internals
+template <typename T> inline CoreLib::System::Type* _typeof()
+{
+	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
+	return &_T::__type;
+}
+
+template <typename T> inline __methods_table* _typeMT()
+{
+	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
+	return &_T::_methods_table;
+}
+
 struct __runtimetype_info
 {
 	// TODO: finish it

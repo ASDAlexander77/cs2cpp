@@ -36,7 +36,7 @@ void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pInd
 {
 	if (rank != 1)
 	{
-		throw __new<CoreLib::System::InvalidOperationException>(u"rank"_s);
+		throw __new<CoreLib::System::RankException>(u"rank"_s);
 	}
 
 	if (elemRef == nullptr)
@@ -659,6 +659,47 @@ int32_t __multi_array<T, RANK>::GetLength(int32_t dimension)
 	}	
 
 	return this->_upperBoundries[dimension] - this->_lowerBoundries[dimension];
+}
+
+template <typename T, int32_t RANK>
+void __multi_array<T, RANK>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
+{
+	if (rank != RANK)
+	{
+		throw __new<CoreLib::System::RankException>(u"rank"_s);
+	}
+
+	if (elemRef == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>(u"elemRef"_s);
+	}	
+
+	if (pIndices == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>(u"pIndices"_s);
+	}	
+
+	auto index = calculate_index(pIndices);
+	if (index < 0 || index >= this->_length)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}	
+
+	auto typedRef = reinterpret_cast<CoreLib::System::TypedReference*>(elemRef);
+	typedRef->Value = __init<CoreLib::System::IntPtr>((void*)&this->_data[index]);
+	typedRef->Type = __init<CoreLib::System::IntPtr>((void*)_typeMT<T>());
+}
+
+template <typename T, int32_t RANK>
+int32_t __multi_array<T, RANK>::get_Length()
+{
+	auto length = 1;
+	for (auto rank = 0; rank < RANK; rank++)
+	{
+		length *= _data[rank];
+	}
+
+	return length;
 }
 
 template <typename T, int32_t RANK>

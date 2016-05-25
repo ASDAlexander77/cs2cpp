@@ -174,8 +174,9 @@
     <Compile Include="DOM\Synthesized\CCodeGetTypeDescriptorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeRuntimeTypeConstructorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeIsPrimitiveTypeArrayVirtualMethod.cs" />
-    <Compile Include="DOM\Synthesized\CCodeBoxRefDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeUnboxToDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\MethodsTable\CCodeBoxRefDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\MethodsTable\CCodeUnboxToDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\MethodsTable\CCodeGetTypeDeclaration.cs" />
     <Compile Include="DOM\Synthesized\MethodBodies.cs" />
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />

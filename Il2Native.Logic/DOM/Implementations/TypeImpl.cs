@@ -110,7 +110,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public ImmutableArray<INamedTypeSymbol> AllInterfaces { get; private set; }
 
-        public bool IsReferenceType { get; private set; }
+        public bool IsReferenceType { get; set; }
 
         public bool IsValueType { get; set; }
 

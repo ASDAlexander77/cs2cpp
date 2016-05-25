@@ -15,6 +15,9 @@ namespace Il2Native.Logic
     using System.Text;
     using DOM;
     using DOM2;
+
+    using Il2Native.Logic.DOM.Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
@@ -689,6 +692,27 @@ namespace Il2Native.Logic
             }
 
             return sb.ToString();
+        }
+
+        public static ITypeSymbol ToSystemType(this string systemTypeName, bool @struct = false)
+        {
+            return new NamedTypeImpl
+                       {
+                           Name = systemTypeName,
+                           ContainingNamespace =
+                               new NamespaceImpl
+                                   {
+                                       MetadataName = "System",
+                                       ContainingNamespace =
+                                           new NamespaceImpl
+                                               {
+                                                   IsGlobalNamespace = true,
+                                                   ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" }
+                                               }
+                                   },
+                           TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
+                           IsReferenceType = !@struct
+                       };
         }
 
         public static CorElementType GetCorElementType(this ITypeSymbol type)

@@ -174,23 +174,7 @@ namespace Il2Native.Logic
         {
             // add call flag for static constructor
             var namedTypeSymbol = (INamedTypeSymbol)type;
-            var runtimeType = new NamedTypeImpl
-                                  {
-                                      Name = "RuntimeType",
-                                      ContainingNamespace =
-                                          new NamespaceImpl
-                                              {
-                                                  MetadataName = "System",
-                                                  ContainingNamespace =
-                                                      new NamespaceImpl
-                                                          {
-                                                              IsGlobalNamespace = true,
-                                                              ContainingAssembly =
-                                                                  new AssemblySymbolImpl { MetadataName = "CoreLib" }
-                                                          }
-                                              },
-                                      TypeKind = TypeKind.Struct
-                                  };
+            var runtimeType = "RuntimeType".ToSystemType(true);
             var typeHolderField = new FieldImpl
             {
                 Name = "__type",

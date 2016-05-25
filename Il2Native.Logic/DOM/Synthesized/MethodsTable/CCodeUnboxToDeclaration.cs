@@ -31,7 +31,6 @@ namespace Il2Native.Logic.DOM.Synthesized
                 Name = name;
                 MetadataName = Name;
                 MethodKind = MethodKind.Ordinary;
-                ContainingType = type;
                 IsVirtual = true;
                 IsOverride = true;
                 ReturnsVoid = true;

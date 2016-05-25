@@ -131,6 +131,7 @@
     <Compile Include="System\OperatingSystem.cs" />
     <Compile Include="System\ParamsArray.cs" />
     <Compile Include="System\PlatformID.cs" />
+    <Compile Include="System\RankException.cs" />
     <Compile Include="System\Reflection\AmbiguousMatchException.cs" />
     <Compile Include="System\Reflection\Associates.cs" />
     <Compile Include="System\Reflection\CustomAttributeFormatException.cs" />
