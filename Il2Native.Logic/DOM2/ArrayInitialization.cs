@@ -6,6 +6,8 @@ namespace Il2Native.Logic.DOM2
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ArrayInitialization : Expression
@@ -59,7 +61,20 @@ namespace Il2Native.Logic.DOM2
                     c.WhiteSpace();
                 }
 
-                bound.WriteTo(c);
+                if (bound.IsStaticOrSupportedVolatileWrapperCall())
+                {
+                    new Cast
+                    {
+                        Type = bound.Type,
+                        Operand = bound,
+                        CCast = true,
+                        UseEnumUnderlyingType = true,
+                    }.WriteTo(c);
+                }
+                else
+                {
+                    bound.WriteTo(c);
+                }
 
                 any = true;
             }

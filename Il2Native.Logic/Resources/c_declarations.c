@@ -197,6 +197,11 @@ public:
 			throw __new<CoreLib::System::IndexOutOfRangeException>();
 		}
 
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		return _data[index]; 
 	}
 
@@ -207,13 +212,31 @@ public:
 			throw __new<CoreLib::System::IndexOutOfRangeException>();
 		}
 
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		return _data[index]; 
 	}
 
-	inline operator int32_t() const { return (size_t)_length; }
+	inline operator int32_t() const 
+	{ 
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
+		return (size_t)_length; 
+	}
 
 	virtual object* __clone()
 	{
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		auto instance = allocate_array(this->_length);
 		auto data_size = this->_length * sizeof(T);
 		memcpy(&instance->_data[0], &this->_data[0], data_size);		
@@ -421,11 +444,21 @@ public:
 
 	const T operator [](std::initializer_list<int32_t> indexes) const 
 	{ 
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		return _data[calculate_index(indexes)]; 
 	}
 
 	T& operator [](std::initializer_list<int32_t> indexes) 
 	{ 
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		return _data[calculate_index(indexes)];  
 	}
 
@@ -531,6 +564,11 @@ public:
 
 	virtual object* __clone() override
 	{
+		if (this == nullptr)
+		{
+			throw __new<CoreLib::System::NullReferenceException>();
+		}
+
 		auto length = 1;
 		for (auto rank = 0; rank < RANK; rank++)
 		{
