@@ -20,3 +20,5 @@ StyleCop.Cache
 /packages
 /PdbReader/obj
 /PdbReader/bin
+/mscorlib/obj/Debug
+/mscorlib/bin/Debug
