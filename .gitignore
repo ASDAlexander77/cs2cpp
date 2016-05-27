@@ -24,3 +24,4 @@ StyleCop.Cache
 /mscorlib/bin/Debug
 /mscorlib/obj/Debug
 /mscorlib/obj/Release
+/mscorlib/bin/Release
