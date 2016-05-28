@@ -861,13 +861,13 @@ public:
 
 	__strings_storage()
 	{
-		__strings = __new<CoreLib::System::Collections::Generic::DictionaryT2<int32_t, string*>>();
+		__strings = __new<CoreLib::System::Collections::Generic::DictionaryT2<uint32_t, string*>>();
 	}
 
 	string* operator() (const char16_t* str, size_t length)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		auto key = (int)str;
+		auto key = (uint32_t)str;
 		string* existingValue;
         if (__strings->TryGetValue_Out(key, existingValue))
         {
@@ -883,7 +883,7 @@ public:
 	void free(const char16_t* str)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		auto key = (int)str;
+		auto key = (uint32_t)str;
 		__strings->Remove(key);
 	}
 
@@ -893,7 +893,7 @@ public:
 		__strings->Clear();
 	}
 
-	CoreLib::System::Collections::Generic::DictionaryT2<int32_t, string*>* __strings;
+	CoreLib::System::Collections::Generic::DictionaryT2<uint32_t, string*>* __strings;
 	mutable std::mutex mutex;
 };
 
