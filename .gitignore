@@ -21,3 +21,7 @@ StyleCop.Cache
 /PdbReader/obj
 /PdbReader/bin
 /Il2Native.Logic/Resources/Impl.zip
+/mscorlib/bin/Debug
+/mscorlib/obj/Debug
+/mscorlib/obj/Release
+/mscorlib/bin/Release
