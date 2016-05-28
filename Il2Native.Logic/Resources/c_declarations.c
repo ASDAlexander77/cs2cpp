@@ -859,44 +859,41 @@ class __strings_storage
 {
 public:
 
-	typedef std::unordered_map<const char16_t*, string*> map;
+	__strings_storage()
+	{
+		__strings = __new<CoreLib::System::Collections::Generic::DictionaryT2<int32_t, string*>>();
+	}
 
 	string* operator() (const char16_t* str, size_t length)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		map::const_iterator got = __strings.find (str);
-		if (got != __strings.end())
-		{
-			return got->second;
-		}
+		auto key = (int)str;
+		string* existingValue;
+        if (__strings->TryGetValue_Out(key, existingValue))
+        {
+			return existingValue;
+        }
 
 		auto _new_string = string::FastAllocateString(length);
 		string::wstrcpy(&_new_string->m_firstChar, (char16_t*)str, length);
-		__strings[str] = _new_string;
+        __strings->Add(key, _new_string);
 		return _new_string;
 	}
 
 	void free(const char16_t* str)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		map::const_iterator got = __strings.find (str);
-		if (got != __strings.end())
-		{
-			delete got->second;
-			__strings.erase(got);
-		}
+		auto key = (int)str;
+		__strings->Remove(key);
 	}
 
 	~__strings_storage()
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		for (auto item : __strings) 
-		{
-			delete item.second;
-		}  
+		__strings->Clear();
 	}
 
-	map __strings;
+	CoreLib::System::Collections::Generic::DictionaryT2<int32_t, string*>* __strings;
 	mutable std::mutex mutex;
 };
 

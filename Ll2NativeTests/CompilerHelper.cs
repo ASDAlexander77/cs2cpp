@@ -31,7 +31,7 @@
 #if _DISK_D_
         public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
         public const string SourcePathCustom = @"D:\Temp\tests\";
-        public const string OutputPath = @"M:\";
+        public const string OutputPath = @"D:\Temp\IlCTests\";
         public const string CoreLibCSProjPath = @"..\..\..\CoreLib\CoreLib.csproj";
         public const string CoreLibDllPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
