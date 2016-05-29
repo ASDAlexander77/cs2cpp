@@ -87,11 +87,18 @@ template <typename T> struct is_pointer_type : std::integral_constant<bool, std:
 
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
+void throw_out_of_memory();
+
 inline void* __new_set0(size_t _size)
 {
 	auto mem = _size > 102400 
 		? GC_MALLOC_IGNORE_OFF_PAGE(_size) 
 		: GC_MALLOC(_size);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	return mem;
 }
 
@@ -105,6 +112,11 @@ inline void* __new_set0(size_t _size, GCAtomic)
 	auto mem = _size > 102400 
 		? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
 		: GC_MALLOC_ATOMIC(_size);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	std::memset(mem, 0, _size);
 	return mem;
 }
@@ -114,6 +126,11 @@ inline void* __new_set0(size_t _size, GC_descr _type_descr)
 	auto mem = _size > 102400 
 		? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descr) 
 		: GC_MALLOC_EXPLICITLY_TYPED(_size, _type_descr);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	return mem;
 }
 
@@ -152,6 +169,11 @@ inline void* __new_set0(size_t _size, const char* _file, int _line)
 	auto mem = _size > 102400 
 		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
 		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	return mem;
 #else
 	return __new_set0(_size);
@@ -173,6 +195,11 @@ inline void* __new_set0(size_t _size, GCAtomic, const char* _file, int _line)
 	auto mem = _size > 102400 
 		? GC_debug_malloc_atomic_ignore_off_page(_size, GC_ALLOC_PARAMS) 
 		: GC_debug_malloc_atomic(_size, GC_ALLOC_PARAMS);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	return mem;
 #else
 	return __new_set0(_size, GCAtomic::Default);
@@ -185,6 +212,11 @@ inline void* __new_set0(size_t _size, GC_descr _type_descr, const char* _file, i
 	auto mem = _size > 102400 
 		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
 		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
+	if (!mem)
+	{
+		throw_out_of_memory();
+	}
+
 	return mem;
 #else
 	return __new_set0(_size, _type_descr);

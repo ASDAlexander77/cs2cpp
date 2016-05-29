@@ -190,3 +190,8 @@ __array<string*>* __get_arguments(int32_t argc, char* argv[])
     
     return args;
 }
+
+void throw_out_of_memory()
+{
+	throw __new<CoreLib::System::OutOfMemoryException>();
+}

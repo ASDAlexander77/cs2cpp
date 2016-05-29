@@ -946,7 +946,8 @@ public:
 			return got->second;
 		}
 
-		auto _new_string = string::CtorCharPtrStartLength((char16_t*)str, 0, length);
+		auto _new_string = string::FastAllocateString(length);
+		string::wstrcpy(&_new_string->m_firstChar, (char16_t*)str, length);
 		__strings[str] = _new_string;
 		return _new_string;
 	}
