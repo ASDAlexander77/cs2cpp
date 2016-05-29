@@ -219,6 +219,13 @@ inline void* __new_set0_with_finalizer(size_t _size, GC_descr _type_descr, const
 	return mem;
 }
 
+/*
+void* operator new (size_t _size);
+void* operator delete (void* obj);
+void* operator new[] (size_t _size);
+void* operator delete[] (void* obj);
+*/
+
 void* operator new (size_t _size, GCNormal);
 void* operator new (size_t _size, GCNormal, const char* _file, int _line);
 void* operator new (size_t _size, int32_t _customSize, GCNormal);

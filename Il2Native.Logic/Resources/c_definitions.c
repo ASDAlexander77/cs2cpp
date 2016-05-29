@@ -1,6 +1,28 @@
 __object_extras_storage* __object_extras_storage_instance = nullptr;
 __strings_storage* __strings_storage_instance = nullptr;
 
+/*
+void* operator new (size_t _size)
+{
+	return GC_MALLOC_UNCOLLECTABLE(size);
+}
+
+void operator delete (void* obj);
+{
+	GC_FREE(obj);
+}
+
+void* operator new[] (size_t _size);
+{
+	return GC_MALLOC_UNCOLLECTABLE(size);
+}
+
+void operator delete[] (void* obj);
+{
+	GC_FREE(obj);
+}
+*/
+
 void* operator new (size_t _size, GCNormal)
 {
     return __new_set0(_size, GCNormal::Default);

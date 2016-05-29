@@ -593,6 +593,82 @@ public:
 	virtual int32_t get_Rank() override;
 };
 
+// allocator
+template<class T>
+class gc_allocator_with_realloc {
+public:
+	typedef T value_type;
+	typedef size_t size_type;
+	typedef ptrdiff_t difference_type;
+
+	typedef T* pointer;
+	typedef const T* const_pointer;
+	typedef T& reference;
+	typedef const T& const_reference;
+
+	gc_allocator_with_realloc() {}
+	gc_allocator_with_realloc(const gc_allocator_with_realloc&) {}
+	~gc_allocator_with_realloc() {}
+
+	pointer address(reference r) const  { return &r; }
+	const_pointer address(const_reference r) const  { return &r; }
+
+	pointer allocate(size_type n, const_pointer = 0) {
+		return static_cast<pointer>(GC_MALLOC_UNCOLLECTABLE(n * sizeof(value_type)));
+	}
+	void deallocate(pointer p, size_type) {
+		GC_FREE(p);
+	}
+	pointer reallocate(pointer p, size_type n) {
+		return static_cast<pointer>(GC_REALLOC(p, n * sizeof(value_type)));
+	}
+
+	size_type max_size() const  {
+		return static_cast<size_type>(-1) / sizeof(value_type);
+	}
+
+	void construct(pointer p, const value_type& val) {
+		new(p) value_type(val);
+	}
+	void destroy(pointer p) { p->~value_type(); }
+
+	template <class U>
+	gc_allocator_with_realloc(const gc_allocator_with_realloc<U>&) {}
+
+	template<class U>
+	struct rebind {
+		typedef gc_allocator_with_realloc<U> other;
+	};
+};
+
+// gc_allocator_with_realloc<void> specialization.
+template<>
+class gc_allocator_with_realloc<void> {
+public:
+	typedef void value_type;
+	typedef size_t size_type;
+	typedef ptrdiff_t difference_type;
+	typedef void* pointer;
+	typedef const void* const_pointer;
+
+	template<class U>
+	struct rebind {
+		typedef gc_allocator_with_realloc<U> other;
+	};
+};
+
+template<class T>
+inline bool operator==(const gc_allocator_with_realloc<T>&,
+					   const gc_allocator_with_realloc<T>&) {
+						   return true;
+}
+
+template<class T>
+inline bool operator!=(const gc_allocator_with_realloc<T>&,
+					   const gc_allocator_with_realloc<T>&) {
+						   return false;
+}
+
 #ifdef NO_TIMED_MUTEX
 #ifndef GC_PTHREADS
 struct __monitor
@@ -813,7 +889,7 @@ class __object_extras_storage
 {
 public:
 
-	typedef std::unordered_map<object*, __object_extras*> map;
+	typedef std::unordered_map<object*, __object_extras*, std::hash<const object*>, std::equal_to<const object*>, gc_allocator_with_realloc<std::pair<const object*, __object_extras*> > > map;
 
 	__object_extras* operator[] (object* obj)
 	{
@@ -859,41 +935,43 @@ class __strings_storage
 {
 public:
 
-	__strings_storage()
-	{
-		__strings = __new<CoreLib::System::Collections::Generic::DictionaryT2<uint32_t, string*>>();
-	}
+	typedef std::unordered_map<const char16_t*, string*, std::hash<const char16_t*>, std::equal_to<const char16_t*>, gc_allocator_with_realloc<std::pair<const char16_t*, string*> > > map;
 
 	string* operator() (const char16_t* str, size_t length)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		auto key = (uint32_t)str;
-		string* existingValue;
-        if (__strings->TryGetValue_Out(key, existingValue))
-        {
-			return existingValue;
-        }
+		map::const_iterator got = __strings.find (str);
+		if (got != __strings.end())
+		{
+			return got->second;
+		}
 
-		auto _new_string = string::FastAllocateString(length);
-		string::wstrcpy(&_new_string->m_firstChar, (char16_t*)str, length);
-        __strings->Add(key, _new_string);
+		auto _new_string = string::CtorCharPtrStartLength((char16_t*)str, 0, length);
+		__strings[str] = _new_string;
 		return _new_string;
 	}
 
 	void free(const char16_t* str)
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		auto key = (uint32_t)str;
-		__strings->Remove(key);
+		map::const_iterator got = __strings.find (str);
+		if (got != __strings.end())
+		{
+			delete got->second;
+			__strings.erase(got);
+		}
 	}
 
 	~__strings_storage()
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		__strings->Clear();
+		for (auto item : __strings) 
+		{
+			delete item.second;
+		}  
 	}
 
-	CoreLib::System::Collections::Generic::DictionaryT2<uint32_t, string*>* __strings;
+	map __strings;
 	mutable std::mutex mutex;
 };
 
