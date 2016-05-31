@@ -847,8 +847,7 @@ namespace Ll2NativeTests
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
-            ////foreach (var index in Enumerable.Range(66, 2).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 934).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

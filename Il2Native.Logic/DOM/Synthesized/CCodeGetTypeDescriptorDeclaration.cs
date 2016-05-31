@@ -35,7 +35,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             {
                 c.TextSpan("GC_set_bit(bitmap, GC_WORD_OFFSET(__type,");
                 c.WhiteSpace();
-                c.WriteName(field);
+                c.WriteFieldAccessAsStaticField(field);
                 c.TextSpanNewLine("));");
             }
 
