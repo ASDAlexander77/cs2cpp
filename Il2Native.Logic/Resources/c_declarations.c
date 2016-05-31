@@ -572,7 +572,7 @@ public:
 		auto length = 1;
 		for (auto rank = 0; rank < RANK; rank++)
 		{
-			length *= _data[rank];
+			length *= (_upperBoundries[rank] - _lowerBoundries[rank]);
 		}
 
 		auto instance = allocate_multiarray(length);
@@ -613,21 +613,28 @@ public:
 	pointer address(reference r) const  { return &r; }
 	const_pointer address(const_reference r) const  { return &r; }
 
-	pointer allocate(size_type n, const_pointer = 0) {
+	pointer allocate(size_type n, const_pointer = 0) 
+	{
 		return static_cast<pointer>(GC_MALLOC_UNCOLLECTABLE(n * sizeof(value_type)));
 	}
-	void deallocate(pointer p, size_type) {
+
+	void deallocate(pointer p, size_type) 
+	{
 		GC_FREE(p);
 	}
-	pointer reallocate(pointer p, size_type n) {
+
+	pointer reallocate(pointer p, size_type n) 
+	{
 		return static_cast<pointer>(GC_REALLOC(p, n * sizeof(value_type)));
 	}
 
-	size_type max_size() const  {
+	size_type max_size() const  
+	{
 		return static_cast<size_type>(-1) / sizeof(value_type);
 	}
 
-	void construct(pointer p, const value_type& val) {
+	void construct(pointer p, const value_type& val) 
+	{
 		new(p) value_type(val);
 	}
 	void destroy(pointer p) { p->~value_type(); }
@@ -636,7 +643,8 @@ public:
 	gc_allocator_with_realloc(const gc_allocator_with_realloc<U>&) {}
 
 	template<class U>
-	struct rebind {
+	struct rebind 
+	{
 		typedef gc_allocator_with_realloc<U> other;
 	};
 };
@@ -652,21 +660,22 @@ public:
 	typedef const void* const_pointer;
 
 	template<class U>
-	struct rebind {
+	struct rebind 
+	{
 		typedef gc_allocator_with_realloc<U> other;
 	};
 };
 
 template<class T>
-inline bool operator==(const gc_allocator_with_realloc<T>&,
-					   const gc_allocator_with_realloc<T>&) {
-						   return true;
+inline bool operator==(const gc_allocator_with_realloc<T>&, const gc_allocator_with_realloc<T>&) 
+{
+	return true;
 }
 
 template<class T>
-inline bool operator!=(const gc_allocator_with_realloc<T>&,
-					   const gc_allocator_with_realloc<T>&) {
-						   return false;
+inline bool operator!=(const gc_allocator_with_realloc<T>&, const gc_allocator_with_realloc<T>&) 
+{
+	return false;
 }
 
 #ifdef NO_TIMED_MUTEX

@@ -696,7 +696,7 @@ int32_t __multi_array<T, RANK>::get_Length()
 	auto length = 1;
 	for (auto rank = 0; rank < RANK; rank++)
 	{
-		length *= _data[rank];
+		length *= (_upperBoundries[rank] - _lowerBoundries[rank]);
 	}
 
 	return length;
