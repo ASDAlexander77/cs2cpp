@@ -188,7 +188,7 @@
                 Trace.WriteLine(output);
             }
 
-            Assert.AreEqual(returnCode, process.ExitCode);
+            Assert.AreEqual(returnCode, process.ExitCode, string.Format("File: {0}, Arguments: {1}, Working Dir: {2}", fileName, arguments, workingDir));
         }
 
         /// <summary>
