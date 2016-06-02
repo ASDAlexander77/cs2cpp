@@ -36,6 +36,7 @@
         public const string CoreLibCSProjPath = @"..\..\..\CoreLib\CoreLib.csproj";
         public const string CoreLibDllPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
+        public const string MscorlibCSProjPath = @"..\..\..\mscorlib\mscorlib.csproj";
         public static string MscorlibDllPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
