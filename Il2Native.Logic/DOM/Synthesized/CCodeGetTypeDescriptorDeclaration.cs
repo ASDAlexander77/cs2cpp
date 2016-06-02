@@ -35,7 +35,9 @@ namespace Il2Native.Logic.DOM.Synthesized
             {
                 c.TextSpan("GC_set_bit(bitmap, GC_WORD_OFFSET(__type,");
                 c.WhiteSpace();
-                c.WriteFieldAccessAsStaticField(field);
+                // TODO: fix it, replace with "base" type as generic types causing issues
+                ////c.WriteFieldAccessAsStaticField(field);
+                c.WriteName(field);
                 c.TextSpanNewLine("));");
             }
 
