@@ -61,21 +61,7 @@ namespace Il2Native.Logic.DOM2
                     c.WhiteSpace();
                 }
 
-                if (bound.IsStaticOrSupportedVolatileWrapperCall())
-                {
-                    new Cast
-                    {
-                        Type = bound.Type,
-                        Operand = bound,
-                        CCast = true,
-                        UseEnumUnderlyingType = true,
-                    }.WriteTo(c);
-                }
-                else
-                {
-                    bound.WriteTo(c);
-                }
-
+                c.WriteWrappedExpressionIfNeeded(bound);
                 any = true;
             }
 

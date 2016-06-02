@@ -18,6 +18,7 @@
         public const string CoreLibCSProjPath = @"C:\Dev\Temp\Il2Native\CoreLib\CoreLib.csproj";
         public const string CoreLibDllPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
+        public const string MscorlibCSProjPath = @"C:\Dev\Temp\Il2Native\mscorlib\mscorlib.csproj";
         public static string MscorlibDllPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"C:\Dev\Temp\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
         public const string SscliSourcePath = @"C:\Dev\Unzipped\sscli20\tests\bcl\system\";
@@ -188,7 +189,7 @@
                 Trace.WriteLine(output);
             }
 
-            Assert.AreEqual(returnCode, process.ExitCode);
+            Assert.AreEqual(returnCode, process.ExitCode, string.Format("File: {0}, Arguments: {1}, Working Dir: {2}", fileName, arguments, workingDir));
         }
 
         /// <summary>
