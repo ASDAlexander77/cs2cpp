@@ -847,8 +847,7 @@ namespace Ll2NativeTests
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
-            ////foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(36, 2).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 934).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
@@ -895,7 +894,7 @@ namespace Ll2NativeTests
             // you need to compile GC property to include GC_pthread_create etc.
             // read Readme.win32 how to compile it for MinGW
 
-            CompilerHelper.GcDebugEnabled = true;
+            CompilerHelper.GcDebugEnabled = false;
 
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.CoreLibCSProjPath),
@@ -1008,8 +1007,10 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         //[Ignore]
         public void TestMscolibCSNative()
         {
+            CompilerHelper.GcDebugEnabled = false;
+
             Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.MscorlibDllPath),
+                Path.GetFullPath(CompilerHelper.MscorlibCSProjPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true));
         }

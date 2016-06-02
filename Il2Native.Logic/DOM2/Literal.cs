@@ -52,7 +52,7 @@ namespace Il2Native.Logic.DOM2
                         return c.ToString();
                     }
 
-                    if (char.IsHighSurrogate(c) || char.IsLowSurrogate(c))
+                    if (c == 0 || char.IsHighSurrogate(c) || char.IsLowSurrogate(c))
                     {
                         return string.Format("\\x{0:X4}", (uint)c);
                     }

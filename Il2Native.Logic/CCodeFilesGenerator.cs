@@ -121,7 +121,7 @@ if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS ""${CMAKE_EXE_LINKER_FLAGS} /ignore:4006 /ignore:4049 /ignore:4217"")
 else()
     if (CMAKE_SYSTEM_NAME STREQUAL ""Android"")
-        SET(EXTRA_CXX_FLAGS ""-std=gnu++11 -fexceptions -frtti -fshort-wchar"")
+        SET(EXTRA_CXX_FLAGS ""-std=gnu++11 -fexceptions -frtti"")
         SET(BUILD_ARCH ""vs_android"")
     else()
         SET(EXTRA_CXX_FLAGS ""-std=gnu++14 -march=native"")
@@ -273,7 +273,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_vs_android_<%build_type_lowercase%>_bdwgc
 cd __build_vs_android_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
+cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=OFF -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
