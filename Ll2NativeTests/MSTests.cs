@@ -1007,8 +1007,10 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
         //[Ignore]
         public void TestMscolibCSNative()
         {
+            CompilerHelper.GcDebugEnabled = false;
+
             Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.MscorlibDllPath),
+                Path.GetFullPath(CompilerHelper.MscorlibCSProjPath),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false, stubs: true));
         }
