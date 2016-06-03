@@ -51,7 +51,7 @@ namespace Il2Native.Logic.DOM2
         }
 
         internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false)
-        {         
+        {
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
@@ -117,7 +117,7 @@ namespace Il2Native.Logic.DOM2
                     c.WriteNamespace(this.Method.ContainingType.ContainingNamespace);
                     c.TextSpan("::");
                 }
-                
+
                 c.WriteMethodName(this.Method, addTemplate: true);
             }
             else
@@ -195,7 +195,7 @@ namespace Il2Native.Logic.DOM2
                 };
             }
 
-            if (effectiveExpression.IsReference && (effectiveExpression.Type.TypeKind == TypeKind.Interface) 
+            if (effectiveExpression.IsReference && (effectiveExpression.Type.TypeKind == TypeKind.Interface)
                 && parameter.Type.SpecialType == SpecialType.System_Object)
             {
                 effectiveExpression = new Conversion
@@ -226,13 +226,43 @@ namespace Il2Native.Logic.DOM2
             return effectiveExpression;
         }
 
-        private static NamedTypeImpl GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
+        private static ITypeSymbol GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
         {
             return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
         }
 
-        private static NamedTypeImpl GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
+        private static ITypeSymbol GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
         {
+            if (type.TypeKind == TypeKind.ArrayType)
+            {
+                var sourceArrayType = (IArrayTypeSymbol)type;
+                var arrayType = new ArrayTypeImpl(sourceArrayType);
+                arrayType.ElementType = GetTypeForVirtualGenericMethod(method, sourceArrayType.ElementType, containingSymbol);
+                return arrayType;
+            }
+
+            if (type.TypeKind == TypeKind.PointerType)
+            {
+                var sourcePointerType = (IPointerTypeSymbol)type;
+                var pointerType = new PointerTypeImpl();
+                pointerType.PointedAtType = GetTypeForVirtualGenericMethod(method, sourcePointerType.PointedAtType, containingSymbol);
+                return pointerType;
+            }
+
+            if (type.TypeKind == TypeKind.TypeParameter)
+            {
+                for (var i = 0; i < method.TypeParameters.Length; i++)
+                {
+                    var typeParameter = method.TypeParameters[i];
+                    if (typeParameter.Name == type.Name)
+                    {
+                        return method.TypeArguments[i];
+                    }
+                }
+
+                return new TypeImpl { SpecialType = SpecialType.System_Object };
+            }
+
             var namedTypeImpl = new NamedTypeImpl((INamedTypeSymbol)type);
             namedTypeImpl.ContainingSymbol = containingSymbol;
             namedTypeImpl.TypeArguments =
@@ -248,7 +278,7 @@ namespace Il2Native.Logic.DOM2
         {
             var effectiveReceiverOpt = receiverOpt;
 
-            if (effectiveReceiverOpt.Kind == Kinds.ThisReference 
+            if (effectiveReceiverOpt.Kind == Kinds.ThisReference
                 && methodSymbol.MethodKind == MethodKind.Constructor
                 && ((TypeSymbol)(MethodOwner.ContainingType)).ToKeyString() != ((TypeSymbol)methodSymbol.ContainingType).ToKeyString())
             {
@@ -264,13 +294,13 @@ namespace Il2Native.Logic.DOM2
             if (effectiveReceiverOpt.IsReference && (effectiveReceiverOpt.Type.TypeKind == TypeKind.Interface) && methodSymbol.ContainingType.SpecialType == SpecialType.System_Object)
             {
                 effectiveReceiverOpt = new Conversion
-                                           {
-                                               ConversionKind = ConversionKind.ImplicitReference,
-                                               IsReference = true,
-                                               Operand = receiverOpt,
-                                               TypeSource = receiverOpt.Type,
-                                               Type = methodSymbol.ContainingType
-                                           };
+                {
+                    ConversionKind = ConversionKind.ImplicitReference,
+                    IsReference = true,
+                    Operand = receiverOpt,
+                    TypeSource = receiverOpt.Type,
+                    Type = methodSymbol.ContainingType
+                };
             }
 
             if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Method.ReceiverType != effectiveReceiverOpt.Type)

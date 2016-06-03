@@ -144,6 +144,7 @@
     <Compile Include="DOM\CCodeDelegateWrapperClass.cs" />
     <Compile Include="DOM\CCodeMethodsTableClass.cs" />
     <Compile Include="DOM\Helpers.cs" />
+    <Compile Include="DOM\Implementations\ArrayTypeImpl.cs" />
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
     <Compile Include="DOM\Implementations\FieldImpl.cs" />
     <Compile Include="DOM\Implementations\IAssembliesInfoResolver.cs" />

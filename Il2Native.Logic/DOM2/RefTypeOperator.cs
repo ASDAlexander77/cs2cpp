@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class RefTypeOperator : Expression
@@ -14,10 +15,11 @@ namespace Il2Native.Logic.DOM2
 
         public Expression Operand { get; set; }
 
-        internal void Parse(BoundRefValueOperator boundRefValueOperator)
+        internal void Parse(BoundRefTypeOperator boundRefTypeOperator)
         {
-            base.Parse(boundRefValueOperator);
-            this.Operand = Deserialize(boundRefValueOperator.Operand) as Expression;
+            base.Parse(boundRefTypeOperator);
+            this.Operand = Deserialize(boundRefTypeOperator.Operand) as Expression;
+            Debug.Assert(this.Operand != null);
         }
 
         internal override void Visit(System.Action<Base> visitor)
