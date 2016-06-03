@@ -101,10 +101,9 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.WhiteSpace();
-                if (this.TypeDeclarationSplit)
+                if (this.TypeDeclarationSplit && !this.IsRef && !this.IsOut)
                 {
-                    Debug.Assert(!this.IsRef && !this.IsOut, "reference initialization");
-
+                    ////Debug.Assert(!this.IsRef && !this.IsOut, "reference initialization");
                     this.Left.WriteTo(c);
                     c.EndStatement();
                 }

@@ -27,3 +27,4 @@ StyleCop.Cache
 /mscorlib/bin/Release
 /Il2Native.VC.db
 /Il2Native.VC.VC.opendb
+/.vs
