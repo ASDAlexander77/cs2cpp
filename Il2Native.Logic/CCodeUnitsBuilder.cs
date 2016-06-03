@@ -252,9 +252,21 @@ namespace Il2Native.Logic
                             new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true },
                             new Literal { Value = ConstantValue.Create(type.ContainingNamespace != null ? type.ContainingNamespace.GetNamespaceFullName() : string.Empty), CppConstString = true },
                             new Literal { Value = ConstantValue.Create((int)type.GetCorElementType()) },
-                            new Literal { Value = ConstantValue.Create(type.IsGenericType) }
+                            new Literal { Value = ConstantValue.Create(type.IsGenericType) },
+                            GetRuntimeTypeReferenceOrNullForType(type.BaseType),
+                            GetRuntimeTypeReferenceOrNullForType(type.GetElementType())
                         }
-                    };
+            };
+        }
+
+        private static Expression GetRuntimeTypeReferenceOrNullForType(ITypeSymbol type)
+        {
+            if (type == null)
+            {
+                return new Literal { Value = ConstantValue.Null };
+            }
+
+            return new AddressOfOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "__type", ContainingType = (INamedTypeSymbol)type, IsStatic = true } } };
         }
 
         private static void BuildMethodTableVariables(ITypeSymbol type, CCodeUnit unit)

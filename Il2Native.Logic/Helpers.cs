@@ -782,6 +782,23 @@ namespace Il2Native.Logic
             return CorElementType.End;
         }
 
+        public static ITypeSymbol GetElementType(this ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.ArrayType)
+            {
+                var arrayType = (IArrayTypeSymbol)type;
+                return arrayType.ElementType;
+            }
+
+            if (type.TypeKind == TypeKind.PointerType)
+            {
+                var arrayType = (IPointerTypeSymbol)type;
+                return arrayType.PointedAtType;
+            }
+
+            return null;
+        }
+
         internal static bool NeedsLabel(this LabelSymbol label, string name)
         {
             var labelName = label.Name;

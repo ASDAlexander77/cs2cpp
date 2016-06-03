@@ -978,6 +978,8 @@ struct __runtimetype_info
 	const char16_t* __namespace;
 	int __cor_element_type;
 	bool __is_generic_type_definition;
+	CoreLib::System::RuntimeType* __base_type;
+	CoreLib::System::RuntimeType* __element_type;
 };
 
 int32_t __hash_code(object* _obj, size_t _size);

@@ -63,7 +63,7 @@ CoreLib::System::Reflection::RuntimeModule* CoreLib::System::RuntimeTypeHandle::
 // Method : System.RuntimeTypeHandle.GetBaseType(System.RuntimeType)
 CoreLib::System::RuntimeType* CoreLib::System::RuntimeTypeHandle::GetBaseType(CoreLib::System::RuntimeType* type)
 {
-	throw 0xC000C000;
+	return ((__runtimetype_info*)(void*)type->m_handle)->__base_type;
 }
 
 // Method : System.RuntimeTypeHandle.GetAttributes(System.RuntimeType)
@@ -75,7 +75,7 @@ CoreLib::System::Reflection::enum_TypeAttributes CoreLib::System::RuntimeTypeHan
 // Method : System.RuntimeTypeHandle.GetElementType(System.RuntimeType)
 CoreLib::System::RuntimeType* CoreLib::System::RuntimeTypeHandle::GetElementType(CoreLib::System::RuntimeType* type)
 {
-	throw 0xC000C000;
+	return ((__runtimetype_info*)(void*)type->m_handle)->__element_type;
 }
 
 // Method : System.RuntimeTypeHandle.CompareCanonicalHandles(System.RuntimeType, System.RuntimeType)
