@@ -273,7 +273,10 @@ namespace Il2Native.Logic.DOM.Implementations
 
         ISymbol ISymbol.OriginalDefinition
         {
-            get;
+            get
+            {
+                return this.OriginalDefinition;
+            }
         }
 
         public void Accept(SymbolVisitor visitor)
