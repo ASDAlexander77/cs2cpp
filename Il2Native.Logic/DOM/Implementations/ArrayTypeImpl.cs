@@ -52,7 +52,6 @@ namespace Il2Native.Logic.DOM.Implementations
             OriginalDefinition = source.OriginalDefinition;
             Rank = source.Rank;
             SpecialType = source.SpecialType;
-            TypeKind = source.TypeKind;
         }
 
         public ImmutableArray<INamedTypeSymbol> AllInterfaces
@@ -267,8 +266,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public TypeKind TypeKind
         {
-            get;
-            set;
+            get { return TypeKind.ArrayType; }
         }
 
         ISymbol ISymbol.OriginalDefinition

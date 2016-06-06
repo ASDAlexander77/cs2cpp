@@ -54,6 +54,11 @@
 #include "gc.h"
 #include "gc_typed.h"
 #include "javaxfc.h"
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
+
 #undef min
 #undef max
 #undef INVALID_HANDLE_VALUE
@@ -63,15 +68,19 @@
 #undef CreateEvent
 #undef GetFullPathName
 #undef CreateFile
+#undef HKEY_CLASSES_ROOT
+#undef HKEY_CURRENT_USER
+#undef HKEY_LOCAL_MACHINE
+#undef HKEY_USESR
+#undef HKEY_PERFORMANCE_DATA
+#undef HKEY_CURRENT_CONFIG
+#undef HKEY_DYN_DATA
+#undef DEBUG
 
 #ifdef GC_ADD_CALLER
 # define GC_ALLOC_PARAMS GC_RETURN_ADDR, _file, _line
 #else
 # define GC_ALLOC_PARAMS _file, _line
-#endif
-
-#ifdef _MSC_VER
-#include <Windows.h>
 #endif
 
 #ifndef _WIN32

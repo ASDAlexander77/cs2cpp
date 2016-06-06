@@ -338,6 +338,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
                 if (isCoreLib)
                 {
+                    if (identity.Name != "CoreLib")
+                    {
+                        Cs2CGenerator.IsCoreLibRewrite = true;
+                    }
+
                     itw.WriteLine(Resources.c_include);
                     itw.WriteLine(Resources.intrin_template);
                 }

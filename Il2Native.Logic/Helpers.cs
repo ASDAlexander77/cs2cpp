@@ -263,7 +263,14 @@ namespace Il2Native.Logic
         {
             if (namespaceNode.IsGlobalNamespace)
             {
-                return namespaceNode.ContainingAssembly.MetadataName.CleanUpName();
+                if (Cs2CGenerator.IsCoreLibRewrite)
+                {
+                    return "CoreLib";
+                }
+                else
+                {
+                    return namespaceNode.ContainingAssembly.MetadataName.CleanUpName();
+                }
             }
             else
             {

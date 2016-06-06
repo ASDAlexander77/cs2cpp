@@ -756,7 +756,14 @@ namespace Il2Native.Logic
         {
             if (namespaceNode.IsGlobalNamespace)
             {
-                this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                if (Cs2CGenerator.IsCoreLibRewrite)
+                {
+                    this.TextSpan("CoreLib");
+                }
+                else
+                {
+                    this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                }
             }
             else
             {
@@ -839,6 +846,11 @@ namespace Il2Native.Logic
                     {
                         this.TextSpan("CoreLib::");
                         this.TextSpan(type.SpecialType.ToString().Replace("_", "::"));
+                        if (type.IsReferenceType)
+                        {
+                            this.TextSpan("*");
+                        }
+
                         return true;
                     }
 

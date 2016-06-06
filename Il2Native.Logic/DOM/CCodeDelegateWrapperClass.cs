@@ -281,10 +281,16 @@ namespace Il2Native.Logic.DOM
                     Operand =
                         new ArrayAccess
                         {
-                            Expression = new FieldAccess
+                            Expression = new Cast
                             {
-                                ReceiverOpt = new ThisReference { Type = new TypeImpl { } },
-                                Field = new FieldImpl { Name = "_invocationList", Type = new TypeImpl { } }
+                                Operand =
+                                    new FieldAccess
+                                    {
+                                        ReceiverOpt = new ThisReference { Type = new TypeImpl { } },
+                                        Field = new FieldImpl { Name = "_invocationList", Type = new TypeImpl { } }
+                                    },
+                                CCast = true,
+                                Type = new ArrayTypeImpl { ElementType = new NamedTypeImpl { SpecialType = SpecialType.System_Delegate, IsReferenceType = true } }
                             },
                             Indices =
                             {

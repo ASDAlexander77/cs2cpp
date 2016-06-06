@@ -293,6 +293,7 @@ template <typename T, typename... Tp> inline T __init(Tp... params)
 } 
 
 template <typename T> class __array;
+template <typename T, int32_t RANK> class __multi_array;
 
 template <typename T, typename TUnderlying> struct __enum
 {

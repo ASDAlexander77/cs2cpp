@@ -76,6 +76,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public static bool IsCoreLibRewrite { get; set; }
+
+        /// <summary>
+        /// </summary>
         public ISet<AssemblyIdentity> Assemblies { get; private set; }
 
         /// <summary>
