@@ -142,7 +142,7 @@ namespace Il2Native.Logic.DOM2
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method);
 
-            if (this.Method.IsVirtualGenericMethod())
+            if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
             {
                 c.TextSpan(")");
             }
