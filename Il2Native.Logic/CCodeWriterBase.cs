@@ -756,14 +756,14 @@ namespace Il2Native.Logic
         {
             if (namespaceNode.IsGlobalNamespace)
             {
-                if (Cs2CGenerator.IsCoreLibRewrite)
-                {
+                var assemblySymbol = namespaceNode.ContainingAssembly as AssemblySymbol;
+                if (assemblySymbol != null && namespaceNode.ContainingAssembly == assemblySymbol)
+                { 
                     this.TextSpan("CoreLib");
+                    return;
                 }
-                else
-                {
-                    this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
-                }
+
+                this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
             }
             else
             {

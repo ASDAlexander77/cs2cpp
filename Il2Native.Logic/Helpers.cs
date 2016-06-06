@@ -263,14 +263,13 @@ namespace Il2Native.Logic
         {
             if (namespaceNode.IsGlobalNamespace)
             {
-                if (Cs2CGenerator.IsCoreLibRewrite)
+                var assemblySymbol = namespaceNode.ContainingAssembly as AssemblySymbol;
+                if (assemblySymbol != null && namespaceNode.ContainingAssembly == assemblySymbol)
                 {
                     return "CoreLib";
                 }
-                else
-                {
-                    return namespaceNode.ContainingAssembly.MetadataName.CleanUpName();
-                }
+
+                return namespaceNode.ContainingAssembly.MetadataName.CleanUpName();
             }
             else
             {
@@ -312,7 +311,7 @@ namespace Il2Native.Logic
 
         public static string GetTypeName(this ITypeSymbol type)
         {
-            if (type.TypeKind != TypeKind.TypeParameter && type.ContainingType != null) 
+            if (type.TypeKind != TypeKind.TypeParameter && type.ContainingType != null)
             {
                 return type.ContainingType.GetTypeName() + "_" + type.MetadataName.CleanUpName();
             }
@@ -397,7 +396,7 @@ namespace Il2Native.Logic
                 foreach (var field in type.BaseType.EnumPossibleReferenceFields())
                 {
                     yield return field;
-                }                
+                }
             }
 
             foreach (var field in type.GetMembers().OfType<IFieldSymbol>().Where(f => !f.IsStatic && !f.IsConst && f.Type.IsPossibleReferenceType()))
@@ -704,22 +703,22 @@ namespace Il2Native.Logic
         public static ITypeSymbol ToSystemType(this string systemTypeName, bool @struct = false)
         {
             return new NamedTypeImpl
-                       {
-                           Name = systemTypeName,
-                           ContainingNamespace =
+            {
+                Name = systemTypeName,
+                ContainingNamespace =
                                new NamespaceImpl
-                                   {
-                                       MetadataName = "System",
-                                       ContainingNamespace =
+                               {
+                                   MetadataName = "System",
+                                   ContainingNamespace =
                                            new NamespaceImpl
-                                               {
-                                                   IsGlobalNamespace = true,
-                                                   ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" }
-                                               }
-                                   },
-                           TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
-                           IsReferenceType = !@struct
-                       };
+                                           {
+                                               IsGlobalNamespace = true,
+                                               ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" }
+                                           }
+                               },
+                TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
+                IsReferenceType = !@struct
+            };
         }
 
         public static CorElementType GetCorElementType(this ITypeSymbol type)
