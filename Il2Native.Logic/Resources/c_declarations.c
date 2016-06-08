@@ -246,6 +246,9 @@ public:
 		return instance;
 	}
 
+	virtual CoreLib::System::Type* __get_type() override;
+	virtual bool __is_type(CoreLib::System::Type*) override;
+
 	// Array
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;

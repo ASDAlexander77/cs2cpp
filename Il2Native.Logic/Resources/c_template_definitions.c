@@ -80,18 +80,17 @@ __runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreL
 
 // Method : 
 template <typename T>
-CoreLib::System::Type* Array::__get_type()
+CoreLib::System::Type* __array<T>::__get_type()
 {
-	return &CoreLib::System::Array::__type;
+	return &__array<T>::__type;
 }
 
 // Method : 
 template <typename T>
-bool Array::__is_type(CoreLib::System::Type* value)
+bool __array<T>::__is_type(CoreLib::System::Type* value)
 {
-	return ((&CoreLib::System::Array::__type == value) || base::__is_type(value));
+	return ((&__array<T>::__type == value) || base::__is_type(value));
 }
-
 
 // IListT1
 template <typename T>
