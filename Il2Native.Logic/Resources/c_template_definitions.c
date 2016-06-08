@@ -72,6 +72,27 @@ int32_t __array<T>::get_Rank()
 	return 1;
 }
 
+template <typename T>
+CoreLib::System::RuntimeType __array<T>::__type = CoreLib::System::RuntimeType(&__array<T>::__rt_info);
+
+template <typename T>
+__runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array::__type, &T::__type };
+
+// Method : 
+template <typename T>
+CoreLib::System::Type* Array::__get_type()
+{
+	return &CoreLib::System::Array::__type;
+}
+
+// Method : 
+template <typename T>
+bool Array::__is_type(CoreLib::System::Type* value)
+{
+	return ((&CoreLib::System::Array::__type == value) || base::__is_type(value));
+}
+
+
 // IListT1
 template <typename T>
 T __array<T>::System_Collections_Generic_IListT1_get_Item(int32_t pos) 

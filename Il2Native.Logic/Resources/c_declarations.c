@@ -140,6 +140,9 @@ public:
 	int32_t _length;
 	T _data[0];
 
+	static CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+
 	typedef CoreLib::System::Array base;
 	__array(int32_t length) { _length = length; }
 	__array(const __array<T>&) = delete;
