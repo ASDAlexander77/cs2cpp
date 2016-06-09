@@ -757,7 +757,7 @@ namespace Il2Native.Logic
             if (namespaceNode.IsGlobalNamespace)
             {
                 var assemblySymbol = namespaceNode.ContainingAssembly as AssemblySymbol;
-                if (assemblySymbol != null && namespaceNode.ContainingAssembly == assemblySymbol)
+                if (assemblySymbol != null && namespaceNode.ContainingAssembly == assemblySymbol.CorLibrary)
                 { 
                     this.TextSpan("CoreLib");
                     return;
