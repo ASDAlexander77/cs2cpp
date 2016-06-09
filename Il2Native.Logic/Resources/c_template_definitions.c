@@ -76,7 +76,7 @@ template <typename T>
 CoreLib::System::RuntimeType __array<T>::__type = CoreLib::System::RuntimeType(&__array<T>::__rt_info);
 
 template <typename T>
-__runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array::__type, &T::__type };
+__runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array::__type, &bare_type<T>::type::__type };
 
 // Method : 
 template <typename T>
@@ -726,4 +726,24 @@ template <typename T, int32_t RANK>
 int32_t __multi_array<T, RANK>::get_Rank()
 {
 	return RANK;
+}
+
+template <typename T, int32_t RANK>
+CoreLib::System::RuntimeType __multi_array<T, RANK>::__type = CoreLib::System::RuntimeType(&__multi_array<T, RANK>::__rt_info);
+
+template <typename T, int32_t RANK>
+__runtimetype_info __multi_array<T, RANK>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array::__type, &bare_type<T>::type::__type };
+
+// Method : 
+template <typename T, int32_t RANK>
+CoreLib::System::Type* __multi_array<T, RANK>::__get_type()
+{
+	return &__multi_array<T, RANK>::__type;
+}
+
+// Method : 
+template <typename T, int32_t RANK>
+bool __multi_array<T, RANK>::__is_type(CoreLib::System::Type* value)
+{
+	return ((&__multi_array<T, RANK>::__type == value) || base::__is_type(value));
 }

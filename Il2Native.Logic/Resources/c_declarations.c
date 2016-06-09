@@ -437,6 +437,9 @@ public:
 	int32_t _upperBoundries[RANK];
 	T _data[0];
 
+	static CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+
 	typedef CoreLib::System::Array base;
 
 	__multi_array()
@@ -588,6 +591,9 @@ public:
 		memcpy(&instance->_data[0], &this->_data[0], data_size);		
 		return instance;
 	}
+
+	virtual CoreLib::System::Type* __get_type() override;
+	virtual bool __is_type(CoreLib::System::Type*) override;
 
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;

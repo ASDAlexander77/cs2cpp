@@ -85,6 +85,11 @@ template <typename T> struct is_pointer_type : std::integral_constant<bool, std:
 {
 };
 
+template <typename T> struct bare_type
+{
+	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type type;
+};
+
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
 void throw_out_of_memory();
@@ -960,14 +965,12 @@ public:
 // Typeof internals
 template <typename T> inline CoreLib::System::Type* _typeof()
 {
-	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
-	return &_T::__type;
+	return &bare_type<T>::type::__type;
 }
 
 template <typename T> inline __methods_table* _typeMT()
 {
-	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type _T;
-	return &_T::_methods_table;
+	return &bare_type<T>::type::_methods_table;
 }
 
 struct __runtimetype_info
