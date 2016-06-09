@@ -32,19 +32,41 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	// Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 	bool Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
 	{
-		throw 3221274624U;
+#ifndef GC_PTHREADS
+		return ::SetEvent((HANDLE)handle->handle.ToInt32());
+#else
+#error NOT IMPLEMENTED YET
+#endif
 	}
 
 	// Method : Microsoft.Win32.Win32Native.ResetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
 	bool Win32Native::ResetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
 	{
-		throw 3221274624U;
+#ifndef GC_PTHREADS
+		return ::ResetEvent((HANDLE)handle->handle.ToInt32());
+#else
+#error NOT IMPLEMENTED YET
+#endif
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CreateEvent(Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, bool, bool, string)
 	CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* Win32Native::CreateEvent(CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* lpSecurityAttributes, bool isManualReset, bool initialState, string* name)
 	{
-		throw 3221274624U;
+#ifndef GC_PTHREADS
+		auto hEvent = CreateEventW((LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
+			(BOOL)isManualReset,
+			(BOOL)initialState,
+			(LPCWSTR)(name != nullptr ? &name->m_firstChar : nullptr));
+
+		if (hEvent == (HANDLE)-1)
+		{
+			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+		}
+
+		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(__init<CoreLib::System::IntPtr>(hEvent), false);
+#else
+#error NOT IMPLEMENTED YET
+#endif
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFullPathName(char*, int, char*, System.IntPtr)
@@ -219,6 +241,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 #ifndef GC_PTHREADS
 		return ::CloseHandle((HANDLE)handle.ToInt32());
 #else
+		// TODO: finish it for Event, write wrapper with Destroy function
 		close(handle.ToInt32());
 		return true;
 #endif

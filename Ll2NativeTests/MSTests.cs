@@ -786,21 +786,21 @@ namespace Ll2NativeTests
             skip.Add(68); // enum to string
             skip.Add(77); // enum to string
             skip.Add(203); // enum to string
-            skip.Add(209); // reflection
+            ////skip.Add(209); // reflection
 
             skip.Add(251); // volatile IntPtr, UIntPtr - can be fixed!!!
             skip.Add(283); // delegate picks virtual function. - investigate if you can fix it
 
-            skip.Add(344); // reflection
-            skip.Add(347); // reflection
+            ////skip.Add(344); // reflection
+            ////skip.Add(347); // reflection
             skip.Add(376); // enum to string
-            skip.Add(428); // reflection
-            skip.Add(429); // reflection
-            skip.Add(430); // reflection
-            skip.Add(431); // reflection
-            skip.Add(432); // reflection
-            skip.Add(433); // reflection
-            skip.Add(434); // reflection
+            ////skip.Add(428); // reflection
+            ////skip.Add(429); // reflection
+            ////skip.Add(430); // reflection
+            ////skip.Add(431); // reflection
+            ////skip.Add(432); // reflection
+            ////skip.Add(433); // reflection
+            ////skip.Add(434); // reflection
             skip.Add(453); // enum to string
 
             /// investigate
@@ -815,7 +815,7 @@ namespace Ll2NativeTests
 
             skip.Add(580); // BUG!!! multiarray index access should be inverted - FIX IT!
 
-            skip.Add(599); // reflection
+            ////skip.Add(599); // reflection
 
             skip.Add(630); // skip / 0 exception - can be fixed!!!
 
@@ -840,10 +840,10 @@ namespace Ll2NativeTests
             skip.Add(859); // scope labels
 
             skip.Add(885); // using custom attributes
-            skip.Add(890); // reflection
-            skip.Add(899); // reflection
-            skip.Add(925); // reflection
-            skip.Add(928); // reflection
+            ////skip.Add(890); // reflection
+            ////skip.Add(899); // reflection
+            ////skip.Add(925); // reflection
+            ////skip.Add(928); // reflection
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
