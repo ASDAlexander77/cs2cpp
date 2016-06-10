@@ -149,6 +149,7 @@ namespace Il2Native.Logic.DOM
             return new MethodImpl(method)
             {
                 ReceiverType = new NamedTypeImpl { Name = GetName((INamedTypeSymbol)Type, this.@interface), ContainingType = (INamedTypeSymbol)Type },
+                IsAbstract = false,
                 ContainingNamespace = Type.ContainingNamespace,
             };
         }
