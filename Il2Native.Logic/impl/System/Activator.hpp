@@ -6,7 +6,7 @@ namespace CoreLib { namespace System {
     template <typename T> 
     T Activator::CreateInstance()
     {
-        throw 3221274624U;
+		return __create_instance<T>();
     }
 }}
 #endif

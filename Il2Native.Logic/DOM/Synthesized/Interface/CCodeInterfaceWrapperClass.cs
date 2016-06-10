@@ -28,7 +28,6 @@ namespace Il2Native.Logic.DOM
             var sb = new StringBuilder();
             sb.Append(type.MetadataName.CleanUpName());
             sb.Append("_");
-            sb.Append(@interface.MetadataName.CleanUpName());
             GetGenericNameRecursive(sb, @interface);
             return sb.ToString();
         }
@@ -152,7 +151,7 @@ namespace Il2Native.Logic.DOM
                 Name = method.Name,
                 Parameters = method.Parameters,
                 ReturnType = method.ReturnType,
-                ReceiverType = new NamedTypeImpl { Name = string.Concat(Type.MetadataName, "_", this.@interface.MetadataName), ContainingType = (INamedTypeSymbol)Type },
+                ReceiverType = new NamedTypeImpl { Name = GetName((INamedTypeSymbol)Type, this.@interface), ContainingType = (INamedTypeSymbol)Type },
                 ContainingType = method.ContainingType,
                 ContainingNamespace = Type.ContainingNamespace,
             };
