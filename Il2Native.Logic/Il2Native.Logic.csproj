@@ -136,13 +136,13 @@
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeUnitsBuilder.cs" />
     <Compile Include="DOM\CCodeFieldDeclaration.cs" />
-    <Compile Include="DOM\CCodeInterfaceWrapperClass.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeInterfaceWrapperClass.cs" />
     <Compile Include="DOM\CCodeMethodDefinition.cs" />
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\CCodeFieldDefinition.cs" />
     <Compile Include="DOM\CCodeDelegateWrapperClass.cs" />
-    <Compile Include="DOM\CCodeMethodsTableClass.cs" />
+    <Compile Include="DOM\Synthesized\MethodsTable\CCodeMethodsTableClass.cs" />
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="DOM\Implementations\ArrayTypeImpl.cs" />
     <Compile Include="DOM\Implementations\AssembliesInfoResolver.cs" />
@@ -160,12 +160,12 @@
     <Compile Include="DOM\Implementations\ValueTypeAsClassTypeImpl.cs" />
     <Compile Include="DOM\Synthesized\CCodeCloneVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetArrayElementSizeVirtualMethod.cs" />
-    <Compile Include="DOM\Synthesized\CCodeInterfaceCastOperatorDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeInterfaceCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethodDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeIsTypeVirtualMethodDefinition.cs" />
-    <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDefinition.cs" />
-    <Compile Include="DOM\Synthesized\CCodeGetInterfaceVirtualMethodDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeGetInterfaceVirtualMethodDefinition.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeGetInterfaceVirtualMethodDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeNewOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDefinition.cs" />
     <Compile Include="DOM\Synthesized\CCodeObjectCastOperatorDeclaration.cs" />
@@ -182,9 +182,9 @@
     <Compile Include="DOM\Synthesized\CCodeArrowOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeCastOperatorDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeGetTypeVirtualMethodDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeInterfaceMethodAdapterDeclaration.cs" />
     <Compile Include="DOM\Synthesized\CCodeSpecialTypeOrEnumConstructorDeclaration.cs" />
-    <Compile Include="DOM\Synthesized\CCodeInterfaceMethodAdapterDefinition.cs" />
+    <Compile Include="DOM\Synthesized\Interface\CCodeInterfaceMethodAdapterDefinition.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Il2Converter.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
