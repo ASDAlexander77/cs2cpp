@@ -414,7 +414,8 @@ namespace Il2Native.Logic
 
             if (methodSymbol.IsGenericMethod)
             {
-                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride)
+                var specialCaseForInterfaceWrapper = methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
+                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride || specialCaseForInterfaceWrapper)
                 {
                     this.TextSpan("T");
                     this.TextSpan(methodSymbol.Arity.ToString());

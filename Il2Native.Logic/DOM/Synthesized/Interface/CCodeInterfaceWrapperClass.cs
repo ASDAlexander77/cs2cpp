@@ -4,6 +4,7 @@
 namespace Il2Native.Logic.DOM
 {
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Linq;
     using System.Text;
 
@@ -151,6 +152,8 @@ namespace Il2Native.Logic.DOM
                 ReceiverType = new NamedTypeImpl { Name = GetName((INamedTypeSymbol)Type, this.@interface), ContainingType = (INamedTypeSymbol)Type },
                 IsAbstract = false,
                 ContainingNamespace = Type.ContainingNamespace,
+                // special case to write method name as MetadataName
+                TypeArguments = ImmutableArray<ITypeSymbol>.Empty
             };
         }
 
