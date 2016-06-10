@@ -120,17 +120,29 @@ public:
 };
 
 // Activator
-template <typename T> 
-typename std::enable_if<is_class_type<T>::value, T>::type __create_instance()
+template <typename T>
+inline typename std::enable_if<std::is_pointer<T>::value, T>::type __create_instance()
 {
 	typedef typename std::remove_pointer<T>::type _T;
 	return __new<_T>();
 }
 
-template <typename T> 
-T __create_instance()
+template <typename T>
+inline typename std::enable_if<is_struct_type<T>::value, T>::type __create_instance()
 {
 	return __init<T>();
+}
+
+template <typename T>
+inline typename std::enable_if<is_primitive_type<T>::value, T>::type __create_instance()
+{
+	return T();
+}
+
+template <typename T>
+inline typename std::enable_if<std::is_void<T>::value, T>::type __create_instance()
+{
+	return;
 }
 
 // Arrays internals
