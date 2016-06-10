@@ -72,7 +72,7 @@ inline typename std::enable_if<std::is_same<D, S>::value, D>::type constrained (
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<is_class_type<S>::value && !std::is_same<D, S>::value, D>::type constrained (S s)
+inline typename std::enable_if<is_class_type<S>::value && !std::is_same<D, S>::value && !is_interface_type<D>::value, D>::type constrained (S s)
 {
 	return static_cast<D>(s);
 }
