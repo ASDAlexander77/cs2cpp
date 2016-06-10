@@ -36,17 +36,20 @@ namespace Il2Native.Logic.DOM.Synthesized
             if (classMethod.IsGenericMethod)
             {
                 // set generic types
-                foreach (var typeArgument in interfaceMethod.TypeArguments)
+                // TODO: to be deleted
+                /*
+                foreach (var typeArgument in interfaceMethod.TypeArguments.Where(t => t.TypeKind == TypeKind.TypeParameter))
                 {
                     this.typeDefs.Add(
-                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = new TypeImpl(typeArgument) { ContainingSymbol = null } } });
                 }
+                */
 
                 // set generic types
-                foreach (var typeArgument in classMethod.TypeArguments)
+                foreach (var typeArgument in classMethod.TypeArguments.Where(t => t.TypeKind == TypeKind.TypeParameter))
                 {
                     MethodBodyOpt.Statements.Add(
-                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = new TypeImpl(typeArgument) { ContainingSymbol = null } } });
                 }
             }
 

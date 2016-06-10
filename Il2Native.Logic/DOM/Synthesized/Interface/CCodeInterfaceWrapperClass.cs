@@ -146,13 +146,9 @@ namespace Il2Native.Logic.DOM
 
         private MethodImpl CreateWrapperMethod(IMethodSymbol method)
         {
-            return new MethodImpl
+            return new MethodImpl(method)
             {
-                Name = method.Name,
-                Parameters = method.Parameters,
-                ReturnType = method.ReturnType,
                 ReceiverType = new NamedTypeImpl { Name = GetName((INamedTypeSymbol)Type, this.@interface), ContainingType = (INamedTypeSymbol)Type },
-                ContainingType = method.ContainingType,
                 ContainingNamespace = Type.ContainingNamespace,
             };
         }

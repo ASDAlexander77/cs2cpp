@@ -12,6 +12,59 @@ namespace Il2Native.Logic.DOM.Implementations
 
     public class MethodImpl : IMethodSymbol
     {
+        public MethodImpl()
+        {
+        }
+
+        public MethodImpl(IMethodSymbol methodSymbol)
+        {
+            Kind = methodSymbol.Kind;
+            Language = methodSymbol.Language;
+            Name = methodSymbol.Name;
+            MetadataName = methodSymbol.MetadataName;
+            ContainingSymbol = methodSymbol.ContainingSymbol;
+            ContainingAssembly = methodSymbol.ContainingAssembly;
+            ContainingModule = methodSymbol.ContainingModule;
+            ContainingType = methodSymbol.ContainingType;
+            ContainingNamespace = methodSymbol.ContainingNamespace;
+            IsDefinition = methodSymbol.IsDefinition;
+            IsStatic = methodSymbol.IsStatic;
+            IsVirtual = methodSymbol.IsVirtual;
+            IsOverride = methodSymbol.IsOverride;
+            IsAbstract = methodSymbol.IsAbstract;
+            IsSealed = methodSymbol.IsSealed;
+            IsExtern = methodSymbol.IsExtern;
+            IsImplicitlyDeclared = methodSymbol.IsImplicitlyDeclared;
+            CanBeReferencedByName = methodSymbol.CanBeReferencedByName;
+            Locations = methodSymbol.Locations;
+            DeclaringSyntaxReferences = methodSymbol.DeclaringSyntaxReferences;
+            DeclaredAccessibility = methodSymbol.DeclaredAccessibility;
+            OriginalDefinition = methodSymbol.OriginalDefinition;
+            OverriddenMethod = methodSymbol.OverriddenMethod;
+            ReceiverType = methodSymbol.ReceiverType;
+            ReducedFrom = methodSymbol.ReducedFrom;
+            ExplicitInterfaceImplementations = methodSymbol.ExplicitInterfaceImplementations;
+            ReturnTypeCustomModifiers = methodSymbol.ReturnTypeCustomModifiers;
+            AssociatedSymbol = methodSymbol.AssociatedSymbol;
+            PartialDefinitionPart = methodSymbol.PartialDefinitionPart;
+            PartialImplementationPart = methodSymbol.PartialImplementationPart;
+            AssociatedAnonymousDelegate = methodSymbol.AssociatedAnonymousDelegate;
+            MethodKind = methodSymbol.MethodKind;
+            Arity = methodSymbol.Arity;
+            IsGenericMethod = methodSymbol.IsGenericMethod;
+            IsExtensionMethod = methodSymbol.IsExtensionMethod;
+            IsAsync = methodSymbol.IsAsync;
+            IsVararg = methodSymbol.IsVararg;
+            IsCheckedBuiltin = methodSymbol.IsCheckedBuiltin;
+            HidesBaseMethodsByName = methodSymbol.HidesBaseMethodsByName;
+            ReturnsVoid = methodSymbol.ReturnsVoid;
+            ReturnType = methodSymbol.ReturnType;
+            TypeArguments = methodSymbol.TypeArguments;
+            TypeParameters = methodSymbol.TypeParameters;
+            Parameters = methodSymbol.Parameters;
+            ConstructedFrom = methodSymbol.ConstructedFrom;
+        }
+
         public SymbolKind Kind { get; private set; }
         public string Language { get; private set; }
         public string Name { get; set; }

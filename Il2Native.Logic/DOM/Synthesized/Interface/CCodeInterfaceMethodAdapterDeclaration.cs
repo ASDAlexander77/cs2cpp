@@ -4,6 +4,8 @@
 namespace Il2Native.Logic.DOM.Synthesized
 {
     using System.Collections.Generic;
+    using System.Linq;
+
     using DOM2;
     using Implementations;
     using Microsoft.CodeAnalysis;
@@ -17,12 +19,15 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             if (classMethod.IsGenericMethod)
             {
+                // TODO: to be deleted
                 // set generic types
-                foreach (var typeArgument in interfaceMethod.TypeArguments)
+                /*
+                foreach (var typeArgument in interfaceMethod.TypeArguments.Where(t => t.TypeKind == TypeKind.TypeParameter))
                 {
                     this.typeDefs.Add(
-                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = typeArgument } });
+                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = new TypeImpl(typeArgument) { ContainingSymbol = null } } });
                 }
+                */
             }
         }
 
