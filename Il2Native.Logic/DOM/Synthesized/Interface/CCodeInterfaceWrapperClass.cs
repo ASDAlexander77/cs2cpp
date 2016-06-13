@@ -38,7 +38,8 @@ namespace Il2Native.Logic.DOM
             return this.@interface.GetMembers()
                 .OfType<IMethodSymbol>()
                 .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
-                .Select(m => new CCodeMethodDefinitionWrapper(this.CreateWrapperMethod(m)) { MethodBodyOpt = this.CreateMethodBody(this.CreateCallWrapperMethod(m)) });
+                .Select(this.CreateWrapperMethod)
+                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -154,19 +155,6 @@ namespace Il2Native.Logic.DOM
                 // special case to write method name as MetadataName
                 TypeArguments = ImmutableArray<ITypeSymbol>.Empty
             };
-        }
-
-        private MethodImpl CreateCallWrapperMethod(IMethodSymbol method)
-        {
-            var wrapMethod = new MethodImpl(method)
-            {
-                IsAbstract = false,
-                IsVirtual = false,
-                IsOverride = false,
-                ////TypeArguments = method.TypeArguments.Select(t => (ITypeSymbol)new TypeImpl((ITypeSymbol)t) { ContainingSymbol = null }).ToImmutableArray()
-            };
-
-            return wrapMethod;
         }
 
         private void Name(CCodeWriterBase c)
