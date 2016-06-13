@@ -805,6 +805,11 @@ namespace Il2Native.Logic
             return null;
         }
 
+        public static bool IsInterfaceGenericMethodSpecialCase(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
+        }
+
         internal static bool NeedsLabel(this LabelSymbol label, string name)
         {
             var labelName = label.Name;
