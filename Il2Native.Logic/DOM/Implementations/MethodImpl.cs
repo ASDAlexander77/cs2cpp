@@ -69,7 +69,7 @@ namespace Il2Native.Logic.DOM.Implementations
         public string Language { get; private set; }
         public string Name { get; set; }
         public string MetadataName { get; protected set; }
-        public ISymbol ContainingSymbol { get; private set; }
+        public ISymbol ContainingSymbol { get; set; }
         public IAssemblySymbol ContainingAssembly { get; private set; }
         public IModuleSymbol ContainingModule { get; private set; }
         public INamedTypeSymbol ContainingType { get; set; }
