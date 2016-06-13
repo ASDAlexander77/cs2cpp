@@ -404,7 +404,8 @@ namespace Il2Native.Logic
 
         public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
         {
-            if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null)
+            var specialCaseForInterfaceWrapper = methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
+            if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null && !specialCaseForInterfaceWrapper)
             {
                 this.TextSpan("template");
                 this.WhiteSpace();
@@ -414,7 +415,6 @@ namespace Il2Native.Logic
 
             if (methodSymbol.IsGenericMethod)
             {
-                var specialCaseForInterfaceWrapper = methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
                 if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride || specialCaseForInterfaceWrapper)
                 {
                     this.TextSpan("T");
@@ -609,7 +609,8 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod())
+            var specialInterfaceCase = methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
+            if (methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && !specialInterfaceCase)
             {
                 this.WriteTemplateDeclaration(methodSymbol);
                 if (!declarationWithingClass)
