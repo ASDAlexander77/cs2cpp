@@ -749,7 +749,7 @@ inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast
 }
 
 template <typename C, typename T> 
-inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast (T t)
+inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast (T& t)
 {
 	return t->operator C();
 }
