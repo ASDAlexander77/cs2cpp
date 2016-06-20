@@ -935,7 +935,7 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool wrapPointer = false)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -989,8 +989,21 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.PointerType:
                     var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
-                    this.TextSpan("*");
+                    if (wrapPointer)
+                    {
+                        this.TextSpan("__pointer<");
+                    }
+
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, wrapPointer: wrapPointer);
+                    if (wrapPointer)
+                    {
+                        this.TextSpan(">");
+                    }
+                    else
+                    {
+                        this.TextSpan("*");
+                    }
+
                     return;
                 case TypeKind.Struct:
                     this.WriteTypeFullName((INamedTypeSymbol)type);

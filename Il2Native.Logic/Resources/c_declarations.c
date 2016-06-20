@@ -151,6 +151,12 @@ inline typename std::enable_if<std::is_void<T>::value, T>::type __create_instanc
 	return;
 }
 
+template <typename T> struct __pointer
+{
+	static CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+};
+
 // Arrays internals
 template <typename T> class __array : public CoreLib::System::Array
 {

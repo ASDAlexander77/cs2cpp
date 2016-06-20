@@ -18,6 +18,13 @@ template <typename T> inline CoreLib::System::Type* __reftype(CoreLib::System::T
 	return ((__methods_table*) ((void*)tr.Type))->__get_type();
 }
 
+// Pointer
+template <typename T>
+CoreLib::System::RuntimeType __pointer<T>::__type = CoreLib::System::RuntimeType(&__pointer<T>::__rt_info);
+
+template <typename T>
+__runtimetype_info __pointer<T>::__rt_info = { nullptr, nullptr, 15, false, &CoreLib::System::Reflection::Pointer::__type, &bare_type<T>::type::__type };
+
 // Array
 template <typename T>
 int32_t  __array<T>::__array_element_size()
