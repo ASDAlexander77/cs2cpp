@@ -109,7 +109,7 @@ bool CoreLib::System::Threading::Thread::get_IsAlive()
 // Method : System.Threading.Thread.IsThreadPoolThread.get
 bool CoreLib::System::Threading::Thread::get_IsThreadPoolThread()
 {
-	throw 0xC000C000;
+	return false;
 }
 
 // Method : System.Threading.Thread.JoinInternal(int)
@@ -188,7 +188,7 @@ void CoreLib::System::Threading::Thread::SetBackgroundNative(bool isBackground)
 // Method : System.Threading.Thread.GetThreadStateNative()
 int32_t CoreLib::System::Threading::Thread::GetThreadStateNative()
 {
-	throw 0xC000C000;
+	return 0;
 }
 
 // Method : System.Threading.Thread.nativeInitCultureAccessors()
