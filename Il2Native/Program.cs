@@ -36,9 +36,9 @@ namespace Il2Native
                 Console.WriteLine("                          Reference assembly by name or file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
-                Console.WriteLine("  Il2C file1.cs          Compiles one C# file");
-                Console.WriteLine("  Il2C proj1.csproj      Compiles C# project");
-                Console.WriteLine("  Il2C /ref:System.Core file1.cs file2.cs");
+                Console.WriteLine("  Cs2Cpp file1.cs          Compiles one C# file");
+                Console.WriteLine("  Cs2Cpp proj1.csproj      Compiles C# project");
+                Console.WriteLine("  Cs2Cpp /ref:System.Core file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
                 return 0;
             }
