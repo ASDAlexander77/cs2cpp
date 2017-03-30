@@ -280,8 +280,10 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 var sideEffectsAsLambdaCallExpression = new SideEffectsAsLambdaCallExpression();
-                sideEffectsAsLambdaCallExpression.Parse(boundSequence);
-                return sideEffectsAsLambdaCallExpression;
+                if (sideEffectsAsLambdaCallExpression.Parse(boundSequence))
+                {
+                    return sideEffectsAsLambdaCallExpression;
+                }
             }
 
             var boundCall = boundBody as BoundCall;
@@ -613,18 +615,13 @@ namespace Il2Native.Logic.DOM2
                 return argListOperator;
             }
 
-            var statemnent = Unwrap(boundBody);
-            if (statemnent != null)
-            {
-                throw new InvalidOperationException("Unwrap statement in foreach cycle in block class");
-            }
-
-            if (statemnent == null)
+            var statemnentOrExpression = Unwrap(boundBody);
+            if (statemnentOrExpression == null)
             {
                 throw new NotImplementedException();
             }
 
-            return Deserialize(statemnent);
+            return Deserialize(statemnentOrExpression);
         }
 
         internal static IEnumerable<BoundStatement> IterateBoundStatementsList(BoundStatementList boundStatementList)
@@ -757,6 +754,12 @@ namespace Il2Native.Logic.DOM2
             if (boundSequencePointWithSpan != null)
             {
                 return boundSequencePointWithSpan.StatementOpt;
+            }
+
+            var boundSequencePointExpression = boundNode as BoundSequencePointExpression;
+            if (boundSequencePointExpression != null)
+            {
+                return boundSequencePointExpression.Expression;
             }
 
             return boundNode;

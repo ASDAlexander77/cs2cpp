@@ -34,7 +34,6 @@ namespace Il2Native.Logic.DOM2
             base.Parse(boundSwitchSection);
             foreach (var boundSwitchLabel in boundSwitchSection.SwitchLabels)
             {
-                Debug.Assert(boundSwitchLabel.ExpressionOpt == null, "check it");
                 var sourceLabelSymbol = (boundSwitchLabel.Label as SourceLabelSymbol);
                 if (sourceLabelSymbol != null)
                 {

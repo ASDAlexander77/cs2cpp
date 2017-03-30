@@ -41,8 +41,9 @@ namespace Il2Native.Logic.DOM2
             var statementList = Unwrap(boundStatementList);
 
             // in case of multi array if current statmentList contains BoundBlock you should process all statements into Initial stage
-            if (statementList.Statements.Last() is BoundBlock &&
-                !(statementList.Statements.Take(statementList.Statements.Length - 1).All(s => s is BoundBlock)))
+            if (statementList.Statements.Any() 
+                && statementList.Statements.Last() is BoundBlock 
+                && !(statementList.Statements.Take(statementList.Statements.Length - 1).All(s => s is BoundBlock)))
             {
                 return false;
             }
