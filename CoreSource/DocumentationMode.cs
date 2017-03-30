@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
@@ -19,12 +20,12 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Parses documentation comments as structured trivia, but do not report any diagnostics.
         /// </summary>
-        Parse,
+        Parse = 1,
 
         /// <summary>
         /// Parses documentation comments as structured trivia and report diagnostics.
         /// </summary>
-        Diagnose,
+        Diagnose = 2,
     }
 
     internal static partial class DocumentationModeEnumBounds

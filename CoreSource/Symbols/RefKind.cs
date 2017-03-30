@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
@@ -11,17 +12,17 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Indicates a "value" parameter.
         /// </summary>
-        None,
+        None = 0,
 
         /// <summary>
         /// Indicates a "ref" parameter.
         /// </summary>
-        Ref,
+        Ref = 1,
 
         /// <summary>
         /// Indicates an "out" parameter.
         /// </summary>
-        Out
+        Out = 2
     }
 
     internal static class RefKindExtensions

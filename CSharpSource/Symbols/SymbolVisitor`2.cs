@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -149,6 +149,18 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="argument">Additional argument</param>
         /// <returns></returns>
         public virtual TResult VisitDynamicType(DynamicTypeSymbol symbol, TArgument argument)
+        {
+            return DefaultVisit(symbol, argument);
+        }
+
+        /// <summary>
+        /// Called when visiting a <see cref="DiscardSymbol" />; Override this with specific
+        /// implementation; Calling <see cref="DefaultVisit" /> if it's not overridden 
+        /// </summary>
+        /// <param name="symbol">The visited symbol</param>
+        /// <param name="argument">Additional argument</param>
+        /// <returns></returns>
+        public virtual TResult VisitDiscard(DiscardSymbol symbol, TArgument argument)
         {
             return DefaultVisit(symbol, argument);
         }

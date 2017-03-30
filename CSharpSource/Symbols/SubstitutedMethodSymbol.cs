@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -19,23 +20,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     // C<X> is a ConstructedTypeSymbol.
     // C<X>.M<> is a SubstitutedMethodSymbol. It has parameters of types X and U.
     // C<X>.M<Y> is a ConstructedMethodSymbol.
-    internal class SubstitutedMethodSymbol : MethodSymbol
+    internal class SubstitutedMethodSymbol : WrappedMethodSymbol
     {
-        private readonly NamedTypeSymbol containingType;
-        protected readonly MethodSymbol originalDefinition;
-        private readonly TypeMap inputMap;
-        private readonly MethodSymbol constructedFrom;
+        private readonly NamedTypeSymbol _containingType;
+        private readonly MethodSymbol _underlyingMethod;
+        private readonly TypeMap _inputMap;
+        private readonly MethodSymbol _constructedFrom;
 
-        private TypeSymbol lazyReturnType;
-        private ImmutableArray<ParameterSymbol> lazyParameters;
-        private TypeMap lazyMap;
-        private ImmutableArray<TypeParameterSymbol> lazyTypeParameters;
+        private TypeSymbol _lazyReturnType;
+        private ImmutableArray<ParameterSymbol> _lazyParameters;
+        private TypeMap _lazyMap;
+        private ImmutableArray<TypeParameterSymbol> _lazyTypeParameters;
 
         //we want to compute these lazily since it may be expensive for the underlying symbol
-        private ImmutableArray<MethodSymbol> lazyExplicitInterfaceImplementations;
-        private OverriddenOrHiddenMembersResult lazyOverriddenOrHiddenMembers;
+        private ImmutableArray<MethodSymbol> _lazyExplicitInterfaceImplementations;
+        private OverriddenOrHiddenMembersResult _lazyOverriddenOrHiddenMembers;
 
-        private int hashCode; // computed on demand
+        private int _hashCode; // computed on demand
 
         internal SubstitutedMethodSymbol(SubstitutedNamedTypeSymbol containingSymbol, MethodSymbol originalDefinition)
             : this(containingSymbol, containingSymbol.TypeSubstitution, originalDefinition, constructedFrom: null)
@@ -44,20 +45,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         protected SubstitutedMethodSymbol(NamedTypeSymbol containingSymbol, TypeMap map, MethodSymbol originalDefinition, MethodSymbol constructedFrom)
         {
+            Debug.Assert((object)originalDefinition != null);
             Debug.Assert(originalDefinition.IsDefinition);
-            this.containingType = containingSymbol;
-            this.originalDefinition = originalDefinition;
-            this.inputMap = map;
+            _containingType = containingSymbol;
+            _underlyingMethod = originalDefinition;
+            _inputMap = map;
             if ((object)constructedFrom != null)
             {
-                this.constructedFrom = constructedFrom;
+                _constructedFrom = constructedFrom;
                 Debug.Assert(ReferenceEquals(constructedFrom.ConstructedFrom, constructedFrom));
-                this.lazyTypeParameters = constructedFrom.TypeParameters;
-                this.lazyMap = map;
+                _lazyTypeParameters = constructedFrom.TypeParameters;
+                _lazyMap = map;
             }
             else
             {
-                this.constructedFrom = this;
+                _constructedFrom = this;
+            }
+        }
+
+        public override MethodSymbol UnderlyingMethod
+        {
+            get
+            {
+                return _underlyingMethod;
             }
         }
 
@@ -65,13 +75,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return constructedFrom;
+                return _constructedFrom;
             }
-        }
-
-        public override string GetDocumentationCommentXml(CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return originalDefinition.GetDocumentationCommentXml(preferredCulture, expandIncludes, cancellationToken);
         }
 
         private TypeMap Map
@@ -79,7 +84,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 EnsureMapAndTypeParameters();
-                return lazyMap;
+                return _lazyMap;
             }
         }
 
@@ -88,129 +93,40 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 EnsureMapAndTypeParameters();
-                return this.lazyTypeParameters;
+                return _lazyTypeParameters;
             }
         }
 
         private void EnsureMapAndTypeParameters()
         {
-            if (!this.lazyTypeParameters.IsDefault)
+            if (!_lazyTypeParameters.IsDefault)
             {
                 return;
             }
 
             ImmutableArray<TypeParameterSymbol> typeParameters;
-            Debug.Assert(ReferenceEquals(constructedFrom, this));
+            Debug.Assert(ReferenceEquals(_constructedFrom, this));
 
             // We're creating a new unconstructed Method from another; alpha-rename type parameters.
-            var newMap = this.inputMap.WithAlphaRename(this.originalDefinition, this, out typeParameters);
+            var newMap = _inputMap.WithAlphaRename(this.OriginalDefinition, this, out typeParameters);
 
-            var prevMap = Interlocked.CompareExchange(ref this.lazyMap, newMap, null);
+            var prevMap = Interlocked.CompareExchange(ref _lazyMap, newMap, null);
             if (prevMap != null)
             {
                 // There is a race with another thread who has already set the map
                 // need to ensure that typeParameters, matches the map
-                typeParameters = prevMap.SubstituteTypeParameters(this.originalDefinition.TypeParameters);
+                typeParameters = prevMap.SubstituteTypeParameters(this.OriginalDefinition.TypeParameters);
             }
 
-            ImmutableInterlocked.InterlockedCompareExchange(ref this.lazyTypeParameters, typeParameters, default(ImmutableArray<TypeParameterSymbol>));
-            Debug.Assert(this.lazyTypeParameters != null);
-        }
-
-        internal sealed override Microsoft.Cci.CallingConvention CallingConvention
-        {
-            get
-            {
-                return originalDefinition.CallingConvention;
-            }
-        }
-
-        public sealed override int Arity
-        {
-            get
-            {
-                return originalDefinition.Arity;
-            }
-        }
-
-        public sealed override string Name
-        {
-            get
-            {
-                return originalDefinition.Name;
-            }
-        }
-
-        internal sealed override bool HasSpecialName
-        {
-            get
-            {
-                return originalDefinition.HasSpecialName;
-            }
-        }
-
-        internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
-        {
-            get
-            {
-                return originalDefinition.ImplementationAttributes;
-            }
-        }
-
-        internal sealed override bool RequiresSecurityObject
-        {
-            get
-            {
-                return originalDefinition.RequiresSecurityObject;
-            }
-        }
-
-        public sealed override DllImportData GetDllImportData()
-        {
-            return originalDefinition.GetDllImportData();
-        }
-
-        internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
-        {
-            get { return originalDefinition.ReturnValueMarshallingInformation; }
-        }
-
-        internal sealed override bool HasDeclarativeSecurity
-        {
-            get { return originalDefinition.HasDeclarativeSecurity; }
-        }
-
-        internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-        {
-            return originalDefinition.GetSecurityInformation();
-        }
-
-        internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-        {
-            return originalDefinition.GetAppliedConditionalSymbols();
+            ImmutableInterlocked.InterlockedCompareExchange(ref _lazyTypeParameters, typeParameters, default(ImmutableArray<TypeParameterSymbol>));
+            Debug.Assert(_lazyTypeParameters != null);
         }
 
         public sealed override AssemblySymbol ContainingAssembly
         {
             get
             {
-                return originalDefinition.ContainingAssembly;
-            }
-        }
-
-        public sealed override ImmutableArray<Location> Locations
-        {
-            get
-            {
-                return originalDefinition.Locations;
-            }
-        }
-
-        public sealed override ImmutableArray<SyntaxReference> DeclaringSyntaxReferences
-        {
-            get
-            {
-                return originalDefinition.DeclaringSyntaxReferences;
+                return OriginalDefinition.ContainingAssembly;
             }
         }
 
@@ -226,79 +142,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return originalDefinition;
-            }
-        }
-
-        public sealed override bool IsExtern
-        {
-            get
-            {
-                return originalDefinition.IsExtern;
-            }
-        }
-
-        public sealed override bool IsSealed
-        {
-            get
-            {
-                return originalDefinition.IsSealed;
-            }
-        }
-
-        public sealed override bool IsVirtual
-        {
-            get
-            {
-                return originalDefinition.IsVirtual;
-            }
-        }
-
-        public sealed override bool IsAsync
-        {
-            get
-            {
-                return originalDefinition.IsAsync;
-            }
-        }
-
-        public sealed override bool IsAbstract
-        {
-            get
-            {
-                return originalDefinition.IsAbstract;
-            }
-        }
-
-        public sealed override bool IsOverride
-        {
-            get
-            {
-                return originalDefinition.IsOverride;
-            }
-        }
-
-        public sealed override bool IsStatic
-        {
-            get
-            {
-                return originalDefinition.IsStatic;
-            }
-        }
-
-        public sealed override bool IsExtensionMethod
-        {
-            get
-            {
-                return originalDefinition.IsExtensionMethod;
-            }
-        }
-
-        internal override ObsoleteAttributeData ObsoleteAttributeData
-        {
-            get
-            {
-                return originalDefinition.ObsoleteAttributeData;
+                return _underlyingMethod;
             }
         }
 
@@ -306,7 +150,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                var method = originalDefinition.ReducedFrom;
+                var method = OriginalDefinition.ReducedFrom;
                 return ((object)method == null) ? null : method.Construct(this.TypeArguments);
             }
         }
@@ -328,9 +172,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public override TypeSymbol GetTypeInferredDuringReduction(TypeParameterSymbol reducedFromTypeParameter)
         {
             // This will throw if API shouldn't be supported or there is a problem with the argument.
-            var notUsed = originalDefinition.GetTypeInferredDuringReduction(reducedFromTypeParameter);
+            var notUsed = OriginalDefinition.GetTypeInferredDuringReduction(reducedFromTypeParameter);
 
-            Debug.Assert((object)notUsed == null && (object)originalDefinition.ReducedFrom != null);
+            Debug.Assert((object)notUsed == null && (object)OriginalDefinition.ReducedFrom != null);
             return this.TypeArguments[reducedFromTypeParameter.Ordinal];
         }
 
@@ -338,46 +182,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return originalDefinition.ReducedFrom;
+                return OriginalDefinition.ReducedFrom;
             }
-        }
-
-        public sealed override bool HidesBaseMethodsByName
-        {
-            get
-            {
-                return originalDefinition.HidesBaseMethodsByName;
-            }
-        }
-
-        public sealed override Accessibility DeclaredAccessibility
-        {
-            get
-            {
-                return originalDefinition.DeclaredAccessibility;
-            }
-        }
-
-        internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-        {
-            return originalDefinition.IsMetadataVirtual(ignoreInterfaceImplementationChanges);
-        }
-
-        internal override bool IsMetadataFinal()
-        {
-            return originalDefinition.IsMetadataFinal();
-        }
-
-        internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-        {
-            return originalDefinition.IsMetadataNewSlot(ignoreInterfaceImplementationChanges);
         }
 
         public sealed override Symbol ContainingSymbol
         {
             get
             {
-                return containingType;
+                return _containingType;
             }
         }
 
@@ -385,29 +198,26 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return containingType;
+                return _containingType;
             }
         }
 
         public sealed override ImmutableArray<CSharpAttributeData> GetAttributes()
         {
-            return this.originalDefinition.GetAttributes();
+            return this.OriginalDefinition.GetAttributes();
+        }
+
+        public override ImmutableArray<CSharpAttributeData> GetReturnTypeAttributes()
+        {
+            return this.OriginalDefinition.GetReturnTypeAttributes();
         }
 
         public sealed override Symbol AssociatedSymbol
         {
             get
             {
-                Symbol underlying = originalDefinition.AssociatedSymbol;
+                Symbol underlying = OriginalDefinition.AssociatedSymbol;
                 return ((object)underlying == null) ? null : underlying.SymbolAsMember(ContainingType);
-            }
-        }
-
-        public sealed override MethodKind MethodKind
-        {
-            get
-            {
-                return originalDefinition.MethodKind;
             }
         }
 
@@ -415,39 +225,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return originalDefinition.ReturnsVoid;
-            }
-        }
-
-        public sealed override bool IsGenericMethod
-        {
-            get
-            {
-                return originalDefinition.IsGenericMethod;
-            }
-        }
-
-        public sealed override bool IsImplicitlyDeclared
-        {
-            get
-            {
-                return this.originalDefinition.IsImplicitlyDeclared;
-            }
-        }
-
-        internal sealed override bool GenerateDebugInfo
-        {
-            get
-            {
-                return this.originalDefinition.GenerateDebugInfo;
-            }
-        }
-
-        public sealed override bool IsVararg
-        {
-            get
-            {
-                return originalDefinition.IsVararg;
+                return OriginalDefinition.ReturnsVoid;
             }
         }
 
@@ -455,14 +233,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                var returnType = this.lazyReturnType;
+                var returnType = _lazyReturnType;
                 if (returnType != null)
                 {
                     return returnType;
                 }
 
-                returnType = Map.SubstituteType(originalDefinition.ReturnType);
-                return Interlocked.CompareExchange(ref this.lazyReturnType, returnType, null) ?? returnType;
+                returnType = Map.SubstituteTypeWithTupleUnification(OriginalDefinition.ReturnType).Type;
+                return Interlocked.CompareExchange(ref _lazyReturnType, returnType, null) ?? returnType;
             }
         }
 
@@ -470,32 +248,34 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                // According to spec, custom modifiers cannot be generic, and so need not be subjected to type substitution.
-                return originalDefinition.ReturnTypeCustomModifiers;
+                return Map.SubstituteCustomModifiers(OriginalDefinition.ReturnType, OriginalDefinition.ReturnTypeCustomModifiers);
             }
         }
 
-        internal sealed override int ParameterCount
+        public sealed override ImmutableArray<CustomModifier> RefCustomModifiers
         {
-            get { return this.originalDefinition.ParameterCount; }
+            get
+            {
+                return Map.SubstituteCustomModifiers(OriginalDefinition.RefCustomModifiers);
+            }
         }
 
         public sealed override ImmutableArray<ParameterSymbol> Parameters
         {
             get
             {
-                if (this.lazyParameters.IsDefault)
+                if (_lazyParameters.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref this.lazyParameters, SubstituteParameters(), default(ImmutableArray<ParameterSymbol>));
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _lazyParameters, SubstituteParameters(), default(ImmutableArray<ParameterSymbol>));
                 }
 
-                return this.lazyParameters;
+                return _lazyParameters;
             }
         }
 
         internal sealed override bool IsExplicitInterfaceImplementation
         {
-            get { return this.originalDefinition.IsExplicitInterfaceImplementation; }
+            get { return this.OriginalDefinition.IsExplicitInterfaceImplementation; }
         }
 
         public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
@@ -507,14 +287,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return ImmutableArray<MethodSymbol>.Empty;
                 }
 
-                if (lazyExplicitInterfaceImplementations.IsDefault)
+                if (_lazyExplicitInterfaceImplementations.IsDefault)
                 {
                     ImmutableInterlocked.InterlockedCompareExchange(
-                        ref lazyExplicitInterfaceImplementations,
-                        ExplicitInterfaceHelpers.SubstituteExplicitInterfaceImplementations(this.originalDefinition.ExplicitInterfaceImplementations, Map),
+                        ref _lazyExplicitInterfaceImplementations,
+                        ExplicitInterfaceHelpers.SubstituteExplicitInterfaceImplementations(this.OriginalDefinition.ExplicitInterfaceImplementations, Map),
                         default(ImmutableArray<MethodSymbol>));
                 }
-                return lazyExplicitInterfaceImplementations;
+                return _lazyExplicitInterfaceImplementations;
             }
         }
 
@@ -522,20 +302,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (lazyOverriddenOrHiddenMembers == null)
+                if (_lazyOverriddenOrHiddenMembers == null)
                 {
                     // We need to compute the overridden or hidden members for this type, rather than applying
                     // our type map to those of the underlying type, because the substitution may have introduced
                     // ambiguities.
-                    Interlocked.CompareExchange(ref lazyOverriddenOrHiddenMembers, this.MakeOverriddenOrHiddenMembers(), null);
+                    Interlocked.CompareExchange(ref _lazyOverriddenOrHiddenMembers, this.MakeOverriddenOrHiddenMembers(), null);
                 }
-                return lazyOverriddenOrHiddenMembers;
+                return _lazyOverriddenOrHiddenMembers;
             }
         }
 
         internal sealed override bool CallsAreOmitted(SyntaxTree syntaxTree)
         {
-            return originalDefinition.CallsAreOmitted(syntaxTree);
+            return OriginalDefinition.CallsAreOmitted(syntaxTree);
         }
 
         internal sealed override TypeMap TypeSubstitution
@@ -543,9 +323,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return this.Map; }
         }
 
+        internal sealed override bool TryGetThisParameter(out ParameterSymbol thisParameter)
+        {
+            // Required in EE scenarios.  Specifically, the EE binds in the context of a 
+            // substituted method, whereas the core compiler always binds within the
+            // context of an original definition.  
+            // There should never be any reason to call this in normal compilation
+            // scenarios, but the behavior should be sensible if it does occur.
+            ParameterSymbol originalThisParameter;
+            if (!OriginalDefinition.TryGetThisParameter(out originalThisParameter))
+            {
+                thisParameter = null;
+                return false;
+            }
+
+            thisParameter = (object)originalThisParameter != null
+                ? new ThisParameterSymbol(this)
+                : null;
+            return true;
+        }
+
         private ImmutableArray<ParameterSymbol> SubstituteParameters()
         {
-            var unsubstitutedParameters = originalDefinition.Parameters;
+            var unsubstitutedParameters = OriginalDefinition.Parameters;
             int count = unsubstitutedParameters.Length;
 
             if (count == 0)
@@ -556,13 +356,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 var substituted = ArrayBuilder<ParameterSymbol>.GetInstance(count);
                 TypeMap map = Map;
-                foreach(var p in unsubstitutedParameters)
+                foreach (var p in unsubstitutedParameters)
                 {
                     substituted.Add(new SubstitutedParameterSymbol(this, map, p));
                 }
 
                 return substituted.ToImmutableAndFree();
             }
+        }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            throw ExceptionUtilities.Unreachable;
         }
 
         private int ComputeHashCode()
@@ -619,7 +424,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return selfIsDeclaration & otherIsDeclaration;
             }
 
-            // This checks if the type parameters on the method itself have been subsituted in the same way.
+            // This checks if the type parameters on the method itself have been substituted in the same way.
             int arity = this.Arity;
             for (int i = 0; i < arity; i++)
             {
@@ -634,7 +439,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override int GetHashCode()
         {
-            int code = hashCode;
+            int code = _hashCode;
 
             if (code == 0)
             {
@@ -647,7 +452,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     code++;
                 }
 
-                hashCode = code;
+                _hashCode = code;
             }
 
             return code;

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -148,7 +148,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     case BinaryOperatorKind.Equal:
                     case BinaryOperatorKind.NotEqual:
-                        TypeSymbol systemDelegateType = binder.GetSpecialType(SpecialType.System_Delegate, binder.Compilation.SemanticDiagnostics, left.Syntax);
+                        TypeSymbol systemDelegateType = _binder.GetSpecialType(SpecialType.System_Delegate, _binder.Compilation.DeclarationDiagnostics, left.Syntax);
 
                         if (Conversions.ClassifyImplicitConversionFromExpression(left, systemDelegateType, ref useSiteDiagnostics).IsValid &&
                             Conversions.ClassifyImplicitConversionFromExpression(right, systemDelegateType, ref useSiteDiagnostics).IsValid)
@@ -231,7 +231,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             AddDelegateOperation(kind, delegateType, operators);
         }
 
-        private void GetEnumOperation(BinaryOperatorKind kind, TypeSymbol enumType, ArrayBuilder<BinaryOperatorSignature> operators)
+        private void GetEnumOperation(BinaryOperatorKind kind, TypeSymbol enumType, BoundExpression left, BoundExpression right, ArrayBuilder<BinaryOperatorSignature> operators)
         {
             Debug.Assert((object)enumType != null);
             AssertNotChecked(kind);
@@ -258,19 +258,36 @@ namespace Microsoft.CodeAnalysis.CSharp
                     operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedUnderlyingAndEnumAddition, nullableUnderlying, nullableEnum, nullableEnum));
                     break;
                 case BinaryOperatorKind.Subtraction:
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumSubtraction, enumType, enumType, underlying));
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumAndUnderlyingSubtraction, enumType, underlying, enumType));
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumSubtraction, nullableEnum, nullableEnum, nullableUnderlying));
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumAndUnderlyingSubtraction, nullableEnum, nullableUnderlying, nullableEnum));
+                    if (Strict)
+                    {
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumSubtraction, enumType, enumType, underlying));
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumAndUnderlyingSubtraction, enumType, underlying, enumType));
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumSubtraction, nullableEnum, nullableEnum, nullableUnderlying));
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumAndUnderlyingSubtraction, nullableEnum, nullableUnderlying, nullableEnum));
+                    }
+                    else
+                    {
+                        // SPEC VIOLATION:
+                        // The native compiler has bugs in overload resolution involving binary operator- for enums,
+                        // which we duplicate by hardcoding Priority values among the operators. When present on both
+                        // methods being compared during overload resolution, Priority values are used to decide between
+                        // two candidates (instead of the usual language-specified rules).
+                        bool isExactSubtraction = right.Type?.StrippedType() == underlying;
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumSubtraction, enumType, enumType, underlying)
+                        { Priority = 2 });
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.EnumAndUnderlyingSubtraction, enumType, underlying, enumType)
+                        { Priority = isExactSubtraction ? 1 : 3 });
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumSubtraction, nullableEnum, nullableEnum, nullableUnderlying)
+                        { Priority = 12 });
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedEnumAndUnderlyingSubtraction, nullableEnum, nullableUnderlying, nullableEnum)
+                        { Priority = isExactSubtraction ? 11 : 13 });
 
-                    // Due to a bug, the native compiler allows "underlying - enum", so Roslyn does as well.
-                    // (In the native compiler codebase look at GetEnumBinOpSigs; the last call to method
-                    // "ValidForEnumAndUnderlyingType" is wrong; it should be a call to "ValidForUnderlyingTypeAndEnum".
-                    // The net result of the bug is that everything that is supposed to work is fine, and we accidentally
-                    // allow underlying - enum because enum - underlying is valid.)
-
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.UnderlyingAndEnumSubtraction, underlying, enumType, enumType));
-                    operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedUnderlyingAndEnumSubtraction, nullableUnderlying, nullableEnum, nullableEnum));
+                        // Due to a bug, the native compiler allows "underlying - enum", so Roslyn does as well.
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.UnderlyingAndEnumSubtraction, underlying, enumType, enumType)
+                        { Priority = 4 });
+                        operators.Add(new BinaryOperatorSignature(BinaryOperatorKind.LiftedUnderlyingAndEnumSubtraction, nullableUnderlying, nullableEnum, nullableEnum)
+                        { Priority = 14 });
+                    }
                     break;
                 case BinaryOperatorKind.Equal:
                 case BinaryOperatorKind.NotEqual:
@@ -383,7 +400,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     break;
 
                 case BinaryOperatorKind.Addition:
-                    // Addtion only accepts a single enum type, so operations on non-equal identity-convertible types are not ambiguous. 
+                    // Addition only accepts a single enum type, so operations on non-equal identity-convertible types are not ambiguous. 
                     //   E operator +(E x, U y)
                     //   E operator +(U x, E y)
                     useIdentityConversion = true;
@@ -414,12 +431,12 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if ((object)leftType != null)
             {
-                GetEnumOperation(kind, leftType, results);
+                GetEnumOperation(kind, leftType, left, right, results);
             }
 
             if ((object)rightType != null && ((object)leftType == null || !(useIdentityConversion ? Conversions.HasIdentityConversion(rightType, leftType) : rightType.Equals(leftType))))
             {
-                GetEnumOperation(kind, rightType, results);
+                GetEnumOperation(kind, rightType, left, right, results);
             }
         }
 
@@ -461,20 +478,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Strip the "checked" off; the checked-ness of the context does not affect which built-in operators
             // are applicable.
             kind = kind.OperatorWithLogical();
-
-            // The spec states that overload resolution is performed upon the infinite set of
-            // operators defined on enumerated types, pointers and delegates. Clearly we cannot
-            // construct the infinite set; we have to pare it down. Previous implementations of C#
-            // implement a much stricter rule; they only add the special operators to the candidate
-            // set if one of the operands is of the relevant type. This means that operands
-            // involving user-defined implicit conversions from class or struct types to enum,
-            // pointer and delegate types do not cause the right candidates to participate in
-            // overload resolution. It also presents numerous problems involving delegate variance
-            // and conversions from lambdas to delegate types.
-            //
-            // It is onerous to require the actually specified behavior. We should change the
-            // specification to match the previous implementation.
-
             var operators = ArrayBuilder<BinaryOperatorSignature>.GetInstance();
             bool isEquality = kind == BinaryOperatorKind.Equal || kind == BinaryOperatorKind.NotEqual;
             if (isEquality && UseOnlyReferenceEquality(left, right, ref useSiteDiagnostics))
@@ -487,8 +490,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 this.Compilation.builtInOperators.GetSimpleBuiltInOperators(kind, operators);
+
+                // SPEC 7.3.4: For predefined enum and delegate operators, the only operators
+                // considered are those defined by an enum or delegate type that is the binding
+                //-time type of one of the operands.
                 GetDelegateOperations(kind, left, right, operators, ref useSiteDiagnostics);
                 GetEnumOperations(kind, left, right, operators);
+
+                // We similarly limit pointer operator candidates considered.
                 GetPointerOperators(kind, left, right, operators);
             }
 
@@ -562,7 +571,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var operators = ArrayBuilder<BinaryOperatorAnalysisResult>.GetInstance();
             TypeSymbol leftType = left.Type;
-            TypeSymbol strippedLeftType = ((object)leftType == null) ? null : leftType.StrippedType();
+            TypeSymbol strippedLeftType = leftType?.StrippedType();
 
             bool hadApplicableCandidate = false;
 
@@ -576,7 +585,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             TypeSymbol rightType = right.Type;
-            TypeSymbol strippedRightType = ((object)rightType == null) ? null : rightType.StrippedType();
+            TypeSymbol strippedRightType = rightType?.StrippedType();
             if ((object)strippedRightType != null && !strippedRightType.Equals(strippedLeftType) &&
                 !OperatorFacts.DefinitelyHasNoUserDefinedOperators(strippedRightType))
             {
@@ -612,10 +621,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     // Return types must match exactly, parameters might match modulo identity conversion.
                     if (op.Signature.Kind == existingSignature.Kind && // Easy out
-                        op.Signature.ReturnType.Equals(existingSignature.ReturnType, ignoreDynamic: false) &&
-                        op.Signature.LeftType.Equals(existingSignature.LeftType, ignoreDynamic: true) &&
-                        op.Signature.RightType.Equals(existingSignature.RightType, ignoreDynamic: true) &&
-                        op.Signature.Method.ContainingType.Equals(existingSignature.Method.ContainingType, ignoreDynamic: true))
+                        op.Signature.ReturnType.Equals(existingSignature.ReturnType, TypeCompareKind.ConsiderEverything) &&
+                        op.Signature.LeftType.Equals(existingSignature.LeftType, TypeCompareKind.IgnoreDynamicAndTupleNames) &&
+                        op.Signature.RightType.Equals(existingSignature.RightType, TypeCompareKind.IgnoreDynamicAndTupleNames) &&
+                        op.Signature.Method.ContainingType.Equals(existingSignature.Method.ContainingType, TypeCompareKind.IgnoreDynamicAndTupleNames))
                     {
                         equivalentToExisting = true;
                         break;
@@ -685,7 +694,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             operators.Free();
 
             return hadApplicableCandidates;
-
         }
 
         private void GetUserDefinedBinaryOperatorsFromType(
@@ -803,7 +811,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // UNDONE: This is a naive quadratic algorithm; there is a linear algorithm that works. Consider using it.
             var candidates = result.Results;
-            for (int i = 0; i < candidates.Count; ++i)
+            for (int i = 1; i < candidates.Count; ++i)
             {
                 if (candidates[i].Kind != OperatorAnalysisResultKind.Applicable)
                 {
@@ -811,12 +819,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 // Is this applicable operator better than every other applicable method?
-                for (int j = 0; j < candidates.Count; ++j)
+                for (int j = 0; j < i; ++j)
                 {
-                    if (i == j)
-                    {
-                        continue;
-                    }
                     if (candidates[j].Kind == OperatorAnalysisResultKind.Inapplicable)
                     {
                         continue;
@@ -834,15 +838,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private bool IsApplicable(BinaryOperatorSignature binaryOperator, BoundExpression left, BoundExpression right, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
-        {
-            return
-                Conversions.ClassifyImplicitConversionFromExpression(left, binaryOperator.LeftType, ref useSiteDiagnostics).Exists &&
-                Conversions.ClassifyImplicitConversionFromExpression(right, binaryOperator.RightType, ref useSiteDiagnostics).Exists;
-        }
-
         private BetterResult BetterOperator(BinaryOperatorSignature op1, BinaryOperatorSignature op2, BoundExpression left, BoundExpression right, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
+            Debug.Assert(op1.Priority.HasValue == op2.Priority.HasValue);
+
+            // We use Priority as a tie-breaker to help match native compiler bugs.
+            if (op1.Priority.HasValue && op2.Priority.HasValue && op1.Priority.GetValueOrDefault() != op2.Priority.GetValueOrDefault())
+            {
+                return (op1.Priority.GetValueOrDefault() < op2.Priority.GetValueOrDefault()) ? BetterResult.Left : BetterResult.Right;
+            }
+
             BetterResult leftBetter = BetterConversionFromExpression(left, op1.LeftType, op2.LeftType, ref useSiteDiagnostics);
             BetterResult rightBetter = BetterConversionFromExpression(right, op1.RightType, op2.RightType, ref useSiteDiagnostics);
 

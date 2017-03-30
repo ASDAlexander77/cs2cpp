@@ -32,7 +32,7 @@ namespace Il2Native.Logic.DOM2
         internal void Parse(BoundSwitchSection boundSwitchSection)
         {
             base.Parse(boundSwitchSection);
-            foreach (var boundSwitchLabel in boundSwitchSection.BoundSwitchLabels)
+            foreach (var boundSwitchLabel in boundSwitchSection.SwitchLabels)
             {
                 Debug.Assert(boundSwitchLabel.ExpressionOpt == null, "check it");
                 var sourceLabelSymbol = (boundSwitchLabel.Label as SourceLabelSymbol);

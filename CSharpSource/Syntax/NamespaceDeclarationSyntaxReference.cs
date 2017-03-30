@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Threading;
@@ -20,7 +20,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override SyntaxNode Translate(SyntaxReference reference, CancellationToken cancellationToken)
         {
-            var node = (CSharpSyntaxNode)reference.GetSyntax();
+            var node = (CSharpSyntaxNode)reference.GetSyntax(cancellationToken);
 
             // If the node is a name syntax, it's something like "X" or "X.Y" in :
             //    namespace X.Y.Z

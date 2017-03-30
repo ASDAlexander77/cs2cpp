@@ -1,10 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Syntax;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -14,16 +13,36 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     public abstract partial class CSharpSyntaxRewriter : CSharpSyntaxVisitor<SyntaxNode>
     {
-        private readonly bool visitIntoStructuredTrivia;
+        private readonly bool _visitIntoStructuredTrivia;
 
         public CSharpSyntaxRewriter(bool visitIntoStructuredTrivia = false)
         {
-            this.visitIntoStructuredTrivia = visitIntoStructuredTrivia;
+            _visitIntoStructuredTrivia = visitIntoStructuredTrivia;
         }
 
         public virtual bool VisitIntoStructuredTrivia
         {
-            get { return this.visitIntoStructuredTrivia; }
+            get { return _visitIntoStructuredTrivia; }
+        }
+
+        private int _recursionDepth;
+
+        public override SyntaxNode Visit(SyntaxNode node)
+        {
+            if (node != null)
+            {
+                _recursionDepth++;
+                StackGuard.EnsureSufficientExecutionStack(_recursionDepth);
+
+                var result = ((CSharpSyntaxNode)node).Accept(this);
+
+                _recursionDepth--;
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public virtual SyntaxToken VisitToken(SyntaxToken token)
@@ -98,7 +117,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var newStructure = (StructuredTriviaSyntax)this.Visit(structure);
                 if (newStructure != structure)
                 {
-                    return SyntaxFactory.Trivia(newStructure);
+                    if (newStructure != null)
+                    {
+                        return SyntaxFactory.Trivia(newStructure);
+                    }
+                    else
+                    {
+                        return default(SyntaxTrivia);
+                    }
                 }
             }
 
@@ -170,7 +196,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         if (visitedSeparator.RawKind == 0)
                         {
-                            throw new InvalidOperationException(CSharpResources.SeparatorIsExpected);
+                            throw new InvalidOperationException(CodeAnalysisResources.SeparatorIsExpected);
                         }
                         alternate.AddSeparator(visitedSeparator);
                     }
@@ -178,7 +204,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         if (visitedNode == null)
                         {
-                            throw new InvalidOperationException(CSharpResources.ElementIsExpected);
+                            throw new InvalidOperationException(CodeAnalysisResources.ElementIsExpected);
                         }
                     }
                 }
@@ -233,7 +259,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     alternate.Add(list, 0, index);
                 }
 
-                if (alternate != null && visited.CSharpKind() != SyntaxKind.None) //skip the null check since SyntaxToken is a value type
+                if (alternate != null && visited.Kind() != SyntaxKind.None) //skip the null check since SyntaxToken is a value type
                 {
                     alternate.Add(visited);
                 }
@@ -267,7 +293,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         alternate.Add(list, 0, index);
                     }
 
-                    if (alternate != null && visited.CSharpKind() != SyntaxKind.None)
+                    if (alternate != null && visited.Kind() != SyntaxKind.None)
                     {
                         alternate.Add(visited);
                     }

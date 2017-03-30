@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -22,12 +22,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if ((object)symbol == null)
             {
-                throw new ArgumentNullException("symbol");
+                throw new ArgumentNullException(nameof(symbol));
             }
 
             if ((object)within == null)
             {
-                throw new ArgumentNullException("within");
+                throw new ArgumentNullException(nameof(within));
             }
 
             HashSet<DiagnosticInfo> useSiteDiagnostics = null;
@@ -47,52 +47,16 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if ((object)symbol == null)
             {
-                throw new ArgumentNullException("symbol");
+                throw new ArgumentNullException(nameof(symbol));
             }
 
             if ((object)within == null)
             {
-                throw new ArgumentNullException("within");
+                throw new ArgumentNullException(nameof(within));
             }
 
             HashSet<DiagnosticInfo> useSiteDiagnostics = null;
             return AccessCheck.IsSymbolAccessible(symbol, within, ref useSiteDiagnostics);
-        }
-
-        private static readonly HashSet<string> supportedOperators =
-            new HashSet<string>(StringComparer.Ordinal)
-            {
-                WellKnownMemberNames.AdditionOperatorName,
-                WellKnownMemberNames.BitwiseAndOperatorName,
-                WellKnownMemberNames.BitwiseOrOperatorName,
-                WellKnownMemberNames.DecrementOperatorName,
-                WellKnownMemberNames.DivisionOperatorName,
-                WellKnownMemberNames.EqualityOperatorName,
-                WellKnownMemberNames.ExclusiveOrOperatorName,
-                WellKnownMemberNames.ExplicitConversionName,
-                WellKnownMemberNames.FalseOperatorName,
-                WellKnownMemberNames.GreaterThanOperatorName,
-                WellKnownMemberNames.GreaterThanOrEqualOperatorName,
-                WellKnownMemberNames.ImplicitConversionName,
-                WellKnownMemberNames.IncrementOperatorName,
-                WellKnownMemberNames.InequalityOperatorName,
-                WellKnownMemberNames.LeftShiftOperatorName,
-                WellKnownMemberNames.LessThanOperatorName,
-                WellKnownMemberNames.LessThanOrEqualOperatorName,
-                WellKnownMemberNames.LogicalNotOperatorName,
-                WellKnownMemberNames.ModulusOperatorName,
-                WellKnownMemberNames.MultiplyOperatorName,
-                WellKnownMemberNames.OnesComplementOperatorName,
-                WellKnownMemberNames.RightShiftOperatorName,
-                WellKnownMemberNames.SubtractionOperatorName,
-                WellKnownMemberNames.TrueOperatorName,
-                WellKnownMemberNames.UnaryNegationOperatorName,
-                WellKnownMemberNames.UnaryPlusOperatorName
-            };
-
-        public static bool IsSupportedOperatorName(string name)
-        {
-            return supportedOperators.Contains(name);
         }
     }
 }

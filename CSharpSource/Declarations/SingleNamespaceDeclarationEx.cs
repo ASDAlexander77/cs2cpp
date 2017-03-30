@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -10,20 +10,20 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal sealed class SingleNamespaceDeclarationEx : SingleNamespaceDeclaration
     {
-        private readonly bool hasUsings;
-        private readonly bool hasExternAliases;
+        private readonly bool _hasUsings;
+        private readonly bool _hasExternAliases;
 
         public SingleNamespaceDeclarationEx(string name, bool hasUsings, bool hasExternAliases, SyntaxReference syntaxReference, SourceLocation nameLocation, ImmutableArray<SingleNamespaceOrTypeDeclaration> children) : base(name, syntaxReference, nameLocation, children)
         {
-            this.hasUsings = hasUsings;
-            this.hasExternAliases = hasExternAliases;
+            _hasUsings = hasUsings;
+            _hasExternAliases = hasExternAliases;
         }
 
         public override bool HasUsings
         {
             get
             {
-                return this.hasUsings;
+                return _hasUsings;
             }
         }
 
@@ -31,7 +31,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return this.hasExternAliases;
+                return _hasExternAliases;
             }
         }
     }

@@ -1,12 +1,10 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
+using System.Linq;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Diagnostics;
-using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -20,25 +18,29 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="method">the method to be analyzed</param>
         /// <param name="block">the method's body</param>
         /// <param name="diagnostics">the receiver of the reported diagnostics</param>
+        /// <param name="hasTrailingExpression">indicates whether this Script had a trailing expression</param>
+        /// <param name="originalBodyNested">the original method body is the last statement in the block</param>
         /// <returns>the rewritten block for the method (with a return statement possibly inserted)</returns>
         public static BoundBlock Rewrite(
             MethodSymbol method,
             BoundBlock block,
-            DiagnosticBag diagnostics)
+            DiagnosticBag diagnostics,
+            bool hasTrailingExpression,
+            bool originalBodyNested)
         {
+#if DEBUG
+            // We should only see a trailingExpression if we're in a Script initializer.
+            Debug.Assert(!hasTrailingExpression || method.IsScriptInitializer);
+            var initialDiagnosticCount = diagnostics.ToReadOnly().Length;
+#endif
             var compilation = method.DeclaringCompilation;
 
-            if (method.ReturnsVoid || (object)method.IteratorElementType != null
-                || (method.IsAsync && compilation.GetWellKnownType(WellKnownType.System_Threading_Tasks_Task) == method.ReturnType))
+            if (method.ReturnsVoid || method.IsIterator || method.IsTaskReturningAsync(compilation))
             {
-                var sourceMethod = method as SourceMethodSymbol;
-
-                if ((method.IsImplicitlyDeclared && 
-                     !((object)sourceMethod != null && sourceMethod.IsPrimaryCtor && (object)((SourceMemberContainerTypeSymbol)sourceMethod.ContainingType).PrimaryCtor == (object)sourceMethod)) || 
-                    Analyze(compilation, method, block, diagnostics))
+                // we don't analyze synthesized void methods.
+                if ((method.IsImplicitlyDeclared && !method.IsScriptInitializer) || Analyze(compilation, method, block, diagnostics))
                 {
-                    // we don't analyze synthesized void methods.
-                    block = AppendImplicitReturn(block, method, (object)sourceMethod != null ? sourceMethod.BlockSyntax : null);
+                    block = AppendImplicitReturn(block, method, (CSharpSyntaxNode)(method as SourceMethodSymbol)?.BodySyntax, originalBodyNested);
                 }
             }
             else if (Analyze(compilation, method, block, diagnostics))
@@ -48,9 +50,27 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // will be reported by the lambda binder.
                 Debug.Assert(method.MethodKind != MethodKind.AnonymousFunction);
 
+                // Add implicit "return default(T)" if this is a submission that does not have a trailing expression.
+                var submissionResultType = (method as SynthesizedInteractiveInitializerMethod)?.ResultType;
+                if (!hasTrailingExpression && ((object)submissionResultType != null))
+                {
+                    Debug.Assert(submissionResultType.SpecialType != SpecialType.System_Void);
+
+                    var trailingExpression = new BoundDefaultOperator(method.GetNonNullSyntaxNode(), submissionResultType);
+                    var newStatements = block.Statements.Add(new BoundReturnStatement(trailingExpression.Syntax, RefKind.None, trailingExpression));
+                    block = new BoundBlock(block.Syntax, ImmutableArray<LocalSymbol>.Empty, newStatements) { WasCompilerGenerated = true };
+#if DEBUG
+                    // It should not be necessary to repeat analysis after adding this node, because adding a trailing
+                    // return in cases where one was missing should never produce different Diagnostics.
+                    var flowAnalysisDiagnostics = DiagnosticBag.GetInstance();
+                    Debug.Assert(!Analyze(compilation, method, block, flowAnalysisDiagnostics));
+                    Debug.Assert(flowAnalysisDiagnostics.ToReadOnly().SequenceEqual(diagnostics.ToReadOnly().Skip(initialDiagnosticCount)));
+                    flowAnalysisDiagnostics.Free();
+#endif
+                }
                 // If there's more than one location, then the method is partial and we
                 // have already reported a non-void partial method error.
-                if (method.Locations.Length == 1)
+                else if (method.Locations.Length == 1)
                 {
                     diagnostics.Add(ErrorCode.ERR_ReturnExpected, method.Locations[0], method);
                 }
@@ -59,41 +79,45 @@ namespace Microsoft.CodeAnalysis.CSharp
             return block;
         }
 
+        private static BoundBlock AppendImplicitReturn(BoundBlock body, MethodSymbol method, CSharpSyntaxNode syntax, bool originalBodyNested)
+        {
+            if (originalBodyNested)
+            {
+                var statements = body.Statements;
+                int n = statements.Length;
+
+                var builder = ArrayBuilder<BoundStatement>.GetInstance(n);
+                builder.AddRange(statements, n - 1);
+                builder.Add(AppendImplicitReturn((BoundBlock)statements[n - 1], method, syntax));
+
+                return body.Update(body.Locals, ImmutableArray<LocalFunctionSymbol>.Empty, builder.ToImmutableAndFree());
+            }
+            else
+            {
+                return AppendImplicitReturn(body, method, syntax);
+            }
+        }
+
         // insert the implicit "return" statement at the end of the method body
         // Normally, we wouldn't bother attaching syntax trees to compiler-generated nodes, but these
         // ones are going to have sequence points.
-        internal static BoundBlock AppendImplicitReturn(BoundStatement node, MethodSymbol method = null, CSharpSyntaxNode syntax = null)
+        internal static BoundBlock AppendImplicitReturn(BoundBlock body, MethodSymbol method, SyntaxNode syntax = null)
         {
+            Debug.Assert(body != null);
+            Debug.Assert(method != null);
+
             if (syntax == null)
             {
-                syntax = node.Syntax;
+                syntax = body.Syntax;
             }
 
-            BoundStatement ret =
-                (object)method != null && (object)method.IteratorElementType != null
-                ? BoundYieldBreakStatement.Synthesized(syntax) as BoundStatement
-                : BoundReturnStatement.Synthesized(syntax, null);
+            Debug.Assert(body.WasCompilerGenerated || syntax.IsKind(SyntaxKind.Block) || syntax.IsKind(SyntaxKind.ArrowExpressionClause));
 
-            if (syntax.Kind == SyntaxKind.Block)
-            {
-                var blockSyntax = (BlockSyntax)syntax;
+            BoundStatement ret = method.IsIterator
+                ? (BoundStatement)BoundYieldBreakStatement.Synthesized(syntax)
+                : BoundReturnStatement.Synthesized(syntax, RefKind.None, null);
 
-                ret = new BoundSequencePointWithSpan(
-                    blockSyntax,
-                    ret,
-                    blockSyntax.CloseBraceToken.Span)
-                { WasCompilerGenerated = true };
-            }
-
-            switch (node.Kind)
-            {
-                case BoundKind.Block:
-                    var block = (BoundBlock)node;
-                    return block.Update(block.Locals, block.Statements.Add(ret));
-
-                default:
-                    return new BoundBlock(syntax, ImmutableArray<LocalSymbol>.Empty, ImmutableArray.Create(ret, node));
-            }
+            return body.Update(body.Locals, body.LocalFunctions, body.Statements.Add(ret));
         }
 
         private static bool Analyze(
@@ -104,7 +128,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var result = ControlFlowPass.Analyze(compilation, method, block, diagnostics);
             DataFlowPass.Analyze(compilation, method, block, diagnostics);
-            DisposeCheckerPass.Analyze(compilation, method, block, diagnostics);
             return result;
         }
     }

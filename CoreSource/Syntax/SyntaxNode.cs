@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -12,26 +12,26 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
+#pragma warning disable RS0010
     /// <summary>
     /// Represents a non-terminal node in the syntax tree. This is the language agnostic equivalent of <see
     /// cref="T:Microsoft.CodeAnalysis.CSharp.SyntaxNode"/> and <see cref="T:Microsoft.CodeAnalysis.VisualBasic.SyntaxNode"/>.
     /// </summary>
+#pragma warning restore RS0010
     [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
     public abstract partial class SyntaxNode
     {
-        private readonly GreenNode green;
-        private readonly SyntaxNode parent;
+        private readonly SyntaxNode _parent;
         internal SyntaxTree _syntaxTree;
-        private readonly int position;
 
         internal SyntaxNode(GreenNode green, SyntaxNode parent, int position)
         {
             Debug.Assert(position >= 0, "position cannot be negative");
-            Debug.Assert(parent == null || !parent.Green.IsList, "list cannot be a parent");
+            Debug.Assert(parent?.Green.IsList != true, "list cannot be a parent");
 
-            this.position = position;
-            this.green = green;
-            this.parent = parent;
+            Position = position;
+            Green = green;
+            _parent = parent;
         }
 
         /// <summary>
@@ -44,8 +44,6 @@ namespace Microsoft.CodeAnalysis
             this._syntaxTree = syntaxTree;
         }
 
-        internal abstract AbstractSyntaxNavigator Navigator { get; }
-
         private string GetDebuggerDisplay()
         {
             return GetType().Name + " " + KindText + " " + ToString();
@@ -54,71 +52,35 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// An integer representing the language specific kind of this node.
         /// </summary>
-        public int RawKind
-        {
-            get { return green.RawKind; }
-        }
+        public int RawKind => Green.RawKind;
 
-        protected abstract string KindText { get; }
+        protected string KindText => Green.KindText;
 
         /// <summary>
         /// The language name that this node is syntax of.
         /// </summary>
         public abstract string Language { get; }
 
-        internal GreenNode Green
-        {
-            get { return this.green; }
-        }
+        internal GreenNode Green { get; }
 
-        internal int Position
-        {
-            get { return this.position; }
-        }
+        internal int Position { get; }
 
-        internal int EndPosition
-        {
-            get { return this.position + this.green.FullWidth; }
-        }
+        internal int EndPosition => Position + Green.FullWidth;
 
         /// <summary>
         /// Returns SyntaxTree that owns the node or null if node does not belong to a
         /// SyntaxTree
         /// </summary>
-        public SyntaxTree SyntaxTree
-        {
-            get
-            {
-                return this.SyntaxTreeCore;
-            }
-        }
+        public SyntaxTree SyntaxTree => this.SyntaxTreeCore;
 
-        internal bool IsList
-        {
-            get
-            {
-                return this.Green.IsList;
-            }
-        }
+        internal bool IsList => this.Green.IsList;
 
         /// <summary>
         /// The absolute span of this node in characters, including its leading and trailing trivia.
         /// </summary>
-        public TextSpan FullSpan
-        {
-            get
-            {
-                return new TextSpan(this.Position, this.Green.FullWidth);
-            }
-        }
+        public TextSpan FullSpan => new TextSpan(this.Position, this.Green.FullWidth);
 
-        internal int SlotCount
-        {
-            get
-            {
-                return this.Green.SlotCount;
-            }
-        }
+        internal int SlotCount => this.Green.SlotCount;
 
         /// <summary>
         /// The absolute span of this node in characters, not including its leading and trailing trivia.
@@ -150,13 +112,7 @@ namespace Microsoft.CodeAnalysis
         /// <remarks>
         /// Slight performance improvement.
         /// </remarks>
-        public int SpanStart
-        {
-            get
-            {
-                return Position + Green.GetLeadingTriviaWidth();
-            }
-        }
+        public int SpanStart => Position + Green.GetLeadingTriviaWidth();
 
         /// <summary>
         /// The width of the node in characters, not including leading and trailing trivia.
@@ -164,26 +120,14 @@ namespace Microsoft.CodeAnalysis
         /// <remarks>
         /// The Width property returns the same value as Span.Length, but is somewhat more efficient.
         /// </remarks>
-        internal int Width
-        {
-            get
-            {
-                return this.Green.Width;
-            }
-        }
+        internal int Width => this.Green.Width;
 
         /// <summary>
         /// The complete width of the node in characters, including leading and trailing trivia.
         /// </summary>
         /// <remarks>The FullWidth property returns the same value as FullSpan.Length, but is
         /// somewhat more efficient.</remarks>
-        internal int FullWidth
-        {
-            get
-            {
-                return this.Green.FullWidth;
-            }
-        }
+        internal int FullWidth => this.Green.FullWidth;
 
         // this is used in cases where we know that a child is a node of particular type.
         internal SyntaxNode GetRed(ref SyntaxNode field, int slot)
@@ -195,8 +139,8 @@ namespace Microsoft.CodeAnalysis
                 var green = this.Green.GetSlot(slot);
                 if (green != null)
                 {
-                    result = green.CreateRed(this, this.GetChildPosition(slot));
-                    result = Interlocked.CompareExchange(ref field, result, null) ?? result;
+                    Interlocked.CompareExchange(ref field, green.CreateRed(this, this.GetChildPosition(slot)), null);
+                    result = field;
                 }
             }
 
@@ -213,8 +157,8 @@ namespace Microsoft.CodeAnalysis
                 var green = this.Green.GetSlot(0);
                 if (green != null)
                 {
-                    result = green.CreateRed(this, this.Position);
-                    result = Interlocked.CompareExchange(ref field, result, null) ?? result;
+                    Interlocked.CompareExchange(ref field, green.CreateRed(this, this.Position), null);
+                    result = field;
                 }
             }
 
@@ -230,8 +174,8 @@ namespace Microsoft.CodeAnalysis
                 var green = this.Green.GetSlot(slot);
                 if (green != null)
                 {
-                    result = (T)green.CreateRed(this, this.GetChildPosition(slot));
-                    result = Interlocked.CompareExchange(ref field, result, null) ?? result;
+                    Interlocked.CompareExchange(ref field, (T)green.CreateRed(this, this.GetChildPosition(slot)), null);
+                    result = field;
                 }
             }
 
@@ -248,8 +192,8 @@ namespace Microsoft.CodeAnalysis
                 var green = this.Green.GetSlot(0);
                 if (green != null)
                 {
-                    result = (T)green.CreateRed(this, this.Position);
-                    result = Interlocked.CompareExchange(ref field, result, null) ?? result;
+                    Interlocked.CompareExchange(ref field, (T)green.CreateRed(this, this.Position), null);
+                    result = field;
                 }
             }
 
@@ -270,11 +214,9 @@ namespace Microsoft.CodeAnalysis
             if (result == null)
             {
                 var green = this.Green.GetSlot(slot);
-                result = green.CreateRed(this.Parent, this.GetChildPosition(slot)); // <- passing list's parent
-                if (Interlocked.CompareExchange(ref element, result, null) != null)
-                {
-                    result = element;
-                }
+                // passing list's parent
+                Interlocked.CompareExchange(ref element, green.CreateRed(this.Parent, this.GetChildPosition(slot)), null);
+                result = element;
             }
 
             return result;
@@ -294,11 +236,9 @@ namespace Microsoft.CodeAnalysis
                 var green = this.Green.GetSlot(1);
                 if (!green.IsToken)
                 {
-                    result = green.CreateRed(this.Parent, this.GetChildPosition(1)); // <- passing list's parent
-                    if (Interlocked.CompareExchange(ref element, result, null) != null)
-                    {
-                        result = element;
-                    }
+                    // passing list's parent
+                    Interlocked.CompareExchange(ref element, green.CreateRed(this.Parent, this.GetChildPosition(1)), null);
+                    result = element;
                 }
             }
 
@@ -307,9 +247,8 @@ namespace Microsoft.CodeAnalysis
 
         internal SyntaxNode GetWeakRedElement(ref WeakReference<SyntaxNode> slot, int index)
         {
-            SyntaxNode value;
-            WeakReference<SyntaxNode> weak = slot;
-            if (weak != null && weak.TryGetTarget(out value))
+            SyntaxNode value = null;
+            if (slot?.TryGetTarget(out value) == true)
             {
                 return value;
             }
@@ -326,9 +265,9 @@ namespace Microsoft.CodeAnalysis
 
             while (true)
             {
-                SyntaxNode previousNode;
+                SyntaxNode previousNode = null;
                 WeakReference<SyntaxNode> previousWeakReference = slot;
-                if (previousWeakReference != null && previousWeakReference.TryGetTarget(out previousNode))
+                if (previousWeakReference?.TryGetTarget(out previousNode) == true)
                 {
                     return previousNode;
                 }
@@ -340,25 +279,33 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-
         /// <summary>
         /// Returns the string representation of this node, not including its leading and trailing trivia.
         /// </summary>
         /// <returns>The string representation of this node, not including its leading and trailing trivia.</returns>
         /// <remarks>The length of the returned string is always the same as Span.Length</remarks>
-        public abstract override string ToString();
+        public override string ToString()
+        {
+            return this.Green.ToString();
+        }
 
         /// <summary>
         /// Returns full string representation of this node including its leading and trailing trivia.
         /// </summary>
         /// <returns>The full string representation of this node including its leading and trailing trivia.</returns>
         /// <remarks>The length of the returned string is always the same as FullSpan.Length</remarks>
-        public abstract string ToFullString();
+        public virtual string ToFullString()
+        {
+            return this.Green.ToFullString();
+        }
 
         /// <summary>
         /// Writes the full text of this node to the specified <see cref="TextWriter"/>.
         /// </summary>
-        public abstract void WriteTo(TextWriter writer);
+        public virtual void WriteTo(TextWriter writer)
+        {
+            this.Green.WriteTo(writer, leading: true, trailing: true);
+        }
 
         /// <summary>
         /// Gets the full text of this node as an new <see cref="SourceText"/> instance.
@@ -369,11 +316,15 @@ namespace Microsoft.CodeAnalysis
         /// If the encoding is not specified the <see cref="SourceText"/> isn't debuggable.
         /// If an encoding-less <see cref="SourceText"/> is written to a file a <see cref="Encoding.UTF8"/> shall be used as a default.
         /// </param>
-        public SourceText GetText(Encoding encoding = null)
+        /// <param name="checksumAlgorithm">
+        /// Hash algorithm to use to calculate checksum of the text that's saved to PDB.
+        /// </param>
+        /// <exception cref="ArgumentException"><paramref name="checksumAlgorithm"/> is not supported.</exception>
+        public SourceText GetText(Encoding encoding = null, SourceHashAlgorithm checksumAlgorithm = SourceHashAlgorithm.Sha1)
         {
             var builder = new StringBuilder();
             this.WriteTo(new StringWriter(builder));
-            return new StringBuilderText(builder, encoding);
+            return new StringBuilderText(builder, encoding, checksumAlgorithm);
         }
 
         /// <summary>
@@ -381,7 +332,17 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public bool IsEquivalentTo(SyntaxNode other)
         {
-            return EquivalentToCore(other);
+            if (this == other)
+            {
+                return true;
+            }
+
+            if (other == null)
+            {
+                return false;
+            }
+
+            return this.Green.IsEquivalentTo(other.Green);
         }
 
         /// <summary>
@@ -468,13 +429,47 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
+        /// Determines if the specified node is a descendant of this node.
+        /// </summary>
+        public bool Contains(SyntaxNode node)
+        {
+            if (node == null || !this.FullSpan.Contains(node.FullSpan))
+            {
+                return false;
+            }
+
+            while (node != null)
+            {
+                if (node == this)
+                {
+                    return true;
+                }
+
+                if (node.Parent != null)
+                {
+                    node = node.Parent;
+                }
+                else if (node.IsStructuredTrivia)
+                {
+                    node = ((IStructuredTriviaSyntax)node).ParentTrivia.Token.Parent;
+                }
+                else
+                {
+                    node = null;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Determines whether this node has any leading trivia.
         /// </summary>
         public bool HasLeadingTrivia
         {
             get
             {
-                return this.Green.HasLeadingTrivia;
+                return this.GetLeadingTrivia().Count > 0;
             }
         }
 
@@ -485,7 +480,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return this.Green.HasTrailingTrivia;
+                return this.GetTrailingTrivia().Count > 0;
             }
         }
 
@@ -552,6 +547,25 @@ namespace Microsoft.CodeAnalysis
             return this.SyntaxTree.GetLocation(this.Span);
         }
 
+        internal Location Location
+        {
+            get
+            {
+                // SyntaxNodes always has a non-null SyntaxTree, however the tree might be rooted at a node which is not a CompilationUnit.
+                // These kind of nodes may be seen during binding in couple of scenarios:
+                //   (a) Compiler synthesized syntax nodes (e.g. missing nodes, qualified names for command line using directives, etc.)
+                //   (b) Speculatively binding syntax nodes through the semantic model.
+                //
+                // For scenario (a), we need to ensure that we return NoLocation for generating location agnostic compiler diagnostics.
+                // For scenario (b), at present, we do not expose the diagnostics for speculative binding, hence we can return NoLocation.
+                // In future, if we decide to support this, we will need some mechanism to distinguish between scenarios (a) and (b) here.
+
+                var tree = this.SyntaxTree;
+                Debug.Assert(tree != null);
+                return !tree.SupportsLocations ? NoLocation.Singleton : new SourceLocation(this);
+            }
+        }
+
         /// <summary>
         /// Gets a list of all the diagnostics in the sub tree that has this node as its root.
         /// This method does not filter diagnostics based on #pragmas and compiler options
@@ -563,7 +577,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Gets an SyntaxReference for this syntax node. CommonSyntaxReferences can be used to
+        /// Gets a <see cref="SyntaxReference"/> for this syntax node. CommonSyntaxReferences can be used to
         /// regain access to a syntax node without keeping the entire tree and source text in
         /// memory.
         /// </summary>
@@ -575,13 +589,13 @@ namespace Microsoft.CodeAnalysis
         #region Node Lookup
 
         /// <summary>
-        /// The node that contains this node in its Children collection.
+        /// The node that contains this node in its <see cref="ChildNodes"/> collection.
         /// </summary>
         public SyntaxNode Parent
         {
             get
             {
-                return this.parent;
+                return _parent;
             }
         }
 
@@ -609,7 +623,19 @@ namespace Microsoft.CodeAnalysis
             return new ChildSyntaxList(this);
         }
 
-        public abstract SyntaxNodeOrToken ChildThatContainsPosition(int position);
+        public virtual SyntaxNodeOrToken ChildThatContainsPosition(int position)
+        {
+            //PERF: it is very important to keep this method fast.
+
+            if (!FullSpan.Contains(position))
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+
+            SyntaxNodeOrToken childNodeOrToken = ChildSyntaxList.ChildThatContainsPosition(this, position);
+            Debug.Assert(childNodeOrToken.FullSpan.Contains(position), "ChildThatContainsPosition's return value does not contain the requested position.");
+            return childNodeOrToken;
+        }
 
         /// <summary>
         /// Gets node at given node index. 
@@ -636,9 +662,9 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public IEnumerable<SyntaxNode> Ancestors(bool ascendOutOfTrivia = true)
         {
-            return this.Parent != null
-                ? this.Parent.AncestorsAndSelf(ascendOutOfTrivia)
-                : SpecializedCollections.EmptyEnumerable<SyntaxNode>();
+            return this.Parent?
+                .AncestorsAndSelf(ascendOutOfTrivia) ??
+                SpecializedCollections.EmptyEnumerable<SyntaxNode>();
         }
 
         /// <summary>
@@ -783,12 +809,14 @@ namespace Microsoft.CodeAnalysis
         {
             if (!this.FullSpan.Contains(span))
             {
-                throw new ArgumentOutOfRangeException("span");
+                throw new ArgumentOutOfRangeException(nameof(span));
             }
 
             var node = FindToken(span.Start, findInsideTrivia)
                 .Parent
                 .FirstAncestorOrSelf<SyntaxNode>(a => a.FullSpan.Contains(span));
+
+            var cuRoot = node.SyntaxTree?.GetRoot();
 
             // Tie-breaking.
             if (!getInnermostNodeForTie)
@@ -798,6 +826,8 @@ namespace Microsoft.CodeAnalysis
                     var parent = node.Parent;
                     // NOTE: We care about FullSpan equality, but FullWidth is cheaper and equivalent.
                     if (parent == null || parent.FullWidth != node.FullWidth) break;
+                    // prefer child over compilation unit
+                    if (parent == cuRoot) break;
                     node = parent;
                 }
             }
@@ -827,7 +857,7 @@ namespace Microsoft.CodeAnalysis
         /// <returns>The first token or <c>default(SyntaxToken)</c> if it doesn't exist.</returns>
         public SyntaxToken GetFirstToken(bool includeZeroWidth = false, bool includeSkipped = false, bool includeDirectives = false, bool includeDocumentationComments = false)
         {
-            return this.Navigator.GetFirstToken(this, includeZeroWidth, includeSkipped, includeDirectives, includeDocumentationComments);
+            return SyntaxNavigator.Instance.GetFirstToken(this, includeZeroWidth, includeSkipped, includeDirectives, includeDocumentationComments);
         }
 
         /// <summary>
@@ -836,7 +866,7 @@ namespace Microsoft.CodeAnalysis
         /// <returns>The last token or <c>default(SyntaxToken)</c> if it doesn't exist.</returns>
         public SyntaxToken GetLastToken(bool includeZeroWidth = false, bool includeSkipped = false, bool includeDirectives = false, bool includeDocumentationComments = false)
         {
-            return this.Navigator.GetLastToken(this, includeZeroWidth, includeSkipped, includeDirectives, includeDocumentationComments);
+            return SyntaxNavigator.Instance.GetLastToken(this, includeZeroWidth, includeSkipped, includeDirectives, includeDocumentationComments);
         }
 
         /// <summary>
@@ -900,7 +930,94 @@ namespace Microsoft.CodeAnalysis
         /// </param>
         public SyntaxTrivia FindTrivia(int position, bool findInsideTrivia = false)
         {
-            return FindTriviaCore(position, findInsideTrivia);
+            return FindTrivia(position, findInsideTrivia ? SyntaxTrivia.Any : null);
+        }
+
+        /// <summary>
+        /// Finds a descendant trivia of this node at the specified position, where the position is
+        /// within the span of the node.
+        /// </summary>
+        /// <param name="position">The character position of the trivia relative to the beginning of
+        /// the file.</param>
+        /// <param name="stepInto">Specifies a function that determines per trivia node, whether to
+        /// descend into structured trivia of that node.</param>
+        /// <returns></returns>
+        public SyntaxTrivia FindTrivia(int position, Func<SyntaxTrivia, bool> stepInto)
+        {
+            if (this.FullSpan.Contains(position))
+            {
+                return FindTriviaByOffset(this, position - this.Position, stepInto);
+            }
+
+            return default(SyntaxTrivia);
+        }
+
+        internal static SyntaxTrivia FindTriviaByOffset(SyntaxNode node, int textOffset, Func<SyntaxTrivia, bool> stepInto = null)
+        {
+            recurse:
+            if (textOffset >= 0)
+            {
+                foreach (var element in node.ChildNodesAndTokens())
+                {
+                    var fullWidth = element.FullWidth;
+                    if (textOffset < fullWidth)
+                    {
+                        if (element.IsNode)
+                        {
+                            node = element.AsNode();
+                            goto recurse;
+                        }
+                        else if (element.IsToken)
+                        {
+                            var token = element.AsToken();
+                            var leading = token.LeadingWidth;
+                            if (textOffset < token.LeadingWidth)
+                            {
+                                foreach (var trivia in token.LeadingTrivia)
+                                {
+                                    if (textOffset < trivia.FullWidth)
+                                    {
+                                        if (trivia.HasStructure && stepInto != null && stepInto(trivia))
+                                        {
+                                            node = trivia.GetStructure();
+                                            goto recurse;
+                                        }
+
+                                        return trivia;
+                                    }
+
+                                    textOffset -= trivia.FullWidth;
+                                }
+                            }
+                            else if (textOffset >= leading + token.Width)
+                            {
+                                textOffset -= leading + token.Width;
+                                foreach (var trivia in token.TrailingTrivia)
+                                {
+                                    if (textOffset < trivia.FullWidth)
+                                    {
+                                        if (trivia.HasStructure && stepInto != null && stepInto(trivia))
+                                        {
+                                            node = trivia.GetStructure();
+                                            goto recurse;
+                                        }
+
+                                        return trivia;
+                                    }
+
+                                    textOffset -= trivia.FullWidth;
+                                }
+                            }
+
+                            return default(SyntaxTrivia);
+                        }
+                    }
+
+                    textOffset -= fullWidth;
+                }
+            }
+
+            return default(SyntaxTrivia);
         }
 
         /// <summary>
@@ -1094,12 +1211,11 @@ namespace Microsoft.CodeAnalysis
             }
 
             var annotations = this.Green.GetAnnotations();
-            if (annotations == null || annotations.Length == 0)
+            if (annotations?.Length > 0)
             {
-                return node;
+                return (T)(node.Green.WithAdditionalAnnotationsGreen(annotations)).CreateRed();
             }
-
-            return (T)(node.Green.WithAdditionalAnnotationsGreen(annotations)).CreateRed();
+            return node;
         }
 
         #endregion
@@ -1118,14 +1234,33 @@ namespace Microsoft.CodeAnalysis
             return IsEquivalentToCore(node, topLevel);
         }
 
-        public abstract void SerializeTo(Stream stream, CancellationToken cancellationToken = default(CancellationToken));
+        public virtual void SerializeTo(Stream stream, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            if (!stream.CanWrite)
+            {
+                throw new InvalidOperationException(CodeAnalysisResources.TheStreamCannotBeWrittenTo);
+            }
+
+            using (var writer = new ObjectWriter(stream, cancellationToken: cancellationToken))
+            {
+                writer.WriteValue(this.Green);
+            }
+        }
 
         #region Core Methods
 
         /// <summary>
         /// Determine if this node is structurally equivalent to another.
         /// </summary>
-        protected abstract bool EquivalentToCore(SyntaxNode other);
+        protected virtual bool EquivalentToCore(SyntaxNode other)
+        {
+            return IsEquivalentTo(other);
+        }
 
         /// <summary>
         /// Returns SyntaxTree that owns the node or null if node does not belong to a
@@ -1141,7 +1276,73 @@ namespace Microsoft.CodeAnalysis
         /// True to return tokens that are part of trivia.
         /// If false finds the token whose full span (including trivia) includes the position.
         /// </param>
-        protected abstract SyntaxToken FindTokenCore(int position, bool findInsideTrivia);
+        protected virtual SyntaxToken FindTokenCore(int position, bool findInsideTrivia)
+        {
+            if (findInsideTrivia)
+            {
+                return this.FindToken(position, SyntaxTrivia.Any);
+            }
+
+            SyntaxToken EoF;
+            if (this.TryGetEofAt(position, out EoF))
+            {
+                return EoF;
+            }
+
+            if (!this.FullSpan.Contains(position))
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+
+            return this.FindTokenInternal(position);
+        }
+
+        private bool TryGetEofAt(int position, out SyntaxToken Eof)
+        {
+            if (position == this.EndPosition)
+            {
+                var compilationUnit = this as ICompilationUnitSyntax;
+                if (compilationUnit != null)
+                {
+                    Eof = compilationUnit.EndOfFileToken;
+                    Debug.Assert(Eof.EndPosition == position);
+                    return true;
+                }
+            }
+
+            Eof = default(SyntaxToken);
+            return false;
+        }
+
+        internal SyntaxToken FindTokenInternal(int position)
+        {
+            // While maintaining invariant   curNode.Position <= position < curNode.FullSpan.End
+            // go down the tree until a token is found
+            SyntaxNodeOrToken curNode = this;
+
+            while (true)
+            {
+                Debug.Assert(curNode.RawKind != 0);
+                Debug.Assert(curNode.FullSpan.Contains(position));
+
+                var node = curNode.AsNode();
+
+                if (node != null)
+                {
+                    //find a child that includes the position
+                    curNode = node.ChildThatContainsPosition(position);
+                }
+                else
+                {
+                    return curNode.AsToken();
+                }
+            }
+        }
+
+        private SyntaxToken FindToken(int position, Func<SyntaxTrivia, bool> findInsideTrivia)
+        {
+            return FindTokenCore(position, findInsideTrivia);
+        }
 
         /// <summary>
         /// Finds a descendant token of this node whose span includes the supplied position. 
@@ -1151,14 +1352,65 @@ namespace Microsoft.CodeAnalysis
         /// Applied on every structured trivia. Return false if the tokens included in the trivia should be skipped. 
         /// Pass null to skip all structured trivia.
         /// </param>
-        protected abstract SyntaxToken FindTokenCore(int position, Func<SyntaxTrivia, bool> stepInto);
+        protected virtual SyntaxToken FindTokenCore(int position, Func<SyntaxTrivia, bool> stepInto)
+        {
+            var token = this.FindToken(position, findInsideTrivia: false);
+            if (stepInto != null)
+            {
+                var trivia = GetTriviaFromSyntaxToken(position, token);
+
+                if (trivia.HasStructure && stepInto(trivia))
+                {
+                    token = trivia.GetStructure().FindTokenInternal(position);
+                }
+            }
+
+            return token;
+        }
+
+        internal static SyntaxTrivia GetTriviaFromSyntaxToken(int position, SyntaxToken token)
+        {
+            var span = token.Span;
+            var trivia = new SyntaxTrivia();
+            if (position < span.Start && token.HasLeadingTrivia)
+            {
+                trivia = GetTriviaThatContainsPosition(token.LeadingTrivia, position);
+            }
+            else if (position >= span.End && token.HasTrailingTrivia)
+            {
+                trivia = GetTriviaThatContainsPosition(token.TrailingTrivia, position);
+            }
+
+            return trivia;
+        }
+
+        internal static SyntaxTrivia GetTriviaThatContainsPosition(SyntaxTriviaList list, int position)
+        {
+            foreach (var trivia in list)
+            {
+                if (trivia.FullSpan.Contains(position))
+                {
+                    return trivia;
+                }
+
+                if (trivia.Position > position)
+                {
+                    break;
+                }
+            }
+
+            return default(SyntaxTrivia);
+        }
 
         /// <summary>
         /// Finds a descendant trivia of this node whose span includes the supplied position.
         /// </summary>
         /// <param name="position">The character position of the trivia relative to the beginning of the file.</param>
         /// <param name="findInsideTrivia">Whether to search inside structured trivia.</param>
-        protected abstract SyntaxTrivia FindTriviaCore(int position, bool findInsideTrivia);
+        protected virtual SyntaxTrivia FindTriviaCore(int position, bool findInsideTrivia)
+        {
+            return FindTrivia(position, findInsideTrivia);
+        }
 
         /// <summary>
         /// Creates a new tree of nodes with the specified nodes, tokens or trivia replaced.
@@ -1186,7 +1438,7 @@ namespace Microsoft.CodeAnalysis
             IEnumerable<SyntaxNode> nodes,
             SyntaxRemoveOptions options);
 
-        protected internal abstract SyntaxNode NormalizeWhitespaceCore(string indentation, bool elasticTrivia);
+        protected internal abstract SyntaxNode NormalizeWhitespaceCore(string indentation, string eol, bool elasticTrivia);
 
         /// <summary>
         /// Determines if two nodes are the same, disregarding trivia differences.
@@ -1200,5 +1452,35 @@ namespace Microsoft.CodeAnalysis
         protected abstract bool IsEquivalentToCore(SyntaxNode node, bool topLevel = false);
 
         #endregion
+
+        /// <summary>
+        /// Whether or not this parent node wants its child SyntaxList node to be 
+        /// converted to a Weak-SyntaxList when creating the red-node equivalent.
+        /// For example, in C# the statements of a Block-Node that is parented by a 
+        /// MethodDeclaration will be held weakly.
+        /// </summary>
+        internal virtual bool ShouldCreateWeakList()
+        {
+            return false;
+        }
+
+        internal bool HasErrors
+        {
+            get
+            {
+                if (!this.ContainsDiagnostics)
+                {
+                    return false;
+                }
+
+                return HasErrorsSlow();
+            }
+        }
+
+        private bool HasErrorsSlow()
+        {
+            return new Syntax.InternalSyntax.SyntaxDiagnosticInfoList(this.Green).Any(
+                info => info.Severity == DiagnosticSeverity.Error);
+        }
     }
 }

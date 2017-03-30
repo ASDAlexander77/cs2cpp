@@ -9,6 +9,7 @@ namespace Il2Native.Logic.DOM.Implementations
     using System.Threading;
     using Microsoft.Cci;
     using Microsoft.CodeAnalysis;
+    using System.Reflection;
 
     public class MethodImpl : IMethodSymbol
     {
@@ -127,7 +128,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public DllImportData GetDllImportData()
         {
-            return new DllImportData(string.Empty, string.Empty, PInvokeAttributes.CallConvCdecl);
+            return new DllImportData(string.Empty, string.Empty, MethodImportAttributes.CallingConventionCDecl);
         }
 
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
@@ -194,6 +195,15 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool HasUnsupportedMetadata { get; private set; }
+
+        public bool ReturnsByRef { get; private set; }
+
+        public ImmutableArray<CustomModifier> RefCustomModifiers { get; private set; }
     }
 }

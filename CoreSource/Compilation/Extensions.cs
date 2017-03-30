@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -135,6 +135,12 @@ namespace Microsoft.CodeAnalysis
             return semanticModel.GetDeclaredSymbolForNode(declaration, cancellationToken);
         }
 
+        /// <summary>
+        /// Gets a list of method or indexed property symbols for a syntax node.
+        /// </summary>
+        /// <param name="semanticModel"></param>
+        /// <param name="node">The syntax node to get semantic information for.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         public static ImmutableArray<ISymbol> GetMemberGroup(this SemanticModel semanticModel, SyntaxNode node, CancellationToken cancellationToken = default(CancellationToken))
         {
             return semanticModel.GetMemberGroup(node, cancellationToken);

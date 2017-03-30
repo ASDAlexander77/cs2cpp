@@ -8,7 +8,6 @@ namespace Il2Native.Logic
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
     using System.Threading.Tasks;
     using DOM;
     using DOM.Implementations;
@@ -19,7 +18,9 @@ namespace Il2Native.Logic
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+
     using MethodBody = DOM2.MethodBody;
+    using Expression = DOM2.Expression;
 
     public class CCodeUnitsBuilder
     {

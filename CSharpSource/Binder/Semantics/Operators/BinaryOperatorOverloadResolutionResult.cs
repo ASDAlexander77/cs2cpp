@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
-{   
+{
     internal sealed class BinaryOperatorOverloadResolutionResult
     {
         public readonly ArrayBuilder<BinaryOperatorAnalysisResult> Results;
@@ -94,7 +94,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return sb.ToString();
         }
 
-        int CountKind(OperatorAnalysisResultKind kind)
+        private int CountKind(OperatorAnalysisResultKind kind)
         {
             int count = 0;
             for (int i = 0, n = this.Results.Count; i < n; i++)

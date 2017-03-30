@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,16 +13,91 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundBlock tryBlock = (BoundBlock)this.Visit(node.TryBlock);
 
-            var origSawAwait = this.sawAwait;
-            this.sawAwait = false;
+            var origSawAwait = _sawAwait;
+            _sawAwait = false;
 
-            ImmutableArray<BoundCatchBlock> catchBlocks = (ImmutableArray<BoundCatchBlock>)this.VisitList(node.CatchBlocks);
+            var optimizing = _compilation.Options.OptimizationLevel == OptimizationLevel.Release;
+            ImmutableArray<BoundCatchBlock> catchBlocks =
+                // When optimizing and we have a try block without side-effects, we can discard the catch blocks.
+                (optimizing && !HasSideEffects(tryBlock)) ? ImmutableArray<BoundCatchBlock>.Empty
+                : this.VisitList(node.CatchBlocks);
             BoundBlock finallyBlockOpt = (BoundBlock)this.Visit(node.FinallyBlockOpt);
 
-            this.sawAwaitInExceptionHandler |= this.sawAwait;
-            this.sawAwait |= origSawAwait;
+            _sawAwaitInExceptionHandler |= _sawAwait;
+            _sawAwait |= origSawAwait;
 
-            return node.Update(tryBlock, catchBlocks, finallyBlockOpt, node.PreferFaultHandler);
+            if (optimizing && !HasSideEffects(finallyBlockOpt))
+            {
+                finallyBlockOpt = null;
+            }
+
+            return (catchBlocks.IsDefaultOrEmpty && finallyBlockOpt == null)
+                ? (BoundNode)tryBlock
+                : (BoundNode)node.Update(tryBlock, catchBlocks, finallyBlockOpt, node.PreferFaultHandler);
+        }
+
+        /// <summary>
+        /// Is there any code to execute in the given statement that could have side-effects,
+        /// such as throwing an exception? This implementation is conservative, in the sense
+        /// that it may return true when the statement actually may have no side effects.
+        /// </summary>
+        private static bool HasSideEffects(BoundStatement statement)
+        {
+            if (statement == null) return false;
+            switch (statement.Kind)
+            {
+                case BoundKind.NoOpStatement:
+                    return true;
+                case BoundKind.Block:
+                    {
+                        var block = (BoundBlock)statement;
+                        foreach (var stmt in block.Statements)
+                        {
+                            if (HasSideEffects(stmt)) return true;
+                        }
+                        return false;
+                    }
+                case BoundKind.SequencePoint:
+                    {
+                        var sequence = (BoundSequencePoint)statement;
+                        return HasSideEffects(sequence.StatementOpt);
+                    }
+                case BoundKind.SequencePointWithSpan:
+                    {
+                        var sequence = (BoundSequencePointWithSpan)statement;
+                        return HasSideEffects(sequence.StatementOpt);
+                    }
+                default:
+                    return true;
+            }
+        }
+
+        public override BoundNode VisitCatchBlock(BoundCatchBlock node)
+        {
+            if (node.ExceptionFilterOpt == null)
+            {
+                return base.VisitCatchBlock(node);
+            }
+
+            BoundExpression rewrittenExceptionSourceOpt = (BoundExpression)this.Visit(node.ExceptionSourceOpt);
+            BoundExpression rewrittenFilter = (BoundExpression)this.Visit(node.ExceptionFilterOpt);
+            BoundBlock rewrittenBody = (BoundBlock)this.Visit(node.Body);
+            TypeSymbol rewrittenExceptionTypeOpt = this.VisitType(node.ExceptionTypeOpt);
+
+            // EnC: We need to insert a hidden sequence point to handle function remapping in case 
+            // the containing method is edited while methods invoked in the condition are being executed.
+            if (rewrittenFilter != null && !node.WasCompilerGenerated && this.Instrument)
+            {
+                rewrittenFilter = _instrumenter.InstrumentCatchClauseFilter(node, rewrittenFilter, _factory);
+            }
+
+            return node.Update(
+                node.Locals,
+                rewrittenExceptionSourceOpt,
+                rewrittenExceptionTypeOpt,
+                rewrittenFilter,
+                rewrittenBody,
+                node.IsSynthesizedAsyncCatchAll);
         }
     }
 }

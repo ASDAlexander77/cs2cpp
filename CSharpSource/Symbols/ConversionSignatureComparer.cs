@@ -1,21 +1,18 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal sealed class ConversionSignatureComparer : IEqualityComparer<SourceUserDefinedConversionSymbol>
     {
-        private static ConversionSignatureComparer comparer = new ConversionSignatureComparer();
+        private static readonly ConversionSignatureComparer s_comparer = new ConversionSignatureComparer();
         public static ConversionSignatureComparer Comparer
         {
             get
             {
-                return comparer;
+                return s_comparer;
             }
         }
 
@@ -47,8 +44,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return false;
             }
 
-            return member1.ReturnType.Equals(member2.ReturnType, ignoreDynamic: true)
-                && member1.ParameterTypes[0].Equals(member2.ParameterTypes[0], ignoreDynamic: true);
+            return member1.ReturnType.Equals(member2.ReturnType, TypeCompareKind.IgnoreDynamicAndTupleNames)
+                && member1.ParameterTypes[0].Equals(member2.ParameterTypes[0], TypeCompareKind.IgnoreDynamicAndTupleNames);
         }
 
         public int GetHashCode(SourceUserDefinedConversionSymbol member)

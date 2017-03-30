@@ -1,6 +1,5 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using Microsoft.CodeAnalysis.CSharp.Emit;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -15,6 +14,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
         }
 
+        internal override bool SuppressDynamicAttribute
+        {
+            get { return true; }
+        }
+
         internal override TypeSymbol GetFieldType(ConsList<FieldSymbol> fieldsBeingBound)
         {
             return ((SourceNamedTypeSymbol)ContainingType).EnumUnderlyingType;
@@ -23,11 +27,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal override void AddSynthesizedAttributes(ModuleCompilationState compilationState, ref ArrayBuilder<SynthesizedAttributeData> attributes)
         {
             // no attributes should be emitted
-        }
-
-        internal override int IteratorLocalIndex
-        {
-            get { throw ExceptionUtilities.Unreachable; }
         }
     }
 }

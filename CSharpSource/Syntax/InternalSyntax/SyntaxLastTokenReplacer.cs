@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -9,15 +9,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
 {
     internal class SyntaxLastTokenReplacer : CSharpSyntaxRewriter
     {
-        private readonly SyntaxToken oldToken;
-        private readonly SyntaxToken newToken;
-        private int count = 1;
-        private bool found = false;
+        private readonly SyntaxToken _oldToken;
+        private readonly SyntaxToken _newToken;
+        private int _count = 1;
+        private bool _found;
 
         private SyntaxLastTokenReplacer(SyntaxToken oldToken, SyntaxToken newToken)
         {
-            this.oldToken = oldToken;
-            this.newToken = newToken;
+            _oldToken = oldToken;
+            _newToken = newToken;
         }
 
         internal static TRoot Replace<TRoot>(TRoot root, SyntaxToken newToken)
@@ -26,7 +26,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             var oldToken = root.GetLastToken();
             var replacer = new SyntaxLastTokenReplacer(oldToken, newToken);
             var newRoot = (TRoot)replacer.Visit(root);
-            Debug.Assert(replacer.found);
+            Debug.Assert(replacer._found);
             return newRoot;
         }
 
@@ -37,20 +37,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
 
         public override CSharpSyntaxNode Visit(CSharpSyntaxNode node)
         {
-            if (node != null && !found)
+            if (node != null && !_found)
             {
-                count--;
-                if (count == 0)
+                _count--;
+                if (_count == 0)
                 {
                     var token = node as SyntaxToken;
                     if (token != null)
                     {
-                        Debug.Assert(token == oldToken);
-                        found = true;
-                        return newToken;
+                        Debug.Assert(token == _oldToken);
+                        _found = true;
+                        return _newToken;
                     }
 
-                    count += CountNonNullSlots(node);
+                    _count += CountNonNullSlots(node);
                     return base.Visit(node);
                 }
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 
@@ -19,12 +19,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             : base(CSharp.MessageProvider.Instance, isWarningAsError, (int)errorCode, arguments)
         {
             this.Symbols = symbols;
-        }
-
-        // Create a copy of this instance with a WarningAsError flag
-        internal override DiagnosticInfo GetInstanceWithReportWarning(bool isWarningAsError)
-        {
-            return new DiagnosticInfoWithSymbols(isWarningAsError, (ErrorCode)this.Code, this.Arguments, this.Symbols);
         }
     }
 }

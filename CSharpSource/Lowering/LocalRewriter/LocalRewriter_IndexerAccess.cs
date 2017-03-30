@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -23,7 +23,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // However, with the cast the scenarios don't work either, so we don't mimic Dev12.
                 // loweredReceiver = BoundConversion.Synthesized(loweredReceiver.Syntax, loweredReceiver, Conversion.Identity, false, false, null, DynamicTypeSymbol.Instance);
 
-                result = dynamicFactory.MakeDynamicGetMember(loweredReceiver, indexedPropertyName, resultIndexed: true).ToExpression();
+                result = _dynamicFactory.MakeDynamicGetMember(loweredReceiver, indexedPropertyName, resultIndexed: true).ToExpression();
             }
             else
             {
@@ -54,7 +54,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // with the matching name of this dynamic invocation.
             EmbedIfNeedTo(loweredReceiver, node.ApplicableIndexers, node.Syntax);
 
-            return dynamicFactory.MakeDynamicGetIndex(
+            return _dynamicFactory.MakeDynamicGetIndex(
                 MakeDynamicIndexerAccessReceiver(node, loweredReceiver),
                 loweredArguments,
                 argumentNames,
@@ -87,7 +87,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private BoundExpression MakeIndexerAccess(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenReceiver,
             PropertySymbol indexer,
             ImmutableArray<BoundExpression> rewrittenArguments,
@@ -99,7 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundIndexerAccess oldNodeOpt,
             bool isLeftOfAssignment)
         {
-            if (isLeftOfAssignment)
+            if (isLeftOfAssignment && indexer.RefKind == RefKind.None)
             {
                 // This is an indexer set access. We return a BoundIndexerAccess node here.
                 // This node will be rewritten with MakePropertyAssignment when rewriting the enclosing BoundAssignmentOperator.
@@ -116,7 +116,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // We have already lowered each argument, but we may need some additional rewriting for the arguments,
                 // such as generating a params array, re-ordering arguments based on argsToParamsOpt map, inserting arguments for optional parameters, etc.
                 ImmutableArray<LocalSymbol> temps;
-                rewrittenArguments = MakeArguments(syntax, rewrittenArguments, indexer, getMethod, expanded, argsToParamsOpt, ref argumentRefKindsOpt, out temps);
+                rewrittenArguments = MakeArguments(syntax, rewrittenArguments, indexer, getMethod, expanded, argsToParamsOpt, ref argumentRefKindsOpt, out temps, enableCallerInfo: ThreeState.True);
 
                 BoundExpression call = MakePropertyGetAccess(syntax, rewrittenReceiver, indexer, rewrittenArguments, getMethod);
 

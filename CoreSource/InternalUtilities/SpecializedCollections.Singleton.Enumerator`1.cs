@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections;
 using System.Collections.Generic;
@@ -11,30 +11,18 @@ namespace Roslyn.Utilities
         {
             internal class Enumerator<T> : IEnumerator<T>
             {
-                private T loneValue;
-                private bool moveNextCalled;
+                private readonly T _loneValue;
+                private bool _moveNextCalled;
 
                 public Enumerator(T value)
                 {
-                    this.loneValue = value;
-                    this.moveNextCalled = false;
+                    _loneValue = value;
+                    _moveNextCalled = false;
                 }
 
-                public T Current
-                {
-                    get
-                    {
-                        return this.loneValue;
-                    }
-                }
+                public T Current => _loneValue;
 
-                object IEnumerator.Current
-                {
-                    get
-                    {
-                        return this.loneValue;
-                    }
-                }
+                object IEnumerator.Current => _loneValue;
 
                 public void Dispose()
                 {
@@ -42,9 +30,9 @@ namespace Roslyn.Utilities
 
                 public bool MoveNext()
                 {
-                    if (!this.moveNextCalled)
+                    if (!_moveNextCalled)
                     {
-                        this.moveNextCalled = true;
+                        _moveNextCalled = true;
                         return true;
                     }
 
@@ -53,7 +41,7 @@ namespace Roslyn.Utilities
 
                 public void Reset()
                 {
-                    this.moveNextCalled = false;
+                    _moveNextCalled = false;
                 }
             }
         }

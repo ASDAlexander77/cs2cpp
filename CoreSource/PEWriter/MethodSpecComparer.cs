@@ -1,15 +1,17 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using Cci = Microsoft.Cci;
+using Roslyn.Utilities;
 
 namespace Microsoft.Cci
 {
-    internal class MethodSpecComparer : IEqualityComparer<IGenericMethodInstanceReference>
+    internal sealed class MethodSpecComparer : IEqualityComparer<IGenericMethodInstanceReference>
     {
-        internal MethodSpecComparer(PeWriter peWriter)
+        private readonly MetadataWriter _metadataWriter;
+
+        internal MethodSpecComparer(MetadataWriter metadataWriter)
         {
-            this.peWriter = peWriter;
+            _metadataWriter = metadataWriter;
         }
 
         public bool Equals(IGenericMethodInstanceReference x, IGenericMethodInstanceReference y)
@@ -20,16 +22,15 @@ namespace Microsoft.Cci
             }
 
             return
-                this.peWriter.GetMethodDefOrRefCodedIndex(x.GetGenericMethod(peWriter.Context)) == this.peWriter.GetMethodDefOrRefCodedIndex(y.GetGenericMethod(peWriter.Context)) &&
-                this.peWriter.GetMethodInstanceSignatureIndex(x) == this.peWriter.GetMethodInstanceSignatureIndex(y);
+                _metadataWriter.GetMethodDefinitionOrReferenceHandle(x.GetGenericMethod(_metadataWriter.Context)) == _metadataWriter.GetMethodDefinitionOrReferenceHandle(y.GetGenericMethod(_metadataWriter.Context)) &&
+                _metadataWriter.GetMethodSpecificationSignatureHandle(x) == _metadataWriter.GetMethodSpecificationSignatureHandle(y);
         }
 
         public int GetHashCode(IGenericMethodInstanceReference methodInstanceReference)
         {
-            return (int)((this.peWriter.GetMethodDefOrRefCodedIndex(methodInstanceReference.GetGenericMethod(peWriter.Context)) << 2) ^
-              this.peWriter.GetMethodInstanceSignatureIndex(methodInstanceReference));
+            return Hash.Combine(
+                _metadataWriter.GetMethodDefinitionOrReferenceHandle(methodInstanceReference.GetGenericMethod(_metadataWriter.Context)).GetHashCode(),
+                _metadataWriter.GetMethodSpecificationSignatureHandle(methodInstanceReference).GetHashCode());
         }
-
-        private PeWriter peWriter;
     }
 }

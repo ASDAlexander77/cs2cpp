@@ -1,11 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis
 {
@@ -13,10 +13,15 @@ namespace Microsoft.CodeAnalysis
     /// Represents a symbol (namespace, class, method, parameter, etc.)
     /// exposed by the compiler.
     /// </summary>
-    public interface ISymbol
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
+    [InternalImplementationOnly]
+    public interface ISymbol : IEquatable<ISymbol>
     {
         /// <summary>
-        /// Gets the <see cref="E:Microsoft.CodeAnalysis.SymbolKind"/> indicating what kind of symbol it is.
+        /// Gets the <see cref="SymbolKind"/> indicating what kind of symbol it is.
         /// </summary>
         SymbolKind Kind { get; }
 
@@ -43,30 +48,30 @@ namespace Microsoft.CodeAnalysis
         string MetadataName { get; }
 
         /// <summary>
-        /// Gets the <see cref="T:Microsoft.CodeAnalysis.ISymbol"/> for the immediately containing symbol.
+        /// Gets the <see cref="ISymbol"/> for the immediately containing symbol.
         /// </summary>
         ISymbol ContainingSymbol { get; }
 
         /// <summary>
-        /// Gets the <see cref="T:Microsoft.CodeAnalysis.IAssemblySymbol"/> for the containing assembly. Returns null if the
+        /// Gets the <see cref="IAssemblySymbol"/> for the containing assembly. Returns null if the
         /// symbol is shared across multiple assemblies.
         /// </summary>
         IAssemblySymbol ContainingAssembly { get; }
 
         /// <summary>
-        /// Gets the <see cref="T:Microsoft.CodeAnalysis.IModuleSymbol"/> for the containing module. Returns null if the
+        /// Gets the <see cref="IModuleSymbol"/> for the containing module. Returns null if the
         /// symbol is shared across multiple modules.
         /// </summary>
         IModuleSymbol ContainingModule { get; }
 
         /// <summary>
-        /// Gets the <see cref="T:Microsoft.CodeAnalysis.INamedTypeSymbol"/> for the containing type. Returns null if the
+        /// Gets the <see cref="INamedTypeSymbol"/> for the containing type. Returns null if the
         /// symbol is not contained within a type.
         /// </summary>
         INamedTypeSymbol ContainingType { get; }
 
         /// <summary>
-        /// Gets the <see cref="T:Microsoft.CodeAnalysis.INamespaceSymbol"/> for the nearest enclosing namespace. Returns null if the
+        /// Gets the <see cref="INamespaceSymbol"/> for the nearest enclosing namespace. Returns null if the
         /// symbol isn't contained in a namespace.
         /// </summary>
         INamespaceSymbol ContainingNamespace { get; }

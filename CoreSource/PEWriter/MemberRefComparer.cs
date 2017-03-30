@@ -1,16 +1,17 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using Roslyn.Utilities;
-using Cci = Microsoft.Cci;
 
 namespace Microsoft.Cci
 {
-    internal class MemberRefComparer : IEqualityComparer<ITypeMemberReference>
+    internal sealed class MemberRefComparer : IEqualityComparer<ITypeMemberReference>
     {
-        internal MemberRefComparer(PeWriter peWriter)
+        private readonly MetadataWriter _metadataWriter;
+
+        internal MemberRefComparer(MetadataWriter metadataWriter)
         {
-            this.peWriter = peWriter;
+            _metadataWriter = metadataWriter;
         }
 
         public bool Equals(ITypeMemberReference x, ITypeMemberReference y)
@@ -20,9 +21,9 @@ namespace Microsoft.Cci
                 return true;
             }
 
-            if (x.GetContainingType(peWriter.Context) != y.GetContainingType(peWriter.Context))
+            if (x.GetContainingType(_metadataWriter.Context) != y.GetContainingType(_metadataWriter.Context))
             {
-                if (this.peWriter.GetMemberRefParentCodedIndex(x) != this.peWriter.GetMemberRefParentCodedIndex(y))
+                if (_metadataWriter.GetMemberReferenceParent(x) != _metadataWriter.GetMemberReferenceParent(y))
                 {
                     return false;
                 }
@@ -33,18 +34,18 @@ namespace Microsoft.Cci
                 return false;
             }
 
-            IFieldReference/*?*/ xf = x as IFieldReference;
-            IFieldReference/*?*/ yf = y as IFieldReference;
+            var xf = x as IFieldReference;
+            var yf = y as IFieldReference;
             if (xf != null && yf != null)
             {
-                return this.peWriter.GetFieldSignatureIndex(xf) == this.peWriter.GetFieldSignatureIndex(yf);
+                return _metadataWriter.GetFieldSignatureIndex(xf) == _metadataWriter.GetFieldSignatureIndex(yf);
             }
 
-            IMethodReference/*?*/ xm = x as IMethodReference;
-            IMethodReference/*?*/ ym = y as IMethodReference;
+            var xm = x as IMethodReference;
+            var ym = y as IMethodReference;
             if (xm != null && ym != null)
             {
-                return this.peWriter.GetMethodSignatureIndex(xm) == this.peWriter.GetMethodSignatureIndex(ym);
+                return _metadataWriter.GetMethodSignatureHandle(xm) == _metadataWriter.GetMethodSignatureHandle(ym);
             }
 
             return false;
@@ -52,25 +53,23 @@ namespace Microsoft.Cci
 
         public int GetHashCode(ITypeMemberReference memberRef)
         {
-            int hash = Hash.Combine(memberRef.Name, (int)this.peWriter.GetMemberRefParentCodedIndex(memberRef) << 4);
+            int hash = Hash.Combine(memberRef.Name, _metadataWriter.GetMemberReferenceParent(memberRef).GetHashCode());
 
-            IFieldReference/*?*/ fieldRef = memberRef as IFieldReference;
+            var fieldRef = memberRef as IFieldReference;
             if (fieldRef != null)
             {
-                hash = Hash.Combine(hash, (int)this.peWriter.GetFieldSignatureIndex(fieldRef));
+                hash = Hash.Combine(hash, _metadataWriter.GetFieldSignatureIndex(fieldRef).GetHashCode());
             }
             else
             {
-                IMethodReference/*?*/ methodRef = memberRef as IMethodReference;
+                var methodRef = memberRef as IMethodReference;
                 if (methodRef != null)
                 {
-                    hash = Hash.Combine(hash, (int)this.peWriter.GetMethodSignatureIndex(methodRef));
+                    hash = Hash.Combine(hash, _metadataWriter.GetMethodSignatureHandle(methodRef).GetHashCode());
                 }
             }
 
             return hash;
         }
-
-        private PeWriter peWriter;
     }
 }

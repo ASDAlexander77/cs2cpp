@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
@@ -30,10 +30,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal static readonly string ImplicitTypeName = "<invalid-global-code>";
 
         // InterfaceInfo for a common case of a type not implementing anything directly or indirectly.
-        private static readonly InterfaceInfo NoInterfaces = new InterfaceInfo();
+        private static readonly InterfaceInfo s_noInterfaces = new InterfaceInfo();
 
-        private ImmutableHashSet<Symbol> lazyAbstractMembers = null;
-        private InterfaceInfo lazyInterfaceInfo = null;
+        private ImmutableHashSet<Symbol> _lazyAbstractMembers;
+        private InterfaceInfo _lazyInterfaceInfo;
 
         private class InterfaceInfo
         {
@@ -45,7 +45,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             // Key is implemented member (method, property, or event), value is implementing member (from the 
             // perspective of this type).  Don't allocate until someone needs it.
-            internal ConcurrentDictionary<Symbol, SymbolAndDiagnostics> implementationForInterfaceMemberMap;
+            private ConcurrentDictionary<Symbol, SymbolAndDiagnostics> _implementationForInterfaceMemberMap;
+
+            public ConcurrentDictionary<Symbol, SymbolAndDiagnostics> ImplementationForInterfaceMemberMap
+            {
+                get
+                {
+                    var map = _implementationForInterfaceMemberMap;
+                    if (map != null)
+                    {
+                        return map;
+                    }
+
+                    // PERF: Avoid over-allocation. In many cases, there's only 1 entry and we don't expect concurrent updates.
+                    map = new ConcurrentDictionary<Symbol, SymbolAndDiagnostics>(concurrencyLevel: 1, capacity: 1);
+                    return Interlocked.CompareExchange(ref _implementationForInterfaceMemberMap, map, null) ?? map;
+                }
+            }
 
             // key = interface method/property/event, value = explicitly implementing method/property/event declared on this type
             internal Dictionary<Symbol, Symbol> explicitInterfaceImplementationMap;
@@ -54,23 +70,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 return allInterfaces.IsDefault &&
                     interfacesAndTheirBaseInterfaces == null &&
-                    implementationForInterfaceMemberMap == null &&
+                    _implementationForInterfaceMemberMap == null &&
                     explicitInterfaceImplementationMap == null;
             }
         }
 
         private InterfaceInfo GetInterfaceInfo()
         {
-            var info = this.lazyInterfaceInfo;
+            var info = _lazyInterfaceInfo;
             if (info != null)
             {
-                Debug.Assert(info != NoInterfaces || info.IsDefaultValue(), "default value was modified");
+                Debug.Assert(info != s_noInterfaces || info.IsDefaultValue(), "default value was modified");
                 return info;
             }
 
             for (var baseType = this; !ReferenceEquals(baseType, null); baseType = baseType.BaseTypeNoUseSiteDiagnostics)
             {
-                var interfaces = (baseType.TypeKind == TypeKind.TypeParameter) ? ((TypeParameterSymbol)baseType).EffectiveInterfacesNoUseSiteDiagnostics : baseType.InterfacesNoUseSiteDiagnostics;
+                var interfaces = (baseType.TypeKind == TypeKind.TypeParameter) ? ((TypeParameterSymbol)baseType).EffectiveInterfacesNoUseSiteDiagnostics : baseType.InterfacesNoUseSiteDiagnostics();
                 if (!interfaces.IsEmpty)
                 {
                     // it looks like we or one of our bases implements something.
@@ -78,20 +94,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     // NOTE: we are assigning lazyInterfaceInfo via interlocked not for correctness, 
                     // we just do not want to override an existing info that could be partially filled.
-                    return Interlocked.CompareExchange(ref this.lazyInterfaceInfo, info, null) ?? info;
+                    return Interlocked.CompareExchange(ref _lazyInterfaceInfo, info, null) ?? info;
                 }
             }
 
             // if we have got here it means neither we nor our bases implement anything
-            this.lazyInterfaceInfo = info = NoInterfaces;
+            _lazyInterfaceInfo = info = s_noInterfaces;
             return info;
         }
 
 
         /// <summary>
-        /// A comparator that treats dynamic and object as "the same" types.
+        /// A comparer that treats dynamic and object as "the same" types, and also ignores tuple element names differences.
         /// </summary>
-        internal static readonly EqualityComparer<TypeSymbol> EqualsIgnoringDynamicComparer = new EqualsIgnoringComparer(ignoreDynamic: true, ignoreCustomModifiers: false);
+        internal static readonly EqualityComparer<TypeSymbol> EqualsIgnoringDynamicAndTupleNamesComparer = new EqualsIgnoringComparer(TypeCompareKind.IgnoreDynamicAndTupleNames);
 
         /// <summary>
         /// The original definition of this symbol. If this symbol is constructed from another
@@ -171,11 +187,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return InterfacesNoUseSiteDiagnostics;
+                return InterfacesNoUseSiteDiagnostics();
             }
         }
 
-        internal abstract ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics { get; }
+        internal abstract ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved = null);
 
         /// <summary>
         /// The list of all interfaces of which this type is a declared subtype, excluding this type
@@ -186,6 +202,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// list. This is not quite the same as "all interfaces of which this type is a proper
         /// subtype" because it does not take into account variance: AllInterfaces for
         /// IEnumerable&lt;string&gt; will not include IEnumerable&lt;object&gt;
+        ///
+        /// Note: When interfaces specified on the same inheritance level differ by tuple names only,
+        /// only the last one will be listed here.
         /// </summary>
         public ImmutableArray<NamedTypeSymbol> AllInterfaces
         {
@@ -235,10 +254,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal TypeSymbol EffectiveType(ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        {
+            return this.IsTypeParameter() ? ((TypeParameterSymbol)this).EffectiveBaseClass(ref useSiteDiagnostics) : this;
+        }
+
         /// <summary>
         /// Returns true if this type derives from a given type.
         /// </summary>
-        internal bool IsDerivedFrom(TypeSymbol type, bool ignoreDynamic, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        internal bool IsDerivedFrom(TypeSymbol type, TypeCompareKind comparison, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             Debug.Assert((object)type != null);
             Debug.Assert(!type.IsTypeParameter());
@@ -251,7 +275,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var t = this.BaseTypeWithDefinitionUseSiteDiagnostics(ref useSiteDiagnostics);
             while ((object)t != null)
             {
-                if (type.Equals(t, ignoreDynamic: ignoreDynamic))
+                if (type.Equals(t, comparison))
                 {
                     return true;
                 }
@@ -263,11 +287,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Returns true if this type si equal or derives from a given type.
+        /// Returns true if this type is equal or derives from a given type.
         /// </summary>
-        internal bool IsEqualToOrDerivedFrom(TypeSymbol type, bool ignoreDynamic, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        internal bool IsEqualToOrDerivedFrom(TypeSymbol type, TypeCompareKind comparison, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
-            return this.Equals(type, ignoreDynamic: ignoreDynamic) || this.IsDerivedFrom(type, ignoreDynamic, ref useSiteDiagnostics);
+            return this.Equals(type, comparison) || this.IsDerivedFrom(type, comparison, ref useSiteDiagnostics);
         }
 
         /// <summary>
@@ -275,10 +299,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// semantics.
         /// </summary>
         /// <param name="t2">The other type.</param>
-        /// <param name="ignoreCustomModifiers">True to compare without regard to custom modifiers, false by default.</param>
-        /// <param name="ignoreDynamic">True to ignore the distinction between object and dynamic, false by default.</param>
+        /// <param name="compareKind">
+        /// What kind of comparison to use? 
+        /// You can ignore custom modifiers, ignore the distinction between object and dynamic, or ignore tuple element names differences.
+        /// </param>
         /// <returns>True if the types are equivalent.</returns>
-        internal virtual bool Equals(TypeSymbol t2, bool ignoreCustomModifiers = false, bool ignoreDynamic = false)
+        internal virtual bool Equals(TypeSymbol t2, TypeCompareKind compareKind = TypeCompareKind.ConsiderEverything)
         {
             return ReferenceEquals(this, t2);
         }
@@ -287,7 +313,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             var t2 = obj as TypeSymbol;
             if ((object)t2 == null) return false;
-            return this.Equals(t2, false, false);
+            return this.Equals(t2, TypeCompareKind.ConsiderEverything);
         }
 
         /// <summary>
@@ -299,30 +325,34 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return RuntimeHelpers.GetHashCode(this);
         }
 
-        private class EqualsIgnoringComparer : EqualityComparer<TypeSymbol>
+        internal sealed class EqualsIgnoringComparer : EqualityComparer<TypeSymbol>
         {
-            private readonly bool ignoreDynamic, ignoreCustomModifiers;
-            public EqualsIgnoringComparer(bool ignoreDynamic, bool ignoreCustomModifiers)
+            public static EqualsIgnoringComparer InstanceIgnoringTupleNames { get; } = new EqualsIgnoringComparer(TypeCompareKind.IgnoreTupleNames);
+
+            private readonly TypeCompareKind _comparison;
+
+            public EqualsIgnoringComparer(TypeCompareKind comparison)
             {
-                this.ignoreDynamic = ignoreDynamic;
-                this.ignoreCustomModifiers = ignoreCustomModifiers;
+                _comparison = comparison;
             }
+
             public override int GetHashCode(TypeSymbol obj)
             {
-                return obj.GetHashCode();
+                return (object)obj == null ? 0 : obj.GetHashCode();
             }
+
             public override bool Equals(TypeSymbol x, TypeSymbol y)
             {
                 return
                     (object)x == null ? (object)y == null :
-                    x.Equals(y, ignoreCustomModifiers: ignoreCustomModifiers, ignoreDynamic: ignoreDynamic);
+                    x.Equals(y, _comparison);
             }
         }
 
         protected virtual ImmutableArray<NamedTypeSymbol> GetAllInterfaces()
         {
             var info = this.GetInterfaceInfo();
-            if (info == NoInterfaces)
+            if (info == s_noInterfaces)
             {
                 return ImmutableArray<NamedTypeSymbol>.Empty;
             }
@@ -342,15 +372,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         protected virtual ImmutableArray<NamedTypeSymbol> MakeAllInterfaces()
         {
             var result = ArrayBuilder<NamedTypeSymbol>.GetInstance();
-            var visited = new HashSet<NamedTypeSymbol>();
+            var visited = new HashSet<NamedTypeSymbol>(EqualsIgnoringComparer.InstanceIgnoringTupleNames);
 
             for (var baseType = this; !ReferenceEquals(baseType, null); baseType = baseType.BaseTypeNoUseSiteDiagnostics)
             {
-                var interfaces = (baseType.TypeKind == TypeKind.TypeParameter) ? ((TypeParameterSymbol)baseType).EffectiveInterfacesNoUseSiteDiagnostics : baseType.InterfacesNoUseSiteDiagnostics;
+                var interfaces = (baseType.TypeKind == TypeKind.TypeParameter) ? ((TypeParameterSymbol)baseType).EffectiveInterfacesNoUseSiteDiagnostics : baseType.InterfacesNoUseSiteDiagnostics();
                 for (int i = interfaces.Length - 1; i >= 0; i--)
                 {
-                    var @interface = interfaces[i];
-                    AddAllInterfaces(@interface, visited, result);
+                    AddAllInterfaces(interfaces[i], visited, result);
                 }
             }
 
@@ -362,7 +391,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (visited.Add(@interface))
             {
-                ImmutableArray<NamedTypeSymbol> baseInterfaces = @interface.InterfacesNoUseSiteDiagnostics;
+                ImmutableArray<NamedTypeSymbol> baseInterfaces = @interface.InterfacesNoUseSiteDiagnostics();
                 for (int i = baseInterfaces.Length - 1; i >= 0; i--)
                 {
                     var baseInterface = baseInterfaces[i];
@@ -387,14 +416,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 var info = this.GetInterfaceInfo();
-                if (info == NoInterfaces)
+                if (info == s_noInterfaces)
                 {
                     return ImmutableHashSet.Create<NamedTypeSymbol>();
                 }
 
                 if (info.interfacesAndTheirBaseInterfaces == null)
                 {
-                    Interlocked.CompareExchange(ref info.interfacesAndTheirBaseInterfaces, MakeInterfacesAndTheirBaseInterfaces(this.InterfacesNoUseSiteDiagnostics), null);
+                    Interlocked.CompareExchange(ref info.interfacesAndTheirBaseInterfaces, MakeInterfacesAndTheirBaseInterfaces(this.InterfacesNoUseSiteDiagnostics()), null);
                 }
 
                 return info.interfacesAndTheirBaseInterfaces;
@@ -434,7 +463,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if ((object)interfaceMember == null)
             {
-                throw new ArgumentNullException("interfaceMember");
+                throw new ArgumentNullException(nameof(interfaceMember));
             }
 
             return FindImplementationForInterfaceMemberWithDiagnostics(interfaceMember).Symbol;
@@ -530,6 +559,78 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
+        /// Is this a symbol for a Tuple.
+        /// </summary>
+        public virtual bool IsTupleType => false;
+
+        /// <summary>
+        /// Verify if the given type can be used to back a tuple type 
+        /// and return cardinality of that tuple type in <paramref name="tupleCardinality"/>. 
+        /// </summary>
+        /// <param name="tupleCardinality">If method returns true, contains cardinality of the compatible tuple type.</param>
+        /// <returns></returns>
+        public virtual bool IsTupleCompatible(out int tupleCardinality)
+        {
+            tupleCardinality = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// Verify if the given type can be used to back a tuple type. 
+        /// </summary>
+        public bool IsTupleCompatible()
+        {
+            int countOfItems;
+            return IsTupleCompatible(out countOfItems);
+        }
+
+        /// <summary>
+        /// Verify if the given type is a tuple of a given cardinality, or can be used to back a tuple type 
+        /// with the given cardinality. 
+        /// </summary>
+        public bool IsTupleOrCompatibleWithTupleOfCardinality(int targetCardinality)
+        {
+            if (IsTupleType)
+            {
+                return TupleElementTypes.Length == targetCardinality;
+            }
+
+            int countOfItems;
+            return IsTupleCompatible(out countOfItems) && countOfItems == targetCardinality;
+        }
+
+        /// <summary>
+        /// If this is a tuple type symbol, returns the symbol for its underlying type.
+        /// Otherwise, returns null.
+        /// The type argument corresponding to the type of the extension field (VT[8].Rest),
+        /// which is at the 8th (one based) position is always a symbol for another tuple, 
+        /// rather than its underlying type.
+        /// </summary>
+        public virtual NamedTypeSymbol TupleUnderlyingType
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// If this symbol represents a tuple type, get the types of the tuple's elements.
+        /// </summary>
+        public virtual ImmutableArray<TypeSymbol> TupleElementTypes => default(ImmutableArray<TypeSymbol>);
+
+        /// <summary>
+        /// If this symbol represents a tuple type, get the names of the tuple's elements.
+        /// </summary>
+        public virtual ImmutableArray<string> TupleElementNames => default(ImmutableArray<string>);
+
+        /// <summary>
+        /// If this symbol represents a tuple type, get the fields for the tuple's elements.
+        /// Otherwise, returns default.
+        /// </summary>
+        public virtual ImmutableArray<FieldSymbol> TupleElements => default(ImmutableArray<FieldSymbol>);
+
+        /// <summary>
         /// Is this type a managed type (false for everything but enum, pointer, and
         /// some struct types).
         /// </summary>
@@ -552,7 +653,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return StaticCast<INamedTypeSymbol>.From(this.InterfacesNoUseSiteDiagnostics);
+                return StaticCast<INamedTypeSymbol>.From(this.InterfacesNoUseSiteDiagnostics());
             }
         }
 
@@ -603,6 +704,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 : null;
         }
 
+        /// <summary>
+        /// Is this a symbol for a Tuple.
+        /// </summary>
+        bool ITypeSymbol.IsTupleType => this.IsTupleType;
+
         #endregion
 
         #region Interface member checks
@@ -628,17 +734,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Property:
                 case SymbolKind.Event:
                     var info = this.GetInterfaceInfo();
-                    if (info == NoInterfaces)
+                    if (info == s_noInterfaces)
                     {
                         return SymbolAndDiagnostics.Empty;
                     }
 
-                    if (info.implementationForInterfaceMemberMap == null)
+                    // PERF: Avoid delegate allocation by splitting GetOrAdd into TryGetValue+TryAdd
+                    var map = info.ImplementationForInterfaceMemberMap;
+                    SymbolAndDiagnostics result;
+                    if (map.TryGetValue(interfaceMember, out result))
                     {
-                        Interlocked.CompareExchange(ref info.implementationForInterfaceMemberMap, new ConcurrentDictionary<Symbol, SymbolAndDiagnostics>(), null);
+                        return result;
                     }
 
-                    return info.implementationForInterfaceMemberMap.GetOrAdd(interfaceMember, this.ComputeImplementationAndDiagnosticsForInterfaceMember);
+                    result = ComputeImplementationAndDiagnosticsForInterfaceMember(interfaceMember);
+                    map.TryAdd(interfaceMember, result);
+                    return result;
 
                 default:
                     return SymbolAndDiagnostics.Empty;
@@ -892,8 +1003,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         correspondingImplementingAccessor = ((EventSymbol)implementingPropertyOrEvent).GetOwnOrInheritedRemoveMethod();
                         break;
                     default:
-                        Debug.Assert(false, "Expected property or event accessor");
-                        break;
+                        throw ExceptionUtilities.UnexpectedValue(interfaceMethod.MethodKind);
                 }
             }
 
@@ -923,8 +1033,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     interfaceMethod.CallingConvention,
                     interfaceMethod.TypeParameters,
                     interfaceMethod.Parameters,
+                    interfaceMethod.RefKind,
                     interfaceMethod.ReturnType,
                     interfaceMethod.ReturnTypeCustomModifiers,
+                    interfaceMethod.RefCustomModifiers,
                     interfaceMethod.ExplicitInterfaceImplementations);
 
                 // Make sure that the corresponding accessor is a real implementation.
@@ -971,6 +1083,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
+            if (MemberSignatureComparer.ConsideringTupleNamesCreatesDifference(implicitImpl, interfaceMember))
+            {
+                diagnostics.Add(ErrorCode.ERR_ImplBadTupleNames, implicitImpl.Locations[0], implicitImpl, interfaceMember);
+            }
+
             // In constructed types, it is possible to see multiple members with the same (runtime) signature.
             // Now that we know which member will implement the interface member, confirm that it is the only
             // such member.
@@ -996,48 +1113,78 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private static void ReportImplicitImplementationMismatchDiagnostics(Symbol interfaceMember, TypeSymbol implementingType, Symbol closestMismatch, DiagnosticBag diagnostics)
         {
-            // Determine  a better location for diagnostic squiggles.  Squiggle the interace rather than the class.
-            Location interfacelocation = null;
-            if ((object)implementingType !=null)
+            // Determine  a better location for diagnostic squiggles.  Squiggle the interface rather than the class.
+            Location interfaceLocation = null;
+            if ((object)implementingType != null)
             {
                 var @interface = interfaceMember.ContainingType;
                 SourceMemberContainerTypeSymbol snt = implementingType as SourceMemberContainerTypeSymbol;
-                interfacelocation = snt.GetImplementsLocation(@interface) ?? implementingType.Locations[0];
+                interfaceLocation = snt.GetImplementsLocation(@interface) ?? implementingType.Locations[0];
             }
             else
             {
-                interfacelocation = implementingType.Locations[0];
+                interfaceLocation = implementingType.Locations[0];
             }
 
             if (closestMismatch.IsStatic)
             {
-                diagnostics.Add(ErrorCode.ERR_CloseUnimplementedInterfaceMemberStatic, interfacelocation, implementingType, interfaceMember, closestMismatch);
+                diagnostics.Add(ErrorCode.ERR_CloseUnimplementedInterfaceMemberStatic, interfaceLocation, implementingType, interfaceMember, closestMismatch);
             }
             else if (closestMismatch.DeclaredAccessibility != Accessibility.Public)
             {
                 ErrorCode errorCode = interfaceMember.IsAccessor() ? ErrorCode.ERR_UnimplementedInterfaceAccessor : ErrorCode.ERR_CloseUnimplementedInterfaceMemberNotPublic;
-                diagnostics.Add(errorCode, interfacelocation, implementingType, interfaceMember, closestMismatch);
+                diagnostics.Add(errorCode, interfaceLocation, implementingType, interfaceMember, closestMismatch);
             }
-            else //return type doesn't match
+            else //return ref kind or type doesn't match
             {
+                RefKind interfaceMemberRefKind = RefKind.None;
                 TypeSymbol interfaceMemberReturnType;
                 switch (interfaceMember.Kind)
                 {
                     case SymbolKind.Method:
-                        interfaceMemberReturnType = ((MethodSymbol)interfaceMember).ReturnType;
+                        var method = (MethodSymbol)interfaceMember;
+                        interfaceMemberRefKind = method.RefKind;
+                        interfaceMemberReturnType = method.ReturnType;
                         break;
                     case SymbolKind.Property:
-                        interfaceMemberReturnType = ((PropertySymbol)interfaceMember).Type;
+                        var property = (PropertySymbol)interfaceMember;
+                        interfaceMemberRefKind = property.RefKind;
+                        interfaceMemberReturnType = property.Type;
                         break;
                     case SymbolKind.Event:
                         interfaceMemberReturnType = ((EventSymbol)interfaceMember).Type;
                         break;
                     default:
-                        Debug.Assert(false, "Unexpected interface member kind " + interfaceMember.Kind);
-                        interfaceMemberReturnType = null;
+                        throw ExceptionUtilities.UnexpectedValue(interfaceMember.Kind);
+                }
+
+                bool hasRefReturnMismatch = false;
+                switch (closestMismatch.Kind)
+                {
+                    case SymbolKind.Method:
+                        hasRefReturnMismatch = (((MethodSymbol)closestMismatch).RefKind != RefKind.None) != (interfaceMemberRefKind != RefKind.None);
+                        break;
+
+                    case SymbolKind.Property:
+                        hasRefReturnMismatch = (((PropertySymbol)closestMismatch).RefKind != RefKind.None) != (interfaceMemberRefKind != RefKind.None);
                         break;
                 }
-                diagnostics.Add(ErrorCode.ERR_CloseUnimplementedInterfaceMemberWrongReturnType, interfacelocation, implementingType, interfaceMember, closestMismatch, interfaceMemberReturnType);
+
+                DiagnosticInfo useSiteDiagnostic;
+                if ((object)interfaceMemberReturnType != null &&
+                    (useSiteDiagnostic = interfaceMemberReturnType.GetUseSiteDiagnostic()) != null &&
+                    useSiteDiagnostic.DefaultSeverity == DiagnosticSeverity.Error)
+                {
+                    diagnostics.Add(useSiteDiagnostic, interfaceLocation);
+                }
+                else if (hasRefReturnMismatch)
+                {
+                    diagnostics.Add(ErrorCode.ERR_CloseUnimplementedInterfaceMemberWrongRefReturn, interfaceLocation, implementingType, interfaceMember, closestMismatch, interfaceMemberRefKind != RefKind.None ? "reference" : "value");
+                }
+                else
+                {
+                    diagnostics.Add(ErrorCode.ERR_CloseUnimplementedInterfaceMemberWrongReturnType, interfaceLocation, implementingType, interfaceMember, closestMismatch, interfaceMemberReturnType);
+                }
             }
         }
 
@@ -1185,7 +1332,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         private Symbol GetExplicitImplementationForInterfaceMember(Symbol interfaceMember)
         {
             var info = this.GetInterfaceInfo();
-            if (info == NoInterfaces)
+            if (info == s_noInterfaces)
             {
                 return null;
             }
@@ -1234,11 +1381,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (lazyAbstractMembers == null)
+                if (_lazyAbstractMembers == null)
                 {
-                    Interlocked.CompareExchange(ref this.lazyAbstractMembers, ComputeAbstractMembers(), null);
+                    Interlocked.CompareExchange(ref _lazyAbstractMembers, ComputeAbstractMembers(), null);
                 }
-                return lazyAbstractMembers;
+                return _lazyAbstractMembers;
             }
         }
 
@@ -1295,5 +1442,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         #endregion Abstract base type checks
+
+        [Obsolete("Use TypeWithModifiers.Is method.", true)]
+        internal bool Equals(TypeWithModifiers other)
+        {
+            return other.Is(this);
+        }
     }
 }

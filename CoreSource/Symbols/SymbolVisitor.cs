@@ -1,5 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -7,10 +6,7 @@ namespace Microsoft.CodeAnalysis
     {
         public virtual void Visit(ISymbol symbol)
         {
-            if (symbol != null)
-            {
-                symbol.Accept(this);
-            }
+            symbol?.Accept(this);
         }
 
         public virtual void DefaultVisit(ISymbol symbol)
@@ -28,6 +24,11 @@ namespace Microsoft.CodeAnalysis
         }
 
         public virtual void VisitAssembly(IAssemblySymbol symbol)
+        {
+            DefaultVisit(symbol);
+        }
+
+        public virtual void VisitDiscard(IDiscardSymbol symbol)
         {
             DefaultVisit(symbol);
         }

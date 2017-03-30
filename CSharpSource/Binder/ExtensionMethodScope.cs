@@ -1,8 +1,5 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.CodeAnalysis.CSharp
 {
     /// <summary>
@@ -28,16 +25,16 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal struct ExtensionMethodScopes
     {
-        private readonly Binder binder;
+        private readonly Binder _binder;
 
         public ExtensionMethodScopes(Binder binder)
         {
-            this.binder = binder;
+            _binder = binder;
         }
 
         public ExtensionMethodScopeEnumerator GetEnumerator()
         {
-            return new ExtensionMethodScopeEnumerator(this.binder);
+            return new ExtensionMethodScopeEnumerator(_binder);
         }
     }
 
@@ -46,43 +43,43 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal struct ExtensionMethodScopeEnumerator
     {
-        private readonly Binder binder;
-        private ExtensionMethodScope current;
+        private readonly Binder _binder;
+        private ExtensionMethodScope _current;
 
         public ExtensionMethodScopeEnumerator(Binder binder)
         {
-            this.binder = binder;
-            this.current = new ExtensionMethodScope();
+            _binder = binder;
+            _current = new ExtensionMethodScope();
         }
 
         public ExtensionMethodScope Current
         {
-            get { return this.current; }
+            get { return _current; }
         }
 
         public bool MoveNext()
         {
-            if (this.current.Binder == null)
+            if (_current.Binder == null)
             {
-                this.current = GetNextScope(this.binder);
+                _current = GetNextScope(_binder);
             }
             else
             {
-                var binder = this.current.Binder;
-                if (!this.current.SearchUsingsNotNamespace)
+                var binder = _current.Binder;
+                if (!_current.SearchUsingsNotNamespace)
                 {
                     // Return a scope for the same Binder that was previously exposed
                     // for the namespace, this time exposed for the usings.
-                    this.current = new ExtensionMethodScope(binder, searchUsingsNotNamespace: true);
+                    _current = new ExtensionMethodScope(binder, searchUsingsNotNamespace: true);
                 }
                 else
                 {
                     // Return a scope for the next Binder that supports extension methods.
-                    this.current = GetNextScope(binder.Next);
+                    _current = GetNextScope(binder.Next);
                 }
             }
 
-            return (this.current.Binder != null);
+            return (_current.Binder != null);
         }
 
         private static ExtensionMethodScope GetNextScope(Binder binder)

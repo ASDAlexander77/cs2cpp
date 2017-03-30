@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -21,24 +21,26 @@ namespace Microsoft.CodeAnalysis.CodeGen
     /// </summary>
     internal class SequencePointList
     {
-        private readonly SyntaxTree tree;
-        private readonly OffsetAndSpan[] points;
-        private SequencePointList next;  // Linked list of all points.
+        internal const int HiddenSequencePointLine = 0xFEEFEE;
+
+        private readonly SyntaxTree _tree;
+        private readonly OffsetAndSpan[] _points;
+        private SequencePointList _next;  // Linked list of all points.
 
         // No sequence points.
-        private static readonly SequencePointList Empty = new SequencePointList();
+        private static readonly SequencePointList s_empty = new SequencePointList();
 
         // Construct a list with no sequence points.
         private SequencePointList()
         {
-            points = SpecializedCollections.EmptyArray<OffsetAndSpan>();
+            _points = Array.Empty<OffsetAndSpan>();
         }
 
         // Construct a list with sequence points from exactly one syntax tree.
         private SequencePointList(SyntaxTree tree, OffsetAndSpan[] points)
         {
-            this.tree = tree;
-            this.points = points;
+            _tree = tree;
+            _points = points;
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         {
             if (seqPointBuilder.Count == 0)
             {
-                return SequencePointList.Empty;
+                return SequencePointList.s_empty;
             }
 
             SequencePointList first = null, current = null;
@@ -71,7 +73,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
                     }
                     else
                     {
-                        current.next = next;
+                        current._next = next;
                         current = next;
                     }
                 }
@@ -84,7 +86,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         {
             get
             {
-                return next == null && points.Length == 0;
+                return _next == null && _points.Length == 0;
             }
         }
 
@@ -107,28 +109,30 @@ namespace Microsoft.CodeAnalysis.CodeGen
         /// file names to debug documents with the given mapping function.
         /// </summary>
         /// <param name="documentProvider">Function that maps file paths to CCI debug documents</param>
-        public ImmutableArray<Cci.SequencePoint> GetSequencePoints(DebugDocumentProvider documentProvider)
+        /// <param name="builder">where sequence points should be deposited</param>
+        public void GetSequencePoints(
+            DebugDocumentProvider documentProvider,
+            ArrayBuilder<Cci.SequencePoint> builder)
         {
             bool lastPathIsMapped = false;
             string lastPath = null;
             Cci.DebugSourceDocument lastDebugDocument = null;
 
-            // First, count the number of sequence points.
-            int count = 0;
+            FileLinePositionSpan? firstReal = FindFirstRealSequencePoint();
+            if (!firstReal.HasValue)
+            {
+                return;
+            }
+            lastPath = firstReal.Value.Path;
+            lastPathIsMapped = firstReal.Value.HasMappedPath;
+            lastDebugDocument = documentProvider(lastPath, basePath: lastPathIsMapped ? this._tree.FilePath : null);
+
             SequencePointList current = this;
             while (current != null)
             {
-                count += current.points.Length;
-                current = current.next;
-            }
+                SyntaxTree currentTree = current._tree;
 
-            ArrayBuilder<Cci.SequencePoint> result = ArrayBuilder<Cci.SequencePoint>.GetInstance(count);
-            current = this;
-            while (current != null)
-            {
-                SyntaxTree currentTree = current.tree;
-
-                foreach (var offsetAndSpan in current.points)
+                foreach (var offsetAndSpan in current._points)
                 {
                     TextSpan span = offsetAndSpan.Span;
 
@@ -153,12 +157,12 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
                         if (lastDebugDocument != null)
                         {
-                            result.Add(new Cci.SequencePoint(
+                            builder.Add(new Cci.SequencePoint(
                                 lastDebugDocument,
                                 offset: offsetAndSpan.Offset,
-                                startLine: 0xFEEFEE,
+                                startLine: HiddenSequencePointLine,
                                 startColumn: 0,
-                                endLine: 0xFEEFEE,
+                                endLine: HiddenSequencePointLine,
                                 endColumn: 0));
                         }
                     }
@@ -173,7 +177,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
                         if (lastDebugDocument != null)
                         {
-                            result.Add(new Cci.SequencePoint(
+                            builder.Add(new Cci.SequencePoint(
                                 lastDebugDocument,
                                 offset: offsetAndSpan.Offset,
                                 startLine: (fileLinePositionSpan.StartLinePosition.Line == -1) ? 0 : fileLinePositionSpan.StartLinePosition.Line + 1,
@@ -185,10 +189,35 @@ namespace Microsoft.CodeAnalysis.CodeGen
                     }
                 }
 
-                current = current.next;
+                current = current._next;
+            }
+        }
+
+        // Find the document for the first non-hidden sequence point (issue #4370)
+        // Returns null if a real sequence point was not found.
+        private FileLinePositionSpan? FindFirstRealSequencePoint()
+        {
+            SequencePointList current = this;
+            
+            while (current != null)
+            {
+                foreach (var offsetAndSpan in current._points)
+                {
+                    TextSpan span = offsetAndSpan.Span;
+                    bool isHidden = span == RawSequencePoint.HiddenSequencePointSpan;
+                    if (!isHidden)
+                    {
+                        FileLinePositionSpan fileLinePositionSpan = current._tree.GetMappedLineSpanAndVisibility(span, out isHidden);
+                        if (!isHidden)
+                        {
+                            return fileLinePositionSpan;
+                        }
+                    }
+                }
+                current = current._next;
             }
 
-            return result.ToImmutableAndFree();
+            return null;
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +9,9 @@ namespace Roslyn.Utilities
     {
         private partial class Empty
         {
-            internal class Dictionary<TKey, TValue> : Collection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
+            internal class Dictionary<TKey, TValue> : Collection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
             {
-                public static readonly new IDictionary<TKey, TValue> Instance = new Dictionary<TKey, TValue>();
+                public static readonly new Dictionary<TKey, TValue> Instance = new Dictionary<TKey, TValue>();
 
                 private Dictionary()
                 {
@@ -34,6 +34,9 @@ namespace Roslyn.Utilities
                         return Collection<TKey>.Instance;
                     }
                 }
+
+                IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+                IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
                 public bool Remove(TKey key)
                 {

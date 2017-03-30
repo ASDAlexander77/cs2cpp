@@ -1,15 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -18,21 +10,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         /// <summary>
         /// Represents an anonymous type template's type parameter.
-        /// 
-        /// TODO: The symbol dones't have any behavior specific to anonymous type, so we should consider consolidating with <see cref="SynthesizedParameterSymbol"/>.
         /// </summary>
         internal sealed class AnonymousTypeParameterSymbol : TypeParameterSymbol
         {
-            private readonly Symbol container;
-            private readonly int ordinal;
-            private readonly string name;
+            private readonly Symbol _container;
+            private readonly int _ordinal;
+            private readonly string _name;
 
             public AnonymousTypeParameterSymbol(Symbol container, int ordinal, string name)
             {
-                Debug.Assert((object)container != null && !String.IsNullOrEmpty(name));
-                this.container = container;
-                this.ordinal = ordinal;
-                this.name = name;
+                Debug.Assert((object)container != null);
+                Debug.Assert(!string.IsNullOrEmpty(name));
+
+                _container = container;
+                _ordinal = ordinal;
+                _name = name;
             }
 
             public override TypeParameterKind TypeParameterKind
@@ -58,12 +50,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override int Ordinal
             {
-                get { return this.ordinal; }
+                get { return _ordinal; }
             }
 
             public override string Name
             {
-                get { return this.name; }
+                get { return _name; }
             }
 
             public override bool HasConstructorConstraint
@@ -102,7 +94,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override Symbol ContainingSymbol
             {
-                get { return this.container; }
+                get { return _container; }
             }
 
             internal override ImmutableArray<NamedTypeSymbol> GetInterfaces(ConsList<TypeParameterSymbol> inProgress)

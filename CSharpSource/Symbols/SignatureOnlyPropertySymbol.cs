@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -16,45 +16,55 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class SignatureOnlyPropertySymbol : PropertySymbol
     {
-        private readonly string name;
-        private readonly TypeSymbol containingType;
-        private readonly ImmutableArray<ParameterSymbol> parameters;
-        private readonly TypeSymbol type;
-        private readonly ImmutableArray<CustomModifier> typeCustomModifiers;
-        private readonly bool isStatic;
-        private readonly ImmutableArray<PropertySymbol> explicitInterfaceImplementations;
+        private readonly string _name;
+        private readonly TypeSymbol _containingType;
+        private readonly ImmutableArray<ParameterSymbol> _parameters;
+        private readonly RefKind _refKind;
+        private readonly TypeSymbol _type;
+        private readonly ImmutableArray<CustomModifier> _typeCustomModifiers;
+        private readonly ImmutableArray<CustomModifier> _refCustomModifiers;
+        private readonly bool _isStatic;
+        private readonly ImmutableArray<PropertySymbol> _explicitInterfaceImplementations;
 
         public SignatureOnlyPropertySymbol(
             string name,
             TypeSymbol containingType,
             ImmutableArray<ParameterSymbol> parameters,
+            RefKind refKind,
             TypeSymbol type,
             ImmutableArray<CustomModifier> typeCustomModifiers,
+            ImmutableArray<CustomModifier> refCustomModifiers,
             bool isStatic,
             ImmutableArray<PropertySymbol> explicitInterfaceImplementations)
         {
-            this.type = type;
-            this.typeCustomModifiers = typeCustomModifiers;
-            this.isStatic = isStatic;
-            this.parameters = parameters;
-            this.explicitInterfaceImplementations = explicitInterfaceImplementations.NullToEmpty();
-            this.containingType = containingType;
-            this.name = name;
+            _refKind = refKind;
+            _type = type;
+            _typeCustomModifiers = typeCustomModifiers;
+            _refCustomModifiers = refCustomModifiers;
+            _isStatic = isStatic;
+            _parameters = parameters;
+            _explicitInterfaceImplementations = explicitInterfaceImplementations.NullToEmpty();
+            _containingType = containingType;
+            _name = name;
         }
 
-        public override TypeSymbol Type { get { return this.type; } }
+        internal override RefKind RefKind { get { return _refKind; } }
 
-        public override ImmutableArray<CustomModifier> TypeCustomModifiers { get { return this.typeCustomModifiers; } }
+        public override TypeSymbol Type { get { return _type; } }
 
-        public override bool IsStatic { get { return this.isStatic; } }
+        public override ImmutableArray<CustomModifier> TypeCustomModifiers { get { return _typeCustomModifiers; } }
 
-        public override ImmutableArray<ParameterSymbol> Parameters { get { return parameters; } }
+        public override ImmutableArray<CustomModifier> RefCustomModifiers { get { return _refCustomModifiers; } }
 
-        public override ImmutableArray<PropertySymbol> ExplicitInterfaceImplementations { get { return explicitInterfaceImplementations; } }
+        public override bool IsStatic { get { return _isStatic; } }
 
-        public override Symbol ContainingSymbol { get { return containingType; } }
+        public override ImmutableArray<ParameterSymbol> Parameters { get { return _parameters; } }
 
-        public override string Name { get { return name; } }
+        public override ImmutableArray<PropertySymbol> ExplicitInterfaceImplementations { get { return _explicitInterfaceImplementations; } }
+
+        public override Symbol ContainingSymbol { get { return _containingType; } }
+
+        public override string Name { get { return _name; } }
 
         #region Not used by PropertySignatureComparer
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -11,12 +11,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
     internal sealed class PENetModuleBuilder : PEModuleBuilder
     {
         internal PENetModuleBuilder(
-            SourceModuleSymbol sourceModule, 
-            string outputName, 
-            ModulePropertiesForSerialization serializationProperties, 
-            IEnumerable<ResourceDescription> manifestResources,
-            bool metadataOnly)
-            : base(sourceModule, outputName, OutputKind.NetModule, serializationProperties, manifestResources, assemblySymbolMapper: null, metadataOnly: metadataOnly)
+            SourceModuleSymbol sourceModule,
+            EmitOptions emitOptions,
+            Cci.ModulePropertiesForSerialization serializationProperties,
+            IEnumerable<ResourceDescription> manifestResources)
+            : base(sourceModule, emitOptions, OutputKind.NetModule, serializationProperties, manifestResources)
         {
         }
 
@@ -24,5 +23,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
         {
             throw ExceptionUtilities.Unreachable;
         }
+
+        public override int CurrentGenerationOrdinal => 0;
+        public override IEnumerable<Cci.IFileReference> GetFiles(EmitContext context) => SpecializedCollections.EmptyEnumerable<Cci.IFileReference>();
+        public override ISourceAssemblySymbolInternal SourceAssemblyOpt => null;
     }
 }

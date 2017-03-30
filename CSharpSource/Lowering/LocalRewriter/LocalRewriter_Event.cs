@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -69,23 +69,23 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <remarks>
         /// TODO: use or delete isDynamic.
         /// </remarks>
-        private BoundExpression RewriteWindowsRuntimeEventAssignmentOperator(CSharpSyntaxNode syntax, EventSymbol eventSymbol, EventAssignmentKind kind, bool isDynamic, BoundExpression rewrittenReceiverOpt, BoundExpression rewrittenArgument)
+        private BoundExpression RewriteWindowsRuntimeEventAssignmentOperator(SyntaxNode syntax, EventSymbol eventSymbol, EventAssignmentKind kind, bool isDynamic, BoundExpression rewrittenReceiverOpt, BoundExpression rewrittenArgument)
         {
             BoundAssignmentOperator tempAssignment = null;
             BoundLocal boundTemp = null;
-            if (!eventSymbol.IsStatic && NeedsTemp(rewrittenReceiverOpt, localsMayBeAssigned: false))
+            if (!eventSymbol.IsStatic && CanChangeValueBetweenReads(rewrittenReceiverOpt))
             {
-                boundTemp = factory.StoreToTemp(rewrittenReceiverOpt, out tempAssignment);
+                boundTemp = _factory.StoreToTemp(rewrittenReceiverOpt, out tempAssignment);
             }
 
-            NamedTypeSymbol tokenType = factory.WellKnownType(WellKnownType.System_Runtime_InteropServices_WindowsRuntime_EventRegistrationToken);
-            NamedTypeSymbol marshalType = factory.WellKnownType(WellKnownType.System_Runtime_InteropServices_WindowsRuntime_WindowsRuntimeMarshal);
+            NamedTypeSymbol tokenType = _factory.WellKnownType(WellKnownType.System_Runtime_InteropServices_WindowsRuntime_EventRegistrationToken);
+            NamedTypeSymbol marshalType = _factory.WellKnownType(WellKnownType.System_Runtime_InteropServices_WindowsRuntime_WindowsRuntimeMarshal);
 
-            NamedTypeSymbol actionType = factory.WellKnownType(WellKnownType.System_Action_T).Construct(tokenType);
+            NamedTypeSymbol actionType = _factory.WellKnownType(WellKnownType.System_Action_T).Construct(tokenType);
 
             TypeSymbol eventType = eventSymbol.Type;
 
-            BoundExpression delegateCreationArgument = boundTemp ?? rewrittenReceiverOpt ?? factory.Type(eventType);
+            BoundExpression delegateCreationArgument = boundTemp ?? rewrittenReceiverOpt ?? _factory.Type(eventType);
 
             BoundDelegateCreationExpression removeDelegate = new BoundDelegateCreationExpression(
                 syntax: syntax,
@@ -122,7 +122,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
             else
             {
-                NamedTypeSymbol func2Type = factory.WellKnownType(WellKnownType.System_Func_T2).Construct(eventType, tokenType);
+                NamedTypeSymbol func2Type = _factory.WellKnownType(WellKnownType.System_Func_T2).Construct(eventType, tokenType);
 
                 BoundDelegateCreationExpression addDelegate = new BoundDelegateCreationExpression(
                     syntax: syntax,
@@ -172,7 +172,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return new BoundSequence(syntax, tempSymbols, sideEffects.ToImmutableAndFree(), marshalCall, marshalCall.Type);
         }
 
-        private BoundExpression VisitWindowsRuntimeEventFieldAssignmentOperator(CSharpSyntaxNode syntax, BoundEventAccess left, BoundExpression right)
+        private BoundExpression VisitWindowsRuntimeEventFieldAssignmentOperator(SyntaxNode syntax, BoundEventAccess left, BoundExpression rewrittenRight)
         {
             Debug.Assert(left.IsUsableAsField);
 
@@ -181,7 +181,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(eventSymbol.IsWindowsRuntimeEvent);
 
             BoundExpression rewrittenReceiverOpt = left.ReceiverOpt == null ? null : VisitExpression(left.ReceiverOpt);
-            BoundExpression rewrittenRight = VisitExpression(right);
 
             const bool isDynamic = false;
             return RewriteWindowsRuntimeEventAssignmentOperator(
@@ -204,7 +203,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private BoundExpression MakeEventAccess(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenReceiver,
             EventSymbol eventSymbol,
             ConstantValue constantValueOpt,
@@ -244,7 +243,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     syntax,
                     receiverOpt: null,
                     method: getOrCreateMethod,
-                    arguments: fieldAccess);
+                    arg0: fieldAccess);
             }
             else
             {
@@ -261,12 +260,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                     string accessorName = SourcePropertyAccessorSymbol.GetAccessorName(invocationListProperty.Name,
                         getNotSet: true,
                         isWinMdOutput: invocationListProperty.IsCompilationOutputWinMdObj());
-                    diagnostics.Add(new CSDiagnosticInfo(ErrorCode.ERR_MissingPredefinedMember, invocationListProperty.ContainingType, accessorName), syntax.Location);
+                    _diagnostics.Add(new CSDiagnosticInfo(ErrorCode.ERR_MissingPredefinedMember, invocationListProperty.ContainingType, accessorName), syntax.Location);
                 }
                 else
                 {
                     invocationListAccessor = invocationListAccessor.AsMember(fieldType);
-                    return factory.Call(getOrCreateCall, invocationListAccessor);
+                    return _factory.Call(getOrCreateCall, invocationListAccessor);
                 }
             }
 
@@ -281,27 +280,27 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             BoundExpression result = null;
 
-            CSharpSyntaxNode oldSyntax = factory.Syntax;
-            factory.Syntax = node.Syntax;
+            SyntaxNode oldSyntax = _factory.Syntax;
+            _factory.Syntax = node.Syntax;
 
 
-            var ctor = factory.WellKnownMethod(WellKnownMember.System_Runtime_InteropServices_ComAwareEventInfo__ctor);
+            var ctor = _factory.WellKnownMethod(WellKnownMember.System_Runtime_InteropServices_ComAwareEventInfo__ctor);
 
             if ((object)ctor != null)
             {
-                var addRemove = factory.WellKnownMethod(node.IsAddition ? WellKnownMember.System_Runtime_InteropServices_ComAwareEventInfo__AddEventHandler :
+                var addRemove = _factory.WellKnownMethod(node.IsAddition ? WellKnownMember.System_Runtime_InteropServices_ComAwareEventInfo__AddEventHandler :
                                                                           WellKnownMember.System_Runtime_InteropServices_ComAwareEventInfo__RemoveEventHandler);
 
                 if ((object)addRemove != null)
                 {
-                    BoundExpression eventInfo = factory.New(ctor, factory.Typeof(node.Event.ContainingType), factory.Literal(node.Event.MetadataName));
-                    result = factory.Call(eventInfo, addRemove,
-                                          factory.Convert(addRemove.Parameters[0].Type, rewrittenReceiver),
-                                          factory.Convert(addRemove.Parameters[1].Type, rewrittenArgument));
+                    BoundExpression eventInfo = _factory.New(ctor, _factory.Typeof(node.Event.ContainingType), _factory.Literal(node.Event.MetadataName));
+                    result = _factory.Call(eventInfo, addRemove,
+                                          _factory.Convert(addRemove.Parameters[0].Type, rewrittenReceiver),
+                                          _factory.Convert(addRemove.Parameters[1].Type, rewrittenArgument));
                 }
             }
 
-            factory.Syntax = oldSyntax;
+            _factory.Syntax = oldSyntax;
 
             // The code we just generated doesn't contain any direct references to the event itself,
             // but the com event binder needs the event to exist on the local type. We'll poke the pia reference
@@ -309,7 +308,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             var module = this.EmitModule;
             if (module != null)
             {
-                module.EmbeddedTypesManagerOpt.EmbedEventIfNeedTo(node.Event, node.Syntax, diagnostics, isUsedForComAwareEventBinding: true);
+                module.EmbeddedTypesManagerOpt.EmbedEventIfNeedTo(node.Event, node.Syntax, _diagnostics, isUsedForComAwareEventBinding: true);
             }
 
             if (result != null)

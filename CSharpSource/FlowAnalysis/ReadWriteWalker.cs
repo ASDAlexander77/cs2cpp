@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -34,10 +33,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
                 else
                 {
-                    readInside = walker.readInside;
-                    writtenInside = walker.writtenInside;
-                    readOutside = walker.readOutside;
-                    writtenOutside = walker.writtenOutside;
+                    readInside = walker._readInside;
+                    writtenInside = walker._writtenInside;
+                    readOutside = walker._readOutside;
+                    writtenOutside = walker._writtenOutside;
 
                     captured = walker.GetCaptured();
                     unsafeAddressTaken = walker.GetUnsafeAddressTaken();
@@ -49,10 +48,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private readonly HashSet<Symbol> readInside = new HashSet<Symbol>();
-        private readonly HashSet<Symbol> writtenInside = new HashSet<Symbol>();
-        private readonly HashSet<Symbol> readOutside = new HashSet<Symbol>();
-        private readonly HashSet<Symbol> writtenOutside = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _readInside = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _writtenInside = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _readOutside = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _writtenOutside = new HashSet<Symbol>();
 
         private ReadWriteWalker(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion,
             HashSet<PrefixUnaryExpressionSyntax> unassignedVariableAddressOfSyntaxes)
@@ -66,49 +65,55 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 foreach (var p in m.Parameters)
                 {
-                    if (p.RefKind != RefKind.None) readOutside.Add(p);
+                    if (p.RefKind != RefKind.None) _readOutside.Add(p);
                 }
 
-                if (!m.IsStatic && (object)m.ThisParameter != null && m.ThisParameter.RefKind != RefKind.None)
+                var thisParameter = m.ThisParameter;
+                if ((object)thisParameter != null && thisParameter.RefKind != RefKind.None)
                 {
-                    readOutside.Add(m.ThisParameter);
+                    _readOutside.Add(thisParameter);
                 }
             }
 
             base.EnterRegion();
         }
 
-        protected override void NoteRead(Symbol variable)
+        /// <summary>
+        /// Note that a variable is read.
+        /// </summary>
+        /// <param name="variable">The variable</param>
+        /// <param name="rangeVariableUnderlyingParameter">If variable.Kind is RangeVariable, its underlying lambda parameter. Else null.</param>
+        protected override void NoteRead(Symbol variable, ParameterSymbol rangeVariableUnderlyingParameter = null)
         {
             if ((object)variable == null) return;
-            if (variable.Kind != SymbolKind.Field) (IsInside ? readInside : readOutside).Add(variable);
-            base.NoteRead(variable);
+            if (variable.Kind != SymbolKind.Field) (IsInside ? _readInside : _readOutside).Add(variable);
+            base.NoteRead(variable, rangeVariableUnderlyingParameter);
         }
 
         protected override void NoteWrite(Symbol variable, BoundExpression value, bool read)
         {
             if ((object)variable == null) return;
-            (IsInside ? writtenInside : writtenOutside).Add(variable);
+            (IsInside ? _writtenInside : _writtenOutside).Add(variable);
             base.NoteWrite(variable, value, read);
         }
 
-        override protected void CheckAssigned(BoundExpression expr, FieldSymbol fieldSymbol, CSharpSyntaxNode node)
+        protected override void CheckAssigned(BoundExpression expr, FieldSymbol fieldSymbol, SyntaxNode node)
         {
             base.CheckAssigned(expr, fieldSymbol, node);
-            if (!IsInside && node.Span.Contains(RegionSpan) && expr is BoundFieldAccess)
+            if (!IsInside && node.Span.Contains(RegionSpan) && (expr.Kind == BoundKind.FieldAccess))
             {
-                NoteReceiverRead(expr as BoundFieldAccess);
+                NoteReceiverRead((BoundFieldAccess)expr);
             }
         }
 
         private void NoteReceiverWritten(BoundFieldAccess expr)
         {
-            NoteReceiverReadOrWritten(expr, writtenInside);
+            NoteReceiverReadOrWritten(expr, _writtenInside);
         }
 
         private void NoteReceiverRead(BoundFieldAccess expr)
         {
-            NoteReceiverReadOrWritten(expr, readInside);
+            NoteReceiverReadOrWritten(expr, _readInside);
         }
 
         /// <summary>
@@ -132,12 +137,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     if (RegionContains(receiverSyntax.Span))
                     {
                         readOrWritten.Add(((BoundLocal)receiver).LocalSymbol);
-                    }
-                    break;
-                case BoundKind.DeclarationExpression:
-                    if (RegionContains(receiverSyntax.Span))
-                    {
-                        readOrWritten.Add(((BoundDeclarationExpression)receiver).LocalSymbol);
                     }
                     break;
                 case BoundKind.ThisReference:
@@ -214,19 +213,34 @@ namespace Microsoft.CodeAnalysis.CSharp
             return VisitLambda(node.BindForErrorRecovery());
         }
 
-        public override void VisitForEachIterationVariable(BoundForEachStatement node)
-        {
-            var local = node.IterationVariable;
-            if ((object)local != null)
-            {
-                MakeSlot(local);
-                Assign(node, value: null);
-            }
-        }
-
         public override BoundNode VisitRangeVariable(BoundRangeVariable node)
         {
-            NoteRead(node.RangeVariableSymbol);
+            // Compute the "underlying symbol" for a read of the range variable
+            ParameterSymbol rangeVariableUnderlyingParameter = GetRangeVariableUnderlyingParameter(node.Value);
+            NoteRead(node.RangeVariableSymbol, rangeVariableUnderlyingParameter);
+            return null;
+        }
+
+        /// <summary>
+        /// Compute the underlying lambda parameter symbol for a range variable, if any.
+        /// </summary>
+        /// <param name="underlying">The bound node for the expansion of the range variable</param>
+        private static ParameterSymbol GetRangeVariableUnderlyingParameter(BoundNode underlying)
+        {
+            while (underlying != null)
+            {
+                switch (underlying.Kind)
+                {
+                    case BoundKind.Parameter:
+                        return ((BoundParameter)underlying).ParameterSymbol;
+                    case BoundKind.PropertyAccess:
+                        underlying = ((BoundPropertyAccess)underlying).ReceiverOpt;
+                        continue;
+                    default:
+                        return null;
+                }
+            }
+
             return null;
         }
 

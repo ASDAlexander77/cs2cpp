@@ -1,29 +1,32 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.CodeAnalysis.Diagnostics
 {
     /// <summary>
-    /// A thread-safe, asynchronously dequeuable queue.
+    /// A queue whose enqueue and dequeue operations can be performed in parallel.
     /// </summary>
     /// <typeparam name="TElement">The type of values kept by the queue.</typeparam>
-    public sealed class AsyncQueue<TElement>
+    internal sealed class AsyncQueue<TElement>
     {
-        private readonly object syncObject = new object();
-        private readonly Queue<TElement> data = new Queue<TElement>();
-        private readonly Queue<TaskCompletionSource<TElement>> waiters = new Queue<TaskCompletionSource<TElement>>();
-        private bool completed = false;
-        private readonly TaskCompletionSource<bool> whenCompleted = new TaskCompletionSource<bool>();
-        private Exception thrown = null;
+        private readonly TaskCompletionSource<bool> _whenCompleted = new TaskCompletionSource<bool>();
+
+        // Note: All of the below fields are accessed in parallel and may only be accessed
+        // when protected by lock (SyncObject)
+        private readonly Queue<TElement> _data = new Queue<TElement>();
+        private Queue<TaskCompletionSource<TElement>> _waiters;
+        private bool _completed;
+        private bool _disallowEnqueue;
+
+        private object SyncObject
+        {
+            get { return _data; }
+        }
 
         /// <summary>
         /// The number of unconsumed elements in the queue.
@@ -32,100 +35,83 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         {
             get
             {
-                lock(syncObject)
+                lock (SyncObject)
                 {
-                    return data.Count;
+                    return _data.Count;
                 }
             }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AsyncQueue{TElement}"/> class.
+        /// Adds an element to the tail of the queue.  This method will throw if the queue 
+        /// is completed.
         /// </summary>
-        public AsyncQueue()
-        {
-        }
-
-        /// <summary>
-        /// Adds an element to the tail of the queue.
-        /// </summary>
+        /// <exception cref="InvalidOperationException">The queue is already completed.</exception>
         /// <param name="value">The value to add.</param>
         public void Enqueue(TElement value)
         {
-            TaskCompletionSource<TElement> waiter;
-            lock(syncObject)
+            if (!EnqueueCore(value))
             {
-                if (completed)
-                {
-                    throw new InvalidOperationException("Enqueue after Complete");
-                }
-
-                if (thrown != null)
-                {
-                    return;
-                }
-
-                if (waiters.Count == 0)
-                {
-                    data.Enqueue(value);
-                    return;
-                }
-
-                Debug.Assert(data.Count == 0);
-                waiter = waiters.Dequeue();
+                throw new InvalidOperationException($"Cannot call {nameof(Enqueue)} when the queue is already completed.");
             }
-
-            Task.Run(() => waiter.SetResult(value));
         }
 
         /// <summary>
-        /// Set the queue to an exception state. Once this has been done, every
-        /// Dequeue operation will throw this exception.
+        /// Tries to add an element to the tail of the queue.  This method will return false if the queue
+        /// is completed.
         /// </summary>
-        /// <param name="exception">The exception to be associated with this queue.</param>
-        public void SetException(Exception exception)
+        /// <param name="value">The value to add.</param>
+        public bool TryEnqueue(TElement value)
         {
-            if (exception == null) throw new ArgumentNullException("exception");
-            ImmutableArray<TaskCompletionSource<TElement>> waitersArray;
-            lock (syncObject)
-            {
-                if (completed)
-                {
-                    throw new InvalidOperationException("Thrown after Completed");
-                }
-
-                if (thrown != null)
-                {
-                    throw new InvalidOperationException("Thrown after Thrown");
-                }
-
-                thrown = exception;
-                data.Clear();
-                waitersArray = waiters.AsImmutable();
-                waiters.Clear();
-            }
-
-            Task.Run(() =>
-            {
-                whenCompleted.SetException(exception);
-                foreach (var tcs in waitersArray)
-                {
-                    tcs.SetException(exception);
-                }
-            });
+            return EnqueueCore(value);
         }
 
-        public bool TryDequeue(out TElement d)
+        private bool EnqueueCore(TElement value)
         {
-            d = default(TElement);
-            lock(syncObject)
+            if (_disallowEnqueue)
             {
-                if (data.Count == 0)
+                throw new InvalidOperationException($"Cannot enqueue data after PromiseNotToEnqueue.");
+            }
+
+            TaskCompletionSource<TElement> waiter;
+            lock (SyncObject)
+            {
+                if (_completed)
                 {
                     return false;
                 }
 
-                d = data.Dequeue();
+                if (_waiters == null || _waiters.Count == 0)
+                {
+                    _data.Enqueue(value);
+                    return true;
+                }
+
+                Debug.Assert(_data.Count == 0);
+                waiter = _waiters.Dequeue();
+            }
+
+            // Invoke SetResult on a separate task, as this invocation could cause the underlying task to executing,
+            // which could be a long running operation that can potentially cause a deadlock if executed on the current thread.
+            Task.Run(() => waiter.SetResult(value));
+
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to dequeue an existing item and return whether or not it was available.
+        /// </summary>
+        public bool TryDequeue(out TElement d)
+        {
+            lock (SyncObject)
+            {
+                if (_data.Count == 0)
+                {
+                    d = default(TElement);
+                    return false;
+                }
+
+                d = _data.Dequeue();
                 return true;
             }
         }
@@ -137,99 +123,154 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         {
             get
             {
-                lock(syncObject)
+                lock (SyncObject)
                 {
-                    return completed;
+                    return _completed;
                 }
             }
         }
 
         /// <summary>
-        /// Signals that no further elements will be enqueued.
+        /// Signals that no further elements will be enqueued.  All outstanding and future
+        /// Dequeue Task will be cancelled.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The queue is already completed.</exception>
         public void Complete()
         {
-            ImmutableArray<TaskCompletionSource<TElement>> waitersArray;
-            lock(syncObject)
+            if (!CompleteCore())
             {
-                if (completed)
+                throw new InvalidOperationException($"Cannot call {nameof(Complete)} when the queue is already completed.");
+            }
+        }
+
+        public void PromiseNotToEnqueue()
+        {
+            _disallowEnqueue = true;
+        }
+
+        /// <summary>
+        /// Same operation as <see cref="AsyncQueue{TElement}.Complete"/> except it will not
+        /// throw if the queue is already completed.
+        /// </summary>
+        /// <returns>Whether or not the operation succeeded.</returns>
+        public bool TryComplete()
+        {
+            return CompleteCore();
+        }
+
+        private bool CompleteCore()
+        {
+            Queue<TaskCompletionSource<TElement>> existingWaiters;
+            lock (SyncObject)
+            {
+                if (_completed)
                 {
-                    throw new InvalidOperationException("Completed after Completed");
+                    return false;
                 }
 
-                if (thrown != null)
-                {
-                    throw new InvalidOperationException("Completed after Thrown");
-                }
+                _completed = true;
 
-                waitersArray = waiters.AsImmutable();
-                waiters.Clear();
-                completed = true;
+                existingWaiters = _waiters;
+                _waiters = null;
             }
 
             Task.Run(() =>
             {
-                whenCompleted.SetResult(true);
-                foreach (var tcs in waitersArray)
+                if (existingWaiters?.Count > 0)
                 {
-                    tcs.SetCanceled();
+                    // cancel waiters.
+                    // NOTE: AsyncQueue has an invariant that 
+                    //       the queue can either have waiters or items, not both
+                    //       adding an item would "unwait" the waiters
+                    //       the fact that we _had_ waiters at the time we completed the queue
+                    //       guarantees that there is no items in the queue now or in the future, 
+                    //       so it is safe to cancel waiters with no loss of diagnostics
+                    Debug.Assert(this.Count == 0, "we should not be cancelling the waiters when we have items in the queue");
+                    foreach (var tcs in existingWaiters)
+                    {
+                        tcs.SetCanceled();
+                    }
                 }
+
+                _whenCompleted.SetResult(true);
             });
+
+            return true;
         }
 
         /// <summary>
-        /// Gets a task that transitions to a completed state when <see cref="Complete"/> is called.
+        /// Gets a task that transitions to a completed state when <see cref="Complete"/> or
+        /// <see cref="TryComplete"/> is called.  This transition will not happen synchronously.
+        /// 
+        /// This Task will not complete until it has completed all existing values returned
+        /// from <see cref="DequeueAsync"/>.
         /// </summary>
-        public Task WhenCompleted
+        public Task WhenCompletedTask
         {
             get
             {
-                return whenCompleted.Task;
+                return _whenCompleted.Task;
             }
         }
 
         /// <summary>
         /// Gets a task whose result is the element at the head of the queue. If the queue
-        /// is empty, waits for an element to be enqueued. If <see cref="Complete"/> is called
-        /// before an element becomes available, the returned task is cancelled. If
-        /// <see cref="SetException"/> is called before an element becomes available, the
-        /// returned task throws that exception.
+        /// is empty, the returned task waits for an element to be enqueued. If <see cref="Complete"/> 
+        /// is called before an element becomes available, the returned task is cancelled.
         /// </summary>
-        public Task<TElement> DequeueAsync()
+        public Task<TElement> DequeueAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            // TODO: should this method accept a cancellation token?
-            lock(syncObject)
-            {
-                if (thrown != null)
-                {
-                    var waiter = new TaskCompletionSource<TElement>();
-                    waiter.SetException(thrown);
-                    return waiter.Task;
-                }
-
-                if (data.Count != 0)
-                {
-                    Debug.Assert(waiters.Count == 0);
-                    var datum = data.Dequeue();
-                    return Task.FromResult(datum);
-                }
-
-                if (completed)
-                {
-                    var waiter = new TaskCompletionSource<TElement>();
-                    waiter.SetCanceled();
-                    return waiter.Task;
-                }
-
-                var waiter0 = new TaskCompletionSource<TElement>();
-                waiters.Enqueue(waiter0);
-                return waiter0.Task;
-            }
+            return WithCancellation(DequeueAsyncCore(), cancellationToken);
         }
 
-        public override string ToString()
+        /// <summary>
+        /// 
+        /// Note: The early cancellation behavior is intentional.
+        /// </summary>
+        private static Task<T> WithCancellation<T>(Task<T> task, CancellationToken cancellationToken)
         {
-            return "AsyncQueue<" + typeof(TElement).Name + ">:" + (IsCompleted ? "Completed" : Count.ToString());
+            if (task.IsCompleted || !cancellationToken.CanBeCanceled)
+            {
+                return task;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new Task<T>(() => default(T), cancellationToken);
+            }
+
+            return task.ContinueWith(t => t, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
+        }
+
+        private Task<TElement> DequeueAsyncCore()
+        {
+            lock (SyncObject)
+            {
+                // No matter what the state we allow DequeueAsync to drain the existing items 
+                // in the queue.  This keeps the behavior in line with TryDequeue
+                if (_data.Count > 0)
+                {
+                    return Task.FromResult(_data.Dequeue());
+                }
+
+                if (_completed)
+                {
+                    var tcs = new TaskCompletionSource<TElement>();
+                    tcs.SetCanceled();
+                    return tcs.Task;
+                }
+                else
+                {
+                    if (_waiters == null)
+                    {
+                        _waiters = new Queue<TaskCompletionSource<TElement>>();
+                    }
+
+                    var waiter = new TaskCompletionSource<TElement>();
+                    _waiters.Enqueue(waiter);
+                    return waiter.Task;
+                }
+            }
         }
     }
 }

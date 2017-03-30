@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -45,7 +45,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             SeparatedSyntaxList<ParameterSyntax>? parameterSyntaxList = null;
             bool hasSignature;
 
-            switch (syntax.Kind)
+            switch (syntax.Kind())
             {
                 default:
                 case SyntaxKind.SimpleLambdaExpression:
@@ -53,7 +53,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     hasSignature = true;
                     var simple = (SimpleLambdaExpressionSyntax)syntax;
                     namesBuilder.Add(simple.Parameter.Identifier.ValueText);
-                    isAsync = (simple.AsyncKeyword.CSharpKind() == SyntaxKind.AsyncKeyword);
+                    isAsync = (simple.AsyncKeyword.Kind() == SyntaxKind.AsyncKeyword);
                     break;
                 case SyntaxKind.ParenthesizedLambdaExpression:
                     // (T x, U y) => ...
@@ -61,7 +61,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     hasSignature = true;
                     var paren = (ParenthesizedLambdaExpressionSyntax)syntax;
                     parameterSyntaxList = paren.ParameterList.Parameters;
-                    isAsync = (paren.AsyncKeyword.CSharpKind() == SyntaxKind.AsyncKeyword);
+                    isAsync = (paren.AsyncKeyword.Kind() == SyntaxKind.AsyncKeyword);
                     break;
                 case SyntaxKind.AnonymousMethodExpression:
                     // delegate (int x) { }
@@ -72,7 +72,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         parameterSyntaxList = anon.ParameterList.Parameters;
                     }
-                    isAsync = (anon.AsyncKeyword.CSharpKind() == SyntaxKind.AsyncKeyword);
+                    isAsync = (anon.AsyncKeyword.Kind() == SyntaxKind.AsyncKeyword);
                     break;
             }
 
@@ -94,6 +94,16 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 foreach (var p in parameterSyntaxList.Value)
                 {
+                    foreach (var attributeList in p.AttributeLists)
+                    {
+                        Error(diagnostics, ErrorCode.ERR_AttributesNotAllowed, attributeList);
+                    }
+
+                    if (p.Default != null)
+                    {
+                        Error(diagnostics, ErrorCode.ERR_DefaultValueNotAllowed, p.Default.EqualsToken);
+                    }
+
                     if (p.IsArgList)
                     {
                         Error(diagnostics, ErrorCode.ERR_IllegalVarArgs, p);
@@ -113,19 +123,25 @@ namespace Microsoft.CodeAnalysis.CSharp
                         type = BindType(typeSyntax, diagnostics);
                         foreach (var modifier in p.Modifiers)
                         {
-                            if (modifier.CSharpKind() == SyntaxKind.RefKeyword)
+                            SyntaxKind modifierKind = modifier.Kind();
+                            if (modifierKind == SyntaxKind.ThisKeyword)
+                            {
+                                Error(diagnostics, ErrorCode.ERR_ThisInBadContext, modifier);
+                                break;
+                            }
+                            else if (modifierKind == SyntaxKind.RefKeyword)
                             {
                                 refKind = RefKind.Ref;
                                 allValue = false;
                                 break;
                             }
-                            else if (modifier.CSharpKind() == SyntaxKind.OutKeyword)
+                            else if (modifierKind == SyntaxKind.OutKeyword)
                             {
                                 refKind = RefKind.Out;
                                 allValue = false;
                                 break;
                             }
-                            else if (modifier.CSharpKind() == SyntaxKind.ParamsKeyword)
+                            else if (modifierKind == SyntaxKind.ParamsKeyword)
                             {
                                 // This was a parse error in the native compiler; 
                                 // it is a semantic analysis error in Roslyn. See comments to
@@ -191,10 +207,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             var lambda = new UnboundLambda(syntax, this, refKinds, types, names, isAsync);
             if (!names.IsDefault)
             {
-               var binder = new LocalScopeBinder(this);
+                var binder = new LocalScopeBinder(this);
                 var pNames = PooledHashSet<string>.GetInstance();
 
-                for (int i = 0; i < lambda.ParameterCount; i ++)
+                for (int i = 0; i < lambda.ParameterCount; i++)
                 {
                     var name = lambda.ParameterName(i);
 

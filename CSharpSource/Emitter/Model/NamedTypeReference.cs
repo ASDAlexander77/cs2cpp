@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -65,16 +65,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             return null;
         }
 
-        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode(EmitContext context)
-        {
-            return Cci.PrimitiveTypeCode.NotPrimitive;
-        }
-
-        TypeHandle Cci.ITypeReference.TypeDef
+        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode
         {
             get
             {
-                return default(TypeHandle);
+                return Cci.PrimitiveTypeCode.NotPrimitive;
+            }
+        }
+
+        TypeDefinitionHandle Cci.ITypeReference.TypeDef
+        {
+            get
+            {
+                return default(TypeDefinitionHandle);
             }
         }
 

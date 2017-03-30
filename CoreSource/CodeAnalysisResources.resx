@@ -207,10 +207,10 @@
   <data name="GetMetadataMustReturnInstance" xml:space="preserve">
     <value>{0}.GetMetadata() must return an instance of {1}.</value>
   </data>
-  <data name="ValueTooLargeToBeRepresented" xml:space="preserve">
+  <data name="Value_too_large_to_be_represented_as_a_30_bit_unsigned_integer" xml:space="preserve">
     <value>Value too large to be represented as a 30 bit unsigned integer.</value>
   </data>
-  <data name="ArraysWithMoreThanOneDimensionCannotBeSerialized" xml:space="preserve">
+  <data name="Arrays_with_more_than_one_dimension_cannot_be_serialized" xml:space="preserve">
     <value>Arrays with more than one dimension cannot be serialized.</value>
   </data>
   <data name="InvalidAssemblyName" xml:space="preserve">
@@ -218,6 +218,15 @@
   </data>
   <data name="AbsolutePathExpected" xml:space="preserve">
     <value>Absolute path expected.</value>
+  </data>
+  <data name="EmptyKeyInPathMap" xml:space="preserve">
+    <value>A key in the pathMap is empty.</value>
+  </data>
+  <data name="NullValueInPathMap" xml:space="preserve">
+    <value>A value in the pathMap is null.</value>
+  </data>
+  <data name="KeyInPathMapEndsWithSeparator" xml:space="preserve">
+    <value>A key in the pathMap ends with a path separator.</value>
   </data>
   <data name="CompilationOptionsMustNotHaveErrors" xml:space="preserve">
     <value>Compilation options must not have errors.</value>
@@ -270,6 +279,9 @@
   <data name="FileSizeExceedsMaximumAllowed" xml:space="preserve">
     <value>File size exceeds maximum allowed size of a valid metadata file.</value>
   </data>
+  <data name="NameCannotBeNull" xml:space="preserve">
+    <value>Name cannot be null.</value>
+  </data>
   <data name="NameCannotBeEmpty" xml:space="preserve">
     <value>Name cannot be empty.</value>
   </data>
@@ -283,7 +295,7 @@
     <value>The span does not include the start of a line.</value>
   </data>
   <data name="SpanDoesNotIncludeEndOfLine" xml:space="preserve">
-    <value>Then span does not include the end of a line.</value>
+    <value>The span does not include the end of a line.</value>
   </data>
   <data name="StartMustNotBeNegative" xml:space="preserve">
     <value>'start' must not be negative</value>
@@ -309,8 +321,23 @@
   <data name="StreamMustSupportReadAndSeek" xml:space="preserve">
     <value>Stream must support read and seek operations.</value>
   </data>
-  <data name="InvalidSHA1Hash" xml:space="preserve">
-    <value>Invalid SHA1 hash.</value>
+  <data name="StreamMustSupportRead" xml:space="preserve">
+    <value>Stream must be readable.</value>
+  </data>
+  <data name="StreamMustSupportWrite" xml:space="preserve">
+    <value>Stream must be writable.</value>
+  </data>
+  <data name="PdbStreamUnexpectedWhenEmbedding" xml:space="preserve">
+    <value>PDB stream should not be given when embedding PDB into the PE stream.</value>
+  </data>
+  <data name="InvalidHash" xml:space="preserve">
+    <value>Invalid hash.</value>
+  </data>
+  <data name="UnsupportedHashAlgorithm" xml:space="preserve">
+    <value>Unsupported hash algorithm.</value>
+  </data>
+  <data name="InconsistentLanguageVersions" xml:space="preserve">
+    <value>Inconsistent language versions</value>
   </data>
   <data name="CoffResourceInvalidRelocation" xml:space="preserve">
     <value>Win32 resources, assumed to be in COFF object format, have one or more invalid relocation header values.</value>
@@ -342,9 +369,6 @@
   <data name="XmlReferencesNotSupported" xml:space="preserve">
     <value>References to XML documents are not supported.</value>
   </data>
-  <data name="RuleSetSchemaViolation" xml:space="preserve">
-    <value>The file does not conform to the rule set schema - {0}</value>
-  </data>
   <data name="FailedToResolveRuleSetName" xml:space="preserve">
     <value>Could not locate the rule set file '{0}'.</value>
   </data>
@@ -352,10 +376,24 @@
     <value>An error occurred while loading the included rule set file {0} - {1}</value>
   </data>
   <data name="CompilerAnalyzerFailure" xml:space="preserve">
-    <value>Compiler Analyzer Failure</value>
+    <value>Analyzer Failure</value>
   </data>
   <data name="CompilerAnalyzerThrows" xml:space="preserve">
-    <value>The Compiler Analyzer '{0}' threw an exception with message '{1}'.</value>
+    <value>Analyzer '{0}' threw an exception of type '{1}' with message '{2}'.</value>
+  </data>
+  <data name="CompilerAnalyzerThrowsDescription" xml:space="preserve">
+    <value>Analyzer '{0}' threw the following exception:
+'{1}'.</value>
+  </data>
+  <data name="AnalyzerDriverFailure" xml:space="preserve">
+    <value>Analyzer Driver Failure</value>
+  </data>
+  <data name="AnalyzerDriverThrows" xml:space="preserve">
+    <value>Analyzer driver threw an exception of type '{0}' with message '{1}'.</value>
+  </data>
+  <data name="AnalyzerDriverThrowsDescription" xml:space="preserve">
+    <value>Analyzer driver threw the following exception:
+'{0}'.</value>
   </data>
   <data name="PEImageDoesntContainManagedMetadata" xml:space="preserve">
     <value>PE image doesn't contain managed metadata.</value>
@@ -364,9 +402,196 @@
     <value>The changes must be ordered and not overlapping.</value>
   </data>
   <data name="DiagnosticIdCantBeNullOrWhitespace" xml:space="preserve">
-    <value>A DiagnosticDescriptor must have an Id that is neiter null nor an empty string nor a string that only contains white space.</value>
+    <value>A DiagnosticDescriptor must have an Id that is neither null nor an empty string nor a string that only contains white space.</value>
   </data>
   <data name="RuleSetHasDuplicateRules" xml:space="preserve">
     <value>The rule set file has duplicate rules for '{0}' with differing actions '{1}' and '{2}'.</value>
+  </data>
+  <data name="CantCreateModuleReferenceToAssembly" xml:space="preserve">
+    <value>Can't create a module reference to an assembly.</value>
+  </data>
+  <data name="CantCreateReferenceToDynamicAssembly" xml:space="preserve">
+    <value>Can't create a metadata reference to a dynamic assembly.</value>
+  </data>
+  <data name="CantCreateReferenceToAssemblyWithoutLocation" xml:space="preserve">
+    <value>Can't create a metadata reference to an assembly without location.</value>
+  </data>
+  <data name="ArgumentCannotBeEmpty" xml:space="preserve">
+    <value>Argument cannot be empty.</value>
+  </data>
+  <data name="ArgumentElementCannotBeNull" xml:space="preserve">
+    <value>Argument cannot have a null element.</value>
+  </data>
+  <data name="AsyncAnalyzerActionCannotBeRegistered" xml:space="preserve">
+    <value>Analyzer attempted to register an 'async' action, which is not supported.</value>
+  </data>
+  <data name="UnsupportedDiagnosticReported" xml:space="preserve">
+    <value>Reported diagnostic with ID '{0}' is not supported by the analyzer.</value>
+  </data>
+  <data name="InvalidDiagnosticIdReported" xml:space="preserve">
+    <value>Reported diagnostic has an ID '{0}', which is not a valid identifier.</value>
+  </data>
+  <data name="InvalidDiagnosticLocationReported" xml:space="preserve">
+    <value>Reported diagnostic '{0}' has a source location in file '{1}', which is not part of the compilation being analyzed.</value>
+  </data>
+  <data name="The_type_0_is_not_understood_by_the_serialization_binder" xml:space="preserve">
+    <value>The type '{0}' is not understood by the serialization binder.</value>
+  </data>
+  <data name="Cannot_deserialize_type_0" xml:space="preserve">
+    <value>Cannot deserialize type '{0}'.</value>
+  </data>
+  <data name="Cannot_serialize_type_0" xml:space="preserve">
+    <value>Cannot serialize type '{0}'.</value>
+  </data>
+  <data name="InvalidNodeToTrack" xml:space="preserve">
+    <value>Node to track is not a descendant of the root.</value>
+  </data>
+  <data name="NodeOrTokenOutOfSequence" xml:space="preserve">
+    <value>A node or token is out of sequence.</value>
+  </data>
+  <data name="UnexpectedTypeOfNodeInList" xml:space="preserve">
+    <value>A node in the list is not of the expected type.</value>
+  </data>
+  <data name="MissingListItem" xml:space="preserve">
+    <value>The item specified is not the element of a list.</value>
+  </data>
+  <data name="InvalidPublicKey" xml:space="preserve">
+    <value>Invalid public key.</value>
+  </data>
+  <data name="InvalidPublicKeyToken" xml:space="preserve">
+    <value>Invalid public key token.</value>
+  </data>
+  <data name="InvalidDataAtOffset" xml:space="preserve">
+    <value>Invalid data at offset {0}: {1}{2}*{3}{4}</value>
+  </data>
+  <data name="SymWriterNotDeterministic" xml:space="preserve">
+    <value>Windows PDB writer doesn't support deterministic compilation -- could not find Microsoft.DiaSymReader.Native.{0}.dll</value>
+  </data>
+  <data name="SymWriterNotAvailable" xml:space="preserve">
+    <value>Windows PDB writer is not available -- could not find Microsoft.DiaSymReader.Native.{0}.dll</value>
+  </data>
+  <data name="RuleSetBadAttributeValue" xml:space="preserve">
+    <value>The attribute {0} has an invalid value of {1}.</value>
+  </data>
+  <data name="RuleSetMissingAttribute" xml:space="preserve">
+    <value>The element {0} is missing an attribute named {1}.</value>
+  </data>
+  <data name="KeepAliveIsNotAnInteger" xml:space="preserve">
+    <value>Argument to '/keepalive' option is not a 32-bit integer.</value>
+  </data>
+  <data name="KeepAliveIsTooSmall" xml:space="preserve">
+    <value>Arguments to '/keepalive' option below -1 are invalid.</value>
+  </data>
+  <data name="KeepAliveWithoutShared" xml:space="preserve">
+    <value>'/keepalive' option is only valid with '/shared' option.</value>
+  </data>
+  <data name="MismatchedVersion" xml:space="preserve">
+    <value>Roslyn compiler server reports different protocol version than build task.</value>
+  </data>
+  <data name="MissingKeepAlive" xml:space="preserve">
+    <value>Missing argument for '/keepalive' option.</value>
+  </data>
+  <data name="AnalyzerTotalExecutionTime" xml:space="preserve">
+    <value>Total analyzer execution time: {0} seconds.</value>
+  </data>
+  <data name="MultithreadedAnalyzerExecutionNote" xml:space="preserve">
+    <value>NOTE: Elapsed time may be less than analyzer execution time because analyzers can run concurrently.</value>
+  </data>
+  <data name="AnalyzerExecutionTimeColumnHeader" xml:space="preserve">
+    <value>Time (s)</value>
+  </data>
+  <data name="AnalyzerNameColumnHeader" xml:space="preserve">
+    <value>Analyzer</value>
+  </data>
+  <data name="NoAnalyzersFound" xml:space="preserve">
+    <value>No analyzers found</value>
+  </data>
+  <data name="DuplicateAnalyzerInstances" xml:space="preserve">
+    <value>Argument contains duplicate analyzer instances.</value>
+  </data>
+  <data name="UnsupportedAnalyzerInstance" xml:space="preserve">
+    <value>Argument contains an analyzer instance that does not belong to the 'Analyzers' for this CompilationWithAnalyzers instance.</value>
+  </data>
+  <data name="InvalidTree" xml:space="preserve">
+    <value>Syntax tree doesn't belong to the underlying 'Compilation'.</value>
+  </data>
+  <data name="ResourceStreamEndedUnexpectedly" xml:space="preserve">
+    <value>Resource stream ended at {0} bytes, expected {1} bytes.</value>
+  </data>
+  <data name="SharedArgumentMissing" xml:space="preserve">
+    <value>Value for argument '/shared:' must not be empty</value>
+  </data>
+  <data name="ExceptionContext" xml:space="preserve">
+    <value>Exception occurred with following context:
+{0}</value>
+  </data>
+  <data name="AnonymousTypeMemberAndNamesCountMismatch2" xml:space="preserve">
+    <value>{0} and {1} must have the same length.</value>
+  </data>
+  <data name="AnonymousTypeArgumentCountMismatch2" xml:space="preserve">
+    <value>{0} must either be 'default' or have the same length as {1}.</value>
+  </data>
+  <data name="InconsistentSyntaxTreeFeature" xml:space="preserve">
+    <value>Inconsistent syntax tree features</value>
+  </data>
+  <data name="ReferenceOfTypeIsInvalid1" xml:space="preserve">
+    <value>Reference of type '{0}' is not valid for this compilation.</value>
+  </data>
+  <data name="MetadataRefNotFoundToRemove1" xml:space="preserve">
+    <value>MetadataReference '{0}' not found to remove.</value>
+  </data>
+  <data name="TupleElementNameCountMismatch" xml:space="preserve">
+    <value>If tuple element names are specified, the number of element names must match the cardinality of the tuple.</value>
+  </data>
+  <data name="TupleElementNameEmpty" xml:space="preserve">
+    <value>Tuple element name cannot be an empty string.</value>
+  </data>
+  <data name="TupleElementLocationCountMismatch" xml:space="preserve">
+    <value>If tuple element locations are specified, the number of locations must match the cardinality of the tuple.</value>
+  </data>
+  <data name="TuplesNeedAtLeastTwoElements" xml:space="preserve">
+    <value>Tuples must have at least two elements.</value>
+  </data>
+  <data name="CompilationReferencesAssembliesWithDifferentAutoGeneratedVersion" xml:space="preserve">
+    <value>The compilation references multiple assemblies whose versions only differ in auto-generated build and/or revision numbers.</value>
+  </data>
+  <data name="TupleUnderlyingTypeMustBeTupleCompatible" xml:space="preserve">
+    <value>The underlying type for a tuple must be tuple-compatible.</value>
+  </data>
+  <data name="IOperationFeatureDisabled" xml:space="preserve">
+    <value>Feature 'IOperation' is disabled.</value>
+  </data>
+  <data name="SourceLinkRequiresPortablePdb" xml:space="preserve">
+    <value>Source Link embedding is only supported when emitting Portable PDB.</value>
+  </data>
+  <data name="UnrecognizedResourceFileFormat" xml:space="preserve">
+    <value>Unrecognized resource file format.</value>
+  </data>
+  <data name="SourceTextCannotBeEmbedded" xml:space="preserve">
+    <value>SourceText cannot be embedded. Provide encoding or canBeEmbedded=true at construction.</value>
+  </data>
+  <data name="StreamIsTooLong" xml:space="preserve">
+    <value>Stream is too long.</value>
+  </data>
+  <data name="EmbeddedTextsRequirePortablePdb" xml:space="preserve">
+    <value>Embedded texts are only supported when emitting Portable PDB.</value>
+  </data>
+  <data name="TheStreamCannotBeWrittenTo" xml:space="preserve">
+    <value>The stream cannot be written to.</value>
+  </data>
+  <data name="ElementIsExpected" xml:space="preserve">
+    <value>element is expected</value>
+  </data>
+  <data name="SeparatorIsExpected" xml:space="preserve">
+    <value>separator is expected</value>
+  </data>
+  <data name="TheStreamCannotBeReadFrom" xml:space="preserve">
+    <value>The stream cannot be read from.</value>
+  </data>
+  <data name="Deserialization_reader_for_0_read_incorrect_number_of_values" xml:space="preserve">
+    <value>Deserialization reader for '{0}' read incorrect number of values.</value>
+  </data>
+  <data name="Stream_contains_invalid_data" xml:space="preserve">
+    <value>Stream contains invalid data</value>
   </data>
 </root>

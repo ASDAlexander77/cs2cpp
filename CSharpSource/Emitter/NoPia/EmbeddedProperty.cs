@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -37,41 +37,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit.NoPia
             }
         }
 
-        protected override Cci.CallingConvention CallingConvention
+        protected override Cci.ISignature UnderlyingPropertySignature
         {
             get
             {
-                return UnderlyingProperty.CallingConvention;
+                return (Cci.ISignature)UnderlyingProperty;
             }
-        }
-
-        protected override bool ReturnValueIsModified
-        {
-            get
-            {
-                return UnderlyingProperty.TypeCustomModifiers.Length != 0;
-            }
-        }
-
-        protected override ImmutableArray<Cci.ICustomModifier> ReturnValueCustomModifiers
-        {
-            get
-            {
-                return UnderlyingProperty.TypeCustomModifiers.As<Cci.ICustomModifier>();
-            }
-        }
-
-        protected override bool ReturnValueIsByRef
-        {
-            get
-            {
-                return UnderlyingProperty.Type is ByRefReturnErrorTypeSymbol;
-            }
-        }
-
-        protected override Cci.ITypeReference GetType(PEModuleBuilder moduleBuilder, CSharpSyntaxNode syntaxNodeOpt, DiagnosticBag diagnostics)
-        {
-            return moduleBuilder.Translate(UnderlyingProperty.Type, syntaxNodeOpt, diagnostics);
         }
 
         protected override EmbeddedType ContainingType

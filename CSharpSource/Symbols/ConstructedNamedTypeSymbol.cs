@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -27,6 +27,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return TypeParameters.Cast<TypeParameterSymbol, TypeSymbol>(); }
         }
 
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
+        }
+
         public override NamedTypeSymbol ConstructedFrom
         {
             get { return this; }
@@ -38,17 +51,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class ConstructedNamedTypeSymbol : SubstitutedNamedTypeSymbol
     {
-        private readonly ImmutableArray<TypeSymbol> typeArguments;
-        private readonly NamedTypeSymbol constructedFrom;
+        private readonly ImmutableArray<TypeSymbol> _typeArguments;
+        private readonly bool _hasTypeArgumentsCustomModifiers;
+        private readonly NamedTypeSymbol _constructedFrom;
 
-        internal ConstructedNamedTypeSymbol(NamedTypeSymbol constructedFrom, ImmutableArray<TypeSymbol> typeArguments, bool unbound = false)
+        internal ConstructedNamedTypeSymbol(NamedTypeSymbol constructedFrom, ImmutableArray<TypeWithModifiers> typeArguments, bool unbound = false)
             : base(newContainer: constructedFrom.ContainingSymbol,
                    map: new TypeMap(constructedFrom.ContainingType, constructedFrom.OriginalDefinition.TypeParameters, typeArguments),
                    originalDefinition: constructedFrom.OriginalDefinition,
                    constructedFrom: constructedFrom, unbound: unbound)
         {
-            this.typeArguments = typeArguments;
-            this.constructedFrom = constructedFrom;
+            _typeArguments = typeArguments.ToTypes(out _hasTypeArgumentsCustomModifiers);
+            _constructedFrom = constructedFrom;
 
             Debug.Assert(constructedFrom.Arity == typeArguments.Length);
             Debug.Assert(constructedFrom.Arity != 0);
@@ -58,7 +72,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return constructedFrom;
+                return _constructedFrom;
             }
         }
 
@@ -66,11 +80,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return typeArguments;
+                return _typeArguments;
             }
         }
 
-        internal static bool TypeParametersMatchTypeArguments(ImmutableArray<TypeParameterSymbol> typeParameters, ImmutableArray<TypeSymbol> typeArguments)
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return _hasTypeArgumentsCustomModifiers;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            if (_hasTypeArgumentsCustomModifiers)
+            {
+                return TypeSubstitution.GetTypeArgumentsCustomModifiersFor(_constructedFrom.OriginalDefinition.TypeParameters[ordinal]);
+            }
+
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
+        }
+
+        internal static bool TypeParametersMatchTypeArguments(ImmutableArray<TypeParameterSymbol> typeParameters, ImmutableArray<TypeWithModifiers> typeArguments)
         {
             int n = typeParameters.Length;
             Debug.Assert(typeArguments.Length == n);
@@ -78,7 +110,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             for (int i = 0; i < n; i++)
             {
-                if (!ReferenceEquals(typeArguments[i], typeParameters[i]))
+                if (!typeArguments[i].Is(typeParameters[i]))
                 {
                     return false;
                 }
@@ -89,8 +121,24 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal sealed override bool GetUnificationUseSiteDiagnosticRecursive(ref DiagnosticInfo result, Symbol owner, ref HashSet<TypeSymbol> checkedTypes)
         {
-            return ConstructedFrom.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes) ||
-                   GetUnificationUseSiteDiagnosticRecursive(ref result, typeArguments, owner, ref checkedTypes);
+            if (ConstructedFrom.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes) ||
+                GetUnificationUseSiteDiagnosticRecursive(ref result, _typeArguments, owner, ref checkedTypes))
+            {
+                return true;
+            }
+
+            if (_hasTypeArgumentsCustomModifiers)
+            {
+                for (int i = 0; i < this.Arity; i++)
+                {
+                    if (GetUnificationUseSiteDiagnosticRecursive(ref result, this.GetTypeArgumentCustomModifiers(i), owner, ref checkedTypes))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

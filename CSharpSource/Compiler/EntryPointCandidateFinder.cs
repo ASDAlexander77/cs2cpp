@@ -1,18 +1,16 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal class EntryPointCandidateFinder : CSharpSymbolVisitor<object, object>
     {
-        private readonly ArrayBuilder<MethodSymbol> entryPointCandidates;
-        private readonly bool visitNestedTypes;
-        private readonly CancellationToken cancellationToken;
+        private readonly ArrayBuilder<MethodSymbol> _entryPointCandidates;
+        private readonly bool _visitNestedTypes;
+        private readonly CancellationToken _cancellationToken;
 
         public static void FindCandidatesInNamespace(NamespaceSymbol root, ArrayBuilder<MethodSymbol> entryPointCandidates, CancellationToken cancellationToken)
         {
@@ -28,14 +26,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private EntryPointCandidateFinder(ArrayBuilder<MethodSymbol> entryPointCandidates, bool visitNestedTypes, CancellationToken cancellationToken)
         {
-            this.entryPointCandidates = entryPointCandidates;
-            this.visitNestedTypes = visitNestedTypes;
-            this.cancellationToken = cancellationToken;
+            _entryPointCandidates = entryPointCandidates;
+            _visitNestedTypes = visitNestedTypes;
+            _cancellationToken = cancellationToken;
         }
 
         public override object VisitNamespace(NamespaceSymbol symbol, object arg)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            _cancellationToken.ThrowIfCancellationRequested();
 
             foreach (var s in symbol.GetMembersUnordered())
             {
@@ -47,14 +45,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override object VisitNamedType(NamedTypeSymbol symbol, object arg)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            _cancellationToken.ThrowIfCancellationRequested();
 
             foreach (var member in symbol.GetMembersUnordered())
             {
                 switch (member.Kind)
                 {
                     case SymbolKind.NamedType:
-                        if (this.visitNestedTypes)
+                        if (_visitNestedTypes)
                         {
                             member.Accept(this, arg);
                         }
@@ -71,9 +69,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 }
                             }
 
-                            if (entryPointCandidates != null && method.IsEntryPointCandidate)
+                            if (method.IsEntryPointCandidate)
                             {
-                                entryPointCandidates.Add(method);
+                                _entryPointCandidates.Add(method);
                             }
                             break;
                         }

@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Text
@@ -11,15 +10,15 @@ namespace Microsoft.CodeAnalysis.Text
     /// </summary>
     public struct TextLine : IEquatable<TextLine>
     {
-        private readonly SourceText text;
-        private readonly int start;
-        private readonly int endIncludingBreaks;
+        private readonly SourceText _text;
+        private readonly int _start;
+        private readonly int _endIncludingBreaks;
 
         private TextLine(SourceText text, int start, int endIncludingBreaks)
         {
-            this.text = text;
-            this.start = start;
-            this.endIncludingBreaks = endIncludingBreaks;
+            _text = text;
+            _start = start;
+            _endIncludingBreaks = endIncludingBreaks;
         }
 
         /// <summary>
@@ -33,12 +32,12 @@ namespace Microsoft.CodeAnalysis.Text
         {
             if (text == null)
             {
-                throw new ArgumentNullException("text");
+                throw new ArgumentNullException(nameof(text));
             }
 
             if (span.Start > text.Length || span.Start < 0 || span.End > text.Length)
             {
-                throw new ArgumentOutOfRangeException("span");
+                throw new ArgumentOutOfRangeException(nameof(span));
             }
 
             if (text.Length > 0)
@@ -46,7 +45,7 @@ namespace Microsoft.CodeAnalysis.Text
                 // check span is start of line
                 if (span.Start > 0 && !TextUtilities.IsAnyLineBreakCharacter(text[span.Start - 1]))
                 {
-                    throw new ArgumentOutOfRangeException(CodeAnalysisResources.SpanDoesNotIncludeStartOfLine);
+                    throw new ArgumentOutOfRangeException(nameof(span), CodeAnalysisResources.SpanDoesNotIncludeStartOfLine);
                 }
 
                 bool endIncludesLineBreak = false;
@@ -69,7 +68,7 @@ namespace Microsoft.CodeAnalysis.Text
                 // check end of span is at end of line
                 if (span.End < text.Length && !endIncludesLineBreak)
                 {
-                    throw new ArgumentOutOfRangeException(CodeAnalysisResources.SpanDoesNotIncludeEndOfLine);
+                    throw new ArgumentOutOfRangeException(nameof(span), CodeAnalysisResources.SpanDoesNotIncludeEndOfLine);
                 }
 
                 return new TextLine(text, span.Start, span.End);
@@ -85,7 +84,7 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         public SourceText Text
         {
-            get { return this.text; }
+            get { return _text; }
         }
 
         /// <summary>
@@ -95,14 +94,7 @@ namespace Microsoft.CodeAnalysis.Text
         {
             get
             {
-                if (this.text != null)
-                {
-                    return this.text.Lines.IndexOf(this.start);
-                }
-                else
-                {
-                    return 0;
-                }
+                return _text?.Lines.IndexOf(_start) ?? 0;
             }
         }
 
@@ -111,7 +103,7 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         public int Start
         {
-            get { return this.start; }
+            get { return _start; }
         }
 
         /// <summary>
@@ -119,24 +111,22 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         public int End
         {
-            get { return this.endIncludingBreaks - this.LineBreakLength; }
+            get { return _endIncludingBreaks - this.LineBreakLength; }
         }
 
         private int LineBreakLength
         {
             get
             {
-                if (this.text == null || this.text.Length == 0 || this.endIncludingBreaks == this.start)
+                if (_text == null || _text.Length == 0 || _endIncludingBreaks == _start)
                 {
                     return 0;
                 }
-                else
-                {
-                    int startLineBreak;
-                    int lineBreakLength;
-                    TextUtilities.GetStartAndLengthOfLineBreakEndingAt(this.text, this.endIncludingBreaks - 1, out startLineBreak, out lineBreakLength);
-                    return lineBreakLength;
-                }
+
+                int startLineBreak;
+                int lineBreakLength;
+                TextUtilities.GetStartAndLengthOfLineBreakEndingAt(_text, _endIncludingBreaks - 1, out startLineBreak, out lineBreakLength);
+                return lineBreakLength;
             }
         }
 
@@ -145,7 +135,7 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         public int EndIncludingLineBreak
         {
-            get { return this.endIncludingBreaks; }
+            get { return _endIncludingBreaks; }
         }
 
         /// <summary>
@@ -166,13 +156,13 @@ namespace Microsoft.CodeAnalysis.Text
 
         public override string ToString()
         {
-            if (this.text == null || this.text.Length == 0)
+            if (_text == null || _text.Length == 0)
             {
                 return string.Empty;
             }
             else
             {
-                return this.text.ToString(this.Span);
+                return _text.ToString(this.Span);
             }
         }
 
@@ -188,9 +178,9 @@ namespace Microsoft.CodeAnalysis.Text
 
         public bool Equals(TextLine other)
         {
-            return other.text == this.text
-                && other.start == this.start
-                && other.endIncludingBreaks == this.endIncludingBreaks;
+            return other._text == _text
+                && other._start == _start
+                && other._endIncludingBreaks == _endIncludingBreaks;
         }
 
         public override bool Equals(object obj)
@@ -205,7 +195,7 @@ namespace Microsoft.CodeAnalysis.Text
 
         public override int GetHashCode()
         {
-            return Hash.Combine(this.text, Hash.Combine(this.start, this.endIncludingBreaks));
+            return Hash.Combine(_text, Hash.Combine(_start, _endIncludingBreaks));
         }
     }
 }

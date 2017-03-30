@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -103,5 +103,10 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// 7.5.3.2 of the language specification).
         /// </summary>
         Worse,
+
+        /// <summary>
+        /// Same as <see cref="Worse"/>, but the candidate shouldn't be mentioned in an ambiguity diagnostics.
+        /// </summary>
+        Worst,
     }
 }

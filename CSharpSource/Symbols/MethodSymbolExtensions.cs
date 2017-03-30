@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.CodeAnalysis.Collections;
+using Roslyn.Utilities;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -53,19 +55,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             var paramCount = method.ParameterCount;
             var arguments = new BoundExpression[paramCount];
-            var argumentTypes = new TypeSymbol[paramCount];
             for (int i = 0; i < paramCount; i++)
             {
                 var argument = (i == 0) ? thisArgumentValue : otherArgumentValue;
                 arguments[i] = argument;
-                argumentTypes[i] = argument.Type;
             }
 
             var typeArgs = MethodTypeInferrer.InferTypeArgumentsFromFirstArgument(
                 conversions,
                 method,
-                argumentTypes.AsImmutableOrNull(),
-                arguments.AsImmutableOrNull(),
+                arguments.AsImmutable(),
                 ref useSiteDiagnostics);
 
             if (typeArgs.IsDefault)
@@ -73,13 +72,48 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return null;
             }
 
+            int firstNullInTypeArgs = -1;
+
+            // For the purpose of constraint checks we use error type symbol in place of type arguments that we couldn't infer from the first argument.
+            // This prevents constraint checking from failing for corresponding type parameters. 
+            var notInferredTypeParameters = PooledHashSet<TypeParameterSymbol>.GetInstance();
+            var typeParams = method.TypeParameters;
+            var typeArgsForConstraintsCheck = typeArgs;
+            for (int i = 0; i < typeArgsForConstraintsCheck.Length; i++)
+            {
+                if ((object)typeArgsForConstraintsCheck[i] == null)
+                {
+                    firstNullInTypeArgs = i;
+                    var builder = ArrayBuilder<TypeSymbol>.GetInstance();
+                    builder.AddRange(typeArgs, firstNullInTypeArgs);
+
+                    for (; i < typeArgsForConstraintsCheck.Length; i++)
+                    {
+                        var typeArg = typeArgsForConstraintsCheck[i];
+                        if ((object)typeArg == null)
+                        {
+                            notInferredTypeParameters.Add(typeParams[i]);
+                            builder.Add(ErrorTypeSymbol.UnknownResultType);
+                        }
+                        else
+                        {
+                            builder.Add(typeArg);
+                        }
+                    }
+
+                    typeArgsForConstraintsCheck = builder.ToImmutableAndFree();
+                    break;
+                }
+            }
+
             // Check constraints.
             var diagnosticsBuilder = ArrayBuilder<TypeParameterDiagnosticInfo>.GetInstance();
-            var typeParams = method.TypeParameters;
-            var substitution = new TypeMap(typeParams, typeArgs);
+            var substitution = new TypeMap(typeParams, typeArgsForConstraintsCheck.SelectAsArray(TypeMap.TypeSymbolAsTypeWithModifiers));
             ArrayBuilder<TypeParameterDiagnosticInfo> useSiteDiagnosticsBuilder = null;
-            var success = method.CheckConstraints(conversions, substitution, method.TypeParameters, typeArgs, compilation, diagnosticsBuilder, ref useSiteDiagnosticsBuilder);
+            var success = method.CheckConstraints(conversions, substitution, typeParams, typeArgsForConstraintsCheck, compilation, diagnosticsBuilder, ref useSiteDiagnosticsBuilder, 
+                                                  ignoreTypeConstraintsDependentOnTypeParametersOpt: notInferredTypeParameters.Count > 0 ? notInferredTypeParameters : null);
             diagnosticsBuilder.Free();
+            notInferredTypeParameters.Free();
 
             if (useSiteDiagnosticsBuilder != null && useSiteDiagnosticsBuilder.Count > 0)
             {
@@ -99,7 +133,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return null;
             }
 
-            return method.Construct(typeArgs);
+            // For the purpose of construction we use original type parameters in place of type arguments that we couldn't infer from the first argument.
+            var typeArgsForConstruct = typeArgs;
+            if (firstNullInTypeArgs != -1)
+            {
+                var builder = ArrayBuilder<TypeSymbol>.GetInstance();
+                builder.AddRange(typeArgs, firstNullInTypeArgs);
+
+                for (int i = firstNullInTypeArgs; i < typeArgsForConstruct.Length; i++)
+                {
+                    builder.Add(typeArgsForConstruct[i] ?? typeParams[i]);
+                }
+
+                typeArgsForConstruct = builder.ToImmutableAndFree();
+            }
+
+            return method.Construct(typeArgsForConstruct);
         }
 
         internal static bool IsSynthesizedLambda(this MethodSymbol method)
@@ -197,8 +246,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event: // Events are not covered by CSemanticChecker::FindSymHiddenByMethPropAgg.
                     return true;
                 default:
-                    Debug.Assert(false, "Expected a member kind, found " + hidingMemberKind);
-                    return false;
+                    throw ExceptionUtilities.UnexpectedValue(hidingMemberKind);
             }
         }
 
@@ -241,7 +289,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public static bool IsTaskReturningAsync(this MethodSymbol method, CSharpCompilation compilation)
         {
             return method.IsAsync
-                && method.ReturnType == compilation.GetWellKnownType(WellKnownType.System_Threading_Tasks_Task);
+                && method.ReturnType.IsNonGenericTaskType(compilation);
         }
 
         /// <summary>
@@ -250,9 +298,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public static bool IsGenericTaskReturningAsync(this MethodSymbol method, CSharpCompilation compilation)
         {
             return method.IsAsync
-                && (object)method.ReturnType != null
-                && method.ReturnType.Kind == SymbolKind.NamedType
-                && ((NamedTypeSymbol)method.ReturnType).ConstructedFrom == compilation.GetWellKnownType(WellKnownType.System_Threading_Tasks_Task_T);
+                && method.ReturnType.IsGenericTaskType(compilation);
         }
     }
 }

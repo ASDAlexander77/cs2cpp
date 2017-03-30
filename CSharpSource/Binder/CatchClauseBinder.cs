@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -10,58 +10,54 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal sealed class CatchClauseBinder : LocalScopeBinder
     {
-        private readonly CatchClauseSyntax syntax;
+        private readonly CatchClauseSyntax _syntax;
 
         public CatchClauseBinder(Binder enclosing, CatchClauseSyntax syntax)
-            : base(enclosing, enclosing.Flags | BinderFlags.InCatchBlock)
+            : base(enclosing, (enclosing.Flags | BinderFlags.InCatchBlock) & ~BinderFlags.InNestedFinallyBlock)
         {
             Debug.Assert(syntax != null);
-            this.syntax = syntax;
+            _syntax = syntax;
         }
 
         override protected ImmutableArray<LocalSymbol> BuildLocals()
         {
-            SourceLocalSymbol local = null;
+            var locals = ArrayBuilder<LocalSymbol>.GetInstance();
 
-            var declarationOpt = syntax.Declaration;
-            if ((declarationOpt != null) && (declarationOpt.Identifier.CSharpKind() != SyntaxKind.None))
+            var declarationOpt = _syntax.Declaration;
+            if ((declarationOpt != null) && (declarationOpt.Identifier.Kind() != SyntaxKind.None))
             {
-                local = SourceLocalSymbol.MakeLocal(this.ContainingMemberOrLambda, this, declarationOpt.Type, declarationOpt.Identifier, LocalDeclarationKind.CatchVariable);
+                locals.Add(SourceLocalSymbol.MakeLocal(this.ContainingMemberOrLambda, this, false, declarationOpt.Type, declarationOpt.Identifier, LocalDeclarationKind.CatchVariable));
             }
 
-            if (syntax.Filter != null)
+            if (_syntax.Filter != null)
             {
-                var walker = new BuildLocalsFromDeclarationsWalker(this.GetBinder(syntax.Filter), syntax.Filter);
-
-                walker.Visit(syntax.Filter);
-
-                if (walker.Locals != null)
-                {
-                    if ((object)local != null)
-                    {
-                        walker.Locals.Insert(0, local);
-                    }
-
-                    return walker.Locals.ToImmutableAndFree();
-                }
+                ExpressionVariableFinder.FindExpressionVariables(this, locals, _syntax.Filter.FilterExpression);
             }
 
-            if ((object)local != null)
-            {
-                return ImmutableArray.Create<LocalSymbol>(local);
-            }
-
-            return ImmutableArray<LocalSymbol>.Empty;
+            return locals.ToImmutableAndFree();
         }
 
-        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(CSharpSyntaxNode node)
+        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(SyntaxNode scopeDesignator)
         {
-            if (node == syntax)
+            if (_syntax == scopeDesignator)
             {
                 return this.Locals;
             }
 
             throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override ImmutableArray<LocalFunctionSymbol> GetDeclaredLocalFunctionsForScope(CSharpSyntaxNode scopeDesignator)
+        {
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override SyntaxNode ScopeDesignator
+        {
+            get
+            {
+                return _syntax;
+            }
         }
     }
 }

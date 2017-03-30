@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Emit;
 using System.Collections.Immutable;
@@ -58,7 +58,6 @@ namespace Microsoft.CodeAnalysis.CodeGen
                 return;
             }
 
-            Debug.Assert(!(typeReference is Cci.IManagedPointerTypeReference));
             //Cci.IManagedPointerTypeReference managedPointerType = typeReference as Cci.IManagedPointerTypeReference;
             //if (managedPointerType != null)
             //{
@@ -130,7 +129,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
             // Visit return value type
             VisitTypeReference(methodReference.GetType(context), context);
-            
+
             foreach (var typeModifier in methodReference.ReturnValueCustomModifiers)
             {
                 VisitTypeReference(typeModifier.GetModifier(context), context);

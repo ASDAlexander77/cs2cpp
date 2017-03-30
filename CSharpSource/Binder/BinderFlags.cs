@@ -1,3 +1,5 @@
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
 using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
@@ -60,12 +62,44 @@ namespace Microsoft.CodeAnalysis.CSharp
         InTryBlockOfTryCatch = 1 << 19, // try block must have at least one catch clause
         InCatchFilter = 1 << 20,
 
-        SuppressAccessChecks = 1 << 21,
+        // Indicates that this binder is inside of a finally block that is nested inside
+        // of a catch block. This flag resets at every catch clause in the binder chain.
+        // This flag is only used to support CS0724. Implies that InFinallyBlock and
+        // InCatchBlock are also set.
+        InNestedFinallyBlock = 1 << 21,
 
-        ParameterDefaultValue = 1 << 22,
+        IgnoreAccessibility = 1 << 22,
+
+        ParameterDefaultValue = 1 << 23,
+
+        /// <summary>
+        /// In the debugger, one can take the address of a managed object.
+        /// </summary>
+        AllowManagedAddressOf = 1 << 24,
+
+        /// <summary>
+        /// In the debugger, the context is always unsafe, but one can still await.
+        /// </summary>
+        AllowAwaitInUnsafeContext = 1 << 25,
+
+        /// <summary>
+        /// Ignore duplicate types from the cor library.
+        /// </summary>
+        IgnoreCorLibraryDuplicatedTypes = 1 << 26,
+
+        /// <summary>
+        /// When binding imports in scripts/submissions, using aliases (other than from the current submission)
+        /// are considered but other imports are not.
+        /// </summary>
+        InScriptUsing = 1 << 27,
+
+        /// <summary>
+        /// In a file that has been included in the compilation via #load.
+        /// </summary>
+        InLoadedSyntaxTree = 1 << 28,
 
         // Groups
 
-        AllClearedAtExecutableCodeBoundary = InLockBody | InCatchBlock | InCatchFilter | InFinallyBlock | InTryBlockOfTryCatch,
+        AllClearedAtExecutableCodeBoundary = InLockBody | InCatchBlock | InCatchFilter | InFinallyBlock | InTryBlockOfTryCatch | InNestedFinallyBlock,
     }
 }

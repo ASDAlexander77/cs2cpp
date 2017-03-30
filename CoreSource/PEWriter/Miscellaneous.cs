@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Runtime.InteropServices;
-using Roslyn.Utilities;
+using System.Diagnostics;
+using System.Reflection;
 using EmitContext = Microsoft.CodeAnalysis.Emit.EmitContext;
 
 namespace Microsoft.Cci
@@ -89,23 +88,13 @@ namespace Microsoft.Cci
     /// </summary>
     internal struct SecurityAttribute
     {
-        private readonly SecurityAction action;
-        private readonly ICustomAttribute attribute;
+        public DeclarativeSecurityAction Action { get; }
+        public ICustomAttribute Attribute { get; }
 
-        public SecurityAttribute(SecurityAction action, ICustomAttribute attribute)
+        public SecurityAttribute(DeclarativeSecurityAction action, ICustomAttribute attribute)
         {
-            this.attribute = attribute;
-            this.action = action;
-        }
-
-        public SecurityAction Action
-        {
-            get { return action; }
-        }
-
-        public ICustomAttribute Attribute
-        {
-            get { return attribute; }
+            Action = action;
+            Attribute = attribute;
         }
     }
 
@@ -115,7 +104,7 @@ namespace Microsoft.Cci
     internal interface IMarshallingInformation
     {
         /// <summary>
-        /// <see cref="ITypeReference"/> or a string (ususally a fully-qualified type name of a type implementing the custom marshaller, but Dev11 allows any string).
+        /// <see cref="ITypeReference"/> or a string (usually a fully-qualified type name of a type implementing the custom marshaller, but Dev11 allows any string).
         /// </summary>
         object GetCustomMarshaller(EmitContext context);
 
@@ -137,7 +126,7 @@ namespace Microsoft.Cci
         }
 
         /// <summary>
-        /// Specifies the index of the parameter that contains the value of the Inteface Identifier (IID) of the marshalled object.
+        /// Specifies the index of the parameter that contains the value of the Interface Identifier (IID) of the marshalled object.
         /// -1 if it should be omitted from the marshal blob.
         /// </summary>
         int IidParameterIndex
@@ -146,7 +135,7 @@ namespace Microsoft.Cci
         }
 
         /// <summary>
-        /// The unmanaged type to which the managed type will be marshalled. This can be be UnmanagedType.CustomMarshaler, in which case the unmanaged type
+        /// The unmanaged type to which the managed type will be marshalled. This can be UnmanagedType.CustomMarshaler, in which case the unmanaged type
         /// is decided at runtime.
         /// </summary>
         System.Runtime.InteropServices.UnmanagedType UnmanagedType { get; }
@@ -174,7 +163,7 @@ namespace Microsoft.Cci
         /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
         /// -1 if it should be omitted from the marshal blob.
         /// </summary>
-        System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype
+        VarEnum SafeArrayElementSubtype
         {
             get;
         }
@@ -207,7 +196,7 @@ namespace Microsoft.Cci
         /// <summary>
         /// Method must be called before calling INamedEntity.Name.
         /// </summary>
-        void AssociateWithPeWriter(PeWriter peWriter);
+        void AssociateWithMetadataWriter(MetadataWriter metadataWriter);
     }
 
     /// <summary>
@@ -220,43 +209,6 @@ namespace Microsoft.Cci
         /// The position in the parameter list where this instance can be found.
         /// </summary>
         ushort Index { get; }
-    }
-
-    /// <summary>
-    /// This enum is used internally by BCL. It includes flags that are not in the metadata spec.
-    /// </summary>
-    [Flags]
-    internal enum PInvokeAttributes : ushort
-    {
-        NoMangle = 0x0001,
-
-        CharSetMask = 0x0006,
-        CharSetNotSpec = 0x0000,
-        CharSetAnsi = 0x0002,
-        CharSetUnicode = 0x0004,
-        CharSetAuto = 0x0006,
-
-
-        BestFitUseAssem = 0x0000,
-        BestFitEnabled = 0x0010,
-        BestFitDisabled = 0x0020,
-        BestFitMask = 0x0030,
-
-        ThrowOnUnmappableCharUseAssem = 0x0000,
-        ThrowOnUnmappableCharEnabled = 0x1000,
-        ThrowOnUnmappableCharDisabled = 0x2000,
-        ThrowOnUnmappableCharMask = 0x3000,
-
-        SupportsLastError = 0x0040,
-
-        CallConvMask = 0x0700,
-        CallConvWinapi = 0x0100,
-        CallConvCdecl = 0x0200,
-        CallConvStdcall = 0x0300,
-        CallConvThiscall = 0x0400,
-        CallConvFastcall = 0x0500,
-
-        MaxValue = 0xFFFF,
     }
 
     /// <summary>
@@ -277,13 +229,16 @@ namespace Microsoft.Cci
         /// <summary>
         /// Flags that determine marshalling behavior.
         /// </summary>
-        PInvokeAttributes Flags { get; }
+        MethodImportAttributes Flags { get; }
     }
 
     internal class ResourceSection
     {
         internal ResourceSection(byte[] sectionBytes, uint[] relocations)
         {
+            Debug.Assert(sectionBytes != null);
+            Debug.Assert(relocations != null);
+
             SectionBytes = sectionBytes;
             Relocations = relocations;
         }
@@ -306,7 +261,6 @@ namespace Microsoft.Cci
         string TypeName
         {
             get;
-
             // ^ requires this.TypeId < 0;
         }
 
@@ -324,7 +278,6 @@ namespace Microsoft.Cci
         string Name
         {
             get;
-
             // ^ requires this.Id < 0; 
         }
 

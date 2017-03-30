@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace Microsoft.CodeAnalysis
     /// The LineDirectiveMap is created to enable translating positions, using the #line directives
     /// in a file. The basic implementation creates an ordered array of line mapping entries, one
     /// for each #line directive in the file (plus one at the beginning). If the file has no
-    /// directives, then the array has just one element in in. To map line numbers, a binary search
+    /// directives, then the array has just one element in it. To map line numbers, a binary search
     /// of the mapping entries is done and nearest line mapping is applied.
     /// </summary>
     internal abstract partial class LineDirectiveMap<TDirective>
@@ -34,11 +34,11 @@ namespace Microsoft.CodeAnalysis
         {
             // Accumulate all the directives, in source code order
             var syntaxRoot = (SyntaxNodeOrToken)syntaxTree.GetRoot();
-            IEnumerable<TDirective> directives = syntaxRoot.GetDirectives<TDirective>(filter: ShouldAddDirective);
+            IList<TDirective> directives = syntaxRoot.GetDirectives<TDirective>(filter: ShouldAddDirective);
             Debug.Assert(directives != null);
 
             // Create the entry map.
-            this.Entries = CreateEntryMap(syntaxTree.GetText(), directives);
+            this.Entries = CreateEntryMap(syntaxTree, directives);
         }
 
         // Given a span and a default file name, return a FileLinePositionSpan that is the mapped
@@ -102,18 +102,22 @@ namespace Microsoft.CodeAnalysis
 
         // Given the ordered list of all directives in the file, return the ordered line mapping
         // entry for the file. This always starts with the null mapped that maps line 0 to line 0.
-        private LineMappingEntry[] CreateEntryMap(SourceText sourceText, IEnumerable<TDirective> directives)
+        private LineMappingEntry[] CreateEntryMap(SyntaxTree tree, IList<TDirective> directives)
         {
-            var entries = new LineMappingEntry[directives.Count() + 1];
+            var entries = new LineMappingEntry[directives.Count + 1];
             var current = InitializeFirstEntry();
             var index = 0;
             entries[index] = current;
 
-            foreach (var directive in directives)
+            if (directives.Count > 0)
             {
-                current = GetEntry(directive, sourceText, current);
-                ++index;
-                entries[index] = current;
+                var sourceText = tree.GetText();
+                foreach (var directive in directives)
+                {
+                    current = GetEntry(directive, sourceText, current);
+                    ++index;
+                    entries[index] = current;
+                }
             }
 
 #if DEBUG

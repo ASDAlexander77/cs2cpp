@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -10,8 +11,16 @@ namespace Microsoft.CodeAnalysis.CSharp
         [Conditional("DEBUG")]
         internal static void AssertIsLabeledStatement(this BoundStatement node)
         {
-            Debug.Assert(node != null);
-            Debug.Assert(node.Kind == BoundKind.LabelStatement || node.Kind == BoundKind.LabeledStatement || node.Kind == BoundKind.SwitchSection);
+            switch (node.Kind)
+            {
+                case BoundKind.LabelStatement:
+                case BoundKind.LabeledStatement:
+                case BoundKind.SwitchSection:
+                case BoundKind.PatternSwitchSection:
+                    break;
+                default:
+                    throw ExceptionUtilities.UnexpectedValue(node.Kind);
+            }
         }
 
 
@@ -31,19 +40,27 @@ namespace Microsoft.CodeAnalysis.CSharp
                     break;
 
                 case BoundKind.SwitchSection:
-                    foreach (var boundSwitchLabel in ((BoundSwitchSection)node).BoundSwitchLabels)
+                    foreach (var boundSwitchLabel in ((BoundSwitchSection)node).SwitchLabels)
                     {
                         if (boundSwitchLabel.Label == label)
                         {
                             return;
                         }
                     }
-                    Debug.Assert(false);
-                    break;
+                    throw ExceptionUtilities.Unreachable;
+
+                case BoundKind.PatternSwitchSection:
+                    foreach (var boundPatternSwitchLabel in ((BoundPatternSwitchSection)node).SwitchLabels)
+                    {
+                        if (boundPatternSwitchLabel.Label == label)
+                        {
+                            return;
+                        }
+                    }
+                    throw ExceptionUtilities.Unreachable;
 
                 default:
-                    Debug.Assert(false);
-                    break;
+                    throw ExceptionUtilities.UnexpectedValue(node.Kind);
             }
         }
     }

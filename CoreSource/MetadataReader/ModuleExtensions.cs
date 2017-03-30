@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Globalization;
@@ -14,7 +14,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Returns true if the nested type should be imported. 
         /// </summary>
-        public static bool ShouldImportNestedType(this PEModule module, TypeHandle typeDef)
+        public static bool ShouldImportNestedType(this PEModule module, TypeDefinitionHandle typeDef)
         {
             // Currently, it appears that we must import ALL types, even private ones,
             // in order to maintain language semantics. This is because a class may implement
@@ -36,7 +36,7 @@ namespace Microsoft.CodeAnalysis
         /// Returns true if the field should be imported. Visibility
         /// and the value of <paramref name="importOptions"/> are considered
         /// </summary>
-        public static bool ShouldImportField(this PEModule module, FieldHandle field, MetadataImportOptions importOptions)
+        public static bool ShouldImportField(this PEModule module, FieldDefinitionHandle field, MetadataImportOptions importOptions)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace Microsoft.CodeAnalysis
         /// explicit interface implementations. For other methods, visibility and the value of
         /// <paramref name="importOptions"/> are considered.
         /// </summary>
-        public static bool ShouldImportMethod(this PEModule module, MethodHandle methodDef, MetadataImportOptions importOptions)
+        public static bool ShouldImportMethod(this PEModule module, MethodDefinitionHandle methodDef, MetadataImportOptions importOptions)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace Microsoft.CodeAnalysis
             {
                 // As in the native C# compiler (see IMPORTER::ImportMethod), drop any method prefixed
                 // with "_VtblGap".  They should be impossible to call/implement/etc.
-                // BREAK: The native VB compiler does not drop such methods, but it produces unverfiable
+                // BREAK: The native VB compiler does not drop such methods, but it produces unverifiable
                 // code when they are called, so the break is acceptable.
                 // TODO: Keep some record of vtable gaps (DevDiv #17472).
                 var name = module.GetMethodDefNameOrThrow(methodDef);
@@ -149,7 +149,7 @@ namespace Microsoft.CodeAnalysis
             // _VtblGap<SequenceNumber><_CountOfSlots>
             // where <SequenceNumber> and <CountOfSlots> are decimal numbers
             // ----------------------
-            string prefix = VTableGapMethodNamePrefix;
+            const string prefix = VTableGapMethodNamePrefix;
 
             if (emittedMethodName.StartsWith(prefix, StringComparison.Ordinal))
             {

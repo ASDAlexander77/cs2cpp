@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -12,14 +12,14 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class IteratorConstructor : SynthesizedInstanceConstructor, ISynthesizedMethodBodyImplementationSymbol
     {
-        private readonly ImmutableArray<ParameterSymbol> parameters;
+        private readonly ImmutableArray<ParameterSymbol> _parameters;
 
         internal IteratorConstructor(IteratorStateMachine container)
             : base(container)
         {
             var intType = container.DeclaringCompilation.GetSpecialType(SpecialType.System_Int32);
-            parameters = ImmutableArray.Create<ParameterSymbol>(
-                new SynthesizedParameterSymbol(this, intType, 0, RefKind.None, GeneratedNames.MakeStateMachineStateName()));
+            _parameters = ImmutableArray.Create<ParameterSymbol>(
+                SynthesizedParameterSymbol.Create(this, intType, 0, RefKind.None, GeneratedNames.MakeStateMachineStateFieldName()));
         }
 
         internal override void AddSynthesizedAttributes(ModuleCompilationState compilationState, ref ArrayBuilder<SynthesizedAttributeData> attributes)
@@ -27,12 +27,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             base.AddSynthesizedAttributes(compilationState, ref attributes);
 
             var compilation = this.DeclaringCompilation;
-            AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(WellKnownMember.System_Diagnostics_DebuggerHiddenAttribute__ctor));
+            AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(WellKnownMember.System_Diagnostics_DebuggerHiddenAttribute__ctor));
         }
 
         public override ImmutableArray<ParameterSymbol> Parameters
         {
-            get { return parameters; }
+            get { return _parameters; }
         }
 
         public override Accessibility DeclaredAccessibility

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
@@ -15,12 +15,12 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             // perf optimization. try to not use enumerator if possible
@@ -47,7 +47,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return new ReadOnlyCollection<T>(source.ToList());
@@ -57,7 +57,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return source.ConcatWorker(value);
@@ -77,12 +77,12 @@ namespace Roslyn.Utilities
         {
             if (source1 == null)
             {
-                throw new ArgumentNullException("source1");
+                throw new ArgumentNullException(nameof(source1));
             }
 
             if (source2 == null)
             {
-                throw new ArgumentNullException("source2");
+                throw new ArgumentNullException(nameof(source2));
             }
 
             return source1.ToSet(comparer).SetEquals(source2);
@@ -92,12 +92,12 @@ namespace Roslyn.Utilities
         {
             if (source1 == null)
             {
-                throw new ArgumentNullException("source1");
+                throw new ArgumentNullException(nameof(source1));
             }
 
             if (source2 == null)
             {
-                throw new ArgumentNullException("source2");
+                throw new ArgumentNullException(nameof(source2));
             }
 
             return source1.ToSet().SetEquals(source2);
@@ -107,7 +107,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return new HashSet<T>(source, comparer);
@@ -117,7 +117,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return source as ISet<T> ?? new HashSet<T>(source);
@@ -128,7 +128,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return source.Cast<T?>().FirstOrDefault();
@@ -139,7 +139,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return source.Cast<T?>().FirstOrDefault(v => predicate(v.Value));
@@ -150,7 +150,7 @@ namespace Roslyn.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             return source.Cast<T?>().LastOrDefault();
@@ -229,7 +229,7 @@ namespace Roslyn.Utilities
             return source.Count == 0;
         }
 
-        private static readonly Func<object, bool> NotNullTest = x => x != null;
+        private static readonly Func<object, bool> s_notNullTest = x => x != null;
 
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> source)
             where T : class
@@ -239,14 +239,14 @@ namespace Roslyn.Utilities
                 return SpecializedCollections.EmptyEnumerable<T>();
             }
 
-            return source.Where((Func<T, bool>)NotNullTest);
+            return source.Where((Func<T, bool>)s_notNullTest);
         }
 
         public static bool All(this IEnumerable<bool> source)
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             foreach (var b in source)
@@ -264,25 +264,47 @@ namespace Roslyn.Utilities
         {
             if (sequence == null)
             {
-                throw new ArgumentNullException("sequence");
+                throw new ArgumentNullException(nameof(sequence));
             }
 
             return sequence.SelectMany(s => s);
         }
 
-        public static IEnumerable<T> OrderBy<T>(this IEnumerable<T> source, IComparer<T> comparer)
+        public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, IComparer<T> comparer)
         {
-            return source.OrderBy(t => t, comparer);
+            return source.OrderBy(Functions<T>.Identity, comparer);
         }
 
-        public static IEnumerable<T> OrderBy<T>(this IEnumerable<T> source, Comparison<T> compare)
+        public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, Comparison<T> compare)
         {
-            return source.OrderBy(new ComparisonComparer<T>(compare));
+            return source.OrderBy(Comparer<T>.Create(compare));
         }
 
-        public static IEnumerable<T> Order<T>(this IEnumerable<T> source) where T : IComparable<T>
+        public static IOrderedEnumerable<T> Order<T>(this IEnumerable<T> source) where T : IComparable<T>
         {
-            return source.OrderBy((t1, t2) => t1.CompareTo(t2));
+            return source.OrderBy(Comparisons<T>.Comparer);
+        }
+
+        public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source, IComparer<T> comparer)
+        {
+            return source.ThenBy(Functions<T>.Identity, comparer);
+        }
+
+        public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source, Comparison<T> compare)
+        {
+            return source.ThenBy(Comparer<T>.Create(compare));
+        }
+
+        public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source) where T : IComparable<T>
+        {
+            return source.ThenBy(Comparisons<T>.Comparer);
+        }
+
+        private static class Comparisons<T> where T : IComparable<T>
+        {
+            public static readonly Comparison<T> CompareTo = (t1, t2) => t1.CompareTo(t2);
+
+            public static readonly IComparer<T> Comparer = Comparer<T>.Create(CompareTo);
         }
 
         public static bool IsSorted<T>(this IEnumerable<T> enumerable, IComparer<T> comparer)
@@ -347,5 +369,33 @@ namespace Roslyn.Utilities
         {
             return sequence.Any(predicate);
         }
+
+        public static bool Contains(this IEnumerable<string> sequence, string s)
+        {
+            foreach (var item in sequence)
+            {
+                if (item == s)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static IComparer<T> ToComparer<T>(this Comparison<T> comparison)
+        {
+            return Comparer<T>.Create(comparison);
+        }
+    }
+
+    /// <summary>
+    /// Cached versions of commonly used delegates.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    internal static class Functions<T>
+    {
+        public static readonly Func<T, T> Identity = t => t;
+        public static readonly Func<T, bool> True = t => true;
     }
 }

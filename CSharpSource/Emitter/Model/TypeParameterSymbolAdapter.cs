@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -7,10 +7,11 @@ using Microsoft.CodeAnalysis.CSharp.Emit;
 using Roslyn.Utilities;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Emit;
+using System.Collections.Immutable;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    partial class TypeParameterSymbol :
+    internal partial class TypeParameterSymbol :
         Cci.IGenericParameterReference,
         Cci.IGenericMethodParameterReference,
         Cci.IGenericTypeParameterReference,
@@ -33,14 +34,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return null;
         }
 
-        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode(EmitContext context)
+        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode
         {
-            return Cci.PrimitiveTypeCode.NotPrimitive;
+            get { return Cci.PrimitiveTypeCode.NotPrimitive; }
         }
 
-        TypeHandle Cci.ITypeReference.TypeDef
+        TypeDefinitionHandle Cci.ITypeReference.TypeDef
         {
-            get { return default(TypeHandle); }
+            get { return default(TypeDefinitionHandle); }
         }
 
         Cci.IGenericMethodParameter Cci.IGenericParameter.AsGenericMethodParameter
@@ -219,7 +220,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        IEnumerable<Cci.ITypeReference> Cci.IGenericParameter.GetConstraints(EmitContext context)
+        IEnumerable<Cci.TypeReferenceWithAttributes> Cci.IGenericParameter.GetConstraints(EmitContext context)
         {
             var moduleBeingBuilt = (PEModuleBuilder)context.Module;
             var seenValueType = false;
@@ -234,16 +235,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         seenValueType = true;
                         break;
                 }
-                yield return moduleBeingBuilt.Translate(type,
-                                                        syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt,
-                                                        diagnostics: context.Diagnostics);
+                var typeRef = moduleBeingBuilt.Translate(type,
+                                                         syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt,
+                                                         diagnostics: context.Diagnostics);
+
+                yield return type.GetTypeRefWithAttributes(this.DeclaringCompilation,
+                                                           typeRef);
             }
             if (this.HasValueTypeConstraint && !seenValueType)
             {
                 // Add System.ValueType constraint to comply with Dev11 output
-                yield return moduleBeingBuilt.GetSpecialType(SpecialType.System_ValueType,
-                                                             syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt,
-                                                             diagnostics: context.Diagnostics);
+                var typeRef = moduleBeingBuilt.GetSpecialType(SpecialType.System_ValueType,
+                                                              syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt,
+                                                              diagnostics: context.Diagnostics);
+
+                yield return new Cci.TypeReferenceWithAttributes(typeRef);
             }
         }
 

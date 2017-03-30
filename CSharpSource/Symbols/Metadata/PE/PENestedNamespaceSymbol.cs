@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -22,13 +22,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         /// top level namespaces. 
         /// </summary>
         /// <remarks></remarks>
-        private readonly PENamespaceSymbol containingNamespaceSymbol;
+        private readonly PENamespaceSymbol _containingNamespaceSymbol;
 
         /// <summary>
         /// The name of the namespace.
         /// </summary>
         /// <remarks></remarks>
-        private readonly string name;
+        private readonly string _name;
 
         /// <summary>
         /// The sequence of groups of TypeDef row ids for types contained within the namespace, 
@@ -43,7 +43,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         /// as soon as symbols for children are created.
         /// </summary>
         /// <remarks></remarks>
-        private IEnumerable<IGrouping<string, TypeHandle>> typesByNS;
+        private IEnumerable<IGrouping<string, TypeDefinitionHandle>> _typesByNS;
 
         /// <summary>
         /// Constructor.
@@ -66,32 +66,32 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         internal PENestedNamespaceSymbol(
             string name,
             PENamespaceSymbol containingNamespace,
-            IEnumerable<IGrouping<string, TypeHandle>> typesByNS)
+            IEnumerable<IGrouping<string, TypeDefinitionHandle>> typesByNS)
         {
-            Debug.Assert(name != null && name.Length > 0);
+            Debug.Assert(name != null);
             Debug.Assert((object)containingNamespace != null);
             Debug.Assert(typesByNS != null);
 
-            this.containingNamespaceSymbol = containingNamespace;
-            this.name = name;
-            this.typesByNS = typesByNS;
+            _containingNamespaceSymbol = containingNamespace;
+            _name = name;
+            _typesByNS = typesByNS;
         }
 
         public override Symbol ContainingSymbol
         {
-            get { return containingNamespaceSymbol; }
+            get { return _containingNamespaceSymbol; }
         }
 
         internal override PEModuleSymbol ContainingPEModule
         {
-            get { return containingNamespaceSymbol.ContainingPEModule; }
+            get { return _containingNamespaceSymbol.ContainingPEModule; }
         }
 
         public override string Name
         {
             get
             {
-                return name;
+                return _name;
             }
         }
 
@@ -115,19 +115,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             get
             {
-                return containingNamespaceSymbol.ContainingPEModule;
+                return _containingNamespaceSymbol.ContainingPEModule;
             }
         }
 
         protected override void EnsureAllMembersLoaded()
         {
-            var typesByNS = this.typesByNS;
+            var typesByNS = _typesByNS;
 
             if (lazyTypes == null || lazyNamespaces == null)
             {
                 System.Diagnostics.Debug.Assert(typesByNS != null);
                 LoadAllMembers(typesByNS);
-                Interlocked.Exchange(ref this.typesByNS, null);
+                Interlocked.Exchange(ref _typesByNS, null);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,10 +91,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             switch (symbol.Kind)
             {
                 case SymbolKind.ArrayType:
-                    return IsSymbolAccessibleCore(((ArrayTypeSymbol)symbol).ElementType, within, null, out failedThroughTypeCheck, compilation, ref useSiteDiagnostics);
+                    return IsSymbolAccessibleCore(((ArrayTypeSymbol)symbol).ElementType, within, null, out failedThroughTypeCheck, compilation, ref useSiteDiagnostics, basesBeingResolved);
 
                 case SymbolKind.PointerType:
-                    return IsSymbolAccessibleCore(((PointerTypeSymbol)symbol).PointedAtType, within, null, out failedThroughTypeCheck, compilation, ref useSiteDiagnostics);
+                    return IsSymbolAccessibleCore(((PointerTypeSymbol)symbol).PointedAtType, within, null, out failedThroughTypeCheck, compilation, ref useSiteDiagnostics, basesBeingResolved);
 
                 case SymbolKind.NamedType:
                     return IsNamedTypeAccessible((NamedTypeSymbol)symbol, within, ref useSiteDiagnostics, basesBeingResolved);
@@ -148,11 +148,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 // All type argument must be accessible.
                 var typeArgs = type.TypeArgumentsWithDefinitionUseSiteDiagnostics(ref useSiteDiagnostics);
-                for (int i = 0; i < typeArgs.Length; ++i)
+                foreach (var typeArg in typeArgs)
                 {
                     // type parameters are always accessible, so don't check those (so common it's
                     // worth optimizing this).
-                    if (typeArgs[i].Kind != SymbolKind.TypeParameter && !IsSymbolAccessibleCore(typeArgs[i], within, null, out unused, compilation, ref useSiteDiagnostics))
+                    if (typeArg.Kind != SymbolKind.TypeParameter && !IsSymbolAccessibleCore(typeArg, within, null, out unused, compilation, ref useSiteDiagnostics, basesBeingResolved))
                     {
                         return false;
                     }
@@ -204,7 +204,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        // Is a member with declared accessibility "declaredAccessiblity" accessible from within
+        // Is a member with declared accessibility "declaredAccessibility" accessible from within
         // "within", which must be a named type or an assembly.
         private static bool IsMemberAccessible(
             NamedTypeSymbol containingType,              // the symbol's containing type
@@ -220,6 +220,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert((object)containingType != null);
 
             failedThroughTypeCheck = false;
+
+            if (containingType.IsTupleType)
+            {
+                containingType = containingType.TupleUnderlyingType;
+            }
 
             // easy case - members of containing type are accessible.
             if ((object)containingType == (object)within)
@@ -423,7 +428,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return IsNestedWithinOriginalContainingType(withinType, originalContainingType);
         }
 
-        // Is the type "withinType" nested withing the original type "originalContainingType".
+        // Is the type "withinType" nested within the original type "originalContainingType".
         private static bool IsNestedWithinOriginalContainingType(
             NamedTypeSymbol withinType,
             NamedTypeSymbol originalContainingType)
@@ -431,8 +436,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert((object)withinType != null);
             Debug.Assert((object)originalContainingType != null);
 
-            // Walk up my parent chain and see if I eventually hit the owner.  If so then i'm a
-            // nested type of that owner and i'm allowed access to everything inside of it.
+            // Walk up my parent chain and see if I eventually hit the owner.  If so then I'm a
+            // nested type of that owner and I'm allowed access to everything inside of it.
             var current = withinType.OriginalDefinition;
             while ((object)current != null)
             {
@@ -488,11 +493,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            if (visited != null)
-            {
-                visited.Free();
-            }
-
+            visited?.Free();
             return result;
         }
 

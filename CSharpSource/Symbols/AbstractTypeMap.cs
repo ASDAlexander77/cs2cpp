@@ -1,10 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -43,8 +43,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (previous.IsAnonymousType)
             {
                 ImmutableArray<TypeSymbol> oldFieldTypes = AnonymousTypeManager.GetAnonymousTypePropertyTypes(previous);
-                ImmutableArray<TypeSymbol> newFieldTypes = SubstituteTypes(oldFieldTypes);
+                ImmutableArray<TypeSymbol> newFieldTypes = SubstituteTypesWithoutModifiers(oldFieldTypes);
                 return (oldFieldTypes == newFieldTypes) ? previous : AnonymousTypeManager.ConstructAnonymousTypeSymbol(previous, newFieldTypes);
+            }
+
+            if (previous.IsTupleType)
+            {
+                var previousTuple = (TupleTypeSymbol)previous;
+                NamedTypeSymbol oldUnderlyingType = previousTuple.TupleUnderlyingType;
+                NamedTypeSymbol newUnderlyingType = (NamedTypeSymbol)SubstituteType(oldUnderlyingType).Type;
+
+                return ((object)newUnderlyingType == (object)oldUnderlyingType) ? previous : previousTuple.WithUnderlyingType(newUnderlyingType);
             }
 
             // TODO: we could construct the result's ConstructedFrom lazily by using a "deep"
@@ -54,14 +63,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             NamedTypeSymbol newConstructedFrom = SubstituteMemberType(oldConstructedFrom);
 
             ImmutableArray<TypeSymbol> oldTypeArguments = previous.TypeArgumentsNoUseSiteDiagnostics;
-            ImmutableArray<TypeSymbol> newTypeArguments = SubstituteTypes(oldTypeArguments);
+            bool changed = !ReferenceEquals(oldConstructedFrom, newConstructedFrom);
+            bool hasModifiers = previous.HasTypeArgumentsCustomModifiers;
+            var newTypeArguments = ArrayBuilder<TypeWithModifiers>.GetInstance(oldTypeArguments.Length);
 
-            if (ReferenceEquals(oldConstructedFrom, newConstructedFrom) && oldTypeArguments == newTypeArguments)
+            for (int i = 0; i < oldTypeArguments.Length; i++)
             {
+                var oldArgument = hasModifiers ? new TypeWithModifiers(oldTypeArguments[i], previous.GetTypeArgumentCustomModifiers(i)) : new TypeWithModifiers(oldTypeArguments[i]);
+                var newArgument = oldArgument.SubstituteTypeWithTupleUnification(this);
+
+                if (!changed && oldArgument != newArgument)
+                {
+                    changed = true;
+                }
+
+                newTypeArguments.Add(newArgument);
+            }
+
+            if (!changed)
+            {
+                newTypeArguments.Free();
                 return previous;
             }
 
-            return newConstructedFrom.ConstructIfGeneric(newTypeArguments);
+            return newConstructedFrom.ConstructIfGeneric(newTypeArguments.ToImmutableAndFree());
         }
 
         /// <summary>
@@ -70,28 +95,109 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         /// <param name="previous">The type to be rewritten.</param>
         /// <returns>The type with type parameters replaced with the type arguments.</returns>
-        internal TypeSymbol SubstituteType(TypeSymbol previous)
+        internal TypeWithModifiers SubstituteType(TypeSymbol previous)
         {
             if (ReferenceEquals(previous, null))
-                return null;
+                return default(TypeWithModifiers);
+
+            TypeSymbol result;
 
             switch (previous.Kind)
             {
                 case SymbolKind.NamedType:
-                    return SubstituteNamedType((NamedTypeSymbol)previous);
+                    result = SubstituteNamedType((NamedTypeSymbol)previous);
+                    break;
                 case SymbolKind.TypeParameter:
                     return SubstituteTypeParameter((TypeParameterSymbol)previous);
                 case SymbolKind.ArrayType:
-                    return SubstituteArrayType((ArrayTypeSymbol)previous);
+                    result = SubstituteArrayType((ArrayTypeSymbol)previous);
+                    break;
                 case SymbolKind.PointerType:
-                    return SubstitutePointerType((PointerTypeSymbol)previous);
+                    result = SubstitutePointerType((PointerTypeSymbol)previous);
+                    break;
                 case SymbolKind.DynamicType:
-                    return SubstituteDynamicType();
+                    result = SubstituteDynamicType();
+                    break;
                 case SymbolKind.ErrorType:
                     return ((ErrorTypeSymbol)previous).Substitute(this);
                 default:
-                    return previous;
+                    result = previous;
+                    break;
             }
+
+            return new TypeWithModifiers(result);
+        }
+
+        /// <summary>
+        /// Same as <see cref="SubstituteType"/>, but with special behavior around tuples.
+        /// In particular, if substitution makes type tuple compatible, transform it into a tuple type.
+        /// </summary>
+        internal TypeWithModifiers SubstituteTypeWithTupleUnification(TypeSymbol previous)
+        {
+            TypeWithModifiers result = SubstituteType(previous);
+
+            // Make it a tuple if it became compatible with one.
+            if ((object)result.Type != null && !previous.IsTupleCompatible())
+            {
+                var possiblyTuple = TupleTypeSymbol.TransformToTupleIfCompatible(result.Type);
+                if ((object)result.Type != possiblyTuple)
+                {
+                    result = new TypeWithModifiers(possiblyTuple, result.CustomModifiers);
+                }
+            }
+
+            return result;
+        }
+
+        internal ImmutableArray<CustomModifier> SubstituteCustomModifiers(TypeSymbol type, ImmutableArray<CustomModifier> customModifiers)
+        {
+            if (type.IsTypeParameter())
+            {
+                return new TypeWithModifiers(type, customModifiers).SubstituteType(this).CustomModifiers;
+            }
+
+            return SubstituteCustomModifiers(customModifiers);
+        }
+
+        internal ImmutableArray<CustomModifier> SubstituteCustomModifiers(ImmutableArray<CustomModifier> customModifiers)
+        {
+            if (customModifiers.IsDefaultOrEmpty)
+            {
+                return customModifiers;
+            }
+
+            for (int i = 0; i < customModifiers.Length; i++)
+            {
+                var modifier = (NamedTypeSymbol)customModifiers[i].Modifier;
+                var substituted = SubstituteNamedType(modifier);
+
+                if (modifier != substituted)
+                {
+                    var builder = ArrayBuilder<CustomModifier>.GetInstance(customModifiers.Length);
+                    builder.AddRange(customModifiers, i);
+
+                    builder.Add(customModifiers[i].IsOptional ? CSharpCustomModifier.CreateOptional(substituted) : CSharpCustomModifier.CreateRequired(substituted));
+                    for (i++; i < customModifiers.Length; i++)
+                    {
+                        modifier = (NamedTypeSymbol)customModifiers[i].Modifier;
+                        substituted = SubstituteNamedType(modifier);
+
+                        if (modifier != substituted)
+                        {
+                            builder.Add(customModifiers[i].IsOptional ? CSharpCustomModifier.CreateOptional(substituted) : CSharpCustomModifier.CreateRequired(substituted));
+                        }
+                        else
+                        {
+                            builder.Add(customModifiers[i]);
+                        }
+                    }
+
+                    Debug.Assert(builder.Count == customModifiers.Length);
+                    return builder.ToImmutableAndFree();
+                }
+            }
+
+            return customModifiers;
         }
 
         protected virtual TypeSymbol SubstituteDynamicType()
@@ -99,53 +205,69 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return DynamicTypeSymbol.Instance;
         }
 
-        protected virtual TypeSymbol SubstituteTypeParameter(TypeParameterSymbol typeParameter)
+        protected virtual TypeWithModifiers SubstituteTypeParameter(TypeParameterSymbol typeParameter)
         {
-            return typeParameter;
+            return new TypeWithModifiers(typeParameter);
         }
 
         private ArrayTypeSymbol SubstituteArrayType(ArrayTypeSymbol t)
         {
-            TypeSymbol element = SubstituteType(t.ElementType);
-            if (ReferenceEquals(element, t.ElementType))
+            var oldElement = new TypeWithModifiers(t.ElementType, t.CustomModifiers);
+            TypeWithModifiers element = oldElement.SubstituteTypeWithTupleUnification(this);
+            if (element == oldElement)
             {
                 return t;
             }
 
-            ImmutableArray<NamedTypeSymbol> interfaces = t.InterfacesNoUseSiteDiagnostics;
-            Debug.Assert(0 <= interfaces.Length && interfaces.Length <= 2);
-
-            if (interfaces.Length == 1)
+            if (t.IsSZArray)
             {
-                Debug.Assert(interfaces[0] is NamedTypeSymbol); // IList<T>
-                interfaces = ImmutableArray.Create<NamedTypeSymbol>((NamedTypeSymbol)SubstituteType(interfaces[0]));
-            }
-            else if (interfaces.Length == 2)
-            {
-                Debug.Assert(interfaces[0] is NamedTypeSymbol); // IList<T>
-                interfaces = ImmutableArray.Create<NamedTypeSymbol>((NamedTypeSymbol)SubstituteType(interfaces[0]), (NamedTypeSymbol)SubstituteType(interfaces[1]));
+                ImmutableArray<NamedTypeSymbol> interfaces = t.InterfacesNoUseSiteDiagnostics();
+                Debug.Assert(0 <= interfaces.Length && interfaces.Length <= 2);
+
+                if (interfaces.Length == 1)
+                {
+                    Debug.Assert(interfaces[0] is NamedTypeSymbol); // IList<T>
+                    interfaces = ImmutableArray.Create<NamedTypeSymbol>((NamedTypeSymbol)SubstituteType(interfaces[0]).AsTypeSymbolOnly());
+                }
+                else if (interfaces.Length == 2)
+                {
+                    Debug.Assert(interfaces[0] is NamedTypeSymbol); // IList<T>
+                    interfaces = ImmutableArray.Create<NamedTypeSymbol>((NamedTypeSymbol)SubstituteType(interfaces[0]).AsTypeSymbolOnly(), (NamedTypeSymbol)SubstituteType(interfaces[1]).AsTypeSymbolOnly());
+                }
+                else if (interfaces.Length != 0)
+                {
+                    throw ExceptionUtilities.Unreachable;
+                }
+
+                return ArrayTypeSymbol.CreateSZArray(
+                    element.Type,
+                    t.BaseTypeNoUseSiteDiagnostics,
+                    interfaces,
+                    element.CustomModifiers);
             }
 
-            return new ArrayTypeSymbol(
-                element,
+            return ArrayTypeSymbol.CreateMDArray(
+                element.Type,
                 t.Rank,
+                t.Sizes,
+                t.LowerBounds,
                 t.BaseTypeNoUseSiteDiagnostics,
-                interfaces,
-                t.CustomModifiers);
+                element.CustomModifiers);
         }
 
         private PointerTypeSymbol SubstitutePointerType(PointerTypeSymbol t)
         {
-            TypeSymbol pointedAtType = SubstituteType(t.PointedAtType);
-            if (ReferenceEquals(pointedAtType, t.PointedAtType))
+            var oldPointedAtType = new TypeWithModifiers(t.PointedAtType, t.CustomModifiers);
+            TypeWithModifiers pointedAtType = oldPointedAtType.SubstituteTypeWithTupleUnification(this);
+            if (pointedAtType == oldPointedAtType)
             {
                 return t;
             }
 
-            return new PointerTypeSymbol(pointedAtType, t.CustomModifiers);
+            return new PointerTypeSymbol(pointedAtType.Type, pointedAtType.CustomModifiers);
         }
 
-        internal ImmutableArray<TypeSymbol> SubstituteTypes(ImmutableArray<TypeSymbol> original)
+        internal ImmutableArray<TypeSymbol> SubstituteTypesWithoutModifiers(ImmutableArray<TypeSymbol> original)
         {
             if (original.IsDefault)
             {
@@ -157,7 +279,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             for (int i = 0; i < original.Length; i++)
             {
                 var t = original[i];
-                var substituted = SubstituteType(t);
+                var substituted = SubstituteType(t).Type;
                 if (!Object.ReferenceEquals(substituted, t))
                 {
                     if (result == null)
@@ -179,10 +301,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return result != null ? result.AsImmutableOrNull() : original;
         }
 
+        internal ImmutableArray<TypeWithModifiers> SubstituteTypes(ImmutableArray<TypeSymbol> original)
+        {
+            if (original.IsDefault)
+            {
+                return default(ImmutableArray<TypeWithModifiers>);
+            }
+
+            var result = ArrayBuilder<TypeWithModifiers>.GetInstance(original.Length);
+
+            foreach (TypeSymbol t in original)
+            {
+                result.Add(SubstituteType(t));
+            }
+
+            return result.ToImmutableAndFree();
+        }
+
+
         /// <summary>
         /// Substitute types, and return the results without duplicates, preserving the original order.
         /// </summary>
-        internal void SubstituteTypesDistinct(ImmutableArray<TypeSymbol> original, ArrayBuilder<TypeSymbol> result)
+        internal void SubstituteTypesDistinctWithoutModifiers(
+            ImmutableArray<TypeSymbol> original, 
+            ArrayBuilder<TypeSymbol> result, 
+            HashSet<TypeParameterSymbol> ignoreTypesDependentOnTypeParametersOpt)
         {
             if (original.Length == 0)
             {
@@ -190,17 +333,24 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
             else if (original.Length == 1)
             {
-                result.Add(SubstituteType(original[0]));
+                var type = original[0];
+                if (ignoreTypesDependentOnTypeParametersOpt == null || !type.ContainsTypeParameters(ignoreTypesDependentOnTypeParametersOpt))
+                {
+                    result.Add(SubstituteType(type).Type);
+                }
             }
             else
             {
                 var set = new HashSet<TypeSymbol>();
                 foreach (var type in original)
                 {
-                    var substituted = SubstituteType(type);
-                    if (set.Add(substituted))
+                    if (ignoreTypesDependentOnTypeParametersOpt == null || !type.ContainsTypeParameters(ignoreTypesDependentOnTypeParametersOpt))
                     {
-                        result.Add(substituted);
+                        var substituted = SubstituteType(type).Type;
+                        if (set.Add(substituted))
+                        {
+                            result.Add(substituted);
+                        }
                     }
                 }
             }
@@ -208,7 +358,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal ImmutableArray<TypeParameterSymbol> SubstituteTypeParameters(ImmutableArray<TypeParameterSymbol> original)
         {
-            return original.SelectAsArray((tp, m) => (TypeParameterSymbol)m.SubstituteTypeParameter(tp), this);
+            return original.SelectAsArray((tp, m) => (TypeParameterSymbol)m.SubstituteTypeParameter(tp).AsTypeSymbolOnly(), this);
         }
 
         /// <summary>

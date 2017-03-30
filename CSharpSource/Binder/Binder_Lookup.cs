@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -53,31 +53,36 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <remarks>
         /// Makes a second attempt if the results are not viable, in order to produce more detailed failure information (symbols and diagnostics).
         /// </remarks>
-        private void LookupSymbolsWithFallback(LookupResult result, string name, int arity, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null, LookupOptions options = LookupOptions.Default)
+        private Binder LookupSymbolsWithFallback(LookupResult result, string name, int arity, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null, LookupOptions options = LookupOptions.Default)
         {
             Debug.Assert(options.AreValid());
 
             // don't create diagnosis instances unless lookup fails
-            this.LookupSymbolsInternal(result, name, arity, basesBeingResolved, options, diagnose: false, useSiteDiagnostics: ref useSiteDiagnostics);
+            var binder = this.LookupSymbolsInternal(result, name, arity, basesBeingResolved, options, diagnose: false, useSiteDiagnostics: ref useSiteDiagnostics);
+            Debug.Assert((binder != null) || result.IsClear);
+
             if (result.Kind != LookupResultKind.Viable && result.Kind != LookupResultKind.Empty)
             {
                 result.Clear();
                 // retry to get diagnosis
-                this.LookupSymbolsInternal(result, name, arity, basesBeingResolved, options, diagnose: true, useSiteDiagnostics: ref useSiteDiagnostics);
+                var otherBinder = this.LookupSymbolsInternal(result, name, arity, basesBeingResolved, options, diagnose: true, useSiteDiagnostics: ref useSiteDiagnostics);
+                Debug.Assert(binder == otherBinder);
             }
 
             Debug.Assert(result.IsMultiViable || result.IsClear || result.Error != null);
+            return binder;
         }
 
-        private void LookupSymbolsInternal(
+        private Binder LookupSymbolsInternal(
             LookupResult result, string name, int arity, ConsList<Symbol> basesBeingResolved, LookupOptions options, bool diagnose, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             Debug.Assert(result.IsClear);
             Debug.Assert(options.AreValid());
 
+            Binder binder = null;
             for (var scope = this; scope != null && !result.IsMultiViable; scope = scope.Next)
             {
-                if (!result.IsClear)
+                if (binder != null)
                 {
                     var tmp = LookupResult.GetInstance();
                     scope.LookupSymbolsInSingleBinder(tmp, name, arity, basesBeingResolved, options, this, diagnose, ref useSiteDiagnostics);
@@ -87,11 +92,16 @@ namespace Microsoft.CodeAnalysis.CSharp
                 else
                 {
                     scope.LookupSymbolsInSingleBinder(result, name, arity, basesBeingResolved, options, this, diagnose, ref useSiteDiagnostics);
+                    if (!result.IsClear)
+                    {
+                        binder = scope;
+                    }
                 }
             }
+            return binder;
         }
 
-        protected virtual void LookupSymbolsInSingleBinder(
+        internal virtual void LookupSymbolsInSingleBinder(
             LookupResult result, string name, int arity, ConsList<Symbol> basesBeingResolved, LookupOptions options, Binder originalBinder, bool diagnose, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
         }
@@ -122,15 +132,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
-        /// Look for symbols that are members of the specified namespace or type
+        /// Look for symbols that are members of the specified namespace or type.
         /// </summary>
-        /// <param name="result"></param>
-        /// <param name="nsOrType"></param>
-        /// <param name="name"></param>
-        /// <param name="arity"></param>
-        /// <param name="useSiteDiagnostics"/>
-        /// <param name="basesBeingResolved"></param>
-        /// <param name="options"></param>
         private void LookupMembersWithFallback(LookupResult result, NamespaceOrTypeSymbol nsOrType, string name, int arity, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null, LookupOptions options = LookupOptions.Default)
         {
             Debug.Assert(options.AreValid());
@@ -179,8 +182,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case TypeKind.Struct:
                 case TypeKind.Enum:
                 case TypeKind.Delegate:
-                case TypeKind.ArrayType:
-                case TypeKind.DynamicType:
+                case TypeKind.Array:
+                case TypeKind.Dynamic:
                     this.LookupMembersInClass(result, type, name, arity, basesBeingResolved, options, originalBinder, diagnose, ref useSiteDiagnostics);
                     break;
 
@@ -192,7 +195,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     LookupMembersInErrorType(result, (ErrorTypeSymbol)type, name, arity, basesBeingResolved, options, originalBinder, diagnose, ref useSiteDiagnostics);
                     break;
 
-                case TypeKind.PointerType:
+                case TypeKind.Pointer:
                     result.Clear();
                     break;
 
@@ -251,29 +254,61 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 submissionSymbols.Clear();
 
+                var isCurrentSubmission = submission == Compilation;
+                var considerUsings = !(isCurrentSubmission && this.Flags.Includes(BinderFlags.InScriptUsing));
+
+                Imports submissionImports;
+                if (!considerUsings)
+                {
+                    submissionImports = Imports.Empty;
+                }
+                else if (!this.Flags.Includes(BinderFlags.InLoadedSyntaxTree))
+                {
+                    submissionImports = submission.GetSubmissionImports();
+                }
+                else if (isCurrentSubmission)
+                {
+                    submissionImports = this.GetImports(basesBeingResolved);
+                }
+                else
+                {
+                    submissionImports = Imports.Empty;
+                }
+
                 // If a viable using alias and a matching member are both defined in the submission an error is reported elsewhere.
                 // Ignore the member in such case.
                 if ((options & LookupOptions.NamespaceAliasesOnly) == 0 && (object)submission.ScriptClass != null)
                 {
                     LookupMembersWithoutInheritance(submissionSymbols, submission.ScriptClass, name, arity, options, originalBinder, submissionClass, diagnose, ref useSiteDiagnostics, basesBeingResolved);
-                }
 
-                // using aliases:
-                Imports imports = submission.GetSubmissionImports();
-                if (submissionSymbols.Symbols.Count > 0 && imports.IsUsingAlias(name, this.IsSemanticModelBinder))
-                {
-                    // using alias is ambiguous with another definition within the same submission iff the other definition is a 0-ary type or a non-type:
-                    Symbol existingDefinition = submissionSymbols.Symbols.First();
-                    if (existingDefinition.Kind == SymbolKind.NamedType && arity == 0 || existingDefinition.Kind != SymbolKind.NamedType)
+                    // NB: It doesn't matter that submissionImports hasn't been expanded since we're not actually using the alias target. 
+                    if (submissionSymbols.IsMultiViable &&
+                        considerUsings &&
+                        submissionImports.IsUsingAlias(name, originalBinder.IsSemanticModelBinder))
                     {
-                        CSDiagnosticInfo diagInfo = new CSDiagnosticInfo(ErrorCode.ERR_ConflictingAliasAndDefinition, name, existingDefinition.GetKindText());
-                        var error = new ExtendedErrorTypeSymbol((NamespaceOrTypeSymbol)null, name, arity, diagInfo, unreported: true);
-                        result.SetFrom(LookupResult.Good(error)); // force lookup to be done w/ error symbol as result
-                        break;
+                        // using alias is ambiguous with another definition within the same submission iff the other definition is a 0-ary type or a non-type:
+                        Symbol existingDefinition = submissionSymbols.Symbols.First();
+                        if (existingDefinition.Kind != SymbolKind.NamedType || arity == 0)
+                        {
+                            CSDiagnosticInfo diagInfo = new CSDiagnosticInfo(ErrorCode.ERR_ConflictingAliasAndDefinition, name, existingDefinition.GetKindText());
+                            var error = new ExtendedErrorTypeSymbol((NamespaceOrTypeSymbol)null, name, arity, diagInfo, unreported: true);
+                            result.SetFrom(LookupResult.Good(error)); // force lookup to be done w/ error symbol as result
+                            break;
+                        }
                     }
                 }
 
-                imports.LookupSymbolInAliases(originalBinder, submissionSymbols, name, arity, basesBeingResolved, options, diagnose, ref useSiteDiagnostics);
+                if (!submissionSymbols.IsMultiViable && considerUsings)
+                {
+                    if (!isCurrentSubmission)
+                    {
+                        submissionImports = Imports.ExpandPreviousSubmissionImports(submissionImports, Compilation);
+                    }
+
+                    // NB: We diverge from InContainerBinder here and only look in aliases.
+                    // In submissions, regular usings are bubbled up to the outermost scope.
+                    submissionImports.LookupSymbolInAliases(originalBinder, submissionSymbols, name, arity, basesBeingResolved, options, diagnose, ref useSiteDiagnostics);
+                }
 
                 if (lookingForOverloadsOfKind == null)
                 {
@@ -344,7 +379,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var methods = ArrayBuilder<MethodSymbol>.GetInstance();
             var binder = scope.Binder;
-            binder.GetCandidateExtensionMethods(scope.SearchUsingsNotNamespace, methods, name, arity, options, this.IsSemanticModelBinder);
+            binder.GetCandidateExtensionMethods(scope.SearchUsingsNotNamespace, methods, name, arity, options, this);
 
             foreach (var method in methods)
             {
@@ -390,10 +425,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // Roslyn Bug 9681: Compilers incorrectly use the *failure* of binding some subexpression to indicate some other strategy is applicable (attributes, 'var')
 
-            // Rolsyn reproduces Dev10 compiler behavior which doesn't report an error if one of the 
+            // Roslyn reproduces Dev10 compiler behavior which doesn't report an error if one of the 
             // lookups is single viable and other lookup is ambiguous. If one of the lookup results 
             // (either with or without "Attribute" suffix) is single viable and is an attribute type we 
-            // use it  disregarding the second result which may be ambigous. 
+            // use it  disregarding the second result which may be ambiguous. 
 
             // Note: if both are single and attribute types, we still report ambiguity.
 
@@ -444,7 +479,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 if (!result.IsClear)
                 {
-                    if ((object)symbolWithoutSuffix != null) // was not ambigous, but not viable
+                    if ((object)symbolWithoutSuffix != null) // was not ambiguous, but not viable
                     {
                         result.SetFrom(GenerateNonViableAttributeTypeResult(symbolWithoutSuffix, result.Error, diagnose));
                     }
@@ -464,10 +499,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            if (resultWithSuffix != null)
-            {
-                resultWithSuffix.Free();
-            }
+            resultWithSuffix?.Free();
         }
 
         private bool IsAmbiguousResult(LookupResult result, out Symbol resultSymbol)
@@ -621,7 +653,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             string name,
             int arity,
             LookupOptions options,
-            bool isCallerSemanticModel)
+            Binder originalBinder)
         {
         }
 
@@ -669,7 +701,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // If the type is from a winmd and implements any of the special WinRT collection
                 // projections then we may need to add underlying interface members. 
                 NamedTypeSymbol namedType = currentType as NamedTypeSymbol;
-                if ((object)namedType != null && namedType.ShouldAddWinRTMembers)
+                if (namedType?.ShouldAddWinRTMembers == true)
                 {
                     AddWinRTMembers(result, namedType, name, arity, options, originalBinder, diagnose, ref useSiteDiagnostics);
                 }
@@ -702,15 +734,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 currentType = currentType.GetNextBaseTypeNoUseSiteDiagnostics(basesBeingResolved, this.Compilation, ref visited);
                 if ((object)currentType != null)
                 {
-                    ((TypeSymbol)currentType.OriginalDefinition).AddUseSiteDiagnostics(ref useSiteDiagnostics);
+                    currentType.OriginalDefinition.AddUseSiteDiagnostics(ref useSiteDiagnostics);
                 }
             }
 
-            if (visited != null)
-            {
-                visited.Free();
-            }
-
+            visited?.Free();
             tmp.Free();
         }
 
@@ -763,31 +791,13 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var tmp = LookupResult.GetInstance();
 
-            var idictSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Generic_IDictionary_KV);
-            var iroDictSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Generic_IReadOnlyDictionary_KV);
-            var iListSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_IList);
-            var iCollectionSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_ICollection);
-            var inccSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Specialized_INotifyCollectionChanged);
-            var inpcSymbol = Compilation.GetWellKnownType(WellKnownType.System_ComponentModel_INotifyPropertyChanged);
+            NamedTypeSymbol idictSymbol, iroDictSymbol, iListSymbol, iCollectionSymbol, inccSymbol, inpcSymbol;
+            GetWellKnownWinRTMemberInterfaces(out idictSymbol, out iroDictSymbol, out iListSymbol, out iCollectionSymbol, out inccSymbol, out inpcSymbol);
 
             // Dev11 searches all declared and undeclared base interfaces
             foreach (var iface in type.AllInterfacesWithDefinitionUseSiteDiagnostics(ref useSiteDiagnostics))
             {
-                var iFaceOriginal = iface.OriginalDefinition;
-                var iFaceSpecial = iFaceOriginal.SpecialType;
-                // Types match the list given in dev11 IMPORTER::GetWindowsRuntimeInterfacesToFake
-                if (iFaceSpecial == SpecialType.System_Collections_Generic_IEnumerable_T ||
-                    iFaceSpecial == SpecialType.System_Collections_Generic_IList_T ||
-                    iFaceSpecial == SpecialType.System_Collections_Generic_ICollection_T ||
-                    iFaceOriginal == idictSymbol ||
-                    iFaceSpecial == SpecialType.System_Collections_Generic_IReadOnlyList_T ||
-                    iFaceSpecial == SpecialType.System_Collections_Generic_IReadOnlyCollection_T ||
-                    iFaceOriginal == iroDictSymbol ||
-                    iFaceSpecial == SpecialType.System_Collections_IEnumerable ||
-                    iFaceOriginal == iListSymbol ||
-                    iFaceOriginal == iCollectionSymbol ||
-                    iFaceOriginal == inccSymbol ||
-                    iFaceOriginal == inpcSymbol)
+                if (ShouldAddWinRTMembersForInterface(iface, idictSymbol, iroDictSymbol, iListSymbol, iCollectionSymbol, inccSymbol, inpcSymbol))
                 {
                     LookupMembersWithoutInheritance(tmp, iface, name, arity, options, originalBinder, iface, diagnose, ref useSiteDiagnostics);
                     // only add viable members
@@ -829,6 +839,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
         }
+
+        private void GetWellKnownWinRTMemberInterfaces(out NamedTypeSymbol idictSymbol, out NamedTypeSymbol iroDictSymbol, out NamedTypeSymbol iListSymbol, out NamedTypeSymbol iCollectionSymbol, out NamedTypeSymbol inccSymbol, out NamedTypeSymbol inpcSymbol)
+        {
+            idictSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Generic_IDictionary_KV);
+            iroDictSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Generic_IReadOnlyDictionary_KV);
+            iListSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_IList);
+            iCollectionSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_ICollection);
+            inccSymbol = Compilation.GetWellKnownType(WellKnownType.System_Collections_Specialized_INotifyCollectionChanged);
+            inpcSymbol = Compilation.GetWellKnownType(WellKnownType.System_ComponentModel_INotifyPropertyChanged);
+        }
+
+        private static bool ShouldAddWinRTMembersForInterface(NamedTypeSymbol iface, NamedTypeSymbol idictSymbol, NamedTypeSymbol iroDictSymbol, NamedTypeSymbol iListSymbol, NamedTypeSymbol iCollectionSymbol, NamedTypeSymbol inccSymbol, NamedTypeSymbol inpcSymbol)
+        {
+            var iFaceOriginal = iface.OriginalDefinition;
+            var iFaceSpecial = iFaceOriginal.SpecialType;
+
+            // Types match the list given in dev11 IMPORTER::GetWindowsRuntimeInterfacesToFake
+            return iFaceSpecial == SpecialType.System_Collections_Generic_IEnumerable_T ||
+                   iFaceSpecial == SpecialType.System_Collections_Generic_IList_T ||
+                   iFaceSpecial == SpecialType.System_Collections_Generic_ICollection_T ||
+                   iFaceOriginal == idictSymbol ||
+                   iFaceSpecial == SpecialType.System_Collections_Generic_IReadOnlyList_T ||
+                   iFaceSpecial == SpecialType.System_Collections_Generic_IReadOnlyCollection_T ||
+                   iFaceOriginal == iroDictSymbol ||
+                   iFaceSpecial == SpecialType.System_Collections_IEnumerable ||
+                   iFaceOriginal == iListSymbol ||
+                   iFaceOriginal == iCollectionSymbol ||
+                   iFaceOriginal == inccSymbol ||
+                   iFaceOriginal == inpcSymbol;
+        }
+
 
         // find the nearest symbol in list to the symbol 'type'.  It may be the same symbol if its the only one.
         private static Symbol GetNearestOtherSymbol(ConsList<Symbol> list, TypeSymbol type)
@@ -1098,7 +1139,18 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 return LookupResult.NotInvocable(unwrappedSymbol, symbol, diagnose);
             }
-            else if (!this.IsAccessible(unwrappedSymbol, RefineAccessThroughType(options, this.InCref, accessThroughType), out inaccessibleViaQualifier, ref useSiteDiagnostics, basesBeingResolved))
+            else if (InCref && !this.IsCrefAccessible(unwrappedSymbol))
+            {
+                var unwrappedSymbols = ImmutableArray.Create<Symbol>(unwrappedSymbol);
+                diagInfo = diagnose ? new CSDiagnosticInfo(ErrorCode.ERR_BadAccess, new[] { unwrappedSymbol }, unwrappedSymbols, additionalLocations: ImmutableArray<Location>.Empty) : null;
+                return LookupResult.Inaccessible(symbol, diagInfo);
+            }
+            else if (!InCref &&
+                     !this.IsAccessible(unwrappedSymbol,
+                                        RefineAccessThroughType(options, accessThroughType),
+                                        out inaccessibleViaQualifier,
+                                        ref useSiteDiagnostics,
+                                        basesBeingResolved))
             {
                 if (inaccessibleViaQualifier)
                 {
@@ -1206,7 +1258,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 return false;
             }
-            else if (!this.IsAccessible(symbol, ref useSiteDiagnostics, RefineAccessThroughType(options, this.InCref, accessThroughType)))
+            else if (InCref ? !this.IsCrefAccessible(symbol)
+                            : !this.IsAccessible(symbol, ref useSiteDiagnostics, RefineAccessThroughType(options, accessThroughType)))
             {
                 return false;
             }
@@ -1225,21 +1278,42 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 // This viability check is only used by SemanticModel.LookupSymbols, which does its own
-                // filtering of not-referencable symbols.  Hence, we do not check CanBeReferencedByName
+                // filtering of not-referenceable symbols.  Hence, we do not check CanBeReferencedByName
                 // here.
                 return true;
             }
         }
 
-        private static TypeSymbol RefineAccessThroughType(LookupOptions options, bool inCref, TypeSymbol accessThroughType)
+        private static TypeSymbol RefineAccessThroughType(LookupOptions options, TypeSymbol accessThroughType)
         {
             // Normally, when we access a protected instance member, we need to know the type of the receiver so we
-            // can determine whether the member is actually accessible in the containing type.  There are two exceptions:
-            //   1) If the receiver is "base", then it's okay if the receiver type isn't derived from the containing type; or
-            //   2) If we're in a cref, then there isn't really a receiver so the test makes no sense.
-            return ((options & LookupOptions.UseBaseReferenceAccessibility) != 0 || inCref)
+            // can determine whether the member is actually accessible in the containing type.  There is one exception:
+            // If the receiver is "base", then it's okay if the receiver type isn't derived from the containing type.
+            return ((options & LookupOptions.UseBaseReferenceAccessibility) != 0)
                 ? null
                 : accessThroughType;
+        }
+
+        /// <summary>
+        /// A symbol is accessible for referencing in a cref if it is in the same assembly as the reference
+        /// or the symbols's effective visibility is not private.
+        /// </summary>
+        private bool IsCrefAccessible(Symbol symbol)
+        {
+            return !IsEffectivelyPrivate(symbol) || symbol.ContainingAssembly == this.Compilation.Assembly;
+        }
+
+        private static bool IsEffectivelyPrivate(Symbol symbol)
+        {
+            for (Symbol s = symbol; (object)s != null; s = s.ContainingSymbol)
+            {
+                if (s.DeclaredAccessibility == Accessibility.Private)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1257,10 +1331,25 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// Also checks protected access via "accessThroughType", and sets "failedThroughTypeCheck" if fails
         /// the protected access check.
         /// </summary>
-        internal virtual bool IsAccessible(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null)
+        internal bool IsAccessible(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null)
+        {
+            if (this.Flags.Includes(BinderFlags.IgnoreAccessibility))
+            {
+                failedThroughTypeCheck = false;
+                return true;
+            }
+
+            return IsAccessibleHelper(symbol, accessThroughType, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
+        }
+
+        /// <remarks>
+        /// Should only be called by <see cref="IsAccessible(Symbol, TypeSymbol, out bool, ref HashSet{DiagnosticInfo}, ConsList{Symbol})"/>,
+        /// which will already have checked for <see cref="BinderFlags.IgnoreAccessibility"/>.
+        /// </remarks>
+        internal virtual bool IsAccessibleHelper(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved)
         {
             // By default, just delegate to containing binder.
-            return Next.IsAccessible(symbol, accessThroughType, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
+            return Next.IsAccessibleHelper(symbol, accessThroughType, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
         }
 
         internal bool IsNonInvocableMember(Symbol symbol)
@@ -1326,22 +1415,25 @@ namespace Microsoft.CodeAnalysis.CSharp
             switch (symbol.Kind)
             {
                 case SymbolKind.NamedType:
-                    NamedTypeSymbol namedType = (NamedTypeSymbol)symbol;
-                    // non-declared types only appear as using aliases (aliases are arity 0)
-                    Debug.Assert(object.ReferenceEquals(namedType.ConstructedFrom, namedType));
-                    if (namedType.Arity != arity || options.IsAttributeTypeLookup() && arity != 0)
+                    if (arity != 0 || (options & LookupOptions.AllNamedTypesOnArityZero) == 0)
                     {
-                        if (namedType.Arity == 0)
+                        NamedTypeSymbol namedType = (NamedTypeSymbol)symbol;
+                        // non-declared types only appear as using aliases (aliases are arity 0)
+                        Debug.Assert(object.ReferenceEquals(namedType.ConstructedFrom, namedType));
+                        if (namedType.Arity != arity || options.IsAttributeTypeLookup() && arity != 0)
                         {
-                            // The non-generic {1} '{0}' cannot be used with type arguments
-                            diagInfo = diagnose ? new CSDiagnosticInfo(ErrorCode.ERR_HasNoTypeVars, namedType, MessageID.IDS_SK_TYPE.Localize()) : null;
+                            if (namedType.Arity == 0)
+                            {
+                                // The non-generic {1} '{0}' cannot be used with type arguments
+                                diagInfo = diagnose ? new CSDiagnosticInfo(ErrorCode.ERR_HasNoTypeVars, namedType, MessageID.IDS_SK_TYPE.Localize()) : null;
+                            }
+                            else
+                            {
+                                // Using the generic {1} '{0}' requires {2} type arguments
+                                diagInfo = diagnose ? new CSDiagnosticInfo(ErrorCode.ERR_BadArity, namedType, MessageID.IDS_SK_TYPE.Localize(), namedType.Arity) : null;
+                            }
+                            return true;
                         }
-                        else
-                        {
-                            // Using the generic {1} '{0}' requires {2} type arguments
-                            diagInfo = diagnose ? new CSDiagnosticInfo(ErrorCode.ERR_BadArity, namedType, MessageID.IDS_SK_TYPE.Localize(), namedType.Arity) : null;
-                        }
-                        return true;
                     }
                     break;
 
@@ -1426,8 +1518,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case TypeKind.Struct:
                 case TypeKind.Enum:
                 case TypeKind.Delegate:
-                case TypeKind.ArrayType:
-                case TypeKind.DynamicType:
+                case TypeKind.Array:
+                case TypeKind.Dynamic:
                     this.AddMemberLookupSymbolsInfoInClass(result, type, options, originalBinder, type);
                     break;
 
@@ -1443,10 +1535,25 @@ namespace Microsoft.CodeAnalysis.CSharp
             // TODO: optimize lookup (there might be many interactions in the chain)
             for (CSharpCompilation submission = Compilation; submission != null; submission = submission.PreviousSubmission)
             {
-                submission.GetSubmissionImports().AddLookupSymbolsInfoInAliases(this, result, options);
                 if ((object)submission.ScriptClass != null)
                 {
                     AddMemberLookupSymbolsInfoWithoutInheritance(result, submission.ScriptClass, options, originalBinder, scriptClass);
+                }
+
+                bool isCurrentSubmission = submission == Compilation;
+
+                // If we are looking only for labels we do not need to search through the imports.
+                if ((options & LookupOptions.LabelsOnly) == 0 && !(isCurrentSubmission && this.Flags.Includes(BinderFlags.InScriptUsing)))
+                {
+                    var submissionImports = submission.GetSubmissionImports();
+                    if (!isCurrentSubmission)
+                    {
+                        submissionImports = Imports.ExpandPreviousSubmissionImports(submissionImports, Compilation);
+                    }
+
+                    // NB: We diverge from InContainerBinder here and only look in aliases.
+                    // In submissions, regular usings are bubbled up to the outermost scope.
+                    submissionImports.AddLookupSymbolsInfoInAliases(result, options, originalBinder);
                 }
             }
         }
@@ -1473,6 +1580,21 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        private void AddWinRTMembersLookupSymbolsInfo(LookupSymbolsInfo result, NamedTypeSymbol type, LookupOptions options, Binder originalBinder, TypeSymbol accessThroughType)
+        {
+            NamedTypeSymbol idictSymbol, iroDictSymbol, iListSymbol, iCollectionSymbol, inccSymbol, inpcSymbol;
+            GetWellKnownWinRTMemberInterfaces(out idictSymbol, out iroDictSymbol, out iListSymbol, out iCollectionSymbol, out inccSymbol, out inpcSymbol);
+
+            // Dev11 searches all declared and undeclared base interfaces
+            foreach (var iface in type.AllInterfacesNoUseSiteDiagnostics)
+            {
+                if (ShouldAddWinRTMembersForInterface(iface, idictSymbol, iroDictSymbol, iListSymbol, iCollectionSymbol, inccSymbol, inpcSymbol))
+                {
+                    AddMemberLookupSymbolsInfoWithoutInheritance(result, iface, options, originalBinder, accessThroughType);
+                }
+            }
+        }
+
         private void AddMemberLookupSymbolsInfoInClass(LookupSymbolsInfo result, TypeSymbol type, LookupOptions options, Binder originalBinder, TypeSymbol accessThroughType)
         {
             PooledHashSet<NamedTypeSymbol> visited = null;
@@ -1481,6 +1603,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             while ((object)type != null && type.SpecialType != SpecialType.System_Void)
             {
                 AddMemberLookupSymbolsInfoWithoutInheritance(result, type, options, originalBinder, accessThroughType);
+
+                // If the type is from a winmd and implements any of the special WinRT collection
+                // projections then we may need to add underlying interface members. 
+                NamedTypeSymbol namedType = type as NamedTypeSymbol;
+                if ((object)namedType != null && namedType.ShouldAddWinRTMembers)
+                {
+                    AddWinRTMembersLookupSymbolsInfo(result, namedType, options, originalBinder, accessThroughType);
+                }
 
                 // As in dev11, we don't consider inherited members within crefs.
                 // CAVEAT: dev11 appears to ignore this rule within parameter types and return types,
@@ -1493,17 +1623,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 type = type.GetNextBaseTypeNoUseSiteDiagnostics(null, this.Compilation, ref visited);
             }
 
-            if (visited != null)
-            {
-                visited.Free();
-            }
-
-            // TODO: It would probably be most correct to add WinRT members as this point, but we're probably okay not:
-            //   1) If there's exactly one non-WinRT symbol, it would have won anyway.
-            //   2) If there's not exactly one non-WinRT symbol, then we'll call LookupSymbols anyway.
-            // The only point of contention is whether a WinRT event could hide a non-WinRT event (i.e. a false positive
-            // from this pass).  That seems unlikely since WinRT types have to be sealed (i.e. don't have to worry about
-            // conflicts with inherited members).
+            visited?.Free();
         }
 
         private void AddMemberLookupSymbolsInfoInInterface(LookupSymbolsInfo result, TypeSymbol type, LookupOptions options, Binder originalBinder, TypeSymbol accessThroughType)

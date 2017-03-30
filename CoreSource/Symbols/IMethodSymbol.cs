@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Text;
@@ -9,6 +9,10 @@ namespace Microsoft.CodeAnalysis
     /// Represents a method or method-like symbol (including constructor,
     /// destructor, operator, or property/event accessor).
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface IMethodSymbol : ISymbol
     {
         /// <summary>
@@ -42,9 +46,9 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Returns whether this method is using CLI VARARG calling convention. This is used for
         /// C-style variable argument lists. This is used extremely rarely in C# code and is
-        /// represented using the undocumented “__arglist” keyword.
+        /// represented using the undocumented "__arglist" keyword.
         ///
-        /// Note that methods with “params” on the last parameter are indicated with the “IsParams”
+        /// Note that methods with "params" on the last parameter are indicated with the "IsParams"
         /// property on ParameterSymbol, and are not represented with this property.
         /// </summary>
         bool IsVararg { get; }
@@ -65,6 +69,11 @@ namespace Microsoft.CodeAnalysis
         /// Returns true if this method has no return type; i.e., returns "void".
         /// </summary>
         bool ReturnsVoid { get; }
+
+        /// <summary>
+        /// Returns true if this method returns by reference.
+        /// </summary>
+        bool ReturnsByRef { get; }
 
         /// <summary>
         /// Gets the return type of the method.
@@ -148,9 +157,14 @@ namespace Microsoft.CodeAnalysis
         ImmutableArray<IMethodSymbol> ExplicitInterfaceImplementations { get; }
 
         /// <summary>
-        /// Returns the list of custom modifiers, if any, associated with the returned value. 
+        /// Returns the list of custom modifiers, if any, associated with the return type. 
         /// </summary>
         ImmutableArray<CustomModifier> ReturnTypeCustomModifiers { get; }
+
+        /// <summary>
+        /// Custom modifiers associated with the ref modifier, or an empty array if there are none.
+        /// </summary>
+        ImmutableArray<CustomModifier> RefCustomModifiers { get; }
 
         /// <summary>
         /// Returns the list of custom attributes, if any, associated with the returned value. 

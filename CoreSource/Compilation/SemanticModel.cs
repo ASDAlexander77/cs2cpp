@@ -1,10 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Threading;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis
@@ -62,6 +62,47 @@ namespace Microsoft.CodeAnalysis
         /// The syntax tree this model was obtained from.
         /// </summary>
         protected abstract SyntaxTree SyntaxTreeCore { get; }
+
+        /// <summary>
+        /// Gets the operation corresponding to the expression or statement syntax node.
+        /// </summary>
+        /// <param name="node">The expression or statement syntax node.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns></returns>
+        public IOperation GetOperation(SyntaxNode node, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (!this.Compilation.IsIOperationFeatureEnabled())
+            {
+                throw new InvalidOperationException(CodeAnalysisResources.IOperationFeatureDisabled);
+            }
+
+            return GetOperationInternal(node, cancellationToken);
+        }
+
+        internal IOperation GetOperationInternal(SyntaxNode node, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                return GetOperationCore(node, cancellationToken);
+            }
+            catch (Exception e) when (FatalError.ReportWithoutCrashUnlessCanceled(e))
+            {
+                // Log a Non-fatal-watson and then ignore the crash in the attempt of getting operation
+                Debug.Assert(false);
+            }
+
+            return null;
+        }
+
+        protected abstract IOperation GetOperationCore(SyntaxNode node, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns true if this is a SemanticModel that ignores accessibility rules when answering semantic questions.
+        /// </summary>
+        public virtual bool IgnoresAccessibility
+        {
+            get { return false; }
+        }
 
         /// <summary>
         /// Gets symbol information about a syntax node.
@@ -739,60 +780,6 @@ namespace Microsoft.CodeAnalysis
         protected abstract ISymbol GetEnclosingSymbolCore(int position, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Resolves the set of provided arguments against set of provided members to determine the
-        /// appropriate overload. The arguments are bound as if they were at 'position' within this
-        /// semantic model. An CommonOverloadResolutionResult is returned that gives the result of
-        /// the compiler's overload resolution analysis.
-        /// </summary>
-        /// <param name="position">A character position used to identify a declaration scope and
-        /// accessibility. This character position must be within the FullSpan of the Root syntax
-        /// node in this SemanticModel. This position is used when binding the arguments.
-        /// </param>
-        /// <param name="members">The set of members to resolve overloads among.</param>
-        /// <param name="arguments">The list of arguments, in order, to use when resolving the
-        /// overloads. The arguments are interpreted as if they occurred within the declaration
-        /// scope that encloses "position".</param>
-        /// <param name="typeArguments">If present, the type argument provided. If not provided,
-        /// type inference is done.</param>
-        /// <remarks>
-        /// This can be used to resolve constructors, properties as well as methods.
-        /// </remarks>
-        [Obsolete("This API will be removed in a subsequent release.")]
-        public CommonOverloadResolutionResult<TSymbol> ResolveOverloads<TSymbol>(
-           int position,
-           ImmutableArray<TSymbol> members,
-           ImmutableArray<ITypeSymbol> typeArguments,
-           ImmutableArray<SyntaxNode> arguments) where TSymbol : ISymbol
-        {
-            return ResolveOverloadsCore(position, members, typeArguments, arguments);
-        }
-
-        /// <summary>
-        /// Resolves the set of provided arguments against set of provided members to determine the
-        /// appropriate overload. The arguments are bound as if they were at 'position' within this
-        /// semantic model. An CommonOverloadResolutionResult is returned that gives the result of
-        /// the compiler's overload resolution analysis.
-        /// </summary>
-        /// <param name="position">A character position used to identify a declaration scope and
-        /// accessibility. This character position must be within the FullSpan of the Root syntax
-        /// node in this SemanticModel. This position is used when binding the arguments.
-        /// </param>
-        /// <param name="members">The set of members to resolve overloads among.</param>
-        /// <param name="arguments">The list of arguments, in order, to use when resolving the
-        /// overloads. The arguments are interpreted as if they occurred within the declaration
-        /// scope that encloses "position".</param>
-        /// <param name="typeArguments">If present, the type argument provided. If not provided,
-        /// type inference is done.</param>
-        /// <remarks>
-        /// This can be used to resolve constructors, properties as well as methods.
-        /// </remarks>
-        internal abstract CommonOverloadResolutionResult<TSymbol> ResolveOverloadsCore<TSymbol>(
-           int position,
-           ImmutableArray<TSymbol> members,
-           ImmutableArray<ITypeSymbol> typeArguments,
-           ImmutableArray<SyntaxNode> arguments) where TSymbol : ISymbol;
-
-        /// <summary>
         /// Determines if the symbol is accessible from the specified location. 
         /// </summary>
         /// <param name="position">A character position used to identify a declaration scope and
@@ -868,29 +855,26 @@ namespace Microsoft.CodeAnalysis
         protected abstract PreprocessingSymbolInfo GetPreprocessingSymbolInfoCore(SyntaxNode nameSyntax);
 
         /// <summary>
-        /// Takes a Span and returns a set of declarations that overlap that span in this model's tree.
+        /// Gets the <see cref="DeclarationInfo"/> for all the declarations whose span overlaps with the given <paramref name="span"/>.
         /// </summary>
-        protected internal abstract ImmutableArray<DeclarationInSpan> DeclarationsInSpanInternal(TextSpan span);
+        /// <param name="span">Span to get declarations.</param>
+        /// <param name="getSymbol">Flag indicating whether <see cref="DeclarationInfo.DeclaredSymbol"/> should be computed for the returned declaration infos.
+        /// If false, then <see cref="DeclarationInfo.DeclaredSymbol"/> is always null.</param>
+        /// <param name="builder">Builder to add declarations.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        internal abstract void ComputeDeclarationsInSpan(TextSpan span, bool getSymbol, List<DeclarationInfo> builder, CancellationToken cancellationToken);
 
-        protected internal struct DeclarationInSpan
+        /// <summary>
+        /// Takes a node and returns a set of declarations that overlap the node's span.
+        /// </summary>
+        internal abstract void ComputeDeclarationsInNode(SyntaxNode node, bool getSymbol, List<DeclarationInfo> builder, CancellationToken cancellationToken, int? levelsToCompute = null);
+
+        /// <summary>
+        /// Takes a Symbol and syntax for one of its declaring syntax reference and returns the topmost syntax node to be used by syntax analyzer.
+        /// </summary>
+        protected internal virtual SyntaxNode GetTopmostNodeForDiagnosticAnalysis(ISymbol symbol, SyntaxNode declaringSyntax)
         {
-            public DeclarationInSpan(SyntaxNode declaration, SyntaxNode body) : this()
-            {
-                this.Declaration = declaration;
-                this.Body = body;
-            }
-
-            public SyntaxNode Declaration { get; private set; }
-
-            public SyntaxNode Body { get; private set; }
+            return declaringSyntax;
         }
-
-        protected internal abstract void RunAnalyzersCore(
-            TextSpan span,
-            ImmutableArray<IDiagnosticAnalyzer> analyzers,
-            Action<Diagnostic> addDiagnostic,
-            AnalyzerOptions analyzerOptions,
-            bool continueOnError,
-            CancellationToken cancellationToken = default(CancellationToken));
     }
 }

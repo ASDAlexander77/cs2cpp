@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -15,15 +15,15 @@ namespace Microsoft.CodeAnalysis.Text
         /// <summary>
         /// The original span of the changed text. 
         /// </summary>
-        public TextSpan Span { get; private set; }
+        public TextSpan Span { get; }
 
         /// <summary>
         /// The new text.
         /// </summary>
-        public string NewText { get; private set; }
+        public string NewText { get; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="T:TextChange"/>
+        /// Initializes a new instance of <see cref="TextChange"/>
         /// </summary>
         /// <param name="span">The original span of the changed text.</param>
         /// <param name="newText">The new text.</param>
@@ -32,7 +32,7 @@ namespace Microsoft.CodeAnalysis.Text
         {
             if (newText == null)
             {
-                throw new ArgumentNullException("newText");
+                throw new ArgumentNullException(nameof(newText));
             }
 
             this.Span = span;
@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis.Text
         }
 
         /// <summary>
-        /// Provides a string representation for <see cref="T:TextChange"/>.
+        /// Provides a string representation for <see cref="TextChange"/>.
         /// </summary>
         public override string ToString()
         {
@@ -86,6 +86,6 @@ namespace Microsoft.CodeAnalysis.Text
         /// <summary>
         /// An empty set of changes.
         /// </summary>
-        public static readonly IReadOnlyList<TextChange> NoChanges = SpecializedCollections.EmptyReadOnlyList<TextChange>();
+        public static IReadOnlyList<TextChange> NoChanges => SpecializedCollections.EmptyReadOnlyList<TextChange>();
     }
 }

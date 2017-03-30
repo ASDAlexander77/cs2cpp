@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         internal static readonly ErrorTypeSymbol UnknownResultType = new UnsupportedMetadataTypeSymbol();
 
-        private ImmutableArray<TypeParameterSymbol> lazyTypeParameters;
+        private ImmutableArray<TypeParameterSymbol> _lazyTypeParameters;
 
         /// <summary>
         /// The underlying error.
@@ -36,9 +37,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// to perform substitution on the wrapped type, if any, and then construct a new
         /// error type symbol from the result (if there was a change).
         /// </summary>
-        internal virtual ErrorTypeSymbol Substitute(AbstractTypeMap typeMap)
+        internal virtual TypeWithModifiers Substitute(AbstractTypeMap typeMap)
         {
-            return (ErrorTypeSymbol)typeMap.SubstituteNamedType(this);
+            return new TypeWithModifiers((ErrorTypeSymbol)typeMap.SubstituteNamedType(this));
         }
 
         /// <summary>
@@ -130,7 +131,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// no members with this name, returns an empty ImmutableArray. Never returns Null.</returns>
         public override ImmutableArray<Symbol> GetMembers(string name)
         {
-            return ImmutableArray<Symbol>.Empty;
+            return GetMembers().WhereAsArray(m => m.Name == name);
         }
 
         internal sealed override IEnumerable<FieldSymbol> GetFieldsToEmit()
@@ -276,6 +277,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
+        }
+
         /// <summary>
         /// Returns the type parameters that this type has. If this is a non-generic type,
         /// returns an empty ImmutableArray.  
@@ -284,13 +298,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (this.lazyTypeParameters.IsDefault)
+                if (_lazyTypeParameters.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref this.lazyTypeParameters,
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _lazyTypeParameters,
                         GetTypeParameters(),
                         default(ImmutableArray<TypeParameterSymbol>));
                 }
-                return this.lazyTypeParameters;
+                return _lazyTypeParameters;
             }
         }
 
@@ -407,9 +421,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return null; }
         }
 
-        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
+        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved)
         {
-            get { return ImmutableArray<NamedTypeSymbol>.Empty; }
+            return ImmutableArray<NamedTypeSymbol>.Empty;
         }
 
         internal override ImmutableArray<NamedTypeSymbol> GetInterfacesToEmit()
@@ -427,7 +441,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return ImmutableArray<NamedTypeSymbol>.Empty;
         }
 
-        protected override NamedTypeSymbol ConstructCore(ImmutableArray<TypeSymbol> typeArguments, bool unbound)
+        protected override NamedTypeSymbol ConstructCore(ImmutableArray<TypeWithModifiers> typeArguments, bool unbound)
         {
             return new ConstructedErrorTypeSymbol(this, typeArguments);
         }
@@ -514,130 +528,162 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
     internal abstract class SubstitutedErrorTypeSymbol : ErrorTypeSymbol
     {
-        private readonly ErrorTypeSymbol originalDefinition;
-        private int hashCode;
+        private readonly ErrorTypeSymbol _originalDefinition;
+        private int _hashCode;
 
         protected SubstitutedErrorTypeSymbol(ErrorTypeSymbol originalDefinition)
         {
-            this.originalDefinition = originalDefinition;
+            _originalDefinition = originalDefinition;
         }
 
         public override NamedTypeSymbol OriginalDefinition
         {
-            get { return this.originalDefinition; }
+            get { return _originalDefinition; }
         }
 
         internal override bool MangleName
         {
-            get { return this.originalDefinition.MangleName; }
+            get { return _originalDefinition.MangleName; }
         }
 
         internal override DiagnosticInfo ErrorInfo
         {
-            get { return this.originalDefinition.ErrorInfo; }
+            get { return _originalDefinition.ErrorInfo; }
         }
 
         public override int Arity
         {
-            get { return this.originalDefinition.Arity; }
+            get { return _originalDefinition.Arity; }
         }
 
         public override string Name
         {
-            get { return this.originalDefinition.Name; }
+            get { return _originalDefinition.Name; }
         }
 
         public override ImmutableArray<Location> Locations
         {
-            get { return this.originalDefinition.Locations; }
+            get { return _originalDefinition.Locations; }
         }
 
         public override ImmutableArray<Symbol> CandidateSymbols
         {
-            get { return this.originalDefinition.CandidateSymbols; }
+            get { return _originalDefinition.CandidateSymbols; }
         }
 
         internal override LookupResultKind ResultKind
         {
-            get { return this.originalDefinition.ResultKind; }
+            get { return _originalDefinition.ResultKind; }
         }
 
         internal override DiagnosticInfo GetUseSiteDiagnostic()
         {
-            return this.originalDefinition.GetUseSiteDiagnostic();
+            return _originalDefinition.GetUseSiteDiagnostic();
         }
 
         public override int GetHashCode()
         {
-            if (this.hashCode == 0)
+            if (_hashCode == 0)
             {
-                this.hashCode = this.ComputeHashCode();
+                _hashCode = this.ComputeHashCode();
             }
-            return this.hashCode;
+            return _hashCode;
         }
     }
 
     internal sealed class ConstructedErrorTypeSymbol : SubstitutedErrorTypeSymbol
     {
-        private readonly ErrorTypeSymbol constructedFrom;
-        private readonly ImmutableArray<TypeSymbol> typeArguments;
-        private readonly TypeMap map;
+        private readonly ErrorTypeSymbol _constructedFrom;
+        private readonly ImmutableArray<TypeSymbol> _typeArguments;
+        private readonly bool _hasTypeArgumentsCustomModifiers;
+        private readonly TypeMap _map;
 
-        public ConstructedErrorTypeSymbol(ErrorTypeSymbol constructedFrom, ImmutableArray<TypeSymbol> typeArguments) :
+        public ConstructedErrorTypeSymbol(ErrorTypeSymbol constructedFrom, ImmutableArray<TypeWithModifiers> typeArguments) :
             base((ErrorTypeSymbol)constructedFrom.OriginalDefinition)
         {
-            this.constructedFrom = constructedFrom;
-            this.typeArguments = typeArguments;
-            this.map = new TypeMap(constructedFrom.ContainingType, constructedFrom.OriginalDefinition.TypeParameters, typeArguments);
+            _constructedFrom = constructedFrom;
+            _typeArguments = typeArguments.ToTypes(out _hasTypeArgumentsCustomModifiers);
+            _map = new TypeMap(constructedFrom.ContainingType, constructedFrom.OriginalDefinition.TypeParameters, typeArguments);
         }
 
         public override ImmutableArray<TypeParameterSymbol> TypeParameters
         {
-            get { return this.constructedFrom.TypeParameters; }
+            get { return _constructedFrom.TypeParameters; }
         }
 
         internal override ImmutableArray<TypeSymbol> TypeArgumentsNoUseSiteDiagnostics
         {
-            get { return this.typeArguments; }
+            get { return _typeArguments; }
+        }
+
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return _hasTypeArgumentsCustomModifiers;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            if (_hasTypeArgumentsCustomModifiers)
+            {
+                return _map.GetTypeArgumentsCustomModifiersFor(_constructedFrom.OriginalDefinition.TypeParameters[ordinal]);
+            }
+
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
         }
 
         public override NamedTypeSymbol ConstructedFrom
         {
-            get { return this.constructedFrom; }
+            get { return _constructedFrom; }
         }
 
         public override Symbol ContainingSymbol
         {
-            get { return this.constructedFrom.ContainingSymbol; }
+            get { return _constructedFrom.ContainingSymbol; }
         }
 
         internal override TypeMap TypeSubstitution
         {
-            get { return this.map; }
+            get { return _map; }
         }
     }
 
     internal sealed class SubstitutedNestedErrorTypeSymbol : SubstitutedErrorTypeSymbol
     {
-        private readonly NamedTypeSymbol containingSymbol;
-        private readonly ImmutableArray<TypeParameterSymbol> typeParameters;
-        private readonly TypeMap map;
+        private readonly NamedTypeSymbol _containingSymbol;
+        private readonly ImmutableArray<TypeParameterSymbol> _typeParameters;
+        private readonly TypeMap _map;
 
         public SubstitutedNestedErrorTypeSymbol(NamedTypeSymbol containingSymbol, ErrorTypeSymbol originalDefinition) :
             base(originalDefinition)
         {
-            this.containingSymbol = containingSymbol;
-            this.map = containingSymbol.TypeSubstitution.WithAlphaRename(originalDefinition, this, out this.typeParameters);
+            _containingSymbol = containingSymbol;
+            _map = containingSymbol.TypeSubstitution.WithAlphaRename(originalDefinition, this, out _typeParameters);
         }
 
         public override ImmutableArray<TypeParameterSymbol> TypeParameters
         {
-            get { return this.typeParameters; }
+            get { return _typeParameters; }
         }
 
         internal override ImmutableArray<TypeSymbol> TypeArgumentsNoUseSiteDiagnostics
         {
             get { return this.TypeParameters.Cast<TypeParameterSymbol, TypeSymbol>(); }
+        }
+
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
         }
 
         public override NamedTypeSymbol ConstructedFrom
@@ -647,12 +693,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return this.containingSymbol; }
+            get { return _containingSymbol; }
         }
 
         internal override TypeMap TypeSubstitution
         {
-            get { return this.map; }
+            get { return _map; }
         }
     }
 }

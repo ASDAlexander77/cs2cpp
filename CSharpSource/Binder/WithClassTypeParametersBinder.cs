@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,43 +13,43 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class WithClassTypeParametersBinder : WithTypeParametersBinder
     {
-        private readonly NamedTypeSymbol namedType;
-        private MultiDictionary<string, TypeParameterSymbol> lazyTypeParameterMap;
+        private readonly NamedTypeSymbol _namedType;
+        private MultiDictionary<string, TypeParameterSymbol> _lazyTypeParameterMap;
 
         internal WithClassTypeParametersBinder(NamedTypeSymbol container, Binder next)
             : base(next)
         {
             Debug.Assert((object)container != null);
-            this.namedType = container;
+            _namedType = container;
         }
 
-        internal override bool IsAccessible(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null)
+        internal override bool IsAccessibleHelper(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved)
         {
-            return this.IsSymbolAccessibleConditional(symbol, namedType, accessThroughType, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
+            return this.IsSymbolAccessibleConditional(symbol, _namedType, accessThroughType, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
         }
 
         protected override MultiDictionary<string, TypeParameterSymbol> TypeParameterMap
         {
             get
             {
-                if (this.lazyTypeParameterMap == null)
+                if (_lazyTypeParameterMap == null)
                 {
                     var result = new MultiDictionary<string, TypeParameterSymbol>();
-                    foreach (TypeParameterSymbol tps in this.namedType.TypeParameters)
+                    foreach (TypeParameterSymbol tps in _namedType.TypeParameters)
                     {
                         result.Add(tps.Name, tps);
                     }
-                    Interlocked.CompareExchange(ref this.lazyTypeParameterMap, result, null);
+                    Interlocked.CompareExchange(ref _lazyTypeParameterMap, result, null);
                 }
-                return lazyTypeParameterMap;
+                return _lazyTypeParameterMap;
             }
         }
 
         protected override void AddLookupSymbolsInfoInSingleBinder(LookupSymbolsInfo result, LookupOptions options, Binder originalBinder)
         {
-            if (options.CanConsiderTypeParameters())
+            if (CanConsiderTypeParameters(options))
             {
-                foreach (var parameter in this.namedType.TypeParameters)
+                foreach (var parameter in _namedType.TypeParameters)
                 {
                     if (originalBinder.CanAddLookupSymbolInfo(parameter, options, null))
                     {

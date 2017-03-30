@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -10,7 +10,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Shows only the name of the delegate (e.g. "SomeDelegate").
         /// </summary>
-        NameOnly,
+        NameOnly = 0,
 
         /// <summary>
         /// Shows the name and the parameters of the delegate (e.g. "SomeDelegate(int x)").  
@@ -18,7 +18,7 @@ namespace Microsoft.CodeAnalysis
         /// <remarks>
         /// The format of the parameters will be determined by the other flags passed.
         /// </remarks>
-        NameAndParameters,
+        NameAndParameters = 1,
 
         /// <summary>
         /// Shows the name and the signature of the delegate (e.g. "void SomeDelegate(int x)").  
@@ -26,6 +26,6 @@ namespace Microsoft.CodeAnalysis
         /// <remarks>
         /// The format of the signature will be determined by the other flags passed.
         /// </remarks>
-        NameAndSignature,
+        NameAndSignature = 2,
     }
 }

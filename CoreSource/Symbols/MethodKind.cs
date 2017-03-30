@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
@@ -93,6 +94,11 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Declare Sub or Function.
         /// </summary>
-        DeclareMethod = 16
+        DeclareMethod = 16,
+
+        /// <summary>
+        /// Method is declared inside of another method.
+        /// </summary>
+        LocalFunction = 17
     }
 }

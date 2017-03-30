@@ -1,14 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.Syntax
 {
-    partial class AttributeSyntax
+    public partial class AttributeSyntax
     {
         /// <summary>
         /// Return the name used in syntax for the attribute. This is typically the class
@@ -18,7 +15,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
         internal string GetErrorDisplayName()
         {
             // Dev10 uses the name from source, even if it's an alias.
-            return Name.ToString();
+            return Name.ErrorDisplayName();
         }
 
         internal AttributeArgumentSyntax GetNamedArgumentSyntax(string namedArgName)

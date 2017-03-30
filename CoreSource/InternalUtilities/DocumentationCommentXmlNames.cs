@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 
@@ -28,12 +28,18 @@ namespace Roslyn.Utilities
         public const string TypeParameterElementName = "typeparam";
         public const string TypeParameterReferenceElementName = "typeparamref";
         public const string ValueElementName = "value";
+        public const string ThreadSafetyElementName = "threadsafety";
+        public const string PreliminaryElementName = "preliminary";
+        public const string KeywordElementName = "langword";
+        public const string PlaceholderElementName = "placeholder";
 
         public const string CrefAttributeName = "cref";
         public const string NameAttributeName = "name";
         public const string FileAttributeName = "file";
         public const string PathAttributeName = "path";
         public const string TypeAttributeName = "type";
+        public const string StaticAttributeName = "static";
+        public const string InstanceAttributeName = "instance";
 
         public static bool ElementEquals(string name1, string name2, bool fromVb = false)
         {

@@ -1,21 +1,23 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis;
 using Roslyn.Utilities;
 
 namespace Microsoft.Cci
 {
-    internal sealed class ManagedResource 
+    internal sealed class ManagedResource
     {
-        private readonly Func<Stream> streamProvider;
-        private readonly IFileReference fileReference;
-        private readonly uint offset;
-        private readonly string name;
-        private readonly bool isPublic;
+        private readonly Func<Stream> _streamProvider;
+        private readonly IFileReference _fileReference;
+        private readonly uint _offset;
+        private readonly string _name;
+        private readonly bool _isPublic;
 
         /// <summary>
         /// <paramref name="streamProvider"/> streamProvider callers will dispose result after use.
@@ -25,20 +27,20 @@ namespace Microsoft.Cci
         {
             Debug.Assert(streamProvider == null ^ fileReference == null);
 
-            this.streamProvider = streamProvider;
-            this.name = name;
-            this.fileReference = fileReference;
-            this.offset = offset;
-            this.isPublic = isPublic;
+            _streamProvider = streamProvider;
+            _name = name;
+            _fileReference = fileReference;
+            _offset = offset;
+            _isPublic = isPublic;
         }
 
-        public void WriteData(BinaryWriter resourceWriter)
+        public void WriteData(BlobBuilder resourceWriter)
         {
-            if (fileReference == null)
+            if (_fileReference == null)
             {
                 try
                 {
-                    using (Stream stream = streamProvider())
+                    using (Stream stream = _streamProvider())
                     {
                         if (stream == null)
                         {
@@ -46,20 +48,20 @@ namespace Microsoft.Cci
                         }
 
                         var count = (int)(stream.Length - stream.Position);
-                        resourceWriter.WriteInt(count);
+                        resourceWriter.WriteInt32(count);
 
-                        var to = resourceWriter.BaseStream;
-                        var position = (int)to.Position;
-                        to.Position = (uint)(position + count);
+                        int bytesWritten = resourceWriter.TryWriteBytes(stream, count);
+                        if (bytesWritten != count)
+                        {
+                            throw new EndOfStreamException(
+                                    string.Format(CultureInfo.CurrentUICulture, CodeAnalysisResources.ResourceStreamEndedUnexpectedly, bytesWritten, count));
+                        }
                         resourceWriter.Align(8);
-
-                        var buffer = to.Buffer;
-                        stream.Read(buffer, position, count);
                     }
                 }
                 catch (Exception e)
                 {
-                    throw new ResourceException(this.name, e);
+                    throw new ResourceException(_name, e);
                 }
             }
         }
@@ -68,7 +70,7 @@ namespace Microsoft.Cci
         {
             get
             {
-                return fileReference;
+                return _fileReference;
             }
         }
 
@@ -76,7 +78,7 @@ namespace Microsoft.Cci
         {
             get
             {
-                return offset;
+                return _offset;
             }
         }
 
@@ -87,12 +89,12 @@ namespace Microsoft.Cci
 
         public bool IsPublic
         {
-            get { return isPublic; }
+            get { return _isPublic; }
         }
 
         public string Name
         {
-            get { return name; }
+            get { return _name; }
         }
     }
 }

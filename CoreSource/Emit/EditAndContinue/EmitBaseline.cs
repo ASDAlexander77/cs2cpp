@@ -1,18 +1,17 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using Microsoft.Cci;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Emit
 {
-    public delegate ImmutableArray<string> LocalVariableNameProvider(uint methodIndex);
-
     // A MethodImpl entry is a pair of implementing method and implemented
     // method. However, the implemented method is a MemberRef rather
     // than a MethodDef (e.g.: I<int>.M) and currently we are not mapping
@@ -23,7 +22,7 @@ namespace Microsoft.CodeAnalysis.Emit
     // sufficient to track a pair of implementing method and index.
     internal struct MethodImplKey : IEquatable<MethodImplKey>
     {
-        internal MethodImplKey(uint implementingMethod, int index)
+        internal MethodImplKey(int implementingMethod, int index)
         {
             Debug.Assert(implementingMethod > 0);
             Debug.Assert(index > 0);
@@ -31,8 +30,13 @@ namespace Microsoft.CodeAnalysis.Emit
             this.Index = index;
         }
 
-        internal readonly uint ImplementingMethod;
+        internal readonly int ImplementingMethod;
         internal readonly int Index;
+
+        public override bool Equals(object obj)
+        {
+            return obj is MethodImplKey && Equals((MethodImplKey)obj);
+        }
 
         public bool Equals(MethodImplKey other)
         {
@@ -42,7 +46,7 @@ namespace Microsoft.CodeAnalysis.Emit
 
         public override int GetHashCode()
         {
-            return Hash.Combine((int)this.ImplementingMethod, this.Index);
+            return Hash.Combine(this.ImplementingMethod, this.Index);
         }
     }
 
@@ -52,15 +56,41 @@ namespace Microsoft.CodeAnalysis.Emit
     /// </summary>
     public sealed class EmitBaseline
     {
-        private static readonly ImmutableArray<int> EmptyTableSizes = ImmutableArray.Create(new int[MetadataTokens.TableCount]);
+        private static readonly ImmutableArray<int> s_emptyTableSizes = ImmutableArray.Create(new int[MetadataTokens.TableCount]);
+
+        internal sealed class MetadataSymbols
+        {
+            public readonly IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> AnonymousTypes;
+
+            /// <summary>
+            /// A map of the assembly identities of the baseline compilation to the identities of the original metadata AssemblyRefs.
+            /// Only includes identities that differ between these two.
+            /// </summary>
+            public readonly ImmutableDictionary<AssemblyIdentity, AssemblyIdentity> AssemblyReferenceIdentityMap;
+
+            public readonly object MetadataDecoder;
+
+            public MetadataSymbols(IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> anonymousTypes, object metadataDecoder, ImmutableDictionary<AssemblyIdentity, AssemblyIdentity> assemblyReferenceIdentityMap)
+            {
+                Debug.Assert(anonymousTypes != null);
+                Debug.Assert(metadataDecoder != null);
+                Debug.Assert(assemblyReferenceIdentityMap != null);
+
+                this.AnonymousTypes = anonymousTypes;
+                this.MetadataDecoder = metadataDecoder;
+                this.AssemblyReferenceIdentityMap = assemblyReferenceIdentityMap;
+            }
+        }
 
         /// <summary>
         /// Creates an <see cref="EmitBaseline"/> from the metadata of the module before editing
         /// and from a function that maps from a method to an array of local names. 
         /// </summary>
         /// <param name="module">The metadata of the module before editing.</param>
-        /// <param name="localNames">
-        /// A function that returns the array of local names given a method index from the module metadata.
+        /// <param name="debugInformationProvider">
+        /// A function that for a method handle returns Edit and Continue debug information emitted by the compiler into the PDB.
+        /// The function shall throw <see cref="System.IO.InvalidDataException"/> if the debug information can't be read for the specified method.
+        /// This exception is caught and converted to an emit diagnostic. Other exceptions are passed through.
         /// </param>
         /// <returns>An <see cref="EmitBaseline"/> for the module.</returns>
         /// <remarks>
@@ -69,9 +99,9 @@ namespace Microsoft.CodeAnalysis.Emit
         /// 
         /// When an active method (one for which a frame is allocated on a stack) is updated the values of its local variables need to be preserved.
         /// The mapping of local variable names to their slots in the frame is not included in the metadata and thus needs to be provided by 
-        /// <paramref name="localNames"/>.
+        /// <paramref name="debugInformationProvider"/>.
         /// 
-        /// The <see cref="LocalVariableNameProvider"/> is only needed for the initial generation. The mapping for the subsequent generations
+        /// The <paramref name="debugInformationProvider"/> is only needed for the initial generation. The mapping for the subsequent generations
         /// is carried over through <see cref="EmitBaseline"/>. The compiler assigns slots to named local variables (including named temporary variables)
         /// it the order in which they appear in the source code. This property allows the compiler to reconstruct the local variable mapping 
         /// for the initial generation. A subsequent generation may add a new variable in between two variables of the previous generation. 
@@ -79,62 +109,81 @@ namespace Microsoft.CodeAnalysis.Emit
         /// The slot ordering thus no longer matches the syntax ordering. It is therefore necessary to pass <see cref="EmitDifferenceResult.Baseline"/>
         /// to the next generation (rather than e.g. create new <see cref="EmitBaseline"/>s from scratch based on metadata produced by subsequent compilations).
         /// </remarks>
-        public static EmitBaseline CreateInitialBaseline(ModuleMetadata module, LocalVariableNameProvider localNames)
+        /// <exception cref="ArgumentException"><paramref name="module"/> is not a PE image.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="module"/> is null.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="debugInformationProvider"/> is null.</exception>
+        /// <exception cref="IOException">Error reading module metadata.</exception>
+        /// <exception cref="BadImageFormatException">Module metadata is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">Module has been disposed.</exception>
+        public static EmitBaseline CreateInitialBaseline(ModuleMetadata module, Func<MethodDefinitionHandle, EditAndContinueMethodDebugInformation> debugInformationProvider)
         {
             if (module == null)
             {
-                throw new ArgumentNullException("module");
+                throw new ArgumentNullException(nameof(module));
             }
 
             if (!module.Module.HasIL)
             {
-                throw new ArgumentException(CodeAnalysisResources.PEImageNotAvailable, "module");
+                throw new ArgumentException(CodeAnalysisResources.PEImageNotAvailable, nameof(module));
             }
 
-            if (localNames == null)
+            if (debugInformationProvider == null)
             {
-                throw new ArgumentNullException("localNames");
+                throw new ArgumentNullException(nameof(debugInformationProvider));
             }
+
+            // module has IL as checked above and hence a PE reader:
+            Debug.Assert(module.Module.PEReaderOpt != null);
 
             var reader = module.MetadataReader;
             var moduleVersionId = module.GetModuleVersionId();
+            var hasPortablePdb = module.Module.PEReaderOpt.ReadDebugDirectory().Any(entry => entry.IsPortableCodeView);
 
             return new EmitBaseline(
+                null,
                 module,
                 compilation: null,
                 moduleBuilder: null,
                 moduleVersionId: moduleVersionId,
                 ordinal: 0,
                 encId: default(Guid),
-                typesAdded: new Dictionary<ITypeDefinition, uint>(),
-                eventsAdded: new Dictionary<IEventDefinition, uint>(),
-                fieldsAdded: new Dictionary<IFieldDefinition, uint>(),
-                methodsAdded: new Dictionary<IMethodDefinition, uint>(),
-                propertiesAdded: new Dictionary<IPropertyDefinition, uint>(),
-                eventMapAdded: new Dictionary<uint, uint>(),
-                propertyMapAdded: new Dictionary<uint, uint>(),
-                methodImplsAdded: new Dictionary<MethodImplKey, uint>(),
-                tableEntriesAdded: EmptyTableSizes,
+                hasPortablePdb: hasPortablePdb,
+                typesAdded: new Dictionary<Cci.ITypeDefinition, int>(),
+                eventsAdded: new Dictionary<Cci.IEventDefinition, int>(),
+                fieldsAdded: new Dictionary<Cci.IFieldDefinition, int>(),
+                methodsAdded: new Dictionary<Cci.IMethodDefinition, int>(),
+                propertiesAdded: new Dictionary<Cci.IPropertyDefinition, int>(),
+                eventMapAdded: new Dictionary<int, int>(),
+                propertyMapAdded: new Dictionary<int, int>(),
+                methodImplsAdded: new Dictionary<MethodImplKey, int>(),
+                tableEntriesAdded: s_emptyTableSizes,
                 blobStreamLengthAdded: 0,
                 stringStreamLengthAdded: 0,
                 userStringStreamLengthAdded: 0,
                 guidStreamLengthAdded: 0,
                 anonymousTypeMap: null, // Unset for initial metadata
-                localsForMethodsAddedOrChanged: new Dictionary<uint, ImmutableArray<EncLocalInfo>>(),
-                localNames: localNames,
-                typeToEventMap: reader.CalculateTypeEventMap(),
-                typeToPropertyMap: reader.CalculateTypePropertyMap(),
+                synthesizedMembers: ImmutableDictionary<Cci.ITypeDefinition, ImmutableArray<Cci.ITypeDefinitionMember>>.Empty,
+                methodsAddedOrChanged: new Dictionary<int, AddedOrChangedMethodInfo>(),
+                debugInformationProvider: debugInformationProvider,
+                typeToEventMap: CalculateTypeEventMap(reader),
+                typeToPropertyMap: CalculateTypePropertyMap(reader),
                 methodImpls: CalculateMethodImpls(reader));
         }
+
+        internal EmitBaseline InitialBaseline { get; }
 
         /// <summary>
         /// The original metadata of the module.
         /// </summary>
-        public readonly ModuleMetadata OriginalMetadata;
+        public ModuleMetadata OriginalMetadata { get; }
+
+        // Symbols hydrated from the original metadata. Lazy since we don't know the language at the time the baseline is constructed.
+        internal MetadataSymbols LazyMetadataSymbols;
 
         internal readonly Compilation Compilation;
         internal readonly CommonPEModuleBuilder PEModuleBuilder;
         internal readonly Guid ModuleVersionId;
+        internal readonly bool HasPortablePdb;
 
         /// <summary>
         /// Metadata generation ordinal. Zero for
@@ -148,14 +197,14 @@ namespace Microsoft.CodeAnalysis.Emit
         /// </summary>
         internal readonly Guid EncId;
 
-        internal readonly IReadOnlyDictionary<ITypeDefinition, uint> TypesAdded;
-        internal readonly IReadOnlyDictionary<IEventDefinition, uint> EventsAdded;
-        internal readonly IReadOnlyDictionary<IFieldDefinition, uint> FieldsAdded;
-        internal readonly IReadOnlyDictionary<IMethodDefinition, uint> MethodsAdded;
-        internal readonly IReadOnlyDictionary<IPropertyDefinition, uint> PropertiesAdded;
-        internal readonly IReadOnlyDictionary<uint, uint> EventMapAdded;
-        internal readonly IReadOnlyDictionary<uint, uint> PropertyMapAdded;
-        internal readonly IReadOnlyDictionary<MethodImplKey, uint> MethodImplsAdded;
+        internal readonly IReadOnlyDictionary<Cci.ITypeDefinition, int> TypesAdded;
+        internal readonly IReadOnlyDictionary<Cci.IEventDefinition, int> EventsAdded;
+        internal readonly IReadOnlyDictionary<Cci.IFieldDefinition, int> FieldsAdded;
+        internal readonly IReadOnlyDictionary<Cci.IMethodDefinition, int> MethodsAdded;
+        internal readonly IReadOnlyDictionary<Cci.IPropertyDefinition, int> PropertiesAdded;
+        internal readonly IReadOnlyDictionary<int, int> EventMapAdded;
+        internal readonly IReadOnlyDictionary<int, int> PropertyMapAdded;
+        internal readonly IReadOnlyDictionary<MethodImplKey, int> MethodImplsAdded;
 
         internal readonly ImmutableArray<int> TableEntriesAdded;
 
@@ -165,58 +214,64 @@ namespace Microsoft.CodeAnalysis.Emit
         internal readonly int GuidStreamLengthAdded;
 
         /// <summary>
-        /// Map from syntax to local variable for methods added or updated
-        /// since the initial generation, indexed by method row.
+        /// EnC metadata for methods added or updated since the initial generation, indexed by method row id.
         /// </summary>
-        internal readonly IReadOnlyDictionary<uint, ImmutableArray<EncLocalInfo>> LocalsForMethodsAddedOrChanged;
+        internal readonly IReadOnlyDictionary<int, AddedOrChangedMethodInfo> AddedOrChangedMethods;
 
         /// <summary>
-        /// Local variable names for methods from metadata,
-        /// indexed by method row.
+        /// Reads EnC debug information of a method from the initial baseline PDB.
+        /// The function shall throw <see cref="System.IO.InvalidDataException"/> if the debug information can't be read for the specified method.
+        /// This exception is caught and converted to an emit diagnostic. Other exceptions are passed through.
         /// </summary>
-        internal readonly LocalVariableNameProvider LocalNames;
+        internal readonly Func<MethodDefinitionHandle, EditAndContinueMethodDebugInformation> DebugInformationProvider;
 
         internal readonly ImmutableArray<int> TableSizes;
-        internal readonly IReadOnlyDictionary<uint, uint> TypeToEventMap;
-        internal readonly IReadOnlyDictionary<uint, uint> TypeToPropertyMap;
-        internal readonly IReadOnlyDictionary<MethodImplKey, uint> MethodImpls;
-        internal readonly IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> AnonymousTypeMap;
+        internal readonly IReadOnlyDictionary<int, int> TypeToEventMap;
+        internal readonly IReadOnlyDictionary<int, int> TypeToPropertyMap;
+        internal readonly IReadOnlyDictionary<MethodImplKey, int> MethodImpls;
+        private readonly IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> _anonymousTypeMap;
+        internal readonly ImmutableDictionary<Cci.ITypeDefinition, ImmutableArray<Cci.ITypeDefinitionMember>> SynthesizedMembers;
 
         private EmitBaseline(
+            EmitBaseline initialBaseline,
             ModuleMetadata module,
             Compilation compilation,
             CommonPEModuleBuilder moduleBuilder,
             Guid moduleVersionId,
             int ordinal,
             Guid encId,
-            IReadOnlyDictionary<ITypeDefinition, uint> typesAdded,
-            IReadOnlyDictionary<IEventDefinition, uint> eventsAdded,
-            IReadOnlyDictionary<IFieldDefinition, uint> fieldsAdded,
-            IReadOnlyDictionary<IMethodDefinition, uint> methodsAdded,
-            IReadOnlyDictionary<IPropertyDefinition, uint> propertiesAdded,
-            IReadOnlyDictionary<uint, uint> eventMapAdded,
-            IReadOnlyDictionary<uint, uint> propertyMapAdded,
-            IReadOnlyDictionary<MethodImplKey, uint> methodImplsAdded,
+            bool hasPortablePdb,
+            IReadOnlyDictionary<Cci.ITypeDefinition, int> typesAdded,
+            IReadOnlyDictionary<Cci.IEventDefinition, int> eventsAdded,
+            IReadOnlyDictionary<Cci.IFieldDefinition, int> fieldsAdded,
+            IReadOnlyDictionary<Cci.IMethodDefinition, int> methodsAdded,
+            IReadOnlyDictionary<Cci.IPropertyDefinition, int> propertiesAdded,
+            IReadOnlyDictionary<int, int> eventMapAdded,
+            IReadOnlyDictionary<int, int> propertyMapAdded,
+            IReadOnlyDictionary<MethodImplKey, int> methodImplsAdded,
             ImmutableArray<int> tableEntriesAdded,
             int blobStreamLengthAdded,
             int stringStreamLengthAdded,
             int userStringStreamLengthAdded,
             int guidStreamLengthAdded,
             IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> anonymousTypeMap,
-            IReadOnlyDictionary<uint, ImmutableArray<EncLocalInfo>> localsForMethodsAddedOrChanged,
-            LocalVariableNameProvider localNames,
-            IReadOnlyDictionary<uint, uint> typeToEventMap,
-            IReadOnlyDictionary<uint, uint> typeToPropertyMap,
-            IReadOnlyDictionary<MethodImplKey, uint> methodImpls)
+            ImmutableDictionary<Cci.ITypeDefinition, ImmutableArray<Cci.ITypeDefinitionMember>> synthesizedMembers,
+            IReadOnlyDictionary<int, AddedOrChangedMethodInfo> methodsAddedOrChanged,
+            Func<MethodDefinitionHandle, EditAndContinueMethodDebugInformation> debugInformationProvider,
+            IReadOnlyDictionary<int, int> typeToEventMap,
+            IReadOnlyDictionary<int, int> typeToPropertyMap,
+            IReadOnlyDictionary<MethodImplKey, int> methodImpls)
         {
             Debug.Assert(module != null);
             Debug.Assert((ordinal == 0) == (encId == default(Guid)));
+            Debug.Assert((ordinal == 0) == (initialBaseline == null));
             Debug.Assert(encId != module.GetModuleVersionId());
-            Debug.Assert(localNames != null);
+            Debug.Assert(debugInformationProvider != null);
             Debug.Assert(typeToEventMap != null);
             Debug.Assert(typeToPropertyMap != null);
             Debug.Assert(moduleVersionId != default(Guid));
             Debug.Assert(moduleVersionId == module.GetModuleVersionId());
+            Debug.Assert(synthesizedMembers != null);
 
             Debug.Assert(tableEntriesAdded.Length == MetadataTokens.TableCount);
 
@@ -234,12 +289,14 @@ namespace Microsoft.CodeAnalysis.Emit
 
             var reader = module.Module.MetadataReader;
 
+            this.InitialBaseline = initialBaseline ?? this;
             this.OriginalMetadata = module;
             this.Compilation = compilation;
             this.PEModuleBuilder = moduleBuilder;
             this.ModuleVersionId = moduleVersionId;
             this.Ordinal = ordinal;
             this.EncId = encId;
+            this.HasPortablePdb = hasPortablePdb;
 
             this.TypesAdded = typesAdded;
             this.EventsAdded = eventsAdded;
@@ -254,10 +311,11 @@ namespace Microsoft.CodeAnalysis.Emit
             this.StringStreamLengthAdded = stringStreamLengthAdded;
             this.UserStringStreamLengthAdded = userStringStreamLengthAdded;
             this.GuidStreamLengthAdded = guidStreamLengthAdded;
-            this.AnonymousTypeMap = anonymousTypeMap;
-            this.LocalsForMethodsAddedOrChanged = localsForMethodsAddedOrChanged;
+            _anonymousTypeMap = anonymousTypeMap;
+            this.SynthesizedMembers = synthesizedMembers;
+            this.AddedOrChangedMethods = methodsAddedOrChanged;
 
-            this.LocalNames = localNames;
+            this.DebugInformationProvider = debugInformationProvider;
             this.TableSizes = CalculateTableSizes(reader, this.TableEntriesAdded);
             this.TypeToEventMap = typeToEventMap;
             this.TypeToPropertyMap = typeToPropertyMap;
@@ -269,33 +327,36 @@ namespace Microsoft.CodeAnalysis.Emit
             CommonPEModuleBuilder moduleBuilder,
             int ordinal,
             Guid encId,
-            IReadOnlyDictionary<ITypeDefinition, uint> typesAdded,
-            IReadOnlyDictionary<IEventDefinition, uint> eventsAdded,
-            IReadOnlyDictionary<IFieldDefinition, uint> fieldsAdded,
-            IReadOnlyDictionary<IMethodDefinition, uint> methodsAdded,
-            IReadOnlyDictionary<IPropertyDefinition, uint> propertiesAdded,
-            IReadOnlyDictionary<uint, uint> eventMapAdded,
-            IReadOnlyDictionary<uint, uint> propertyMapAdded,
-            IReadOnlyDictionary<MethodImplKey, uint> methodImplsAdded,
+            IReadOnlyDictionary<Cci.ITypeDefinition, int> typesAdded,
+            IReadOnlyDictionary<Cci.IEventDefinition, int> eventsAdded,
+            IReadOnlyDictionary<Cci.IFieldDefinition, int> fieldsAdded,
+            IReadOnlyDictionary<Cci.IMethodDefinition, int> methodsAdded,
+            IReadOnlyDictionary<Cci.IPropertyDefinition, int> propertiesAdded,
+            IReadOnlyDictionary<int, int> eventMapAdded,
+            IReadOnlyDictionary<int, int> propertyMapAdded,
+            IReadOnlyDictionary<MethodImplKey, int> methodImplsAdded,
             ImmutableArray<int> tableEntriesAdded,
             int blobStreamLengthAdded,
             int stringStreamLengthAdded,
             int userStringStreamLengthAdded,
             int guidStreamLengthAdded,
             IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> anonymousTypeMap,
-            IReadOnlyDictionary<uint, ImmutableArray<EncLocalInfo>> localsForMethodsAddedOrChanged,
-            LocalVariableNameProvider localNames)
+            ImmutableDictionary<Cci.ITypeDefinition, ImmutableArray<Cci.ITypeDefinitionMember>> synthesizedMembers,
+            IReadOnlyDictionary<int, AddedOrChangedMethodInfo> addedOrChangedMethods,
+            Func<MethodDefinitionHandle, EditAndContinueMethodDebugInformation> debugInformationProvider)
         {
-            Debug.Assert((this.AnonymousTypeMap == null) || (anonymousTypeMap != null));
-            Debug.Assert((this.AnonymousTypeMap == null) || (anonymousTypeMap.Count >= this.AnonymousTypeMap.Count));
+            Debug.Assert(_anonymousTypeMap == null || anonymousTypeMap != null);
+            Debug.Assert(_anonymousTypeMap == null || anonymousTypeMap.Count >= _anonymousTypeMap.Count);
 
             return new EmitBaseline(
-                this.OriginalMetadata,
+                InitialBaseline,
+                OriginalMetadata,
                 compilation,
                 moduleBuilder,
-                this.ModuleVersionId,
+                ModuleVersionId,
                 ordinal,
                 encId,
+                HasPortablePdb,
                 typesAdded,
                 eventsAdded,
                 fieldsAdded,
@@ -310,11 +371,26 @@ namespace Microsoft.CodeAnalysis.Emit
                 userStringStreamLengthAdded: userStringStreamLengthAdded,
                 guidStreamLengthAdded: guidStreamLengthAdded,
                 anonymousTypeMap: anonymousTypeMap,
-                localsForMethodsAddedOrChanged: localsForMethodsAddedOrChanged,
-                localNames: localNames,
-                typeToEventMap: this.TypeToEventMap,
-                typeToPropertyMap: this.TypeToPropertyMap,
-                methodImpls: this.MethodImpls);
+                synthesizedMembers: synthesizedMembers,
+                methodsAddedOrChanged: addedOrChangedMethods,
+                debugInformationProvider: debugInformationProvider,
+                typeToEventMap: TypeToEventMap,
+                typeToPropertyMap: TypeToPropertyMap,
+                methodImpls: MethodImpls);
+        }
+
+        internal IReadOnlyDictionary<AnonymousTypeKey, AnonymousTypeValue> AnonymousTypeMap
+        {
+            get
+            {
+                if (Ordinal > 0)
+                {
+                    return _anonymousTypeMap;
+                }
+
+                Debug.Assert(LazyMetadataSymbols != null);
+                return LazyMetadataSymbols.AnonymousTypes;
+            }
         }
 
         internal MetadataReader MetadataReader
@@ -354,9 +430,39 @@ namespace Microsoft.CodeAnalysis.Emit
             return ImmutableArray.Create(sizes);
         }
 
-        private static Dictionary<MethodImplKey, uint> CalculateMethodImpls(MetadataReader reader)
+        private static Dictionary<int, int> CalculateTypePropertyMap(MetadataReader reader)
         {
-            var result = new Dictionary<MethodImplKey, uint>();
+            var result = new Dictionary<int, int>();
+
+            int rowId = 1;
+            foreach (var parentType in reader.GetTypesWithProperties())
+            {
+                Debug.Assert(!parentType.IsNil);
+                result.Add(reader.GetRowNumber(parentType), rowId);
+                rowId++;
+            }
+
+            return result;
+        }
+
+        private static Dictionary<int, int> CalculateTypeEventMap(MetadataReader reader)
+        {
+            var result = new Dictionary<int, int>();
+
+            int rowId = 1;
+            foreach (var parentType in reader.GetTypesWithEvents())
+            {
+                Debug.Assert(!parentType.IsNil);
+                result.Add(reader.GetRowNumber(parentType), rowId);
+                rowId++;
+            }
+
+            return result;
+        }
+
+        private static Dictionary<MethodImplKey, int> CalculateMethodImpls(MetadataReader reader)
+        {
+            var result = new Dictionary<MethodImplKey, int>();
             int n = reader.GetTableRowCount(TableIndex.MethodImpl);
             for (int row = 1; row <= n; row++)
             {
@@ -366,14 +472,14 @@ namespace Microsoft.CodeAnalysis.Emit
                 // member refs currently, and since we don't allow changes to
                 // the set of methods a method def implements, the actual
                 // tokens of the implemented methods are not needed.)
-                var methodDefRow = (uint)MetadataTokens.GetRowNumber(methodImpl.MethodBody);
+                int methodDefRow = MetadataTokens.GetRowNumber(methodImpl.MethodBody);
                 int index = 1;
                 while (true)
                 {
                     var key = new MethodImplKey(methodDefRow, index);
                     if (!result.ContainsKey(key))
                     {
-                        result.Add(key, (uint)row);
+                        result.Add(key, row);
                         break;
                     }
                     index++;
@@ -397,6 +503,7 @@ namespace Microsoft.CodeAnalysis.Emit
                     nextIndex = index + 1;
                 }
             }
+
             return nextIndex;
         }
     }

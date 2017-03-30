@@ -1,13 +1,8 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using System.Threading;
 
 namespace Roslyn.Utilities
@@ -49,27 +44,27 @@ namespace Roslyn.Utilities
 
         // local (L1) cache
         // simple fast and not threadsafe cache 
-        // with lmited size and "last add wins" expiration policy
+        // with limited size and "last add wins" expiration policy
         //
         // The main purpose of the local cache is to use in long lived
         // single threaded operations with lots of locality (like parsing).
         // Local cache is smaller (and thus faster) and is not affected
         // by cache misses on other threads.
-        private readonly Entry[] localTable = new Entry[LocalSize];
+        private readonly Entry[] _localTable = new Entry[LocalSize];
 
         // shared (L2) threadsafe cache
         // slightly slower than local cache
         // we read this cache when having a miss in local cache
         // writes to local cache will update shared cache as well.
-        private static Entry[] sharedTable = new Entry[SharedSize];
+        private static readonly Entry[] s_sharedTable = new Entry[SharedSize];
 
         // essentially a random number 
         // the usage pattern will randomly use and increment this
         // the counter is not static to avoid interlocked operations and cross-thread traffic
-        private int localRandom = Environment.TickCount;
+        private int _localRandom = Environment.TickCount;
 
-        // same asabove but for users that go directly with unbuffered shared cache.
-        private static int sharedRandom = Environment.TickCount;
+        // same as above but for users that go directly with unbuffered shared cache.
+        private static int s_sharedRandom = Environment.TickCount;
 
         internal StringTable() :
             this(null)
@@ -81,11 +76,11 @@ namespace Roslyn.Utilities
 
         private StringTable(ObjectPool<StringTable> pool)
         {
-            this.pool = pool;
+            _pool = pool;
         }
 
-        private readonly ObjectPool<StringTable> pool;
-        private static readonly ObjectPool<StringTable> StaticPool = CreatePool();
+        private readonly ObjectPool<StringTable> _pool;
+        private static readonly ObjectPool<StringTable> s_staticPool = CreatePool();
 
         private static ObjectPool<StringTable> CreatePool()
         {
@@ -96,7 +91,7 @@ namespace Roslyn.Utilities
 
         public static StringTable GetInstance()
         {
-            return StaticPool.Allocate();
+            return s_staticPool.Allocate();
         }
 
         public void Free()
@@ -105,7 +100,7 @@ namespace Roslyn.Utilities
             // Array.Clear(this.localTable, 0, this.localTable.Length);
             // Array.Clear(sharedTable, 0, sharedTable.Length);
 
-            pool.Free(this);
+            _pool.Free(this);
         }
 
         #endregion // Poolable
@@ -115,7 +110,7 @@ namespace Roslyn.Utilities
             var hashCode = Hash.GetFNVHashCode(chars, start, len);
 
             // capture array to avoid extra range checks
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
 
             var text = arr[idx].Text;
@@ -132,7 +127,7 @@ namespace Roslyn.Utilities
             string shared = FindSharedEntry(chars, start, len, hashCode);
             if (shared != null)
             {
-                // PERF: the following code does elementwise assignment of a struct
+                // PERF: the following code does element-wise assignment of a struct
                 //       because current JIT produces better code compared to
                 //       arr[idx] = new Entry(...)
                 arr[idx].HashCode = hashCode;
@@ -149,7 +144,7 @@ namespace Roslyn.Utilities
             var hashCode = Hash.GetFNVHashCode(chars, start, len);
 
             // capture array to avoid extra range checks
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
 
             var text = arr[idx].Text;
@@ -166,7 +161,7 @@ namespace Roslyn.Utilities
             string shared = FindSharedEntry(chars, start, len, hashCode);
             if (shared != null)
             {
-                // PERF: the following code does elementwise assignment of a struct
+                // PERF: the following code does element-wise assignment of a struct
                 //       because current JIT produces better code compared to
                 //       arr[idx] = new Entry(...)
                 arr[idx].HashCode = hashCode;
@@ -183,7 +178,7 @@ namespace Roslyn.Utilities
             var hashCode = Hash.GetFNVHashCode(chars);
 
             // capture array to avoid extra range checks
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
 
             var text = arr[idx].Text;
@@ -200,7 +195,7 @@ namespace Roslyn.Utilities
             string shared = FindSharedEntry(chars, hashCode);
             if (shared != null)
             {
-                // PERF: the following code does elementwise assignment of a struct
+                // PERF: the following code does element-wise assignment of a struct
                 //       because current JIT produces better code compared to
                 //       arr[idx] = new Entry(...)
                 arr[idx].HashCode = hashCode;
@@ -217,7 +212,7 @@ namespace Roslyn.Utilities
             var hashCode = Hash.GetFNVHashCode(chars);
 
             // capture array to avoid extra range checks
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
 
             var text = arr[idx].Text;
@@ -234,7 +229,7 @@ namespace Roslyn.Utilities
             string shared = FindSharedEntry(chars, hashCode);
             if (shared != null)
             {
-                // PERF: the following code does elementwise assignment of a struct
+                // PERF: the following code does element-wise assignment of a struct
                 //       because current JIT produces better code compared to
                 //       arr[idx] = new Entry(...)
                 arr[idx].HashCode = hashCode;
@@ -251,7 +246,7 @@ namespace Roslyn.Utilities
             var hashCode = Hash.GetFNVHashCode(chars);
 
             // capture array to avoid extra range checks
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
 
             var text = arr[idx].Text;
@@ -268,7 +263,7 @@ namespace Roslyn.Utilities
             string shared = FindSharedEntry(chars, hashCode);
             if (shared != null)
             {
-                // PERF: the following code does elementwise assignment of a struct
+                // PERF: the following code does element-wise assignment of a struct
                 //       because current JIT produces better code compared to
                 //       arr[idx] = new Entry(...)
                 arr[idx].HashCode = hashCode;
@@ -284,7 +279,7 @@ namespace Roslyn.Utilities
 
         private static string FindSharedEntry(char[] chars, int start, int len, int hashCode)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             string e = null;
@@ -319,7 +314,7 @@ namespace Roslyn.Utilities
 
         private static string FindSharedEntry(string chars, int start, int len, int hashCode)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             string e = null;
@@ -352,9 +347,44 @@ namespace Roslyn.Utilities
             return e;
         }
 
+        private static unsafe string FindSharedEntryASCII(int hashCode, byte* asciiChars, int length)
+        {
+            var arr = s_sharedTable;
+            int idx = SharedIdxFromHash(hashCode);
+
+            string e = null;
+            // we use quadratic probing here
+            // bucket positions are (n^2 + n)/2 relative to the masked hashcode
+            for (int i = 1; i < SharedBucketSize + 1; i++)
+            {
+                e = arr[idx].Text;
+                int hash = arr[idx].HashCode;
+
+                if (e != null)
+                {
+                    if (hash == hashCode && TextEqualsASCII(e, asciiChars, length))
+                    {
+                        break;
+                    }
+
+                    // this is not e we are looking for
+                    e = null;
+                }
+                else
+                {
+                    // once we see unfilled entry, the rest of the bucket will be empty
+                    break;
+                }
+
+                idx = (idx + i) & SharedSizeMask;
+            }
+
+            return e;
+        }
+
         private static string FindSharedEntry(char chars, int hashCode)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             string e = null;
@@ -388,7 +418,7 @@ namespace Roslyn.Utilities
 
         private static string FindSharedEntry(StringBuilder chars, int hashCode)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             string e = null;
@@ -423,7 +453,7 @@ namespace Roslyn.Utilities
 
         private static string FindSharedEntry(string chars, int hashCode)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             string e = null;
@@ -469,7 +499,6 @@ namespace Roslyn.Utilities
             var text = chars.Substring(start, len);
             AddCore(chars, hashCode);
             return text;
-
         }
 
         private string AddItem(char chars, int hashCode)
@@ -493,7 +522,7 @@ namespace Roslyn.Utilities
             AddSharedEntry(hashCode, chars);
 
             // add to the local table too
-            var arr = localTable;
+            var arr = _localTable;
             var idx = LocalIdxFromHash(hashCode);
             arr[idx].HashCode = hashCode;
             arr[idx].Text = chars;
@@ -501,7 +530,7 @@ namespace Roslyn.Utilities
 
         private void AddSharedEntry(int hashCode, string text)
         {
-            var arr = sharedTable;
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             // try finding an empty spot in the bucket
@@ -544,8 +573,49 @@ namespace Roslyn.Utilities
 
         private static string AddSharedSlow(int hashCode, StringBuilder builder)
         {
-            var text = builder.ToString();
-            var arr = sharedTable;
+            string text = builder.ToString();
+            AddSharedSlow(hashCode, text);
+            return text;
+        }
+
+        internal static unsafe string AddSharedUTF8(byte* bytes, int byteCount)
+        {
+            bool isAscii;
+            int hashCode = Hash.GetFNVHashCode(bytes, byteCount, out isAscii);
+
+            if (isAscii)
+            {
+                string shared = FindSharedEntryASCII(hashCode, bytes, byteCount);
+                if (shared != null)
+                {
+                    return shared;
+                }
+            }
+
+            return AddSharedSlow(hashCode, bytes, byteCount, isAscii);
+        }
+
+        private static unsafe string AddSharedSlow(int hashCode, byte* utf8Bytes, int byteCount, bool isAscii)
+        {
+            // TODO: This should be Encoding.UTF8.GetString (for better layering) but the unsafe variant isn't portable. 
+            //       The MetadataReader has code to light it up and even fall back to internal String.CreateStringFromEncoding
+            //       on .NET < 4.5.3. Use that instead of copying the light-up code here.
+            string text = System.Reflection.Metadata.MetadataStringDecoder.DefaultUTF8.GetString(utf8Bytes, byteCount);
+
+            // Don't add non-ascii strings to table. The hashCode we have here is not correct and we won't find them again.
+            // Non-ascii in UTF8-encoded parts of metadata (the only use of this at the moment) is assumed to be rare in 
+            // practice. If that turns out to be wrong, we could decode to pooled memory and rehash here.
+            if (isAscii)
+            {
+                AddSharedSlow(hashCode, text);
+            }
+
+            return text;
+        }
+
+        private static void AddSharedSlow(int hashCode, string text)
+        {
+            var arr = s_sharedTable;
             int idx = SharedIdxFromHash(hashCode);
 
             // try finding an empty spot in the bucket
@@ -571,8 +641,6 @@ namespace Roslyn.Utilities
         foundIdx:
             arr[idx].HashCode = hashCode;
             Volatile.Write(ref arr[idx].Text, text);
-
-            return text;
         }
 
         private static int LocalIdxFromHash(int hash)
@@ -588,12 +656,12 @@ namespace Roslyn.Utilities
 
         private int LocalNextRandom()
         {
-            return this.localRandom++;
+            return _localRandom++;
         }
 
         private static int SharedNextRandom()
         {
-            return Interlocked.Increment(ref StringTable.sharedRandom);
+            return Interlocked.Increment(ref StringTable.s_sharedRandom);
         }
 
         internal static bool TextEquals(string array, string text, int start, int length)
@@ -603,7 +671,7 @@ namespace Roslyn.Utilities
                 return false;
             }
 
-            // use array.Length to eliminate the rangecheck
+            // use array.Length to eliminate the range check
             for (var i = 0; i < array.Length; i++)
             {
                 if (array[i] != text[start + i])
@@ -635,6 +703,31 @@ namespace Roslyn.Utilities
             return true;
         }
 
+        internal static unsafe bool TextEqualsASCII(string text, byte* ascii, int length)
+        {
+#if DEBUG
+            for (var i = 0; i < length; i++)
+            {
+                Debug.Assert((ascii[i] & 0x80) == 0, "The byte* input to this method must be valid ASCII.");
+            }
+#endif
+
+            if (length != text.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < length; i++)
+            {
+                if (ascii[i] != text[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         internal static bool TextEquals(string array, char[] text, int start, int length)
         {
             return array.Length == length && TextEqualsCore(array, text, start);
@@ -642,7 +735,7 @@ namespace Roslyn.Utilities
 
         private static bool TextEqualsCore(string array, char[] text, int start)
         {
-            // use array.Length to eliminate the rangecheck
+            // use array.Length to eliminate the range check
             int s = start;
             for (var i = 0; i < array.Length; i++)
             {

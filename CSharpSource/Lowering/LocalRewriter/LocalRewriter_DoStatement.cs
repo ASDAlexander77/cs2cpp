@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -20,16 +20,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var syntax = node.Syntax;
 
+            // EnC: We need to insert a hidden sequence point to handle function remapping in case 
+            // the containing method is edited while methods invoked in the condition are being executed.
+            if (!node.WasCompilerGenerated && this.Instrument)
+            {
+                rewrittenCondition = _instrumenter.InstrumentDoStatementCondition(node, rewrittenCondition, _factory);
+            }
+
             BoundStatement ifConditionGotoStart = new BoundConditionalGoto(syntax, rewrittenCondition, true, startLabel);
 
-            if (this.generateDebugInfo)
+            if (!node.WasCompilerGenerated && this.Instrument)
             {
-                var doSyntax = (DoStatementSyntax)syntax;
-                var span = TextSpan.FromBounds(
-                    doSyntax.WhileKeyword.SpanStart,
-                    doSyntax.SemicolonToken.Span.End);
-
-                ifConditionGotoStart = new BoundSequencePointWithSpan(doSyntax, ifConditionGotoStart, span);
+                ifConditionGotoStart = _instrumenter.InstrumentDoStatementConditionalGotoStart(node, ifConditionGotoStart);
             }
 
             // do
@@ -47,23 +49,23 @@ namespace Microsoft.CodeAnalysis.CSharp
             // }
             // break:
 
-            if (!node.InnerLocals.IsDefaultOrEmpty)
+            if (node.Locals.IsEmpty)
             {
                 return BoundStatementList.Synthesized(syntax, node.HasErrors,
                     new BoundLabelStatement(syntax, startLabel),
-                    new BoundBlock(syntax,
-                                   node.InnerLocals,
-                                   ImmutableArray.Create<BoundStatement>(rewrittenBody,
-                                                                         new BoundLabelStatement(syntax, node.ContinueLabel),
-                                                                         ifConditionGotoStart)),
+                    rewrittenBody,
+                    new BoundLabelStatement(syntax, node.ContinueLabel),
+                    ifConditionGotoStart,
                     new BoundLabelStatement(syntax, node.BreakLabel));
             }
 
             return BoundStatementList.Synthesized(syntax, node.HasErrors,
                 new BoundLabelStatement(syntax, startLabel),
-                rewrittenBody,
-                new BoundLabelStatement(syntax, node.ContinueLabel),
-                ifConditionGotoStart,
+                new BoundBlock(syntax,
+                               node.Locals,
+                               ImmutableArray.Create<BoundStatement>(rewrittenBody,
+                                                                     new BoundLabelStatement(syntax, node.ContinueLabel),
+                                                                     ifConditionGotoStart)),
                 new BoundLabelStatement(syntax, node.BreakLabel));
         }
     }

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using Roslyn.Utilities;
 
@@ -9,9 +10,9 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// <summary>
     /// Applies C#-specific modification and filtering of <see cref="Diagnostic"/>s.
     /// </summary>
-    public static class CSharpDiagnosticFilter
+    internal static class CSharpDiagnosticFilter
     {
-        private static readonly ErrorCode[] AlinkWarnings = { ErrorCode.WRN_ConflictingMachineAssembly,
+        private static readonly ErrorCode[] s_alinkWarnings = { ErrorCode.WRN_ConflictingMachineAssembly,
                                                               ErrorCode.WRN_RefCultureMismatch,
                                                               ErrorCode.WRN_InvalidVersionFormat };
 
@@ -27,15 +28,26 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <returns>A diagnostic updated to reflect the options, or null if it has been filtered out</returns>
         public static Diagnostic Filter(Diagnostic d, int warningLevelOption, ReportDiagnostic generalDiagnosticOption, IDictionary<string, ReportDiagnostic> specificDiagnosticOptions)
         {
-            if (d == null) return d;
-            switch (d.Severity)
+            if (d == null)
             {
-                case DiagnosticSeverity.Error:
+                return d;
+            }
+            else if (d.IsNotConfigurable())
+            {
+                if (d.IsEnabledByDefault)
+                {
+                    // Enabled NotConfigurable should always be reported as it is.
                     return d;
-                case InternalDiagnosticSeverity.Void:
+                }
+                else
+                {
+                    // Disabled NotConfigurable should never be reported.
                     return null;
-                default:
-                    break;
+                }
+            }
+            else if (d.Severity == InternalDiagnosticSeverity.Void)
+            {
+                return null;
             }
 
             //In the native compiler, all warnings originating from alink.dll were issued
@@ -47,7 +59,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             //specifying warnaserror:1607 and getting a message saying "warning as error CS8012..."
             //We don't permit configuring 1607 and independently configuring the new warnings.
             ReportDiagnostic reportAction;
-            if (AlinkWarnings.Contains((ErrorCode)d.Code) &&
+            bool hasPragmaSuppression;
+            if (s_alinkWarnings.Contains((ErrorCode)d.Code) &&
                 specificDiagnosticOptions.Keys.Contains(CSharp.MessageProvider.Instance.GetIdForErrorCode((int)ErrorCode.WRN_ALinkWarn)))
             {
                 reportAction = GetDiagnosticReport(ErrorFacts.GetSeverity(ErrorCode.WRN_ALinkWarn),
@@ -58,46 +71,43 @@ namespace Microsoft.CodeAnalysis.CSharp
                     d.Category,
                     warningLevelOption,
                     generalDiagnosticOption,
-                    specificDiagnosticOptions);
+                    specificDiagnosticOptions,
+                    out hasPragmaSuppression);
             }
             else
             {
-                reportAction = GetDiagnosticReport(d.Severity, d.IsEnabledByDefault, d.Id, d.WarningLevel, d.Location as Location, d.Category, warningLevelOption, generalDiagnosticOption, specificDiagnosticOptions);
+                reportAction = GetDiagnosticReport(d.Severity, d.IsEnabledByDefault, d.Id, d.WarningLevel, d.Location as Location,
+                    d.Category, warningLevelOption, generalDiagnosticOption, specificDiagnosticOptions, out hasPragmaSuppression);
+            }
+
+            if (hasPragmaSuppression)
+            {
+                d = d.WithIsSuppressed(true);
             }
 
             return d.WithReportDiagnostic(reportAction);
         }
 
         // Take a warning and return the final deposition of the given warning,
-        // based on both command line options and pragmas
-        private static ReportDiagnostic GetDiagnosticReport(DiagnosticSeverity severity, bool isEnabledByDefault, string id, int diagnosticWarningLevel, Location location, string category, int warningLevelOption, ReportDiagnostic generalDiagnosticOption, IDictionary<string, ReportDiagnostic> specificDiagnosticOptions)
+        // based on both command line options and pragmas.
+        internal static ReportDiagnostic GetDiagnosticReport(
+            DiagnosticSeverity severity,
+            bool isEnabledByDefault,
+            string id,
+            int diagnosticWarningLevel,
+            Location location,
+            string category,
+            int warningLevelOption,
+            ReportDiagnostic generalDiagnosticOption,
+            IDictionary<string, ReportDiagnostic> specificDiagnosticOptions,
+            out bool hasPragmaSuppression)
         {
-            switch (severity)
-            {
-                case InternalDiagnosticSeverity.Void:
-                    // If this is a deleted diagnostic, suppress it.
-                    return ReportDiagnostic.Suppress;
-                case DiagnosticSeverity.Hidden:
-                    // Compiler diagnostics cannot have severity Hidden, but user generated diagnostics can.
-                    Debug.Assert(category != Diagnostic.CompilerDiagnosticCategory);
-                    break;
-                case DiagnosticSeverity.Info:
-                    if (category == Diagnostic.CompilerDiagnosticCategory)
-                    {
-                        // Don't modify compiler generated Info diagnostics.
-                        return ReportDiagnostic.Default;
-                    }
-                    break;
-                case DiagnosticSeverity.Warning:
-                    // Process warnings below.
-                    break;
-                default:
-                    throw ExceptionUtilities.UnexpectedValue(severity);
-            }
+            hasPragmaSuppression = false;
 
             // Read options (e.g., /nowarn or /warnaserror)
             ReportDiagnostic report = ReportDiagnostic.Default;
-            if (!specificDiagnosticOptions.TryGetValue(id, out report))
+            var isSpecified = specificDiagnosticOptions.TryGetValue(id, out report);
+            if (!isSpecified)
             {
                 report = isEnabledByDefault ? ReportDiagnostic.Default : ReportDiagnostic.Suppress;
             }
@@ -114,24 +124,31 @@ namespace Microsoft.CodeAnalysis.CSharp
                 location.SourceTree != null &&
                 ((SyntaxTree)location.SourceTree).GetPragmaDirectiveWarningState(id, location.SourceSpan.Start) == ReportDiagnostic.Suppress)
             {
-                return ReportDiagnostic.Suppress;
+                hasPragmaSuppression = true;
             }
 
             // Unless specific warning options are defined (/warnaserror[+|-]:<n> or /nowarn:<n>, 
             // follow the global option (/warnaserror[+|-] or /nowarn).
             if (report == ReportDiagnostic.Default)
             {
-                // If we've been asked to do warn-as-error then don't raise severity for anything below warning (info or hidden).
-                // When doing suppress-all-warnings, don't lower severity for anything other than warning and info
                 switch (generalDiagnosticOption)
                 {
                     case ReportDiagnostic.Error:
+                        // If we've been asked to do warn-as-error then don't raise severity for anything below warning (info or hidden).
                         if (severity == DiagnosticSeverity.Warning)
                         {
-                            return ReportDiagnostic.Error;
+                            // In the case where /warnaserror+ is followed by /warnaserror-:<n> on the command line,
+                            // do not promote the warning specified in <n> to an error.
+                            if (!isSpecified && (report == ReportDiagnostic.Default))
+                            {
+                                return ReportDiagnostic.Error;
+                            }
                         }
                         break;
                     case ReportDiagnostic.Suppress:
+                        // When doing suppress-all-warnings, don't lower severity for anything other than warning and info.
+                        // We shouldn't suppress hidden diagnostics here because then features that use hidden diagnostics to
+                        // display a lightbulb would stop working if someone has suppress-all-warnings (/nowarn) specified in their project.
                         if (severity == DiagnosticSeverity.Warning || severity == DiagnosticSeverity.Info)
                         {
                             return ReportDiagnostic.Suppress;

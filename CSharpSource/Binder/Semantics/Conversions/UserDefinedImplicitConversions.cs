@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace Microsoft.CodeAnalysis.CSharp
     internal abstract partial class ConversionsBase
     {
         /// <remarks>
-        /// NOTE: Keep this method in sync with AnalyzeImplicitUserDefinedConversionForSwitchGoverningType.
+        /// NOTE: Keep this method in sync with <see cref="AnalyzeImplicitUserDefinedConversionForV6SwitchGoverningType"/>.
         /// </remarks>
         private UserDefinedConversionResult AnalyzeImplicitUserDefinedConversions(
             BoundExpression sourceExpression,
@@ -132,7 +132,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// type to any target type.
         /// </summary>
         /// <remarks>
-        /// Currently allowAnyTarget flag is only set to true by AnalyzeImplicitUserDefinedConversionForSwitchGoverningType,
+        /// Currently allowAnyTarget flag is only set to true by <see cref="AnalyzeImplicitUserDefinedConversionForV6SwitchGoverningType"/>,
         /// where we must consider user defined implicit conversions from the type of the switch expression to
         /// any of the possible switch governing types.
         /// </remarks>
@@ -278,7 +278,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         u.Add(UserDefinedConversionAnalysis.Normal(op, fromConversion, toConversion, convertsFrom, convertsTo));
                     }
-                    else if ((object)source != null && (object)target != null && source.IsNullableType() && convertsFrom.IsNonNullableValueType() && target.CanBeAssignedNull())
+                    else if ((object)source != null && source.IsNullableType() && convertsFrom.IsNonNullableValueType() &&
+                        (allowAnyTarget || target.CanBeAssignedNull()))
                     {
                         // As mentioned above, here we diverge from the specification, in two ways.
                         // First, we only check for the lifted form if the normal form was inapplicable.
@@ -375,16 +376,21 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private static int? MostSpecificConversionOperator(TypeSymbol sx, TypeSymbol tx, ImmutableArray<UserDefinedConversionAnalysis> u)
         {
-            Debug.Assert((object)sx != null);
-            Debug.Assert((object)tx != null);
+            return MostSpecificConversionOperator(conv => conv.FromType == sx && conv.ToType == tx, u);
+        }
 
+        /// <summary>
+        /// Find the most specific among a set of conversion operators, with the given constraint on the conversion.
+        /// </summary>
+        private static int? MostSpecificConversionOperator(Func<UserDefinedConversionAnalysis, bool> constraint, ImmutableArray<UserDefinedConversionAnalysis> u)
+        {
             // SPEC: If U contains exactly one user-defined conversion operator from SX to TX 
             // SPEC: then that is the most-specific conversion operator;
             //
-            // SPEC: Otherise, if U contains exactly one lifted conversion operator that converts from
+            // SPEC: Otherwise, if U contains exactly one lifted conversion operator that converts from
             // SPEC: SX to TX then this is the most specific operator.
             //
-            // SPEC: Otherise, the conversion is ambiguous and a compile-time error occurs.
+            // SPEC: Otherwise, the conversion is ambiguous and a compile-time error occurs.
             //
             // SPEC ERROR:
             //
@@ -419,10 +425,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             // best operator that converts from the source type to the target type with liftings
             // on neither side.
 
-            BestIndex bestUnlifted = u.UniqueIndex(
+            BestIndex bestUnlifted = UniqueIndex(u,
                 conv =>
-                conv.FromType == sx &&
-                conv.ToType == tx &&
+                constraint(conv) &&
                 LiftingCount(conv) == 0);
 
             if (bestUnlifted.Kind == BestIndexKind.Best)
@@ -449,10 +454,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             // (in the sense that we are not checking the source to see if it is null.)
             // 
 
-            BestIndex bestHalfLifted = u.UniqueIndex(
+            BestIndex bestHalfLifted = UniqueIndex(u,
                 conv =>
-                conv.FromType == sx &&
-                conv.ToType == tx &&
+                constraint(conv) &&
                 LiftingCount(conv) == 1);
 
             if (bestHalfLifted.Kind == BestIndexKind.Best)
@@ -468,10 +472,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // Finally, see if there is a unique best *fully lifted* operator.
 
-            BestIndex bestFullyLifted = u.UniqueIndex(
+            BestIndex bestFullyLifted = UniqueIndex(u,
                 conv =>
-                conv.FromType == sx &&
-                conv.ToType == tx &&
+                constraint(conv) &&
                 LiftingCount(conv) == 2);
 
             if (bestFullyLifted.Kind == BestIndexKind.Best)
@@ -486,6 +489,35 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             return null;
+        }
+
+        // Return the index of the *unique* item in the array that matches the predicate,
+        // or null if there is not one.
+        private static BestIndex UniqueIndex<T>(ImmutableArray<T> items, Func<T, bool> predicate)
+        {
+            if (items.IsEmpty)
+            {
+                return BestIndex.None();
+            }
+
+            int? result = null;
+            for (int i = 0; i < items.Length; ++i)
+            {
+                if (predicate(items[i]))
+                {
+                    if (result == null)
+                    {
+                        result = i;
+                    }
+                    else
+                    {
+                        // Not unique.
+                        return BestIndex.IsAmbiguous(result.Value, i);
+                    }
+                }
+            }
+
+            return result == null ? BestIndex.None() : BestIndex.HasBest(result.Value);
         }
 
         // Is A encompassed by B?
@@ -527,6 +559,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.MethodGroup:
                 case ConversionKind.AnonymousFunction:
                 case ConversionKind.ImplicitDynamic:
+                case ConversionKind.InterpolatedString:
 
                 // DELIBERATE SPEC VIOLATION: 
                 // We do not support an encompassing implicit conversion from a zero constant
@@ -563,10 +596,19 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // Added to spec in Roslyn timeframe.
                 case ConversionKind.NullLiteral:
                 case ConversionKind.NullToPointer:
+
+                // Added for C# 7.
+                case ConversionKind.ImplicitTupleLiteral:
+                case ConversionKind.ImplicitTuple:
+                case ConversionKind.ImplicitThrow:
                     return true;
 
+                case ConversionKind.ExplicitTupleLiteral:
+                case ConversionKind.ExplicitTuple:
+                    return false;
+
                 default:
-                    throw ExceptionUtilities.Unreachable;
+                    throw ExceptionUtilities.UnexpectedValue(kind);
             }
         }
 
@@ -584,7 +626,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             Func<T, TypeSymbol> extract,
             ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
-
             // SPEC: The most encompassed type is the one type in the set that 
             // SPEC: is encompassed by all the other types.
 
@@ -610,7 +651,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // by Y but Y is not encompassed by X".
 
             HashSet<DiagnosticInfo> _useSiteDiagnostics = useSiteDiagnostics;
-            int? best = items.UniqueBestValidIndex(valid,
+            int? best = UniqueBestValidIndex(items, valid,
                 (left, right) =>
                 {
                     TypeSymbol leftType = extract(left);
@@ -641,17 +682,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             return MostEncompassingType<T>(items, x => true, extract, ref useSiteDiagnostics);
         }
 
-
         private TypeSymbol MostEncompassingType<T>(
             ImmutableArray<T> items,
             Func<T, bool> valid,
             Func<T, TypeSymbol> extract,
             ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
-
             // See comments above.
             HashSet<DiagnosticInfo> _useSiteDiagnostics = useSiteDiagnostics;
-            int? best = items.UniqueBestValidIndex(valid,
+            int? best = UniqueBestValidIndex(items, valid,
                 (left, right) =>
                 {
                     TypeSymbol leftType = extract(left);
@@ -674,6 +713,101 @@ namespace Microsoft.CodeAnalysis.CSharp
             return best == null ? null : extract(items[best.Value]);
         }
 
+        // This method takes an array of items and a predicate which filters out the valid items.
+        // From the valid items we find the index of the *unique best item* in the array.
+        // In order for a valid item x to be considered best, x must be better than every other
+        // item. The "better" relation must be consistent; that is:
+        //
+        // better(x,y) == Left     requires that    better(y,x) == Right
+        // better(x,y) == Right    requires that    better(y,x) == Left
+        // better(x,y) == Neither  requires that    better(y,x) == Neither 
+        //
+        // It is possible for the array to contain the same item twice; if it does then
+        // the duplicate is ignored. That is, having the "best" item twice does not preclude
+        // it from being the best.
+
+        // UNDONE: Update this to give a BestIndex result that indicates ambiguity.
+        private static int? UniqueBestValidIndex<T>(ImmutableArray<T> items, Func<T, bool> valid, Func<T, T, BetterResult> better)
+        {
+            if (items.IsEmpty)
+            {
+                return null;
+            }
+
+            int? candidateIndex = null;
+            T candidateItem = default(T);
+
+            for (int currentIndex = 0; currentIndex < items.Length; ++currentIndex)
+            {
+                T currentItem = items[currentIndex];
+                if (!valid(currentItem))
+                {
+                    continue;
+                }
+
+                if (candidateIndex == null)
+                {
+                    candidateIndex = currentIndex;
+                    candidateItem = currentItem;
+                    continue;
+                }
+
+                BetterResult result = better(candidateItem, currentItem);
+
+                if (result == BetterResult.Equal)
+                {
+                    // The list had the same item twice. Just ignore it.
+                    continue;
+                }
+                else if (result == BetterResult.Neither)
+                {
+                    // Neither the current item nor the candidate item are better,
+                    // and therefore neither of them can be the best. We no longer
+                    // have a candidate for best item.
+                    candidateIndex = null;
+                    candidateItem = default(T);
+                }
+                else if (result == BetterResult.Right)
+                {
+                    // The candidate is worse than the current item, so replace it
+                    // with the current item.
+                    candidateIndex = currentIndex;
+                    candidateItem = currentItem;
+                }
+                // Otherwise, the candidate is better than the current item, so
+                // it continues to be the candidate.
+            }
+
+            if (candidateIndex == null)
+            {
+                return null;
+            }
+
+            // We had a candidate that was better than everything that came *after* it.
+            // Now verify that it was better than everything that came before it.
+
+            for (int currentIndex = 0; currentIndex < candidateIndex.Value; ++currentIndex)
+            {
+                T currentItem = items[currentIndex];
+                if (!valid(currentItem))
+                {
+                    continue;
+                }
+
+                BetterResult result = better(candidateItem, currentItem);
+                if (result != BetterResult.Left && result != BetterResult.Equal)
+                {
+                    // The candidate was not better than everything that came before it. There is 
+                    // no best item.
+                    return null;
+                }
+            }
+
+            // The candidate was better than everything that came before it.
+
+            return candidateIndex;
+        }
+
         private NamedTypeSymbol MakeNullableType(TypeSymbol type)
         {
             var nullable = this.corLibrary.GetDeclaredSpecialType(SpecialType.System_Nullable_T);
@@ -683,7 +817,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <remarks>
         /// NOTE: Keep this method in sync with AnalyzeImplicitUserDefinedConversion.
         /// </remarks>
-        protected UserDefinedConversionResult AnalyzeImplicitUserDefinedConversionForSwitchGoverningType(TypeSymbol source, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        protected UserDefinedConversionResult AnalyzeImplicitUserDefinedConversionForV6SwitchGoverningType(TypeSymbol source, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             // SPEC:    The governing type of a switch statement is established by the switch expression.
             // SPEC:    1) If the type of the switch expression is sbyte, byte, short, ushort, int, uint,
@@ -696,128 +830,79 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // NOTE:    This method implements part (2) above, it should be called only if (1) is false for source type.
             Debug.Assert((object)source != null);
-            Debug.Assert(!source.IsValidSwitchGoverningType());
+            Debug.Assert(!source.IsValidV6SwitchGoverningType());
 
-            // NOTE:    There are multiple possible approaches for implementing (2):
-            // NOTE:    1)  AnalyzeImplicitUserDefinedConversion from source type to each of the possible governing types
-            // NOTE:        mentioned in (2): Though this approach exactly matches the specification, it is highly inefficient.
-            // NOTE:        We need to consider 20 possible target types (ten primitive non-nullable types
-            // NOTE:        and ten primitive nullable types) to determine if there is exactly one valid user defined conversion to
-            // NOTE:        any one of these types, requiring 20 calls to AnalyzeImplicitUserDefinedConversion.
-            // NOTE:    2)  Native compiler's approach: Native compiler implements this by walking through all the implicit user defined operators
-            // NOTE:        from the source type to a valid switch governing type, as per (2), and determining if there is a unique best.
-            // NOTE:        This part is that piece of code doesn't call into the code for analyzing user defined implicit conversion, but does the
-            // NOTE:        analysis of applicable lifted/normal forms itself. This makes it very difficult to maintain and is bug prone.
-            // NOTE:        See the SPEC VIOLATION comment later in this method for one of the cases where it gets the analysis wrong and violates the
-            // NOTE:        language specification.
-            // NOTE:    3)  Use an approach similar to native compiler's approach, but call into the common code for analyzing user defined implicit conversion.
-
-
-            // NOTE:    We choose approach (3) and implement it as a slight variation of AnalyzeImplicitUserDefinedConversion as follows:
-
+            // NOTE: For (2) we use an approach similar to native compiler's approach, but call into the common code for analyzing user defined implicit conversions.
             // NOTE:    (a) Compute the set of types D from which user-defined conversion operators should be considered by considering only the source type.
             // NOTE:    (b) Instead of computing applicable user defined implicit conversions U from the source type to a specific target type,
             // NOTE:        we compute these from the source type to ANY target type.
-            // NOTE:    (c) If U is empty, the conversion is undefined and a compile-time error occurs.
-            // NOTE:    (d) Find the most specific source type SX of the operators in U...
-            // NOTE:    (e) Instead of finding the most specific target type TX of the operators in U, we consider all unique target types TX for all operators in U.
-            // NOTE:        Let this set of unique target types be called Y.
-            // NOTE:    (f) Check if there is exactly one target type TX in Y such that it satisfied both conditions below:
-            // NOTE:        (i)  TX is a valid switch governing type as per condition (2) of the SPEC for establishing the switch governing type and 
-            // NOTE:        (ii) There is a valid most specific user defined implicit conversion operator from SX to TX.
-            // NOTE:        If there exists such unique TX in Y, then that operator is the resultant user defined conversion and TX is the resultant switch governing type.
-            // NOTE:        Otherwise we either have ambiguity or no applicable operators.
+            // NOTE:    (c) From the conversions in U, select the most specific of them that targets a valid switch governing type
+
+            // SPEC VIOLATION: Because we use the same strategy for computing the most specific conversion, as the Dev10 compiler did (in fact
+            // SPEC VIOLATION: we share the code), we inherit any spec deviances in that analysis. Specifically, the analysis only considers
+            // SPEC VIOLATION: which conversion has the least amount of lifting, where a conversion may be considered to be in unlifted form,
+            // SPEC VIOLATION: half-lifted form (only the argument type or return type is lifted) or fully lifted form. The most specific computation
+            // SPEC VIOLATION: looks for a unique conversion that is least lifted. The spec, on the other hand, requires that the conversion
+            // SPEC VIOLATION: be *unique*, not merely most use the least amount of lifting among the applicable conversions.
+
+            // SPEC VIOLATION: This introduces a SPEC VIOLATION for the following tests in the native compiler:
+
+            // NOTE:    // See test SwitchTests.CS0166_AggregateTypeWithMultipleImplicitConversions_07
+            // NOTE:    struct Conv
+            // NOTE:    {
+            // NOTE:        public static implicit operator int (Conv C) { return 1; }
+            // NOTE:        public static implicit operator int (Conv? C2) { return 0; }
+            // NOTE:        public static int Main()
+            // NOTE:        {
+            // NOTE:            Conv? D = new Conv();
+            // NOTE:            switch(D)
+            // NOTE:            {   ...
+
+            // SPEC VIOLATION: Native compiler allows the above code to compile
+            // SPEC VIOLATION: even though there are two user-defined implicit conversions:
+            // SPEC VIOLATION: 1) To int type (applicable in normal form): public static implicit operator int (Conv? C2)
+            // SPEC VIOLATION: 2) To int? type (applicable in lifted form): public static implicit operator int (Conv C)
+
+            // NOTE:    // See also test SwitchTests.TODO
+            // NOTE:    struct Conv
+            // NOTE:    {
+            // NOTE:        public static implicit operator int? (Conv C) { return 1; }
+            // NOTE:        public static implicit operator string (Conv? C2) { return 0; }
+            // NOTE:        public static int Main()
+            // NOTE:        {
+            // NOTE:            Conv? D = new Conv();
+            // NOTE:            switch(D)
+            // NOTE:            {   ...
+
+            // SPEC VIOLATION: Native compiler allows the above code to compile too
+            // SPEC VIOLATION: even though there are two user-defined implicit conversions:
+            // SPEC VIOLATION: 1) To string type (applicable in normal form): public static implicit operator string (Conv? C2)
+            // SPEC VIOLATION: 2) To int? type (applicable in half-lifted form): public static implicit operator int? (Conv C)
+
+            // SPEC VIOLATION: This occurs because the native compiler compares the applicable conversions to find one with the least amount
+            // SPEC VIOLATION: of lifting, ignoring whether the return types are the same or not.
+            // SPEC VIOLATION: We do the same to maintain compatibility with the native compiler.
 
             // (a) Compute the set of types D from which user-defined conversion operators should be considered by considering only the source type.
             var d = ArrayBuilder<NamedTypeSymbol>.GetInstance();
             ComputeUserDefinedImplicitConversionTypeSet(source, t: null, d: d, useSiteDiagnostics: ref useSiteDiagnostics);
 
             // (b) Instead of computing applicable user defined implicit conversions U from the source type to a specific target type,
-            //     we compute these from the source type to ANY target type.
+            //     we compute these from the source type to ANY target type. We will filter out those that are valid switch governing
+            //     types later.
             var ubuild = ArrayBuilder<UserDefinedConversionAnalysis>.GetInstance();
             ComputeApplicableUserDefinedImplicitConversionSet(null, source, target: null, d: d, u: ubuild, useSiteDiagnostics: ref useSiteDiagnostics, allowAnyTarget: true);
             d.Free();
             ImmutableArray<UserDefinedConversionAnalysis> u = ubuild.ToImmutableAndFree();
 
-            // (c) If U is empty, the conversion is undefined and a compile-time error occurs.
-            if (u.Length == 0)
+            // (c) Find that conversion with the least amount of lifting
+            int? best = MostSpecificConversionOperator(conv => conv.ToType.IsValidV6SwitchGoverningType(isTargetTypeOfUserDefinedOp: true), u);
+            if (best != null)
             {
-                return UserDefinedConversionResult.NoApplicableOperators(u);
+                return UserDefinedConversionResult.Valid(u, best.Value);
             }
 
-            // (d) Find the most specific source type SX of the operators in U...
-            TypeSymbol sx = MostSpecificSourceTypeForImplicitUserDefinedConversion(u, source, ref useSiteDiagnostics);
-            if ((object)sx == null)
-            {
-                return UserDefinedConversionResult.NoBestSourceType(u);
-            }
-
-            return MostSpecificConversionOperatorForSwitchGoverningType(sx, u);
-        }
-
-        private static UserDefinedConversionResult MostSpecificConversionOperatorForSwitchGoverningType(TypeSymbol sx, ImmutableArray<UserDefinedConversionAnalysis> u)
-        {
-            // This method finds the most specific user-defined implicit conversion operator from the best source type SX to a valid switch governing type.
-            // It implements steps (e) and (f) for AnalyzeImplicitUserDefinedConversionForSwitchGoverningType, see comments in that method for details.
-
-            // (e) Instead of finding the most specific target type TX of the operators in U, we consider all unique target types TX for all operators in U.
-            //     Let this set of unique target types be called Y.
-            var y = new HashSet<TypeSymbol>();
-            UserDefinedConversionResult? exactConversionResult = null;
-
-            // (f) Check if there is exactly one target type TX in Y such that it satisfied both conditions below:
-            //     (i)  TX is a valid switch governing type as per condition (2) of the SPEC for establishing the switch governing type and 
-            //     (ii) There is a valid most specific user defined implicit conversion operator from SX to TX.
-
-            foreach (UserDefinedConversionAnalysis analysis in u)
-            {
-                TypeSymbol tx = analysis.ToType;
-
-                if (y.Add(tx) && tx.IsValidSwitchGoverningType(isTargetTypeOfUserDefinedOp: true))
-                {
-                    if (!exactConversionResult.HasValue)
-                    {
-                        // NOTE:    As mentioned in the comments at the start of this function, native compiler doesn't call into
-                        // NOTE:    the code for analyzing user defined implicit conversion, i.e. MostSpecificConversionOperator,
-                        // NOTE:    but does the analysis of applicable lifted/normal forms itself.
-                        // NOTE:    This introduces a SPEC VIOLATION for the following test in the native compiler:
-
-                        // NOTE:    // See test SwitchTests.CS0166_AggregateTypeWithMultipleImplicitConversions_07
-                        // NOTE:    struct Conv
-                        // NOTE:    {
-                        // NOTE:        public static implicit operator int (Conv C) { return 1; }
-                        // NOTE:        public static implicit operator int (Conv? C2) { return 0; }
-                        // NOTE:        public static int Main()
-                        // NOTE:        {
-                        // NOTE:            Conv? D = new Conv();
-                        // NOTE:            switch(D)
-                        // NOTE:            {   ...
-
-                        // SPEC VIOLATION: Native compiler allows the above code to compile
-                        // SPEC VIOLATION: even though there are two user-defined implicit conversions:
-                        // SPEC VIOLATION: 1) To int type (applicable in normal form): public static implicit operator int (Conv? C2)
-                        // SPEC VIOLATION: 2) To int? type (applicable in lifted form): public static implicit operator int (Conv C)
-
-                        // SPEC VIOLATION: We maintain compability with the native compiler.
-
-                        int? best = MostSpecificConversionOperator(sx, tx, u);
-                        if (best != null)
-                        {
-                            exactConversionResult = UserDefinedConversionResult.Valid(u, best.Value);
-                            continue;
-                        }
-                    }
-
-                    return UserDefinedConversionResult.Ambiguous(u);
-                }
-            }
-
-            // If there exists such unique TX in Y, then that operator is the resultant user defined conversion and TX is the resultant switch governing type.
-            // Otherwise we either have ambiguity or no applicable operators.
-
-            return exactConversionResult.HasValue ?
-                exactConversionResult.Value :
-                UserDefinedConversionResult.NoApplicableOperators(u);
+            return UserDefinedConversionResult.NoApplicableOperators(u);
         }
     }
 }

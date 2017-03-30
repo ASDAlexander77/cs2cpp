@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -14,19 +14,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         #region CoClassAttribute
 
-        private NamedTypeSymbol comImportCoClass;
+        private NamedTypeSymbol _comImportCoClass;
         public NamedTypeSymbol ComImportCoClass
         {
             get
             {
-                return this.comImportCoClass;
+                return _comImportCoClass;
             }
             set
             {
                 VerifySealed(expected: false);
-                Debug.Assert((object)this.comImportCoClass == null);
+                Debug.Assert((object)_comImportCoClass == null);
                 Debug.Assert((object)value != null);
-                this.comImportCoClass = value;
+                _comImportCoClass = value;
                 SetDataStored();
             }
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -17,7 +17,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <summary>
         /// As a performance optimization, cache parameter types and refkinds - overload resolution uses them a lot.
         /// </summary>
-        private ParameterSignature lazyParameterSignature;
+        private ParameterSignature _lazyParameterSignature;
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Changes to the public interface of this class should remain synchronized with the VB version.
@@ -51,6 +51,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
+        /// Indicates whether or not the method returns by reference
+        /// </summary>
+        public bool ReturnsByRef { get { return this.RefKind != RefKind.None; } }
+
+        /// <summary>
+        /// Gets the ref kind of the property.
+        /// </summary>
+        internal abstract RefKind RefKind { get; }
+
+        /// <summary>
         /// The type of the property. 
         /// </summary>
         public abstract TypeSymbol Type { get; }
@@ -59,6 +69,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// The list of custom modifiers, if any, associated with the type of the property. 
         /// </summary>
         public abstract ImmutableArray<CustomModifier> TypeCustomModifiers { get; }
+
+        /// <summary>
+        /// Custom modifiers associated with the ref modifier, or an empty array if there are none.
+        /// </summary>
+        public abstract ImmutableArray<CustomModifier> RefCustomModifiers { get; }
 
         /// <summary>
         /// The parameters of this property. If this property has no parameters, returns
@@ -83,8 +98,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                ParameterSignature.PopulateParameterSignature(this.Parameters, ref this.lazyParameterSignature);
-                return this.lazyParameterSignature.parameterTypes;
+                ParameterSignature.PopulateParameterSignature(this.Parameters, ref _lazyParameterSignature);
+                return _lazyParameterSignature.parameterTypes;
             }
         }
 
@@ -92,8 +107,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                ParameterSignature.PopulateParameterSignature(this.Parameters, ref this.lazyParameterSignature);
-                return this.lazyParameterSignature.parameterRefKinds;
+                ParameterSignature.PopulateParameterSignature(this.Parameters, ref _lazyParameterSignature);
+                return _lazyParameterSignature.parameterRefKinds;
             }
         }
 
@@ -144,6 +159,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
+        /// True if the property itself is excluded from code covarage instrumentation.
+        /// True for source properties marked with <see cref="AttributeDescription.ExcludeFromCodeCoverageAttribute"/>.
+        /// </summary>
+        internal virtual bool IsDirectlyExcludedFromCodeCoverage { get => false; }
+
+        /// <summary>
         /// True if this symbol has a special name (metadata flag SpecialName is set).
         /// </summary>
         internal abstract bool HasSpecialName { get; }
@@ -177,7 +198,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 if (this.IsOverride)
                 {
-                    return (PropertySymbol)OverriddenOrHiddenMembers.GetOverriddenMember();
+                    if (IsDefinition)
+                    {
+                        return (PropertySymbol)OverriddenOrHiddenMembers.GetOverriddenMember();
+                    }
+
+                    return (PropertySymbol)OverriddenOrHiddenMembersResult.GetOverriddenMember(this, OriginalDefinition.OverriddenProperty);
                 }
                 return null;
             }
@@ -318,6 +344,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             // Check return type, custom modifiers and parameters:
             if (DeriveUseSiteDiagnosticFromType(ref result, this.Type) ||
+                DeriveUseSiteDiagnosticFromCustomModifiers(ref result, this.RefCustomModifiers) ||
                 DeriveUseSiteDiagnosticFromCustomModifiers(ref result, this.TypeCustomModifiers) ||
                 DeriveUseSiteDiagnosticFromParameters(ref result, this.Parameters))
             {
@@ -330,6 +357,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 HashSet<TypeSymbol> unificationCheckedTypes = null;
                 if (this.Type.GetUnificationUseSiteDiagnosticRecursive(ref result, this, ref unificationCheckedTypes) ||
+                    GetUnificationUseSiteDiagnosticRecursive(ref result, this.RefCustomModifiers, this, ref unificationCheckedTypes) ||
                     GetUnificationUseSiteDiagnosticRecursive(ref result, this.TypeCustomModifiers, this, ref unificationCheckedTypes) ||
                     GetUnificationUseSiteDiagnosticRecursive(ref result, this.Parameters, this, ref unificationCheckedTypes))
                 {
@@ -361,6 +389,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         #endregion
+
+        /// <summary>
+        /// Is this a property of a tuple type?
+        /// </summary>
+        public virtual bool IsTupleProperty
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// If this is a property of a tuple type, return corresponding underlying property from the
+        /// tuple underlying type. Otherwise, null. 
+        /// </summary>
+        public virtual PropertySymbol TupleUnderlyingProperty
+        {
+            get
+            {
+                return null;
+            }
+        }
 
         #region IPropertySymbol Members
 
@@ -422,6 +473,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         ImmutableArray<CustomModifier> IPropertySymbol.TypeCustomModifiers
         {
             get { return this.TypeCustomModifiers; }
+        }
+
+        ImmutableArray<CustomModifier> IPropertySymbol.RefCustomModifiers
+        {
+            get { return this.RefCustomModifiers; }
         }
 
         #endregion

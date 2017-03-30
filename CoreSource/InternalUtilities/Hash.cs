@@ -1,9 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
+using Microsoft.CodeAnalysis;
 
 namespace Roslyn.Utilities
 {
@@ -55,6 +55,30 @@ namespace Roslyn.Utilities
                 {
                     break;
                 }
+
+                // Should end up with a constrained virtual call to object.GetHashCode (i.e. avoid boxing where possible).
+                if (value != null)
+                {
+                    hashCode = Hash.Combine(value.GetHashCode(), hashCode);
+                }
+            }
+
+            return hashCode;
+        }
+
+        internal static int CombineValues<T>(T[] values, int maxItemsToHash = int.MaxValue)
+        {
+            if (values == null)
+            {
+                return 0;
+            }
+
+            var maxSize = Math.Min(maxItemsToHash, values.Length);
+            var hashCode = 0;
+
+            for (int i = 0; i < maxSize; i++)
+            {
+                T value = values[i];
 
                 // Should end up with a constrained virtual call to object.GetHashCode (i.e. avoid boxing where possible).
                 if (value != null)
@@ -148,6 +172,33 @@ namespace Roslyn.Utilities
         }
 
         /// <summary>
+        /// Compute the FNV-1a hash of a sequence of bytes and determines if the byte
+        /// sequence is valid ASCII and hence the hash code matches a char sequence
+        /// encoding the same text.
+        /// See http://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+        /// </summary>
+        /// <param name="data">The sequence of bytes that are likely to be ASCII text.</param>
+        /// <param name="length">The length of the sequence.</param>
+        /// <param name="isAscii">True if the sequence contains only characters in the ASCII range.</param>
+        /// <returns>The FNV-1a hash of <paramref name="data"/></returns>
+        internal static unsafe int GetFNVHashCode(byte* data, int length, out bool isAscii)
+        {
+            int hashCode = Hash.FnvOffsetBias;
+
+            byte asciiMask = 0;
+
+            for (int i = 0; i < length; i++)
+            {
+                byte b = data[i];
+                asciiMask |= b;
+                hashCode = unchecked((hashCode ^ b) * Hash.FnvPrime);
+            }
+
+            isAscii = (asciiMask & 0x80) == 0;
+            return hashCode;
+        }
+
+        /// <summary>
         /// Compute the FNV-1a hash of a sequence of bytes
         /// See http://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
@@ -189,6 +240,23 @@ namespace Roslyn.Utilities
 
             return hashCode;
         }
+
+#if WORKSPACE
+
+        internal static int GetCaseInsensitiveFNVHashCode(string text, int start, int length)
+        {
+            int hashCode = Hash.FnvOffsetBias;
+            int end = start + length;
+
+            for (int i = start; i < end; i++)
+            {
+                hashCode = unchecked((hashCode ^ CaseInsensitiveComparison.ToLower(text[i])) * Hash.FnvPrime);
+            }
+
+            return hashCode;
+        }
+
+#endif
 
         /// <summary>
         /// Compute the hashcode of a sub-string using FNV-1a

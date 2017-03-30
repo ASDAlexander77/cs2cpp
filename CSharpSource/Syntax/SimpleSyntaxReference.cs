@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,18 +11,18 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal class SimpleSyntaxReference : SyntaxReference
     {
-        private readonly SyntaxNode node;
+        private readonly SyntaxNode _node;
 
         internal SimpleSyntaxReference(SyntaxNode node)
         {
-            this.node = node;
+            _node = node;
         }
 
         public override SyntaxTree SyntaxTree
         {
             get
             {
-                return this.node.SyntaxTree;
+                return _node.SyntaxTree;
             }
         }
 
@@ -30,13 +30,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return this.node.Span;
+                return _node.Span;
             }
         }
 
         public override SyntaxNode GetSyntax(CancellationToken cancellationToken)
         {
-            return this.node;
+            return _node;
         }
     }
 }

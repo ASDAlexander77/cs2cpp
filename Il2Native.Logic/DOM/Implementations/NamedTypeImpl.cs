@@ -37,16 +37,27 @@ namespace Il2Native.Logic.DOM.Implementations
         }
 
         public int Arity { get; private set; }
+
         public bool IsGenericType { get; set; }
+
         public bool IsUnboundGenericType { get; private set; }
+
         public bool IsScriptClass { get; private set; }
+
         public bool IsImplicitClass { get; private set; }
+
         public IEnumerable<string> MemberNames { get; private set; }
+
         public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; set; }
+
         public ImmutableArray<ITypeSymbol> TypeArguments { get; set; }
+
         public INamedTypeSymbol OriginalDefinition { get; private set; }
+
         public IMethodSymbol DelegateInvokeMethod { get; private set; }
+
         public INamedTypeSymbol EnumUnderlyingType { get; private set; }
+
         public INamedTypeSymbol ConstructedFrom { get; private set; }
 
         public INamedTypeSymbol Construct(params ITypeSymbol[] typeArguments)
@@ -59,10 +70,21 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
         public ImmutableArray<IMethodSymbol> InstanceConstructors { get; private set; }
         public ImmutableArray<IMethodSymbol> StaticConstructors { get; private set; }
         public ImmutableArray<IMethodSymbol> Constructors { get; private set; }
         public ISymbol AssociatedSymbol { get; private set; }
         public bool MightContainExtensionMethods { get; private set; }
+
+        public bool IsComImport => throw new NotImplementedException();
+
+        public INamedTypeSymbol TupleUnderlyingType => throw new NotImplementedException();
+
+        public ImmutableArray<IFieldSymbol> TupleElements => throw new NotImplementedException();
     }
 }

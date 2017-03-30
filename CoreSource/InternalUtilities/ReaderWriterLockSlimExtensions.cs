@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Threading;
@@ -14,17 +14,17 @@ namespace Roslyn.Utilities
 
         internal struct ReadLockExiter : IDisposable
         {
-            private readonly ReaderWriterLockSlim @lock;
+            private readonly ReaderWriterLockSlim _lock;
 
             internal ReadLockExiter(ReaderWriterLockSlim @lock)
             {
-                this.@lock = @lock;
+                _lock = @lock;
                 @lock.EnterReadLock();
             }
 
             public void Dispose()
             {
-                this.@lock.ExitReadLock();
+                _lock.ExitReadLock();
             }
         }
 
@@ -35,17 +35,17 @@ namespace Roslyn.Utilities
 
         internal struct WriteLockExiter : IDisposable
         {
-            private readonly ReaderWriterLockSlim @lock;
+            private readonly ReaderWriterLockSlim _lock;
 
             internal WriteLockExiter(ReaderWriterLockSlim @lock)
             {
-                this.@lock = @lock;
+                _lock = @lock;
                 @lock.EnterWriteLock();
             }
 
             public void Dispose()
             {
-                this.@lock.ExitWriteLock();
+                _lock.ExitWriteLock();
             }
         }
 

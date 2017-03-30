@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -94,11 +94,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             }
         }
 
+        ImmutableArray<Cci.ICustomModifier> Cci.ISignature.RefCustomModifiers
+        {
+            get
+            {
+                return UnderlyingMethod.RefCustomModifiers.As<Cci.ICustomModifier>();
+            }
+        }
+
         bool Cci.ISignature.ReturnValueIsByRef
         {
             get
             {
-                return UnderlyingMethod.ReturnType is ByRefReturnErrorTypeSymbol;
+                return UnderlyingMethod.RefKind == RefKind.Ref;
             }
         }
 

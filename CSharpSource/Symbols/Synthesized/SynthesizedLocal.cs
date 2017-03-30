@@ -1,7 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -11,34 +14,73 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     [DebuggerDisplay("{GetDebuggerDisplay(),nq}")]
     internal sealed class SynthesizedLocal : LocalSymbol
     {
-        private readonly MethodSymbol containingMethod;
-        private readonly TypeSymbol type;
-        private readonly CSharpSyntaxNode syntax;
-        private readonly bool isPinned;
-        private readonly RefKind refKind;
-        private readonly SynthesizedLocalKind kind;
+        private readonly MethodSymbol _containingMethodOpt;
+        private readonly TypeSymbol _type;
+        private readonly SynthesizedLocalKind _kind;
+        private readonly SyntaxNode _syntaxOpt;
+        private readonly bool _isPinned;
+        private readonly RefKind _refKind;
+
+#if DEBUG
+        private readonly int _createdAtLineNumber;
+        private readonly string _createdAtFilePath;
+#endif
 
         internal SynthesizedLocal(
-            MethodSymbol containingMethod,
+            MethodSymbol containingMethodOpt,
             TypeSymbol type,
             SynthesizedLocalKind kind,
-            CSharpSyntaxNode syntax = null,
+            SyntaxNode syntaxOpt = null,
             bool isPinned = false,
-            RefKind refKind = RefKind.None)
+            RefKind refKind = RefKind.None
+#if DEBUG
+            ,
+            [CallerLineNumber]int createdAtLineNumber = 0,
+            [CallerFilePath]string createdAtFilePath = null
+#endif
+            )
         {
-            this.containingMethod = containingMethod;
             Debug.Assert(type.SpecialType != SpecialType.System_Void);
+            Debug.Assert(!kind.IsLongLived() || syntaxOpt != null);
+            Debug.Assert(refKind != RefKind.Out);
 
-            this.type = type;
-            this.syntax = syntax;
-            this.isPinned = isPinned;
-            this.refKind = refKind;
-            this.kind = kind;
+            _containingMethodOpt = containingMethodOpt;
+            _type = type;
+            _kind = kind;
+            _syntaxOpt = syntaxOpt;
+            _isPinned = isPinned;
+            _refKind = refKind;
+
+#if DEBUG
+            _createdAtLineNumber = createdAtLineNumber;
+            _createdAtFilePath = createdAtFilePath;
+#endif
+        }
+
+        public SyntaxNode SyntaxOpt
+        {
+            get { return _syntaxOpt; }
+        }
+
+        internal override LocalSymbol WithSynthesizedLocalKindAndSyntax(SynthesizedLocalKind kind, SyntaxNode syntax)
+        {
+            return new SynthesizedLocal(
+                _containingMethodOpt,
+                _type,
+                kind,
+                syntax,
+                _isPinned,
+                _refKind);
         }
 
         internal override RefKind RefKind
         {
-            get { return this.refKind; }
+            get { return _refKind; }
+        }
+
+        internal override bool IsImportedFromMetadata
+        {
+            get { return false; }
         }
 
         internal override LocalDeclarationKind DeclarationKind
@@ -46,9 +88,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return LocalDeclarationKind.None; }
         }
 
-        internal override SynthesizedLocalKind SynthesizedLocalKind
+        internal override SynthesizedLocalKind SynthesizedKind
         {
-            get { return this.kind; }
+            get { return _kind; }
+        }
+
+        internal override SyntaxNode ScopeDesignatorOpt
+        {
+            get { return null; }
         }
 
         internal override SyntaxToken IdentifierToken
@@ -58,7 +105,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return this.containingMethod; }
+            get { return _containingMethodOpt; }
         }
 
         public override string Name
@@ -68,17 +115,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override TypeSymbol Type
         {
-            get { return type; }
+            get { return _type; }
         }
 
         public override ImmutableArray<Location> Locations
         {
-            get { return (this.syntax == null) ? ImmutableArray<Location>.Empty : ImmutableArray.Create(this.syntax.GetLocation()); }
+            get { return (_syntaxOpt == null) ? ImmutableArray<Location>.Empty : ImmutableArray.Create(_syntaxOpt.GetLocation()); }
         }
 
         public override ImmutableArray<SyntaxReference> DeclaringSyntaxReferences
         {
-            get { return (this.syntax == null) ? ImmutableArray<SyntaxReference>.Empty : ImmutableArray.Create(this.syntax.GetReference()); }
+            get { return (_syntaxOpt == null) ? ImmutableArray<SyntaxReference>.Empty : ImmutableArray.Create(_syntaxOpt.GetReference()); }
+        }
+
+        internal override SyntaxNode GetDeclaratorSyntax()
+        {
+            Debug.Assert(_syntaxOpt != null);
+            return _syntaxOpt;
         }
 
         public override bool IsImplicitlyDeclared
@@ -88,7 +141,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override bool IsPinned
         {
-            get { return this.isPinned; }
+            get { return _isPinned; }
         }
 
         internal override bool IsCompilerGenerated
@@ -96,21 +149,32 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return true; }
         }
 
-        internal override ConstantValue GetConstantValue(LocalSymbol inProgress)
+        internal override ConstantValue GetConstantValue(SyntaxNode node, LocalSymbol inProgress, DiagnosticBag diagnostics)
         {
             return null;
         }
 
         internal override ImmutableArray<Diagnostic> GetConstantValueDiagnostics(BoundExpression boundInitValue)
         {
-            return default(ImmutableArray<Diagnostic>);
+            return ImmutableArray<Diagnostic>.Empty;
         }
 
         private new string GetDebuggerDisplay()
         {
-            return string.Format("{0} {1}",
-                this.kind == SynthesizedLocalKind.None ? "<temp>" : this.kind.ToString(), 
-                this.type.ToDisplayString(SymbolDisplayFormat.TestFormat));
+            var builder = new StringBuilder();
+            builder.Append((_kind == SynthesizedLocalKind.UserDefined) ? "<temp>" : _kind.ToString());
+            builder.Append(' ');
+            builder.Append(_type.ToDisplayString(SymbolDisplayFormat.TestFormat));
+
+#if DEBUG
+            builder.Append(" @");
+            builder.Append(_createdAtFilePath);
+            builder.Append('(');
+            builder.Append(_createdAtLineNumber);
+            builder.Append(')');
+#endif
+
+            return builder.ToString();
         }
     }
 }

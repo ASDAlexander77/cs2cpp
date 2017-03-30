@@ -1,21 +1,21 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     /// <summary>
     /// Represents a namespace.
     /// </summary>
-    internal abstract class NamespaceSymbol : NamespaceOrTypeSymbol, INamespaceSymbol
+    internal abstract partial class NamespaceSymbol : NamespaceOrTypeSymbol, INamespaceSymbol
     {
+        // PERF: initialization of the following fields will allocate, so we make them lazy
+        private ImmutableArray<NamedTypeSymbol> _lazyTypesMightContainExtensionMethods;
+        private string _lazyQualifiedName;
+        
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Changes to the public interface of this class should remain synchronized with the VB version.
         // Do not make any changes to the public interface without making the corresponding change
@@ -76,7 +76,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return ImmutableArray.Create<NamespaceSymbol>(this);
+                return ImmutableArray.Create(this);
             }
         }
 
@@ -239,7 +239,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Symbol for the most nested namespace, if found. Nothing 
         /// if namespace or any part of it can not be found.
         /// </returns>
-        /// <remarks></remarks>
         internal NamespaceSymbol LookupNestedNamespace(ImmutableArray<string> names)
         {
             NamespaceSymbol scope = this;
@@ -291,7 +290,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal NamespaceSymbol GetNestedNamespace(NameSyntax name)
         {
-            switch (name.Kind)
+            switch (name.Kind())
             {
                 case SyntaxKind.GenericName: // DeclarationTreeBuilder.VisitNamespace uses the PlainName, even for generic names
                 case SyntaxKind.IdentifierName:
@@ -316,6 +315,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return null;
         }
 
+        private ImmutableArray<NamedTypeSymbol> TypesMightContainExtensionMethods
+        {
+            get
+            {
+                var typesWithExtensionMethods = this._lazyTypesMightContainExtensionMethods;
+                if (typesWithExtensionMethods.IsDefault)
+                {
+                    this._lazyTypesMightContainExtensionMethods = this.GetTypeMembersUnordered().WhereAsArray(t => t.MightContainExtensionMethods);
+                    typesWithExtensionMethods = this._lazyTypesMightContainExtensionMethods;
+                }
+
+                return typesWithExtensionMethods;
+            }
+        }
+
+
         /// <summary>
         /// Add all extension methods in this namespace to the given list. If name or arity
         /// or both are provided, only those extension methods that match are included.
@@ -337,10 +352,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return;
             }
 
-            var types = this.GetTypeMembersUnordered();
-            foreach (var type in types)
+            var typesWithExtensionMethods = this.TypesMightContainExtensionMethods;
+
+            foreach (var type in typesWithExtensionMethods)
             {
-                type.GetExtensionMethods(methods, nameOpt, arity, options);
+                type.DoGetExtensionMethods(methods, nameOpt, arity, options);
             }
         }
 
@@ -379,6 +395,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 return StaticCast<INamespaceSymbol>.From(this.ConstituentNamespaces);
+            }
+        }
+
+        internal string QualifiedName
+        {
+            get
+            {
+                return _lazyQualifiedName ??
+                    (_lazyQualifiedName = this.ToDisplayString(SymbolDisplayFormat.QualifiedNameOnlyFormat));
             }
         }
 

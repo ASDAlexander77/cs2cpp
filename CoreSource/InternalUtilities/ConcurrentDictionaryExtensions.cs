@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Concurrent;
 
@@ -8,7 +8,7 @@ namespace Roslyn.Utilities
     {
         /// <summary>
         /// NOTE!!! adding duplicates will result in exceptions. 
-        /// Being concurrent only allows accessing the dictionary without takind locks.
+        /// Being concurrent only allows accessing the dictionary without taking locks.
         /// Duplicate keys are still not allowed in the hashtable.
         /// If unsure about adding unique items use APIs such as TryAdd, GetOrAdd, etc...
         /// </summary>

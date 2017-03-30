@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -45,16 +45,16 @@ namespace Microsoft.CodeAnalysis.Text
         /// <summary>
         /// Gets the text before the change.
         /// </summary>
-        public SourceText OldText { get; private set; }
+        public SourceText OldText { get; }
 
         /// <summary>
         /// Gets the text after the change.
         /// </summary>
-        public SourceText NewText { get; private set; }
+        public SourceText NewText { get; }
 
         /// <summary>
         /// Gets the set of ranges for the change.
         /// </summary>
-        public IReadOnlyList<TextChangeRange> Changes { get; private set; }
+        public IReadOnlyList<TextChangeRange> Changes { get; }
     }
 }

@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Emit;
+using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis.CSharp.Emit
 {
@@ -17,6 +18,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
         public SpecializedGenericNestedTypeInstanceReference(NamedTypeSymbol underlyingNamedType)
             : base(underlyingNamedType)
         {
+            Debug.Assert(underlyingNamedType.IsDefinition);
+            // Definition doesn't have custom modifiers on type arguments
+            Debug.Assert(!underlyingNamedType.HasTypeArgumentsCustomModifiers);
         }
 
         public sealed override void Dispatch(Cci.MetadataVisitor visitor)
@@ -34,16 +38,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             }
 
             return builder.ToImmutableAndFree();
-
         }
 
-        Cci.INamedTypeReference Cci.IGenericTypeInstanceReference.GenericType
+        Cci.INamedTypeReference Cci.IGenericTypeInstanceReference.GetGenericType(EmitContext context)
         {
-            get
-            {
-                System.Diagnostics.Debug.Assert(UnderlyingNamedType.OriginalDefinition.IsDefinition);
-                return this.UnderlyingNamedType.OriginalDefinition;
-            }
+            System.Diagnostics.Debug.Assert(UnderlyingNamedType.OriginalDefinition.IsDefinition);
+            PEModuleBuilder moduleBeingBuilt = (PEModuleBuilder)context.Module;
+            return moduleBeingBuilt.Translate(this.UnderlyingNamedType.OriginalDefinition, syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt, 
+                                              diagnostics: context.Diagnostics, needDeclaration: true);
         }
 
         public override Cci.IGenericTypeInstanceReference AsGenericTypeInstanceReference

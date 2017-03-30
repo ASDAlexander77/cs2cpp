@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -9,19 +9,19 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class ConstantFieldsInProgressBinder : Binder
     {
-        private readonly ConstantFieldsInProgress inProgress;
+        private readonly ConstantFieldsInProgress _inProgress;
 
         internal ConstantFieldsInProgressBinder(ConstantFieldsInProgress inProgress, Binder next)
             : base(next, BinderFlags.FieldInitializer | next.Flags)
         {
-            this.inProgress = inProgress;
+            _inProgress = inProgress;
         }
 
         internal override ConstantFieldsInProgress ConstantFieldsInProgress
         {
             get
             {
-                return inProgress;
+                return _inProgress;
             }
         }
     }

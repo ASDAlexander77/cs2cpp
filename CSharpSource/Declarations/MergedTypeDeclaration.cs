@@ -1,12 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
@@ -15,21 +13,21 @@ namespace Microsoft.CodeAnalysis.CSharp
     // declarations.
     internal sealed class MergedTypeDeclaration : MergedNamespaceOrTypeDeclaration
     {
-        private readonly ImmutableArray<SingleTypeDeclaration> declarations;
-        private ImmutableArray<MergedTypeDeclaration> lazyChildren;
-        private ICollection<string> lazyMemberNames;
+        private readonly ImmutableArray<SingleTypeDeclaration> _declarations;
+        private ImmutableArray<MergedTypeDeclaration> _lazyChildren;
+        private ICollection<string> _lazyMemberNames;
 
         internal MergedTypeDeclaration(ImmutableArray<SingleTypeDeclaration> declarations)
             : base(declarations[0].Name)
         {
-            this.declarations = declarations;
+            _declarations = declarations;
         }
 
         public ImmutableArray<SingleTypeDeclaration> Declarations
         {
             get
             {
-                return declarations;
+                return _declarations;
             }
         }
 
@@ -37,7 +35,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return declarations.SelectAsArray(r => r.SyntaxReference);
+                return _declarations.SelectAsArray(r => r.SyntaxReference);
             }
         }
 
@@ -45,7 +43,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var attributeSyntaxListBuilder = ArrayBuilder<SyntaxList<AttributeListSyntax>>.GetInstance();
 
-            foreach (var decl in this.declarations)
+            foreach (var decl in _declarations)
             {
                 if (!decl.HasAnyAttributes)
                 {
@@ -55,7 +53,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var syntaxRef = decl.SyntaxReference;
                 var typeDecl = syntaxRef.GetSyntax();
                 SyntaxList<AttributeListSyntax> attributesSyntaxList;
-                switch (typeDecl.CSharpKind())
+                switch (typeDecl.Kind())
                 {
                     case SyntaxKind.ClassDeclaration:
                     case SyntaxKind.StructDeclaration:
@@ -72,7 +70,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         break;
 
                     default:
-                        throw ExceptionUtilities.UnexpectedValue(typeDecl.CSharpKind());
+                        throw ExceptionUtilities.UnexpectedValue(typeDecl.Kind());
                 }
 
                 attributeSyntaxListBuilder.Add(attributesSyntaxList);
@@ -125,6 +123,22 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        public bool HasConstraints
+        {
+            get
+            {
+                foreach (var decl in this.Declarations)
+                {
+                    if (decl.HasConstraints)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public LexicalSortKey GetLexicalSortKey(CSharpCompilation compilation)
         {
             LexicalSortKey sortKey = new LexicalSortKey(Declarations[0].NameLocation, compilation);
@@ -142,7 +156,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 if (Declarations.Length == 1)
                 {
-                    return ImmutableArray.Create<SourceLocation>(Declarations[0].NameLocation);
+                    return ImmutableArray.Create(Declarations[0].NameLocation);
                 }
                 else
                 {
@@ -198,12 +212,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (this.lazyChildren.IsDefault)
+                if (_lazyChildren.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedInitialize(ref this.lazyChildren, MakeChildren());
+                    ImmutableInterlocked.InterlockedInitialize(ref _lazyChildren, MakeChildren());
                 }
 
-                return this.lazyChildren;
+                return _lazyChildren;
             }
         }
 
@@ -216,13 +230,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (lazyMemberNames == null)
+                if (_lazyMemberNames == null)
                 {
                     var names = UnionCollection<string>.Create(this.Declarations, d => d.MemberNames);
-                    Interlocked.CompareExchange(ref lazyMemberNames, names, null);
+                    Interlocked.CompareExchange(ref _lazyMemberNames, names, null);
                 }
 
-                return lazyMemberNames;
+                return _lazyMemberNames;
             }
         }
     }

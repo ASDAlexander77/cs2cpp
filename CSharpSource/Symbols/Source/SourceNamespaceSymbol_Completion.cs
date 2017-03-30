@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,7 +17,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var incompletePart = state.NextIncompletePart;
+                var incompletePart = _state.NextIncompletePart;
                 switch (incompletePart)
                 {
                     case CompletionPart.NameToMembersMap:
@@ -29,7 +29,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case CompletionPart.MembersCompleted:
                         {
                             // ensure relevant imports are complete.
-                            foreach (var declaration in mergedDeclaration.Declarations)
+                            foreach (var declaration in _mergedDeclaration.Declarations)
                             {
                                 if (locationOpt == null || locationOpt.SourceTree == declaration.SyntaxReference.SyntaxTree)
                                 {
@@ -50,11 +50,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                                     ? new ParallelOptions() { CancellationToken = cancellationToken }
                                     : CSharpCompilation.DefaultParallelOptions;
 
-                                Parallel.For(0, members.Length, po, i =>
+                                Parallel.For(0, members.Length, po, UICultureUtilities.WithCurrentUICulture<int>(i =>
                                 {
                                     var member = members[i];
-                                    ForceCompleteMemberByLocation(locationOpt, cancellationToken, member);
-                                });
+                                    ForceCompleteMemberByLocation(locationOpt, member, cancellationToken);
+                                }));
 
                                 foreach (var member in members)
                                 {
@@ -69,17 +69,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             {
                                 foreach (var member in members)
                                 {
-                                    ForceCompleteMemberByLocation(locationOpt, cancellationToken, member);
+                                    ForceCompleteMemberByLocation(locationOpt, member, cancellationToken);
                                     allCompleted = allCompleted && member.HasComplete(CompletionPart.All);
                                 }
                             }
 
                             if (allCompleted)
                             {
-                                if (state.NotePartComplete(CompletionPart.MembersCompleted))
-                                {
-                                    DeclaringCompilation.SymbolDeclaredEvent(this);
-                                }
+                                _state.NotePartComplete(CompletionPart.MembersCompleted);
                                 break;
                             }
                             else
@@ -95,23 +92,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     default:
                         // any other values are completion parts intended for other kinds of symbols
-                        state.NotePartComplete(CompletionPart.All & ~CompletionPart.NamespaceSymbolAll);
+                        _state.NotePartComplete(CompletionPart.All & ~CompletionPart.NamespaceSymbolAll);
                         break;
                 }
 
-                state.SpinWaitComplete(incompletePart, cancellationToken);
+                _state.SpinWaitComplete(incompletePart, cancellationToken);
             }
 
-            done:
+        done:
             // Don't return until we've seen all of the CompletionParts. This ensures all
             // diagnostics have been reported (not necessarily on this thread).
             CompletionPart allParts = (locationOpt == null) ? CompletionPart.NamespaceSymbolAll : CompletionPart.NamespaceSymbolAll & ~CompletionPart.MembersCompleted;
-            state.SpinWaitComplete(allParts, cancellationToken);
+            _state.SpinWaitComplete(allParts, cancellationToken);
         }
 
         internal override bool HasComplete(CompletionPart part)
         {
-            return state.HasComplete(part);
+            return _state.HasComplete(part);
         }
     }
 }

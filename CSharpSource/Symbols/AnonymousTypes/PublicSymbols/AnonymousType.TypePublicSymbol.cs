@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
@@ -24,13 +24,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private sealed class AnonymousTypePublicSymbol : NamedTypeSymbol
         {
-            private readonly ImmutableArray<Symbol> members;
+            private readonly ImmutableArray<Symbol> _members;
 
             /// <summary> Properties defined in the type </summary>
             internal readonly ImmutableArray<AnonymousTypePropertySymbol> Properties;
 
             /// <summary> Maps member names to symbol(s) </summary>
-            private readonly MultiDictionary<string, Symbol> name2symbol = new MultiDictionary<string, Symbol>();
+            private readonly MultiDictionary<string, Symbol> _nameToSymbols = new MultiDictionary<string, Symbol>();
 
             /// <summary> Anonymous type manager owning this template </summary>
             internal readonly AnonymousTypeManager Manager;
@@ -78,19 +78,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 // Add a constructor
                 members[memberIndex++] = new AnonymousTypeConstructorSymbol(this, this.Properties);
-                this.members = members.AsImmutableOrNull();
-                Debug.Assert(memberIndex == this.members.Length);
+                _members = members.AsImmutableOrNull();
+                Debug.Assert(memberIndex == _members.Length);
 
-                //  fill name2symbol map
-                foreach (var symbol in this.members)
+                //  fill nameToSymbols map
+                foreach (var symbol in _members)
                 {
-                    this.name2symbol.Add(symbol.Name, symbol);
+                    _nameToSymbols.Add(symbol.Name, symbol);
                 }
             }
 
             public override ImmutableArray<Symbol> GetMembers()
             {
-                return this.members;
+                return _members;
             }
 
             internal override IEnumerable<FieldSymbol> GetFieldsToEmit()
@@ -103,24 +103,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return ImmutableArray<TypeSymbol>.Empty; }
             }
 
+            internal override bool HasTypeArgumentsCustomModifiers
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+            {
+                return GetEmptyTypeArgumentCustomModifiers(ordinal);
+            }
+
             public override ImmutableArray<Symbol> GetMembers(string name)
             {
-                int count = this.name2symbol.GetCountForKey(name);
+                var symbols = _nameToSymbols[name];
+                var builder = ArrayBuilder<Symbol>.GetInstance(symbols.Count);
+                foreach (var symbol in symbols)
+                {
+                    builder.Add(symbol);
+                }
 
-                if (count == 0)
-                {
-                    return ImmutableArray<Symbol>.Empty;
-                }
-                else if (count == 1)
-                {
-                    Symbol symbol = null;
-                    this.name2symbol.TryGetSingleValue(name, out symbol);
-                    return ImmutableArray.Create<Symbol>(symbol);
-                }
-                else
-                {
-                    return ImmutableArray.CreateRange<Symbol>(this.name2symbol[name]);
-                }
+                return builder.ToImmutableAndFree();
             }
 
             internal override ImmutableArray<Symbol> GetEarlyAttributeDecodingMembers()
@@ -135,7 +140,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override IEnumerable<string> MemberNames
             {
-                get { return this.name2symbol.Keys; }
+                get { return _nameToSymbols.Keys; }
             }
 
             public override Symbol ContainingSymbol
@@ -213,9 +218,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return Accessibility.Internal; }
             }
 
-            internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
+            internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved)
             {
-                get { return ImmutableArray<NamedTypeSymbol>.Empty; }
+                return ImmutableArray<NamedTypeSymbol>.Empty;
             }
 
             internal override ImmutableArray<NamedTypeSymbol> GetInterfacesToEmit()
@@ -331,7 +336,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return ImmutableArray<NamedTypeSymbol>.Empty;
             }
 
-            internal override bool Equals(TypeSymbol t2, bool ignoreCustomModifiers, bool ignoreDynamic)
+            internal override bool Equals(TypeSymbol t2, TypeCompareKind comparison)
             {
                 if (ReferenceEquals(this, t2))
                 {
@@ -339,7 +344,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
 
                 var other = t2 as AnonymousTypePublicSymbol;
-                return (object)other != null && this.TypeDescriptor.Equals(other.TypeDescriptor, ignoreCustomModifiers, ignoreDynamic);
+                return (object)other != null && this.TypeDescriptor.Equals(other.TypeDescriptor, comparison);
             }
 
             public override int GetHashCode()

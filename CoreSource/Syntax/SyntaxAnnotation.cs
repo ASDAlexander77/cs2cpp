@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -7,30 +7,35 @@ using Roslyn.Utilities;
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
-    /// A SynatxAnnotation is used to annotate syntax elements with additional information. 
+    /// A SyntaxAnnotation is used to annotate syntax elements with additional information. 
     /// 
     /// Since syntax elements are immutable, annotating them requires creating new instances of them
     /// with the annotations attached.
     /// </summary>
     [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
-    public sealed class SyntaxAnnotation : IObjectWritable, IObjectReadable, IEquatable<SyntaxAnnotation>
+    public sealed class SyntaxAnnotation : IObjectWritable, IEquatable<SyntaxAnnotation>
     {
+        static SyntaxAnnotation()
+        {
+            ObjectBinder.RegisterTypeReader(typeof(SyntaxAnnotation), r => new SyntaxAnnotation(r));
+        }
+
         /// <summary>
         /// A predefined syntax annotation that indicates whether the syntax element has elastic trivia.
         /// </summary>
-        public static readonly SyntaxAnnotation ElasticAnnotation = new SyntaxAnnotation();
+        public static SyntaxAnnotation ElasticAnnotation { get; } = new SyntaxAnnotation();
 
         // use a value identity instead of object identity so a deserialized instance matches the original instance.
-        private readonly long id;
-        private static long nextId;
+        private readonly long _id;
+        private static long s_nextId;
 
         // use a value identity instead of object identity so a deserialized instance matches the original instance.
-        public string Kind { get; private set; }
-        public string Data { get; private set; }
+        public string Kind { get; }
+        public string Data { get; }
 
         public SyntaxAnnotation()
         {
-            this.id = System.Threading.Interlocked.Increment(ref nextId);
+            _id = System.Threading.Interlocked.Increment(ref s_nextId);
         }
 
         public SyntaxAnnotation(string kind)
@@ -47,21 +52,16 @@ namespace Microsoft.CodeAnalysis
 
         private SyntaxAnnotation(ObjectReader reader)
         {
-            this.id = reader.ReadInt64();
+            _id = reader.ReadInt64();
             this.Kind = reader.ReadString();
             this.Data = reader.ReadString();
         }
 
         void IObjectWritable.WriteTo(ObjectWriter writer)
         {
-            writer.WriteInt64(this.id);
+            writer.WriteInt64(_id);
             writer.WriteString(this.Kind);
             writer.WriteString(this.Data);
-        }
-
-        Func<ObjectReader, object> IObjectReadable.GetReader()
-        {
-            return r => new SyntaxAnnotation(r);
         }
 
         private string GetDebuggerDisplay()
@@ -71,7 +71,7 @@ namespace Microsoft.CodeAnalysis
 
         public bool Equals(SyntaxAnnotation other)
         {
-            return (object)other != null && this.id == other.id;
+            return (object)other != null && _id == other._id;
         }
 
         public static bool operator ==(SyntaxAnnotation left, SyntaxAnnotation right)
@@ -111,7 +111,7 @@ namespace Microsoft.CodeAnalysis
 
         public override int GetHashCode()
         {
-            return this.id.GetHashCode();
+            return _id.GetHashCode();
         }
     }
 }

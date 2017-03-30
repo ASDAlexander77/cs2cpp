@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -86,6 +86,10 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get { return (this.MethodGroup != null) && this.MethodGroup.IsExtensionMethodGroup; }
         }
+
+        public bool IsLocalFunctionInvocation =>
+            MethodGroup.Methods.Count == 1 && // Local functions cannot be overloaded
+            MethodGroup.Methods[0].MethodKind == MethodKind.LocalFunction;
 
         public void Free()
         {

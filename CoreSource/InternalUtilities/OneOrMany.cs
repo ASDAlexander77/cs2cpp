@@ -1,56 +1,56 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
+using System.Diagnostics;
 
 namespace Roslyn.Utilities
 {
     /// <summary>
-    /// Represents a single item or many items. 
+    /// Represents a single item or many items.
     /// </summary>
     /// <remarks>
     /// Used when a collection usually contains a single item but sometimes might contain multiple.
     /// </remarks>
     internal struct OneOrMany<T>
     {
-        private readonly T one;
-        private readonly ImmutableArray<T> many;
+        private readonly T _one;
+        private readonly ImmutableArray<T> _many;
 
         public OneOrMany(T one)
         {
-            this.one = one;
-            this.many = default(ImmutableArray<T>);
+            _one = one;
+            _many = default(ImmutableArray<T>);
         }
 
         public OneOrMany(ImmutableArray<T> many)
         {
             if (many.IsDefault)
             {
-                throw new ArgumentNullException("many");
+                throw new ArgumentNullException(nameof(many));
             }
 
-            this.one = default(T);
-            this.many = many;
+            _one = default(T);
+            _many = many;
         }
 
         public T this[int index]
         {
             get
             {
-                if (this.many.IsDefault)
+                if (_many.IsDefault)
                 {
                     if (index != 0)
                     {
                         throw new IndexOutOfRangeException();
                     }
 
-                    return one;
+                    return _one;
                 }
                 else
                 {
-                    return many[index];
+                    return _many[index];
                 }
             }
         }
@@ -59,7 +59,95 @@ namespace Roslyn.Utilities
         {
             get
             {
-                return this.many.IsDefault ? 1 : this.many.Length;
+                return _many.IsDefault ? 1 : _many.Length;
+            }
+        }
+
+        public OneOrMany<T> Add(T one)
+        {
+            var builder = ArrayBuilder<T>.GetInstance();
+            if (_many.IsDefault)
+            {
+                builder.Add(_one);
+            }
+            else
+            {
+                builder.AddRange(_many);
+            }
+            builder.Add(one);
+            return new OneOrMany<T>(builder.ToImmutableAndFree());
+        }
+
+        public bool Contains(T item)
+        {
+            Debug.Assert(item != null);
+            if (Count == 1)
+            {
+                return item.Equals(_one);
+            }
+
+            var iter = GetEnumerator();
+            while (iter.MoveNext())
+            {
+                if (item.Equals(iter.Current))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public OneOrMany<T> RemoveAll(T item)
+        {
+            if (_many.IsDefault)
+            {
+                return item.Equals(_one) ? default(OneOrMany<T>) : this;
+            }
+
+            var builder = ArrayBuilder<T>.GetInstance();
+            var iter = GetEnumerator();
+            while (iter.MoveNext())
+            {
+                if (!item.Equals(iter.Current))
+                {
+                    builder.Add(iter.Current);
+                }
+            }
+
+            if (builder.Count == 0)
+            {
+                return default(OneOrMany<T>);
+            }
+
+            return builder.Count == Count ? this : new OneOrMany<T>(builder.ToImmutableAndFree());
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        internal struct Enumerator
+        {
+            private readonly OneOrMany<T> _collection;
+            private int _index;
+
+            internal Enumerator(OneOrMany<T> collection)
+            {
+                _collection = collection;
+                _index = -1;
+            }
+
+            public bool MoveNext()
+            {
+                _index++;
+                return _index < _collection.Count;
+            }
+
+            public T Current
+            {
+                get { return _collection[_index]; }
             }
         }
     }

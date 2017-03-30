@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -6,10 +6,12 @@ using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
+#pragma warning disable RS0010
     /// <summary>
     /// Displays a symbol in the C# style.
     /// </summary>
     /// <seealso cref="T:Microsoft.CodeAnalysis.VisualBasic.Symbols.SymbolDisplay"/>
+#pragma warning restore RS0010
     public static class SymbolDisplay
     {
         /// <summary>
@@ -101,7 +103,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException("symbol");
+                throw new ArgumentNullException(nameof(symbol));
             }
 
             if (minimal)
@@ -143,7 +145,16 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </remarks>
         public static string FormatPrimitive(object obj, bool quoteStrings, bool useHexadecimalNumbers)
         {
-            return ObjectDisplay.FormatPrimitive(obj, quoteStrings, useHexadecimalNumbers);
+            var options = ObjectDisplayOptions.EscapeNonPrintableCharacters;
+            if (quoteStrings)
+            {
+                options |= ObjectDisplayOptions.UseQuotes;
+            }
+            if (useHexadecimalNumbers)
+            {
+                options |= ObjectDisplayOptions.UseHexadecimalNumbers;
+            }
+            return ObjectDisplay.FormatPrimitive(obj, options);
         }
 
         /// <summary>
@@ -157,7 +168,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </remarks>
         public static string FormatLiteral(string value, bool quote)
         {
-            return ObjectDisplay.FormatLiteral(value, quote);
+            var options = ObjectDisplayOptions.EscapeNonPrintableCharacters |
+                (quote ? ObjectDisplayOptions.UseQuotes : ObjectDisplayOptions.None);
+            return ObjectDisplay.FormatLiteral(value, options);
         }
 
         /// <summary>
@@ -171,7 +184,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </remarks>
         public static string FormatLiteral(char c, bool quote)
         {
-            return ObjectDisplay.FormatLiteral(c, quote);
+            var options = ObjectDisplayOptions.EscapeNonPrintableCharacters |
+                (quote ? ObjectDisplayOptions.UseQuotes : ObjectDisplayOptions.None);
+            return ObjectDisplay.FormatLiteral(c, options);
         }
     }
 }

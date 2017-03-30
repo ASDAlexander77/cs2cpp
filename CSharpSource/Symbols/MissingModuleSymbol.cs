@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -183,31 +183,33 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get { return null; }
         }
+
+        public override ModuleMetadata GetMetadata() => null;
     }
 
     internal class MissingModuleSymbolWithName : MissingModuleSymbol
     {
-        private readonly string name;
+        private readonly string _name;
 
         public MissingModuleSymbolWithName(AssemblySymbol assembly, string name)
             : base(assembly, ordinal: -1)
         {
             Debug.Assert(name != null);
 
-            this.name = name;
+            _name = name;
         }
 
         public override string Name
         {
             get
             {
-                return name;
+                return _name;
             }
         }
 
         public override int GetHashCode()
         {
-            return Hash.Combine(assembly.GetHashCode(), StringComparer.OrdinalIgnoreCase.GetHashCode(name));
+            return Hash.Combine(assembly.GetHashCode(), StringComparer.OrdinalIgnoreCase.GetHashCode(_name));
         }
 
         public override bool Equals(object obj)
@@ -219,7 +221,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             MissingModuleSymbolWithName other = obj as MissingModuleSymbolWithName;
 
-            return (object)other != null && assembly.Equals(other.assembly) && string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase);
+            return (object)other != null && assembly.Equals(other.assembly) && string.Equals(_name, other._name, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

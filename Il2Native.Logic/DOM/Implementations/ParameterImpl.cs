@@ -97,6 +97,13 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool HasUnsupportedMetadata { get; private set; }
+
+        public ImmutableArray<CustomModifier> RefCustomModifiers { get; private set; }
     }
 }

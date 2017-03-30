@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -62,14 +62,17 @@ namespace Microsoft.CodeAnalysis
         /// Creates a new tree of nodes with the specified old node replaced with a new node.
         /// </summary>
         /// <typeparam name="TRoot">The type of the root node.</typeparam>
-        /// <typeparam name="TNode">The type of the replaced node.</typeparam>
         /// <param name="root">The root node of the tree of nodes.</param>
         /// <param name="oldNode">The node to be replaced; a descendant of the root node.</param>
         /// <param name="newNode">The new node to use in the new tree in place of the old node.</param>
-        public static TRoot ReplaceNode<TRoot, TNode>(this TRoot root, TNode oldNode, TNode newNode)
+        public static TRoot ReplaceNode<TRoot>(this TRoot root, SyntaxNode oldNode, SyntaxNode newNode)
             where TRoot : SyntaxNode
-            where TNode : SyntaxNode
         {
+            if (oldNode == newNode)
+            {
+                return root;
+            }
+
             return (TRoot)root.ReplaceCore(nodes: new[] { oldNode }, computeReplacementNode: (o, r) => newNode);
         }
 
@@ -77,13 +80,11 @@ namespace Microsoft.CodeAnalysis
         /// Creates a new tree of nodes with specified old node replaced with a new nodes.
         /// </summary>
         /// <typeparam name="TRoot">The type of the root node.</typeparam>
-        /// <typeparam name="TNode">The type of the replaced node.</typeparam>
         /// <param name="root">The root of the tree of nodes.</param>
         /// <param name="oldNode">The node to be replaced; a descendant of the root node and an element of a list member.</param>
         /// <param name="newNodes">A sequence of nodes to use in the tree in place of the old node.</param>
-        public static TRoot ReplaceNode<TRoot, TNode>(this TRoot root, TNode oldNode, IEnumerable<TNode> newNodes)
+        public static TRoot ReplaceNode<TRoot>(this TRoot root, SyntaxNode oldNode, IEnumerable<SyntaxNode> newNodes)
             where TRoot : SyntaxNode
-            where TNode : SyntaxNode
         {
             return (TRoot)root.ReplaceNodeInListCore(oldNode, newNodes);
         }
@@ -154,7 +155,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Creates a new tree of nodes with the specified old triva replaced with new trivia.
+        /// Creates a new tree of nodes with the specified old trivia replaced with new trivia.
         /// </summary>
         /// <typeparam name="TRoot">The type of the root node.</typeparam>
         /// <param name="root">The root of the tree of nodes.</param>
@@ -281,6 +282,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         internal const string DefaultIndentation = "    ";
+        internal const string DefaultEOL = "\r\n";
 
         /// <summary>
         /// Creates a new syntax node with all whitespace and end of line trivia replaced with
@@ -288,14 +290,53 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         /// <typeparam name="TNode">The type of the node.</typeparam>
         /// <param name="node">The node to format.</param>
-        /// <param name="indentation">An optional sequence of whitespace characters that defines a
-        /// single level of indentation.</param>
+        /// <param name="indentation">A sequence of whitespace characters that defines a single level of indentation.</param>
         /// <param name="elasticTrivia">If true the replaced trivia is elastic trivia.</param>
-        public static TNode NormalizeWhitespace<TNode>(this TNode node, string indentation = DefaultIndentation, bool elasticTrivia = false)
+        public static TNode NormalizeWhitespace<TNode>(this TNode node, string indentation, bool elasticTrivia)
             where TNode : SyntaxNode
         {
-            return (TNode)node.NormalizeWhitespaceCore(indentation, elasticTrivia);
+            return (TNode)node.NormalizeWhitespaceCore(indentation, DefaultEOL, elasticTrivia);
         }
+
+        /// <summary>
+        /// Creates a new syntax node with all whitespace and end of line trivia replaced with
+        /// regularly formatted trivia.
+        /// </summary>
+        /// <typeparam name="TNode">The type of the node.</typeparam>
+        /// <param name="node">The node to format.</param>
+        /// <param name="indentation">An optional sequence of whitespace characters that defines a single level of indentation.</param>
+        /// <param name="eol">An optional sequence of whitespace characters used for end of line.</param>
+        /// <param name="elasticTrivia">If true the replaced trivia is elastic trivia.</param>
+        public static TNode NormalizeWhitespace<TNode>(this TNode node, string indentation = DefaultIndentation, string eol = DefaultEOL, bool elasticTrivia = false)
+            where TNode : SyntaxNode
+        {
+            return (TNode)node.NormalizeWhitespaceCore(indentation, eol, elasticTrivia);
+        }
+
+        /// <summary>
+        /// Creates a new node from this node with both the leading and trailing trivia of the specified node.
+        /// </summary>
+        public static TSyntax WithTriviaFrom<TSyntax>(this TSyntax syntax, SyntaxNode node)
+            where TSyntax : SyntaxNode
+        {
+            return syntax.WithLeadingTrivia(node.GetLeadingTrivia()).WithTrailingTrivia(node.GetTrailingTrivia());
+        }
+
+        /// <summary>
+        /// Creates a new node from this node without leading or trailing trivia.
+        /// </summary>
+        public static TSyntax WithoutTrivia<TSyntax>(this TSyntax syntax)
+            where TSyntax : SyntaxNode
+        {
+            return syntax.WithoutLeadingTrivia().WithoutTrailingTrivia();
+        }
+
+        /// <summary>
+        /// Creates a new token from this token without leading or trailing trivia.
+        /// </summary>
+        public static SyntaxToken WithoutTrivia(this SyntaxToken token)
+            => token.WithTrailingTrivia(default(SyntaxTriviaList))
+                    .WithLeadingTrivia(default(SyntaxTriviaList));
 
         /// <summary>
         /// Creates a new node from this node with the leading trivia replaced.
@@ -319,6 +360,16 @@ namespace Microsoft.CodeAnalysis
             var first = node.GetFirstToken(includeZeroWidth: true);
             var newFirst = first.WithLeadingTrivia(trivia);
             return node.ReplaceToken(first, newFirst);
+        }
+
+        /// <summary>
+        /// Creates a new node from this node with the leading trivia removed.
+        /// </summary>
+        public static TSyntax WithoutLeadingTrivia<TSyntax>(
+            this TSyntax node
+            ) where TSyntax : SyntaxNode
+        {
+            return node.WithLeadingTrivia((IEnumerable<SyntaxTrivia>)null);
         }
 
         /// <summary>
@@ -353,6 +404,14 @@ namespace Microsoft.CodeAnalysis
             var last = node.GetLastToken(includeZeroWidth: true);
             var newLast = last.WithTrailingTrivia(trivia);
             return node.ReplaceToken(last, newLast);
+        }
+
+        /// <summary>
+        /// Creates a new node from this node with the trailing trivia removed.
+        /// </summary>
+        public static TSyntax WithoutTrailingTrivia<TSyntax>(this TSyntax node) where TSyntax : SyntaxNode
+        {
+            return node.WithTrailingTrivia((IEnumerable<SyntaxTrivia>)null);
         }
 
         /// <summary>

@@ -1,14 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.RuntimeMembers;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -31,7 +24,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             ReportErrorOnSpecialMember(System_Object__Equals, SpecialMember.System_Object__Equals, diagnostics, ref hasErrors);
             ReportErrorOnSpecialMember(System_Object__ToString, SpecialMember.System_Object__ToString, diagnostics, ref hasErrors);
             ReportErrorOnSpecialMember(System_Object__GetHashCode, SpecialMember.System_Object__GetHashCode, diagnostics, ref hasErrors);
-            ReportErrorOnSpecialMember(System_String__Format, SpecialMember.System_String__Format, diagnostics, ref hasErrors);
+            ReportErrorOnWellKnownMember(System_String__Format_IFormatProvider, WellKnownMember.System_String__Format_IFormatProvider, diagnostics, ref hasErrors);
 
             // optional synthesized attributes:
             Debug.Assert(WellKnownMembers.IsSynthesizedAttributeOptional(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
@@ -73,7 +66,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 MemberDescriptor memberDescriptor = SpecialMembers.GetDescriptor(member);
                 diagnostics.Add(ErrorCode.ERR_MissingPredefinedMember, NoLocation.Singleton,
-                    ((SpecialType)memberDescriptor.DeclaringTypeId).GetMetadataName(), memberDescriptor.Name);
+                    memberDescriptor.DeclaringTypeMetadataName, memberDescriptor.Name);
                 hasError = true;
             }
             else
@@ -88,7 +81,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 MemberDescriptor memberDescriptor = WellKnownMembers.GetDescriptor(member);
                 diagnostics.Add(ErrorCode.ERR_MissingPredefinedMember, NoLocation.Singleton,
-                    ((WellKnownType)memberDescriptor.DeclaringTypeId).GetMetadataName(), memberDescriptor.Name);
+                    memberDescriptor.DeclaringTypeMetadataName, memberDescriptor.Name);
                 hasError = true;
             }
             else
@@ -147,21 +140,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return this.Compilation.GetSpecialTypeMember(SpecialMember.System_Object__GetHashCode) as MethodSymbol; }
         }
 
-        public MethodSymbol System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor
-        {
-            get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor) as MethodSymbol; }
-        }
-
-        public MethodSymbol System_Diagnostics_DebuggerHiddenAttribute__ctor
-        {
-            get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Diagnostics_DebuggerHiddenAttribute__ctor) as MethodSymbol; }
-        }
-
-        public MethodSymbol System_Diagnostics_DebuggerBrowsableAttribute__ctor
-        {
-            get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Diagnostics_DebuggerBrowsableAttribute__ctor) as MethodSymbol; }
-        }
-
         public MethodSymbol System_Collections_Generic_EqualityComparer_T__Equals
         {
             get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Collections_Generic_EqualityComparer_T__Equals) as MethodSymbol; }
@@ -177,9 +155,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_Collections_Generic_EqualityComparer_T__get_Default) as MethodSymbol; }
         }
 
-        public MethodSymbol System_String__Format
+        public MethodSymbol System_String__Format_IFormatProvider
         {
-            get { return this.Compilation.GetSpecialTypeMember(SpecialMember.System_String__Format) as MethodSymbol; }
+            get { return this.Compilation.GetWellKnownTypeMember(WellKnownMember.System_String__Format_IFormatProvider) as MethodSymbol; }
         }
 
         #endregion

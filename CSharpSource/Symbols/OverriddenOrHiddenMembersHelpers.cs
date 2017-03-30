@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -6,8 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis.Collections;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -150,7 +149,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             ImmutableArray<Symbol> overriddenMembers;
             ImmutableArray<Symbol> runtimeOverriddenMembers;
             FindRelatedMembers(member.IsOverride, memberIsFromSomeCompilation, member.Kind, bestMatch, out overriddenMembers, out runtimeOverriddenMembers, ref hiddenBuilder);
-
+            
             ImmutableArray<Symbol> hiddenMembers = hiddenBuilder == null ? ImmutableArray<Symbol>.Empty : hiddenBuilder.ToImmutableAndFree();
             return OverriddenOrHiddenMembersResult.Create(overriddenMembers, hiddenMembers, runtimeOverriddenMembers);
         }
@@ -446,6 +445,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 hiddenBuilder = hiddenAndRelatedBuilder;
             }
 
+            Debug.Assert(overriddenMembers.IsEmpty);
+
             ImmutableArray<Symbol> hiddenMembers = hiddenBuilder == null ? ImmutableArray<Symbol>.Empty : hiddenBuilder.ToImmutableAndFree();
             return OverriddenOrHiddenMembersResult.Create(overriddenMembers, hiddenMembers, runtimeOverriddenMembers);
         }
@@ -547,7 +548,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             // If the member is from metadata, then even a fallback match is an exact match.
             // We just declined to set the flag at the time in case there was a "better" exact match.
-            // Having said that, there's no reason to update the flag, since no one will consume it.
+            // Having said that, there's no reason to update the flag, since no-one will consume it.
             // if (!memberIsFromSomeCompilation && ((object)currTypeBestMatch != null)) currTypeHasExactMatch = true;
 
             // There's a special case where we have to go back and fix up our best match.
@@ -569,8 +570,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // exact and so we would already have applied the custom modifier count as a tie-breaker.
                 foreach (ParameterSymbol param in currTypeBestMatch.GetParameters())
                 {
-                    Debug.Assert(!param.CustomModifiers.Any());
-                    Debug.Assert(!param.Type.HasCustomModifiers());
+                    Debug.Assert(!(param.CustomModifiers.Any() || param.RefCustomModifiers.Any()));
+                    Debug.Assert(!param.Type.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds: false));
                 }
 #endif
 
@@ -705,8 +706,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// DevDiv Bugs 115384: Both out and ref parameters are implemented as references. In addition, out parameters are 
         /// decorated with OutAttribute. In CLR when a signature is looked up in virtual dispatch, CLR does not distinguish
         /// between these to parameter types. The choice is the last method in the vtable. Therefore we check and warn if 
-        /// there would potentially be a mismatch in CLRs and C#s choice of the overriden method. Unfortunately we have no 
-        /// way of communicating to CLR which method is the overriden one. We only run into this problem when the 
+        /// there would potentially be a mismatch in CLRs and C#s choice of the overridden method. Unfortunately we have no 
+        /// way of communicating to CLR which method is the overridden one. We only run into this problem when the 
         /// parameters are generic.
         /// </param>
         private static void FindOtherOverriddenMethodsInContainingType(Symbol representativeMember, bool overridingMemberIsFromSomeCompilation, ArrayBuilder<Symbol> overriddenBuilder, ArrayBuilder<Symbol> runtimeOverriddenBuilder)
@@ -812,8 +813,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     MethodSymbol methodSymbol = (MethodSymbol)member;
                     return MethodSymbol.CanOverrideOrHide(methodSymbol.MethodKind) && ReferenceEquals(methodSymbol, methodSymbol.ConstructedFrom);
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return false;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -823,17 +823,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 case SymbolKind.Method:
                     MethodSymbol method = (MethodSymbol)member;
-                    return method.ReturnTypeCustomModifiers.Any() || method.ReturnType.HasCustomModifiers();
+                    return method.ReturnTypeCustomModifiers.Any() || method.RefCustomModifiers.Any() || 
+                           method.ReturnType.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds: false);
                 case SymbolKind.Property:
                     PropertySymbol property = (PropertySymbol)member;
-                    return property.TypeCustomModifiers.Any() || property.Type.HasCustomModifiers();
+                    return property.TypeCustomModifiers.Any() || property.RefCustomModifiers.Any() || 
+                           property.Type.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds: false);
                 case SymbolKind.Event:
                     EventSymbol @event = (EventSymbol)member;
-                    return @event.Type.HasCustomModifiers(); //can't have custom modifiers on (vs in) type
+                    return @event.Type.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds: false); //can't have custom modifiers on (vs in) type
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return false;
-
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -851,9 +851,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     EventSymbol @event = (EventSymbol)member;
                     return @event.Type.CustomModifierCount();
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return 0;
-
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 

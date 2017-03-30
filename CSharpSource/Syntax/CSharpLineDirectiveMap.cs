@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
         // Add all active #line directives under trivia into the list, in source code order.
         protected override bool ShouldAddDirective(DirectiveTriviaSyntax directive)
         {
-            return directive.IsActive && directive.Kind == SyntaxKind.LineDirectiveTrivia;
+            return directive.IsActive && directive.Kind() == SyntaxKind.LineDirectiveTrivia;
         }
 
         // Given a directive and the previous entry, create a new entry.
@@ -42,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
             SyntaxToken lineToken = directive.Line;
             if (!lineToken.IsMissing)
             {
-                switch (lineToken.CSharpKind())
+                switch (lineToken.Kind())
                 {
                     case SyntaxKind.HiddenKeyword:
                         state = PositionState.Hidden;
@@ -65,7 +65,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
                                 mappedLine = ((int)value) - 1;
                             }
 
-                            if (directive.File.CSharpKind() == SyntaxKind.StringLiteralToken)
+                            if (directive.File.Kind() == SyntaxKind.StringLiteralToken)
                             {
                                 mappedPathOpt = (string)directive.File.Value;
                             }

@@ -1,8 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Reflection;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -14,7 +13,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 AddNonNullConstantValue(type, constantValue, preferNumericValueOrExpandedFlagsForEnum);
             }
-            else if (type.IsReferenceType || type.TypeKind == TypeKind.PointerType || type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            else if (type.IsReferenceType || type.TypeKind == TypeKind.Pointer || type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             {
                 AddKeyword(SyntaxKind.NullKeyword);
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,6 +11,10 @@ namespace Microsoft.CodeAnalysis
     /// of an error. For example, if a field is declared "Foo x;", and the type "Foo" cannot be
     /// found, an IErrorTypeSymbol is returned when asking the field "x" what it's type is.
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface IErrorTypeSymbol : INamedTypeSymbol
     {
         /// <summary>

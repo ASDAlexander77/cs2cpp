@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -7,28 +7,29 @@ using System.Text;
 namespace Microsoft.CodeAnalysis.Text
 {
     /// <summary>
-    /// Implementation of SourceText based on a <see cref="T:System.String"/> input
+    /// Implementation of <see cref="SourceText"/> based on a <see cref="StringBuilder"/> input
     /// </summary>
     internal sealed partial class StringBuilderText : SourceText
     {
         /// <summary>
         /// Underlying string on which this SourceText instance is based
         /// </summary>
-        private readonly StringBuilder builder;
+        private readonly StringBuilder _builder;
 
-        private readonly Encoding encodingOpt;
+        private readonly Encoding _encodingOpt;
 
-        public StringBuilderText(StringBuilder builder, Encoding encodingOpt)
+        public StringBuilderText(StringBuilder builder, Encoding encodingOpt, SourceHashAlgorithm checksumAlgorithm)
+             : base(checksumAlgorithm: checksumAlgorithm)
         {
             Debug.Assert(builder != null);
 
-            this.builder = builder;
-            this.encodingOpt = encodingOpt;
+            _builder = builder;
+            _encodingOpt = encodingOpt;
         }
 
         public override Encoding Encoding
         {
-            get { return encodingOpt; }
+            get { return _encodingOpt; }
         }
 
         /// <summary>
@@ -36,15 +37,15 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         internal StringBuilder Builder
         {
-            get { return this.builder; }
+            get { return _builder; }
         }
 
         /// <summary>
-        /// The length of the text represented by <see cref="T:StringText"/>.
+        /// The length of the text represented by <see cref="StringBuilderText"/>.
         /// </summary>
         public override int Length
         {
-            get { return this.builder.Length; }
+            get { return _builder.Length; }
         }
 
         /// <summary>
@@ -52,38 +53,38 @@ namespace Microsoft.CodeAnalysis.Text
         /// </summary>
         /// <param name="position">The position to get the character from.</param>
         /// <returns>The character.</returns>
-        /// <exception cref="T:ArgumentOutOfRangeException">When position is negative or 
-        /// greater than <see cref="T:"/> length.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When position is negative or 
+        /// greater than <see cref="Length"/>.</exception>
         public override char this[int position]
         {
             get
             {
-                if (position < 0 || position >= this.builder.Length)
+                if (position < 0 || position >= _builder.Length)
                 {
-                    throw new ArgumentOutOfRangeException("position");
+                    throw new ArgumentOutOfRangeException(nameof(position));
                 }
 
-                return this.builder[position];
+                return _builder[position];
             }
         }
 
         /// <summary>
         /// Provides a string representation of the StringBuilderText located within given span.
         /// </summary>
-        /// <exception cref="T:ArgumentOutOfRangeException">When given span is outside of the text range.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When given span is outside of the text range.</exception>
         public override string ToString(TextSpan span)
         {
-            if (span.End > this.builder.Length)
+            if (span.End > _builder.Length)
             {
-                throw new ArgumentOutOfRangeException("span");
+                throw new ArgumentOutOfRangeException(nameof(span));
             }
 
-            return this.builder.ToString(span.Start, span.Length);
+            return _builder.ToString(span.Start, span.Length);
         }
 
         public override void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
         {
-            this.builder.CopyTo(sourceIndex, destination, destinationIndex, count);
+            _builder.CopyTo(sourceIndex, destination, destinationIndex, count);
         }
     }
 }

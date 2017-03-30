@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -10,51 +10,51 @@ namespace Microsoft.Cci
 {
     internal class InheritedTypeParameter : IGenericTypeParameter
     {
-        private ushort index;
-        private ITypeDefinition inheritingType;
-        private IGenericTypeParameter parentParameter;
+        private readonly ushort _index;
+        private readonly ITypeDefinition _inheritingType;
+        private readonly IGenericTypeParameter _parentParameter;
 
         internal InheritedTypeParameter(ushort index, ITypeDefinition inheritingType, IGenericTypeParameter parentParameter)
         {
-            this.index = index;
-            this.inheritingType = inheritingType;
-            this.parentParameter = parentParameter;
+            _index = index;
+            _inheritingType = inheritingType;
+            _parentParameter = parentParameter;
         }
 
         #region IGenericTypeParameter Members
 
         public ITypeDefinition DefiningType
         {
-            get { return this.inheritingType; }
+            get { return _inheritingType; }
         }
 
         #endregion
 
         #region IGenericParameter Members
 
-        public IEnumerable<ITypeReference> GetConstraints(EmitContext context)
+        public IEnumerable<TypeReferenceWithAttributes> GetConstraints(EmitContext context)
         {
-            return this.parentParameter.GetConstraints(context);
+            return _parentParameter.GetConstraints(context);
         }
 
         public bool MustBeReferenceType
         {
-            get { return this.parentParameter.MustBeReferenceType; }
+            get { return _parentParameter.MustBeReferenceType; }
         }
 
         public bool MustBeValueType
         {
-            get { return this.parentParameter.MustBeValueType; }
+            get { return _parentParameter.MustBeValueType; }
         }
 
         public bool MustHaveDefaultConstructor
         {
-            get { return this.parentParameter.MustHaveDefaultConstructor; }
+            get { return _parentParameter.MustHaveDefaultConstructor; }
         }
 
         public TypeParameterVariance Variance
         {
-            get { return this.parentParameter.Variance; }
+            get { return _parentParameter.Variance; }
         }
 
         #endregion
@@ -174,14 +174,6 @@ namespace Microsoft.Cci
             }
         }
 
-        public IManagedPointerTypeReference AsManagedPointerTypeReference
-        {
-            get
-            {
-                return this as IManagedPointerTypeReference;
-            }
-        }
-
         public ITypeDefinition AsTypeDefinition(EmitContext context)
         {
             return this as ITypeDefinition;
@@ -198,7 +190,7 @@ namespace Microsoft.Cci
 
         public IEnumerable<ICustomAttribute> GetAttributes(EmitContext context)
         {
-            return this.parentParameter.GetAttributes(context);
+            return _parentParameter.GetAttributes(context);
         }
 
         public void Dispatch(MetadataVisitor visitor)
@@ -209,11 +201,11 @@ namespace Microsoft.Cci
 
         #region ITypeReference Members
 
-        public TypeHandle TypeDef
+        public TypeDefinitionHandle TypeDef
         {
             get
             {
-                return default(TypeHandle);
+                return default(TypeDefinitionHandle);
             }
         }
 
@@ -232,9 +224,9 @@ namespace Microsoft.Cci
             throw ExceptionUtilities.Unreachable;
         }
 
-        public PrimitiveTypeCode TypeCode(EmitContext context)
+        public PrimitiveTypeCode TypeCode
         {
-            return PrimitiveTypeCode.NotPrimitive;
+            get { return PrimitiveTypeCode.NotPrimitive; }
         }
 
         #endregion
@@ -243,7 +235,7 @@ namespace Microsoft.Cci
 
         public ushort Index
         {
-            get { return this.index; }
+            get { return _index; }
         }
 
         #endregion
@@ -252,7 +244,7 @@ namespace Microsoft.Cci
 
         public string Name
         {
-            get { return this.parentParameter.Name; }
+            get { return _parentParameter.Name; }
         }
 
         #endregion
@@ -261,7 +253,7 @@ namespace Microsoft.Cci
 
         ITypeReference IGenericTypeParameterReference.DefiningType
         {
-            get { return this.inheritingType; }
+            get { return _inheritingType; }
         }
 
         #endregion

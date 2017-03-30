@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
@@ -12,9 +12,9 @@ namespace Microsoft.CodeAnalysis
 {
     public partial struct SeparatedSyntaxList<TNode> : IEquatable<SeparatedSyntaxList<TNode>>, IReadOnlyList<TNode> where TNode : SyntaxNode
     {
-        private readonly SyntaxNodeOrTokenList list;
-        private readonly int count;
-        private readonly int separatorCount;
+        private readonly SyntaxNodeOrTokenList _list;
+        private readonly int _count;
+        private readonly int _separatorCount;
 
         internal SeparatedSyntaxList(SyntaxNodeOrTokenList list)
             : this()
@@ -25,10 +25,10 @@ namespace Microsoft.CodeAnalysis
             // so lets just do it here.
 
             int allCount = list.Count;
-            this.count = (allCount + 1) >> 1;
-            this.separatorCount = allCount >> 1;
+            _count = (allCount + 1) >> 1;
+            _separatorCount = allCount >> 1;
 
-            this.list = list;
+            _list = list;
         }
 
         [Conditional("DEBUG")]
@@ -57,7 +57,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return list.Node;
+                return _list.Node;
             }
         }
 
@@ -65,7 +65,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return count;
+                return _count;
             }
         }
 
@@ -73,7 +73,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return separatorCount;
+                return _separatorCount;
             }
         }
 
@@ -81,7 +81,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                var node = list.Node;
+                var node = _list.Node;
                 if (node != null)
                 {
                     if (!node.IsList)
@@ -93,14 +93,14 @@ namespace Microsoft.CodeAnalysis
                     }
                     else
                     {
-                        if (unchecked((uint)index < (uint)count))
+                        if (unchecked((uint)index < (uint)_count))
                         {
                             return (TNode)node.GetNodeSlot(index << 1);
                         }
                     }
                 }
 
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
         }
 
@@ -111,20 +111,20 @@ namespace Microsoft.CodeAnalysis
         /// <returns></returns>
         public SyntaxToken GetSeparator(int index)
         {
-            var node = list.Node;
+            var node = _list.Node;
             if (node != null)
             {
                 Debug.Assert(node.IsList, "separated list cannot be a singleton separator");
-                if (unchecked((uint)index < (uint)separatorCount))
+                if (unchecked((uint)index < (uint)_separatorCount))
                 {
                     index = (index << 1) + 1;
                     var green = node.Green.GetSlot(index);
                     Debug.Assert(green.IsToken);
-                    return new SyntaxToken(node.Parent, green, node.GetChildPosition(index), list.index + index);
+                    return new SyntaxToken(node.Parent, green, node.GetChildPosition(index), _list.index + index);
                 }
             }
 
-            throw new ArgumentOutOfRangeException("index");
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
 
         /// <summary>
@@ -132,23 +132,23 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public IEnumerable<SyntaxToken> GetSeparators()
         {
-            return this.list.Where(n => n.IsToken).Select(n => n.AsToken());
-        }
-
-        /// <summary>
-        /// The absolute span of the list elements in characters, not including the leading and trailing trivia of the first and last elements.
-        /// </summary>
-        public TextSpan FullSpan
-        {
-            get { return this.list.FullSpan; }
+            return _list.Where(n => n.IsToken).Select(n => n.AsToken());
         }
 
         /// <summary>
         /// The absolute span of the list elements in characters, including the leading and trailing trivia of the first and last elements.
         /// </summary>
+        public TextSpan FullSpan
+        {
+            get { return _list.FullSpan; }
+        }
+
+        /// <summary>
+        /// The absolute span of the list elements in characters, not including the leading and trailing trivia of the first and last elements.
+        /// </summary>
         public TextSpan Span
         {
-            get { return this.list.Span; }
+            get { return _list.Span; }
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Microsoft.CodeAnalysis
         /// </returns>
         public override string ToString()
         {
-            return this.list.ToString();
+            return _list.ToString();
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace Microsoft.CodeAnalysis
         /// </returns>
         public string ToFullString()
         {
-            return this.list.ToFullString();
+            return _list.ToFullString();
         }
 
         public TNode First()
@@ -188,10 +188,8 @@ namespace Microsoft.CodeAnalysis
             {
                 return this[0];
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public TNode Last()
@@ -205,10 +203,8 @@ namespace Microsoft.CodeAnalysis
             {
                 return this[this.Count - 1];
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public bool Contains(TNode node)
@@ -218,7 +214,7 @@ namespace Microsoft.CodeAnalysis
 
         public int IndexOf(TNode node)
         {
-            for (int i = 0; i < this.Count; i++)
+            for (int i = 0, n = this.Count; i < n; i++)
             {
                 if (object.Equals(this[i], node))
                 {
@@ -231,9 +227,22 @@ namespace Microsoft.CodeAnalysis
 
         public int IndexOf(Func<TNode, bool> predicate)
         {
-            for (int i = 0; i < this.Count; i++)
+            for (int i = 0, n = this.Count; i < n; i++)
             {
                 if (predicate(this[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        internal int IndexOf(int rawKind)
+        {
+            for (int i = 0, n = this.Count; i < n; i++)
+            {
+                if (this[i].RawKind == rawKind)
                 {
                     return i;
                 }
@@ -270,12 +279,25 @@ namespace Microsoft.CodeAnalysis
 
         public bool Any()
         {
-            return this.list.Any();
+            return _list.Any();
+        }
+
+        internal bool Any(Func<TNode, bool> predicate)
+        {
+            for (int i = 0; i < this.Count; i++)
+            {
+                if (predicate(this[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public SyntaxNodeOrTokenList GetWithSeparators()
         {
-            return list;
+            return _list;
         }
 
         public static bool operator ==(SeparatedSyntaxList<TNode> left, SeparatedSyntaxList<TNode> right)
@@ -290,7 +312,7 @@ namespace Microsoft.CodeAnalysis
 
         public bool Equals(SeparatedSyntaxList<TNode> other)
         {
-            return this.list == other.list;
+            return _list == other._list;
         }
 
         public override bool Equals(object obj)
@@ -300,7 +322,7 @@ namespace Microsoft.CodeAnalysis
 
         public override int GetHashCode()
         {
-            return this.list.GetHashCode();
+            return _list.GetHashCode();
         }
 
         /// <summary>
@@ -330,7 +352,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (node == null)
             {
-                throw new ArgumentNullException("node");
+                throw new ArgumentNullException(nameof(node));
             }
 
             return InsertRange(index, new[] { node });
@@ -345,12 +367,12 @@ namespace Microsoft.CodeAnalysis
         {
             if (nodes == null)
             {
-                throw new ArgumentNullException("nodes");
+                throw new ArgumentNullException(nameof(nodes));
             }
 
             if (index < 0 || index > this.Count)
             {
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             var nodesWithSeps = this.GetWithSeparators();
@@ -367,19 +389,18 @@ namespace Microsoft.CodeAnalysis
                 }
             }
 
+            var nodesToInsertWithSeparators = new List<SyntaxNodeOrToken>();
             foreach (var item in nodes)
             {
                 if (item != null)
                 {
                     // if item before insertion point is a node, add a separator
-                    if (insertionIndex > 0 && nodesWithSeps[insertionIndex - 1].IsNode)
+                    if (nodesToInsertWithSeparators.Count > 0 || (insertionIndex > 0 && nodesWithSeps[insertionIndex - 1].IsNode))
                     {
-                        nodesWithSeps = nodesWithSeps.Insert(insertionIndex, item.Green.CreateSeparator<TNode>(item)); // separator
-                        insertionIndex++;
+                        nodesToInsertWithSeparators.Add(item.Green.CreateSeparator<TNode>(item));
                     }
 
-                    nodesWithSeps = nodesWithSeps.Insert(insertionIndex, item);
-                    insertionIndex++;
+                    nodesToInsertWithSeparators.Add(item);
                 }
             }
 
@@ -387,10 +408,10 @@ namespace Microsoft.CodeAnalysis
             if (insertionIndex < nodesWithSeps.Count && nodesWithSeps[insertionIndex].IsNode)
             {
                 var node = nodesWithSeps[insertionIndex].AsNode();
-                nodesWithSeps = nodesWithSeps.Insert(insertionIndex, node.Green.CreateSeparator<TNode>(node)); // separator
+                nodesToInsertWithSeparators.Add(node.Green.CreateSeparator<TNode>(node)); // separator
             }
 
-            return new SeparatedSyntaxList<TNode>(nodesWithSeps);
+            return new SeparatedSyntaxList<TNode>(nodesWithSeps.InsertRange(insertionIndex, nodesToInsertWithSeparators));
         }
 
         private static bool KeepSeparatorWithPreviousNode(SyntaxToken separator)
@@ -416,7 +437,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (index < 0 || index > this.Count)
             {
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             return this.Remove(this[index]);
@@ -447,10 +468,8 @@ namespace Microsoft.CodeAnalysis
 
                 return new SeparatedSyntaxList<TNode>(nodesWithSeps);
             }
-            else
-            {
-                return this;
-            }
+
+            return this;
         }
 
         /// <summary>
@@ -462,7 +481,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (newNode == null)
             {
-                throw new ArgumentNullException("newNode");
+                throw new ArgumentNullException(nameof(newNode));
             }
 
             var index = this.IndexOf(nodeInList);
@@ -470,10 +489,8 @@ namespace Microsoft.CodeAnalysis
             {
                 return new SeparatedSyntaxList<TNode>(this.GetWithSeparators().Replace(nodeInList, newNode));
             }
-            else
-            {
-                throw new ArgumentException("nodeInList");
-            }
+
+            throw new ArgumentOutOfRangeException(nameof(nodeInList));
         }
 
         /// <summary>
@@ -485,7 +502,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (newNodes == null)
             {
-                throw new ArgumentNullException("newNodes");
+                throw new ArgumentNullException(nameof(newNodes));
             }
 
             var index = this.IndexOf(nodeInList);
@@ -504,15 +521,11 @@ namespace Microsoft.CodeAnalysis
                     newNodeList.RemoveAt(0);
                     return listWithFirstReplaced.InsertRange(index + 1, newNodeList);
                 }
-                else
-                {
-                    return listWithFirstReplaced;
-                }
+
+                return listWithFirstReplaced;
             }
-            else
-            {
-                throw new ArgumentException("nodeInList");
-            }
+
+            throw new ArgumentOutOfRangeException(nameof(nodeInList));
         }
 
         /// <summary>
@@ -524,7 +537,7 @@ namespace Microsoft.CodeAnalysis
         {
             var nodesWithSeps = this.GetWithSeparators();
             var index = nodesWithSeps.IndexOf(separatorToken);
-            if (index < 0 || index >= this.Count)
+            if (index < 0)
             {
                 throw new ArgumentException("separatorToken");
             }
@@ -546,7 +559,7 @@ namespace Microsoft.CodeAnalysis
 
         private SyntaxNodeOrToken[] NodesWithSeparators
         {
-            get { return this.list.ToArray(); }
+            get { return _list.ToArray(); }
         }
 
         public Enumerator GetEnumerator()
@@ -572,6 +585,16 @@ namespace Microsoft.CodeAnalysis
             }
 
             return SpecializedCollections.EmptyEnumerator<TNode>();
+        }
+
+        public static implicit operator SeparatedSyntaxList<SyntaxNode>(SeparatedSyntaxList<TNode> nodes)
+        {
+            return new SeparatedSyntaxList<SyntaxNode>(nodes._list);
+        }
+
+        public static implicit operator SeparatedSyntaxList<TNode>(SeparatedSyntaxList<SyntaxNode> nodes)
+        {
+            return new SeparatedSyntaxList<TNode>(nodes._list);
         }
     }
 }

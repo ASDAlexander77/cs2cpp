@@ -1,13 +1,15 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.CodeGen;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     /// <summary>
     /// Represents a local variable in a method body.
     /// </summary>
-    internal abstract class LocalSymbol : Symbol, ILocalSymbol
+    internal abstract class LocalSymbol : Symbol, ILocalSymbolInternal
     {
         protected LocalSymbol()
         {
@@ -18,9 +20,26 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get;
         }
 
-        internal abstract SynthesizedLocalKind SynthesizedLocalKind
+        internal abstract SynthesizedLocalKind SynthesizedKind
         {
             get;
+        }
+
+        /// <summary>
+        /// Syntax node that is used as the scope designator. Otherwise, null.
+        /// </summary>
+        internal abstract SyntaxNode ScopeDesignatorOpt { get; }
+
+        internal abstract LocalSymbol WithSynthesizedLocalKindAndSyntax(SynthesizedLocalKind kind, SyntaxNode syntax);
+
+        internal abstract bool IsImportedFromMetadata
+        {
+            get;
+        }
+
+        internal virtual bool CanScheduleToStack
+        {
+            get { return !IsConst && !IsPinned; }
         }
 
         internal abstract SyntaxToken IdentifierToken
@@ -189,11 +208,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Returns true if the local variable is declared in resource-acquisition of a 'using statement';
         /// otherwise false
         /// </summary>
-        /// <exmaple>
+        /// <example>
         /// <code>
         ///     using (var localVariable = new StreamReader("C:\\Temp\\MyFile.txt")) { ... } 
         /// </code>
-        /// </exmaple>
+        /// </example>
         public bool IsUsing
         {
             get
@@ -214,17 +233,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Returns true if this local variable is declared in for-initializer
-        /// </summary>
-        public bool IsFor
-        {
-            get
-            {
-                return this.DeclarationKind == LocalDeclarationKind.ForInitializerVariable;
-            }
-        }
-
-        /// <summary>
         /// Returns true if this local variable is declared as iteration variable
         /// </summary>
         public bool IsForEach
@@ -234,6 +242,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return this.DeclarationKind == LocalDeclarationKind.ForEachIterationVariable;
             }
         }
+
+        /// <summary>
+        /// Returns the syntax node that declares the variable.
+        /// </summary>
+        /// <remarks>
+        /// All user-defined and long-lived synthesized variables must return a reference to a node that is 
+        /// tracked by the EnC diffing algorithm. For example, for <see cref="LocalDeclarationKind.CatchVariable"/> variable
+        /// the declarator is the <see cref="CatchClauseSyntax"/> node.
+        /// 
+        /// The location of the declarator is used to calculate <see cref="LocalDebugId.SyntaxOffset"/> during emit.
+        /// </remarks>
+        internal abstract SyntaxNode GetDeclaratorSyntax();
 
         internal virtual bool IsWritable
         {
@@ -265,7 +285,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return false;
                 }
 
-                ConstantValue constantValue = this.GetConstantValue(null);
+                ConstantValue constantValue = this.GetConstantValue(null, null, null);
                 return constantValue != null && !constantValue.IsBad; //can be null in error scenarios
             }
         }
@@ -283,9 +303,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return null;
                 }
 
-
-                ConstantValue constantValue = this.GetConstantValue(null); //null just means we aren't currently evaluating another constant
-                return constantValue == null ? null : constantValue.Value; //can be null in error scenarios
+                ConstantValue constantValue = this.GetConstantValue(null, null, null);
+                return constantValue?.Value; //can be null in error scenarios
             }
         }
 
@@ -297,14 +316,38 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get;
         }
 
-        internal abstract ConstantValue GetConstantValue(LocalSymbol inProgress);
+        internal abstract ConstantValue GetConstantValue(SyntaxNode node, LocalSymbol inProgress, DiagnosticBag diagnostics = null);
 
         internal abstract ImmutableArray<Diagnostic> GetConstantValueDiagnostics(BoundExpression boundInitValue);
+
+        public bool IsRef => RefKind == RefKind.Ref;
 
         internal abstract RefKind RefKind
         {
             get;
         }
+
+        internal virtual bool IsReturnable
+        {
+            get
+            {
+                // by default all locals are returnable
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// When a local variable's type is inferred, it may not be used in the
+        /// expression that computes its value (and type). This property returns
+        /// the expression where a reference to an inferred variable is forbidden.
+        /// </summary>
+        internal virtual SyntaxNode ForbiddenZone => null;
+
+        /// <summary>
+        /// The diagnostic code to be reported when an inferred variable is used
+        /// in its forbidden zone.
+        /// </summary>
+        internal virtual ErrorCode ForbiddenDiagnostic => ErrorCode.ERR_VariableUsedBeforeDeclaration;
 
         #region ILocalSymbol Members
 
@@ -336,6 +379,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public sealed override TResult Accept<TResult>(SymbolVisitor<TResult> visitor)
         {
             return visitor.VisitLocal(this);
+        }
+
+        #endregion
+
+        #region ILocalSymbolInternal Members
+
+        SynthesizedLocalKind ILocalSymbolInternal.SynthesizedKind
+        {
+            get
+            {
+                return this.SynthesizedKind;
+            }
+        }
+
+        bool ILocalSymbolInternal.IsImportedFromMetadata
+        {
+            get
+            {
+                return this.IsImportedFromMetadata;
+            }
+        }
+
+        SyntaxNode ILocalSymbolInternal.GetDeclaratorSyntax()
+        {
+            return this.GetDeclaratorSyntax();
         }
 
         #endregion

@@ -1,16 +1,12 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal class SingleNamespaceDeclaration : SingleNamespaceOrTypeDeclaration
     {
-        private readonly ImmutableArray<SingleNamespaceOrTypeDeclaration> children;
+        private readonly ImmutableArray<SingleNamespaceOrTypeDeclaration> _children;
 
         protected SingleNamespaceDeclaration(
             string name,
@@ -19,7 +15,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<SingleNamespaceOrTypeDeclaration> children)
             : base(name, syntaxReference, nameLocation)
         {
-            this.children = children;
+            _children = children;
         }
 
         public override DeclarationKind Kind
@@ -32,7 +28,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override ImmutableArray<SingleNamespaceOrTypeDeclaration> GetNamespaceOrTypeDeclarationChildren()
         {
-            return this.children;
+            return _children;
         }
 
         public virtual bool HasUsings

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -13,23 +13,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
     internal abstract class AbstractTypeParameterMap : AbstractTypeMap
     {
-        protected readonly SmallDictionary<TypeParameterSymbol, TypeSymbol> Mapping;
+        protected readonly SmallDictionary<TypeParameterSymbol, TypeWithModifiers> Mapping;
 
-        protected AbstractTypeParameterMap(SmallDictionary<TypeParameterSymbol, TypeSymbol> mapping)
+        protected AbstractTypeParameterMap(SmallDictionary<TypeParameterSymbol, TypeWithModifiers> mapping)
         {
             this.Mapping = mapping;
         }
 
-        protected sealed override TypeSymbol SubstituteTypeParameter(TypeParameterSymbol typeParameter)
+        protected sealed override TypeWithModifiers SubstituteTypeParameter(TypeParameterSymbol typeParameter)
         {
             // It might need to be substituted directly.
-            TypeSymbol result;
+            TypeWithModifiers result;
             if (Mapping.TryGetValue(typeParameter, out result))
             {
                 return result;
             }
 
-            return typeParameter;
+            return new TypeWithModifiers(typeParameter);
         }
 
         private string GetDebuggerDisplay()
@@ -38,7 +38,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             result.Append(this.GetType().Name);
             foreach (var kv in Mapping)
             {
-                result.Append(" ").Append(kv.Key).Append(":").Append(kv.Value);
+                result.Append(" ").Append(kv.Key).Append(":").Append(kv.Value.Type);
             }
 
             return result.Append("]").ToString();

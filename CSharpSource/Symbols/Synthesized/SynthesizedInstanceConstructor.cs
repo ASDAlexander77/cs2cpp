@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -9,12 +9,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal class SynthesizedInstanceConstructor : SynthesizedInstanceMethodSymbol
     {
-        private readonly NamedTypeSymbol containingType;
+        private readonly NamedTypeSymbol _containingType;
 
         internal SynthesizedInstanceConstructor(NamedTypeSymbol containingType)
         {
             Debug.Assert((object)containingType != null);
-            this.containingType = containingType;
+            _containingType = containingType;
         }
 
         //
@@ -36,23 +36,26 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return ContainingType.IsAbstract ? Accessibility.Protected : Accessibility.Public; }
         }
 
-        internal override bool IsMetadataFinal()
+        internal override bool IsMetadataFinal
         {
-            return false;
+            get
+            {
+                return false;
+            }
         }
 
         #region Sealed
 
         public sealed override Symbol ContainingSymbol
         {
-            get { return this.containingType; }
+            get { return _containingType; }
         }
 
         public sealed override NamedTypeSymbol ContainingType
         {
             get
             {
-                return this.containingType;
+                return _containingType;
             }
         }
 
@@ -70,13 +73,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (containingType.IsComImport)
+                if (_containingType.IsComImport)
                 {
-                    Debug.Assert(containingType.TypeKind == TypeKind.Class);
+                    Debug.Assert(_containingType.TypeKind == TypeKind.Class);
                     return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
                 }
 
-                if (containingType.TypeKind == TypeKind.Delegate)
+                if (_containingType.TypeKind == TypeKind.Delegate)
                 {
                     return System.Reflection.MethodImplAttributes.Runtime;
                 }
@@ -105,7 +108,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return false; }
         }
 
-        internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
+        internal sealed override IEnumerable<Cci.SecurityAttribute> GetSecurityInformation()
         {
             throw ExceptionUtilities.Unreachable;
         }
@@ -129,12 +132,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
             //This is not critical, but it makes it easier on tools that are comparing metadata.
-            return LexicalSortKey.Last;
+            return LexicalSortKey.SynthesizedCtor;
         }
 
         public sealed override ImmutableArray<Location> Locations
         {
             get { return ContainingType.Locations; }
+        }
+
+        internal override RefKind RefKind
+        {
+            get { return RefKind.None; }
         }
 
         public sealed override TypeSymbol ReturnType
@@ -143,6 +151,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
+        {
+            get { return ImmutableArray<CustomModifier>.Empty; }
+        }
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
         {
             get { return ImmutableArray<CustomModifier>.Empty; }
         }
@@ -232,9 +245,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return false; }
         }
 
-        internal sealed override Microsoft.Cci.CallingConvention CallingConvention
+        internal sealed override Cci.CallingConvention CallingConvention
         {
-            get { return Microsoft.Cci.CallingConvention.HasThis; }
+            get { return Cci.CallingConvention.HasThis; }
         }
 
         internal sealed override bool IsExplicitInterfaceImplementation
@@ -245,6 +258,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
         {
             get { return ImmutableArray<MethodSymbol>.Empty; }
+        }
+
+        internal sealed override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            var containingType = (SourceMemberContainerTypeSymbol)this.ContainingType;
+            return containingType.CalculateSyntaxOffsetInSynthesizedConstructor(localPosition, localTree, isStatic: false);
         }
 
         #endregion

@@ -185,8 +185,15 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool IsNamespace { get; private set; }
 
         public bool IsType { get; private set; }
+
+        public bool IsTupleType { get; private set; }
     }
 }

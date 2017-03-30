@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Globalization;
@@ -8,7 +8,12 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal sealed class XmlSyntaxDiagnosticInfo : SyntaxDiagnosticInfo
     {
-        private readonly XmlParseErrorCode xmlErrorCode;
+        static XmlSyntaxDiagnosticInfo()
+        {
+            ObjectBinder.RegisterTypeReader(typeof(XmlSyntaxDiagnosticInfo), r => new XmlSyntaxDiagnosticInfo(r));
+        }
+
+        private readonly XmlParseErrorCode _xmlErrorCode;
 
         internal XmlSyntaxDiagnosticInfo(XmlParseErrorCode code, params object[] args)
             : this(0, 0, code, args)
@@ -18,7 +23,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal XmlSyntaxDiagnosticInfo(int offset, int width, XmlParseErrorCode code, params object[] args)
             : base(offset, width, ErrorCode.WRN_XMLParseError, args)
         {
-            this.xmlErrorCode = code;
+            _xmlErrorCode = code;
         }
 
         #region Serialization
@@ -26,40 +31,32 @@ namespace Microsoft.CodeAnalysis.CSharp
         protected override void WriteTo(ObjectWriter writer)
         {
             base.WriteTo(writer);
-            writer.WriteCompressedUInt((uint)this.xmlErrorCode);
+            writer.WriteUInt32((uint)_xmlErrorCode);
         }
 
-        protected override Func<ObjectReader, object> GetReader()
-        {
-            return r => new XmlSyntaxDiagnosticInfo(r);
-        }
-
-        protected XmlSyntaxDiagnosticInfo(ObjectReader reader)
+        private XmlSyntaxDiagnosticInfo(ObjectReader reader)
             : base(reader)
         {
-            this.xmlErrorCode = (XmlParseErrorCode)reader.ReadCompressedUInt();
+            _xmlErrorCode = (XmlParseErrorCode)reader.ReadUInt32();
         }
 
         #endregion
 
-        public override string GetMessage(CultureInfo culture = null)
+        public override string GetMessage(IFormatProvider formatProvider = null)
         {
-            if (culture == null)
-            {
-                culture = CultureInfo.InvariantCulture;
-            }
+            var culture = formatProvider as CultureInfo;
 
             string messagePrefix = this.MessageProvider.LoadMessage(this.Code, culture);
-            string message = ErrorFacts.GetMessage(xmlErrorCode, culture);
+            string message = ErrorFacts.GetMessage(_xmlErrorCode, culture);
 
             System.Diagnostics.Debug.Assert(!string.IsNullOrEmpty(message));
 
             if (this.Arguments == null || this.Arguments.Length == 0)
             {
-                return String.Format(culture, messagePrefix, message);
+                return String.Format(formatProvider, messagePrefix, message);
             }
 
-            return String.Format(culture, String.Format(culture, messagePrefix, message), this.Arguments);
+            return String.Format(formatProvider, String.Format(formatProvider, messagePrefix, message), GetArgumentsToUse(formatProvider));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Emit;
@@ -12,13 +12,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private sealed partial class AnonymousTypePropertyGetAccessorSymbol : SynthesizedMethodBase
         {
-            private readonly AnonymousTypePropertySymbol property;
+            private readonly AnonymousTypePropertySymbol _property;
 
             internal AnonymousTypePropertyGetAccessorSymbol(AnonymousTypePropertySymbol property)
                 // winmdobj output only effects setters, so we can always set this to false
                 : base(property.ContainingType, SourcePropertyAccessorSymbol.GetAccessorName(property.Name, getNotSet: true, isWinMdOutput: false))
             {
-                this.property = property;
+                _property = property;
             }
 
             public override MethodKind MethodKind
@@ -31,9 +31,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return false; }
             }
 
+            internal override RefKind RefKind
+            {
+                get { return RefKind.None; }
+            }
+
             public override TypeSymbol ReturnType
             {
-                get { return this.property.Type; }
+                get { return _property.Type; }
             }
 
             public override ImmutableArray<ParameterSymbol> Parameters
@@ -43,7 +48,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override Symbol AssociatedSymbol
             {
-                get { return this.property; }
+                get { return _property; }
             }
 
             public override ImmutableArray<Location> Locations
@@ -51,7 +56,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get
                 {
                     // The accessor for a anonymous type property has the same location as the property.
-                    return this.property.Locations;
+                    return _property.Locations;
                 }
             }
 
@@ -65,9 +70,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return false;
             }
 
-            internal override bool IsMetadataFinal()
+            internal override bool IsMetadataFinal
             {
-                return false;
+                get
+                {
+                    return false;
+                }
             }
 
             internal override void AddSynthesizedAttributes(ModuleCompilationState compilationState, ref ArrayBuilder<SynthesizedAttributeData> attributes)

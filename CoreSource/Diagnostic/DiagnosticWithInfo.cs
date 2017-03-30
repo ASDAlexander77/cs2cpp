@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -14,20 +14,22 @@ namespace Microsoft.CodeAnalysis
     [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
     internal class DiagnosticWithInfo : Diagnostic
     {
-        private readonly DiagnosticInfo info;
-        private readonly Location location;
-        
-        internal DiagnosticWithInfo(DiagnosticInfo info, Location location)
+        private readonly DiagnosticInfo _info;
+        private readonly Location _location;
+        private readonly bool _isSuppressed;
+
+        internal DiagnosticWithInfo(DiagnosticInfo info, Location location, bool isSuppressed = false)
         {
             Debug.Assert(info != null);
             Debug.Assert(location != null);
-            this.info = info;
-            this.location = location;
+            _info = info;
+            _location = location;
+            _isSuppressed = isSuppressed;
         }
 
         public override Location Location
         {
-            get { return this.location; }
+            get { return _location; }
         }
 
         public override IReadOnlyList<Location> AdditionalLocations
@@ -35,12 +37,19 @@ namespace Microsoft.CodeAnalysis
             get { return this.Info.AdditionalLocations; }
         }
 
-        public override IReadOnlyList<string> CustomTags
+        internal override IReadOnlyList<string> CustomTags
         {
             get
             {
-                // Compiler diagnostics don't have any custom tags.
-                return SpecializedCollections.EmptyReadOnlyList<string>();
+                return this.Info.CustomTags;
+            }
+        }
+
+        public override DiagnosticDescriptor Descriptor
+        {
+            get
+            {
+                return this.Info.Descriptor;
             }
         }
 
@@ -49,10 +58,11 @@ namespace Microsoft.CodeAnalysis
             get { return this.Info.MessageIdentifier; }
         }
 
-        public override string Category
+        internal override string Category
         {
-            get { return CompilerDiagnosticCategory; }
+            get { return this.Info.Category; }
         }
+
 
         internal sealed override int Code
         {
@@ -64,10 +74,20 @@ namespace Microsoft.CodeAnalysis
             get { return this.Info.Severity; }
         }
 
-        public sealed override bool IsEnabledByDefault
+        public sealed override DiagnosticSeverity DefaultSeverity
+        {
+            get { return this.Info.DefaultSeverity; }
+        }
+
+        internal sealed override bool IsEnabledByDefault
         {
             // All compiler errors and warnings are enabled by default.
             get { return true; }
+        }
+
+        public override bool IsSuppressed
+        {
+            get { return _isSuppressed; }
         }
 
         public sealed override int WarningLevel
@@ -75,14 +95,9 @@ namespace Microsoft.CodeAnalysis
             get { return this.Info.WarningLevel; }
         }
 
-        public sealed override bool IsWarningAsError
+        public override string GetMessage(IFormatProvider formatProvider = null)
         {
-            get { return this.Info.IsWarningAsError; }
-        }
-
-        public override string GetMessage(System.Globalization.CultureInfo culture = null)
-        {
-            return this.Info.GetMessage(culture);
+            return this.Info.GetMessage(formatProvider);
         }
 
         internal override IReadOnlyList<object> Arguments
@@ -97,12 +112,12 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                if (this.info.Severity == InternalDiagnosticSeverity.Unknown)
+                if (_info.Severity == InternalDiagnosticSeverity.Unknown)
                 {
-                    return this.info.GetResolvedInfo();
+                    return _info.GetResolvedInfo();
                 }
 
-                return this.info;
+                return _info;
             }
         }
 
@@ -114,8 +129,8 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return this.info.Severity == InternalDiagnosticSeverity.Unknown ||
-                    this.info.Severity == InternalDiagnosticSeverity.Void;
+                return _info.Severity == InternalDiagnosticSeverity.Unknown ||
+                    _info.Severity == InternalDiagnosticSeverity.Void;
             }
         }
 
@@ -144,14 +159,14 @@ namespace Microsoft.CodeAnalysis
             }
 
             return
-                this.Location.Equals(other.location) &&
+                this.Location.Equals(other._location) &&
                 this.Info.Equals(other.Info) &&
                 this.AdditionalLocations.SequenceEqual(other.AdditionalLocations);
         }
 
         private string GetDebuggerDisplay()
         {
-            switch (info.Severity)
+            switch (_info.Severity)
             {
                 case InternalDiagnosticSeverity.Unknown:
                     // If we called ToString before the diagnostic was resolved,
@@ -173,22 +188,12 @@ namespace Microsoft.CodeAnalysis
         {
             if (location == null)
             {
-                throw new ArgumentNullException("location");
+                throw new ArgumentNullException(nameof(location));
             }
 
-            if (location != this.location)
+            if (location != _location)
             {
-                return new DiagnosticWithInfo(this.info, location);
-            }
-
-            return this;
-        }
-
-        internal override Diagnostic WithWarningAsError(bool isWarningAsError)
-        {
-            if (this.IsWarningAsError != isWarningAsError)
-            {
-                return new DiagnosticWithInfo(this.Info.GetInstanceWithReportWarning(isWarningAsError), this.location);
+                return new DiagnosticWithInfo(_info, location, _isSuppressed);
             }
 
             return this;
@@ -198,10 +203,25 @@ namespace Microsoft.CodeAnalysis
         {
             if (this.Severity != severity)
             {
-                return new DiagnosticWithInfo(this.Info.GetInstanceWithSeverity(severity), this.location);
+                return new DiagnosticWithInfo(this.Info.GetInstanceWithSeverity(severity), _location, _isSuppressed);
             }
 
             return this;
+        }
+
+        internal override Diagnostic WithIsSuppressed(bool isSuppressed)
+        {
+            if (this.IsSuppressed != isSuppressed)
+            {
+                return new DiagnosticWithInfo(this.Info, _location, isSuppressed);
+            }
+
+            return this;
+        }
+
+        internal sealed override bool IsNotConfigurable()
+        {
+            return this.Info.IsNotConfigurable();
         }
     }
 }

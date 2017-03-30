@@ -298,7 +298,26 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool IsNamespace { get { return this.typeSymbol.IsNamespace; } }
+
         public bool IsType { get { return this.typeSymbol.IsType; } }
+
+        public bool IsComImport { get { return this.typeSymbol.IsComImport; } }
+
+        public INamedTypeSymbol TupleUnderlyingType { get { return this.typeSymbol.TupleUnderlyingType; } }
+
+        public ImmutableArray<IFieldSymbol> TupleElements { get { return this.typeSymbol.TupleElements; } }
+
+        public bool IsTupleType { get { return this.typeSymbol.IsTupleType; } }
     }
 }

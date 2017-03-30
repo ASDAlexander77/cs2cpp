@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -14,11 +14,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             return node.Kind == BoundKind.Literal && node.ConstantValue.Discriminator == ConstantValueTypeDiscriminator.Null;
         }
 
-        // returns true when expression has no sideeffects and produces
+        // returns true when expression has no side-effects and produces
         // default value (null, zero, false, default(T) ...)
         //
         // NOTE: This method is a very shallow check.
-        //       It does not make any asumptions about what this node could become 
+        //       It does not make any assumptions about what this node could become 
         //       after some folding/propagation/algebraic transformations.
         public static bool IsDefaultValue(this BoundExpression node)
         {
@@ -59,7 +59,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 case BoundKind.Call:
                 case BoundKind.Local:
-                case BoundKind.DeclarationExpression:
                 case BoundKind.FieldAccess:
                 case BoundKind.PropertyAccess:
                 case BoundKind.IndexerAccess:
@@ -150,7 +149,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 case BoundKind.Conversion:
                     BoundConversion conversionNode = (BoundConversion)boundNode;
-                    return new Conversion(conversionNode.ConversionKind, methodGroupConversionMethod: conversionNode.SymbolOpt, isExtensionMethod: conversionNode.IsExtensionMethod);
+                    return conversionNode.Conversion;
 
                 default:
                     return Conversion.Identity;

@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -42,30 +43,45 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 containingType,
                 location,
                 syntax.GetReference(),
-                syntax.Body.GetReferenceOrNull()
-                ?? syntax.ExpressionBody.GetReferenceOrNull(),
+                syntax.Body?.GetReference() ?? syntax.ExpressionBody?.GetReference(),
                 syntax.Modifiers,
                 diagnostics,
                 isExpressionBodied)
         {
-        }
+            CheckForBlockAndExpressionBody(
+                syntax.Body, syntax.ExpressionBody, syntax, diagnostics);
 
-        override protected ParameterListSyntax ParameterListSyntax
-        {
-            get
+            if (syntax.ParameterList.Parameters.Count != 1)
             {
-                var syntax = (ConversionOperatorDeclarationSyntax)syntaxReference.GetSyntax();
-                return syntax.ParameterList;
+                diagnostics.Add(ErrorCode.ERR_OvlUnaryOperatorExpected, syntax.ParameterList.GetLocation());
             }
         }
 
-        override protected TypeSyntax ReturnTypeSyntax
+        internal new ConversionOperatorDeclarationSyntax GetSyntax()
+        {
+            Debug.Assert(syntaxReferenceOpt != null);
+            return (ConversionOperatorDeclarationSyntax)syntaxReferenceOpt.GetSyntax();
+        }
+
+        protected override ParameterListSyntax ParameterListSyntax
         {
             get
             {
-                var syntax = (ConversionOperatorDeclarationSyntax)syntaxReference.GetSyntax();
-                return syntax.Type;
+                return GetSyntax().ParameterList;
             }
+        }
+
+        protected override TypeSyntax ReturnTypeSyntax
+        {
+            get
+            {
+                return GetSyntax().Type;
+            }
+        }
+
+        internal override bool GenerateDebugInfo
+        {
+            get { return true; }
         }
     }
 }

@@ -1,11 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -17,11 +13,26 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="diagnostics"></param>
         /// <param name="code"></param>
         /// <param name="location"></param>
+        /// <returns></returns>
+        internal static CSDiagnosticInfo Add(this DiagnosticBag diagnostics, ErrorCode code, Location location)
+        {
+            var info = new CSDiagnosticInfo(code);
+            var diag = new CSDiagnostic(info, location);
+            diagnostics.Add(diag);
+            return info;
+        }
+
+        /// <summary>
+        /// Add a diagnostic to the bag.
+        /// </summary>
+        /// <param name="diagnostics"></param>
+        /// <param name="code"></param>
+        /// <param name="location"></param>
         /// <param name="args"></param>
         /// <returns></returns>
         internal static CSDiagnosticInfo Add(this DiagnosticBag diagnostics, ErrorCode code, Location location, params object[] args)
         {
-            var info = new CSDiagnosticInfo(code, args, ImmutableArray<Symbol>.Empty, ImmutableArray<Location>.Empty);
+            var info = new CSDiagnosticInfo(code, args);
             var diag = new CSDiagnostic(info, location);
             diagnostics.Add(diag);
             return info;
@@ -46,7 +57,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal static bool Add(
             this DiagnosticBag diagnostics,
-            CSharpSyntaxNode node,
+            SyntaxNode node,
             HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             return !useSiteDiagnostics.IsNullOrEmpty() && diagnostics.Add(node.Location, useSiteDiagnostics);

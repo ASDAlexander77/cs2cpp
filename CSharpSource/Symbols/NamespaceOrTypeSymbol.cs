@@ -1,12 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -46,14 +43,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 return !IsNamespace;
-            }
-        }
-
-        internal bool IsSubmissionClass
-        {
-            get
-            {
-                return IsType && ((TypeSymbol)this).TypeKind == TypeKind.Submission;
             }
         }
 
@@ -192,7 +181,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <returns>Null if there is no matching declaration.</returns>
         internal SourceNamedTypeSymbol GetSourceTypeMember(TypeDeclarationSyntax syntax)
         {
-            return GetSourceTypeMember(syntax.Identifier.ValueText, syntax.Arity, syntax.Kind, syntax);
+            return GetSourceTypeMember(syntax.Identifier.ValueText, syntax.Arity, syntax.Kind(), syntax);
         }
 
         /// <summary>
@@ -201,7 +190,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <returns>Null if there is no matching declaration.</returns>
         internal SourceNamedTypeSymbol GetSourceTypeMember(DelegateDeclarationSyntax syntax)
         {
-            return GetSourceTypeMember(syntax.Identifier.ValueText, syntax.Arity, syntax.Kind, syntax);
+            return GetSourceTypeMember(syntax.Identifier.ValueText, syntax.Arity, syntax.Kind(), syntax);
         }
 
         /// <summary>
@@ -260,7 +249,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <returns>
         /// Symbol for the type, or MissingMetadataSymbol if the type isn't found.
         /// </returns>
-        /// <remarks></remarks>
         internal virtual NamedTypeSymbol LookupMetadataType(ref MetadataTypeName emittedTypeName)
         {
             Debug.Assert(!emittedTypeName.IsNull);

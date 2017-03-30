@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -19,38 +19,38 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
     /// another MethodSymbol that is responsible for retargeting symbols from one assembly to another. 
     /// It can retarget symbols for multiple assemblies at the same time.
     /// </summary>
-    internal sealed class RetargetingMethodSymbol : MethodSymbol
+    internal sealed class RetargetingMethodSymbol : WrappedMethodSymbol
     {
         /// <summary>
         /// Owning RetargetingModuleSymbol.
         /// </summary>
-        private readonly RetargetingModuleSymbol retargetingModule;
+        private readonly RetargetingModuleSymbol _retargetingModule;
 
         /// <summary>
-        /// The underlying MethodSymbol, cannot be another RetargetingMethodSymbol.
+        /// The underlying MethodSymbol.
         /// </summary>
-        private readonly MethodSymbol underlyingMethod;
+        private readonly MethodSymbol _underlyingMethod;
 
-        private ImmutableArray<TypeParameterSymbol> lazyTypeParameters;
+        private ImmutableArray<TypeParameterSymbol> _lazyTypeParameters;
 
-        private ImmutableArray<ParameterSymbol> lazyParameters;
+        private ImmutableArray<ParameterSymbol> _lazyParameters;
 
-        private ImmutableArray<CustomModifier> lazyCustomModifiers;
+        private CustomModifiersTuple _lazyCustomModifiers;
 
         /// <summary>
         /// Retargeted custom attributes
         /// </summary>
-        private ImmutableArray<CSharpAttributeData> lazyCustomAttributes;
+        private ImmutableArray<CSharpAttributeData> _lazyCustomAttributes;
 
         /// <summary>
         /// Retargeted return type custom attributes
         /// </summary>
-        private ImmutableArray<CSharpAttributeData> lazyReturnTypeCustomAttributes;
+        private ImmutableArray<CSharpAttributeData> _lazyReturnTypeCustomAttributes;
 
-        private ImmutableArray<MethodSymbol> lazyExplicitInterfaceImplementations;
-        private DiagnosticInfo lazyUseSiteDiagnostic = CSDiagnosticInfo.EmptyErrorInfo; // Indicates unknown state. 
+        private ImmutableArray<MethodSymbol> _lazyExplicitInterfaceImplementations;
+        private DiagnosticInfo _lazyUseSiteDiagnostic = CSDiagnosticInfo.EmptyErrorInfo; // Indicates unknown state. 
 
-        private TypeSymbol lazyReturnType;
+        private TypeSymbol _lazyReturnType;
 
         public RetargetingMethodSymbol(RetargetingModuleSymbol retargetingModule, MethodSymbol underlyingMethod)
         {
@@ -58,23 +58,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
             Debug.Assert((object)underlyingMethod != null);
             Debug.Assert(!(underlyingMethod is RetargetingMethodSymbol));
 
-            this.retargetingModule = retargetingModule;
-            this.underlyingMethod = underlyingMethod;
+            _retargetingModule = retargetingModule;
+            _underlyingMethod = underlyingMethod;
         }
 
         private RetargetingModuleSymbol.RetargetingSymbolTranslator RetargetingTranslator
         {
             get
             {
-                return retargetingModule.RetargetingTranslator;
-            }
-        }
-
-        public MethodSymbol UnderlyingMethod
-        {
-            get
-            {
-                return this.underlyingMethod;
+                return _retargetingModule.RetargetingTranslator;
             }
         }
 
@@ -82,31 +74,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                return this.retargetingModule;
+                return _retargetingModule;
             }
         }
 
-        public override bool IsVararg
+        public override MethodSymbol UnderlyingMethod
         {
             get
             {
-                return this.underlyingMethod.IsVararg;
-            }
-        }
-
-        public override bool IsGenericMethod
-        {
-            get
-            {
-                return this.underlyingMethod.IsGenericMethod;
-            }
-        }
-
-        public override int Arity
-        {
-            get
-            {
-                return this.underlyingMethod.Arity;
+                return _underlyingMethod;
             }
         }
 
@@ -114,20 +90,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                if (lazyTypeParameters.IsDefault)
+                if (_lazyTypeParameters.IsDefault)
                 {
                     if (!IsGenericMethod)
                     {
-                        lazyTypeParameters = ImmutableArray<TypeParameterSymbol>.Empty;
+                        _lazyTypeParameters = ImmutableArray<TypeParameterSymbol>.Empty;
                     }
                     else
                     {
-                        ImmutableInterlocked.InterlockedCompareExchange(ref lazyTypeParameters,
-                            this.RetargetingTranslator.Retarget(this.underlyingMethod.TypeParameters), default(ImmutableArray<TypeParameterSymbol>));
+                        ImmutableInterlocked.InterlockedCompareExchange(ref _lazyTypeParameters,
+                            this.RetargetingTranslator.Retarget(_underlyingMethod.TypeParameters), default(ImmutableArray<TypeParameterSymbol>));
                     }
                 }
 
-                return lazyTypeParameters;
+                return _lazyTypeParameters;
             }
         }
 
@@ -150,7 +126,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                return this.underlyingMethod.ReturnsVoid;
+                return _underlyingMethod.ReturnsVoid;
             }
         }
 
@@ -158,12 +134,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                if ((object)this.lazyReturnType == null)
+                if ((object)_lazyReturnType == null)
                 {
-                    var type = this.RetargetingTranslator.Retarget(this.underlyingMethod.ReturnType, RetargetOptions.RetargetPrimitiveTypesByTypeCode);
-                    this.lazyReturnType = type.AsDynamicIfNoPia(this.ContainingType);
+                    var type = this.RetargetingTranslator.Retarget(_underlyingMethod.ReturnType, RetargetOptions.RetargetPrimitiveTypesByTypeCode);
+                    _lazyReturnType = type.AsDynamicIfNoPia(this.ContainingType);
                 }
-                return this.lazyReturnType;
+                return _lazyReturnType;
             }
         }
 
@@ -171,33 +147,44 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                return RetargetingTranslator.RetargetModifiers(
-                    underlyingMethod.ReturnTypeCustomModifiers,
-                    ref lazyCustomModifiers);
+                return CustomModifiersTuple.TypeCustomModifiers;
             }
         }
 
-        internal override int ParameterCount
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
         {
-            get { return underlyingMethod.ParameterCount; }
+            get
+            {
+                return CustomModifiersTuple.RefCustomModifiers;
+            }
+        }
+
+        private CustomModifiersTuple CustomModifiersTuple
+        {
+            get
+            {
+                return RetargetingTranslator.RetargetModifiers(
+                    _underlyingMethod.ReturnTypeCustomModifiers, _underlyingMethod.RefCustomModifiers,
+                    ref _lazyCustomModifiers);
+            }
         }
 
         public override ImmutableArray<ParameterSymbol> Parameters
         {
             get
             {
-                if (lazyParameters.IsDefault)
+                if (_lazyParameters.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref lazyParameters, this.RetargetParameters(), default(ImmutableArray<ParameterSymbol>));
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _lazyParameters, this.RetargetParameters(), default(ImmutableArray<ParameterSymbol>));
                 }
 
-                return lazyParameters;
+                return _lazyParameters;
             }
         }
 
         private ImmutableArray<ParameterSymbol> RetargetParameters()
         {
-            var list = this.underlyingMethod.Parameters;
+            var list = _underlyingMethod.Parameters;
             int count = list.Length;
 
             if (count == 0)
@@ -221,24 +208,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                var associatedPropertyOrEvent = this.underlyingMethod.AssociatedSymbol;
+                var associatedPropertyOrEvent = _underlyingMethod.AssociatedSymbol;
                 return (object)associatedPropertyOrEvent == null ? null : this.RetargetingTranslator.Retarget(associatedPropertyOrEvent);
-            }
-        }
-
-        public override bool IsExtensionMethod
-        {
-            get
-            {
-                return this.underlyingMethod.IsExtensionMethod;
-            }
-        }
-
-        public override bool HidesBaseMethodsByName
-        {
-            get
-            {
-                return this.underlyingMethod.HidesBaseMethodsByName;
             }
         }
 
@@ -246,186 +217,39 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                return this.RetargetingTranslator.Retarget(this.underlyingMethod.ContainingSymbol);
+                return this.RetargetingTranslator.Retarget(_underlyingMethod.ContainingSymbol);
             }
-        }
-
-        public override ImmutableArray<Location> Locations
-        {
-            get
-            {
-                return this.underlyingMethod.Locations;
-            }
-        }
-
-        public override ImmutableArray<SyntaxReference> DeclaringSyntaxReferences
-        {
-            get
-            {
-                return this.underlyingMethod.DeclaringSyntaxReferences;
-            }
-        }
-
-        public override Accessibility DeclaredAccessibility
-        {
-            get
-            {
-                return this.underlyingMethod.DeclaredAccessibility;
-            }
-        }
-
-        public override bool IsStatic
-        {
-            get
-            {
-                return this.underlyingMethod.IsStatic;
-            }
-        }
-
-        public override bool IsVirtual
-        {
-            get
-            {
-                return this.underlyingMethod.IsVirtual;
-            }
-        }
-
-        public override bool IsAsync
-        {
-            get
-            {
-                return this.underlyingMethod.IsAsync;
-            }
-        }
-
-        public override bool IsOverride
-        {
-            get
-            {
-                return this.underlyingMethod.IsOverride;
-            }
-        }
-
-        public override bool IsAbstract
-        {
-            get
-            {
-                return this.underlyingMethod.IsAbstract;
-            }
-        }
-
-        public override bool IsSealed
-        {
-            get
-            {
-                return this.underlyingMethod.IsSealed;
-            }
-        }
-
-        public override bool IsExtern
-        {
-            get
-            {
-                return this.underlyingMethod.IsExtern;
-            }
-        }
-
-        public override bool IsImplicitlyDeclared
-        {
-            get
-            {
-                return underlyingMethod.IsImplicitlyDeclared;
-            }
-        }
-
-        internal override bool GenerateDebugInfo
-        {
-            get
-            {
-                return underlyingMethod.GenerateDebugInfo;
-            }
-        }
-
-        internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-        {
-            return this.underlyingMethod.IsMetadataVirtual(ignoreInterfaceImplementationChanges);
-        }
-
-        internal sealed override bool IsMetadataFinal()
-        {
-            return this.underlyingMethod.IsMetadataFinal();
-        }
-
-        internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-        {
-            return underlyingMethod.IsMetadataNewSlot(ignoreInterfaceImplementationChanges);
-        }
-
-        internal override bool RequiresSecurityObject
-        {
-            get
-            {
-                return this.underlyingMethod.RequiresSecurityObject;
-            }
-        }
-
-        public override DllImportData GetDllImportData()
-        {
-            return this.underlyingMethod.GetDllImportData();
         }
 
         internal override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
         {
             get
             {
-                return this.retargetingModule.RetargetingTranslator.Retarget(this.underlyingMethod.ReturnValueMarshallingInformation);
+                return _retargetingModule.RetargetingTranslator.Retarget(_underlyingMethod.ReturnValueMarshallingInformation);
             }
-        }
-
-        internal override bool HasDeclarativeSecurity
-        {
-            get { return this.underlyingMethod.HasDeclarativeSecurity; }
-        }
-
-        internal override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-        {
-            return this.underlyingMethod.GetSecurityInformation();
-        }
-
-        internal override ImmutableArray<string> GetAppliedConditionalSymbols()
-        {
-            return this.underlyingMethod.GetAppliedConditionalSymbols();
         }
 
         public override ImmutableArray<CSharpAttributeData> GetAttributes()
         {
-            return this.RetargetingTranslator.GetRetargetedAttributes(this.underlyingMethod.GetAttributes(), ref this.lazyCustomAttributes);
+            return this.RetargetingTranslator.GetRetargetedAttributes(_underlyingMethod.GetAttributes(), ref _lazyCustomAttributes);
         }
 
         internal override IEnumerable<CSharpAttributeData> GetCustomAttributesToEmit(ModuleCompilationState compilationState)
         {
-            return this.RetargetingTranslator.RetargetAttributes(this.underlyingMethod.GetCustomAttributesToEmit(compilationState));
+            return this.RetargetingTranslator.RetargetAttributes(_underlyingMethod.GetCustomAttributesToEmit(compilationState));
         }
 
         // Get return type attributes
         public override ImmutableArray<CSharpAttributeData> GetReturnTypeAttributes()
         {
-            return this.RetargetingTranslator.GetRetargetedAttributes(this.underlyingMethod.GetReturnTypeAttributes(), ref this.lazyReturnTypeCustomAttributes);
-        }
-
-        internal override ObsoleteAttributeData ObsoleteAttributeData
-        {
-            get
-            {
-                return underlyingMethod.ObsoleteAttributeData;
-            }
+            return this.RetargetingTranslator.GetRetargetedAttributes(_underlyingMethod.GetReturnTypeAttributes(), ref _lazyReturnTypeCustomAttributes);
         }
 
         public override AssemblySymbol ContainingAssembly
         {
             get
             {
-                return this.retargetingModule.ContainingAssembly;
+                return _retargetingModule.ContainingAssembly;
             }
         }
 
@@ -433,78 +257,33 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
         {
             get
             {
-                return this.retargetingModule;
-            }
-        }
-
-        public override string Name
-        {
-            get
-            {
-                return this.underlyingMethod.Name;
-            }
-        }
-
-        internal override bool HasSpecialName
-        {
-            get
-            {
-                return this.underlyingMethod.HasSpecialName;
-            }
-        }
-
-        public override string GetDocumentationCommentXml(CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return this.underlyingMethod.GetDocumentationCommentXml(preferredCulture, expandIncludes, cancellationToken);
-        }
-
-        internal override System.Reflection.MethodImplAttributes ImplementationAttributes
-        {
-            get
-            {
-                return this.underlyingMethod.ImplementationAttributes;
-            }
-        }
-
-        public override MethodKind MethodKind
-        {
-            get
-            {
-                return this.underlyingMethod.MethodKind;
-            }
-        }
-
-        internal override Microsoft.Cci.CallingConvention CallingConvention
-        {
-            get
-            {
-                return this.underlyingMethod.CallingConvention;
+                return _retargetingModule;
             }
         }
 
         internal override bool IsExplicitInterfaceImplementation
         {
-            get { return this.underlyingMethod.IsExplicitInterfaceImplementation; }
+            get { return _underlyingMethod.IsExplicitInterfaceImplementation; }
         }
 
         public override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
         {
             get
             {
-                if (lazyExplicitInterfaceImplementations.IsDefault)
+                if (_lazyExplicitInterfaceImplementations.IsDefault)
                 {
                     ImmutableInterlocked.InterlockedCompareExchange(
-                        ref lazyExplicitInterfaceImplementations,
+                        ref _lazyExplicitInterfaceImplementations,
                         this.RetargetExplicitInterfaceImplementations(),
                         default(ImmutableArray<MethodSymbol>));
                 }
-                return lazyExplicitInterfaceImplementations;
+                return _lazyExplicitInterfaceImplementations;
             }
         }
 
         private ImmutableArray<MethodSymbol> RetargetExplicitInterfaceImplementations()
         {
-            var impls = this.underlyingMethod.ExplicitInterfaceImplementations;
+            var impls = _underlyingMethod.ExplicitInterfaceImplementations;
 
             if (impls.IsEmpty)
             {
@@ -529,67 +308,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
 
         internal override DiagnosticInfo GetUseSiteDiagnostic()
         {
-            if (ReferenceEquals(lazyUseSiteDiagnostic, CSDiagnosticInfo.EmptyErrorInfo))
+            if (ReferenceEquals(_lazyUseSiteDiagnostic, CSDiagnosticInfo.EmptyErrorInfo))
             {
                 DiagnosticInfo result = null;
                 CalculateUseSiteDiagnostic(ref result);
-                lazyUseSiteDiagnostic = result;
+                _lazyUseSiteDiagnostic = result;
             }
 
-            return lazyUseSiteDiagnostic;
-        }
-
-        internal override bool IsAccessCheckedOnOverride
-        {
-            get
-            {
-                return this.underlyingMethod.IsAccessCheckedOnOverride;
-            }
-        }
-
-        internal override bool IsExternal
-        {
-            get
-            {
-                return this.underlyingMethod.IsExternal;
-            }
-        }
-
-        internal override bool HasRuntimeSpecialName
-        {
-            get
-            {
-                return this.underlyingMethod.HasRuntimeSpecialName;
-            }
-        }
-
-        internal override bool HasFinalFlag
-        {
-            get
-            {
-                return this.underlyingMethod.HasFinalFlag;
-            }
-        }
-
-        internal override bool ReturnValueIsMarshalledExplicitly
-        {
-            get
-            {
-                return this.underlyingMethod.ReturnValueIsMarshalledExplicitly;
-            }
-        }
-
-        internal override ImmutableArray<byte> ReturnValueMarshallingDescriptor
-        {
-            get
-            {
-                return this.underlyingMethod.ReturnValueMarshallingDescriptor;
-            }
+            return _lazyUseSiteDiagnostic;
         }
 
         internal sealed override CSharpCompilation DeclaringCompilation // perf, not correctness
         {
             get { return null; }
+        }
+
+        internal override bool GenerateDebugInfo
+        {
+            get { return false; }
+        }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            // retargeting symbols refer to a symbol from another compilation, they don't define locals in the current compilation
+            throw ExceptionUtilities.Unreachable;
         }
     }
 }

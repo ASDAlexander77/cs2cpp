@@ -1,21 +1,21 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.Emit;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    partial class FieldSymbol :
+    internal partial class FieldSymbol :
         Cci.IFieldReference,
         Cci.IFieldDefinition,
         Cci.ITypeMemberReference,
         Cci.ITypeDefinitionMember,
         Cci.ISpecializedFieldReference
     {
-
         Cci.ITypeReference Cci.IFieldReference.GetType(EmitContext context)
         {
             PEModuleBuilder moduleBeingBuilt = (PEModuleBuilder)context.Module;
@@ -127,14 +127,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        Cci.IMetadataConstant Cci.IFieldDefinition.GetCompileTimeValue(EmitContext context)
+        MetadataConstant Cci.IFieldDefinition.GetCompileTimeValue(EmitContext context)
         {
             CheckDefinitionInvariant();
 
             return GetMetadataConstantValue(context);
         }
 
-        internal Cci.IMetadataConstant GetMetadataConstantValue(EmitContext context)
+        internal MetadataConstant GetMetadataConstantValue(EmitContext context)
         {
             // A constant field of type decimal is not treated as a compile time value in CLR,
             // so check if it is a metadata constant, not just a constant to exclude decimals.
@@ -263,13 +263,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        uint Cci.IFieldDefinition.Offset
+        int Cci.IFieldDefinition.Offset
         {
             get
             {
                 CheckDefinitionInvariant();
-                var offset = this.TypeLayoutOffset;
-                return (uint)(offset ?? 0);
+                return TypeLayoutOffset ?? 0;
             }
         }
 

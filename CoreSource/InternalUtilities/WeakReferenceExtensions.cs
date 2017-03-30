@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 
@@ -9,15 +9,13 @@ namespace Roslyn.Utilities
     {
         public static T GetTarget<T>(this WeakReference<T> reference) where T : class
         {
-            T target;
-            reference.TryGetTarget(out target);
+            reference.TryGetTarget(out var target);
             return target;
         }
 
         public static bool IsNull<T>(this WeakReference<T> reference) where T : class
         {
-            T target;
-            return !reference.TryGetTarget(out target);
+            return !reference.TryGetTarget(out var target);
         }
     }
 }

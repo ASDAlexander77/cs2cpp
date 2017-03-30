@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -12,12 +12,12 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    internal class SourceFixedFieldSymbol : SourceMemberFieldSymbol
+    internal class SourceFixedFieldSymbol : SourceMemberFieldSymbolFromDeclarator
     {
         private const int FixedSizeNotInitialized = -1;
 
         // In a fixed-size field declaration, stores the fixed size of the buffer
-        private int fixedSize = FixedSizeNotInitialized;
+        private int _fixedSize = FixedSizeNotInitialized;
 
         internal SourceFixedFieldSymbol(
             SourceMemberContainerTypeSymbol containingType,
@@ -41,7 +41,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var intType = compilation.GetSpecialType(SpecialType.System_Int32);
             var item1 = new TypedConstant(systemType, TypedConstantKind.Type, ((PointerTypeSymbol)this.Type).PointedAtType);
             var item2 = new TypedConstant(intType, TypedConstantKind.Primitive, this.FixedSize);
-            AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(
+            AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(
                 WellKnownMember.System_Runtime_CompilerServices_FixedBufferAttribute__ctor,
                 ImmutableArray.Create<TypedConstant>(item1, item2)));
         }
@@ -50,13 +50,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (this.fixedSize == FixedSizeNotInitialized)
+                if (_fixedSize == FixedSizeNotInitialized)
                 {
                     DiagnosticBag diagnostics = DiagnosticBag.GetInstance();
                     int size = 0;
 
-                    VariableDeclaratorSyntax declarator = this.VariableDeclaratorNode;
-
+                    VariableDeclaratorSyntax declarator = VariableDeclaratorNode;
                     if (declarator.ArgumentList == null)
                     {
                         // Diagnostic reported by parser.
@@ -65,7 +64,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         SeparatedSyntaxList<ArgumentSyntax> arguments = declarator.ArgumentList.Arguments;
 
-                        if (arguments.Count == 0 || arguments[0].Expression.Kind == SyntaxKind.OmittedArraySizeExpression)
+                        if (arguments.Count == 0 || arguments[0].Expression.Kind() == SyntaxKind.OmittedArraySizeExpression)
                         {
                             Debug.Assert(declarator.ArgumentList.ContainsDiagnostics, "The parser should have caught this.");
                         }
@@ -80,6 +79,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                             BinderFactory binderFactory = this.DeclaringCompilation.GetBinderFactory(SyntaxTree);
                             Binder binder = binderFactory.GetBinder(sizeExpression);
+                            binder = new ExecutableCodeBinder(sizeExpression, binder.ContainingMemberOrLambda, binder).GetBinder(sizeExpression);
 
                             TypeSymbol intType = binder.GetSpecialType(SpecialType.System_Int32, diagnostics, sizeExpression);
                             BoundExpression boundSizeExpression = binder.GenerateConversionForAssignment(
@@ -119,21 +119,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     }
 
                     // Winner writes diagnostics.
-                    if (Interlocked.CompareExchange(ref this.fixedSize, size, FixedSizeNotInitialized) == FixedSizeNotInitialized)
+                    if (Interlocked.CompareExchange(ref _fixedSize, size, FixedSizeNotInitialized) == FixedSizeNotInitialized)
                     {
-                        this.AddSemanticDiagnostics(diagnostics);
-                        if (state.NotePartComplete(CompletionPart.FixedSize))
-                        {
-                            // FixedSize is the last completion part for fields.
-                            DeclaringCompilation.SymbolDeclaredEvent(this);
-                        }
+                        this.AddDeclarationDiagnostics(diagnostics);
+                        state.NotePartComplete(CompletionPart.FixedSize);
                     }
 
                     diagnostics.Free();
                 }
 
-                Debug.Assert(this.fixedSize != FixedSizeNotInitialized);
-                return this.fixedSize;
+                Debug.Assert(_fixedSize != FixedSizeNotInitialized);
+                return _fixedSize;
             }
         }
 
@@ -147,39 +143,39 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         internal const string FixedElementFieldName = "FixedElementField";
 
-        private readonly SourceMemberFieldSymbol field;
-        private readonly MethodSymbol constructor;
-        private readonly FieldSymbol internalField;
+        private readonly SourceMemberFieldSymbol _field;
+        private readonly MethodSymbol _constructor;
+        private readonly FieldSymbol _internalField;
 
         public FixedFieldImplementationType(SourceMemberFieldSymbol field)
             : base(GeneratedNames.MakeFixedFieldImplementationName(field.Name), typeParameters: ImmutableArray<TypeParameterSymbol>.Empty, typeMap: TypeMap.Empty)
         {
-            this.field = field;
-            this.constructor = new SynthesizedInstanceConstructor(this);
-            this.internalField = new SynthesizedFieldSymbol(this, ((PointerTypeSymbol)field.Type).PointedAtType, FixedElementFieldName, isPublic: true);
+            _field = field;
+            _constructor = new SynthesizedInstanceConstructor(this);
+            _internalField = new SynthesizedFieldSymbol(this, ((PointerTypeSymbol)field.Type).PointedAtType, FixedElementFieldName, isPublic: true);
         }
 
         public override Symbol ContainingSymbol
         {
-            get { return field.ContainingType; }
+            get { return _field.ContainingType; }
         }
 
         public override TypeKind TypeKind
         {
             get { return TypeKind.Struct; }
         }
-                
+
         internal override MethodSymbol Constructor
         {
-            get { return constructor; }
+            get { return _constructor; }
         }
 
         internal override TypeLayout Layout
         {
             get
             {
-                int nElements = field.FixedSize;
-                var elementType = ((PointerTypeSymbol)field.Type).PointedAtType;
+                int nElements = _field.FixedSize;
+                var elementType = ((PointerTypeSymbol)_field.Type).PointedAtType;
                 int elementSize = elementType.FixedBufferElementSizeInBytes();
                 const int alignment = 0;
                 int totalSize = nElements * elementSize;
@@ -188,16 +184,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal override CharSet MarshallingCharSet
+        {
+            get
+            {
+                // We manually propagate the CharSet field of StructLayout attribute for fabricated structs implementing fixed buffers.
+                // See void AttrBind::EmitStructLayoutAttributeCharSet(AttributeNode *attr) in native codebase.
+                return _field.ContainingType.MarshallingCharSet;
+            }
+        }
         internal override FieldSymbol FixedElementField
         {
-            get { return internalField; }
+            get { return _internalField; }
         }
 
         internal override void AddSynthesizedAttributes(ModuleCompilationState compilationState, ref ArrayBuilder<SynthesizedAttributeData> attributes)
         {
             base.AddSynthesizedAttributes(compilationState, ref attributes);
             var compilation = ContainingSymbol.DeclaringCompilation;
-            AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_UnsafeValueTypeAttribute__ctor));
+            AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_UnsafeValueTypeAttribute__ctor));
         }
 
         public override IEnumerable<string> MemberNames
@@ -207,14 +212,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override ImmutableArray<Symbol> GetMembers()
         {
-            return ImmutableArray.Create<Symbol>(constructor, internalField);
+            return ImmutableArray.Create<Symbol>(_constructor, _internalField);
         }
 
         public override ImmutableArray<Symbol> GetMembers(string name)
         {
             return
-                (name == constructor.Name) ? ImmutableArray.Create<Symbol>(constructor) :
-                (name == FixedElementFieldName) ? ImmutableArray.Create<Symbol>(internalField) :
+                (name == _constructor.Name) ? ImmutableArray.Create<Symbol>(_constructor) :
+                (name == FixedElementFieldName) ? ImmutableArray.Create<Symbol>(_internalField) :
                 ImmutableArray<Symbol>.Empty;
         }
 

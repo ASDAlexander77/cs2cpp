@@ -1,9 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -23,7 +24,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             Debug.Assert((object)interfaceType != null && interfaceType.IsInterface);
 
-            foreach (NamedTypeSymbol baseInterface in interfaceType.InterfacesNoUseSiteDiagnostics)
+            foreach (NamedTypeSymbol baseInterface in interfaceType.InterfacesNoUseSiteDiagnostics())
             {
                 IsVarianceUnsafe(
                     baseInterface,
@@ -93,7 +94,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             IsVarianceUnsafe(
                 method.ReturnType,
                 requireOutputSafety: true,
-                requireInputSafety: false,
+                requireInputSafety: method.RefKind != RefKind.None,
                 context: method,
                 locationProvider: returnTypeLocationProvider,
                 locationArg: method,
@@ -114,7 +115,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 IsVarianceUnsafe(
                     property.Type,
                     requireOutputSafety: hasGetter,
-                    requireInputSafety: hasSetter,
+                    requireInputSafety: hasSetter || !(property.GetMethod?.RefKind == RefKind.None),
                     context: property,
                     locationProvider: p =>
                         {
@@ -245,8 +246,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return IsVarianceUnsafe(((ArrayTypeSymbol)type).ElementType, requireOutputSafety, requireInputSafety, context, locationProvider, locationArg, diagnostics);
                 case SymbolKind.ErrorType:
                 case SymbolKind.NamedType:
+                    var namedType = (NamedTypeSymbol)type.TupleUnderlyingTypeOrSelf();
                     // 3) (see IsVarianceUnsafe(NamedTypeSymbol))
-                    return IsVarianceUnsafe((NamedTypeSymbol)type, requireOutputSafety, requireInputSafety, context, locationProvider, locationArg, diagnostics);
+                    return IsVarianceUnsafe(namedType, requireOutputSafety, requireInputSafety, context, locationProvider, locationArg, diagnostics);
                 default:
                     return false;
             }
@@ -318,8 +320,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             requireOut = true;
                             break;
                         default:
-                            Debug.Assert(false, "Unknown variance kind " + typeParam.Variance);
-                            goto case VarianceKind.None;
+                            throw ExceptionUtilities.UnexpectedValue(typeParam.Variance);
                     }
 
                     if (IsVarianceUnsafe(typeArg, requireOut, requireIn, context, locationProvider, locationArg, diagnostics))
@@ -368,8 +369,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     actualVariance = MessageID.IDS_Covariant;
                     break;
                 default:
-                    Debug.Assert(false, "Unexpected variance " + unsafeTypeParameter.Variance);
-                    return;
+                    throw ExceptionUtilities.UnexpectedValue(unsafeTypeParameter.Variance);
             }
 
             // Get a location that roughly represents the unsafe type parameter use.

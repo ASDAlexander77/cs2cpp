@@ -5,9 +5,12 @@ namespace Il2Native.Logic.DOM.Synthesized
 {
     using DOM2;
     using Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+
     using Conversion = DOM2.Conversion;
+    using Expression = DOM2.Expression;
 
     public class CCodeObjectCastOperatorDefinition : CCodeMethodDefinition
     {

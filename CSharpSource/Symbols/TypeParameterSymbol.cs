@@ -1,16 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    // TODO: Should document how the BaseType and Interfaces members behave.
-
     /// <summary>
     /// Represents a type parameter in a generic type or generic method.
     /// </summary>
@@ -260,12 +255,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal sealed override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
+        internal sealed override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved)
         {
-            get
-            {
-                return ImmutableArray<NamedTypeSymbol>.Empty;
-            }
+            return ImmutableArray<NamedTypeSymbol>.Empty;
         }
 
         protected override ImmutableArray<NamedTypeSymbol> GetAllInterfaces()
@@ -415,7 +407,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 switch (constraint.TypeKind)
                 {
                     case TypeKind.Interface:
-                        return false; // can be satisfied by valuetypes
+                        return false; // can be satisfied by value types
                     case TypeKind.Error:
                         return false;
                 }
@@ -425,7 +417,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SpecialType.System_Object:
                     case SpecialType.System_ValueType:
                     case SpecialType.System_Enum:
-                        return false; // can be satisfied by valuetypes
+                        return false; // can be satisfied by value types
                 }
 
                 return true;
@@ -501,17 +493,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return false;
         }
 
-        internal override bool Equals(TypeSymbol t2, bool ignoreCustomModifiers, bool ignoreDynamic)
+        internal override bool Equals(TypeSymbol t2, TypeCompareKind comparison)
         {
-            return this.Equals(t2 as TypeParameterSymbol, ignoreCustomModifiers, ignoreDynamic);
+            return this.Equals(t2 as TypeParameterSymbol, comparison);
         }
 
         internal bool Equals(TypeParameterSymbol other)
         {
-            return Equals(other, false, false);
+            return Equals(other, TypeCompareKind.ConsiderEverything);
         }
 
-        private bool Equals(TypeParameterSymbol other, bool ignoreCustomModifiers, bool ignoreDynamic)
+        private bool Equals(TypeParameterSymbol other, TypeCompareKind comparison)
         {
             if (ReferenceEquals(this, other))
             {
@@ -524,23 +516,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
 
             // Type parameters may be equal but not reference equal due to independent alpha renamings.
-            return other.ContainingSymbol.ContainingType.Equals(this.ContainingSymbol.ContainingType, ignoreCustomModifiers, ignoreDynamic);
+            return other.ContainingSymbol.ContainingType.Equals(this.ContainingSymbol.ContainingType, comparison);
         }
 
         public override int GetHashCode()
         {
             return Hash.Combine(ContainingSymbol, Ordinal);
-        }
-
-        /// <summary>
-        /// Returns a bag of applied custom attributes and data decoded from well-known attributes. Returns null if there are no attributes applied on the symbol.
-        /// </summary>
-        /// <remarks>
-        /// Forces binding and decoding of attributes.
-        /// </remarks>
-        internal virtual CustomAttributesBag<CSharpAttributeData> GetAttributesBag()
-        {
-            return null;
         }
 
         #region ITypeParameterTypeSymbol Members

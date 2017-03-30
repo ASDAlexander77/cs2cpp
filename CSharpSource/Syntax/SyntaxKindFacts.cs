@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 
@@ -87,6 +87,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.DisableKeyword:
                 case SyntaxKind.RestoreKeyword:
                 case SyntaxKind.ReferenceKeyword:
+                case SyntaxKind.LoadKeyword:
                     return true;
                 default:
                     return false;
@@ -185,7 +186,20 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public static bool IsAnyToken(SyntaxKind kind)
         {
-            return kind >= SyntaxKind.TildeToken && kind < SyntaxKind.EndOfLineTrivia;
+            if (kind >= SyntaxKind.TildeToken && kind < SyntaxKind.EndOfLineTrivia) return true;
+            switch (kind)
+            {
+                case SyntaxKind.InterpolatedStringToken:
+                case SyntaxKind.InterpolatedStringStartToken:
+                case SyntaxKind.InterpolatedVerbatimStringStartToken:
+                case SyntaxKind.InterpolatedStringTextToken:
+                case SyntaxKind.InterpolatedStringEndToken:
+                case SyntaxKind.LoadKeyword:
+                case SyntaxKind.UnderscoreToken:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static bool IsTrivia(SyntaxKind kind)
@@ -200,6 +214,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.MultiLineDocumentationCommentTrivia:
                 case SyntaxKind.DisabledTextTrivia:
                 case SyntaxKind.DocumentationCommentExteriorTrivia:
+                case SyntaxKind.ConflictMarkerTrivia:
                     return true;
                 default:
                     return IsPreprocessorDirective(kind);
@@ -224,7 +239,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.PragmaWarningDirectiveTrivia:
                 case SyntaxKind.PragmaChecksumDirectiveTrivia:
                 case SyntaxKind.ReferenceDirectiveTrivia:
+                case SyntaxKind.LoadDirectiveTrivia:
                 case SyntaxKind.BadDirectiveTrivia:
+                case SyntaxKind.ShebangDirectiveTrivia:
                     return true;
                 default:
                     return false;
@@ -279,6 +296,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.PointerType:
                 case SyntaxKind.NullableType:
                 case SyntaxKind.PredefinedType:
+                case SyntaxKind.TupleType:
                     return true;
                 default:
                     return IsName(kind);
@@ -395,6 +413,18 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return SyntaxKind.PostDecrementExpression;
                 default:
                     return SyntaxKind.None;
+            }
+        }
+
+        internal static bool IsIncrementOrDecrementOperator(SyntaxKind token)
+        {
+            switch (token)
+            {
+                case SyntaxKind.PlusPlusToken:
+                case SyntaxKind.MinusMinusToken:
+                    return true;
+                default:
+                    return false;
             }
         }
 
@@ -586,28 +616,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return SyntaxKind.LogicalAndExpression;
                 case SyntaxKind.BarBarToken:
                     return SyntaxKind.LogicalOrExpression;
-                case SyntaxKind.BarEqualsToken:
-                    return SyntaxKind.OrAssignmentExpression;
-                case SyntaxKind.AmpersandEqualsToken:
-                    return SyntaxKind.AndAssignmentExpression;
-                case SyntaxKind.CaretEqualsToken:
-                    return SyntaxKind.ExclusiveOrAssignmentExpression;
-                case SyntaxKind.LessThanLessThanEqualsToken:
-                    return SyntaxKind.LeftShiftAssignmentExpression;
-                case SyntaxKind.GreaterThanGreaterThanEqualsToken:
-                    return SyntaxKind.RightShiftAssignmentExpression;
-                case SyntaxKind.PlusEqualsToken:
-                    return SyntaxKind.AddAssignmentExpression;
-                case SyntaxKind.MinusEqualsToken:
-                    return SyntaxKind.SubtractAssignmentExpression;
-                case SyntaxKind.AsteriskEqualsToken:
-                    return SyntaxKind.MultiplyAssignmentExpression;
-                case SyntaxKind.SlashEqualsToken:
-                    return SyntaxKind.DivideAssignmentExpression;
-                case SyntaxKind.PercentEqualsToken:
-                    return SyntaxKind.ModuloAssignmentExpression;
-                case SyntaxKind.EqualsToken:
-                    return SyntaxKind.SimpleAssignmentExpression;
                 default:
                     return SyntaxKind.None;
             }
@@ -652,6 +660,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        public static SyntaxKind GetAssignmentExpression(SyntaxKind token)
+        {
+            switch (token)
+            {
+                case SyntaxKind.BarEqualsToken:
+                    return SyntaxKind.OrAssignmentExpression;
+                case SyntaxKind.AmpersandEqualsToken:
+                    return SyntaxKind.AndAssignmentExpression;
+                case SyntaxKind.CaretEqualsToken:
+                    return SyntaxKind.ExclusiveOrAssignmentExpression;
+                case SyntaxKind.LessThanLessThanEqualsToken:
+                    return SyntaxKind.LeftShiftAssignmentExpression;
+                case SyntaxKind.GreaterThanGreaterThanEqualsToken:
+                    return SyntaxKind.RightShiftAssignmentExpression;
+                case SyntaxKind.PlusEqualsToken:
+                    return SyntaxKind.AddAssignmentExpression;
+                case SyntaxKind.MinusEqualsToken:
+                    return SyntaxKind.SubtractAssignmentExpression;
+                case SyntaxKind.AsteriskEqualsToken:
+                    return SyntaxKind.MultiplyAssignmentExpression;
+                case SyntaxKind.SlashEqualsToken:
+                    return SyntaxKind.DivideAssignmentExpression;
+                case SyntaxKind.PercentEqualsToken:
+                    return SyntaxKind.ModuloAssignmentExpression;
+                case SyntaxKind.EqualsToken:
+                    return SyntaxKind.SimpleAssignmentExpression;
+                default:
+                    return SyntaxKind.None;
             }
         }
 
@@ -1000,6 +1039,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return SyntaxKind.RestoreKeyword;
                 case "r":
                     return SyntaxKind.ReferenceKeyword;
+                case "load":
+                    return SyntaxKind.LoadKeyword;
                 default:
                     return SyntaxKind.None;
             }
@@ -1007,7 +1048,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public static IEnumerable<SyntaxKind> GetContextualKeywordKinds()
         {
-            for (int i = (int)SyntaxKind.YieldKeyword; i <= (int)SyntaxKind.AwaitKeyword; i++)
+            for (int i = (int)SyntaxKind.YieldKeyword; i <= (int)SyntaxKind.WhenKeyword; i++)
             {
                 yield return (SyntaxKind)i;
             }
@@ -1046,8 +1087,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.ParamKeyword:
                 case SyntaxKind.PropertyKeyword:
                 case SyntaxKind.TypeVarKeyword:
+                case SyntaxKind.NameOfKeyword:
                 case SyntaxKind.AsyncKeyword:
                 case SyntaxKind.AwaitKeyword:
+                case SyntaxKind.WhenKeyword:
+                case SyntaxKind.UnderscoreToken:
                     return true;
                 default:
                     return false;
@@ -1143,6 +1187,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return SyntaxKind.AsyncKeyword;
                 case "await":
                     return SyntaxKind.AwaitKeyword;
+                case "when":
+                    return SyntaxKind.WhenKeyword;
+                case "nameof":
+                    return SyntaxKind.NameOfKeyword;
+                case "_":
+                    return SyntaxKind.UnderscoreToken;
                 default:
                     return SyntaxKind.None;
             }
@@ -1470,6 +1520,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return "restore";
                 case SyntaxKind.ReferenceKeyword:
                     return "r";
+                case SyntaxKind.LoadKeyword:
+                    return "load";
 
                 // contextual keywords
                 case SyntaxKind.YieldKeyword:
@@ -1530,10 +1582,22 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return "typevar";
                 case SyntaxKind.GlobalKeyword:
                     return "global";
+                case SyntaxKind.NameOfKeyword:
+                    return "nameof";
                 case SyntaxKind.AsyncKeyword:
                     return "async";
                 case SyntaxKind.AwaitKeyword:
                     return "await";
+                case SyntaxKind.WhenKeyword:
+                    return "when";
+                case SyntaxKind.InterpolatedVerbatimStringStartToken:
+                    return "$@\"";
+                case SyntaxKind.InterpolatedStringStartToken:
+                    return "$\"";
+                case SyntaxKind.InterpolatedStringEndToken:
+                    return "\"";
+                case SyntaxKind.UnderscoreToken:
+                    return "_";
                 default:
                     return string.Empty;
             }
@@ -1542,61 +1606,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         public static bool IsTypeParameterVarianceKeyword(SyntaxKind kind)
         {
             return kind == SyntaxKind.OutKeyword || kind == SyntaxKind.InKeyword;
-        }
-
-        internal static bool IsStatementExpression(SyntaxKind kind, bool isMissing)
-        {
-            // The grammar gives:
-            //
-            // expression-statement:
-            //     statement-expression ;
-            //
-            // statement-expression:
-            //     invocation-expression
-            //     object-creation-expression
-            //     assignment
-            //     post-increment-expression
-            //     post-decrement-expression
-            //     pre-increment-expression
-            //     pre-decrement-expression
-            //     await-expression
-
-            switch (kind)
-            {
-                case SyntaxKind.InvocationExpression:
-                case SyntaxKind.ObjectCreationExpression:
-                case SyntaxKind.SimpleAssignmentExpression:
-                case SyntaxKind.AddAssignmentExpression:
-                case SyntaxKind.SubtractAssignmentExpression:
-                case SyntaxKind.MultiplyAssignmentExpression:
-                case SyntaxKind.DivideAssignmentExpression:
-                case SyntaxKind.ModuloAssignmentExpression:
-                case SyntaxKind.AndAssignmentExpression:
-                case SyntaxKind.OrAssignmentExpression:
-                case SyntaxKind.ExclusiveOrAssignmentExpression:
-                case SyntaxKind.LeftShiftAssignmentExpression:
-                case SyntaxKind.RightShiftAssignmentExpression:
-                case SyntaxKind.PostIncrementExpression:
-                case SyntaxKind.PostDecrementExpression:
-                case SyntaxKind.PreIncrementExpression:
-                case SyntaxKind.PreDecrementExpression:
-                case SyntaxKind.AwaitExpression:
-                    return true;
-
-                // Allow missing IdentifierNames; they will show up in error cases
-                // where there is no statement whatsoever.
-
-                case SyntaxKind.IdentifierName:
-                    return isMissing;
-
-                // TODO: The native implementation also disallows delegate
-                // creation expressions with the ERR_IllegalStatement error, 
-                // so that needs to go into the semantic analysis somewhere
-                // if we intend to carry it forward.
-
-                default:
-                    return false;
-            }
         }
 
         public static bool IsDocumentationCommentTrivia(SyntaxKind kind)

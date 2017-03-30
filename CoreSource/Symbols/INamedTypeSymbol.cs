@@ -1,13 +1,19 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
     /// Represents a type other than an array, a pointer, a type parameter.
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface INamedTypeSymbol : ITypeSymbol
     {
         /// <summary>
@@ -43,6 +49,12 @@ namespace Microsoft.CodeAnalysis
         bool IsImplicitClass { get; }
 
         /// <summary>
+        /// Specifies that the class or interface is imported from another module.  See
+        /// <see cref="TypeAttributes.Import"/> and <see cref="ComImportAttribute"/>
+        /// </summary>
+        bool IsComImport { get; }
+
+        /// <summary>
         /// Returns collection of names of members declared within this type.
         /// </summary>
         IEnumerable<string> MemberNames { get; }
@@ -61,6 +73,13 @@ namespace Microsoft.CodeAnalysis
         ImmutableArray<ITypeSymbol> TypeArguments { get; }
 
         /// <summary>
+        /// Returns custom modifiers for the type argument that has been substituted for the type parameter. 
+        /// The modifiers correspond to the type argument at the same ordinal within the <see cref="TypeArguments"/>
+        /// array. Returns an empty array if there are no modifiers.
+        /// </summary>
+        ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal);
+
+        /// <summary>
         /// Get the original definition of this type symbol. If this symbol is derived from another
         /// symbol by (say) type substitution, this gets the original symbol, as it was defined in
         /// source or metadata.
@@ -69,7 +88,7 @@ namespace Microsoft.CodeAnalysis
 
         /// <summary>
         /// For delegate types, gets the delegate's invoke method.  Returns null on
-        /// all other kinds of types.  Note that is is possible to have an ill-formed
+        /// all other kinds of types.  Note that it is possible to have an ill-formed
         /// delegate type imported from metadata which does not have an Invoke method.
         /// Such a type will be classified as a delegate but its DelegateInvokeMethod
         /// would be null.
@@ -130,5 +149,21 @@ namespace Microsoft.CodeAnalysis
         /// If false, the symbol does not contain extension methods. 
         /// </summary>
         bool MightContainExtensionMethods { get; }
+
+        /// <summary>
+        /// If this is a tuple type symbol, returns the symbol for its underlying type.
+        /// Otherwise, returns null.
+        /// The type argument corresponding to the type of the extension field (VT[8].Rest),
+        /// which is at the 8th (one based) position is always a symbol for another tuple, 
+        /// rather than its underlying type.
+        /// </summary>
+        INamedTypeSymbol TupleUnderlyingType { get; }
+
+        /// <summary>
+        /// Returns fields that represent tuple elements for types that are tuples.
+        ///
+        /// If this type is not a tuple, then returns default.
+        /// </summary>
+        ImmutableArray<IFieldSymbol> TupleElements { get; }
     }
 }

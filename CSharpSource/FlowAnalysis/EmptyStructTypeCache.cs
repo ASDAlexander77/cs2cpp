@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
@@ -18,22 +18,35 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal class EmptyStructTypeCache
     {
-        // These are relative to an accessing symbol, as inaccessible fields are
-        // not "considered" for flow analysis (C# language design decision April 2013)
-        private readonly NamedTypeSymbol accessor;
+        private SmallDictionary<NamedTypeSymbol, bool> _cache;
 
-        private SmallDictionary<NamedTypeSymbol, bool> cache;
+        /// <summary>
+        /// When set, we ignore private reference fields of structs loaded from metadata.
+        /// </summary>
+        private readonly bool _dev12CompilerCompatibility;
+
+        private readonly SourceAssemblySymbol _sourceAssembly;
+
         private SmallDictionary<NamedTypeSymbol, bool> Cache
         {
             get
             {
-                return this.cache ?? (this.cache = new SmallDictionary<NamedTypeSymbol, bool>());
+                return _cache ?? (_cache = new SmallDictionary<NamedTypeSymbol, bool>());
             }
         }
 
-        internal EmptyStructTypeCache(NamedTypeSymbol accessor)
+        /// <summary>
+        /// Create a cache for computing whether or not a struct type is "empty".
+        /// </summary>
+        /// <param name="dev12CompilerCompatibility">Enable compatibility with the native compiler, which
+        ///  ignores inaccessible fields of reference type for structs loaded from metadata.</param>
+        /// <param name="compilation">if <see cref="_dev12CompilerCompatibility"/> is true, set to the compilation from
+        /// which to check accessibility.</param>
+        internal EmptyStructTypeCache(Compilation compilation, bool dev12CompilerCompatibility)
         {
-            this.accessor = accessor;
+            Debug.Assert(compilation != null || !dev12CompilerCompatibility);
+            _dev12CompilerCompatibility = dev12CompilerCompatibility;
+            _sourceAssembly = (SourceAssemblySymbol)compilation?.Assembly;
         }
 
         /// <summary>
@@ -86,6 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public static bool IsTrackableStructType(TypeSymbol type)
         {
+            if ((object)type == null) return false;
             var nts = type.OriginalDefinition as NamedTypeSymbol;
             if ((object)nts == null) return false;
             return nts.IsStructType() && nts.SpecialType == SpecialType.None && !nts.KnownCircularStruct;
@@ -104,8 +118,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 if ((object)field != null)
                 {
-                    var actualFiledType = field.Type;
-                    if (!IsEmptyStructType(actualFiledType, typesWithMembersOfThisType))
+                    var actualFieldType = field.Type;
+                    if (!IsEmptyStructType(actualFieldType, typesWithMembersOfThisType))
                     {
                         return false;
                     }
@@ -149,39 +163,93 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (!member.IsStatic)
             {
-                HashSet<DiagnosticInfo> useSiteDiagnostics = null;
-
                 switch (member.Kind)
                 {
                     case SymbolKind.Field:
                         var field = (FieldSymbol)member;
-                        if (!field.IsFixed && ((object)this.accessor == null || AccessCheck.IsSymbolAccessible(field, this.accessor, ref useSiteDiagnostics)))
+
+                        // Do not report virtual tuple fields.
+                        // They are additional aliases to the fields of the underlying struct or nested extensions.
+                        // and as such are already accounted for via the nonvirtual fields.
+                        if (field.IsVirtualTupleField)
                         {
-                            return field.AsMember(type);
+                            return null;
                         }
-                        break;
+
+                        return (field.IsFixed || ShouldIgnoreStructField(field, field.Type)) ? null : field.AsMember(type);
 
                     case SymbolKind.Event:
                         EventSymbol eventSymbol = (EventSymbol)member;
-                        if (eventSymbol.HasAssociatedField && ((object)this.accessor == null || AccessCheck.IsSymbolAccessible(eventSymbol, this.accessor, ref useSiteDiagnostics)))
-                        {
-                            return eventSymbol.AssociatedField.AsMember(type);
-                        }
-                        break;
+                        return (!eventSymbol.HasAssociatedField || ShouldIgnoreStructField(eventSymbol, eventSymbol.Type)) ? null : eventSymbol.AssociatedField.AsMember(type);
                 }
             }
             return null;
         }
 
+        private bool ShouldIgnoreStructField(Symbol member, TypeSymbol memberType)
+        {
+            return _dev12CompilerCompatibility &&                             // when we're trying to be compatible with the native compiler, we ignore
+                   ((object)member.ContainingAssembly != _sourceAssembly ||   // imported fields
+                    member.ContainingModule.Ordinal != 0) &&                      //     (an added module is imported)
+                   IsIgnorableType(memberType) &&                                 // of reference type (but not type parameters, looking through arrays)
+                   !IsAccessibleInAssembly(member, _sourceAssembly);          // that are inaccessible to our assembly.
+        }
+
+        /// <summary>
+        /// When deciding what struct fields to drop on the floor, the native compiler looks
+        /// through arrays, and does not ignore value types or type parameters.
+        /// </summary>
+        private static bool IsIgnorableType(TypeSymbol type)
+        {
+            while (true)
+            {
+                switch (type.TypeKind)
+                {
+                    case TypeKind.Enum:
+                    case TypeKind.Struct:
+                    case TypeKind.TypeParameter:
+                        return false;
+                    case TypeKind.Array:
+                        type = ((ArrayTypeSymbol)type).BaseType;
+                        continue;
+                    default:
+                        return true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Is it possible that the given symbol can be accessed somewhere in the given assembly?
+        /// For the purposes of this test, we assume that code in the given assembly might derive from
+        /// any type. So protected members are considered potentially accessible.
+        /// </summary>
+        private static bool IsAccessibleInAssembly(Symbol symbol, SourceAssemblySymbol assembly)
+        {
+            for (; symbol != null && symbol.Kind != SymbolKind.Namespace; symbol = symbol.ContainingSymbol)
+            {
+                switch (symbol.DeclaredAccessibility)
+                {
+                    case Accessibility.Internal:
+                    case Accessibility.ProtectedAndInternal:
+                        if (!assembly.HasInternalAccessTo(symbol.ContainingAssembly)) return false;
+                        break;
+
+                    case Accessibility.Private:
+                        return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     /// <summary>
     /// Specialized EmptyStructTypeCache that reports all structs as not empty
     /// </summary>
-    internal sealed class CaptureWalkerEmptyStructTypeCache : EmptyStructTypeCache
+    internal sealed class NeverEmptyStructTypeCache : EmptyStructTypeCache
     {
-        public CaptureWalkerEmptyStructTypeCache()
-           : base(null)
+        public NeverEmptyStructTypeCache()
+           : base(null, false)
         {
         }
 

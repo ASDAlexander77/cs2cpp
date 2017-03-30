@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -8,10 +8,10 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
-    internal struct AttributeUsageInfo 
+    internal struct AttributeUsageInfo : IEquatable<AttributeUsageInfo>
     {
         [Flags()]
-        enum PackedAttributeUsage 
+        private enum PackedAttributeUsage
         {
             None = 0,
             Assembly = AttributeTargets.Assembly,
@@ -32,15 +32,15 @@ namespace Microsoft.CodeAnalysis
             All = AttributeTargets.All,
 
             // NOTE: VB allows AttributeUsageAttribute with no valid target, i.e. <AttributeUsageAttribute(0)>, and doesn't generate any diagnostics.
-            // We use use PackedAttributeUsage.Initialized field to differentiate between uninitialized AttributeUsageInfo and initialized AttributeUsageInfo with no valid target.
+            // We use PackedAttributeUsage.Initialized field to differentiate between uninitialized AttributeUsageInfo and initialized AttributeUsageInfo with no valid target.
             Initialized = GenericParameter << 1,
-            
+
             AllowMultiple = Initialized << 1,
             Inherited = AllowMultiple << 1
         }
 
-        private PackedAttributeUsage flags;
-        
+        private readonly PackedAttributeUsage _flags;
+
         /// <summary>
         /// Default attribute usage for attribute types:
         /// (a) Valid targets: AttributeTargets.All
@@ -50,21 +50,21 @@ namespace Microsoft.CodeAnalysis
         static internal readonly AttributeUsageInfo Default = new AttributeUsageInfo(validTargets: AttributeTargets.All, allowMultiple: false, inherited: true);
 
         static internal readonly AttributeUsageInfo Null = default(AttributeUsageInfo);
-        
+
         internal AttributeUsageInfo(AttributeTargets validTargets, bool allowMultiple, bool inherited)
         {
             // NOTE: VB allows AttributeUsageAttribute with no valid target, i.e. <AttributeUsageAttribute(0)>, and doesn't generate any diagnostics.
-            // We use use PackedAttributeUsage.Initialized field to differentiate between uninitialized AttributeUsageInfo and initialized AttributeUsageInfo with no valid targets.
-            flags = (PackedAttributeUsage)validTargets | PackedAttributeUsage.Initialized;
-            
+            // We use PackedAttributeUsage.Initialized field to differentiate between uninitialized AttributeUsageInfo and initialized AttributeUsageInfo with no valid targets.
+            _flags = (PackedAttributeUsage)validTargets | PackedAttributeUsage.Initialized;
+
             if (allowMultiple)
             {
-                flags |= PackedAttributeUsage.AllowMultiple;
+                _flags |= PackedAttributeUsage.AllowMultiple;
             }
 
             if (inherited)
             {
-                flags |= PackedAttributeUsage.Inherited;
+                _flags |= PackedAttributeUsage.Inherited;
             }
         }
 
@@ -72,43 +72,43 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return (flags & PackedAttributeUsage.Initialized) == 0;
+                return (_flags & PackedAttributeUsage.Initialized) == 0;
             }
         }
 
-        
+
         internal AttributeTargets ValidTargets
         {
             get
             {
-                return (AttributeTargets)(flags & PackedAttributeUsage.All);
+                return (AttributeTargets)(_flags & PackedAttributeUsage.All);
             }
         }
 
-        internal bool AllowMultiple 
+        internal bool AllowMultiple
         {
             get
             {
-                return (flags & PackedAttributeUsage.AllowMultiple) != 0;
+                return (_flags & PackedAttributeUsage.AllowMultiple) != 0;
             }
         }
 
-        internal bool Inherited 
+        internal bool Inherited
         {
             get
             {
-                return (flags & PackedAttributeUsage.Inherited) != 0;
+                return (_flags & PackedAttributeUsage.Inherited) != 0;
             }
         }
 
         public static bool operator ==(AttributeUsageInfo left, AttributeUsageInfo right)
         {
-            return left.flags == right.flags;
+            return left._flags == right._flags;
         }
 
         public static bool operator !=(AttributeUsageInfo left, AttributeUsageInfo right)
         {
-            return left.flags != right.flags;
+            return left._flags != right._flags;
         }
 
         public override bool Equals(object obj)
@@ -128,7 +128,7 @@ namespace Microsoft.CodeAnalysis
 
         public override int GetHashCode()
         {
-            return flags.GetHashCode();
+            return _flags.GetHashCode();
         }
 
         internal bool HasValidAttributeTargets
@@ -140,54 +140,89 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        internal string GetValidTargetsString()
+        internal object GetValidTargetsErrorArgument()
         {
             var validTargetsInt = (int)ValidTargets;
             if (!HasValidAttributeTargets)
             {
-                return "InvalidAttributeTargets";
+                return string.Empty;
             }
 
-            var builder = PooledStringBuilder.GetInstance();
+            var builder = ArrayBuilder<string>.GetInstance();
             int flag = 0;
             while (validTargetsInt > 0)
             {
                 if ((validTargetsInt & 1) != 0)
                 {
-                    if (builder.Builder.Length > 0)
-                    {
-                        builder.Builder.Append(", ");
-                    }
-
-                    builder.Builder.Append(GetErrorDisplayName((AttributeTargets)(1 << flag)));
+                    builder.Add(GetErrorDisplayNameResourceId((AttributeTargets)(1 << flag)));
                 }
 
                 validTargetsInt >>= 1;
                 flag++;
             }
 
-            return builder.ToStringAndFree();
+            return new ValidTargetsStringLocalizableErrorArgument(builder.ToArrayAndFree());
         }
 
-        private static string GetErrorDisplayName(AttributeTargets target)
+        private struct ValidTargetsStringLocalizableErrorArgument : IFormattable, IMessageSerializable
+        {
+            private readonly string[] _targetResourceIds;
+
+            internal ValidTargetsStringLocalizableErrorArgument(string[] targetResourceIds)
+            {
+                Debug.Assert(targetResourceIds != null);
+                _targetResourceIds = targetResourceIds;
+            }
+
+            public override string ToString()
+            {
+                return ToString(null, null);
+            }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                var builder = PooledStringBuilder.GetInstance();
+                var culture = formatProvider as System.Globalization.CultureInfo;
+
+                if (_targetResourceIds != null)
+                {
+                    foreach (string id in _targetResourceIds)
+                    {
+                        if (builder.Builder.Length > 0)
+                        {
+                            builder.Builder.Append(", ");
+                        }
+
+                        builder.Builder.Append(CodeAnalysisResources.ResourceManager.GetString(id, culture));
+                    }
+                }
+
+                var message = builder.Builder.ToString();
+                builder.Free();
+
+                return message;
+            }
+        }
+
+        private static string GetErrorDisplayNameResourceId(AttributeTargets target)
         {
             switch (target)
             {
-                case AttributeTargets.Assembly:          return CodeAnalysisResources.Assembly;
-                case AttributeTargets.Class:             return CodeAnalysisResources.Class1;
-                case AttributeTargets.Constructor:       return CodeAnalysisResources.Constructor;
-                case AttributeTargets.Delegate:          return CodeAnalysisResources.Delegate1;
-                case AttributeTargets.Enum:              return CodeAnalysisResources.Enum1;
-                case AttributeTargets.Event:             return CodeAnalysisResources.Event1;
-                case AttributeTargets.Field:             return CodeAnalysisResources.Field;
-                case AttributeTargets.GenericParameter:  return CodeAnalysisResources.TypeParameter;
-                case AttributeTargets.Interface:         return CodeAnalysisResources.Interface1;
-                case AttributeTargets.Method:            return CodeAnalysisResources.Method;
-                case AttributeTargets.Module:            return CodeAnalysisResources.Module;
-                case AttributeTargets.Parameter:         return CodeAnalysisResources.Parameter;
-                case AttributeTargets.Property:          return CodeAnalysisResources.Property;
-                case AttributeTargets.ReturnValue:       return CodeAnalysisResources.Return1;
-                case AttributeTargets.Struct:            return CodeAnalysisResources.Struct1;
+                case AttributeTargets.Assembly: return nameof(CodeAnalysisResources.Assembly);
+                case AttributeTargets.Class: return nameof(CodeAnalysisResources.Class1);
+                case AttributeTargets.Constructor: return nameof(CodeAnalysisResources.Constructor);
+                case AttributeTargets.Delegate: return nameof(CodeAnalysisResources.Delegate1);
+                case AttributeTargets.Enum: return nameof(CodeAnalysisResources.Enum1);
+                case AttributeTargets.Event: return nameof(CodeAnalysisResources.Event1);
+                case AttributeTargets.Field: return nameof(CodeAnalysisResources.Field);
+                case AttributeTargets.GenericParameter: return nameof(CodeAnalysisResources.TypeParameter);
+                case AttributeTargets.Interface: return nameof(CodeAnalysisResources.Interface1);
+                case AttributeTargets.Method: return nameof(CodeAnalysisResources.Method);
+                case AttributeTargets.Module: return nameof(CodeAnalysisResources.Module);
+                case AttributeTargets.Parameter: return nameof(CodeAnalysisResources.Parameter);
+                case AttributeTargets.Property: return nameof(CodeAnalysisResources.Property);
+                case AttributeTargets.ReturnValue: return nameof(CodeAnalysisResources.Return1);
+                case AttributeTargets.Struct: return nameof(CodeAnalysisResources.Struct1);
                 default:
                     throw ExceptionUtilities.UnexpectedValue(target);
             }

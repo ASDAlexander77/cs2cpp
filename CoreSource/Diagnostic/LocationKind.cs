@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
@@ -11,26 +12,26 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Unspecified location.
         /// </summary>
-        None,
+        None = 0,
 
         /// <summary>
         /// The location represents a position in a source file.
         /// </summary>
-        SourceFile,
+        SourceFile = 1,
 
         /// <summary>
         /// The location represents a metadata file.
         /// </summary>
-        MetadataFile,
+        MetadataFile = 2,
 
         /// <summary>
         /// The location represents a position in an XML file.
         /// </summary>
-        XmlFile,
+        XmlFile = 3,
 
         /// <summary>
         /// The location in some external file.
         /// </summary>
-        ExternalFile,
+        ExternalFile = 4,
     }
 }

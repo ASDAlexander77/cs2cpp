@@ -24,13 +24,13 @@ Cs2Cpp is licensed under the MIT license.
 Quick Start
 -----------
 
-Prerequisite: CMake, .NET 4.6, GCC 5.0+ or Microsoft Visual C++ 2015 
+Prerequisite: CMake, .NET 4.6, GCC 5.0+ or Microsoft Visual C++ 2017 Community Edition
 
 1) Build Project
 
 ```
 cd Il2Native
-MSBuild Il2Native.sln /p:Configuration=Debug /p:Platform="Any CPU"
+MSBuild Il2Native.sln /p:Configuration=Release /p:Platform="Any CPU"
 ```
 
 2) Build CoreLib (aka mscorlib)
@@ -58,8 +58,8 @@ cd playground
 
 ```
 cd CoreLib
-build_prerequisite_vs2015_debug.bat 
-build_vs2015_debug.bat
+build_prerequisite_vs2015_release.bat 
+build_vs2015_release.bat
 ```
 
 Now you have compiled CoreLib (mscorelib)

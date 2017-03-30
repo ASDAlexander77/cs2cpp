@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -80,9 +80,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             Debug.Assert(parentSemanticModel != null);
             Debug.Assert(syntax != null);
-            Debug.Assert(syntax.IsKind(SyntaxKind.EqualsValueClause) || 
-                syntax.IsKind(SyntaxKind.ThisConstructorInitializer) || 
-                syntax.IsKind(SyntaxKind.BaseConstructorInitializer) || 
+            Debug.Assert(syntax.IsKind(SyntaxKind.EqualsValueClause) ||
+                syntax.IsKind(SyntaxKind.ThisConstructorInitializer) ||
+                syntax.IsKind(SyntaxKind.BaseConstructorInitializer) ||
                 syntax.IsKind(SyntaxKind.ArgumentList));
             Debug.Assert(rootBinder != null);
             Debug.Assert(rootBinder.IsSemanticModelBinder);
@@ -98,7 +98,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal override BoundNode GetBoundRoot()
         {
             CSharpSyntaxNode rootSyntax = this.Root;
-            switch (rootSyntax.Kind)
+            switch (rootSyntax.Kind())
             {
                 case SyntaxKind.VariableDeclarator:
                     rootSyntax = ((VariableDeclaratorSyntax)rootSyntax).Initializer.Value;
@@ -127,7 +127,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     break;
 
                 default:
-                    throw ExceptionUtilities.UnexpectedValue(rootSyntax.Kind);
+                    throw ExceptionUtilities.UnexpectedValue(rootSyntax.Kind());
             }
 
             return GetUpperBoundNode(GetBindableSyntaxNode(rootSyntax));
@@ -137,7 +137,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             EqualsValueClauseSyntax equalsValue = null;
 
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 case SyntaxKind.EqualsValueClause:
                     equalsValue = (EqualsValueClauseSyntax)node;
@@ -175,43 +175,62 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.Bind(binder, node, diagnostics);
         }
 
-        private BoundNode BindEqualsValue(Binder binder, EqualsValueClauseSyntax equalsValue, DiagnosticBag diagnostics)
+        private BoundEqualsValue BindEqualsValue(Binder binder, EqualsValueClauseSyntax equalsValue, DiagnosticBag diagnostics)
         {
             switch (this.MemberSymbol.Kind)
             {
                 case SymbolKind.Field:
                     {
-                        var enumField = this.MemberSymbol as SourceEnumConstantSymbol;
+                        var field = (FieldSymbol)this.MemberSymbol;
+                        var enumField = field as SourceEnumConstantSymbol;
+                        BoundExpression result;
                         if ((object)enumField != null)
                         {
-                            return binder.BindEnumConstantInitializer(enumField, equalsValue.Value, diagnostics);
+                            result = binder.BindEnumConstantInitializer(enumField, equalsValue, diagnostics);
                         }
-
-                        var fieldType = ((FieldSymbol)this.MemberSymbol).GetFieldType(binder.FieldsBeingBound);
-                        return binder.BindVariableOrAutoPropInitializer(equalsValue, fieldType, diagnostics);
+                        else
+                        {
+                            result = binder.BindVariableOrAutoPropInitializer(equalsValue, RefKind.None, field.GetFieldType(binder.FieldsBeingBound), diagnostics);
+                        }
+                        if (result != null)
+                        {
+                            return new BoundFieldEqualsValue(equalsValue, field, result);
+                        }
+                        break;
                     }
 
                 case SymbolKind.Property:
                     {
-                        var propertyType = ((PropertySymbol)this.MemberSymbol).Type;
-                        return binder.BindVariableOrAutoPropInitializer(equalsValue, propertyType, diagnostics);
+                        var property = (PropertySymbol)this.MemberSymbol;
+                        BoundExpression result = binder.BindVariableOrAutoPropInitializer(equalsValue, RefKind.None, property.Type, diagnostics);
+                        if (result != null)
+                        {
+                            return new BoundPropertyEqualsValue(equalsValue, property, result);
+                        }
+                        break;
                     }
 
                 case SymbolKind.Parameter:
                     {
                         BoundExpression unusedValueBeforeConversion; // not needed.
                         var parameter = (ParameterSymbol)this.MemberSymbol;
-                        return binder.BindParameterDefaultValue(
+                        BoundExpression result = binder.BindParameterDefaultValue(
                             equalsValue,
                             parameter.Type,
                             diagnostics,
                             out unusedValueBeforeConversion);
+                        if (result != null)
+                        {
+                            return new BoundParameterEqualsValue(equalsValue, parameter, result);
+                        }
+                        break;
                     }
 
                 default:
-                    Debug.Assert(false, "Unexpected member symbol kind: " + this.MemberSymbol.Kind);
-                    return null;
+                    throw ExceptionUtilities.UnexpectedValue(this.MemberSymbol.Kind);
             }
+
+            return null;
         }
 
         private bool IsBindableInitializer(CSharpSyntaxNode node)
@@ -220,7 +239,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // that's our root and we know how to bind that thing even if it is not an 
             // expression or a statement.
 
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 case SyntaxKind.EqualsValueClause:
                     return this.Root == node ||     /*enum or parameter initializer*/
@@ -257,8 +276,30 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return false;
             }
 
+            switch (initializer.Kind())
+            {
+                case SyntaxKind.EqualsValueClause:
+                    binder = new ExecutableCodeBinder(initializer, binder.ContainingMemberOrLambda, binder);
+                    break;
+
+                case SyntaxKind.ThisConstructorInitializer:
+                case SyntaxKind.BaseConstructorInitializer:
+                    ArgumentListSyntax argList = ((ConstructorInitializerSyntax)initializer).ArgumentList;
+                    if (argList != null)
+                    {
+                        binder = new ExecutableCodeBinder(argList, binder.ContainingMemberOrLambda, binder);
+                    }
+                    break;
+            }
+
             speculativeModel = CreateSpeculative(parentModel, this.MemberSymbol, initializer, binder, position);
             return true;
+        }
+
+        internal override bool TryGetSpeculativeSemanticModelCore(SyntaxTreeSemanticModel parentModel, int position, ArrowExpressionClauseSyntax expressionBody, out SemanticModel speculativeModel)
+        {
+            speculativeModel = null;
+            return false;
         }
 
         internal override bool TryGetSpeculativeSemanticModelCore(SyntaxTreeSemanticModel parentModel, int position, StatementSyntax statement, out SemanticModel speculativeModel)

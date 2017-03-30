@@ -1,8 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
+using System.Collections.Immutable;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -11,8 +13,8 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class LambdaCapturedVariable : SynthesizedFieldSymbolBase
     {
-        private readonly TypeSymbol type;
-        private readonly bool isThis;
+        private readonly TypeSymbol _type;
+        private readonly bool _isThis;
 
         private LambdaCapturedVariable(SynthesizedContainer frame, TypeSymbol type, string fieldName, bool isThisParameter)
             : base(frame,
@@ -25,8 +27,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // lifted fields do not need to have the CompilerGeneratedAttribute attached to it, the closure is already 
             // marked as being compiler generated.
-            this.type = type;
-            this.isThis = isThisParameter;
+            _type = type;
+            _isThis = isThisParameter;
         }
 
         public static LambdaCapturedVariable Create(LambdaFrame frame, Symbol captured, ref int uniqueId)
@@ -48,20 +50,30 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (IsThis(variable))
             {
-                return GeneratedNames.ThisProxyName();
+                return GeneratedNames.ThisProxyFieldName();
             }
 
             var local = variable as LocalSymbol;
             if ((object)local != null)
             {
-                if (local.SynthesizedLocalKind == SynthesizedLocalKind.LambdaDisplayClass)
+                if (local.SynthesizedKind == SynthesizedLocalKind.LambdaDisplayClass)
                 {
-                    return GeneratedNames.MakeLambdaDisplayClassStorageName(uniqueId++);
+                    return GeneratedNames.MakeLambdaDisplayLocalName(uniqueId++);
                 }
 
-                if (local.SynthesizedLocalKind == SynthesizedLocalKind.ExceptionFilterAwaitHoistedExceptionLocal)
+                if (local.SynthesizedKind == SynthesizedLocalKind.ExceptionFilterAwaitHoistedExceptionLocal)
                 {
-                    return GeneratedNames.MakeHoistedLocalFieldName(string.Empty, uniqueId++);
+                    return GeneratedNames.MakeHoistedLocalFieldName(local.SynthesizedKind, uniqueId++);
+                }
+
+                if (local.SynthesizedKind == SynthesizedLocalKind.InstrumentationPayload)
+                {
+                    return GeneratedNames.MakeSynthesizedInstrumentationPayloadLocalFieldName(uniqueId++);
+                }
+
+                if (local.SynthesizedKind == SynthesizedLocalKind.UserDefined && local.ScopeDesignatorOpt?.Kind() == SyntaxKind.SwitchSection)
+                {
+                    return GeneratedNames.MakeHoistedLocalFieldName(local.SynthesizedKind, uniqueId++, local.Name);
                 }
             }
 
@@ -78,28 +90,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var lambdaFrame = local.Type.OriginalDefinition as LambdaFrame;
                 if ((object)lambdaFrame != null)
                 {
-                    return lambdaFrame.ConstructIfGeneric(frame.TypeArgumentsNoUseSiteDiagnostics);
+                    // lambdaFrame may have less generic type parameters than frame, so trim them down (the first N will always match)
+                    var typeArguments = frame.TypeArgumentsNoUseSiteDiagnostics;
+                    if (typeArguments.Length > lambdaFrame.Arity)
+                    {
+                        typeArguments = ImmutableArray.Create(typeArguments, 0, lambdaFrame.Arity);
+                    }
+                    return lambdaFrame.ConstructIfGeneric(typeArguments.SelectAsArray(TypeMap.TypeSymbolAsTypeWithModifiers));
                 }
             }
 
-            return frame.TypeMap.SubstituteType((object)local != null ? local.Type : ((ParameterSymbol)variable).Type);
-        }
-
-        internal override int IteratorLocalIndex
-        {
-            get { throw ExceptionUtilities.Unreachable; }
+            return frame.TypeMap.SubstituteType((object)local != null ? local.Type : ((ParameterSymbol)variable).Type).Type;
         }
 
         internal override TypeSymbol GetFieldType(ConsList<FieldSymbol> fieldsBeingBound)
         {
-            return this.type;
+            return _type;
         }
 
         internal override bool IsCapturedFrame
         {
             get
             {
-                return isThis;
+                return _isThis;
+            }
+        }
+
+        internal override bool SuppressDynamicAttribute
+        {
+            get
+            {
+                return false;
             }
         }
     }

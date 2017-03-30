@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -13,8 +13,8 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class ConstantFieldsInProgress
     {
-        private readonly SourceFieldSymbol fieldOpt;
-        private readonly HashSet<SourceFieldSymbolWithSyntaxReference> dependencies;
+        private readonly SourceFieldSymbol _fieldOpt;
+        private readonly HashSet<SourceFieldSymbolWithSyntaxReference> _dependencies;
 
         internal static readonly ConstantFieldsInProgress Empty = new ConstantFieldsInProgress(null, null);
 
@@ -22,18 +22,18 @@ namespace Microsoft.CodeAnalysis.CSharp
             SourceFieldSymbol fieldOpt,
             HashSet<SourceFieldSymbolWithSyntaxReference> dependencies)
         {
-            this.fieldOpt = fieldOpt;
-            this.dependencies = dependencies;
+            _fieldOpt = fieldOpt;
+            _dependencies = dependencies;
         }
 
         public bool IsEmpty
         {
-            get { return (object)this.fieldOpt == null; }
+            get { return (object)_fieldOpt == null; }
         }
 
         internal void AddDependency(SourceFieldSymbolWithSyntaxReference field)
         {
-            this.dependencies.Add(field);
+            _dependencies.Add(field);
         }
     }
 }

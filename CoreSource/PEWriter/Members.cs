@@ -1,13 +1,16 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Metadata;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeGen;
+using Microsoft.CodeAnalysis.Debugging;
+using Microsoft.CodeAnalysis.Emit;
+using Roslyn.Utilities;
 using EmitContext = Microsoft.CodeAnalysis.Emit.EmitContext;
 
 namespace Microsoft.Cci
@@ -22,47 +25,47 @@ namespace Microsoft.Cci
         /// C/C++ style calling convention for unmanaged methods. The call stack is cleaned up by the caller, 
         /// which makes this convention suitable for calling methods that accept extra arguments.
         /// </summary>
-        C = 1,
+        C = SignatureCallingConvention.CDecl,
 
         /// <summary>
         /// The convention for calling managed methods with a fixed number of arguments.
         /// </summary>
-        Default = 0,
+        Default = SignatureCallingConvention.Default,
 
         /// <summary>
         /// The convention for calling managed methods that accept extra arguments.
         /// </summary>
-        ExtraArguments = 5,
+        ExtraArguments = SignatureCallingConvention.VarArgs,
 
         /// <summary>
         /// Arguments are passed in registers when possible. This calling convention is not yet supported.
         /// </summary>
-        FastCall = 4,
+        FastCall = SignatureCallingConvention.FastCall,
 
         /// <summary>
         /// Win32 API calling convention for calling unmanaged methods via PlatformInvoke. The call stack is cleaned up by the callee.
         /// </summary>
-        Standard = 2,
+        Standard = SignatureCallingConvention.StdCall,
 
         /// <summary>
         /// C++ member unmanaged method (non-vararg) calling convention. The callee cleans the stack and the this pointer is pushed on the stack last.
         /// </summary>
-        ThisCall = 3,
+        ThisCall = SignatureCallingConvention.ThisCall,
 
         /// <summary>
         /// The convention for calling a generic method.
         /// </summary>
-        Generic = 0x10,
+        Generic = SignatureAttributes.Generic,
 
         /// <summary>
         /// The convention for calling an instance method with an implicit this parameter (the method does not have an explicit parameter definition for this).
         /// </summary>
-        HasThis = 0x20,
+        HasThis = SignatureAttributes.Instance,
 
         /// <summary>
         /// The convention for calling an instance method that explicitly declares its first parameter to correspond to the this instance.
         /// </summary>
-        ExplicitThis = 0x40
+        ExplicitThis = SignatureAttributes.ExplicitThis
     }
 
     /// <summary>
@@ -117,7 +120,7 @@ namespace Microsoft.Cci
         /// The compile time value of the field. This value should be used directly in IL, rather than a reference to the field.
         /// If the field does not have a valid compile time value, Dummy.Constant is returned.
         /// </summary>
-        IMetadataConstant GetCompileTimeValue(EmitContext context);
+        MetadataConstant GetCompileTimeValue(EmitContext context);
 
         /// <summary>
         /// Mapped field data, or null if the field is not mapped.
@@ -168,7 +171,6 @@ namespace Microsoft.Cci
         IMarshallingInformation MarshallingInformation
         {
             get;
-
             // ^ requires this.IsMarshalledExplicitly;
         }
 
@@ -178,17 +180,15 @@ namespace Microsoft.Cci
         ImmutableArray<byte> MarshallingDescriptor
         {
             get;
-
             // ^ requires this.IsMarshalledExplicitly;
         }
 
         /// <summary>
         /// Offset of the field.
         /// </summary>
-        uint Offset
+        int Offset
         {
             get;
-
             // ^ requires this.ContainingTypeDefinition.Layout == LayoutKind.Explicit;
         }
     }
@@ -198,7 +198,6 @@ namespace Microsoft.Cci
     /// </summary>
     internal interface IFieldReference : ITypeMemberReference
     { // TODO: add custom modifiers
-
         /// <summary>
         /// The type of value that is stored in this field.
         /// </summary>
@@ -231,7 +230,7 @@ namespace Microsoft.Cci
         /// <summary>
         /// The compile time value of the definition, if it is a local constant.
         /// </summary>
-        IMetadataConstant CompileTimeValue
+        MetadataConstant CompileTimeValue
         {
             get;
         }
@@ -245,29 +244,42 @@ namespace Microsoft.Cci
         }
 
         /// <summary>
+        /// TODO: use <see cref="Constraints"/> instead.
         /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
         /// </summary>
         bool IsPinned { get; }
 
         /// <summary>
+        /// TODO: use <see cref="Constraints"/> instead.
         /// True if the local contains a managed pointer (for example a reference to a local variable or a reference to a field of an object).
         /// </summary>
         bool IsReference { get; }
 
-        /// <summary>
-        /// True if the local variable is of type Dynamic.
-        /// </summary>
-        bool IsDynamic { get; }
+        LocalSlotConstraints Constraints { get; }
 
         /// <summary>
-        /// True if the local was not declared in source.
+        /// Each local has an attributes field in the PDB.  To match the native compiler,
+        /// we emit <see cref="LocalVariableAttributes.DebuggerHidden"/> for locals that should 
+        /// definitely not bind in the debugger and <see cref="LocalVariableAttributes.None"/>
+        /// for all other locals.
         /// </summary>
-        bool IsCompilerGenerated { get; }
+        /// <remarks>
+        /// A value of <see cref="LocalVariableAttributes.DebuggerHidden"/> is a sufficient, but not a necessary, condition for hiding the
+        /// local in the debugger.  Locals with value <see cref="LocalVariableAttributes.None"/> may also be hidden.
+        /// 
+        /// Hidden locals must still be emitted because they participate in evaluation.
+        /// </remarks>
+        LocalVariableAttributes PdbAttributes { get; }
 
         /// <summary>
-        /// Should return the synthesized dynamic attributes of the local definition if any. Else null.
+        /// The synthesized dynamic attributes of the local definition if any, or empty.
         /// </summary>
-        ImmutableArray<TypedConstant> DynamicTransformFlags { get; }
+        ImmutableArray<bool> DynamicTransformFlags { get; }
+
+        /// <summary>
+        /// The tuple element names of the local definition if any, or empty.
+        /// </summary>
+        ImmutableArray<string> TupleElementNames { get; }
 
         /// <summary>
         /// The type of the local.
@@ -291,6 +303,12 @@ namespace Microsoft.Cci
         /// Optional serialized local signature.
         /// </summary>
         byte[] Signature { get; }
+
+        /// <summary>
+        /// Local id, or <see cref="LocalDebugId.None"/> if this is a local constant, short-lived temp variable, 
+        /// or we are not emitting local variable ids (release builds).
+        /// </summary>
+        LocalSlotDebugInfo SlotInfo { get; }
     }
 
     /// <summary>
@@ -299,16 +317,24 @@ namespace Microsoft.Cci
     /// </summary>
     internal class AsyncMethodBodyDebugInfo
     {
-        /// <summary> Original async method transformed into MoveNext() </summary>
+        /// <summary>
+        ///  Original async method transformed into MoveNext() 
+        /// </summary>
         public readonly IMethodDefinition KickoffMethod;
 
-        /// <summary> IL offset of catch handler or -1 </summary>
+        /// <summary> 
+        /// IL offset of catch handler or -1 
+        /// </summary>
         public readonly int CatchHandlerOffset;
 
-        /// <summary> Set of IL offsets where await operators yield control </summary>
+        /// <summary> 
+        /// Set of IL offsets where await operators yield control
+        ///  </summary>
         public readonly ImmutableArray<int> YieldOffsets;
 
-        /// <summary> Set of IL offsets where await operators are to be resumed </summary>
+        /// <summary> 
+        /// Set of IL offsets where await operators are to be resumed 
+        /// </summary>
         public readonly ImmutableArray<int> ResumeOffsets;
 
         public AsyncMethodBodyDebugInfo(
@@ -318,6 +344,7 @@ namespace Microsoft.Cci
             ImmutableArray<int> resumeOffsets)
         {
             Debug.Assert(!yieldOffsets.IsDefault && !resumeOffsets.IsDefault && yieldOffsets.Length == resumeOffsets.Length);
+
             this.KickoffMethod = kickoffMethod;
             this.CatchHandlerOffset = catchHandlerOffset;
             this.YieldOffsets = yieldOffsets;
@@ -326,7 +353,7 @@ namespace Microsoft.Cci
     }
 
     /// <summary>
-    /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
+    /// A metadata (IL) level representation of the body of a method or of a property/event accessor.
     /// </summary>
     internal interface IMethodBody
     {
@@ -354,7 +381,6 @@ namespace Microsoft.Cci
         ImmutableArray<ExceptionHandlerRegion> ExceptionRegions
         {
             get;
-
             // ^ requires !this.MethodDefinition.IsAbstract && !this.MethodDefinition.IsExternal && this.MethodDefinition.IsCil;
         }
 
@@ -372,36 +398,24 @@ namespace Microsoft.Cci
         /// The definition of the method whose body this is.
         /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
         /// </summary>
-        IMethodDefinition MethodDefinition
-        {
-            get;
-        }
+        IMethodDefinition MethodDefinition { get; }
 
-        /// <summary> The additional info required by debugger  </summary>
-        AsyncMethodBodyDebugInfo AsyncMethodDebugInfo { get; }
+        /// <summary>
+        /// Debugging information associated with an async method to support EE.
+        /// </summary>
+        AsyncMethodBodyDebugInfo AsyncDebugInfo { get; }
 
         /// <summary>
         /// The maximum number of elements on the evaluation stack during the execution of the method.
         /// </summary>
         ushort MaxStack { get; }
 
-        byte[] IL { get; }
-        bool HasAnyLocations { get; }
+        ImmutableArray<byte> IL { get; }
         bool HasAnySequencePoints { get; }
-        ImmutableArray<SequencePoint> GetSequencePoints();
-        ImmutableArray<SequencePoint> GetLocations();
+        void GetSequencePoints(ArrayBuilder<SequencePoint> builder);
 
         /// <summary>
-        /// The PDB content for custom debug information is different between Visual Basic and CSharp.
-        /// E.g. CS always includes a CustomMetadata Header (MD2) that contains the namespace scope counts, where 
-        /// as VB only outputs namespace imports into the namespace scopes. CS defines forwards in that header, VB includes
-        /// them into the scopes list.
-        /// This enum is used to distinguish which style to pick while writing the PDB information.
-        /// </summary>
-        CustomDebugInfoKind CustomDebugInfoKind { get; }
-
-        /// <summary>
-        /// Returns true if there is atleast one dynamic local within the MethodBody
+        /// Returns true if there is at least one dynamic local within the MethodBody
         /// </summary>
         bool HasDynamicLocalVariables { get; }
 
@@ -411,14 +425,25 @@ namespace Microsoft.Cci
         ImmutableArray<LocalScope> LocalScopes { get; }
 
         /// <summary>
-        /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
-        /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
-        /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
-        /// is for the y.
+        /// Returns an import scope the method is declared within, or null if there is none 
+        /// (e.g. the method doesn't contain user code).
         /// </summary>
-        ImmutableArray<NamespaceScope> NamespaceScopes { get; }
+        /// <remarks>
+        /// The chain is a spine of a tree in a forest of import scopes. A tree of import scopes is created by the language for each source file
+        /// based on namespace declarations. In VB each tree is trivial single-node tree that declares the imports of a file.
+        /// In C# the tree copies the nesting of namespace declarations in the file. There is a separate scope for each dotted component in 
+        /// the namespace type name. For instance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+        /// is for the y.
+        /// </remarks>
+        IImportScope ImportScope { get; }
+
+        DebugId MethodId { get; }
 
         /// <summary>
+        /// Returns debug information for local variables hoisted to state machine fields, 
+        /// or null if this method isn't MoveNext method of a state machine.
+        /// </summary>
+        /// <remarks>
         /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
         /// The scopes are returned for the MoveNext method of the object returned by the iterator method.
         /// The index of the scope corresponds to the index of the local.  Specifically local scope i corresponds
@@ -427,23 +452,31 @@ namespace Microsoft.Cci
         /// the first local to be moved into the class is named "xyzzy", it will be stored in a field named
         /// "&lt;xyzzy&gt;5__1", and the ILocalScope returned from this method at index 1 (i.e. the second one) will
         /// have the scope information for where that variable is in scope.
-        /// </summary>
-        ImmutableArray<LocalScope> IteratorScopes { get; }
+        /// </remarks>
+        ImmutableArray<StateMachineHoistedLocalScope> StateMachineHoistedLocalScopes { get; }
 
         /// <summary>
-        /// If the body was written as an iterator, returns the name of the (nested)
-        /// type that implements the iterator's state machine.
+        /// The name of the state machine generated for the method, 
+        /// or null if the method isn't the kickoff method of a state machine.
         /// </summary>
-        string IteratorClassName { get; }
-    }
+        string StateMachineTypeName { get; }
 
-    /// <summary>
-    /// This enum is used to distinguish which style to pick while writing the PDB information.
-    /// </summary>
-    internal enum CustomDebugInfoKind
-    {
-        CSharpStyle,
-        VisualBasicStyle
+        /// <summary>
+        /// Returns information relevant to EnC on slots of local variables hoisted to state machine fields, 
+        /// or null if the method isn't the kickoff method of a state machine.
+        /// </summary>
+        ImmutableArray<EncHoistedLocalInfo> StateMachineHoistedLocalSlots { get; }
+
+        /// <summary>
+        /// Returns types of awaiter slots allocated on the state machine,
+        /// or null if the method isn't the kickoff method of a state machine.
+        /// </summary>
+        ImmutableArray<ITypeReference> StateMachineAwaiterSlots { get; }
+
+        ImmutableArray<ClosureDebugInfo> ClosureDebugInfo { get; }
+        ImmutableArray<LambdaDebugInfo> LambdaDebugInfo { get; }
+
+        DynamicAnalysisMethodBodyData DynamicAnalysisData { get; }
     }
 
     /// <summary>
@@ -455,7 +488,7 @@ namespace Microsoft.Cci
         /// A container for a list of IL instructions providing the implementation (if any) of this method.
         /// </summary>
         /// <remarks>
-        /// When emitting metadata-only assemblies this returns null even if <see cref="M:Cci.Extensions.HasBody"/> returns true.
+        /// When emitting metadata-only assemblies this returns null even if <see cref="Cci.Extensions.HasBody"/> returns true.
         /// </remarks>
         IMethodBody GetBody(EmitContext context);
 
@@ -465,7 +498,6 @@ namespace Microsoft.Cci
         IEnumerable<IGenericMethodParameter> GenericParameters
         {
             get;
-
             // ^ requires this.IsGeneric;
         }
 
@@ -565,7 +597,6 @@ namespace Microsoft.Cci
         IPlatformInvokeInformation PlatformInvokeData
         {
             get;
-
             // ^ requires this.IsPlatformInvoke;
         }
 
@@ -591,7 +622,6 @@ namespace Microsoft.Cci
         IMarshallingInformation ReturnValueMarshallingInformation
         {
             get;
-
             // ^ requires this.ReturnValueIsMarshalledExplicitly;
         }
 
@@ -601,7 +631,6 @@ namespace Microsoft.Cci
         ImmutableArray<byte> ReturnValueMarshallingDescriptor
         {
             get;
-
             // ^ requires this.ReturnValueIsMarshalledExplicitly;
         }
 
@@ -609,6 +638,12 @@ namespace Microsoft.Cci
         /// Declarative security actions for this method.
         /// </summary>
         IEnumerable<SecurityAttribute> SecurityAttributes { get; }
+
+        /// <summary>
+        /// Namespace containing this method.
+        /// TODO: Ideally we would expose INamespace on INamespaceTypeDefinition. Right now we can only get the qualified namespace name.
+        /// </summary>
+        INamespace ContainingNamespace { get; }
     }
 
     /// <summary>
@@ -620,7 +655,7 @@ namespace Microsoft.Cci
         /// A compile time constant value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
         /// Null if the parameter doesn't have default value.
         /// </summary>
-        IMetadataConstant GetDefaultValue(EmitContext context);
+        MetadataConstant GetDefaultValue(EmitContext context);
 
         /// <summary>
         /// True if the parameter has a default value that should be supplied as the argument value by a caller for which the argument value has not been explicitly specified.
@@ -643,7 +678,6 @@ namespace Microsoft.Cci
         bool IsOptional
         {
             get;
-
             // ^ result ==> this.HasDefaultValue;
         }
 
@@ -658,7 +692,6 @@ namespace Microsoft.Cci
         IMarshallingInformation MarshallingInformation
         {
             get;
-
             // ^ requires this.IsMarshalledExplicitly;
         }
 
@@ -668,7 +701,6 @@ namespace Microsoft.Cci
         ImmutableArray<byte> MarshallingDescriptor
         {
             get;
-
             // ^ requires this.IsMarshalledExplicitly;
         }
     }
@@ -687,10 +719,9 @@ namespace Microsoft.Cci
         /// <summary>
         /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
         /// </summary>
-        IMetadataConstant DefaultValue
+        MetadataConstant DefaultValue
         {
             get;
-
             // ^ requires this.HasDefaultValue;
         }
 
@@ -747,9 +778,17 @@ namespace Microsoft.Cci
         ImmutableArray<IParameterTypeInformation> GetParameters(EmitContext context);
 
         /// <summary>
-        /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+        /// Returns the list of custom modifiers, if any, associated with the return type. 
         /// </summary>
         ImmutableArray<ICustomModifier> ReturnValueCustomModifiers
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Returns the list of custom modifiers, if any, associated with the ref modifier. 
+        /// </summary>
+        ImmutableArray<ICustomModifier> RefCustomModifiers
         {
             get;
         }
@@ -870,7 +909,6 @@ namespace Microsoft.Cci
         ushort GenericParameterCount
         {
             get;
-
             // ^ ensures !this.IsGeneric ==> result == 0;
             // ^ ensures this.IsGeneric ==> result > 0;
         }
@@ -929,16 +967,6 @@ namespace Microsoft.Cci
         /// The name of the method.
         /// </summary>
         new string Name { get; }
-    }
-
-    internal enum EncFuncCode
-    {
-        Delta = 0,
-        AddMethod = 1,
-        AddField = 2,
-        AddParameter = 3,
-        AddProperty = 4,
-        AddEvent = 5
     }
 
     internal static class Extensions

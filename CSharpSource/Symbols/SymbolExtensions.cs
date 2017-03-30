@@ -1,17 +1,14 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using Microsoft.CodeAnalysis.Collections;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
-using System.Collections.Generic;
+
+using static System.Linq.ImmutableArrayExtensions;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -31,10 +28,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <summary>
         /// Returns a constructed named type symbol if 'type' is generic, otherwise just returns 'type'
         /// </summary>
-        public static NamedTypeSymbol ConstructIfGeneric(this NamedTypeSymbol type, ImmutableArray<TypeSymbol> typeArguments)
+        public static NamedTypeSymbol ConstructIfGeneric(this NamedTypeSymbol type, ImmutableArray<TypeWithModifiers> typeArguments)
         {
             Debug.Assert(type.TypeParameters.IsEmpty == (typeArguments.Length == 0));
-            return type.TypeParameters.IsEmpty ? type : type.Construct(typeArguments);
+            return type.TypeParameters.IsEmpty ? type : type.Construct(typeArguments, unbound: false);
         }
 
         public static bool IsNestedType(this Symbol symbol)
@@ -123,7 +120,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             while ((object)containingMember != null && containingMember.Kind == SymbolKind.Method)
             {
                 MethodSymbol method = (MethodSymbol)containingMember;
-                if (method.MethodKind != MethodKind.AnonymousFunction) break;
+                if (method.MethodKind != MethodKind.AnonymousFunction && method.MethodKind != MethodKind.LocalFunction) break;
                 containingMember = containingMember.ContainingSymbol;
             }
 
@@ -143,7 +140,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         MethodSymbol method = (MethodSymbol)symbol;
 
                         // skip lambdas:
-                        if (method.MethodKind == MethodKind.AnonymousFunction)
+                        if (method.MethodKind == MethodKind.AnonymousFunction || method.MethodKind == MethodKind.LocalFunction)
                         {
                             symbol = method.ContainingSymbol;
                             continue;
@@ -183,8 +180,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return ((MethodSymbol)symbol).ConstructedFrom;
 
                 default:
-                    Debug.Assert(false, "Unexpected symbol: " + symbol.Kind);
-                    return symbol;
+                    throw ExceptionUtilities.UnexpectedValue(symbol.Kind);
             }
         }
 
@@ -194,7 +190,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         public static bool IsContainingSymbolOfAllTypeParameters(this Symbol containingSymbol, TypeSymbol type)
         {
-            return (object)type.VisitType(HasInvalidTypeParameterFunc, containingSymbol) == null;
+            return (object)type.VisitType(s_hasInvalidTypeParameterFunc, containingSymbol) == null;
         }
 
         /// <summary>
@@ -206,7 +202,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return types.All(containingSymbol.IsContainingSymbolOfAllTypeParameters);
         }
 
-        private static readonly Func<TypeSymbol, Symbol, bool, bool> HasInvalidTypeParameterFunc = (type, containingSymbol, unused) => HasInvalidTypeParameter(type, containingSymbol);
+        private static readonly Func<TypeSymbol, Symbol, bool, bool> s_hasInvalidTypeParameterFunc = (type, containingSymbol, unused) => HasInvalidTypeParameter(type, containingSymbol);
 
         private static bool HasInvalidTypeParameter(TypeSymbol type, Symbol containingSymbol)
         {
@@ -330,5 +326,65 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return csSymbol;
         }
 
+        internal static ImmutableArray<TypeSymbol> ToTypes(this ImmutableArray<TypeWithModifiers> typesWithModifiers, out bool hasModifiers)
+        {
+            hasModifiers = typesWithModifiers.Any(a => !a.CustomModifiers.IsDefaultOrEmpty);
+            return typesWithModifiers.SelectAsArray(a => a.Type);
+        }
+
+        internal static TypeSymbol GetTypeOrReturnType(this Symbol symbol)
+        {
+            RefKind refKind;
+            TypeSymbol returnType;
+            ImmutableArray<CustomModifier> customModifiers_Ignored;
+            GetTypeOrReturnType(symbol, out refKind, out returnType, out customModifiers_Ignored, out customModifiers_Ignored);
+            return returnType;
+        }
+
+        internal static void GetTypeOrReturnType(this Symbol symbol, out RefKind refKind, out TypeSymbol returnType, 
+                                                 out ImmutableArray<CustomModifier> returnTypeCustomModifiers,
+                                                 out ImmutableArray<CustomModifier> refCustomModifiers)
+        {
+            switch (symbol.Kind)
+            {
+                case SymbolKind.Field:
+                    FieldSymbol field = (FieldSymbol)symbol;
+                    refKind = RefKind.None;
+                    returnType = field.Type;
+                    returnTypeCustomModifiers = field.CustomModifiers;
+                    refCustomModifiers = ImmutableArray<CustomModifier>.Empty;
+                    break;
+                case SymbolKind.Method:
+                    MethodSymbol method = (MethodSymbol)symbol;
+                    refKind = method.RefKind;
+                    returnType = method.ReturnType;
+                    returnTypeCustomModifiers = method.ReturnTypeCustomModifiers;
+                    refCustomModifiers = method.RefCustomModifiers;
+                    break;
+                case SymbolKind.Property:
+                    PropertySymbol property = (PropertySymbol)symbol;
+                    refKind = property.RefKind;
+                    returnType = property.Type;
+                    returnTypeCustomModifiers = property.TypeCustomModifiers;
+                    refCustomModifiers = property.RefCustomModifiers;
+                    break;
+                case SymbolKind.Event:
+                    EventSymbol @event = (EventSymbol)symbol;
+                    refKind = RefKind.None;
+                    returnType = @event.Type;
+                    returnTypeCustomModifiers = ImmutableArray<CustomModifier>.Empty;
+                    refCustomModifiers = ImmutableArray<CustomModifier>.Empty;
+                    break;
+                case SymbolKind.Local:
+                    LocalSymbol local = (LocalSymbol)symbol;
+                    refKind = local.RefKind;
+                    returnType = local.Type;
+                    returnTypeCustomModifiers = ImmutableArray<CustomModifier>.Empty;
+                    refCustomModifiers = ImmutableArray<CustomModifier>.Empty;
+                    break;
+                default:
+                    throw ExceptionUtilities.UnexpectedValue(symbol.Kind);
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.ComponentModel;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -15,6 +15,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
         internal override SimpleNameSyntax GetUnqualifiedName()
         {
             return Right;
+        }
+
+        internal override string ErrorDisplayName()
+        {
+            return Left.ErrorDisplayName() + "." + Right.ErrorDisplayName();
         }
     }
 }

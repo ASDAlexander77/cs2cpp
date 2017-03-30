@@ -1,16 +1,17 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.Text;
+using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis
 {
-    partial class CommonReferenceManager<TCompilation, TAssemblySymbol>
+    internal partial class CommonReferenceManager<TCompilation, TAssemblySymbol>
     {
         /// <summary>
         /// Information about an assembly, used as an input for the Binder class.
         /// </summary>
+        [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
         internal abstract class AssemblyData
         {
             /// <summary>
@@ -58,6 +59,14 @@ namespace Microsoft.CodeAnalysis
             public abstract bool IsLinked { get; }
 
             public abstract bool DeclaresTheObjectClass { get; }
+
+            /// <summary>
+            /// Get the source compilation backing this assembly, if one exists.
+            /// Returns null otherwise.
+            /// </summary>
+            public abstract Compilation SourceCompilation { get; }
+
+            private string GetDebuggerDisplay() => $"{GetType().Name}: [{Identity.GetDisplayName()}]";
         }
     }
 }

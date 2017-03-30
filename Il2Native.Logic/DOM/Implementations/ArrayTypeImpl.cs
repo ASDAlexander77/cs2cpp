@@ -266,7 +266,31 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public TypeKind TypeKind
         {
-            get { return TypeKind.ArrayType; }
+            get { return TypeKind.Array; }
+        }
+
+        public bool IsSZArray
+        {
+            get;
+            set;
+        }
+
+        public ImmutableArray<int> LowerBounds
+        {
+            get;
+            set;
+        }
+
+        public ImmutableArray<int> Sizes
+        {
+            get;
+            set;
+        }
+
+        public bool IsTupleType
+        {
+            get;
+            set;
         }
 
         ISymbol ISymbol.OriginalDefinition
@@ -288,6 +312,11 @@ namespace Il2Native.Logic.DOM.Implementations
         }
 
         public bool Equals(IArrayTypeSymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Equals(ISymbol other)
         {
             throw new NotImplementedException();
         }

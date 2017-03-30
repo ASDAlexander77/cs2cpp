@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -65,8 +65,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         /// <summary>
         /// If this field serves as a backing variable for an automatically generated
-        /// property or a field-like event or a Primary Constructor Parameter, returns that 
-        /// property/event/parameter. Otherwise returns null.
+        /// property or a field-like event, returns that 
+        /// property/event. Otherwise returns null.
         /// Note, the set of possible associated symbols might be expanded in the future to 
         /// reflect changes in the languages.
         /// </summary>
@@ -287,7 +287,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Returns the marshalling type of this field, or 0 if marshalling information isn't available.
         /// </summary>
         /// <remarks>
-        /// By default this information is extracted from <see cref="P:MarshallingInformation"/> if available. 
+        /// By default this information is extracted from <see cref="MarshallingInformation"/> if available. 
         /// Since the compiler does only need to know the marshalling type of symbols that aren't emitted 
         /// PE symbols just decode the type from metadata and don't provide full marshalling information.
         /// </remarks>
@@ -373,6 +373,77 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
+        /// <summary>
+        /// Is this a field of a tuple type?
+        /// </summary>
+        public virtual bool IsTupleField
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns True when field symbol is not mapped directly to a field in the underlying tuple struct.
+        /// </summary>
+        public virtual bool IsVirtualTupleField
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if this is a field representing a Default element like Item1, Item2...
+        /// </summary>
+        public virtual bool IsDefaultTupleElement
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// If this is a field of a tuple type, return corresponding underlying field from the
+        /// tuple underlying type. Otherwise, null. In case of a malformed underlying type
+        /// the corresponding underlying field might be missing, return null in this case too.
+        /// </summary>
+        public virtual FieldSymbol TupleUnderlyingField
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// If this field represents a tuple element, returns a corresponding default element field.
+        /// Otherwise returns null.
+        /// </summary>
+        public virtual FieldSymbol CorrespondingTupleField
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// If this is a field representing a tuple element,
+        /// returns the index of the element (zero-based).
+        /// Otherwise returns -1
+        /// </summary>
+        public virtual int TupleElementIndex
+        {
+            get
+            {
+                return -1;
+            }
+        }
+
         #region IFieldSymbol Members
 
         ISymbol IFieldSymbol.AssociatedSymbol
@@ -399,6 +470,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         IFieldSymbol IFieldSymbol.OriginalDefinition
         {
             get { return this.OriginalDefinition; }
+        }
+
+        IFieldSymbol IFieldSymbol.CorrespondingTupleField
+        {
+            get { return this.CorrespondingTupleField; }
         }
 
         #endregion

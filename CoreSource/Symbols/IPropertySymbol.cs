@@ -1,12 +1,17 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
     /// Represents a property or indexer.
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface IPropertySymbol : ISymbol
     {
         /// <summary>
@@ -29,6 +34,11 @@ namespace Microsoft.CodeAnalysis
         /// a field member when the field is marked as WithEvents.
         /// </summary>
         bool IsWithEvents { get; }
+
+        /// <summary>
+        /// Returns true if this property returns by reference.
+        /// </summary>
+        bool ReturnsByRef { get; }
 
         /// <summary>
         /// The type of the property. 
@@ -71,6 +81,11 @@ namespace Microsoft.CodeAnalysis
         /// Properties imported from metadata can explicitly implement more than one property.
         /// </remarks>
         ImmutableArray<IPropertySymbol> ExplicitInterfaceImplementations { get; }
+
+        /// <summary>
+        /// Custom modifiers associated with the ref modifier, or an empty array if there are none.
+        /// </summary>
+        ImmutableArray<CustomModifier> RefCustomModifiers { get; }
 
         /// <summary>
         /// The list of custom modifiers, if any, associated with the type of the property. 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -8,6 +8,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal enum MessageID
     {
+        None = 0,
         MessageBase = 1200,
         IDS_SK_METHOD = MessageBase + 2000,
         IDS_SK_TYPE = MessageBase + 2001,
@@ -47,7 +48,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         IDS_MethodGroup = MessageBase + 12513,
         IDS_AnonMethod = MessageBase + 12514,
         IDS_FeatureSwitchOnBool = MessageBase + 12517,
-        IDS_WarnAsError = MessageBase + 12518,
+        //IDS_WarnAsError = MessageBase + 12518,
         IDS_Collection = MessageBase + 12520,
         IDS_FeaturePropertyAccessorMods = MessageBase + 12522,
         IDS_FeatureExternAlias = MessageBase + 12523,
@@ -55,15 +56,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         IDS_FeatureDefault = MessageBase + 12525,
         IDS_FeatureNullable = MessageBase + 12528,
         IDS_Lambda = MessageBase + 12531,
-        //IDS_AnonymousType = MessageBase + 12532,
-        //IDS_LetClause = MessageBase + 12549,
-        //IDS_FromClause = MessageBase + 12550,
-        //IDS_WhereClause = MessageBase + 12551,
-        //IDS_SelectClause = MessageBase + 12552,
-        //IDS_JoinClause = MessageBase + 12553,
-        //IDS_GroupByClause = MessageBase + 12554,
-        //IDS_OrderByClause = MessageBase + 12555,
-        //IDS_ContinuationClause = MessageBase + 12556,
+        IDS_FeaturePatternMatching = MessageBase + 12532,
+        IDS_FeatureThrowExpression = MessageBase + 12533,
+
         IDS_FeatureImplicitArray = MessageBase + 12557,
         IDS_FeatureImplicitLocal = MessageBase + 12558,
         IDS_FeatureAnonymousTypes = MessageBase + 12559,
@@ -100,29 +95,59 @@ namespace Microsoft.CodeAnalysis.CSharp
         IDS_PathList = MessageBase + 12686,
         IDS_Text = MessageBase + 12687,
 
-        IDS_FeatureDeclarationExpression = MessageBase + 12688,
-        IDS_FeaturePrimaryConstructor = MessageBase + 12689,
+        // available
+
         IDS_FeatureNullPropagatingOperator = MessageBase + 12690,
         IDS_FeatureExpressionBodiedMethod = MessageBase + 12691,
         IDS_FeatureExpressionBodiedProperty = MessageBase + 12692,
         IDS_FeatureExpressionBodiedIndexer = MessageBase + 12693,
-        IDS_VersionExperimental = MessageBase + 12694,
+        // IDS_VersionExperimental = MessageBase + 12694,
+        IDS_FeatureNameof = MessageBase + 12695,
+        IDS_FeatureDictionaryInitializer = MessageBase + 12696,
+
+        IDS_ToolName = MessageBase + 12697,
+        IDS_LogoLine1 = MessageBase + 12698,
+        IDS_LogoLine2 = MessageBase + 12699,
+        IDS_CSCHelp = MessageBase + 12700,
+
+        IDS_FeatureUsingStatic = MessageBase + 12701,
+        IDS_FeatureInterpolatedStrings = MessageBase + 12702,
+        IDS_OperationCausedStackOverflow = MessageBase + 12703,
+        IDS_AwaitInCatchAndFinally = MessageBase + 12704,
+        IDS_FeatureReadonlyAutoImplementedProperties = MessageBase + 12705,
+        IDS_FeatureBinaryLiteral = MessageBase + 12706,
+        IDS_FeatureDigitSeparator = MessageBase + 12707,
+        IDS_FeatureLocalFunctions = MessageBase + 12708,
+
+        IDS_FeatureRefLocalsReturns = MessageBase + 12710,
+        IDS_FeatureTuples = MessageBase + 12711,
+        IDS_FeatureOutVar = MessageBase + 12713,
+
+        IDS_FeatureIOperation = MessageBase + 12714,
+        IDS_FeatureExpressionBodiedAccessor = MessageBase + 12715,
+        IDS_FeatureExpressionBodiedDeOrConstructor = MessageBase + 12716,
+        IDS_ThrowExpression = MessageBase + 12717,
     }
 
     // Message IDs may refer to strings that need to be localized.
     // This struct makes an IFormattable wrapper around a MessageID
     internal struct LocalizableErrorArgument : IFormattable, IMessageSerializable
     {
-        private readonly MessageID id;
+        private readonly MessageID _id;
 
         internal LocalizableErrorArgument(MessageID id)
         {
-            this.id = id;
+            _id = id;
+        }
+
+        public override string ToString()
+        {
+            return ToString(null, null);
         }
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return ErrorFacts.GetMessage(id, formatProvider as System.Globalization.CultureInfo);
+            return ErrorFacts.GetMessage(_id, formatProvider as System.Globalization.CultureInfo);
         }
     }
 
@@ -135,16 +160,41 @@ namespace Microsoft.CodeAnalysis.CSharp
             return new LocalizableErrorArgument(id);
         }
 
+        // Returns the string to be used in the /features flag switch to enable the MessageID feature.
+        // Always call this before RequiredVersion:
+        //   If this method returns null, call RequiredVersion and use that.
+        //   If this method returns non-null, use that.
+        // Features should be mutually exclusive between RequiredFeature and RequiredVersion.
+        //   (hence the above rule - RequiredVersion throws when RequiredFeature returns non-null)
+        internal static string RequiredFeature(this MessageID feature)
+        {
+            switch (feature)
+            {
+                case MessageID.IDS_FeatureIOperation:
+                    return "IOperation";
+                default:
+                    return null;
+            }
+        }
+
         internal static LanguageVersion RequiredVersion(this MessageID feature)
         {
             // Based on CSourceParser::GetFeatureUsage from SourceParser.cpp.
             // Checks are in the LanguageParser unless otherwise noted.
             switch (feature)
             {
-                // Experimental features.
-                case MessageID.IDS_FeatureDeclarationExpression:
-                case MessageID.IDS_FeaturePrimaryConstructor:
-                    return LanguageVersion.Experimental;
+                // C# 7 features.
+                case MessageID.IDS_FeatureBinaryLiteral:
+                case MessageID.IDS_FeatureDigitSeparator:
+                case MessageID.IDS_FeatureLocalFunctions:
+                case MessageID.IDS_FeatureRefLocalsReturns:
+                case MessageID.IDS_FeaturePatternMatching:
+                case MessageID.IDS_FeatureThrowExpression:
+                case MessageID.IDS_FeatureTuples:
+                case MessageID.IDS_FeatureOutVar:
+                case MessageID.IDS_FeatureExpressionBodiedAccessor:
+                case MessageID.IDS_FeatureExpressionBodiedDeOrConstructor:
+                    return LanguageVersion.CSharp7;
 
                 // C# 6 features.
                 case MessageID.IDS_FeatureExceptionFilter:
@@ -153,6 +203,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case MessageID.IDS_FeatureExpressionBodiedMethod:
                 case MessageID.IDS_FeatureExpressionBodiedProperty:
                 case MessageID.IDS_FeatureExpressionBodiedIndexer:
+                case MessageID.IDS_FeatureNameof:
+                case MessageID.IDS_FeatureDictionaryInitializer:
+                case MessageID.IDS_FeatureUsingStatic:
+                case MessageID.IDS_FeatureInterpolatedStrings:
+                case MessageID.IDS_AwaitInCatchAndFinally:
+                case MessageID.IDS_FeatureReadonlyAutoImplementedProperties:
                     return LanguageVersion.CSharp6;
 
                 // C# 5 features.

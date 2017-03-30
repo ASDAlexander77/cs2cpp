@@ -61,26 +61,23 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // interface cast
-        ///template &lt;typename C, typename T&gt; 
-        ///inline typename std::enable_if&lt;!is_value_type&lt;T&gt;::value, C&gt;::type interface_cast (T t)
+        ///   Looks up a localized string similar to // cast internals
+        ///template &lt;typename D, typename S&gt; 
+        ///inline typename std::enable_if&lt;is_class_type&lt;D&gt;::value &amp;&amp; is_class_type&lt;S&gt;::value, D&gt;::type as(S s)
         ///{
-        ///	if (t == nullptr)
-        ///	{
-        ///		return nullptr;
-        ///	}
-        ///
-        ///	return t-&gt;operator C();
+        ///	return dynamic_cast&lt;D&gt;(s);
         ///}
         ///
-        ///template &lt;typename C, typename T&gt; 
-        ///inline typename std::enable_if&lt;is_value_type&lt;T&gt;::value, C&gt;::type interface_cast (T t)
+        ///template &lt;typename D, typename S&gt; 
+        ///inline typename std::enable_if&lt;is_value_type&lt;D&gt;::value || is_value_type&lt;S&gt;::value, D&gt;::type as(S s)
         ///{
-        ///	return t-&gt;operator C();
+        ///	return nullptr;
         ///}
         ///
-        ///template &lt;typename C, typename T&gt; 
-        ///inline typename std::enable_if&lt;!is_interface_type&lt;T&gt;::value, C&gt;::type dynamic_interface_cast  [rest of string was truncated]&quot;;.
+        ///// special case for interfaces
+        ///// add flag to each interface to be able to create is_interface&lt;T&gt;::value
+        ///template &lt;typename D, typename S&gt; 
+        ///inline typena [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -89,35 +86,34 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to __object_extras_storage __object_extras_storage_instance;
-        ///__strings_storage __strings_storage_instance;
+        ///   Looks up a localized string similar to __object_extras_storage* __object_extras_storage_instance = nullptr;
+        ///__strings_storage* __strings_storage_instance = nullptr;
         ///
-        ///void GC_CALLBACK __finalizer(void * obj, void * client_data)
+        ////*
+        ///void* operator new (size_t _size)
         ///{
-        ///	if (obj == nullptr)
-        ///	{
-        ///		return;
-        ///	}
-        ///
-        ///	((object*)obj)-&gt;Finalize();
+        ///	return GC_MALLOC_UNCOLLECTABLE(size);
         ///}
         ///
-        ///int32_t __hash_code(object* _obj, size_t _size)
+        ///void operator delete (void* obj);
         ///{
-        ///	if (_obj == nullptr)
-        ///	{
-        ///		return 0;
-        ///	}
+        ///	GC_FREE(obj);
+        ///}
         ///
-        ///	auto bytes = (int8_t*) _obj;
+        ///void* operator new[] (size_t _size);
+        ///{
+        ///	return GC_MALLOC_UNCOLLECTABLE(size);
+        ///}
         ///
-        ///	const int32_t p = 16777619;
-        ///	auto hash = 2166136261;
+        ///void operator delete[] (void* obj);
+        ///{
+        ///	GC_FREE(obj);
+        ///}
+        ///*/
         ///
-        ///	for (int i = 0; i &lt; _size; i++)
-        ///	{
-        ///		hash = (hash ^ bytes[i]) * p;
-        ///	 [rest of string was truncated]&quot;;.
+        ///void* operator new (size_t _size, GCNormal)
+        ///{
+        ///    return __new_set0(_size, GCNormal [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_definitions {
             get {
@@ -126,7 +122,17 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // map valuetype to class
+        ///   Looks up a localized string similar to enum class GCNormal
+        ///{
+        ///	Default
+        ///};
+        ///
+        ///enum class GCAtomic
+        ///{
+        ///	Default
+        ///};
+        ///
+        ///// map valuetype to class
         ///template&lt;typename T&gt; 
         ///struct valuetype_to_class { typedef T type; };
         ///
@@ -134,12 +140,13 @@ namespace Il2Native.Logic.Properties {
         ///template&lt;typename T&gt; 
         ///struct class_to_valuetype { typedef T type; };
         ///
+        ///template&lt;typename T&gt; 
+        ///struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
+        ///
         ///template &lt;typename T&gt; struct convert_primitive_type_to_class
         ///{
         ///	typedef
-        ///		typename std::conditional&lt; std::is_same&lt; T, void &gt;::value, CoreLib::System::Void, 
-        ///		typename std::conditional&lt; std::is_same&lt; T, int8_t &gt;::value, CoreLib::System::SByte, 
-        ///		typename std::conditional&lt; std::is_same&lt; T, uint8_t &gt;::value [rest of string was truncated]&quot;;.
+        ///		typename std::conditional&lt; std::is_same&lt; T, void [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_forward_declarations {
             get {
@@ -162,17 +169,14 @@ namespace Il2Native.Logic.Properties {
         ///#include &lt;chrono&gt; 
         ///#include &lt;unordered_map&gt;
         ///#include &lt;mutex&gt;
-        ///#include &lt;shared_mutex&gt;
         ///#include &lt;condition_variable&gt;
         ///#include &lt;atomic&gt;
-        ///
-        ///#ifdef _MSC_VER
-        ///#include &lt;Windows.h&gt;
-        ///#endif
+        ///#include &lt;cstdlib&gt;
         ///
         ///#ifndef thread_local
         ///# if __STDC_VERSION__ &gt;= 201112 &amp;&amp; !defined __STDC_NO_THREADS__
-        ///#  de [rest of string was truncated]&quot;;.
+        ///#  define thread_local _Thread_local
+        ///# elif defined _WIN32 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_include {
             get {
@@ -181,29 +185,22 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Array
-        ///template &lt;typename T&gt;
-        ///int32_t  __array&lt;T&gt;::__array_element_size()
+        ///   Looks up a localized string similar to // TypedReference
+        ///template &lt;typename T&gt; inline CoreLib::System::TypedReference __makeref(T* t)
         ///{
-        ///	return sizeof(T);
+        ///	CoreLib::System::TypedReference __MakeRef;
+        ///	__MakeRef = __init&lt;CoreLib::System::TypedReference&gt;();
+        ///	__MakeRef.Value = __init&lt;CoreLib::System::IntPtr&gt;((void*)t);
+        ///	__MakeRef.Type = __init&lt;CoreLib::System::IntPtr&gt;((void*)_typeMT&lt;T&gt;());
+        ///	return __MakeRef;
         ///}
         ///
-        ///template &lt;typename T&gt;
-        ///void __array&lt;T&gt;::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
+        ///template &lt;typename T&gt; inline T&amp; __refvalue(CoreLib::System::TypedReference tr)
         ///{
-        ///	if (rank != 1)
-        ///	{
-        ///		throw __new&lt;CoreLib::System::InvalidOperationException&gt;(L&quot;rank&quot;_s);
-        ///	}
+        ///	return (T&amp;)*(T*)((void*)tr.Value);
+        ///}
         ///
-        ///	if (elemRef == nullptr)
-        ///	{
-        ///		throw __new&lt;CoreLib::System::ArgumentNullException&gt;(L&quot;elemRef&quot;_s);
-        ///	}	
-        ///
-        ///	if (pIndices == nullptr)
-        ///	{
-        ///		throw __new&lt;CoreLib::System::ArgumentNullException&gt;(L&quot;p [rest of string was truncated]&quot;;.
+        ///template &lt;typename T&gt; in [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_template_definitions {
             get {
@@ -294,16 +291,25 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #ifdef _MSC_VER
-        ///
-        ///CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value)
+        ///   Looks up a localized string similar to template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;std::is_signed&lt;T&gt;::value &amp;&amp; std::is_integral&lt;T&gt;::value, T&gt;::type checked_unary_minus(T operand)
         ///{
-        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
+        ///	if (operand == std::numeric_limits&lt;T&gt;::min())
+        ///	{
+        ///		throw __new&lt;CoreLib::System::OverflowException&gt;();
+        ///	}
+        ///
+        ///	return -operand;
         ///}
         ///
-        ///CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
+        ///template &lt; typename T &gt;
+        ///inline typename std::enable_if&lt;!std::is_signed&lt;T&gt;::value || !std::is_integral&lt;T&gt;::value, T&gt;::type checked_unary_minus(T operand)
         ///{
-        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
+        ///	return -operand;
+        ///}
+        ///
+        ///template &lt; typename D, typename S &gt;
+        ///i [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string overflow {
             get {

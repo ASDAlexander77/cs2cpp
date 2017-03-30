@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -21,7 +21,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private BoundExpression MakeIsOperator(
             BoundIsOperator oldNode,
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenOperand,
             BoundTypeExpression rewrittenTargetType,
             Conversion conversion,
@@ -50,7 +50,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // TODO: Handle dynamic operand type and target type
 
-            if (!inExpressionLambda)
+            if (!_inExpressionLambda)
             {
                 ConstantValue constantValue = Binder.GetIsOperatorConstantResult(operandType, targetType, conversion.Kind, rewrittenOperand.ConstantValue);
 
@@ -68,11 +68,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         // We need to box the type parameter even if it is a known
                         // reference type to ensure there are no verifier errors
-                        rewrittenOperand = MakeConversion(
+                        rewrittenOperand = MakeConversionNode(
                             syntax: rewrittenOperand.Syntax,
                             rewrittenOperand: rewrittenOperand,
-                            conversionKind: ConversionKind.Boxing,
-                            rewrittenType: compilation.GetSpecialType(SpecialType.System_Object),
+                            conversion: Conversion.Boxing,
+                            rewrittenType: _compilation.GetSpecialType(SpecialType.System_Object),
                             @checked: false);
                     }
 
@@ -84,7 +84,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private BoundExpression RewriteConstantIsOperator(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression loweredOperand,
             ConstantValue constantValue,
             TypeSymbol type)

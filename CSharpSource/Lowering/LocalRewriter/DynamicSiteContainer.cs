@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -8,18 +8,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal sealed class DynamicSiteContainer : SynthesizedContainer, ISynthesizedMethodBodyImplementationSymbol
     {
-        private readonly MethodSymbol topLevelMethod;
+        private readonly MethodSymbol _topLevelMethod;
 
         internal DynamicSiteContainer(string name, MethodSymbol topLevelMethod)
             : base(name, topLevelMethod)
         {
             Debug.Assert(topLevelMethod != null);
-            this.topLevelMethod = topLevelMethod;
+            _topLevelMethod = topLevelMethod;
         }
 
         public override Symbol ContainingSymbol
         {
-            get { return topLevelMethod.ContainingSymbol; }
+            get { return _topLevelMethod.ContainingSymbol; }
         }
 
         public override TypeKind TypeKind
@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         IMethodSymbol ISynthesizedMethodBodyImplementationSymbol.Method
         {
-            get { return topLevelMethod; }
+            get { return _topLevelMethod; }
         }
     }
 }

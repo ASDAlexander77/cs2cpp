@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -55,9 +55,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public abstract RefKind RefKind { get; }
 
         /// <summary>
-        /// The list of custom modifiers, if any, associated with the parameter.
+        /// The list of custom modifiers, if any, associated with the parameter type.
         /// </summary>
         public abstract ImmutableArray<CustomModifier> CustomModifiers { get; }
+
+        /// <summary>
+        /// Custom modifiers associated with the ref modifier, or an empty array if there are none.
+        /// </summary>
+        public abstract ImmutableArray<CustomModifier> RefCustomModifiers { get; }
 
         /// <summary>
         /// Describes how the parameter is marshalled when passed to native code.
@@ -70,7 +75,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Returns the marshalling type of this parameter, or 0 if marshalling information isn't available.
         /// </summary>
         /// <remarks>
-        /// By default this information is extracted from <see cref="P:MarshallingInformation"/> if available. 
+        /// By default this information is extracted from <see cref="MarshallingInformation"/> if available. 
         /// Since the compiler does only need to know the marshalling type of symbols that aren't emitted 
         /// PE symbols just decode the type from metadata and don't provide full marshalling information.
         /// </remarks>
@@ -91,7 +96,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     case UnmanagedType.Interface:
                     case UnmanagedType.IUnknown:
-                    case UnmanagedType.IDispatch:
+                    case Cci.Constants.UnmanagedType_IDispatch:
                         return true;
                 }
 
@@ -134,7 +139,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 //
                 // Also when we call f() where signature of f is void([Optional]params int[] args) 
                 // an empty array is created and passed to f.
-                return !IsParams && IsMetadataOptional;
+                //
+                // We also do not consider ref/out parameters as optional, unless in COM interop scenarios 
+                // and only for ref.
+                RefKind refKind;
+                return !IsParams && IsMetadataOptional &&
+                       ((refKind = RefKind) == RefKind.None ||
+                        (refKind == RefKind.Ref && ContainingSymbol.ContainingType.IsComImport));
             }
         }
 
@@ -387,17 +398,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        /// <summary>
-        /// The CLI spec says that custom modifiers must precede the ByRef type code in the encoding of a parameter.
-        /// Unfortunately, the managed C++ compiler emits them in the reverse order.  In order to avoid breaking
-        /// interop scenarios, we need to support such signatures.  When this flag is set, we need to reverse the
-        /// emit order.
-        /// </summary>
-        /// <remarks>
-        /// We support before (correct) and after (incorrect, but works), but not in between.
-        /// </remarks>
-        internal abstract bool HasByRefBeforeCustomModifiers { get; }
-
         #region IParameterSymbol Members
 
         ITypeSymbol IParameterSymbol.Type
@@ -408,6 +408,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         ImmutableArray<CustomModifier> IParameterSymbol.CustomModifiers
         {
             get { return this.CustomModifiers; }
+        }
+
+        ImmutableArray<CustomModifier> IParameterSymbol.RefCustomModifiers
+        {
+            get { return this.RefCustomModifiers; }
         }
 
         IParameterSymbol IParameterSymbol.OriginalDefinition

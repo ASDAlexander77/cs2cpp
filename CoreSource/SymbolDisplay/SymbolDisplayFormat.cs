@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -10,7 +10,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Formats a symbol description as in a C# compiler error message.
         /// </summary>
-        public static readonly SymbolDisplayFormat CSharpErrorMessageFormat =
+        public static SymbolDisplayFormat CSharpErrorMessageFormat { get; } =
             new SymbolDisplayFormat(
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
@@ -32,9 +32,33 @@ namespace Microsoft.CodeAnalysis
                     SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName);
 
         /// <summary>
+        /// Formats a symbol description as in a C# compiler short error message.
+        /// </summary>
+        public static SymbolDisplayFormat CSharpShortErrorMessageFormat { get; } =
+            new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+                propertyStyle: SymbolDisplayPropertyStyle.NameOnly,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+                memberOptions:
+                    SymbolDisplayMemberOptions.IncludeParameters |
+                    SymbolDisplayMemberOptions.IncludeContainingType |
+                    SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeType,
+                // Not showing the name is important because we visit parameters to display their
+                // types.  If we visited their types directly, we wouldn't get ref/out/params.
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
+                    SymbolDisplayMiscellaneousOptions.UseAsterisksInMultiDimensionalArrays |
+                    SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName);
+
+        /// <summary>
         /// Formats a symbol description as in a Visual Basic compiler error message.
         /// </summary>
-        public static readonly SymbolDisplayFormat VisualBasicErrorMessageFormat =
+        public static SymbolDisplayFormat VisualBasicErrorMessageFormat { get; } =
             new SymbolDisplayFormat(
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
@@ -47,6 +71,40 @@ namespace Microsoft.CodeAnalysis
                     SymbolDisplayMemberOptions.IncludeParameters |
                     SymbolDisplayMemberOptions.IncludeAccessibility |
                     SymbolDisplayMemberOptions.IncludeType |
+                    SymbolDisplayMemberOptions.IncludeRef |
+                    SymbolDisplayMemberOptions.IncludeModifiers,
+                kindOptions:
+                    SymbolDisplayKindOptions.IncludeMemberKeyword,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeExtensionThis |
+                    SymbolDisplayParameterOptions.IncludeType |
+                    SymbolDisplayParameterOptions.IncludeName |
+                    SymbolDisplayParameterOptions.IncludeOptionalBrackets |
+                    SymbolDisplayParameterOptions.IncludeDefaultValue,
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
+                    SymbolDisplayMiscellaneousOptions.UseAsterisksInMultiDimensionalArrays |
+                    SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName);
+
+        /// <summary>
+        /// Formats a symbol description as in a Visual Basic compiler short error message.
+        /// </summary>
+        public static SymbolDisplayFormat VisualBasicShortErrorMessageFormat { get; } =
+            new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+                propertyStyle: SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
+                genericsOptions:
+                    SymbolDisplayGenericsOptions.IncludeTypeParameters |
+                    SymbolDisplayGenericsOptions.IncludeTypeConstraints |
+                    SymbolDisplayGenericsOptions.IncludeVariance,
+                memberOptions:
+                    SymbolDisplayMemberOptions.IncludeParameters |
+                    SymbolDisplayMemberOptions.IncludeAccessibility |
+                    SymbolDisplayMemberOptions.IncludeType |
+                    SymbolDisplayMemberOptions.IncludeRef |
                     SymbolDisplayMemberOptions.IncludeModifiers,
                 kindOptions:
                     SymbolDisplayKindOptions.IncludeMemberKeyword,
@@ -66,7 +124,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Formats the names of all types and namespaces in a fully qualified style (including the global alias).
         /// </summary>
-        public static readonly SymbolDisplayFormat FullyQualifiedFormat =
+        public static SymbolDisplayFormat FullyQualifiedFormat { get; } =
             new SymbolDisplayFormat(
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
@@ -78,13 +136,14 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Formats a symbol description in a form that suits <see cref="ISymbol.ToMinimalDisplayString"/>.
         /// </summary>
-        public static readonly SymbolDisplayFormat MinimallyQualifiedFormat =
+        public static SymbolDisplayFormat MinimallyQualifiedFormat { get; } =
             new SymbolDisplayFormat(
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
                 genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
                 memberOptions:
                     SymbolDisplayMemberOptions.IncludeParameters |
                     SymbolDisplayMemberOptions.IncludeType |
+                    SymbolDisplayMemberOptions.IncludeRef |
                     SymbolDisplayMemberOptions.IncludeContainingType,
                 kindOptions:
                     SymbolDisplayKindOptions.IncludeMemberKeyword,
@@ -112,6 +171,7 @@ namespace Microsoft.CodeAnalysis
                     SymbolDisplayMemberOptions.IncludeParameters |
                     SymbolDisplayMemberOptions.IncludeContainingType |
                     SymbolDisplayMemberOptions.IncludeType |
+                    SymbolDisplayMemberOptions.IncludeRef |
                     SymbolDisplayMemberOptions.IncludeExplicitInterface,
                 kindOptions:
                     SymbolDisplayKindOptions.IncludeMemberKeyword,
@@ -168,7 +228,7 @@ namespace Microsoft.CodeAnalysis
             new SymbolDisplayFormat(
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-                memberOptions: SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType,
+                memberOptions: SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef,
                 kindOptions: SymbolDisplayKindOptions.IncludeMemberKeyword,
                 genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
                 parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType,
@@ -190,63 +250,63 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Determines how the global namespace is displayed.
         /// </summary>
-        public SymbolDisplayGlobalNamespaceStyle GlobalNamespaceStyle { get; private set; }
+        public SymbolDisplayGlobalNamespaceStyle GlobalNamespaceStyle { get; }
 
         /// <summary>
         /// Determines how types are qualified (e.g. Nested vs Containing.Nested vs Namespace.Containing.Nested).
         /// </summary>
-        public SymbolDisplayTypeQualificationStyle TypeQualificationStyle { get; private set; }
+        public SymbolDisplayTypeQualificationStyle TypeQualificationStyle { get; }
 
         /// <summary>
         /// Determines how generics (on types and methods) should be described (i.e. the level of detail).
         /// </summary>
-        public SymbolDisplayGenericsOptions GenericsOptions { get; private set; }
+        public SymbolDisplayGenericsOptions GenericsOptions { get; }
 
         /// <summary>
         /// Determines how fields, properties, events, and methods are displayed.
         /// </summary>
-        public SymbolDisplayMemberOptions MemberOptions { get; private set; }
+        public SymbolDisplayMemberOptions MemberOptions { get; }
 
         /// <summary>
         /// Determines how parameters (of methods, properties/indexers, and delegates) are displayed.
         /// </summary>
-        public SymbolDisplayParameterOptions ParameterOptions { get; private set; }
+        public SymbolDisplayParameterOptions ParameterOptions { get; }
 
         /// <summary>
         /// Determines how delegates are displayed (e.g. name vs full signature).
         /// </summary>
-        public SymbolDisplayDelegateStyle DelegateStyle { get; private set; }
+        public SymbolDisplayDelegateStyle DelegateStyle { get; }
 
         /// <summary>
         /// Determines how extension methods are displayed.
         /// </summary>
-        public SymbolDisplayExtensionMethodStyle ExtensionMethodStyle { get; private set; }
+        public SymbolDisplayExtensionMethodStyle ExtensionMethodStyle { get; }
 
         /// <summary>
         /// Determines how properties are displayed. 
         /// For example, "Prop" vs "Prop { get; set; }" in C# or "Prop" vs. "ReadOnly Prop" in Visual Basic.
         /// </summary>
-        public SymbolDisplayPropertyStyle PropertyStyle { get; private set; }
+        public SymbolDisplayPropertyStyle PropertyStyle { get; }
 
         /// <summary>
         /// Determines how local variables are displayed.
         /// </summary>
-        public SymbolDisplayLocalOptions LocalOptions { get; private set; }
+        public SymbolDisplayLocalOptions LocalOptions { get; }
 
         /// <summary>
         /// Determines which kind keywords should be included when displaying symbols.
         /// </summary>
-        public SymbolDisplayKindOptions KindOptions { get; private set; }
+        public SymbolDisplayKindOptions KindOptions { get; }
 
         /// <summary>
         /// Determines other characteristics of how symbols are displayed.
         /// </summary>
-        public SymbolDisplayMiscellaneousOptions MiscellaneousOptions { get; private set; }
+        public SymbolDisplayMiscellaneousOptions MiscellaneousOptions { get; }
 
         /// <summary>
         /// Flags that can only be set within the compiler.
         /// </summary>
-        internal SymbolDisplayCompilerInternalOptions CompilerInternalOptions { get; private set; }
+        internal SymbolDisplayCompilerInternalOptions CompilerInternalOptions { get; }
 
         /// <summary>
         /// Constructs a new instance of <see cref="SymbolDisplayFormat"/> accepting a variety of optional parameters.
@@ -274,7 +334,7 @@ namespace Microsoft.CodeAnalysis
         /// </param>
         /// <param name="propertyStyle">
         /// The settings that determine how properties are displayed. 
-        /// For eaxmple, "Prop" vs "Prop { get; set; }" in C# or "Prop" vs. "ReadOnly Prop" in Visual Basic.
+        /// For example, "Prop" vs "Prop { get; set; }" in C# or "Prop" vs. "ReadOnly Prop" in Visual Basic.
         /// </param>
         /// <param name="localOptions">
         /// The settings that determine how local variables are displayed.
@@ -381,6 +441,18 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
+        /// Creates a copy of the SymbolDisplayFormat without the specified <seealso cref="SymbolDisplayMiscellaneousOptions"/>.
+        /// </summary>
+        /// <param name="options">
+        /// An object specifying which parameters should not be applied to how miscellaneous symbols will be formatted.
+        /// </param>
+        /// <returns>A duplicate of the SymbolDisplayFormat, without the specified <seealso cref="SymbolDisplayMiscellaneousOptions"/>.</returns>
+        public SymbolDisplayFormat RemoveMiscellaneousOptions(SymbolDisplayMiscellaneousOptions options)
+        {
+            return this.WithMiscellaneousOptions(this.MiscellaneousOptions & ~options);
+        }
+
+        /// <summary>
         /// Creates a copy of the SymbolDisplayFormat but with replaced set of <seealso cref="SymbolDisplayGenericsOptions"/>.
         /// </summary>
         /// <param name="options">
@@ -413,6 +485,20 @@ namespace Microsoft.CodeAnalysis
         public SymbolDisplayFormat AddGenericsOptions(SymbolDisplayGenericsOptions options)
         {
             return this.WithGenericsOptions(this.GenericsOptions | options);
+        }
+
+        /// <summary>
+        /// Creates a copy of the SymbolDisplayFormat but with a set of <seealso cref="SymbolDisplayGenericsOptions"/> stripped away from the original object.
+        /// </summary>
+        /// <param name="options">
+        /// An object specifying which parameters should not be applied to how generic symbols will be formatted.
+        /// </param>
+        /// <returns>
+        /// A duplicate of the SymbolDisplayFormat, with a set of <seealso cref="SymbolDisplayGenericsOptions"/> stripped away from the original object.
+        /// </returns>
+        public SymbolDisplayFormat RemoveGenericsOptions(SymbolDisplayGenericsOptions options)
+        {
+            return this.WithGenericsOptions(this.GenericsOptions & ~options);
         }
 
         /// <summary>
@@ -574,7 +660,7 @@ namespace Microsoft.CodeAnalysis
         /// Creates a copy of the SymbolDisplayFormat but with replaced <seealso cref="SymbolDisplayGlobalNamespaceStyle"/>.
         /// </summary>
         /// <param name="style">
-        /// An object specifying paramers on how namespace symbols should be formatted.
+        /// An object specifying parameters on how namespace symbols should be formatted.
         /// </param>
         /// <returns>A duplicate of the SymbolDisplayFormat, with a replaced set of <seealso cref="SymbolDisplayGlobalNamespaceStyle"/>.</returns>
         public SymbolDisplayFormat WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle style)
@@ -617,17 +703,31 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Creates a copy of the SymbolDisplayFormat but with an additional set of <seealso cref="SymbolDisplayParameterOptions"/>.
+        /// Creates a copy of the SymbolDisplayFormat but with an additional set of <seealso cref="SymbolDisplayLocalOptions"/>.
         /// </summary>
         /// <param name="options">
         /// An object specifying additional parameters on how symbols belonging to locals should be formatted.
         /// </param>
         /// <returns>
-        /// A duplicate of the SymbolDisplayFormat, with an additional set of <seealso cref="SymbolDisplayParameterOptions"/>.
+        /// A duplicate of the SymbolDisplayFormat, with an additional set of <seealso cref="SymbolDisplayLocalOptions"/>.
         /// </returns>
         public SymbolDisplayFormat AddLocalOptions(SymbolDisplayLocalOptions options)
         {
             return this.WithLocalOptions(this.LocalOptions | options);
+        }
+
+        /// <summary>
+        /// Creates a copy of the SymbolDisplayFormat but with a set of <seealso cref="SymbolDisplayLocalOptions"/> stripped away from the original object.
+        /// </summary>
+        /// <param name="options">
+        /// An object specifying parameters that should not be applied when formatting symbols belonging to locals.
+        /// </param>
+        /// <returns>
+        /// A duplicate of the SymbolDisplayFormat, with a set of <seealso cref="SymbolDisplayLocalOptions"/> stripped away from the original object.
+        /// </returns>
+        public SymbolDisplayFormat RemoveLocalOptions(SymbolDisplayLocalOptions options)
+        {
+            return this.WithLocalOptions(this.LocalOptions & ~options);
         }
     }
 }

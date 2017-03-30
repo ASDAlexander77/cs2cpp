@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
+using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -17,26 +18,26 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </remarks>
     internal class SynthesizedSubmissionFields
     {
-        private readonly NamedTypeSymbol declaringSubmissionClass;
-        private readonly CSharpCompilation compilation;
+        private readonly NamedTypeSymbol _declaringSubmissionClass;
+        private readonly CSharpCompilation _compilation;
 
-        private FieldSymbol hostObjectField;
-        private Dictionary<ImplicitNamedTypeSymbol, FieldSymbol> previousSubmissionFieldMap;
+        private FieldSymbol _hostObjectField;
+        private Dictionary<ImplicitNamedTypeSymbol, FieldSymbol> _previousSubmissionFieldMap;
 
         public SynthesizedSubmissionFields(CSharpCompilation compilation, NamedTypeSymbol submissionClass)
         {
             Debug.Assert(compilation != null);
             Debug.Assert(submissionClass.IsSubmissionClass);
 
-            this.declaringSubmissionClass = submissionClass;
-            this.compilation = compilation;
+            _declaringSubmissionClass = submissionClass;
+            _compilation = compilation;
         }
 
         internal int Count
         {
             get
             {
-                return previousSubmissionFieldMap == null ? 0 : previousSubmissionFieldMap.Count;
+                return _previousSubmissionFieldMap == null ? 0 : _previousSubmissionFieldMap.Count;
             }
         }
 
@@ -44,22 +45,22 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return previousSubmissionFieldMap == null ? SpecializedCollections.EmptyArray<FieldSymbol>() : (IEnumerable<FieldSymbol>)previousSubmissionFieldMap.Values;
+                return _previousSubmissionFieldMap == null ? Array.Empty<FieldSymbol>() : (IEnumerable<FieldSymbol>)_previousSubmissionFieldMap.Values;
             }
         }
 
         internal FieldSymbol GetHostObjectField()
         {
-            if ((object)hostObjectField != null)
+            if ((object)_hostObjectField != null)
             {
-                return hostObjectField;
+                return _hostObjectField;
             }
 
-            var hostObjectTypeSymbol = compilation.GetHostObjectTypeSymbol();
+            var hostObjectTypeSymbol = _compilation.GetHostObjectTypeSymbol();
             if ((object)hostObjectTypeSymbol != null && hostObjectTypeSymbol.Kind != SymbolKind.ErrorType)
             {
-                return hostObjectField = new SynthesizedFieldSymbol(
-                    declaringSubmissionClass, hostObjectTypeSymbol, "<host-object>", isPublic: false, isReadOnly: true, isStatic: false);
+                return _hostObjectField = new SynthesizedFieldSymbol(
+                    _declaringSubmissionClass, hostObjectTypeSymbol, "<host-object>", isPublic: false, isReadOnly: true, isStatic: false);
             }
 
             return null;
@@ -67,21 +68,21 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal FieldSymbol GetOrMakeField(ImplicitNamedTypeSymbol previousSubmissionType)
         {
-            if (previousSubmissionFieldMap == null)
+            if (_previousSubmissionFieldMap == null)
             {
-                previousSubmissionFieldMap = new Dictionary<ImplicitNamedTypeSymbol, FieldSymbol>();
+                _previousSubmissionFieldMap = new Dictionary<ImplicitNamedTypeSymbol, FieldSymbol>();
             }
 
             FieldSymbol previousSubmissionField;
-            if (!previousSubmissionFieldMap.TryGetValue(previousSubmissionType, out previousSubmissionField))
+            if (!_previousSubmissionFieldMap.TryGetValue(previousSubmissionType, out previousSubmissionField))
             {
                 // TODO: generate better name?
                 previousSubmissionField = new SynthesizedFieldSymbol(
-                    declaringSubmissionClass,
+                    _declaringSubmissionClass,
                     previousSubmissionType,
                     "<" + previousSubmissionType.Name + ">",
                     isReadOnly: true);
-                previousSubmissionFieldMap.Add(previousSubmissionType, previousSubmissionField);
+                _previousSubmissionFieldMap.Add(previousSubmissionType, previousSubmissionField);
             }
             return previousSubmissionField;
         }

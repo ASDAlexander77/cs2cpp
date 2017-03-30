@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private ImmutableArray<Symbol> BindCrefInternal(CrefSyntax syntax, out Symbol ambiguityWinner, DiagnosticBag diagnostics)
         {
-            switch (syntax.Kind)
+            switch (syntax.Kind())
             {
                 case SyntaxKind.TypeCref:
                     return BindTypeCref((TypeCrefSyntax)syntax, out ambiguityWinner, diagnostics);
@@ -34,9 +34,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.ConversionOperatorMemberCref:
                     return BindMemberCref((MemberCrefSyntax)syntax, containerOpt: null, ambiguityWinner: out ambiguityWinner, diagnostics: diagnostics);
                 default:
-                    Debug.Assert(false, "Unexpected cref kind " + syntax.Kind);
-                    ambiguityWinner = null;
-                    return ImmutableArray<Symbol>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(syntax.Kind());
             }
         }
 
@@ -112,7 +110,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             ImmutableArray<Symbol> result;
-            switch (syntax.Kind)
+            switch (syntax.Kind())
             {
                 case SyntaxKind.NameMemberCref:
                     result = BindNameMemberCref((NameMemberCrefSyntax)syntax, containerOpt, out ambiguityWinner, diagnostics);
@@ -127,10 +125,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     result = BindConversionOperatorMemberCref((ConversionOperatorMemberCrefSyntax)syntax, containerOpt, out ambiguityWinner, diagnostics);
                     break;
                 default:
-                    Debug.Assert(false, "Unexpected member cref kind " + syntax.Kind);
-                    ambiguityWinner = null;
-                    result = ImmutableArray<Symbol>.Empty;
-                    break;
+                    throw ExceptionUtilities.UnexpectedValue(syntax.Kind());
             }
 
             if (!result.Any())
@@ -229,7 +224,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // NOTE: Prefer binary to unary, unless there is exactly one parameter.
             // CONSIDER: we're following dev11 by never using a binary operator name if there's
             // exactly one parameter, but doing so would allow us to match single-parameter constructors.
-            SyntaxKind operatorTokenKind = syntax.OperatorToken.CSharpKind();
+            SyntaxKind operatorTokenKind = syntax.OperatorToken.Kind();
             string memberName = parameterListSyntax != null && parameterListSyntax.Parameters.Count == 1
                 ? null
                 : OperatorFacts.BinaryOperatorNameFromSyntaxKindIfAny(operatorTokenKind);
@@ -264,7 +259,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             const int arity = 0;
 
-            string memberName = syntax.ImplicitOrExplicitKeyword.CSharpKind() == SyntaxKind.ImplicitKeyword
+            string memberName = syntax.ImplicitOrExplicitKeyword.Kind() == SyntaxKind.ImplicitKeyword
                 ? WellKnownMemberNames.ImplicitConversionName
                 : WellKnownMemberNames.ExplicitConversionName;
 
@@ -521,9 +516,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             switch (type.TypeKind)
             {
-                case TypeKind.ArrayType:
+                case TypeKind.Array:
                     return ContainsNestedTypeOfUnconstructedGenericType(((ArrayTypeSymbol)type).ElementType);
-                case TypeKind.PointerType:
+                case TypeKind.Pointer:
                     return ContainsNestedTypeOfUnconstructedGenericType(((PointerTypeSymbol)type).PointedAtType);
                 case TypeKind.Delegate:
                 case TypeKind.Class:
@@ -546,7 +541,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
 
                     return false;
-                case TypeKind.DynamicType:
+                case TypeKind.Dynamic:
                 case TypeKind.TypeParameter:
                     return false;
                 default:
@@ -717,7 +712,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // (see XmlDocCommentBinder::bindXmlReference).  Apparently, this was because "the params that the xml doc 
                 // comments produce never will."  This does not appear to have made sense in dev11 (skipping dropping the
                 // candidate doesn't cause anything to blow up and may cause resolution to start succeeding) and it almost
-                // certainly does not in roslyn (the signature comparer ignores the object-dynamic distiction anyway).
+                // certainly does not in roslyn (the signature comparer ignores the object-dynamic distinction anyway).
 
                 Symbol signatureMember;
                 switch (candidate.Kind)
@@ -743,8 +738,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 // These are ignored by this specific MemberSignatureComparer.
                                 containingType: null,
                                 name: null,
+                                refKind: RefKind.None,
                                 returnType: null,
                                 returnTypeCustomModifiers: ImmutableArray<CustomModifier>.Empty,
+                                refCustomModifiers: ImmutableArray<CustomModifier>.Empty,
                                 explicitInterfaceImplementations: ImmutableArray<MethodSymbol>.Empty);
                             break;
                         }
@@ -757,8 +754,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 // These are ignored by this specific MemberSignatureComparer.
                                 containingType: null,
                                 name: null,
+                                refKind: RefKind.None,
                                 type: null,
                                 typeCustomModifiers: ImmutableArray<CustomModifier>.Empty,
+                                refCustomModifiers: ImmutableArray<CustomModifier>.Empty,
                                 isStatic: false,
                                 explicitInterfaceImplementations: ImmutableArray<PropertySymbol>.Empty);
                             break;
@@ -869,19 +868,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             foreach (CrefParameterSyntax parameter in parameterListSyntax.Parameters)
             {
-                RefKind refKind = parameter.RefOrOutKeyword.CSharpKind().GetRefKind();
+                RefKind refKind = parameter.RefOrOutKeyword.Kind().GetRefKind();
 
                 TypeSymbol type = BindCrefParameterOrReturnType(parameter.Type, (MemberCrefSyntax)parameterListSyntax.Parent, diagnostics);
 
-                parameterBuilder.Add(new SignatureOnlyParameterSymbol(type, ImmutableArray<CustomModifier>.Empty, isParams: false, refKind: refKind));
+                parameterBuilder.Add(new SignatureOnlyParameterSymbol(type, ImmutableArray<CustomModifier>.Empty, ImmutableArray<CustomModifier>.Empty, isParams: false, refKind: refKind));
             }
 
             return parameterBuilder.ToImmutableAndFree();
         }
 
-
         /// <remarks>
-        /// Keep in sync with <see cref="M:SemanticModel.GetSpeculativelyBoundExpression()"/>.
+        /// Keep in sync with CSharpSemanticModel.GetSpeculativelyBoundExpression.
         /// </remarks>
         private TypeSymbol BindCrefParameterOrReturnType(TypeSyntax typeSyntax, MemberCrefSyntax memberCrefSyntax, DiagnosticBag diagnostics)
         {
@@ -907,7 +905,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 if (HasNonObsoleteError(unusedDiagnostics))
                 {
-                    ErrorCode code = typeSyntax.Parent.Kind == SyntaxKind.ConversionOperatorMemberCref
+                    ErrorCode code = typeSyntax.Parent.Kind() == SyntaxKind.ConversionOperatorMemberCref
                         ? ErrorCode.WRN_BadXMLRefReturnType
                         : ErrorCode.WRN_BadXMLRefParamType;
                     CrefSyntax crefSyntax = GetRootCrefSyntax(memberCrefSyntax);

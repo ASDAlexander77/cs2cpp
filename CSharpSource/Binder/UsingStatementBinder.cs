@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -12,32 +12,54 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal sealed class UsingStatementBinder : LockOrUsingBinder
     {
-        private readonly UsingStatementSyntax syntax;
+        private readonly UsingStatementSyntax _syntax;
 
         public UsingStatementBinder(Binder enclosing, UsingStatementSyntax syntax)
             : base(enclosing)
         {
-            this.syntax = syntax;
+            _syntax = syntax;
         }
 
         override protected ImmutableArray<LocalSymbol> BuildLocals()
         {
-            Debug.Assert(syntax.Declaration == null || syntax.Expression == null);
-            return BuildLocals(syntax.Declaration ?? (CSharpSyntaxNode)syntax.Expression);
+            ExpressionSyntax expressionSyntax = TargetExpressionSyntax;
+            VariableDeclarationSyntax declarationSyntax = _syntax.Declaration;
+
+            Debug.Assert((expressionSyntax == null) ^ (declarationSyntax == null)); // Can't have both or neither.
+
+            if (expressionSyntax != null)
+            {
+                var locals = ArrayBuilder<LocalSymbol>.GetInstance();
+                ExpressionVariableFinder.FindExpressionVariables(this, locals, expressionSyntax);
+                return locals.ToImmutableAndFree();
+            }
+            else
+            {
+                var locals = ArrayBuilder<LocalSymbol>.GetInstance(declarationSyntax.Variables.Count);
+                foreach (VariableDeclaratorSyntax declarator in declarationSyntax.Variables)
+                {
+                    locals.Add(MakeLocal(declarationSyntax, declarator, LocalDeclarationKind.UsingVariable));
+
+                    // also gather expression-declared variables from the bracketed argument lists and the initializers
+                    ExpressionVariableFinder.FindExpressionVariables(this, locals, declarator);
+                }
+
+                return locals.ToImmutableAndFree();
+            }
         }
 
         protected override ExpressionSyntax TargetExpressionSyntax
         {
             get
             {
-                return syntax.Expression;
+                return _syntax.Expression;
             }
         }
 
         internal override BoundStatement BindUsingStatementParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
             ExpressionSyntax expressionSyntax = TargetExpressionSyntax;
-            VariableDeclarationSyntax declarationSyntax = syntax.Declaration;
+            VariableDeclarationSyntax declarationSyntax = _syntax.Declaration;
 
             Debug.Assert((expressionSyntax == null) ^ (declarationSyntax == null)); // Can't have both or neither.
 
@@ -50,10 +72,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (expressionSyntax != null)
             {
-                expressionOpt = this.BindTargetExpression(diagnostics);
+                expressionOpt = this.BindTargetExpression(diagnostics, originalBinder);
 
                 HashSet<DiagnosticInfo> useSiteDiagnostics = null;
-                iDisposableConversion = this.Conversions.ClassifyImplicitConversionFromExpression(expressionOpt, iDisposable, ref useSiteDiagnostics);
+                iDisposableConversion = originalBinder.Conversions.ClassifyImplicitConversionFromExpression(expressionOpt, iDisposable, ref useSiteDiagnostics);
                 diagnostics.Add(expressionSyntax, useSiteDiagnostics);
 
                 if (!iDisposableConversion.IsImplicit)
@@ -69,7 +91,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 ImmutableArray<BoundLocalDeclaration> declarations;
-                BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.UsingVariable, diagnostics, out declarations);
+                originalBinder.BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.UsingVariable, diagnostics, out declarations);
 
                 Debug.Assert(!declarations.IsEmpty);
 
@@ -84,7 +106,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 else
                 {
                     HashSet<DiagnosticInfo> useSiteDiagnostics = null;
-                    iDisposableConversion = Conversions.ClassifyImplicitConversion(declType, iDisposable, ref useSiteDiagnostics);
+                    iDisposableConversion = originalBinder.Conversions.ClassifyImplicitConversionFromType(declType, iDisposable, ref useSiteDiagnostics);
                     diagnostics.Add(declarationSyntax, useSiteDiagnostics);
 
                     if (!iDisposableConversion.IsImplicit)
@@ -99,16 +121,40 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            BoundStatement boundBody = originalBinder.BindPossibleEmbeddedStatement(syntax.Statement, diagnostics);
+            BoundStatement boundBody = originalBinder.BindPossibleEmbeddedStatement(_syntax.Statement, diagnostics);
 
+            Debug.Assert(GetDeclaredLocalsForScope(_syntax) == this.Locals);
             return new BoundUsingStatement(
-                syntax,
+                _syntax,
                 this.Locals,
                 declarationsOpt,
                 expressionOpt,
                 iDisposableConversion,
                 boundBody,
                 hasErrors);
+        }
+
+        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(SyntaxNode scopeDesignator)
+        {
+            if (_syntax == scopeDesignator)
+            {
+                return this.Locals;
+            }
+
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override ImmutableArray<LocalFunctionSymbol> GetDeclaredLocalFunctionsForScope(CSharpSyntaxNode scopeDesignator)
+        {
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override SyntaxNode ScopeDesignator
+        {
+            get
+            {
+                return _syntax;
+            }
         }
     }
 }

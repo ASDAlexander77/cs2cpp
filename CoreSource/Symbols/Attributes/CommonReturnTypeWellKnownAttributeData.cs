@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
@@ -12,18 +12,18 @@ namespace Microsoft.CodeAnalysis
     {
         #region MarshalAsAttribute
         // data from MarshalAsAttribute applied on the return value
-        private MarshalPseudoCustomAttributeData lazyMarshalAsData;
+        private MarshalPseudoCustomAttributeData _lazyMarshalAsData;
 
         MarshalPseudoCustomAttributeData IMarshalAsAttributeTarget.GetOrCreateData()
         {
             VerifySealed(expected: false);
-            if (this.lazyMarshalAsData == null)
+            if (_lazyMarshalAsData == null)
             {
-                lazyMarshalAsData = new MarshalPseudoCustomAttributeData();
+                _lazyMarshalAsData = new MarshalPseudoCustomAttributeData();
                 SetDataStored();
             }
 
-            return lazyMarshalAsData;
+            return _lazyMarshalAsData;
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis
             get
             {
                 VerifySealed(expected: true);
-                return lazyMarshalAsData;
+                return _lazyMarshalAsData;
             }
         }
         #endregion

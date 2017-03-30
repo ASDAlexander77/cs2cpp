@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -14,8 +14,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal abstract class SourceDelegateMethodSymbol : SourceMethodSymbol
     {
-        private ImmutableArray<ParameterSymbol> parameters;
-        private readonly TypeSymbol returnType;
+        private ImmutableArray<ParameterSymbol> _parameters;
+        private readonly TypeSymbol _returnType;
 
         protected SourceDelegateMethodSymbol(
             SourceMemberContainerTypeSymbol delegateType,
@@ -23,16 +23,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             DelegateDeclarationSyntax syntax,
             MethodKind methodKind,
             DeclarationModifiers declarationModifiers)
-            : base(delegateType, syntax.GetReference(), bodySyntaxReference: null, location: syntax.Identifier.GetLocation())
+            : base(delegateType, syntax.GetReference(), bodySyntaxReferenceOpt: null, location: syntax.Identifier.GetLocation())
         {
-            this.returnType = returnType;
-            this.flags = MakeFlags(methodKind, declarationModifiers, this.returnType.SpecialType == SpecialType.System_Void, isExtensionMethod: false);
+            _returnType = returnType;
+            this.MakeFlags(methodKind, declarationModifiers, _returnType.SpecialType == SpecialType.System_Void, isExtensionMethod: false);
         }
 
         protected void InitializeParameters(ImmutableArray<ParameterSymbol> parameters)
         {
-            Debug.Assert(this.parameters.IsDefault);
-            this.parameters = parameters;
+            Debug.Assert(_parameters.IsDefault);
+            _parameters = parameters;
         }
 
         internal static void AddDelegateMembers(
@@ -42,7 +42,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             DiagnosticBag diagnostics)
         {
             Binder binder = delegateType.GetBinder(syntax.ParameterList);
-            TypeSymbol returnType = binder.BindType(syntax.ReturnType, diagnostics);
+            RefKind refKind;
+            TypeSyntax returnTypeSyntax = syntax.ReturnType.SkipRef(out refKind);
+            TypeSymbol returnType = binder.BindType(returnTypeSyntax, diagnostics);
 
             // reuse types to avoid reporting duplicate errors if missing:
             var voidType = binder.GetSpecialType(SpecialType.System_Void, diagnostics, syntax);
@@ -52,12 +54,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (returnType.IsRestrictedType())
             {
                 // Method or delegate cannot return type '{0}'
-                diagnostics.Add(ErrorCode.ERR_MethodReturnCantBeRefAny, syntax.ReturnType.Location, returnType);
+                diagnostics.Add(ErrorCode.ERR_MethodReturnCantBeRefAny, returnTypeSyntax.Location, returnType);
             }
 
             // A delegate has the following members: (see CLI spec 13.6)
             // (1) a method named Invoke with the specified signature
-            var invoke = new InvokeMethod(delegateType, returnType, syntax, binder, diagnostics);
+            var invoke = new InvokeMethod(delegateType, refKind, returnType, syntax, binder, diagnostics);
             invoke.CheckDelegateVarianceSafety(diagnostics);
             symbols.Add(invoke);
 
@@ -121,7 +123,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.parameters;
+                return _parameters;
             }
         }
 
@@ -137,7 +139,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.returnType;
+                return _returnType;
             }
         }
 
@@ -195,8 +197,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 : base(delegateType, voidType, syntax, MethodKind.Constructor, DeclarationModifiers.Public)
             {
                 InitializeParameters(ImmutableArray.Create<ParameterSymbol>(
-                    new SynthesizedParameterSymbol(this, objectType, 0, RefKind.None, "object"),
-                    new SynthesizedParameterSymbol(this, intPtrType, 1, RefKind.None, "method")));
+                    SynthesizedParameterSymbol.Create(this, objectType, 0, RefKind.None, "object"),
+                    SynthesizedParameterSymbol.Create(this, intPtrType, 1, RefKind.None, "method")));
             }
 
             public override string Name
@@ -204,26 +206,52 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return WellKnownMemberNames.InstanceConstructorName; }
             }
 
+            internal override RefKind RefKind
+            {
+                get { return RefKind.None; }
+            }
+
             internal override OneOrMany<SyntaxList<AttributeListSyntax>> GetReturnTypeAttributeDeclarations()
             {
                 // Constructors don't have return type attributes
                 return OneOrMany.Create(default(SyntaxList<AttributeListSyntax>));
             }
+
+            internal override LexicalSortKey GetLexicalSortKey()
+            {
+                // associate "Invoke and .ctor" with whole delegate declaration for the sorting purposes
+                // other methods will be associated with delegate's identifier
+                // we want this just to keep the order of synthesized methods the same as in Dev12
+                // Dev12 order is not strictly alphabetical - .ctor and Invoke go before other members.
+                // there are no real reasons for emitting the members in one order or another, 
+                // so we will keep them the same.
+                return new LexicalSortKey(this.syntaxReferenceOpt.GetLocation(), this.DeclaringCompilation);
+            }
         }
 
         private sealed class InvokeMethod : SourceDelegateMethodSymbol
         {
+            private readonly RefKind refKind;
+
             internal InvokeMethod(
                 SourceMemberContainerTypeSymbol delegateType,
+                RefKind refKind,
                 TypeSymbol returnType,
                 DelegateDeclarationSyntax syntax,
                 Binder binder,
                 DiagnosticBag diagnostics)
                 : base(delegateType, returnType, syntax, MethodKind.DelegateInvoke, DeclarationModifiers.Virtual | DeclarationModifiers.Public)
             {
+                this.refKind = refKind;
+
                 SyntaxToken arglistToken;
-                var parameters = ParameterHelpers.MakeParameters(binder, this, syntax.ParameterList, true, out arglistToken, diagnostics);
-                if (arglistToken.CSharpKind() == SyntaxKind.ArgListKeyword)
+                var parameters = ParameterHelpers.MakeParameters(
+                    binder, this, syntax.ParameterList, out arglistToken,
+                    allowRefOrOut: true,
+                    allowThis: false,
+                    diagnostics: diagnostics);
+
+                if (arglistToken.Kind() == SyntaxKind.ArgListKeyword)
                 {
                     // This is a parse-time error in the native compiler; it is a semantic analysis error in Roslyn.
 
@@ -237,6 +265,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             public override string Name
             {
                 get { return WellKnownMemberNames.DelegateInvokeName; }
+            }
+
+            internal override RefKind RefKind
+            {
+                get { return refKind; }
+            }
+
+            internal override LexicalSortKey GetLexicalSortKey()
+            {
+                // associate "Invoke and .ctor" with whole delegate declaration for the sorting purposes
+                // other methods will be associated with delegate's identifier
+                // we want this just to keep the order of synthesized methods the same as in Dev12
+                // Dev12 order is not strictly alphabetical - .ctor and Invoke go before other members.
+                // there are no real reasons for emitting the members in one order or another, 
+                // so we will keep them the same.
+                return new LexicalSortKey(this.syntaxReferenceOpt.GetLocation(), this.DeclaringCompilation);
             }
         }
 
@@ -258,8 +302,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
 
                 int paramCount = invoke.ParameterCount;
-                parameters.Add(new SynthesizedParameterSymbol(this, asyncCallbackType, paramCount, RefKind.None, "callback"));
-                parameters.Add(new SynthesizedParameterSymbol(this, objectType, paramCount + 1, RefKind.None, "object"));
+                parameters.Add(SynthesizedParameterSymbol.Create(this, asyncCallbackType, paramCount, RefKind.None, GetUniqueParameterName(parameters, "callback")));
+                parameters.Add(SynthesizedParameterSymbol.Create(this, objectType, paramCount + 1, RefKind.None, GetUniqueParameterName(parameters, "object")));
 
                 InitializeParameters(parameters.ToImmutableAndFree());
             }
@@ -267,6 +311,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             public override string Name
             {
                 get { return WellKnownMemberNames.DelegateBeginInvokeName; }
+            }
+
+            internal override RefKind RefKind
+            {
+                get { return RefKind.None; }
             }
 
             internal override OneOrMany<SyntaxList<AttributeListSyntax>> GetReturnTypeAttributeDeclarations()
@@ -280,14 +329,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private sealed class EndInvokeMethod : SourceDelegateMethodSymbol
         {
+            private readonly RefKind refKind;
+
             internal EndInvokeMethod(
                 InvokeMethod invoke,
                 TypeSymbol iAsyncResultType,
                 DelegateDeclarationSyntax syntax)
                 : base((SourceNamedTypeSymbol)invoke.ContainingType, invoke.ReturnType, syntax, MethodKind.Ordinary, DeclarationModifiers.Virtual | DeclarationModifiers.Public)
             {
+                this.refKind = invoke.RefKind;
+
                 var parameters = ArrayBuilder<ParameterSymbol>.GetInstance();
                 int ordinal = 0;
+
                 foreach (SourceParameterSymbol p in invoke.Parameters)
                 {
                     if (p.RefKind != RefKind.None)
@@ -297,7 +351,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     }
                 }
 
-                parameters.Add(new SynthesizedParameterSymbol(this, iAsyncResultType, ordinal++, RefKind.None, "result"));
+                parameters.Add(SynthesizedParameterSymbol.Create(this, iAsyncResultType, ordinal++, RefKind.None, GetUniqueParameterName(parameters, "result")));
                 InitializeParameters(parameters.ToImmutableAndFree());
             }
 
@@ -314,7 +368,34 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get { return WellKnownMemberNames.DelegateEndInvokeName; }
             }
+
+            internal override RefKind RefKind
+            {
+                get { return refKind; }
+            }
         }
 
+        private static string GetUniqueParameterName(ArrayBuilder<ParameterSymbol> currentParameters, string name)
+        {
+            while (!IsUnique(currentParameters, name))
+            {
+                name = "__" + name;
+            }
+
+            return name;
+        }
+
+        private static bool IsUnique(ArrayBuilder<ParameterSymbol> currentParameters, string name)
+        {
+            foreach (var p in currentParameters)
+            {
+                if (string.CompareOrdinal(p.Name, name) == 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

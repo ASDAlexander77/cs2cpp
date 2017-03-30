@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -14,22 +14,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private sealed class AnonymousTypeFieldSymbol : FieldSymbol
         {
-            private readonly PropertySymbol property;
+            private readonly PropertySymbol _property;
 
             public AnonymousTypeFieldSymbol(PropertySymbol property)
             {
                 Debug.Assert((object)property != null);
-                this.property = property;
+                _property = property;
             }
 
             internal override TypeSymbol GetFieldType(ConsList<FieldSymbol> fieldsBeingBound)
             {
-                return this.property.Type;
+                return _property.Type;
             }
 
             public override string Name
             {
-                get { return GeneratedNames.MakeAnonymousTypeBackingFieldName(this.property.Name); }
+                get { return GeneratedNames.MakeAnonymousTypeBackingFieldName(_property.Name); }
             }
 
             internal override bool HasSpecialName
@@ -66,7 +66,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get
                 {
-                    return this.property;
+                    return _property;
                 }
             }
 
@@ -97,14 +97,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override Symbol ContainingSymbol
             {
-                get { return this.property.ContainingType; }
+                get { return _property.ContainingType; }
             }
 
             public override NamedTypeSymbol ContainingType
             {
                 get
                 {
-                    return this.property.ContainingType;
+                    return _property.ContainingType;
                 }
             }
 
@@ -142,7 +142,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 AnonymousTypeManager manager = ((AnonymousTypeTemplateSymbol)this.ContainingSymbol).Manager;
 
-                AddSynthesizedAttribute(ref attributes, manager.Compilation.SynthesizeAttribute(
+                AddSynthesizedAttribute(ref attributes, manager.Compilation.TrySynthesizeAttribute(
                     WellKnownMember.System_Diagnostics_DebuggerBrowsableAttribute__ctor,
                     ImmutableArray.Create(
                         new TypedConstant(manager.System_Diagnostics_DebuggerBrowsableState, TypedConstantKind.Enum, DebuggerBrowsableState.Never))));

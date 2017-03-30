@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -13,13 +13,13 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class AttributeSemanticModel : MemberSemanticModel
     {
-        private readonly AliasSymbol aliasOpt;
+        private readonly AliasSymbol _aliasOpt;
 
         private AttributeSemanticModel(CSharpCompilation compilation, AttributeSyntax syntax, NamedTypeSymbol attributeType, AliasSymbol aliasOpt, Binder rootBinder, SyntaxTreeSemanticModel parentSemanticModelOpt = null, int speculatedPosition = 0)
-            : base(compilation, syntax, attributeType, rootBinder, parentSemanticModelOpt, speculatedPosition)
+            : base(compilation, syntax, attributeType, new ExecutableCodeBinder(syntax, rootBinder.ContainingMember(), rootBinder), parentSemanticModelOpt, speculatedPosition)
         {
             Debug.Assert(syntax != null);
-            this.aliasOpt = aliasOpt;
+            _aliasOpt = aliasOpt;
         }
 
         /// <summary>
@@ -27,8 +27,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         public static AttributeSemanticModel Create(CSharpCompilation compilation, AttributeSyntax syntax, NamedTypeSymbol attributeType, AliasSymbol aliasOpt, Binder rootBinder)
         {
-            var executableBinder = new ExecutableCodeBinder(syntax, attributeType, rootBinder);
-            return new AttributeSemanticModel(compilation, syntax, attributeType, aliasOpt, new LocalScopeBinder(executableBinder));
+            return new AttributeSemanticModel(compilation, syntax, attributeType, aliasOpt, rootBinder);
         }
 
         /// <summary>
@@ -53,7 +52,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal protected override CSharpSyntaxNode GetBindableSyntaxNode(CSharpSyntaxNode node)
         {
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 case SyntaxKind.Attribute:
                     return node;
@@ -77,14 +76,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal override BoundNode Bind(Binder binder, CSharpSyntaxNode node, DiagnosticBag diagnostics)
         {
-            if (node.Kind == SyntaxKind.Attribute)
+            if (node.Kind() == SyntaxKind.Attribute)
             {
                 var attribute = (AttributeSyntax)node;
                 return binder.BindAttribute(attribute, AttributeType, diagnostics);
             }
             else if (SyntaxFacts.IsAttributeName(node))
             {
-                return new BoundTypeExpression((NameSyntax)node, aliasOpt, inferredType: false, type: AttributeType);
+                return new BoundTypeExpression((NameSyntax)node, _aliasOpt, inferredType: false, type: AttributeType);
             }
             else
             {
@@ -99,6 +98,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         internal override bool TryGetSpeculativeSemanticModelCore(SyntaxTreeSemanticModel parentModel, int position, EqualsValueClauseSyntax initializer, out SemanticModel speculativeModel)
+        {
+            speculativeModel = null;
+            return false;
+        }
+
+        internal override bool TryGetSpeculativeSemanticModelCore(SyntaxTreeSemanticModel parentModel, int position, ArrowExpressionClauseSyntax expressionBody, out SemanticModel speculativeModel)
         {
             speculativeModel = null;
             return false;

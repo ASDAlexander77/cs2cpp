@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
@@ -15,19 +15,19 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </remarks>
     internal sealed class ImplicitlyTypedFieldBinder : Binder
     {
-        private readonly ConsList<FieldSymbol> fieldsBeingBound;
+        private readonly ConsList<FieldSymbol> _fieldsBeingBound;
 
         public ImplicitlyTypedFieldBinder(Binder next, ConsList<FieldSymbol> fieldsBeingBound)
             : base(next, next.Flags)
         {
-            this.fieldsBeingBound = fieldsBeingBound;
+            _fieldsBeingBound = fieldsBeingBound;
         }
 
         internal override ConsList<FieldSymbol> FieldsBeingBound
         {
             get
             {
-                return fieldsBeingBound;
+                return _fieldsBeingBound;
             }
         }
     }

@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -10,7 +11,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    partial class MethodSymbol :
+    internal partial class MethodSymbol :
         Cci.ITypeMemberReference,
         Cci.IMethodReference,
         Cci.IGenericMethodInstanceReference,
@@ -213,19 +214,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        ImmutableArray<Cci.ICustomModifier> Cci.ISignature.RefCustomModifiers
+        {
+            get
+            {
+                return this.RefCustomModifiers.As<Cci.ICustomModifier>();
+            }
+        }
+
         bool Cci.ISignature.ReturnValueIsByRef
         {
             get
             {
-                return this.ReturnType is ByRefReturnErrorTypeSymbol;
+                return this.RefKind == RefKind.Ref;
             }
         }
 
         Cci.ITypeReference Cci.ISignature.GetType(EmitContext context)
         {
-            ByRefReturnErrorTypeSymbol byRefType = this.ReturnType as ByRefReturnErrorTypeSymbol;
-            return ((PEModuleBuilder)context.Module).Translate(
-                (object)byRefType == null ? this.ReturnType : byRefType.ReferencedType,
+            return ((PEModuleBuilder)context.Module).Translate(this.ReturnType,
                 syntaxNodeOpt: (CSharpSyntaxNode)context.SyntaxNodeOpt,
                 diagnostics: context.Diagnostics);
         }
@@ -365,7 +372,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 // Enforce C#'s notion of internal virtual
                 // If the method is private or internal and virtual but not final
-                // Set the new bit to indicate that it can only be overriden
+                // Set the new bit to indicate that it can only be overridden
                 // by classes that can normally access this member.
                 Accessibility accessibility = this.DeclaredAccessibility;
                 return (accessibility == Accessibility.Private ||
@@ -487,15 +494,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 CheckDefinitionInvariant();
-                return this.HasFinalFlag;
+                return this.IsMetadataFinal;
             }
         }
 
-        internal virtual bool HasFinalFlag
+        internal virtual bool IsMetadataFinal
         {
             get
             {
-                CheckDefinitionInvariant();
+                // destructors should override this behavior
+                Debug.Assert(this.MethodKind != MethodKind.Destructor);
+
                 return this.IsSealed ||
                     (this.IsMetadataVirtual() &&
                      !(this.IsVirtual || this.IsOverride || this.IsAbstract || this.MethodKind == MethodKind.Destructor));
@@ -542,14 +551,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         internal abstract bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false);
 
-        /// <summary>
-        /// This method indicates whether or not the runtime will regard the method
-        /// as final (as indicated by the presence of the "final" modifier in the
-        /// signature).
-        /// NOTE: The method is supposed to only be called from emitter.
-        /// </summary>
-        internal abstract bool IsMetadataFinal();
-
         ImmutableArray<Cci.IParameterDefinition> Cci.IMethodDefinition.Parameters
         {
             get
@@ -586,11 +587,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             userDefined = this.GetReturnTypeAttributes();
             this.AddSynthesizedReturnTypeAttributes(ref synthesized);
-
-            if (userDefined.IsEmpty && synthesized == null)
-            {
-                return SpecializedCollections.EmptyEnumerable<CSharpAttributeData>();
-            }
 
             // Note that callers of this method (CCI and ReflectionEmitter) have to enumerate 
             // all items of the returned iterator, otherwise the synthesized ArrayBuilder may leak.
@@ -639,6 +635,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 CheckDefinitionInvariant();
                 return default(ImmutableArray<byte>);
+            }
+        }
+
+        Cci.INamespace Cci.IMethodDefinition.ContainingNamespace
+        {
+            get
+            {
+                return ContainingNamespace;
             }
         }
     }

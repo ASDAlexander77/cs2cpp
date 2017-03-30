@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.CodeGen;
 using EmitContext = Microsoft.CodeAnalysis.Emit.EmitContext;
 
 namespace Microsoft.Cci
@@ -10,32 +11,37 @@ namespace Microsoft.Cci
     {
         internal ReturnValueParameter(IMethodDefinition containingMethod)
         {
-            this.containingMethod = containingMethod;
+            _containingMethod = containingMethod;
         }
 
         public IEnumerable<ICustomAttribute> GetAttributes(EmitContext context)
         {
-            return this.containingMethod.ReturnValueAttributes;
+            return _containingMethod.ReturnValueAttributes;
         }
 
         public ISignature ContainingSignature
         {
-            get { return this.containingMethod; }
+            get { return _containingMethod; }
         }
 
-        private IMethodDefinition containingMethod;
+        private readonly IMethodDefinition _containingMethod;
 
-        public IMetadataConstant Constant
+        public MetadataConstant Constant
         {
             get { return null; }
         }
 
-        public ImmutableArray<Cci.ICustomModifier> CustomModifiers
+        public ImmutableArray<Cci.ICustomModifier> RefCustomModifiers
         {
-            get { return this.containingMethod.ReturnValueCustomModifiers; }
+            get { return _containingMethod.RefCustomModifiers; }
         }
 
-        public IMetadataConstant GetDefaultValue(EmitContext context)
+        public ImmutableArray<Cci.ICustomModifier> CustomModifiers
+        {
+            get { return _containingMethod.ReturnValueCustomModifiers; }
+        }
+
+        public MetadataConstant GetDefaultValue(EmitContext context)
         {
             return null;
         }
@@ -61,17 +67,12 @@ namespace Microsoft.Cci
 
         public bool IsByReference
         {
-            get { return this.containingMethod.ReturnValueIsByRef; }
-        }
-
-        public bool HasByRefBeforeCustomModifiers
-        {
-            get { return false; }
+            get { return _containingMethod.ReturnValueIsByRef; }
         }
 
         public bool IsMarshalledExplicitly
         {
-            get { return this.containingMethod.ReturnValueIsMarshalledExplicitly; }
+            get { return _containingMethod.ReturnValueIsMarshalledExplicitly; }
         }
 
         public bool IsOptional
@@ -86,12 +87,12 @@ namespace Microsoft.Cci
 
         public IMarshallingInformation MarshallingInformation
         {
-            get { return this.containingMethod.ReturnValueMarshallingInformation; }
+            get { return _containingMethod.ReturnValueMarshallingInformation; }
         }
 
         public ImmutableArray<byte> MarshallingDescriptor
         {
-            get { return this.containingMethod.ReturnValueMarshallingDescriptor; }
+            get { return _containingMethod.ReturnValueMarshallingDescriptor; }
         }
 
         public string Name
@@ -101,7 +102,7 @@ namespace Microsoft.Cci
 
         public ITypeReference GetType(EmitContext context)
         {
-            return this.containingMethod.GetType(context);
+            return _containingMethod.GetType(context);
         }
 
         public IDefinition AsDefinition(EmitContext context)

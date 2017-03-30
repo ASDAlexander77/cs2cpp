@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    partial class Symbol
+    internal partial class Symbol
     {
         /// <summary>
         /// Gets the attributes for this symbol. Returns an empty <see cref="ImmutableArray&lt;AttributeData&gt;"/> if
@@ -137,7 +137,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return null;
         }
 
-        internal bool EarlyDecodeDeprecatedOrObsoleteAttribute(
+        internal static bool EarlyDecodeDeprecatedOrObsoleteAttribute(
             ref EarlyDecodeWellKnownAttributeArguments<EarlyWellKnownAttributeBinder, NamedTypeSymbol, AttributeSyntax, AttributeLocation> arguments,
             out CSharpAttributeData attributeData,
             out ObsoleteAttributeData obsoleteData)
@@ -214,11 +214,11 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// Called even if there are no attributes.
         /// </summary>
         /// <remarks>
-        /// This method is called by the binder from <see cref="M:LoadAndValidateAttributes"/> after it has finished binding attributes on the symbol,
-        /// has executed <see cref="M:DecodeWellKnownAttributes"/> for attributes applied on the symbol and has stored the decoded data in the
+        /// This method is called by the binder from <see cref="LoadAndValidateAttributes"/> after it has finished binding attributes on the symbol,
+        /// has executed <see cref="DecodeWellKnownAttribute"/> for attributes applied on the symbol and has stored the decoded data in the
         /// lazyCustomAttributesBag on the symbol. Bound attributes haven't been stored on the bag yet.
         /// 
-        /// Post-validation for attributes that is dependant on other attributes can be done here.
+        /// Post-validation for attributes that is dependent on other attributes can be done here.
         /// 
         /// This method should not have any side effects on the symbol, i.e. it SHOULD NOT change the symbol state.
         /// </remarks>
@@ -244,7 +244,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         ///     (a) Store the bound attributes in lazyCustomAttributes in a thread safe manner.
         ///     (b) Perform some additional post attribute validations, such as
         ///         1) Duplicate attributes, attribute usage target validation, etc.
-        ///         2) Post validation for attributes dependant on other attributes
+        ///         2) Post validation for attributes dependent on other attributes
         ///         These validations cannot be performed prior to step 6(a) as we might need to
         ///         perform a GetAttributes() call on a symbol which can introduce a cycle in attribute binding.
         ///         We avoid this cycle by performing such validations in PostDecodeWellKnownAttributes after lazyCustomAttributes have been set.
@@ -260,18 +260,20 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="lazyCustomAttributesBag"></param>
         /// <param name="symbolPart">Specific part of the symbol to which the attributes apply, or <see cref="AttributeLocation.None"/> if the attributes apply to the symbol itself.</param>
         /// <param name="earlyDecodingOnly">Indicates that only early decoding should be performed.  WARNING: the resulting bag will not be sealed.</param>
+        /// <param name="binderOpt">Binder to use. If null, <see cref="DeclaringCompilation"/> GetBinderFactory will be used.</param>
         /// <returns>Flag indicating whether lazyCustomAttributes were stored on this thread. Caller should check for this flag and perform NotePartComplete if true.</returns>
         internal bool LoadAndValidateAttributes(
             OneOrMany<SyntaxList<AttributeListSyntax>> attributesSyntaxLists,
             ref CustomAttributesBag<CSharpAttributeData> lazyCustomAttributesBag,
             AttributeLocation symbolPart = AttributeLocation.None,
-            bool earlyDecodingOnly = false)
+            bool earlyDecodingOnly = false,
+            Binder binderOpt = null)
         {
             var diagnostics = DiagnosticBag.GetInstance();
             var compilation = this.DeclaringCompilation;
 
             ImmutableArray<Binder> binders;
-            ImmutableArray<AttributeSyntax> attributesToBind = this.GetAttributesToBind(attributesSyntaxLists, symbolPart, diagnostics, compilation, out binders);
+            ImmutableArray<AttributeSyntax> attributesToBind = this.GetAttributesToBind(attributesSyntaxLists, symbolPart, diagnostics, compilation, binderOpt, out binders);
             Debug.Assert(!attributesToBind.IsDefault);
 
             ImmutableArray<CSharpAttributeData> boundAttributes;
@@ -348,7 +350,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool lazyAttributesStoredOnThisThread = false;
             if (lazyCustomAttributesBag.SetAttributes(boundAttributes))
             {
-                this.AddSemanticDiagnostics(diagnostics);
+                this.RecordPresenceOfBadAttributes(boundAttributes);
+                AddDeclarationDiagnostics(diagnostics);
                 lazyAttributesStoredOnThisThread = true;
                 if (lazyCustomAttributesBag.IsEmpty) lazyCustomAttributesBag = CustomAttributesBag<CSharpAttributeData>.Empty;
             }
@@ -356,6 +359,20 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(lazyCustomAttributesBag.IsSealed);
             diagnostics.Free();
             return lazyAttributesStoredOnThisThread;
+        }
+
+        private void RecordPresenceOfBadAttributes(ImmutableArray<CSharpAttributeData> boundAttributes)
+        {
+            foreach (var attribute in boundAttributes)
+            {
+                if (attribute.HasErrors)
+                {
+                    CSharpCompilation compilation = this.DeclaringCompilation;
+                    Debug.Assert(compilation != null);
+                    ((SourceModuleSymbol)compilation.SourceModule).RecordPresenceOfBadAttributes();
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -371,6 +388,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             AttributeLocation symbolPart,
             DiagnosticBag diagnostics,
             CSharpCompilation compilation,
+            Binder rootBinderOpt,
             out ImmutableArray<Binder> binders)
         {
             var attributeTarget = (IAttributeTargetSymbol)this;
@@ -408,7 +426,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         Debug.Assert(bindersBuilder != null);
 
                         var syntaxTree = attributeDeclarationSyntaxList.Node.SyntaxTree;
-                        var binder = compilation.GetBinderFactory(syntaxTree).GetBinder((CSharpSyntaxNode)attributeDeclarationSyntaxList.Node);
+                        var binder = rootBinderOpt ?? compilation.GetBinderFactory(syntaxTree).GetBinder(attributeDeclarationSyntaxList.Node);
 
                         binder = new ContextualAttributeBinder(binder, this);
                         Debug.Assert(!binder.InAttributeArgument, "Possible cycle in attribute binding");
@@ -447,6 +465,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return isOwner;
             }
 
+            AttributeLocation allowedTargets = attributesOwner.AllowedAttributeLocations;
+
             AttributeLocation explicitTarget = targetOpt.GetAttributeLocation();
             if (explicitTarget == AttributeLocation.None)
             {
@@ -455,13 +475,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     //NOTE: ValueText so that we accept targets like "@return", to match dev10 (DevDiv #2591).
                     diagnostics.Add(ErrorCode.WRN_InvalidAttributeLocation,
-                        targetOpt.Identifier.GetLocation(), targetOpt.Identifier.ValueText);
+                        targetOpt.Identifier.GetLocation(), targetOpt.Identifier.ValueText, allowedTargets.ToDisplayString());
                 }
 
                 return false;
             }
 
-            AttributeLocation allowedTargets = attributesOwner.AllowedAttributeLocations;
             if ((explicitTarget & allowedTargets) == 0)
             {
                 // error: invalid target for symbol
@@ -568,7 +587,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
-        /// This method validates attribute usage for each bound attribute and calls <see cref="M:DecodeWellKnownAttribute"/>
+        /// This method validates attribute usage for each bound attribute and calls <see cref="DecodeWellKnownAttribute"/>
         /// on attributes with valid attribute usage.
         /// This method is called by the binder when it is finished binding a set of attributes on the symbol so that
         /// the symbol can extract data from the attribute arguments and potentially perform validation specific to
@@ -639,7 +658,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Given attribute can't be specified more than once if AllowMultiple is false.
             if (!uniqueAttributeTypes.Add(attributeType) && !attributeUsageInfo.AllowMultiple)
             {
-                diagnostics.Add(ErrorCode.ERR_DuplicateAttribute, node.Name.Location, node.Name);
+                diagnostics.Add(ErrorCode.ERR_DuplicateAttribute, node.Name.Location, node.GetErrorDisplayName());
                 return false;
             }
 
@@ -659,7 +678,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if ((attributeTarget & attributeUsageInfo.ValidTargets) == 0)
             {
                 // generate error
-                diagnostics.Add(ErrorCode.ERR_AttributeOnBadSymbolType, node.Name.Location, node.Name, attributeUsageInfo.GetValidTargetsString());
+                diagnostics.Add(ErrorCode.ERR_AttributeOnBadSymbolType, node.Name.Location, node.GetErrorDisplayName(), attributeUsageInfo.GetValidTargetsErrorArgument());
                 return false;
             }
 

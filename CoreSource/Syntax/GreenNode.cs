@@ -1,16 +1,19 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis.Collections;
+using Microsoft.CodeAnalysis.Syntax.InternalSyntax;
 using Roslyn.Utilities;
-using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis
 {
     [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
-    internal abstract class GreenNode : IObjectWritable, IObjectReadable
+    internal abstract class GreenNode : IObjectWritable
     {
         private string GetDebuggerDisplay()
         {
@@ -19,80 +22,80 @@ namespace Microsoft.CodeAnalysis
 
         internal const int ListKind = 1;
 
-        private readonly ushort kind;
+        private readonly ushort _kind;
         protected NodeFlags flags;
-        private byte slotCount;
-        private int fullWidth;
+        private byte _slotCount;
+        private int _fullWidth;
 
-        private static readonly ConditionalWeakTable<GreenNode, DiagnosticInfo[]> diagnosticsTable =
+        private static readonly ConditionalWeakTable<GreenNode, DiagnosticInfo[]> s_diagnosticsTable =
             new ConditionalWeakTable<GreenNode, DiagnosticInfo[]>();
 
-        private static readonly ConditionalWeakTable<GreenNode, SyntaxAnnotation[]> annotationsTable =
+        private static readonly ConditionalWeakTable<GreenNode, SyntaxAnnotation[]> s_annotationsTable =
             new ConditionalWeakTable<GreenNode, SyntaxAnnotation[]>();
 
-        private static readonly DiagnosticInfo[] NoDiagnostics = SpecializedCollections.EmptyArray<DiagnosticInfo>();
-        private static readonly SyntaxAnnotation[] NoAnnotations = SpecializedCollections.EmptyArray<SyntaxAnnotation>();
-        private static readonly IEnumerable<SyntaxAnnotation> NoAnnotationsEnumerable = SpecializedCollections.EmptyEnumerable<SyntaxAnnotation>();
+        private static readonly DiagnosticInfo[] s_noDiagnostics = Array.Empty<DiagnosticInfo>();
+        private static readonly SyntaxAnnotation[] s_noAnnotations = Array.Empty<SyntaxAnnotation>();
+        private static readonly IEnumerable<SyntaxAnnotation> s_noAnnotationsEnumerable = SpecializedCollections.EmptyEnumerable<SyntaxAnnotation>();
 
         protected GreenNode(ushort kind)
         {
-            this.kind = kind;
+            _kind = kind;
         }
 
         protected GreenNode(ushort kind, int fullWidth)
         {
-            this.kind = kind;
-            this.fullWidth = fullWidth;
+            _kind = kind;
+            _fullWidth = fullWidth;
         }
 
         protected GreenNode(ushort kind, DiagnosticInfo[] diagnostics, int fullWidth)
         {
-            this.kind = kind;
-            this.fullWidth = fullWidth;
-            if (diagnostics != null && diagnostics.Length > 0)
+            _kind = kind;
+            _fullWidth = fullWidth;
+            if (diagnostics?.Length > 0)
             {
                 this.flags |= NodeFlags.ContainsDiagnostics;
-                diagnosticsTable.Add(this, diagnostics);
+                s_diagnosticsTable.Add(this, diagnostics);
             }
         }
 
         protected GreenNode(ushort kind, DiagnosticInfo[] diagnostics)
         {
-            this.kind = kind;
-            if (diagnostics != null && diagnostics.Length > 0)
+            _kind = kind;
+            if (diagnostics?.Length > 0)
             {
                 this.flags |= NodeFlags.ContainsDiagnostics;
-                diagnosticsTable.Add(this, diagnostics);
+                s_diagnosticsTable.Add(this, diagnostics);
             }
         }
 
         protected GreenNode(ushort kind, DiagnosticInfo[] diagnostics, SyntaxAnnotation[] annotations) :
             this(kind, diagnostics)
         {
-            if (annotations != null && annotations.Length > 0)
+            if (annotations?.Length > 0)
             {
                 foreach (var annotation in annotations)
                 {
-                    if (annotation == null) throw new ArgumentException(paramName: "annotations", message: "" /*CSharpResources.ElementsCannotBeNull*/);
+                    if (annotation == null) throw new ArgumentException(paramName: nameof(annotations), message: "" /*CSharpResources.ElementsCannotBeNull*/);
                 }
 
                 this.flags |= NodeFlags.ContainsAnnotations;
-                annotationsTable.Add(this, annotations);
+                s_annotationsTable.Add(this, annotations);
             }
         }
 
         protected GreenNode(ushort kind, DiagnosticInfo[] diagnostics, SyntaxAnnotation[] annotations, int fullWidth) :
             this(kind, diagnostics, fullWidth)
         {
-            if (annotations != null && annotations.Length > 0)
+            if (annotations?.Length > 0)
             {
                 foreach (var annotation in annotations)
                 {
-                    if (annotation == null) throw new ArgumentException(paramName: "annotations", message: "" /*CSharpResources.ElementsCannotBeNull*/);
+                    if (annotation == null) throw new ArgumentException(paramName: nameof(annotations), message: "" /*CSharpResources.ElementsCannotBeNull*/);
                 }
 
                 this.flags |= NodeFlags.ContainsAnnotations;
-                annotationsTable.Add(this, annotations);
+                s_annotationsTable.Add(this, annotations);
             }
         }
 
@@ -100,7 +103,7 @@ namespace Microsoft.CodeAnalysis
         {
             Debug.Assert(node != null, "PERF: caller must ensure that node!=null, we do not want to re-check that here.");
             this.flags |= (node.flags & NodeFlags.InheritMask);
-            this.fullWidth += node.fullWidth;
+            _fullWidth += node._fullWidth;
         }
 
         public abstract string Language { get; }
@@ -108,7 +111,7 @@ namespace Microsoft.CodeAnalysis
         #region Kind 
         public int RawKind
         {
-            get { return this.kind; }
+            get { return _kind; }
         }
 
         public bool IsList
@@ -120,9 +123,13 @@ namespace Microsoft.CodeAnalysis
         }
 
         public abstract string KindText { get; }
-        public virtual bool IsStructuredTrivia { get { return false; } }
-        public virtual bool IsDirective { get { return false; } }
-        public virtual bool IsToken { get { return false; } }
+
+        public virtual bool IsStructuredTrivia => false;
+        public virtual bool IsDirective => false;
+        public virtual bool IsToken => false;
+        public virtual bool IsTrivia => false;
+        public virtual bool IsSkippedTokensTrivia => false;
+        public virtual bool IsDocumentationCommentTrivia => false;
 
         #endregion
 
@@ -131,7 +138,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                int count = this.slotCount;
+                int count = _slotCount;
                 if (count == byte.MaxValue)
                 {
                     count = GetSlotCount();
@@ -142,19 +149,103 @@ namespace Microsoft.CodeAnalysis
 
             protected set
             {
-                this.slotCount = (byte)value;
+                _slotCount = (byte)value;
             }
         }
 
         internal abstract GreenNode GetSlot(int index);
 
-        // for slot count's >= byte.MaxValue
+        // for slot counts >= byte.MaxValue
         protected virtual int GetSlotCount()
         {
-            return this.slotCount;
+            return _slotCount;
         }
 
-        public abstract int GetSlotOffset(int index);
+        public virtual int GetSlotOffset(int index)
+        {
+            int offset = 0;
+            for (int i = 0; i < index; i++)
+            {
+                var child = this.GetSlot(i);
+                if (child != null)
+                {
+                    offset += child.FullWidth;
+                }
+            }
+
+            return offset;
+        }
+
+        internal Syntax.InternalSyntax.ChildSyntaxList ChildNodesAndTokens()
+        {
+            return new Syntax.InternalSyntax.ChildSyntaxList(this);
+        }
+
+        /// <summary>
+        /// Enumerates all nodes of the tree rooted by this node (including this node).
+        /// </summary>
+        internal IEnumerable<GreenNode> EnumerateNodes()
+        {
+            yield return this;
+
+            var stack = new Stack<Syntax.InternalSyntax.ChildSyntaxList.Enumerator>(24);
+            stack.Push(this.ChildNodesAndTokens().GetEnumerator());
+
+            while (stack.Count > 0)
+            {
+                var en = stack.Pop();
+                if (!en.MoveNext())
+                {
+                    // no more down this branch
+                    continue;
+                }
+
+                var current = en.Current;
+                stack.Push(en); // put it back on stack (struct enumerator)
+
+                yield return current;
+
+                if (!current.IsToken)
+                {
+                    // not token, so consider children
+                    stack.Push(current.ChildNodesAndTokens().GetEnumerator());
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Find the slot that contains the given offset.
+        /// </summary>
+        /// <param name="offset">The target offset. Must be between 0 and <see cref="FullWidth"/>.</param>
+        /// <returns>The slot index of the slot containing the given offset.</returns>
+        /// <remarks>
+        /// The base implementation is a linear search. This should be overridden
+        /// if a derived class can implement it more efficiently.
+        /// </remarks>
+        public virtual int FindSlotIndexContainingOffset(int offset)
+        {
+            Debug.Assert(0 <= offset && offset < FullWidth);
+
+            int i;
+            int accumulatedWidth = 0;
+            for (i = 0; ; i++)
+            {
+                Debug.Assert(i < SlotCount);
+                var child = GetSlot(i);
+                if (child != null)
+                {
+                    accumulatedWidth += child.FullWidth;
+                    if (offset < accumulatedWidth)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return i;
+        }
+
         #endregion
 
         #region Flags 
@@ -173,8 +264,7 @@ namespace Microsoft.CodeAnalysis
             FactoryContextIsInQuery = 1 << 7,
             FactoryContextIsInIterator = FactoryContextIsInQuery,  // VB does not use "InQuery", but uses "InIterator" instead
 
-            FactoryContextMask = FactoryContextIsInAsync | FactoryContextIsInQuery,
-            InheritMask = byte.MaxValue & ~FactoryContextMask,
+            InheritMask = ContainsDiagnostics | ContainsStructuredTrivia | ContainsDirectives | ContainsSkippedText | ContainsAnnotations | IsNotMissing,
         }
 
         internal NodeFlags Flags
@@ -271,12 +361,12 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return this.fullWidth;
+                return _fullWidth;
             }
 
             protected set
             {
-                this.fullWidth = value;
+                _fullWidth = value;
             }
         }
 
@@ -284,25 +374,29 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return this.fullWidth - this.GetLeadingTriviaWidth() - this.GetTrailingTriviaWidth();
+                return _fullWidth - this.GetLeadingTriviaWidth() - this.GetTrailingTriviaWidth();
             }
         }
 
         public virtual int GetLeadingTriviaWidth()
         {
-            return this.GetFirstTerminal().GetLeadingTriviaWidth();
+            return this.FullWidth != 0 ?
+                this.GetFirstTerminal().GetLeadingTriviaWidth() :
+                0;
         }
 
         public virtual int GetTrailingTriviaWidth()
         {
-            return this.GetLastTerminal().GetTrailingTriviaWidth();
+            return this.FullWidth != 0 ?
+                this.GetLastTerminal().GetTrailingTriviaWidth() :
+                0;
         }
 
         public bool HasLeadingTrivia
         {
             get
             {
-                return this.GetLeadingTriviaWidth() > 0;
+                return this.GetLeadingTriviaWidth() != 0;
             }
         }
 
@@ -310,7 +404,7 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                return this.GetTrailingTriviaWidth() > 0;
+                return this.GetTrailingTriviaWidth() != 0;
             }
         }
         #endregion
@@ -322,7 +416,7 @@ namespace Microsoft.CodeAnalysis
         internal GreenNode(ObjectReader reader)
         {
             var kindBits = reader.ReadUInt16();
-            this.kind = (ushort)(kindBits & ~ExtendedSerializationInfoMask);
+            _kind = (ushort)(kindBits & ~ExtendedSerializationInfoMask);
 
             if ((kindBits & ExtendedSerializationInfoMask) != 0)
             {
@@ -330,14 +424,14 @@ namespace Microsoft.CodeAnalysis
                 if (diagnostics != null && diagnostics.Length > 0)
                 {
                     this.flags |= NodeFlags.ContainsDiagnostics;
-                    diagnosticsTable.Add(this, diagnostics);
+                    s_diagnosticsTable.Add(this, diagnostics);
                 }
 
                 var annotations = (SyntaxAnnotation[])reader.ReadValue();
                 if (annotations != null && annotations.Length > 0)
                 {
                     this.flags |= NodeFlags.ContainsAnnotations;
-                    annotationsTable.Add(this, annotations);
+                    s_annotationsTable.Add(this, annotations);
                 }
             }
         }
@@ -349,37 +443,30 @@ namespace Microsoft.CodeAnalysis
 
         internal virtual void WriteTo(ObjectWriter writer)
         {
-            var kindBits = (UInt16)this.kind;
+            var kindBits = (UInt16)_kind;
             var hasDiagnostics = this.GetDiagnostics().Length > 0;
             var hasAnnotations = this.GetAnnotations().Length > 0;
 
             if (hasDiagnostics || hasAnnotations)
             {
                 kindBits |= ExtendedSerializationInfoMask;
-            }
-
-            writer.WriteUInt16(kindBits);
-
-            if (hasDiagnostics || hasAnnotations)
-            {
+                writer.WriteUInt16(kindBits);
                 writer.WriteValue(hasDiagnostics ? this.GetDiagnostics() : null);
                 writer.WriteValue(hasAnnotations ? this.GetAnnotations() : null);
             }
+            else
+            {
+                writer.WriteUInt16(kindBits);
+            }
         }
 
-        Func<ObjectReader, object> IObjectReadable.GetReader()
-        {
-            return this.GetReader();
-        }
-
-        internal abstract Func<ObjectReader, object> GetReader();
         #endregion
 
         #region Annotations 
         public bool HasAnnotations(string annotationKind)
         {
             var annotations = this.GetAnnotations();
-            if (annotations == NoAnnotations)
+            if (annotations == s_noAnnotations)
             {
                 return false;
             }
@@ -398,7 +485,7 @@ namespace Microsoft.CodeAnalysis
         public bool HasAnnotations(IEnumerable<string> annotationKinds)
         {
             var annotations = this.GetAnnotations();
-            if (annotations == NoAnnotations)
+            if (annotations == s_noAnnotations)
             {
                 return false;
             }
@@ -417,7 +504,7 @@ namespace Microsoft.CodeAnalysis
         public bool HasAnnotation(SyntaxAnnotation annotation)
         {
             var annotations = this.GetAnnotations();
-            if (annotations == NoAnnotations)
+            if (annotations == s_noAnnotations)
             {
                 return false;
             }
@@ -437,14 +524,14 @@ namespace Microsoft.CodeAnalysis
         {
             if (string.IsNullOrWhiteSpace(annotationKind))
             {
-                throw new ArgumentNullException("annotationKind");
+                throw new ArgumentNullException(nameof(annotationKind));
             }
 
             var annotations = this.GetAnnotations();
 
-            if (annotations == NoAnnotations)
+            if (annotations == s_noAnnotations)
             {
-                return NoAnnotationsEnumerable;
+                return s_noAnnotationsEnumerable;
             }
 
             return GetAnnotationsSlow(annotations, annotationKind);
@@ -465,14 +552,14 @@ namespace Microsoft.CodeAnalysis
         {
             if (annotationKinds == null)
             {
-                throw new ArgumentNullException("annotationKinds");
+                throw new ArgumentNullException(nameof(annotationKinds));
             }
 
             var annotations = this.GetAnnotations();
 
-            if (annotations == NoAnnotations)
+            if (annotations == s_noAnnotations)
             {
-                return NoAnnotationsEnumerable;
+                return s_noAnnotationsEnumerable;
             }
 
             return GetAnnotationsSlow(annotations, annotationKinds);
@@ -494,14 +581,14 @@ namespace Microsoft.CodeAnalysis
             if (this.ContainsAnnotations)
             {
                 SyntaxAnnotation[] annotations;
-                if (annotationsTable.TryGetValue(this, out annotations))
+                if (s_annotationsTable.TryGetValue(this, out annotations))
                 {
                     System.Diagnostics.Debug.Assert(annotations.Length != 0, "we should return nonempty annotations or NoAnnotations");
                     return annotations;
                 }
             }
 
-            return NoAnnotations;
+            return s_noAnnotations;
         }
 
         internal abstract GreenNode SetAnnotations(SyntaxAnnotation[] annotations);
@@ -514,60 +601,141 @@ namespace Microsoft.CodeAnalysis
             if (this.ContainsDiagnostics)
             {
                 DiagnosticInfo[] diags;
-                if (diagnosticsTable.TryGetValue(this, out diags))
+                if (s_diagnosticsTable.TryGetValue(this, out diags))
                 {
                     return diags;
                 }
             }
 
-            return NoDiagnostics;
+            return s_noDiagnostics;
         }
 
         internal abstract GreenNode SetDiagnostics(DiagnosticInfo[] diagnostics);
         #endregion
 
         #region Text
-        public abstract string ToFullString();
 
-        public virtual void WriteTo(System.IO.TextWriter writer)
+        public virtual string ToFullString()
         {
-            this.WriteTo(writer, true, true);
+            var sb = PooledStringBuilder.GetInstance();
+            var writer = new System.IO.StringWriter(sb.Builder, System.Globalization.CultureInfo.InvariantCulture);
+            this.WriteTo(writer, leading: true, trailing: true);
+            return sb.ToStringAndFree();
         }
 
-        protected internal virtual void WriteTo(System.IO.TextWriter writer, bool leading, bool trailing)
+        public override string ToString()
         {
-            bool first = true;
-            int n = this.SlotCount;
-            int lastIndex = n - 1;
-            for (; lastIndex >= 0; lastIndex--)
+            var sb = PooledStringBuilder.GetInstance();
+            var writer = new System.IO.StringWriter(sb.Builder, System.Globalization.CultureInfo.InvariantCulture);
+            this.WriteTo(writer, leading: false, trailing: false);
+            return sb.ToStringAndFree();
+        }
+
+        public void WriteTo(System.IO.TextWriter writer)
+        {
+            this.WriteTo(writer, leading: true, trailing: true);
+        }
+
+        protected internal void WriteTo(TextWriter writer, bool leading, bool trailing)
+        {
+            // Use an actual Stack so we can write out deeply recursive structures without overflowing.
+            var stack = new Stack<(GreenNode node, bool leading, bool trailing)>();
+            stack.Push((this, leading, trailing));
+
+            // Separated out stack processing logic so that it does not unintentially refer to 
+            // "this", "leading" or "trailing.
+            ProcessStack(writer, stack);
+        }
+
+        private static void ProcessStack(TextWriter writer,
+            Stack<(GreenNode node, bool leading, bool trailing)> stack)
+        {
+            while (stack.Count > 0)
             {
-                var child = this.GetSlot(lastIndex);
+                var current = stack.Pop();
+                var currentNode = current.Item1;
+                var currentLeading = current.Item2;
+                var currentTrailing = current.Item3;
+
+                if (currentNode.IsToken)
+                {
+                    currentNode.WriteTokenTo(writer, currentLeading, currentTrailing);
+                    continue;
+                }
+
+                if (currentNode.IsTrivia)
+                {
+                    currentNode.WriteTriviaTo(writer);
+                    continue;
+                }
+
+                var firstIndex = GetFirstNonNullChildIndex(currentNode);
+                var lastIndex = GetLastNonNullChildIndex(currentNode);
+
+                for (var i = lastIndex; i >= firstIndex; i--)
+                {
+                    var child = currentNode.GetSlot(i);
+                    if (child != null)
+                    {
+                        var first = i == firstIndex;
+                        var last = i == lastIndex;
+                        stack.Push((child, currentLeading | !first, currentTrailing | !last));
+                    }
+                }
+            }
+        }
+
+        private static int GetFirstNonNullChildIndex(GreenNode node)
+        {
+            int n = node.SlotCount;
+            int firstIndex = 0;
+            for (; firstIndex < n; firstIndex++)
+            {
+                var child = node.GetSlot(firstIndex);
                 if (child != null)
                 {
                     break;
                 }
             }
 
-            for (var i = 0; i < n; i++)
+            return firstIndex;
+        }
+
+        private static int GetLastNonNullChildIndex(GreenNode node)
+        {
+            int n = node.SlotCount;
+            int lastIndex = n - 1;
+            for (; lastIndex >= 0; lastIndex--)
             {
-                var child = this.GetSlot(i);
+                var child = node.GetSlot(lastIndex);
                 if (child != null)
                 {
-                    child.WriteTo(writer, leading | !first, trailing | (i < lastIndex));
-                    first = false;
+                    break;
                 }
             }
+
+            return lastIndex;
+        }
+
+        protected virtual void WriteTriviaTo(TextWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual void WriteTokenTo(TextWriter writer, bool leading, bool trailing)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
 
         #region Tokens 
+
         public virtual int RawContextualKind { get { return this.RawKind; } }
         public virtual object GetValue() { return null; }
         public virtual string GetValueText() { return string.Empty; }
         public virtual GreenNode GetLeadingTriviaCore() { return null; }
         public virtual GreenNode GetTrailingTriviaCore() { return null; }
-        public abstract AbstractSyntaxNavigator Navigator { get; }
 
         public virtual GreenNode WithLeadingTrivia(GreenNode trivia)
         {
@@ -585,16 +753,18 @@ namespace Microsoft.CodeAnalysis
 
             do
             {
+                GreenNode firstChild = null;
                 for (int i = 0, n = node.SlotCount; i < n; i++)
                 {
                     var child = node.GetSlot(i);
                     if (child != null)
                     {
-                        node = child;
+                        firstChild = child;
                         break;
                     }
                 }
-            } while (node.slotCount != 0);
+                node = firstChild;
+            } while (node?._slotCount > 0);
 
             return node;
         }
@@ -605,16 +775,18 @@ namespace Microsoft.CodeAnalysis
 
             do
             {
+                GreenNode lastChild = null;
                 for (int i = node.SlotCount - 1; i >= 0; i--)
                 {
                     var child = node.GetSlot(i);
                     if (child != null)
                     {
-                        node = child;
+                        lastChild = child;
                         break;
                     }
                 }
-            } while (node.slotCount != 0);
+                node = lastChild;
+            } while (node?._slotCount > 0);
 
             return node;
         }
@@ -637,7 +809,7 @@ namespace Microsoft.CodeAnalysis
                 }
                 node = nonmissingChild;
             }
-            while (node != null && node.slotCount != 0);
+            while (node?._slotCount > 0);
 
             return node;
         }
@@ -682,7 +854,7 @@ namespace Microsoft.CodeAnalysis
                 }
             }
 
-            if (node1.fullWidth != node2.fullWidth)
+            if (node1._fullWidth != node2._fullWidth)
             {
                 return false;
             }
@@ -711,9 +883,39 @@ namespace Microsoft.CodeAnalysis
 
         #region Factories 
 
-        public abstract GreenNode CreateList(IEnumerable<GreenNode> nodes, bool alwaysCreateListNode = false);
         public abstract SyntaxToken CreateSeparator<TNode>(SyntaxNode element) where TNode : SyntaxNode;
         public abstract bool IsTriviaWithEndOfLine(); // trivia node has end of line
+
+        public virtual GreenNode CreateList(IEnumerable<GreenNode> nodes, bool alwaysCreateListNode = false)
+        {
+            if (nodes == null)
+            {
+                return null;
+            }
+
+            var list = nodes.ToArray();
+
+            switch (list.Length)
+            {
+                case 0:
+                    return null;
+                case 1:
+                    if (alwaysCreateListNode)
+                    {
+                        goto default;
+                    }
+                    else
+                    {
+                        return list[0];
+                    }
+                case 2:
+                    return SyntaxList.List(list[0], list[1]);
+                case 3:
+                    return SyntaxList.List(list[0], list[1], list[2]);
+                default:
+                    return SyntaxList.List(list);
+            }
+        }
 
         public SyntaxNode CreateRed()
         {
@@ -725,7 +927,6 @@ namespace Microsoft.CodeAnalysis
         #endregion
 
         #region Caching
-
 
         internal const int MaxCachedChildNum = 3;
 
@@ -749,7 +950,7 @@ namespace Microsoft.CodeAnalysis
                 var child = GetSlot(i);
                 if (child != null)
                 {
-                    code = Hash.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(child), code);
+                    code = Hash.Combine(RuntimeHelpers.GetHashCode(child), code);
                 }
             }
 
@@ -785,7 +986,36 @@ namespace Microsoft.CodeAnalysis
                 this.GetSlot(1) == child2 &&
                 this.GetSlot(2) == child3;
         }
-
         #endregion //Caching
+
+        /// <summary>
+        /// Add an error to the given node, creating a new node that is the same except it has no parent,
+        /// and has the given error attached to it. The error span is the entire span of this node.
+        /// </summary>
+        /// <param name="err">The error to attach to this node</param>
+        /// <returns>A new node, with no parent, that has this error added to it.</returns>
+        /// <remarks>Since nodes are immutable, the only way to create nodes with errors attached is to create a node without an error,
+        /// then add an error with this method to create another node.</remarks>
+        internal GreenNode AddError(DiagnosticInfo err)
+        {
+            DiagnosticInfo[] errorInfos;
+
+            // If the green node already has errors, add those on.
+            if (GetDiagnostics() == null)
+            {
+                errorInfos = new[] { err };
+            }
+            else
+            {
+                // Add the error to the error list.
+                errorInfos = GetDiagnostics();
+                var length = errorInfos.Length;
+                Array.Resize(ref errorInfos, length + 1);
+                errorInfos[length] = err;
+            }
+
+            // Get a new green node with the errors added on.
+            return SetDiagnostics(errorInfos);
+        }
     }
 }

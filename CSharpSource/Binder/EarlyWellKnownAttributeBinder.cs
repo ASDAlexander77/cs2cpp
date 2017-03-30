@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -44,7 +44,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal static bool CanBeValidAttributeArgument(ExpressionSyntax node, Binder typeBinder)
         {
             Debug.Assert(node != null);
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 // ObjectCreationExpression for primitive types, such as "new int()", are treated as constants and allowed in attribute arguments.
                 case SyntaxKind.ObjectCreationExpression:
@@ -143,9 +143,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.LessThanExpression:
                 case SyntaxKind.GreaterThanOrEqualExpression:
                 case SyntaxKind.LessThanOrEqualExpression:
-
-                //  The ?: conditional operator.
-                case SyntaxKind.ConditionalExpression:
+                case SyntaxKind.InvocationExpression: //  To support nameof(); anything else will be a compile-time error
+                case SyntaxKind.ConditionalExpression: //  The ?: conditional operator.
                     return true;
 
                 default:

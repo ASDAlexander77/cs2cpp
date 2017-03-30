@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Roslyn.Utilities
 {
@@ -72,7 +72,7 @@ namespace Roslyn.Utilities
         /// Returns an extension of the specified path string.
         /// </summary>
         /// <remarks>
-        /// The same functionality as <see cref="M:System.IO.Path.GetExtension(string)"/> but doesn't throw an exception
+        /// The same functionality as <see cref="System.IO.Path.GetExtension(string)"/> but doesn't throw an exception
         /// if there are invalid characters in the path.
         /// </remarks>
         internal static string GetExtension(string path)
@@ -116,10 +116,10 @@ namespace Roslyn.Utilities
         }
 
         /// <summary>
-        /// Returns path with the extenion changed to <paramref name="extension"/>.
+        /// Returns path with the extension changed to <paramref name="extension"/>.
         /// </summary>
         /// <returns>
-        /// Equivalent of <see cref="M:System.IO.Path.ChangeExtension"/>
+        /// Equivalent of <see cref="System.IO.Path.ChangeExtension(string, string)"/>
         /// 
         /// If <paramref name="path"/> is null, returns null. 
         /// If path does not end with an extension, the new extension is appended to the path.
@@ -172,11 +172,12 @@ namespace Roslyn.Utilities
         /// <summary>
         /// Get file name from path.
         /// </summary>
-        /// <remarks>Unlike <see cref="M:System.IO.Path.GetFileName"/> doesn't check for invalid path characters.</remarks>
-        internal static string GetFileName(string path)
+        /// <remarks>Unlike <see cref="System.IO.Path.GetFileName"/> doesn't check for invalid path characters.</remarks>
+        internal static string GetFileName(string path, bool includeExtension = true)
         {
             int fileNameStart = IndexOfFileName(path);
-            return (fileNameStart <= 0) ? path : path.Substring(fileNameStart);
+            var fileName = (fileNameStart <= 0) ? path : path.Substring(fileNameStart);
+            return includeExtension ? fileName : RemoveExtension(fileName);
         }
     }
 }

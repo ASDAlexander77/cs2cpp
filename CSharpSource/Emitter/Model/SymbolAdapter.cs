@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -13,12 +13,12 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    partial class Symbol : Cci.IReference
+    internal partial class Symbol : Cci.IReference
     {
         /// <summary>
         /// Checks if this symbol is a definition and its containing module is a SourceModuleSymbol.
         /// </summary>
-        [Conditional("_DEBUG")]
+        [Conditional("DEBUG")]
         internal protected void CheckDefinitionInvariant()
         {
             // can't be generic instantiation
@@ -72,11 +72,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             userDefined = this.GetAttributes();
             this.AddSynthesizedAttributes(compilationState, ref synthesized);
 
-            if (userDefined.IsEmpty && synthesized == null)
-            {
-                return SpecializedCollections.EmptyEnumerable<CSharpAttributeData>();
-            }
-
             // Note that callers of this method (CCI and ReflectionEmitter) have to enumerate 
             // all items of the returned iterator, otherwise the synthesized ArrayBuilder may leak.
             return GetCustomAttributesToEmit(userDefined, synthesized, isReturnType: false, emittingAssemblyAttributesInNetModule: emittingAssemblyAttributesInNetModule);
@@ -87,6 +82,23 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// The <paramref name="synthesized"/> builder is freed after all its items are enumerated.
         /// </summary>
         internal IEnumerable<CSharpAttributeData> GetCustomAttributesToEmit(
+            ImmutableArray<CSharpAttributeData> userDefined,
+            ArrayBuilder<SynthesizedAttributeData> synthesized,
+            bool isReturnType,
+            bool emittingAssemblyAttributesInNetModule)
+        {
+            CheckDefinitionInvariant();
+
+            //PERF: Avoid creating an iterator for the common case of no attributes.
+            if (userDefined.IsEmpty && synthesized == null)
+            {
+                return SpecializedCollections.EmptyEnumerable<CSharpAttributeData>();
+            }
+
+            return GetCustomAttributesToEmitIterator(userDefined, synthesized, isReturnType, emittingAssemblyAttributesInNetModule);
+        }
+
+        private IEnumerable<CSharpAttributeData> GetCustomAttributesToEmitIterator(
             ImmutableArray<CSharpAttributeData> userDefined,
             ArrayBuilder<SynthesizedAttributeData> synthesized,
             bool isReturnType,
@@ -111,9 +123,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 CSharpAttributeData attribute = userDefined[i];
                 if (this.Kind == SymbolKind.Assembly)
                 {
-                    // We need to filter out duplicate assembly attributes,
-                    // i.e. attributes that bind to the same constructor and have identical arguments.
-                    if (((SourceAssemblySymbol)this).IsIndexOfDuplicateAssemblyAttribute(i))
+                    // We need to filter out duplicate assembly attributes (i.e. attributes that
+                    // bind to the same constructor and have identical arguments) and invalid
+                    // InternalsVisibleTo attributes.
+                    if (((SourceAssemblySymbol)this).IsIndexOfOmittedAssemblyAttribute(i))
                     {
                         continue;
                     }

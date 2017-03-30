@@ -1,18 +1,17 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Collections;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
-using Microsoft.CodeAnalysis.Collections;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -20,79 +19,151 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// Represents a named type symbol whose members are declared in source.
     /// </summary>
     internal abstract partial class SourceMemberContainerTypeSymbol : NamedTypeSymbol
-    {        
-#if DEBUG
-        static SourceMemberContainerTypeSymbol()
+    {
+        // The flags type is used to compact many different bits of information efficiently.
+        private struct Flags
         {
-            // Verify a few things about the values we combine into flags.  This way, if they ever
-            // change, this will get hit and you will know you have to update this type as well.
+            // We current pack everything into two 32-bit ints; layouts for each are given below.
 
-            // 1) Verify that the range of special types doesn't fall outside the bounds of the
-            // special type mask.
-            var specialTypes = EnumExtensions.GetValues<SpecialType>();
-            var maxSpecialType = (int)specialTypes.Aggregate((s1, s2) => s1 | s2);
-            Debug.Assert((maxSpecialType & SpecialTypeMask) == maxSpecialType);
+            // First int:
+            //
+            // |  |d|yy|xxxxxxxxxxxxxxxxxxxxx|wwwwww|
+            //
+            // w = special type.  6 bits.
+            // x = modifiers.  21 bits.
+            // y = IsManagedType.  2 bits.
+            // d = FieldDefinitionsNoted. 1 bit
+            private const int SpecialTypeOffset = 0;
+            private const int DeclarationModifiersOffset = 6;
+            private const int IsManagedTypeOffset = 26;
 
-            // 1) Verify that the range of declaration modifiers doesn't fall outside the bounds of
-            // the declaration modifier mask.
-            var declarationModifiers = EnumExtensions.GetValues<DeclarationModifiers>();
-            var maxDeclarationModifier = (int)declarationModifiers.Aggregate((d1, d2) => d1 | d2);
-            Debug.Assert((maxDeclarationModifier & DeclarationModifiersMask) == maxDeclarationModifier);
-        }
+            private const int SpecialTypeMask = 0x3F;
+            private const int DeclarationModifiersMask = 0x1FFFFF;
+            private const int IsManagedTypeMask = 0x3;
+
+            private const int FieldDefinitionsNotedBit = 1 << 28;
+
+            private int _flags;
+
+            // More flags.
+            //
+            // |                           |zzzz|f|
+            //
+            // f = FlattenedMembersIsSorted.  1 bit.
+            // z = TypeKind. 4 bits.
+            private const int TypeKindOffset = 1;
+
+            private const int TypeKindMask = 0xF;
+
+            private const int FlattenedMembersIsSortedBit = 1 << 0;
+
+            private int _flags2;
+
+            public SpecialType SpecialType
+            {
+                get { return (SpecialType)((_flags >> SpecialTypeOffset) & SpecialTypeMask); }
+            }
+
+            public DeclarationModifiers DeclarationModifiers
+            {
+                get { return (DeclarationModifiers)((_flags >> DeclarationModifiersOffset) & DeclarationModifiersMask); }
+            }
+
+            public ThreeState IsManagedType
+            {
+                get { return (ThreeState)((_flags >> IsManagedTypeOffset) & IsManagedTypeMask); }
+            }
+
+            public bool FieldDefinitionsNoted
+            {
+                get { return (_flags & FieldDefinitionsNotedBit) != 0; }
+            }
+
+            // True if "lazyMembersFlattened" is sorted.
+            public bool FlattenedMembersIsSorted
+            {
+                get { return (_flags2 & FlattenedMembersIsSortedBit) != 0; }
+            }
+
+            public TypeKind TypeKind
+            {
+                get { return (TypeKind)((_flags2 >> TypeKindOffset) & TypeKindMask); }
+            }
+
+
+#if DEBUG
+            static Flags()
+            {
+                // Verify a few things about the values we combine into flags.  This way, if they ever
+                // change, this will get hit and you will know you have to update this type as well.
+
+                // 1) Verify that the range of special types doesn't fall outside the bounds of the
+                // special type mask.
+                var specialTypes = EnumExtensions.GetValues<SpecialType>();
+                var maxSpecialType = (int)specialTypes.Aggregate((s1, s2) => s1 | s2);
+                Debug.Assert((maxSpecialType & SpecialTypeMask) == maxSpecialType);
+
+                // 2) Verify that the range of declaration modifiers doesn't fall outside the bounds of
+                // the declaration modifier mask.
+                var declarationModifiers = EnumExtensions.GetValues<DeclarationModifiers>();
+                var maxDeclarationModifier = (int)declarationModifiers.Aggregate((d1, d2) => d1 | d2);
+                Debug.Assert((maxDeclarationModifier & DeclarationModifiersMask) == maxDeclarationModifier);
+            }
 #endif
+
+            public Flags(SpecialType specialType, DeclarationModifiers declarationModifiers, TypeKind typeKind)
+            {
+                int specialTypeInt = ((int)specialType & SpecialTypeMask) << SpecialTypeOffset;
+                int declarationModifiersInt = ((int)declarationModifiers & DeclarationModifiersMask) << DeclarationModifiersOffset;
+                int typeKindInt = ((int)typeKind & TypeKindMask) << TypeKindOffset;
+
+                _flags = specialTypeInt | declarationModifiersInt;
+                _flags2 = typeKindInt;
+            }
+
+            public void SetFieldDefinitionsNoted()
+            {
+                ThreadSafeFlagOperations.Set(ref _flags, FieldDefinitionsNotedBit);
+            }
+
+            public void SetFlattenedMembersIsSorted()
+            {
+                ThreadSafeFlagOperations.Set(ref _flags2, (FlattenedMembersIsSortedBit));
+            }
+
+            private static bool BitsAreUnsetOrSame(int bits, int mask)
+            {
+                return (bits & mask) == 0 || (bits & mask) == mask;
+            }
+
+            public void SetIsManagedType(bool isManagedType)
+            {
+                int bitsToSet = ((int)isManagedType.ToThreeState() & IsManagedTypeMask) << IsManagedTypeOffset;
+                Debug.Assert(BitsAreUnsetOrSame(_flags, bitsToSet));
+                ThreadSafeFlagOperations.Set(ref _flags, bitsToSet);
+            }
+        }
 
         protected SymbolCompletionState state;
 
-        // The flags int is used to compact many different bits of information efficiently into a 32
-        // bit int.  The layout is currently:
-        //
-        // |  |d|yy|xxxxxxxxxxxxxxxxxxxxx|wwwwww|
-        //
-        // w = special type.  6 bits.
-        // x = modifiers.  21 bits.
-        // y = IsManagedType.  2 bits.
-        // d = FieldDefinitionsNoted. 1 bit
-        private const int SpecialTypeMask = 0x3F;
-        private const int DeclarationModifiersMask = 0x1FFFFF;
-        private const int IsManagedTypeMask = 0x3;
+        private Flags _flags;
 
-        private const int SpecialTypeOffset = 0;
-        private const int DeclarationModifiersOffset = 6;
-        private const int IsManagedTypeOffset = 26;
-        private const int FieldDefinitionsNotedOffset = 28;
-
-        private int flags;
-
-        // More flags.
-        //
-        // |                           |zzzz|f|
-        //
-        // f = FlattenedMembersIsSorted.  1 bit.
-        // z = TypeKind. 4 bits.
-        private const int FlattenedMembersIsSortedMask = 0x1;   // Set if "lazyMembersFlattened" is sorted.
-        private const int TypeKindMask = 0xF;
-
-        private const int FlattenedMembersIsSortedOffset = 0;
-        private const int TypeKindOffset = 1;
-
-        private int flags2;
-
-        private readonly NamespaceOrTypeSymbol containingSymbol;
+        private readonly NamespaceOrTypeSymbol _containingSymbol;
         protected readonly MergedTypeDeclaration declaration;
 
-        private MembersAndInitializers lazyMembersAndInitializers;
-        private Dictionary<string, ImmutableArray<Symbol>> lazyMembersDictionary;
-        private Dictionary<string, ImmutableArray<Symbol>> lazyEarlyAttributeDecodingMembersDictionary;
+        private MembersAndInitializers _lazyMembersAndInitializers;
+        private Dictionary<string, ImmutableArray<Symbol>> _lazyMembersDictionary;
+        private Dictionary<string, ImmutableArray<Symbol>> _lazyEarlyAttributeDecodingMembersDictionary;
 
-        private static readonly Dictionary<string, ImmutableArray<NamedTypeSymbol>> emptyTypeMembers = new Dictionary<string, ImmutableArray<NamedTypeSymbol>>();
-        private Dictionary<string, ImmutableArray<NamedTypeSymbol>> lazyTypeMembers;
-        private ImmutableArray<Symbol> lazyMembersFlattened;
-        private ImmutableArray<SynthesizedExplicitImplementationForwardingMethod> lazySynthesizedExplicitImplementations;
-        private int lazyKnownCircularStruct;
-        private LexicalSortKey lazyLexicalSortKey = LexicalSortKey.NotInitialized;
+        private static readonly Dictionary<string, ImmutableArray<NamedTypeSymbol>> s_emptyTypeMembers = new Dictionary<string, ImmutableArray<NamedTypeSymbol>>(EmptyComparer.Instance);
+        private Dictionary<string, ImmutableArray<NamedTypeSymbol>> _lazyTypeMembers;
+        private ImmutableArray<Symbol> _lazyMembersFlattened;
+        private ImmutableArray<SynthesizedExplicitImplementationForwardingMethod> _lazySynthesizedExplicitImplementations;
+        private int _lazyKnownCircularStruct;
+        private LexicalSortKey _lazyLexicalSortKey = LexicalSortKey.NotInitialized;
 
-        private ThreeState lazyContainsExtensionMethods;
-        private ThreeState lazyAnyMemberHasAttributes;
+        private ThreeState _lazyContainsExtensionMethods;
+        private ThreeState _lazyAnyMemberHasAttributes;
 
         #region Construction
 
@@ -101,7 +172,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             MergedTypeDeclaration declaration,
             DiagnosticBag diagnostics)
         {
-            this.containingSymbol = containingSymbol;
+            _containingSymbol = containingSymbol;
             this.declaration = declaration;
 
             TypeKind typeKind = declaration.Kind.ToTypeKind();
@@ -121,38 +192,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 ? MakeSpecialType()
                 : SpecialType.None;
 
-            this.flags = CreateFlags(specialType, modifiers);
-            this.flags2 = CreateFlags2(typeKind);
+            _flags = new Flags(specialType, modifiers, typeKind);
 
-            if ((object)ContainingType != null && ContainingType.IsSealed &&
-                (this.DeclaredAccessibility == Accessibility.Protected || this.DeclaredAccessibility == Accessibility.ProtectedOrInternal))
+            var containingType = this.ContainingType;
+            if ((object)containingType != null && containingType.IsSealed && this.DeclaredAccessibility.HasProtected())
             {
                 diagnostics.Add(AccessCheck.GetProtectedMemberInSealedTypeError(ContainingType), Locations[0], this);
             }
 
             state.NotePartComplete(CompletionPart.TypeArguments); // type arguments need not be computed separately
-        }
-
-        private static int CreateFlags(SpecialType specialType, DeclarationModifiers declarationModifiers)
-        {
-            int specialTypeInt = (int)specialType;
-            int declarationModifiersInt = (int)declarationModifiers;
-            const int isManagedTypeInt = 0;
-
-            specialTypeInt &= SpecialTypeMask;
-            declarationModifiersInt &= DeclarationModifiersMask;
-            //isManagedTypeInt &= IsManagedTypeMask;
-
-            return
-                (specialTypeInt << SpecialTypeOffset) |
-                (declarationModifiersInt << DeclarationModifiersOffset) |
-                (isManagedTypeInt << IsManagedTypeOffset);
-        }
-
-        private static int CreateFlags2(TypeKind typeKind)
-        {
-            int typeKindInt = (int)typeKind;
-            return (typeKindInt << TypeKindOffset);
         }
 
         private SpecialType MakeSpecialType()
@@ -364,7 +412,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         {
                             var diagnostics = DiagnosticBag.GetInstance();
                             CheckBase(diagnostics);
-                            AddSemanticDiagnostics(diagnostics);
+                            AddDeclarationDiagnostics(diagnostics);
                             state.NotePartComplete(CompletionPart.FinishBaseType);
                             diagnostics.Free();
                         }
@@ -376,7 +424,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         {
                             var diagnostics = DiagnosticBag.GetInstance();
                             CheckInterfaces(diagnostics);
-                            AddSemanticDiagnostics(diagnostics);
+                            AddDeclarationDiagnostics(diagnostics);
                             state.NotePartComplete(CompletionPart.FinishInterfaces);
                             diagnostics.Free();
                         }
@@ -420,7 +468,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         {
                             var diagnostics = DiagnosticBag.GetInstance();
                             AfterMembersChecks(diagnostics);
-                            AddSemanticDiagnostics(diagnostics);
+                            AddDeclarationDiagnostics(diagnostics);
+
+                            // We may produce a SymbolDeclaredEvent for the enclosing type before events for its contained members
+                            DeclaringCompilation.SymbolDeclaredEvent(this);
                             var thisThreadCompleted = state.NotePartComplete(CompletionPart.FinishMemberChecks);
                             Debug.Assert(thisThreadCompleted);
                             diagnostics.Free();
@@ -445,7 +496,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             {
                                 foreach (var member in members)
                                 {
-                                    ForceCompleteMemberByLocation(locationOpt, cancellationToken, member);
+                                    ForceCompleteMemberByLocation(locationOpt, member, cancellationToken);
                                     allCompleted = allCompleted && member.HasComplete(CompletionPart.All);
                                 }
                             }
@@ -463,10 +514,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                             // We've completed all members, so we're ready for the PointedAtManagedTypeChecks;
                             // proceed to the next iteration.
-                            if (state.NotePartComplete(CompletionPart.MembersCompleted))
-                            {
-                                DeclaringCompilation.SymbolDeclaredEvent(this);
-                            }
+                            state.NotePartComplete(CompletionPart.MembersCompleted);
                             break;
                         }
 
@@ -489,7 +537,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal void EnsureFieldDefinitionsNoted()
         {
-            if ((this.flags & (1 << FieldDefinitionsNotedOffset)) != 0)
+            if (_flags.FieldDefinitionsNoted)
             {
                 return;
             }
@@ -502,43 +550,40 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             // we must note all fields once therefore we need to lock
             lock (this.GetMembersAndInitializers())
             {
-                if ((this.flags & (1 << FieldDefinitionsNotedOffset)) == 0)
+                if (!_flags.FieldDefinitionsNoted)
                 {
-                    if (!this.IsAbstract)
+                    var assembly = (SourceAssemblySymbol)ContainingAssembly;
+
+                    Accessibility containerEffectiveAccessibility = EffectiveAccessibility();
+
+                    foreach (var member in _lazyMembersAndInitializers.NonTypeNonIndexerMembers)
                     {
-                        var assembly = (SourceAssemblySymbol)ContainingAssembly;
-
-                        Accessibility containerEffectiveAccessibility = EffectiveAccessibility();
-
-                        foreach (var member in this.lazyMembersAndInitializers.NonTypeNonIndexerMembers)
+                        FieldSymbol field;
+                        if (!member.IsFieldOrFieldLikeEvent(out field) || field.IsConst || field.IsFixed)
                         {
-                            FieldSymbol field;
-                            if (!member.IsFieldOrFieldLikeEvent(out field) || field.IsConst || field.IsFixed)
-                            {
-                                continue;
-                            }
+                            continue;
+                        }
 
-                            Accessibility fieldDeclaredAccessibility = field.DeclaredAccessibility;
-                            if (fieldDeclaredAccessibility == Accessibility.Private)
-                            {
-                                // mark private fields as tentatively unassigned and unread unless we discover otherwise.
-                                assembly.NoteFieldDefinition(field, isInternal: false, isUnread: true);
-                            }
-                            else if (containerEffectiveAccessibility == Accessibility.Private)
-                            {
-                                // mark effectively private fields as tentatively unassigned unless we discover otherwise.
-                                assembly.NoteFieldDefinition(field, isInternal: false, isUnread: false);
-                            }
-                            else if (fieldDeclaredAccessibility == Accessibility.Internal || containerEffectiveAccessibility == Accessibility.Internal)
-                            {
-                                // mark effectively internal fields as tentatively unassigned unless we discover otherwise.
-                                // NOTE: These fields will be reported as unassigned only if internals are not visible from this assembly.
-                                // See property SourceAssemblySymbol.UnusedFieldWarnings.
-                                assembly.NoteFieldDefinition(field, isInternal: true, isUnread: false);
-                            }
+                        Accessibility fieldDeclaredAccessibility = field.DeclaredAccessibility;
+                        if (fieldDeclaredAccessibility == Accessibility.Private)
+                        {
+                            // mark private fields as tentatively unassigned and unread unless we discover otherwise.
+                            assembly.NoteFieldDefinition(field, isInternal: false, isUnread: true);
+                        }
+                        else if (containerEffectiveAccessibility == Accessibility.Private)
+                        {
+                            // mark effectively private fields as tentatively unassigned unless we discover otherwise.
+                            assembly.NoteFieldDefinition(field, isInternal: false, isUnread: false);
+                        }
+                        else if (fieldDeclaredAccessibility == Accessibility.Internal || containerEffectiveAccessibility == Accessibility.Internal)
+                        {
+                            // mark effectively internal fields as tentatively unassigned unless we discover otherwise.
+                            // NOTE: These fields will be reported as unassigned only if internals are not visible from this assembly.
+                            // See property SourceAssemblySymbol.UnusedFieldWarnings.
+                            assembly.NoteFieldDefinition(field, isInternal: true, isUnread: false);
                         }
                     }
-                    ThreadSafeFlagOperations.Set(ref this.flags, 1 << FieldDefinitionsNotedOffset);
+                    _flags.SetFieldDefinitionsNoted();
                 }
             }
         }
@@ -551,7 +596,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.containingSymbol as NamedTypeSymbol;
+                return _containingSymbol as NamedTypeSymbol;
             }
         }
 
@@ -559,7 +604,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.containingSymbol;
+                return _containingSymbol;
             }
         }
 
@@ -571,8 +616,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                var value = flags >> SpecialTypeOffset;
-                return (SpecialType)(value & SpecialTypeMask);
+                return _flags.SpecialType;
             }
         }
 
@@ -580,7 +624,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (TypeKind)((((uint)flags2) >> TypeKindOffset) & TypeKindMask);
+                return _flags.TypeKind;
+            }
+        }
+
+        internal MergedTypeDeclaration MergedDeclaration
+        {
+            get
+            {
+                return this.declaration;
             }
         }
 
@@ -597,31 +649,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                const int IsManagedTypeTrue = 3 << IsManagedTypeOffset;
-                const int IsManagedTypeFalse = 1 << IsManagedTypeOffset;
-
-                switch (this.flags & (IsManagedTypeMask << IsManagedTypeOffset))
+                var isManagedType = _flags.IsManagedType;
+                if (!isManagedType.HasValue())
                 {
-                    case 0:
-                        bool value = base.IsManagedType;
-                        ThreadSafeFlagOperations.Set(ref this.flags, value ? IsManagedTypeTrue : IsManagedTypeFalse);
-                        return value;
-                    case IsManagedTypeTrue:
-                        return true;
-                    case IsManagedTypeFalse:
-                        return false;
-                    default:
-                        throw ExceptionUtilities.UnexpectedValue(this.flags);
+                    bool value = base.IsManagedType;
+                    _flags.SetIsManagedType(value);
+                    return value;
                 }
-            }
-        }
-
-        private DeclarationModifiers DeclarationModifiers
-        {
-            get
-            {
-                var value = flags >> DeclarationModifiersOffset;
-                return (DeclarationModifiers)(value & DeclarationModifiersMask);
+                return isManagedType.Value();
             }
         }
 
@@ -629,7 +664,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.DeclarationModifiers & DeclarationModifiers.Static) != 0;
+                return (_flags.DeclarationModifiers & DeclarationModifiers.Static) != 0;
             }
         }
 
@@ -637,7 +672,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.DeclarationModifiers & DeclarationModifiers.Sealed) != 0;
+                return (_flags.DeclarationModifiers & DeclarationModifiers.Sealed) != 0;
             }
         }
 
@@ -645,7 +680,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.DeclarationModifiers & DeclarationModifiers.Abstract) != 0;
+                return (_flags.DeclarationModifiers & DeclarationModifiers.Abstract) != 0;
             }
         }
 
@@ -653,7 +688,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.DeclarationModifiers & DeclarationModifiers.Partial) != 0;
+                return (_flags.DeclarationModifiers & DeclarationModifiers.Partial) != 0;
             }
         }
 
@@ -661,7 +696,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.DeclarationModifiers & DeclarationModifiers.New) != 0;
+                return (_flags.DeclarationModifiers & DeclarationModifiers.New) != 0;
             }
         }
 
@@ -669,7 +704,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return ModifierUtils.EffectiveAccessibility(this.DeclarationModifiers);
+                return ModifierUtils.EffectiveAccessibility(_flags.DeclarationModifiers);
             }
         }
 
@@ -750,11 +785,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override LexicalSortKey GetLexicalSortKey()
         {
-            if (!lazyLexicalSortKey.IsInitialized)
+            if (!_lazyLexicalSortKey.IsInitialized)
             {
-                lazyLexicalSortKey.SetFrom(declaration.GetLexicalSortKey(this.DeclaringCompilation));
+                _lazyLexicalSortKey.SetFrom(declaration.GetLexicalSortKey(this.DeclaringCompilation));
             }
-            return lazyLexicalSortKey;
+            return _lazyLexicalSortKey;
         }
 
         public override ImmutableArray<Location> Locations
@@ -788,9 +823,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <summary>
         /// Encapsulates information about the non-type members of a (i.e. this) type.
         ///   1) For non-initializers, symbols are created and stored in a list.
-        ///   2) For fields, the symbols are stored in (1) and the initializers are
-        ///        stored with other initialized fields from the same syntax tree with
-        ///        the same static-ness.
+        ///   2) For fields and properties, the symbols are stored in (1) and their initializers are
+        ///      stored with other initialized fields and properties from the same syntax tree with
+        ///      the same static-ness.
         ///   3) For indexers, syntax (weak) references are stored for later binding.
         /// </summary>
         /// <remarks>
@@ -799,72 +834,165 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         private sealed class MembersAndInitializers
         {
-            internal readonly SourceConstructorSymbol PrimaryCtor;
             internal readonly ImmutableArray<Symbol> NonTypeNonIndexerMembers;
-            internal readonly ImmutableArray<FieldInitializers> StaticInitializers;
-            internal readonly ImmutableArray<FieldInitializers> InstanceInitializers;
+            internal readonly ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> StaticInitializers;
+            internal readonly ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> InstanceInitializers;
             internal readonly ImmutableArray<SyntaxReference> IndexerDeclarations;
+            internal readonly int StaticInitializersSyntaxLength;
+            internal readonly int InstanceInitializersSyntaxLength;
 
             public MembersAndInitializers(
-                SourceConstructorSymbol primaryCtor,
                 ImmutableArray<Symbol> nonTypeNonIndexerMembers,
-                ImmutableArray<FieldInitializers> staticInitializers,
-                ImmutableArray<FieldInitializers> instanceInitializers,
-                ImmutableArray<SyntaxReference> indexerDeclarations)
+                ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> staticInitializers,
+                ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> instanceInitializers,
+                ImmutableArray<SyntaxReference> indexerDeclarations,
+                int staticInitializersSyntaxLength,
+                int instanceInitializersSyntaxLength)
             {
                 Debug.Assert(!nonTypeNonIndexerMembers.IsDefault);
                 Debug.Assert(!staticInitializers.IsDefault);
                 Debug.Assert(!instanceInitializers.IsDefault);
                 Debug.Assert(!indexerDeclarations.IsDefault);
 
-                Debug.Assert((object)primaryCtor == null || nonTypeNonIndexerMembers.Any(s => (object)primaryCtor == (object)s));
                 Debug.Assert(!nonTypeNonIndexerMembers.Any(s => s is TypeSymbol));
                 Debug.Assert(!nonTypeNonIndexerMembers.Any(s => s.IsIndexer()));
                 Debug.Assert(!nonTypeNonIndexerMembers.Any(s => s.IsAccessor() && ((MethodSymbol)s).AssociatedSymbol.IsIndexer()));
 
-                this.PrimaryCtor = primaryCtor;
+                Debug.Assert(staticInitializersSyntaxLength == staticInitializers.Sum(s => s.Sum(i => (i.FieldOpt == null || !i.FieldOpt.IsMetadataConstant) ? i.Syntax.Span.Length : 0)));
+                Debug.Assert(instanceInitializersSyntaxLength == instanceInitializers.Sum(s => s.Sum(i => i.Syntax.Span.Length)));
+
                 this.NonTypeNonIndexerMembers = nonTypeNonIndexerMembers;
                 this.StaticInitializers = staticInitializers;
                 this.InstanceInitializers = instanceInitializers;
                 this.IndexerDeclarations = indexerDeclarations;
+                this.StaticInitializersSyntaxLength = staticInitializersSyntaxLength;
+                this.InstanceInitializersSyntaxLength = instanceInitializersSyntaxLength;
             }
         }
 
-        internal ImmutableArray<FieldInitializers> StaticInitializers
+        internal ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> StaticInitializers
         {
             get { return GetMembersAndInitializers().StaticInitializers; }
         }
 
-        internal ImmutableArray<FieldInitializers> InstanceInitializers
+        internal ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> InstanceInitializers
         {
             get { return GetMembersAndInitializers().InstanceInitializers; }
         }
 
-        /// <summary>
-        /// Returns the "main" Primary Constructor. If more than one partial declaration declares a 
-        /// Primary Constructor, we will have several distinct Primary Constructor symbols.
-        /// This property returns the first one we encounter, it's parameters will be in scope within
-        /// type members and initializers.
-        /// </summary>
-        internal SourceConstructorSymbol PrimaryCtor
+        internal int CalculateSyntaxOffsetInSynthesizedConstructor(int position, SyntaxTree tree, bool isStatic)
         {
-            get
+            if (IsScriptClass && !isStatic)
             {
-                if (this.lazyMembersAndInitializers == null)
+                int aggregateLength = 0;
+
+                foreach (var declaration in this.declaration.Declarations)
                 {
-                    foreach (var decl in this.declaration.Declarations)
+                    var syntaxRef = declaration.SyntaxReference;
+                    if (tree == syntaxRef.SyntaxTree)
                     {
-                        if (decl.HasPrimaryCtor)
-                        {
-                            return GetMembersAndInitializers().PrimaryCtor;
-                        }
+                        return aggregateLength + position;
                     }
 
-                    return null;
+                    aggregateLength += syntaxRef.Span.Length;
                 }
 
-                return this.lazyMembersAndInitializers.PrimaryCtor;
+                throw ExceptionUtilities.Unreachable;
             }
+
+            int syntaxOffset;
+            if (TryCalculateSyntaxOffsetOfPositionInInitializer(position, tree, isStatic, ctorInitializerLength: 0, syntaxOffset: out syntaxOffset))
+            {
+                return syntaxOffset;
+            }
+
+            if (declaration.Declarations.Length >= 1 && position == declaration.Declarations[0].Location.SourceSpan.Start)
+            {
+                // With dynamic analysis instrumentation, the introducing declaration of a type can provide
+                // the syntax associated with both the analysis payload local of a synthesized constructor
+                // and with the constructor itself. If the synthesized constructor includes an initializer with a lambda,
+                // that lambda needs a closure that captures the analysis payload of the constructor,
+                // and the offset of the syntax for the local within the constructor is by definition zero.
+                return 0;
+            }
+
+            // an implicit constructor has no body and no initializer, so the variable has to be declared in a member initializer
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        /// <summary>
+        /// Calculates a syntax offset of a syntax position that is contained in a property or field initializer (if it is in fact contained in one).
+        /// </summary>
+        internal bool TryCalculateSyntaxOffsetOfPositionInInitializer(int position, SyntaxTree tree, bool isStatic, int ctorInitializerLength, out int syntaxOffset)
+        {
+            Debug.Assert(ctorInitializerLength >= 0);
+
+            var membersAndInitializers = GetMembersAndInitializers();
+            var allInitializers = isStatic ? membersAndInitializers.StaticInitializers : membersAndInitializers.InstanceInitializers;
+
+            var siblingInitializers = GetInitializersInSourceTree(tree, allInitializers);
+            int index = IndexOfInitializerContainingPosition(siblingInitializers, position);
+            if (index < 0)
+            {
+                syntaxOffset = 0;
+                return false;
+            }
+
+            //                                 |<-----------distanceFromCtorBody----------->|
+            // [      initializer 0    ][ initializer 1 ][ initializer 2 ][ctor initializer][ctor body]
+            // |<--preceding init len-->|      ^
+            //                             position 
+
+            int initializersLength = isStatic ? membersAndInitializers.StaticInitializersSyntaxLength : membersAndInitializers.InstanceInitializersSyntaxLength;
+            int distanceFromInitializerStart = position - siblingInitializers[index].Syntax.Span.Start;
+
+            int distanceFromCtorBody =
+                initializersLength + ctorInitializerLength -
+                (siblingInitializers[index].PrecedingInitializersLength + distanceFromInitializerStart);
+
+            Debug.Assert(distanceFromCtorBody > 0);
+
+            // syntax offset 0 is at the start of the ctor body:
+            syntaxOffset = -distanceFromCtorBody;
+            return true;
+        }
+
+        private static ImmutableArray<FieldOrPropertyInitializer> GetInitializersInSourceTree(SyntaxTree tree, ImmutableArray<ImmutableArray<FieldOrPropertyInitializer>> initializers)
+        {
+            var builder = ArrayBuilder<FieldOrPropertyInitializer>.GetInstance();
+            foreach (var siblingInitializers in initializers)
+            {
+                Debug.Assert(!siblingInitializers.IsEmpty);
+
+                if (siblingInitializers[0].Syntax.SyntaxTree == tree)
+                {
+                    builder.AddRange(siblingInitializers);
+                }
+            }
+
+            return builder.ToImmutableAndFree();
+        }
+
+        private static int IndexOfInitializerContainingPosition(ImmutableArray<FieldOrPropertyInitializer> initializers, int position)
+        {
+            // Search for the start of the span (the spans are non-overlapping and sorted)
+            int index = initializers.BinarySearch(position, (initializer, pos) => initializer.Syntax.Span.Start.CompareTo(pos));
+
+            // Binary search returns non-negative result if the position is exactly the start of some span.
+            if (index >= 0)
+            {
+                return index;
+            }
+
+            // Otherwise, ~index is the closest span whose start is greater than the position.
+            // => Check if the preceding initializer span contains the position.
+            int precedingInitializerIndex = ~index - 1;
+            if (precedingInitializerIndex >= 0 && initializers[precedingInitializerIndex].Syntax.Span.Contains(position))
+            {
+                return precedingInitializerIndex;
+            }
+
+            return -1;
         }
 
         public override IEnumerable<string> MemberNames
@@ -900,12 +1028,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private Dictionary<string, ImmutableArray<NamedTypeSymbol>> GetTypeMembersDictionary()
         {
-            if (lazyTypeMembers == null)
+            if (_lazyTypeMembers == null)
             {
                 var diagnostics = DiagnosticBag.GetInstance();
-                if (Interlocked.CompareExchange(ref lazyTypeMembers, MakeTypeMembers(diagnostics), null) == null)
+                if (Interlocked.CompareExchange(ref _lazyTypeMembers, MakeTypeMembers(diagnostics), null) == null)
                 {
-                    AddSemanticDiagnostics(diagnostics);
+                    AddDeclarationDiagnostics(diagnostics);
 
                     state.NotePartComplete(CompletionPart.TypeMembers);
                 }
@@ -913,13 +1041,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 diagnostics.Free();
             }
 
-            return lazyTypeMembers;
+            return _lazyTypeMembers;
         }
 
         private Dictionary<string, ImmutableArray<NamedTypeSymbol>> MakeTypeMembers(DiagnosticBag diagnostics)
         {
             var symbols = ArrayBuilder<NamedTypeSymbol>.GetInstance();
-            var conflictDict = new Dictionary<ValueTuple<string, int>, SourceNamedTypeSymbol>();
+            var conflictDict = new Dictionary<(string, int), SourceNamedTypeSymbol>();
             try
             {
                 foreach (var childDeclaration in declaration.Children)
@@ -927,7 +1055,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     var t = new SourceNamedTypeSymbol(this, childDeclaration, diagnostics);
                     this.CheckMemberNameDistinctFromType(t, diagnostics);
 
-                    var key = new ValueTuple<string, int>(t.Name, t.Arity);
+                    var key = (t.Name, t.Arity);
                     SourceNamedTypeSymbol other;
                     if (conflictDict.TryGetValue(key, out other))
                     {
@@ -959,8 +1087,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     }
                 }
 
-                Debug.Assert(emptyTypeMembers.Count == 0);
-                return symbols.Count > 0 ? symbols.ToDictionary(s => s.Name) : emptyTypeMembers;
+                Debug.Assert(s_emptyTypeMembers.Count == 0);
+                return symbols.Count > 0 ?
+                    symbols.ToDictionary(s => s.Name, StringOrdinalComparer.Instance) :
+                    s_emptyTypeMembers;
             }
             finally
             {
@@ -984,13 +1114,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override ImmutableArray<Symbol> GetMembersUnordered()
         {
-            var result = this.lazyMembersFlattened;
+            var result = _lazyMembersFlattened;
 
             if (result.IsDefault)
             {
                 result = GetMembersByName().Flatten(null);  // do not sort.
-                ImmutableInterlocked.InterlockedInitialize(ref this.lazyMembersFlattened, result);
-                result = this.lazyMembersFlattened;
+                ImmutableInterlocked.InterlockedInitialize(ref _lazyMembersFlattened, result);
+                result = _lazyMembersFlattened;
             }
 
 #if DEBUG
@@ -1004,9 +1134,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override ImmutableArray<Symbol> GetMembers()
         {
-            if ((flags2 & (FlattenedMembersIsSortedMask << FlattenedMembersIsSortedOffset)) != 0) 
+            if (_flags.FlattenedMembersIsSorted)
             {
-                return this.lazyMembersFlattened;
+                return _lazyMembersFlattened;
             }
             else
             {
@@ -1016,10 +1146,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     // The array isn't sorted. Sort it and remember that we sorted it.
                     allMembers = allMembers.Sort(LexicalOrderSymbolComparer.Instance);
-                    ImmutableInterlocked.InterlockedExchange(ref this.lazyMembersFlattened, allMembers);
+                    ImmutableInterlocked.InterlockedExchange(ref _lazyMembersFlattened, allMembers);
                 }
 
-                ThreadSafeFlagOperations.Set(ref flags2, (FlattenedMembersIsSortedMask << FlattenedMembersIsSortedOffset));
+                _flags.SetFlattenedMembersIsSorted();
                 return allMembers;
             }
         }
@@ -1037,7 +1167,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override ImmutableArray<Symbol> GetSimpleNonTypeMembers(string name)
         {
-            if (lazyMembersDictionary != null || MemberNames.Contains(name))
+            if (_lazyMembersDictionary != null || MemberNames.Contains(name))
             {
                 return GetMembers(name);
             }
@@ -1100,25 +1230,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private Dictionary<string, ImmutableArray<Symbol>> GetEarlyAttributeDecodingMembersDictionary()
         {
-            if (lazyEarlyAttributeDecodingMembersDictionary == null)
+            if (_lazyEarlyAttributeDecodingMembersDictionary == null)
             {
                 var membersAndInitializers = GetMembersAndInitializers(); //NOTE: separately cached
 
                 // NOTE: members were added in a single pass over the syntax, so they're already
                 // in lexical order.
 
-                // TODO: Can we move ToDictionary() off ArrayBuilder<T> so that we don't need a temp here?
-                var temp = ArrayBuilder<Symbol>.GetInstance();
-                temp.AddRange(membersAndInitializers.NonTypeNonIndexerMembers);
-                var membersByName = temp.ToDictionary(s => s.Name);
-                temp.Free();
-
+                var membersByName = membersAndInitializers.NonTypeNonIndexerMembers.ToDictionary(s => s.Name);
                 AddNestedTypesToDictionary(membersByName, GetTypeMembersDictionary());
 
-                Interlocked.CompareExchange(ref lazyEarlyAttributeDecodingMembersDictionary, membersByName, null);
+                Interlocked.CompareExchange(ref _lazyEarlyAttributeDecodingMembersDictionary, membersByName, null);
             }
 
-            return lazyEarlyAttributeDecodingMembersDictionary;
+            return _lazyEarlyAttributeDecodingMembersDictionary;
         }
 
         // NOTE: this method should do as little work as possible
@@ -1127,7 +1252,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         //       needed yet or at all.
         private MembersAndInitializers GetMembersAndInitializers()
         {
-            var membersAndInitializers = this.lazyMembersAndInitializers;
+            var membersAndInitializers = _lazyMembersAndInitializers;
             if (membersAndInitializers != null)
             {
                 return membersAndInitializers;
@@ -1136,14 +1261,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var diagnostics = DiagnosticBag.GetInstance();
             membersAndInitializers = BuildMembersAndInitializers(diagnostics);
 
-            var alreadyKnown = Interlocked.CompareExchange(ref this.lazyMembersAndInitializers, membersAndInitializers, null);
+            var alreadyKnown = Interlocked.CompareExchange(ref _lazyMembersAndInitializers, membersAndInitializers, null);
             if (alreadyKnown != null)
             {
                 diagnostics.Free();
                 return alreadyKnown;
             }
 
-            AddSemanticDiagnostics(diagnostics);
+            AddDeclarationDiagnostics(diagnostics);
             diagnostics.Free();
 
             return membersAndInitializers;
@@ -1153,7 +1278,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (this.state.HasComplete(CompletionPart.Members))
             {
-                return lazyMembersDictionary;
+                return _lazyMembersDictionary;
             }
 
             return GetMembersByNameSlow();
@@ -1161,14 +1286,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private Dictionary<string, ImmutableArray<Symbol>> GetMembersByNameSlow()
         {
-            if (lazyMembersDictionary == null)
+            if (_lazyMembersDictionary == null)
             {
                 var diagnostics = DiagnosticBag.GetInstance();
                 var membersDictionary = MakeAllMembers(diagnostics);
-                if (Interlocked.CompareExchange(ref lazyMembersDictionary, membersDictionary, null) == null)
+                if (Interlocked.CompareExchange(ref _lazyMembersDictionary, membersDictionary, null) == null)
                 {
-                    MergePartialMethods(lazyMembersDictionary, diagnostics);
-                    AddSemanticDiagnostics(diagnostics);
+                    var memberNames = ArrayBuilder<string>.GetInstance(membersDictionary.Count);
+                    memberNames.AddRange(membersDictionary.Keys);
+                    MergePartialMembers(memberNames, membersDictionary, diagnostics);
+                    memberNames.Free();
+                    AddDeclarationDiagnostics(diagnostics);
                     state.NotePartComplete(CompletionPart.Members);
                 }
 
@@ -1176,7 +1304,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
 
             state.SpinWaitComplete(CompletionPart.Members, default(CancellationToken));
-            return lazyMembersDictionary;
+            return _lazyMembersDictionary;
+        }
+
+        internal override IEnumerable<Symbol> GetInstanceFieldsAndEvents()
+        {
+            var membersAndInitializers = this.GetMembersAndInitializers();
+            return membersAndInitializers.NonTypeNonIndexerMembers.Where(IsInstanceFieldOrEvent);
         }
 
         protected void AfterMembersChecks(DiagnosticBag diagnostics)
@@ -1217,7 +1351,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             // key and value will be the same object in these dictionaries.
             var methodsBySignature = new Dictionary<SourceMethodSymbol, SourceMethodSymbol>(MemberSignatureComparer.DuplicateSourceComparer);
             var conversionsAsMethods = new Dictionary<SourceMethodSymbol, SourceMethodSymbol>(MemberSignatureComparer.DuplicateSourceComparer);
-            var conversionsAsConversions = new Dictionary<SourceUserDefinedConversionSymbol, SourceUserDefinedConversionSymbol>(ConversionSignatureComparer.Comparer);
+            var conversionsAsConversions = new HashSet<SourceUserDefinedConversionSymbol>(ConversionSignatureComparer.Comparer);
 
             // SPEC: The signature of an operator must differ from the signatures of all other
             // SPEC: operators declared in the same class.
@@ -1253,16 +1387,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             // "non-method, non-conversion, non-type member", rather than spelling out 
             // "field, property or event...")
 
-            //
-
-            foreach (var name in membersByName.Keys)
+            foreach (var pair in membersByName)
             {
+                var name = pair.Key;
                 Symbol lastSym = GetTypeMembers(name).FirstOrDefault();
                 methodsBySignature.Clear();
-                conversionsAsMethods.Clear();
                 // Conversion collisions do not consider the name of the conversion,
                 // so do not clear that dictionary.
-                foreach (var symbol in membersByName[name])
+                foreach (var symbol in pair.Value)
                 {
                     if (symbol.Kind == SymbolKind.NamedType ||
                         symbol.IsAccessor() ||
@@ -1309,11 +1441,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         if (symbol.Kind != SymbolKind.Method || lastSym.Kind != SymbolKind.Method)
                         {
-                            if (symbol.Kind != SymbolKind.Field || !symbol.IsImplicitlyDeclared || !(symbol is SynthesizedBackingFieldSymbol)) // don't report duplicate errors on backing fields
+                            if (symbol.Kind != SymbolKind.Field || !symbol.IsImplicitlyDeclared)
                             {
                                 // The type '{0}' already contains a definition for '{1}'
                                 if (Locations.Length == 1 || IsPartial)
+                                {
                                     diagnostics.Add(ErrorCode.ERR_DuplicateNameInClass, symbol.Locations[0], this, symbol.Name);
+                                }
                             }
 
                             if (lastSym.Kind == SymbolKind.Method)
@@ -1337,23 +1471,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         // Does this conversion collide *as a conversion* with any previously-seen
                         // conversion?
 
-                        SourceUserDefinedConversionSymbol previousConversion;
-                        if (conversionsAsConversions.TryGetValue(conversion, out previousConversion))
+                        if (!conversionsAsConversions.Add(conversion))
                         {
                             // CS0557: Duplicate user-defined conversion in type 'C'
                             diagnostics.Add(ErrorCode.ERR_DuplicateConversionInClass, conversion.Locations[0], this);
                         }
                         else
                         {
-                            // We haven't seen this conversion before; make a note of it in case we
-                            // see it again later, either as a conversion or as a method.
-                            conversionsAsConversions[conversion] = conversion;
-
                             // The other set might already contain a conversion which would collide
                             // *as a method* with the current conversion.
                             if (!conversionsAsMethods.ContainsKey(conversion))
                             {
-                                conversionsAsMethods[conversion] = conversion;
+                                conversionsAsMethods.Add(conversion, conversion);
                             }
                         }
 
@@ -1367,11 +1496,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         }
                         // Do not add the conversion to the set of previously-seen methods; that set
                         // is only non-conversion methods.
-
                     }
                     else if ((object)method != null)
                     {
-                        // Does this method collide *as a method* with any previously-seen 
+                        // Does this method collide *as a method* with any previously-seen
                         // conversion?
 
                         SourceMethodSymbol previousConversion;
@@ -1393,7 +1521,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         {
                             // We haven't seen this method before. Make a note of it in case
                             // we see a colliding method later.
-                            methodsBySignature[method] = method;
+                            methodsBySignature.Add(method, method);
                         }
                     }
                 }
@@ -1418,16 +1546,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     ErrorCode.ERR_OverloadRefOut;
                 diagnostics.Add(errorCode, method1.Locations[0], this);
             }
-            else if (method1.MethodKind == MethodKind.Destructor && method2.MethodKind == MethodKind.Destructor)
+            else
             {
                 // Special case: if there are two destructors, use the destructor syntax instead of "Finalize"
+                var methodName = (method1.MethodKind == MethodKind.Destructor && method2.MethodKind == MethodKind.Destructor) ?
+                    "~" + this.Name :
+                    method1.Name;
                 // Type '{1}' already defines a member called '{0}' with the same parameter types
-                diagnostics.Add(ErrorCode.ERR_MemberAlreadyExists, method1.Locations[0], "~" + this.Name, this);
-            }
-            else if(!method1.IsPrimaryCtor || !method2.IsPrimaryCtor)
-            {
-                // Type '{1}' already defines a member called '{0}' with the same parameter types
-                diagnostics.Add(ErrorCode.ERR_MemberAlreadyExists, method1.Locations[0], method1.Name, this);
+                diagnostics.Add(ErrorCode.ERR_MemberAlreadyExists, method1.Locations[0], methodName, this);
             }
         }
 
@@ -1443,16 +1569,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
-
             var indexersBySignature = new Dictionary<PropertySymbol, PropertySymbol>(MemberSignatureComparer.DuplicateSourceComparer);
 
             // Note: Can't assume that all indexers are called WellKnownMemberNames.Indexer because 
             // they may be explicit interface implementations.
-            foreach (string name in membersByName.Keys)
+            foreach (var members in membersByName.Values)
             {
                 string lastIndexerName = null;
                 indexersBySignature.Clear();
-                foreach (var symbol in membersByName[name])
+                foreach (var symbol in members)
                 {
                     if (symbol.IsIndexer())
                     {
@@ -1479,10 +1604,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
-            if (typeParameterNames != null)
-            {
-                typeParameterNames.Free();
-            }
+            typeParameterNames?.Free();
         }
 
         private void CheckIndexerSignatureCollisions(
@@ -1556,22 +1678,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             if (Locations.Length == 1 || IsPartial)
             {
-                var primaryCtor = this.PrimaryCtor;
-
                 foreach (var tp in TypeParameters)
                 {
-                    if ((object)primaryCtor != null)
-                    {
-                        foreach (var dup in primaryCtor.Parameters)
-                        {
-                            if (dup.Name.Equals(tp.Name))
-                            {
-                                diagnostics.Add(ErrorCode.ERR_PrimaryCtorParameterSameNameAsTypeParam, dup.Locations[0], this, tp.Name);
-                                break;
-                            }
-                        }
-                    }
-
                     foreach (var dup in GetMembers(tp.Name))
                     {
                         diagnostics.Add(ErrorCode.ERR_DuplicateNameInClass, dup.Locations[0], this, tp.Name);
@@ -1616,28 +1724,28 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (this.lazyKnownCircularStruct == (int)ThreeState.Unknown)
+                if (_lazyKnownCircularStruct == (int)ThreeState.Unknown)
                 {
                     if (TypeKind != TypeKind.Struct)
                     {
-                        Interlocked.CompareExchange(ref this.lazyKnownCircularStruct, (int)ThreeState.False, (int)ThreeState.Unknown);
+                        Interlocked.CompareExchange(ref _lazyKnownCircularStruct, (int)ThreeState.False, (int)ThreeState.Unknown);
                     }
                     else
                     {
                         var diagnostics = DiagnosticBag.GetInstance();
                         var value = (int)CheckStructCircularity(diagnostics).ToThreeState();
 
-                        if (Interlocked.CompareExchange(ref this.lazyKnownCircularStruct, value, (int)ThreeState.Unknown) == (int)ThreeState.Unknown)
+                        if (Interlocked.CompareExchange(ref _lazyKnownCircularStruct, value, (int)ThreeState.Unknown) == (int)ThreeState.Unknown)
                         {
-                            AddSemanticDiagnostics(diagnostics);
+                            AddDeclarationDiagnostics(diagnostics);
                         }
 
-                        Debug.Assert(value == this.lazyKnownCircularStruct);
+                        Debug.Assert(value == _lazyKnownCircularStruct);
                         diagnostics.Free();
                     }
                 }
 
-                return this.lazyKnownCircularStruct == (int)ThreeState.True;
+                return _lazyKnownCircularStruct == (int)ThreeState.True;
             }
         }
 
@@ -1668,7 +1776,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     var type = field.Type;
                     if (((object)type != null) &&
                         (type.TypeKind == TypeKind.Struct) &&
-                        BaseTypeAnalysis.StructDependsOn(type, this) &&
+                        BaseTypeAnalysis.StructDependsOn((NamedTypeSymbol)type, this) &&
                         !type.IsPrimitiveRecursiveStruct()) // allow System.Int32 to contain a field of its own type
                     {
                         // If this is a backing field, report the error on the associated property.
@@ -1791,13 +1899,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             for (int p = 0; p < op1.ParameterCount; ++p)
             {
-                if (!op1.ParameterTypes[p].Equals(op2.ParameterTypes[p], ignoreCustomModifiers: true, ignoreDynamic: true))
+                if (!op1.ParameterTypes[p].Equals(op2.ParameterTypes[p], TypeCompareKind.AllIgnoreOptions))
                 {
                     return false;
                 }
             }
 
-            if (!op1.ReturnType.Equals(op2.ReturnType, ignoreCustomModifiers: true, ignoreDynamic: true))
+            if (!op1.ReturnType.Equals(op2.ReturnType, TypeCompareKind.AllIgnoreOptions))
             {
                 return false;
             }
@@ -1943,7 +2051,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private static bool HasInstanceData(MemberDeclarationSyntax m)
         {
-            switch (m.Kind)
+            switch (m.Kind())
             {
                 case SyntaxKind.FieldDeclaration:
                     var fieldDecl = (FieldDeclarationSyntax)m;
@@ -1957,6 +2065,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         !ContainsModifier(propertyDecl.Modifiers, SyntaxKind.StaticKeyword) &&
                         !ContainsModifier(propertyDecl.Modifiers, SyntaxKind.AbstractKeyword) &&
                         !ContainsModifier(propertyDecl.Modifiers, SyntaxKind.ExternKeyword) &&
+                        propertyDecl.AccessorList != null &&
                         All(propertyDecl.AccessorList.Accessors, a => a.Body == null);
                 case SyntaxKind.EventFieldDeclaration:
                     // field-like event declaration
@@ -1972,13 +2081,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private static bool All<T>(SyntaxList<T> list, Func<T, bool> predicate) where T : CSharpSyntaxNode
         {
-            foreach (var t in list) if (predicate(t)) return true;
+            foreach (var t in list) { if (predicate(t)) return true; };
             return false;
         }
 
         private static bool ContainsModifier(SyntaxTokenList modifiers, SyntaxKind modifier)
         {
-            foreach (var m in modifiers) if (m.CSharpKind() == modifier) return true;
+            foreach (var m in modifiers) { if (m.IsKind(modifier)) return true; };
             return false;
         }
 
@@ -2028,7 +2137,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <summary>
         /// Merge (already ordered) non-type, non-indexer members with (already ordered) indexer members.
         /// </summary>
-        private Dictionary<string, ImmutableArray<Symbol>> MergeIndexersAndNonIndexers(ImmutableArray<Symbol> nonIndexerMembers, ArrayBuilder<Symbol> indexerMembers)
+        private static Dictionary<string, ImmutableArray<Symbol>> MergeIndexersAndNonIndexers(ImmutableArray<Symbol> nonIndexerMembers, ArrayBuilder<Symbol> indexerMembers)
         {
             int nonIndexerCount = nonIndexerMembers.Length;
             int indexerCount = indexerMembers.Count;
@@ -2064,7 +2173,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 merged.Add(indexerMembers[indexerPos]);
             }
 
-            var membersByName = merged.ToDictionary(s => s.Name);
+            var membersByName = merged.ToDictionary(s => s.Name, StringOrdinalComparer.Instance);
             merged.Free();
 
             return membersByName;
@@ -2092,20 +2201,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private class MembersAndInitializersBuilder
         {
-            public SourceConstructorSymbol PrimaryCtor;
-            public ArrayBuilder<Symbol> NonTypeNonIndexerMembers = ArrayBuilder<Symbol>.GetInstance();
-            public ArrayBuilder<FieldInitializers> StaticInitializers = ArrayBuilder<FieldInitializers>.GetInstance();
-            public ArrayBuilder<FieldInitializers> InstanceInitializers = ArrayBuilder<FieldInitializers>.GetInstance();
-            public ArrayBuilder<SyntaxReference> IndexerDeclarations = ArrayBuilder<SyntaxReference>.GetInstance();
+            public readonly ArrayBuilder<Symbol> NonTypeNonIndexerMembers = ArrayBuilder<Symbol>.GetInstance();
+            public readonly ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>> StaticInitializers = ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>>.GetInstance();
+            public readonly ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>> InstanceInitializers = ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>>.GetInstance();
+            public readonly ArrayBuilder<SyntaxReference> IndexerDeclarations = ArrayBuilder<SyntaxReference>.GetInstance();
+
+            public int StaticSyntaxLength;
+            public int InstanceSyntaxLength;
 
             public MembersAndInitializers ToReadOnlyAndFree()
             {
                 return new MembersAndInitializers(
-                    PrimaryCtor,
                     NonTypeNonIndexerMembers.ToImmutableAndFree(),
                     StaticInitializers.ToImmutableAndFree(),
                     InstanceInitializers.ToImmutableAndFree(),
-                    IndexerDeclarations.ToImmutableAndFree());
+                    IndexerDeclarations.ToImmutableAndFree(),
+                    StaticSyntaxLength,
+                    InstanceSyntaxLength);
+            }
+
+            public void Free()
+            {
+                NonTypeNonIndexerMembers.Free();
+                StaticInitializers.Free();
+                InstanceInitializers.Free();
+                IndexerDeclarations.Free();
             }
         }
 
@@ -2118,10 +2238,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 case TypeKind.Struct:
                     CheckForStructBadInitializers(builder, diagnostics);
-                    goto case TypeKind.Enum;
+                    CheckForStructDefaultConstructors(builder.NonTypeNonIndexerMembers, isEnum: false, diagnostics: diagnostics);
+                    AddSynthesizedConstructorsIfNecessary(builder.NonTypeNonIndexerMembers, builder.StaticInitializers, diagnostics);
+                    break;
 
                 case TypeKind.Enum:
-                    CheckForStructDefaultConstructors(builder.NonTypeNonIndexerMembers, diagnostics);
+                    CheckForStructDefaultConstructors(builder.NonTypeNonIndexerMembers, isEnum: true, diagnostics: diagnostics);
                     AddSynthesizedConstructorsIfNecessary(builder.NonTypeNonIndexerMembers, builder.StaticInitializers, diagnostics);
                     break;
 
@@ -2133,6 +2255,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 default:
                     break;
+            }
+
+            // We already built the members and initializers on another thread, we might have detected that condition
+            // during member building on this thread and bailed, which results in incomplete data in the builder.
+            // In such case we have to avoid creating the instance of MemberAndInitializers since it checks the consistency
+            // of the data in the builder and would fail in an assertion if we tried to construct it from incomplete builder.
+            if (_lazyMembersAndInitializers != null)
+            {
+                builder.Free();
+                return null;
             }
 
             return builder.ToReadOnlyAndFree();
@@ -2147,7 +2279,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     continue;
                 }
 
-                if (this.lazyMembersAndInitializers != null)
+                if (_lazyMembersAndInitializers != null)
                 {
                     // membersAndInitializers is already computed. no point to continue.
                     return;
@@ -2155,7 +2287,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 var syntax = decl.SyntaxReference.GetSyntax();
 
-                switch (syntax.CSharpKind())
+                switch (syntax.Kind())
                 {
                     case SyntaxKind.EnumDeclaration:
                         AddEnumMembers(builder, (EnumDeclarationSyntax)syntax, diagnostics);
@@ -2167,29 +2299,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     case SyntaxKind.NamespaceDeclaration:
                         // The members of a global anonymous type is in a syntax tree of a namespace declaration or a compilation unit.
-                        AddNonTypeMembers(builder, null, null, ((NamespaceDeclarationSyntax)syntax).Members, diagnostics);
+                        AddNonTypeMembers(builder, ((NamespaceDeclarationSyntax)syntax).Members, diagnostics);
                         break;
 
                     case SyntaxKind.CompilationUnit:
-                        AddNonTypeMembers(builder, null, null, ((CompilationUnitSyntax)syntax).Members, diagnostics);
+                        AddNonTypeMembers(builder, ((CompilationUnitSyntax)syntax).Members, diagnostics);
                         break;
 
                     case SyntaxKind.ClassDeclaration:
                         var classDecl = (ClassDeclarationSyntax)syntax;
-                        AddNonTypeMembers(builder, classDecl, classDecl.ParameterList, classDecl.Members, diagnostics);
+                        AddNonTypeMembers(builder, classDecl.Members, diagnostics);
                         break;
 
                     case SyntaxKind.InterfaceDeclaration:
-                        AddNonTypeMembers(builder, (InterfaceDeclarationSyntax)syntax, null, ((InterfaceDeclarationSyntax)syntax).Members, diagnostics);
+                        AddNonTypeMembers(builder, ((InterfaceDeclarationSyntax)syntax).Members, diagnostics);
                         break;
 
                     case SyntaxKind.StructDeclaration:
                         var structDecl = (StructDeclarationSyntax)syntax;
-                        AddNonTypeMembers(builder, structDecl, structDecl.ParameterList, structDecl.Members, diagnostics);
+                        AddNonTypeMembers(builder, structDecl.Members, diagnostics);
                         break;
 
                     default:
-                        throw ExceptionUtilities.UnexpectedValue(syntax.CSharpKind());
+                        throw ExceptionUtilities.UnexpectedValue(syntax.Kind());
                 }
             }
         }
@@ -2199,14 +2331,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return this.DeclaringCompilation.GetBinder(syntaxNode);
         }
 
-        private static void MergePartialMethods(
+        private static void MergePartialMembers(
+            ArrayBuilder<string> memberNames,
             Dictionary<string, ImmutableArray<Symbol>> membersByName,
             DiagnosticBag diagnostics)
         {
             //key and value will be the same object
             var methodsBySignature = new Dictionary<MethodSymbol, SourceMethodSymbol>(MemberSignatureComparer.DuplicateSourceComparer);
 
-            foreach (var name in membersByName.Keys.ToArray())
+            foreach (var name in memberNames)
             {
                 methodsBySignature.Clear();
                 foreach (var symbol in membersByName[name])
@@ -2254,6 +2387,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         diagnostics.Add(ErrorCode.ERR_PartialMethodMustHaveLatent, method.Locations[0], method);
                     }
+                    else if ((object)method.OtherPartOfPartial != null && MemberSignatureComparer.ConsideringTupleNamesCreatesDifference(method, method.OtherPartOfPartial))
+                    {
+                        diagnostics.Add(ErrorCode.ERR_PartialMethodInconsistentTupleNames, method.Locations[0], method, method.OtherPartOfPartial);
+                    }
                 }
             }
         }
@@ -2284,15 +2421,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             SourceMemberMethodSymbol.InitializePartialMethodParts(definition, implementation);
 
             // a partial method is represented in the member list by its definition part:
+            return Remove(symbols, implementation);
+        }
+
+        private static ImmutableArray<Symbol> Remove(ImmutableArray<Symbol> symbols, Symbol symbol)
+        {
             var builder = ArrayBuilder<Symbol>.GetInstance();
             foreach (var s in symbols)
             {
-                if (!ReferenceEquals(s, implementation))
+                if (!ReferenceEquals(s, symbol))
                 {
                     builder.Add(s);
                 }
             }
-
             return builder.ToImmutableAndFree();
         }
 
@@ -2436,7 +2577,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
 
                 var propertyParamType = ((i == numParams - 1) && !getNotSet) ? propertySymbol.Type : propertyParams[i].Type;
-                if (!propertyParamType.Equals(methodParam.Type, ignoreCustomModifiers: true, ignoreDynamic: true))
+                if (!propertyParamType.Equals(methodParam.Type, TypeCompareKind.AllIgnoreOptions))
                 {
                     return false;
                 }
@@ -2454,13 +2595,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return
                 methodParams.Length == 1 &&
                 methodParams[0].RefKind == RefKind.None &&
-                eventSymbol.Type.Equals(methodParams[0].Type, ignoreCustomModifiers: true, ignoreDynamic: true);
+                eventSymbol.Type.Equals(methodParams[0].Type, TypeCompareKind.AllIgnoreOptions);
         }
 
         private void AddEnumMembers(MembersAndInitializersBuilder result, EnumDeclarationSyntax syntax, DiagnosticBag diagnostics)
         {
-            ArrayBuilder<FieldInitializer> initializers = null;
-
             // The previous enum constant used to calculate subsequent
             // implicit enum constants. (This is the most recent explicit
             // enum constant or the first implicit constant if no explicit values.)
@@ -2469,71 +2608,66 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             // Offset from "otherSymbol".
             int otherSymbolOffset = 0;
 
-            foreach (var m in syntax.Members)
+            foreach (var member in syntax.Members)
             {
-                switch (m.Kind)
+                SourceEnumConstantSymbol symbol;
+                var valueOpt = member.EqualsValue;
+
+                if (valueOpt != null)
                 {
-                    case SyntaxKind.EnumMemberDeclaration:
-                        {
-                            SourceEnumConstantSymbol symbol;
-                            var valueOpt = m.EqualsValue;
+                    symbol = SourceEnumConstantSymbol.CreateExplicitValuedConstant(this, member, diagnostics);
+                }
+                else
+                {
+                    symbol = SourceEnumConstantSymbol.CreateImplicitValuedConstant(this, member, otherSymbol, otherSymbolOffset, diagnostics);
+                }
 
-                            if (valueOpt != null)
-                            {
-                                symbol = SourceEnumConstantSymbol.CreateExplicitValuedConstant(this, m, diagnostics);
-                            }
-                            else
-                            {
-                                symbol = SourceEnumConstantSymbol.CreateImplicitValuedConstant(this, m, otherSymbol, otherSymbolOffset, diagnostics);
-                            }
+                result.NonTypeNonIndexerMembers.Add(symbol);
 
-                            result.NonTypeNonIndexerMembers.Add(symbol);
-
-                            if ((valueOpt != null) || ((object)otherSymbol == null))
-                            {
-                                otherSymbol = symbol;
-                                otherSymbolOffset = 1;
-                            }
-                            else
-                            {
-                                otherSymbolOffset++;
-                            }
-
-                            // The symbol is added to the set of initializers, even for
-                            // implicit values since it's necessary to generate constants
-                            // for each member to catch errors such as overflow.
-                            AddInitializer(ref initializers, symbol, valueOpt);
-                        }
-                        break;
-
-                    default:
-                        throw ExceptionUtilities.UnexpectedValue(m.Kind);
+                if (valueOpt != null || (object)otherSymbol == null)
+                {
+                    otherSymbol = symbol;
+                    otherSymbolOffset = 1;
+                }
+                else
+                {
+                    otherSymbolOffset++;
                 }
             }
-
-            AddInitializers(ref result.StaticInitializers, null, initializers);
         }
 
-        private static void AddInitializer(ref ArrayBuilder<FieldInitializer> initializers, FieldSymbol field, CSharpSyntaxNode node)
+        private static void AddInitializer(ref ArrayBuilder<FieldOrPropertyInitializer> initializers, ref int aggregateSyntaxLength, FieldSymbol fieldOpt, CSharpSyntaxNode node)
         {
             if (initializers == null)
             {
-                initializers = new ArrayBuilder<FieldInitializer>();
+                initializers = new ArrayBuilder<FieldOrPropertyInitializer>();
+            }
+            else
+            {
+                // initializers should be added in syntax order:
+                Debug.Assert(node.SyntaxTree == initializers.Last().Syntax.SyntaxTree);
+                Debug.Assert(node.SpanStart > initializers.Last().Syntax.GetSyntax().SpanStart);
             }
 
-            initializers.Add(new FieldInitializer(field, node.GetReferenceOrNull()));
+            int currentLength = aggregateSyntaxLength;
+
+            // A constant field of type decimal needs a field initializer, so
+            // check if it is a metadata constant, not just a constant to exclude
+            // decimals. Other constants do not need field initializers.
+            if (fieldOpt == null || !fieldOpt.IsMetadataConstant)
+            {
+                // ignore leading and trailing trivia of the node:
+                aggregateSyntaxLength += node.Span.Length;
+            }
+
+            initializers.Add(new FieldOrPropertyInitializer(fieldOpt, node, currentLength));
         }
 
-        private static void AddInitializers(ref ArrayBuilder<FieldInitializers> allInitializers, TypeDeclarationSyntax typeDeclaration, ArrayBuilder<FieldInitializer> siblings)
+        private static void AddInitializers(ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>> allInitializers, ArrayBuilder<FieldOrPropertyInitializer> siblingsOpt)
         {
-            if (siblings != null)
+            if (siblingsOpt != null)
             {
-                if (allInitializers == null)
-                {
-                    allInitializers = new ArrayBuilder<FieldInitializers>();
-                }
-
-                allInitializers.Add(new FieldInitializers(typeDeclaration.GetReferenceOrNull(), siblings.ToImmutableAndFree()));
+                allInitializers.Add(siblingsOpt.ToImmutableAndFree());
             }
         }
 
@@ -2550,7 +2684,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             switch (member.Kind)
             {
                 case SymbolKind.Field:
-                    diagnostics.Add(ErrorCode.ERR_InterfacesCantContainFields, member.Locations[0]);
+                    if ((object)((FieldSymbol)member).AssociatedSymbol == null)
+                    {
+                        diagnostics.Add(ErrorCode.ERR_InterfacesCantContainFields, member.Locations[0]);
+                    }
                     break;
 
                 case SymbolKind.Method:
@@ -2571,6 +2708,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         case MethodKind.ExplicitInterfaceImplementation:
                         //CS0541 is handled in SourcePropertySymbol
                         case MethodKind.Ordinary:
+                        case MethodKind.LocalFunction:
                         case MethodKind.PropertyGet:
                         case MethodKind.PropertySet:
                         case MethodKind.EventAdd:
@@ -2592,7 +2730,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        private static void CheckForStructDefaultConstructors(ArrayBuilder<Symbol> members, DiagnosticBag diagnostics)
+        private static void CheckForStructDefaultConstructors(
+            ArrayBuilder<Symbol> members,
+            bool isEnum,
+            DiagnosticBag diagnostics)
         {
             foreach (var s in members)
             {
@@ -2601,7 +2742,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     if (m.MethodKind == MethodKind.Constructor && m.ParameterCount == 0)
                     {
-                        diagnostics.Add(ErrorCode.ERR_StructsCantContainDefaultConstructor, m.Locations[0]);
+                        if (isEnum)
+                        {
+                            diagnostics.Add(ErrorCode.ERR_EnumsCantContainDefaultConstructor, m.Locations[0]);
+                        }
+                        else
+                        {
+                            diagnostics.Add(ErrorCode.ERR_StructsCantContainDefaultConstructor, m.Locations[0]);
+                        }
                     }
                 }
             }
@@ -2610,48 +2758,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         private void CheckForStructBadInitializers(MembersAndInitializersBuilder builder, DiagnosticBag diagnostics)
         {
             Debug.Assert(TypeKind == TypeKind.Struct);
-            if (builder.InstanceInitializers.Count > 0)
+
+            foreach (var initializers in builder.InstanceInitializers)
             {
-                var members = builder.NonTypeNonIndexerMembers;
-                foreach (var s in members)
+                foreach (FieldOrPropertyInitializer initializer in initializers)
                 {
-                    if (s.Kind == SymbolKind.Method)
-                    {
-                        var method = s as MethodSymbol;
-                        if (method.MethodKind == MethodKind.Constructor
-                            && !method.IsParameterlessValueTypeConstructor())
-                        {
-                            return;
-                        }
-
-                    }
-                }
-
-                foreach (var s in members)
-                {
-                    var p = s as SourcePropertySymbol;
-                    if (p != null && !p.IsStatic && p.IsAutoProperty
-                        && p.BackingField.HasInitializer)
-                    {
-                        diagnostics.Add(
-                            ErrorCode.ERR_InitializerInStructWithoutExplicitConstructor,
-                            p.Location, p);
-                    }
-                    else
-                    {
-                        var f = s as SourceMemberFieldSymbol;
-                        if (f != null && !f.IsStatic && f.HasInitializer)
-                        {
-                            diagnostics.Add(
-                                ErrorCode.ERR_InitializerInStructWithoutExplicitConstructor,
-                                f.Locations[0], f);
-                        }
-                    }
+                    // '{0}': cannot have instance field initializers in structs
+                    diagnostics.Add(ErrorCode.ERR_FieldInitializerInStruct, (initializer.FieldOpt.AssociatedSymbol ?? initializer.FieldOpt).Locations[0], this);
                 }
             }
         }
 
-        private void AddSynthesizedConstructorsIfNecessary(ArrayBuilder<Symbol> members, ArrayBuilder<FieldInitializers> staticInitializers, DiagnosticBag diagnostics)
+        private void AddSynthesizedConstructorsIfNecessary(ArrayBuilder<Symbol> members, ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>> staticInitializers, DiagnosticBag diagnostics)
         {
             //we're not calling the helpers on NamedTypeSymbol base, because those call
             //GetMembers and we're inside a GetMembers call ourselves (i.e. stack overflow)
@@ -2672,6 +2790,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             hasInstanceConstructor = true;
                             hasParameterlessInstanceConstructor = hasParameterlessInstanceConstructor || method.ParameterCount == 0;
                             break;
+
                         case MethodKind.StaticConstructor:
                             hasStaticConstructor = true;
                             break;
@@ -2685,76 +2804,46 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 }
             }
 
-            var hasStaticInitializer = false;
-            if (staticInitializers != null)
-            {
-                foreach (var siblings in staticInitializers)
-                {
-                    foreach (var initializer in siblings.Initializers)
-                    {
-                        // constants don't count, since they do not exist as fields at runtime
-                        // NOTE: even for decimal constants (which require field initializers), 
-                        // we do not create .cctor here since a static constructor implicitly created for a decimal 
-                        // should not appear in the list returned by public API like GetMembers().
-                        if (!initializer.Field.IsConst)
-                        {
-                            hasStaticInitializer = true;
-                            goto OUTER;
-                        }
-                    }
-                }
-            }
-
-        OUTER:
-
             // NOTE: Per section 11.3.8 of the spec, "every struct implicitly has a parameterless instance constructor".
-            // We won't insert a parameterless constructor for a struct if there already (erroneously) is one.
+            // We won't insert a parameterless constructor for a struct if there already is one.
             // We don't expect anything to be emitted, but it should be in the symbol table.
             if ((!hasParameterlessInstanceConstructor && this.IsStructType()) || (!hasInstanceConstructor && !this.IsStatic))
             {
-                if (this.TypeKind == TypeKind.Submission)
-                {
-                    members.Add(new SynthesizedSubmissionConstructor(this, diagnostics));
-                }
-                else
-                {
-                    members.Add(new SynthesizedInstanceConstructor(this));
-                }
+                members.Add((this.TypeKind == TypeKind.Submission) ?
+                    new SynthesizedSubmissionConstructor(this, diagnostics) :
+                    new SynthesizedInstanceConstructor(this));
             }
 
-            if (!hasStaticConstructor && hasStaticInitializer)
+            // constants don't count, since they do not exist as fields at runtime
+            // NOTE: even for decimal constants (which require field initializers), 
+            // we do not create .cctor here since a static constructor implicitly created for a decimal 
+            // should not appear in the list returned by public API like GetMembers().
+            if (!hasStaticConstructor && HasNonConstantInitializer(staticInitializers))
             {
                 // Note: we don't have to put anything in the method - the binder will
                 // do that when processing field initializers.
                 members.Add(new SynthesizedStaticConstructor(this));
             }
+
+            if (this.IsScriptClass)
+            {
+                var scriptInitializer = new SynthesizedInteractiveInitializerMethod(this, diagnostics);
+                members.Add(scriptInitializer);
+                var scriptEntryPoint = SynthesizedEntryPointSymbol.Create(scriptInitializer, diagnostics);
+                members.Add(scriptEntryPoint);
+            }
+        }
+
+        private static bool HasNonConstantInitializer(ArrayBuilder<ImmutableArray<FieldOrPropertyInitializer>> initializers)
+        {
+            return initializers.Any(siblings => siblings.Any(initializer => !initializer.FieldOpt.IsConst));
         }
 
         private void AddNonTypeMembers(
-            MembersAndInitializersBuilder result,
-            TypeDeclarationSyntax typeDeclaration,
-            ParameterListSyntax primaryCtorParameterList,
+            MembersAndInitializersBuilder builder,
             SyntaxList<MemberDeclarationSyntax> members,
             DiagnosticBag diagnostics)
         {
-            bool havePrimaryCtor = false;
-
-            if (primaryCtorParameterList != null)
-            {
-                havePrimaryCtor = true;
-                var constructor = SourceConstructorSymbol.CreatePrimaryConstructorSymbol(this, primaryCtorParameterList, diagnostics);
-                result.NonTypeNonIndexerMembers.Add(constructor);
-
-                if ((object)result.PrimaryCtor == null)
-                {
-                    result.PrimaryCtor = constructor;
-                }
-                else
-                {
-                    diagnostics.Add(ErrorCode.ERR_SeveralPartialsDeclarePrimaryCtor, new SourceLocation(primaryCtorParameterList));
-                }
-            }
-
             if (members.Count == 0)
             {
                 return;
@@ -2762,28 +2851,26 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             var firstMember = members[0];
             var bodyBinder = this.GetBinder(firstMember);
-            bool globalCodeAllowed = IsGlobalCodeAllowed(firstMember.Parent);
-            bool havePrimaryCtorBody = false;
 
-            ArrayBuilder<FieldInitializer> staticInitializers = null;
-            ArrayBuilder<FieldInitializer> instanceInitializers = null;
+            ArrayBuilder<FieldOrPropertyInitializer> staticInitializers = null;
+            ArrayBuilder<FieldOrPropertyInitializer> instanceInitializers = null;
 
             foreach (var m in members)
             {
-                if (this.lazyMembersAndInitializers != null)
+                if (_lazyMembersAndInitializers != null)
                 {
                     // membersAndInitializers is already computed. no point to continue.
                     return;
                 }
 
-                bool reportMisplacedGlobalCode = !globalCodeAllowed && !m.HasErrors;
+                bool reportMisplacedGlobalCode = !m.HasErrors;
 
-                switch (m.Kind)
+                switch (m.Kind())
                 {
                     case SyntaxKind.FieldDeclaration:
                         {
                             var fieldSyntax = (FieldDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(fieldSyntax.Declaration.Variables.First().Identifier));
@@ -2794,19 +2881,27 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             foreach (var variable in fieldSyntax.Declaration.Variables)
                             {
                                 var fieldSymbol = (modifiers & DeclarationModifiers.Fixed) == 0
-                                    ? new SourceMemberFieldSymbol(this, variable, modifiers, modifierErrors, diagnostics)
+                                    ? new SourceMemberFieldSymbolFromDeclarator(this, variable, modifiers, modifierErrors, diagnostics)
                                     : new SourceFixedFieldSymbol(this, variable, modifiers, modifierErrors, diagnostics);
-                                result.NonTypeNonIndexerMembers.Add(fieldSymbol);
+                                builder.NonTypeNonIndexerMembers.Add(fieldSymbol);
+
+                                if (IsScriptClass)
+                                {
+                                    // also gather expression-declared variables from the bracketed argument lists and the initializers
+                                    ExpressionFieldFinder.FindExpressionVariables(builder.NonTypeNonIndexerMembers, variable, this,
+                                                            DeclarationModifiers.Private | (modifiers & DeclarationModifiers.Static),
+                                                            fieldSymbol);
+                                }
 
                                 if (variable.Initializer != null)
                                 {
                                     if (fieldSymbol.IsStatic)
                                     {
-                                        AddInitializer(ref staticInitializers, fieldSymbol, variable.Initializer);
+                                        AddInitializer(ref staticInitializers, ref builder.StaticSyntaxLength, fieldSymbol, variable.Initializer);
                                     }
                                     else
                                     {
-                                        AddInitializer(ref instanceInitializers, fieldSymbol, variable.Initializer);
+                                        AddInitializer(ref instanceInitializers, ref builder.InstanceSyntaxLength, fieldSymbol, variable.Initializer);
                                     }
                                 }
                             }
@@ -2816,35 +2911,35 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SyntaxKind.MethodDeclaration:
                         {
                             var methodSyntax = (MethodDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(methodSyntax.Identifier));
                             }
 
                             var method = SourceMemberMethodSymbol.CreateMethodSymbol(this, bodyBinder, methodSyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(method);
+                            builder.NonTypeNonIndexerMembers.Add(method);
                         }
                         break;
 
                     case SyntaxKind.ConstructorDeclaration:
                         {
                             var constructorSyntax = (ConstructorDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(constructorSyntax.Identifier));
                             }
 
                             var constructor = SourceConstructorSymbol.CreateConstructorSymbol(this, constructorSyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(constructor);
+                            builder.NonTypeNonIndexerMembers.Add(constructor);
                         }
                         break;
 
                     case SyntaxKind.DestructorDeclaration:
                         {
                             var destructorSyntax = (DestructorDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(destructorSyntax.Identifier));
@@ -2855,43 +2950,54 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             // when it is loaded from metadata.  Perhaps we should just treat it as an Ordinary
                             // method in such cases?
                             var destructor = new SourceDestructorSymbol(this, destructorSyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(destructor);
+                            builder.NonTypeNonIndexerMembers.Add(destructor);
                         }
                         break;
 
                     case SyntaxKind.PropertyDeclaration:
                         {
                             var propertySyntax = (PropertyDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(propertySyntax.Identifier));
                             }
 
                             var property = SourcePropertySymbol.Create(this, bodyBinder, propertySyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(property);
+                            builder.NonTypeNonIndexerMembers.Add(property);
 
-                            AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, property.GetMethod, diagnostics);
-                            AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, property.SetMethod, diagnostics);
+                            AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, property.GetMethod, diagnostics);
+                            AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, property.SetMethod, diagnostics);
+                            FieldSymbol backingField = property.BackingField;
 
                             // TODO: can we leave this out of the member list?
                             // From the 10/12/11 design notes:
                             //   In addition, we will change autoproperties to behavior in 
                             //   a similar manner and make the autoproperty fields private.
-                            if ((object)property.BackingField != null)
+                            if ((object)backingField != null)
                             {
-                                result.NonTypeNonIndexerMembers.Add(property.BackingField);
+                                builder.NonTypeNonIndexerMembers.Add(backingField);
 
                                 var initializer = propertySyntax.Initializer;
                                 if (initializer != null)
                                 {
+                                    if (IsScriptClass)
+                                    {
+                                        // also gather expression-declared variables from the initializer
+                                        ExpressionFieldFinder.FindExpressionVariables(builder.NonTypeNonIndexerMembers,
+                                                                                      initializer,
+                                                                                      this,
+                                                                                      DeclarationModifiers.Private | (property.IsStatic ? DeclarationModifiers.Static : 0),
+                                                                                      backingField);
+                                    }
+
                                     if (property.IsStatic)
                                     {
-                                        AddInitializer(ref staticInitializers, property.BackingField, initializer);
+                                        AddInitializer(ref staticInitializers, ref builder.StaticSyntaxLength, backingField, initializer);
                                     }
                                     else
                                     {
-                                        AddInitializer(ref instanceInitializers, property.BackingField, initializer);
+                                        AddInitializer(ref instanceInitializers, ref builder.InstanceSyntaxLength, backingField, initializer);
                                     }
                                 }
                             }
@@ -2901,7 +3007,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SyntaxKind.EventFieldDeclaration:
                         {
                             var eventFieldSyntax = (EventFieldDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(
                                     ErrorCode.ERR_NamespaceUnexpected,
@@ -2911,9 +3017,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             foreach (VariableDeclaratorSyntax declarator in eventFieldSyntax.Declaration.Variables)
                             {
                                 SourceFieldLikeEventSymbol @event = new SourceFieldLikeEventSymbol(this, bodyBinder, eventFieldSyntax.Modifiers, declarator, diagnostics);
-                                result.NonTypeNonIndexerMembers.Add(@event);
+                                builder.NonTypeNonIndexerMembers.Add(@event);
 
                                 FieldSymbol associatedField = @event.AssociatedField;
+
+                                if (IsScriptClass)
+                                {
+                                    // also gather expression-declared variables from the bracketed argument lists and the initializers
+                                    ExpressionFieldFinder.FindExpressionVariables(builder.NonTypeNonIndexerMembers, declarator, this,
+                                                            DeclarationModifiers.Private | (@event.IsStatic ? DeclarationModifiers.Static : 0),
+                                                            associatedField);
+                                }
+
                                 if ((object)associatedField != null)
                                 {
                                     // NOTE: specifically don't add the associated field to the members list
@@ -2923,11 +3038,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                                     {
                                         if (associatedField.IsStatic)
                                         {
-                                            AddInitializer(ref staticInitializers, associatedField, declarator.Initializer);
+                                            AddInitializer(ref staticInitializers, ref builder.StaticSyntaxLength, associatedField, declarator.Initializer);
                                         }
                                         else
                                         {
-                                            AddInitializer(ref instanceInitializers, associatedField, declarator.Initializer);
+                                            AddInitializer(ref instanceInitializers, ref builder.InstanceSyntaxLength, associatedField, declarator.Initializer);
                                         }
                                     }
                                 }
@@ -2935,8 +3050,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                                 Debug.Assert((object)@event.AddMethod != null);
                                 Debug.Assert((object)@event.RemoveMethod != null);
 
-                                AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, @event.AddMethod, diagnostics);
-                                AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, @event.RemoveMethod, diagnostics);
+                                AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, @event.AddMethod, diagnostics);
+                                AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, @event.RemoveMethod, diagnostics);
                             }
                         }
                         break;
@@ -2944,7 +3059,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SyntaxKind.EventDeclaration:
                         {
                             var eventSyntax = (EventDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(eventSyntax.Identifier));
@@ -2952,10 +3067,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                             var @event = new SourceCustomEventSymbol(this, bodyBinder, eventSyntax, diagnostics);
 
-                            result.NonTypeNonIndexerMembers.Add(@event);
+                            builder.NonTypeNonIndexerMembers.Add(@event);
 
-                            AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, @event.AddMethod, diagnostics);
-                            AddAccessorIfAvailable(result.NonTypeNonIndexerMembers, @event.RemoveMethod, diagnostics);
+                            AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, @event.AddMethod, diagnostics);
+                            AddAccessorIfAvailable(builder.NonTypeNonIndexerMembers, @event.RemoveMethod, diagnostics);
 
                             Debug.Assert((object)@event.AssociatedField == null);
                         }
@@ -2964,7 +3079,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SyntaxKind.IndexerDeclaration:
                         {
                             var indexerSyntax = (IndexerDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(indexerSyntax.ThisKeyword));
@@ -2974,14 +3089,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             // what name it will have after attribute binding (because of
                             // IndexerNameAttribute).  Instead, we'll keep a (weak) reference
                             // to the syntax and bind it again after early attribute decoding.
-                            result.IndexerDeclarations.Add(indexerSyntax.GetReference());
+                            builder.IndexerDeclarations.Add(indexerSyntax.GetReference());
                         }
                         break;
 
                     case SyntaxKind.ConversionOperatorDeclaration:
                         {
                             var conversionOperatorSyntax = (ConversionOperatorDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(conversionOperatorSyntax.OperatorKeyword));
@@ -2989,14 +3104,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                             var method = SourceUserDefinedConversionSymbol.CreateUserDefinedConversionSymbol
                                 (this, conversionOperatorSyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(method);
+                            builder.NonTypeNonIndexerMembers.Add(method);
                         }
                         break;
 
                     case SyntaxKind.OperatorDeclaration:
                         {
                             var operatorSyntax = (OperatorDeclarationSyntax)m;
-                            if (reportMisplacedGlobalCode)
+                            if (IsImplicitClass && reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_NamespaceUnexpected,
                                     new SourceLocation(operatorSyntax.OperatorKeyword));
@@ -3004,55 +3119,78 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                             var method = SourceUserDefinedOperatorSymbol.CreateUserDefinedOperatorSymbol
                                 (this, operatorSyntax, diagnostics);
-                            result.NonTypeNonIndexerMembers.Add(method);
+                            builder.NonTypeNonIndexerMembers.Add(method);
                         }
 
-                        break;
-
-                    case SyntaxKind.PrimaryConstructorBody:
-                        if (havePrimaryCtor)
-                        {
-                            if (havePrimaryCtorBody)
-                            {
-                                diagnostics.Add(ErrorCode.ERR_DuplicatePrimaryCtorBody, new SourceLocation(((PrimaryConstructorBodySyntax)m).Body));
-                            }
-                            else
-                            {
-                                havePrimaryCtorBody = true;
-                            }
-                        }
                         break;
 
                     case SyntaxKind.GlobalStatement:
                         {
                             var globalStatement = ((GlobalStatementSyntax)m).Statement;
-                            if (reportMisplacedGlobalCode)
+
+                            if (IsScriptClass)
+                            {
+                                var innerStatement = globalStatement;
+
+                                // drill into any LabeledStatements 
+                                while (innerStatement.Kind() == SyntaxKind.LabeledStatement)
+                                {
+                                    innerStatement = ((LabeledStatementSyntax)innerStatement).Statement;
+                                }
+
+                                switch (innerStatement.Kind())
+                                {
+                                    case SyntaxKind.LocalDeclarationStatement:
+                                        // We shouldn't reach this place, but field declarations preceded with a label end up here.
+                                        // This is tracked by https://github.com/dotnet/roslyn/issues/13712. Let's do our best for now.
+                                        var decl = (LocalDeclarationStatementSyntax)innerStatement;
+                                        foreach (var vdecl in decl.Declaration.Variables)
+                                        {
+                                            // also gather expression-declared variables from the bracketed argument lists and the initializers
+                                            ExpressionFieldFinder.FindExpressionVariables(builder.NonTypeNonIndexerMembers, vdecl, this, DeclarationModifiers.Private,
+                                                                                          containingFieldOpt: null);
+                                        }
+                                        break;
+
+                                    case SyntaxKind.ExpressionStatement:
+                                    case SyntaxKind.IfStatement:
+                                    case SyntaxKind.YieldReturnStatement:
+                                    case SyntaxKind.ReturnStatement:
+                                    case SyntaxKind.ThrowStatement:
+                                    case SyntaxKind.SwitchStatement:
+                                    case SyntaxKind.LockStatement:
+                                        ExpressionFieldFinder.FindExpressionVariables(builder.NonTypeNonIndexerMembers,
+                                                  innerStatement,
+                                                  this,
+                                                  DeclarationModifiers.Private,
+                                                  containingFieldOpt: null);
+                                        break;
+
+                                    default:
+                                        // no other statement introduces variables into the enclosing scope
+                                        break;
+                                }
+
+                                AddInitializer(ref instanceInitializers, ref builder.InstanceSyntaxLength, null, globalStatement);
+                            }
+                            else if (reportMisplacedGlobalCode)
                             {
                                 diagnostics.Add(ErrorCode.ERR_GlobalStatement, new SourceLocation(globalStatement));
                             }
-
-                            AddInitializer(ref instanceInitializers, null, globalStatement);
                         }
                         break;
 
                     default:
                         Debug.Assert(
-                            SyntaxFacts.IsTypeDeclaration(m.Kind) ||
-                            m.Kind == SyntaxKind.NamespaceDeclaration ||
-                            m.Kind == SyntaxKind.IncompleteMember);
+                            SyntaxFacts.IsTypeDeclaration(m.Kind()) ||
+                            m.Kind() == SyntaxKind.NamespaceDeclaration ||
+                            m.Kind() == SyntaxKind.IncompleteMember);
                         break;
                 }
             }
 
-            AddInitializers(ref result.InstanceInitializers, typeDeclaration, instanceInitializers);
-            AddInitializers(ref result.StaticInitializers, typeDeclaration, staticInitializers);
-        }
-
-        private static bool IsGlobalCodeAllowed(CSharpSyntaxNode parent)
-        {
-            var parentKind = parent.Kind;
-            return !(parentKind == SyntaxKind.NamespaceDeclaration ||
-                parentKind == SyntaxKind.CompilationUnit && parent.SyntaxTree.Options.Kind == SourceCodeKind.Regular);
+            AddInitializers(builder.InstanceInitializers, instanceInitializers);
+            AddInitializers(builder.StaticInitializers, staticInitializers);
         }
 
         private void AddAccessorIfAvailable(ArrayBuilder<Symbol> symbols, MethodSymbol accessorOpt, DiagnosticBag diagnostics, bool checkName = false)
@@ -3075,13 +3213,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (!this.lazyContainsExtensionMethods.HasValue())
+                if (!_lazyContainsExtensionMethods.HasValue())
                 {
-                    bool containsExtensionMethods = (this.IsStatic && !this.IsGenericType && this.declaration.ContainsExtensionMethods);
-                    this.lazyContainsExtensionMethods = containsExtensionMethods.ToThreeState();
+                    bool containsExtensionMethods = ((this.IsStatic && !this.IsGenericType) || this.IsScriptClass) && this.declaration.ContainsExtensionMethods;
+                    _lazyContainsExtensionMethods = containsExtensionMethods.ToThreeState();
                 }
 
-                return this.lazyContainsExtensionMethods.Value();
+                return _lazyContainsExtensionMethods.Value();
             }
         }
 
@@ -3089,13 +3227,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (!this.lazyAnyMemberHasAttributes.HasValue())
+                if (!_lazyAnyMemberHasAttributes.HasValue())
                 {
                     bool anyMemberHasAttributes = this.declaration.AnyMemberHasAttributes;
-                    this.lazyAnyMemberHasAttributes = anyMemberHasAttributes.ToThreeState();
+                    _lazyAnyMemberHasAttributes = anyMemberHasAttributes.ToThreeState();
                 }
 
-                return this.lazyAnyMemberHasAttributes.Value();
+                return _lazyAnyMemberHasAttributes.Value();
             }
         }
 

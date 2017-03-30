@@ -1,22 +1,19 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
-using Microsoft.CodeAnalysis.Text;
-using Cci = Microsoft.Cci;
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis.CodeGen
 {
     /// <summary>
     /// An expression that results in a System.Type instance.
     /// </summary>
-    internal sealed class MetadataTypeOf : Cci.IMetadataTypeOf
+    internal sealed class MetadataTypeOf : Cci.IMetadataExpression
     {
-        private readonly Cci.ITypeReference typeToGet;
-        private readonly Cci.ITypeReference systemType;
+        private readonly Cci.ITypeReference _typeToGet;
+        private readonly Cci.ITypeReference _systemType;
 
         public MetadataTypeOf(Cci.ITypeReference typeToGet, Cci.ITypeReference systemType)
         {
-            this.typeToGet = typeToGet;
-            this.systemType = systemType;
+            _typeToGet = typeToGet;
+            _systemType = systemType;
         }
 
         /// <summary>
@@ -26,7 +23,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         {
             get
             {
-                return this.typeToGet;
+                return _typeToGet;
             }
         }
 
@@ -37,7 +34,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
         Cci.ITypeReference Cci.IMetadataExpression.Type
         {
-            get { return this.systemType; }
+            get { return _systemType; }
         }
     }
 }

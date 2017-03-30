@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -15,6 +15,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression rewrittenExpression = VisitExpression(node.Expression);
             BoundExpression rewrittenIndex = VisitExpression(node.Index);
 
+            return RewritePointerElementAccess(node, rewrittenExpression, rewrittenIndex);
+        }
+
+        private BoundExpression RewritePointerElementAccess(BoundPointerElementAccess node, BoundExpression rewrittenExpression, BoundExpression rewrittenIndex)
+        {
             // Optimization: p[0] == *p
             if (rewrittenIndex.IsDefaultValue())
             {

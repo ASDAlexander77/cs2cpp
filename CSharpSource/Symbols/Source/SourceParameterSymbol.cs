@@ -1,13 +1,9 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -22,9 +18,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         protected SymbolCompletionState state;
         protected readonly TypeSymbol parameterType;
-        private readonly string name;
-        private readonly ImmutableArray<Location> locations;
-        private readonly RefKind refKind;
+        private readonly string _name;
+        private readonly ImmutableArray<Location> _locations;
+        private readonly RefKind _refKind;
 
         public static SourceParameterSymbol Create(
             Binder context,
@@ -36,7 +32,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             int ordinal,
             bool isParams,
             bool isExtensionMethodThis,
-            DiagnosticBag diagnostics)
+            DiagnosticBag declarationDiagnostics)
         {
             var name = identifier.ValueText;
             var locations = ImmutableArray.Create<Location>(new SourceLocation(identifier));
@@ -46,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // touch the constructor in order to generate proper use-site diagnostics
                 Binder.ReportUseSiteDiagnosticForSynthesizedAttribute(context.Compilation,
                     WellKnownMember.System_ParamArrayAttribute__ctor,
-                    diagnostics,
+                    declarationDiagnostics,
                     identifier.Parent.GetLocation());
             }
 
@@ -64,8 +60,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 ordinal,
                 parameterType,
                 refKind,
-                ImmutableArray<CustomModifier>.Empty,
-                false,
                 name,
                 locations,
                 syntax.GetReference(),
@@ -85,29 +79,47 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             Debug.Assert((owner.Kind == SymbolKind.Method) || (owner.Kind == SymbolKind.Property));
             this.parameterType = parameterType;
-            this.refKind = refKind;
-            this.name = name;
-            this.locations = locations;
+            _refKind = refKind;
+            _name = name;
+            _locations = locations;
         }
 
-        internal override ParameterSymbol WithCustomModifiersAndParams(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, bool hasByRefBeforeCustomModifiers, bool newIsParams)
+        internal override ParameterSymbol WithCustomModifiersAndParams(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, ImmutableArray<CustomModifier> newRefCustomModifiers, bool newIsParams)
         {
-            return WithCustomModifiersAndParamsCore(newType, newCustomModifiers, hasByRefBeforeCustomModifiers, newIsParams);
+            return WithCustomModifiersAndParamsCore(newType, newCustomModifiers, newRefCustomModifiers, newIsParams);
         }
 
-        internal SourceParameterSymbol WithCustomModifiersAndParamsCore(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, bool hasByRefBeforeCustomModifiers, bool newIsParams)
+        internal SourceParameterSymbol WithCustomModifiersAndParamsCore(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, ImmutableArray<CustomModifier> newRefCustomModifiers, bool newIsParams)
         {
-            newType = CustomModifierUtils.CopyTypeCustomModifiers(newType, this.Type, this.refKind, this.ContainingAssembly);
+            newType = CustomModifierUtils.CopyTypeCustomModifiers(newType, this.Type, this.ContainingAssembly);
 
-            return new SourceComplexParameterSymbol(
+            if (newCustomModifiers.IsEmpty && newRefCustomModifiers.IsEmpty)
+            {
+                return new SourceComplexParameterSymbol(
+                    this.ContainingSymbol,
+                    this.Ordinal,
+                    newType,
+                    _refKind,
+                    _name,
+                    _locations,
+                    this.SyntaxReference,
+                    this.ExplicitDefaultConstantValue,
+                    newIsParams,
+                    this.IsExtensionMethodThis);
+            }
+
+            // Local functions should never have custom modifiers
+            Debug.Assert(!(ContainingSymbol is LocalFunctionSymbol));
+
+            return new SourceComplexParameterSymbolWithCustomModifiers(
                 this.ContainingSymbol,
                 this.Ordinal,
                 newType,
-                this.refKind,
+                _refKind,
                 newCustomModifiers,
-                hasByRefBeforeCustomModifiers,
-                this.name,
-                this.locations,
+                newRefCustomModifiers,
+                _name,
+                _locations,
                 this.SyntaxReference,
                 this.ExplicitDefaultConstantValue,
                 newIsParams,
@@ -147,14 +159,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Gets the attributes applied on this symbol.
         /// Returns an empty array if there are no attributes.
         /// </summary>
-        /// <remarks>
-        /// NOTE: This method should always be kept as a sealed override.
-        /// If you want to override attribute binding logic for a sub-class, then override <see cref="GetAttributesBag"/> method.
-        /// </remarks>
         public sealed override ImmutableArray<CSharpAttributeData> GetAttributes()
         {
             return this.GetAttributesBag().Attributes;
         }
+
+        /// <summary>
+        /// The declaration diagnostics for a parameter depend on the containing symbol.
+        /// For instance, if the containing symbol is a method the declaration diagnostics
+        /// go on the compilation, but if it is a local function it is part of the local
+        /// function's declaration diagnostics.
+        /// </summary>
+        internal override void AddDeclarationDiagnostics(DiagnosticBag diagnostics)
+            => ContainingSymbol.AddDeclarationDiagnostics(diagnostics);
 
         internal abstract SyntaxReference SyntaxReference { get; }
 
@@ -164,7 +181,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.refKind;
+                return _refKind;
             }
         }
 
@@ -172,7 +189,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return name;
+                return _name;
             }
         }
 
@@ -180,7 +197,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return locations;
+                return _locations;
             }
         }
 
@@ -190,7 +207,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 return IsImplicitlyDeclared ?
                     ImmutableArray<SyntaxReference>.Empty :
-                    GetDeclaringSyntaxReferenceHelper<ParameterSyntax>(locations);
+                    GetDeclaringSyntaxReferenceHelper<ParameterSyntax>(_locations);
             }
         }
 

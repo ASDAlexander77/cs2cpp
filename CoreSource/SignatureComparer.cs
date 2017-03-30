@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection.Metadata;
@@ -160,11 +161,11 @@ namespace Microsoft.CodeAnalysis.RuntimeMembers
                     // ...
                     // ELEMENT_TYPE_VALUETYPE 0x11 Followed by TypeDef or TypeRef token
                     // ELEMENT_TYPE_CLASS 0x12 Followed by TypeDef or TypeRef token
-
-                    return MatchTypeToTypeId(type, signature[position++]);
+                    short expectedType = ReadTypeId(signature, ref position);
+                    return MatchTypeToTypeId(type, expectedType);
 
                 case SignatureTypeCode.Array:
-                    if (!MatchType(GetArrayElementType(type), signature, ref position))
+                    if (!MatchType(GetMDArrayElementType(type), signature, ref position))
                     {
                         return false;
                     }
@@ -211,6 +212,23 @@ namespace Microsoft.CodeAnalysis.RuntimeMembers
         }
 
         /// <summary>
+        /// Read a type Id from the signature.
+        /// This may consume one or two bytes, and therefore increment the position correspondingly.
+        /// </summary>
+        private static short ReadTypeId(ImmutableArray<byte> signature, ref int position)
+        {
+            var firstByte = signature[position++];
+            if (firstByte == (byte)WellKnownType.ExtSentinel)
+            {
+                return (short)(signature[position++] + WellKnownType.ExtSentinel);
+            }
+            else
+            {
+                return firstByte;
+            }
+        }
+
+        /// <summary>
         /// Should return null in case of error.
         /// </summary>
         protected abstract TypeSymbol GetGenericTypeArgument(TypeSymbol type, int argumentIndex);
@@ -236,15 +254,15 @@ namespace Microsoft.CodeAnalysis.RuntimeMembers
         protected abstract TypeSymbol GetSZArrayElementType(TypeSymbol type);
 
         /// <summary>
-        /// Should only accept multi-dimansional arrays.
+        /// Should only accept multi-dimensional arrays.
         /// </summary>
         protected abstract bool MatchArrayRank(TypeSymbol type, int countOfDimensions);
 
         /// <summary>
-        /// Should only accept multi-dimansional arrays.
+        /// Should only accept multi-dimensional arrays.
         /// Should return null in case of error.
         /// </summary>
-        protected abstract TypeSymbol GetArrayElementType(TypeSymbol type);
+        protected abstract TypeSymbol GetMDArrayElementType(TypeSymbol type);
 
         protected abstract bool MatchTypeToTypeId(TypeSymbol type, int typeId);
 

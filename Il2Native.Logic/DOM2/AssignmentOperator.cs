@@ -50,7 +50,7 @@ namespace Il2Native.Logic.DOM2
             var forEachStatementSyntax = boundAssignmentOperator.Left.Syntax.Green as ForEachStatementSyntax;
             if (forEachStatementSyntax != null)
             {
-                if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
+                if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedKind == default(SynthesizedLocalKind))
                 {
                     this.TypeDeclaration = true;
                     this.ApplyAutoType = true;
@@ -61,7 +61,7 @@ namespace Il2Native.Logic.DOM2
             this.Right = Deserialize(boundAssignmentOperator.Right) as Expression;
 
             if (boundLocal == null || boundLocal.LocalSymbol.IsFixed || boundLocal.LocalSymbol.IsUsing ||
-                boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.LoweringTemp)
+                boundLocal.LocalSymbol.SynthesizedKind == SynthesizedLocalKind.LoweringTemp)
             {
                 this.TypeDeclaration = false;
                 this.ApplyAutoType = false;

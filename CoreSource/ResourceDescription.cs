@@ -1,11 +1,13 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.IO;
 using Roslyn.Utilities;
+using Microsoft.CodeAnalysis.Emit;
 using System.Reflection;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace Microsoft.CodeAnalysis
 {
@@ -18,7 +20,7 @@ namespace Microsoft.CodeAnalysis
         internal readonly string FileName; // null if embedded
         internal readonly bool IsPublic;
         internal readonly Func<Stream> DataProvider;
-        private readonly CryptographicHashProvider hashes;
+        private readonly CryptographicHashProvider _hashes;
 
         /// <summary>
         /// Creates a representation of a resource whose contents are to be embedded in the output assembly.
@@ -46,7 +48,7 @@ namespace Microsoft.CodeAnalysis
         /// </param>
         /// <param name="isPublic">True if the resource is public.</param>
         /// <remarks>
-        /// Function returning a stream of the recource content (used to calculate hash).
+        /// Function returning a stream of the resource content (used to calculate hash).
         /// </remarks>
         public ResourceDescription(string resourceName, string fileName, Func<Stream> dataProvider, bool isPublic)
             : this(resourceName, fileName, dataProvider, isPublic, isEmbedded: false, checkArgs: true)
@@ -59,29 +61,29 @@ namespace Microsoft.CodeAnalysis
             {
                 if (dataProvider == null)
                 {
-                    throw new ArgumentNullException("dataProvider");
+                    throw new ArgumentNullException(nameof(dataProvider));
                 }
 
                 if (resourceName == null)
                 {
-                    throw new ArgumentNullException("resourceName");
+                    throw new ArgumentNullException(nameof(resourceName));
                 }
 
                 if (!MetadataHelpers.IsValidMetadataIdentifier(resourceName))
                 {
-                    throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidResourceName, "resourceName");
+                    throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidResourceName, nameof(resourceName));
                 }
 
                 if (!isEmbedded)
                 {
                     if (fileName == null)
                     {
-                        throw new ArgumentNullException("fileName");
+                        throw new ArgumentNullException(nameof(fileName));
                     }
 
                     if (!MetadataHelpers.IsValidMetadataFileName(fileName))
                     {
-                        throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidFileName, "fileName");
+                        throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidFileName, nameof(fileName));
                     }
                 }
             }
@@ -90,24 +92,24 @@ namespace Microsoft.CodeAnalysis
             this.DataProvider = dataProvider;
             this.FileName = isEmbedded ? null : fileName;
             this.IsPublic = isPublic;
-            this.hashes = new ResourceHashProvider(this);
+            _hashes = new ResourceHashProvider(this);
         }
 
         private sealed class ResourceHashProvider : CryptographicHashProvider
         {
-            private readonly ResourceDescription resource;
+            private readonly ResourceDescription _resource;
 
             public ResourceHashProvider(ResourceDescription resource)
             {
                 Debug.Assert(resource != null);
-                this.resource = resource;
+                _resource = resource;
             }
 
             internal override ImmutableArray<byte> ComputeHash(HashAlgorithm algorithm)
             {
                 try
                 {
-                    using (var stream = resource.DataProvider())
+                    using (var stream = _resource.DataProvider())
                     {
                         if (stream == null)
                         {
@@ -119,7 +121,7 @@ namespace Microsoft.CodeAnalysis
                 }
                 catch (Exception ex)
                 {
-                    throw new ResourceException(resource.FileName, ex);
+                    throw new ResourceException(_resource.FileName, ex);
                 }
             }
         }
@@ -129,14 +131,14 @@ namespace Microsoft.CodeAnalysis
             get { return FileName == null; }
         }
 
-        internal Cci.ManagedResource ToManagedResource(Cci.IModule moduleBeingBuilt)
+        internal Cci.ManagedResource ToManagedResource(CommonPEModuleBuilder moduleBeingBuilt)
         {
             return new Cci.ManagedResource(ResourceName, IsPublic, IsEmbedded ? DataProvider : null, IsEmbedded ? null : this, offset: 0);
         }
 
         ImmutableArray<byte> Cci.IFileReference.GetHashValue(AssemblyHashAlgorithm algorithmId)
         {
-            return hashes.GetHash(algorithmId);
+            return _hashes.GetHash(algorithmId);
         }
 
         string Cci.IFileReference.FileName

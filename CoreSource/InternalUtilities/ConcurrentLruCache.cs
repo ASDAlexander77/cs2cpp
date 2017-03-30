@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -7,12 +7,12 @@ using System.Diagnostics;
 namespace Microsoft.CodeAnalysis.InternalUtilities
 {
     /// <summary>
-    /// Cache with a fixed size that evictes the least recently used members.
+    /// Cache with a fixed size that evicts the least recently used members.
     /// Thread-safe.
     /// </summary>
     internal class ConcurrentLruCache<K, V>
     {
-        private readonly int capacity;
+        private readonly int _capacity;
 
         private struct CacheValue
         {
@@ -20,20 +20,20 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
             public LinkedListNode<K> Node;
         }
 
-        private readonly Dictionary<K, CacheValue> cache;
-        private readonly LinkedList<K> nodeList;
+        private readonly Dictionary<K, CacheValue> _cache;
+        private readonly LinkedList<K> _nodeList;
         // This is a naive course-grained lock, it can probably be optimized
-        private readonly object lockObject = new object();
+        private readonly object _lockObject = new object();
 
         public ConcurrentLruCache(int capacity)
         {
             if (capacity <= 0)
             {
-                throw new ArgumentOutOfRangeException("capacity");
+                throw new ArgumentOutOfRangeException(nameof(capacity));
             }
-            this.capacity = capacity;
-            cache = new Dictionary<K, CacheValue>(capacity);
-            nodeList = new LinkedList<K>();
+            _capacity = capacity;
+            _cache = new Dictionary<K, CacheValue>(capacity);
+            _nodeList = new LinkedList<K>();
         }
 
         /// <summary>
@@ -58,14 +58,14 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
         {
             get
             {
-                lock (lockObject)
+                lock (_lockObject)
                 {
-                    var copy = new KeyValuePair<K, V>[cache.Count];
+                    var copy = new KeyValuePair<K, V>[_cache.Count];
                     int index = 0;
-                    foreach (K key in nodeList)
+                    foreach (K key in _nodeList)
                     {
                         copy[index++] = new KeyValuePair<K, V>(key,
-                                                               cache[key].Value);
+                                                               _cache[key].Value);
                     }
                     return copy;
                 }
@@ -74,7 +74,7 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
 
         public void Add(K key, V value)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
                 UnsafeAdd(key, value, true);
             }
@@ -82,10 +82,10 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
 
         private void MoveNodeToTop(LinkedListNode<K> node)
         {
-            if (!object.ReferenceEquals(nodeList.First, node))
+            if (!object.ReferenceEquals(_nodeList.First, node))
             {
-                nodeList.Remove(node);
-                nodeList.AddFirst(node);
+                _nodeList.Remove(node);
+                _nodeList.AddFirst(node);
             }
         }
 
@@ -94,17 +94,17 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
         /// </summary>
         private void UnsafeEvictLastNode()
         {
-            Debug.Assert(capacity > 0);
-            var lastNode = nodeList.Last;
-            nodeList.Remove(lastNode);
-            cache.Remove(lastNode.Value);
+            Debug.Assert(_capacity > 0);
+            var lastNode = _nodeList.Last;
+            _nodeList.Remove(lastNode);
+            _cache.Remove(lastNode.Value);
         }
 
         private void UnsafeAddNodeToTop(K key, V value)
         {
             var node = new LinkedListNode<K>(key);
-            cache.Add(key, new CacheValue { Node = node, Value = value });
-            nodeList.AddFirst(node);
+            _cache.Add(key, new CacheValue { Node = node, Value = value });
+            _nodeList.AddFirst(node);
         }
 
         /// <summary>
@@ -112,23 +112,22 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
         /// </summary>
         private void UnsafeAdd(K key, V value, bool throwExceptionIfKeyExists)
         {
-            CacheValue result;
-            if (cache.TryGetValue(key, out result))
+            if (_cache.TryGetValue(key, out var result))
             {
                 if (throwExceptionIfKeyExists)
                 {
-                    throw new ArgumentException("Key already exists", "key");
+                    throw new ArgumentException("Key already exists", nameof(key));
                 }
                 else if (!result.Value.Equals(value))
                 {
                     result.Value = value;
-                    cache[key] = result;
+                    _cache[key] = result;
                     MoveNodeToTop(result.Node);
                 }
             }
             else
             {
-                if (cache.Count == capacity)
+                if (_cache.Count == _capacity)
                 {
                     UnsafeEvictLastNode();
                 }
@@ -140,8 +139,7 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
         {
             get
             {
-                V value;
-                if (TryGetValue(key, out value))
+                if (TryGetValue(key, out var value))
                 {
                     return value;
                 }
@@ -152,7 +150,7 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
             }
             set
             {
-                lock (lockObject)
+                lock (_lockObject)
                 {
                     UnsafeAdd(key, value, false);
                 }
@@ -161,7 +159,7 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
 
         public bool TryGetValue(K key, out V value)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
                 return UnsafeTryGetValue(key, out value);
             }
@@ -172,8 +170,7 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
         /// </summary>
         public bool UnsafeTryGetValue(K key, out V value)
         {
-            CacheValue result;
-            if (cache.TryGetValue(key, out result))
+            if (_cache.TryGetValue(key, out var result))
             {
                 MoveNodeToTop(result.Node);
                 value = result.Value;
@@ -188,15 +185,48 @@ namespace Microsoft.CodeAnalysis.InternalUtilities
 
         public V GetOrAdd(K key, V value)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                V result;
-                if (UnsafeTryGetValue(key, out result))
+                if (UnsafeTryGetValue(key, out var result))
                 {
                     return result;
                 }
                 else
                 {
+                    UnsafeAdd(key, value, true);
+                    return value;
+                }
+            }
+        }
+
+        public V GetOrAdd(K key, Func<V> creator)
+        {
+            lock (_lockObject)
+            {
+                if (UnsafeTryGetValue(key, out var result))
+                {
+                    return result;
+                }
+                else
+                {
+                    var value = creator();
+                    UnsafeAdd(key, value, true);
+                    return value;
+                }
+            }
+        }
+
+        public V GetOrAdd<T>(K key, T arg, Func<T, V> creator)
+        {
+            lock (_lockObject)
+            {
+                if (UnsafeTryGetValue(key, out var result))
+                {
+                    return result;
+                }
+                else
+                {
+                    var value = creator(arg);
                     UnsafeAdd(key, value, true);
                     return value;
                 }

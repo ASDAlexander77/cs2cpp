@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.IO;
@@ -18,7 +18,10 @@ namespace Microsoft.CodeAnalysis.Text
             var c = text[index];
 
             // common case - ASCII & not a line break
-            if (c > '\r' & c <= 127)
+            // if (c > '\r' && c <= 127)
+            // if (c >= ('\r'+1) && c <= 127)
+            const uint bias = '\r' + 1;
+            if (unchecked(c - bias) <= (127 - bias))
             {
                 return 0;
             }

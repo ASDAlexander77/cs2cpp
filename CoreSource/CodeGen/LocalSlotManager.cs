@@ -1,23 +1,15 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.Cci;
+using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis.Collections;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeGen
 {
-    [Flags]
-    internal enum LocalSlotConstraints : byte
-    {
-        None = 0,
-        ByRef = 1,
-        Pinned = 2,
-    }
-
     /// <summary>
     /// At this level there are two kinds of local variables:
     /// <list type="bullet">
@@ -32,20 +24,20 @@ namespace Microsoft.CodeAnalysis.CodeGen
     /// </item>
     /// </list>
     /// </summary>
-    internal abstract class LocalSlotManager
+    internal sealed class LocalSlotManager
     {
         /// <summary>
         /// Structure that represents a local signature (as in <a href="http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-335.pdf">ECMA-335</a>, Partition I, §8.6.1.3 Local signatures).
         /// </summary>
         private struct LocalSignature : IEquatable<LocalSignature>
         {
-            private readonly ITypeReference Type;
-            private readonly LocalSlotConstraints Constraints;
+            private readonly Cci.ITypeReference _type;
+            private readonly LocalSlotConstraints _constraints;
 
-            internal LocalSignature(ITypeReference valType, LocalSlotConstraints constraints)
+            internal LocalSignature(Cci.ITypeReference valType, LocalSlotConstraints constraints)
             {
-                this.Constraints = constraints;
-                this.Type = valType;
+                _constraints = constraints;
+                _type = valType;
             }
 
             public bool Equals(LocalSignature other)
@@ -53,13 +45,13 @@ namespace Microsoft.CodeAnalysis.CodeGen
                 // ITypeReference does not have object identity.
                 // Same type may be represented by multiple instances.
                 // Therefore the use of "Equals" here.
-                return this.Constraints == other.Constraints &&
-                    (this.Type == other.Type || this.Type.Equals(other.Type));
+                return _constraints == other._constraints &&
+                    (_type == other._type || _type.Equals(other._type));
             }
 
             public override int GetHashCode()
             {
-                var code = Hash.Combine(this.Type, (int)this.Constraints);
+                var code = Hash.Combine(_type, (int)_constraints);
                 return code;
             }
 
@@ -70,20 +62,40 @@ namespace Microsoft.CodeAnalysis.CodeGen
         }
 
         // maps local identities to locals.
-        private Dictionary<object, LocalDefinition> localMap;
+        private Dictionary<ILocalSymbol, LocalDefinition> _localMap;
 
         // pool of free slots partitioned by their signature.
-        private KeyedStack<LocalSignature, LocalDefinition> freeSlots;
+        private KeyedStack<LocalSignature, LocalDefinition> _freeSlots;
 
-        private Dictionary<object, LocalDefinition> LocalMap
+        // all locals in order
+        private ArrayBuilder<Cci.ILocalDefinition> _lazyAllLocals;
+
+        // An optional allocator that provides slots for locals.
+        // Used when emitting an update to a method body during EnC.
+        private readonly VariableSlotAllocator _slotAllocatorOpt;
+
+        public LocalSlotManager(VariableSlotAllocator slotAllocatorOpt)
+        {
+            _slotAllocatorOpt = slotAllocatorOpt;
+
+            // Add placeholders for pre-allocated locals. 
+            // The actual identities are populated if/when the locals are reused.
+            if (slotAllocatorOpt != null)
+            {
+                _lazyAllLocals = new ArrayBuilder<Cci.ILocalDefinition>();
+                slotAllocatorOpt.AddPreviousLocals(_lazyAllLocals);
+            }
+        }
+
+        private Dictionary<ILocalSymbol, LocalDefinition> LocalMap
         {
             get
             {
-                var map = localMap;
+                var map = _localMap;
                 if (map == null)
                 {
-                    map = new Dictionary<object, LocalDefinition>(ReferenceEqualityComparer.Instance);
-                    localMap = map;
+                    map = new Dictionary<ILocalSymbol, LocalDefinition>(ReferenceEqualityComparer.Instance);
+                    _localMap = map;
                 }
 
                 return map;
@@ -94,11 +106,11 @@ namespace Microsoft.CodeAnalysis.CodeGen
         {
             get
             {
-                var slots = freeSlots;
+                var slots = _freeSlots;
                 if (slots == null)
                 {
                     slots = new KeyedStack<LocalSignature, LocalDefinition>();
-                    freeSlots = slots;
+                    _freeSlots = slots;
                 }
 
                 return slots;
@@ -106,41 +118,44 @@ namespace Microsoft.CodeAnalysis.CodeGen
         }
 
         internal LocalDefinition DeclareLocal(
-            ITypeReference type,
-            object identity,
+            Cci.ITypeReference type,
+            ILocalSymbolInternal symbol,
             string name,
-            bool isCompilerGenerated,
+            SynthesizedLocalKind kind,
+            LocalDebugId id,
+            LocalVariableAttributes pdbAttributes,
             LocalSlotConstraints constraints,
-            bool isDynamic,
-            ImmutableArray<TypedConstant> dynamicTransformFlags)
+            ImmutableArray<bool> dynamicTransformFlags,
+            ImmutableArray<string> tupleElementNames,
+            bool isSlotReusable)
         {
             LocalDefinition local;
 
-            if ((name != null) || !FreeSlots.TryPop(new LocalSignature(type, constraints), out local))
+            if (!isSlotReusable || !FreeSlots.TryPop(new LocalSignature(type, constraints), out local))
             {
-                local = this.DeclareLocalInternal(type, identity, name, isCompilerGenerated, constraints, isDynamic, dynamicTransformFlags);
+                local = this.DeclareLocalImpl(type, symbol, name, kind, id, pdbAttributes, constraints, dynamicTransformFlags, tupleElementNames);
             }
 
-            LocalMap.Add(identity, local);
+            LocalMap.Add(symbol, local);
             return local;
         }
 
         /// <summary>
-        /// Retrieve a local slot by its identity.
+        /// Retrieve a local slot by its symbol.
         /// </summary>
-        internal LocalDefinition GetLocal(object identity)
+        internal LocalDefinition GetLocal(ILocalSymbol symbol)
         {
-            return LocalMap[identity];
+            return LocalMap[symbol];
         }
 
         /// <summary>
-        /// Release a local slot by its identity.
-        /// Slot is not associated with identity after this.
+        /// Release a local slot by its symbol.
+        /// Slot is not associated with symbol after this.
         /// </summary>
-        internal void FreeLocal(object identity)
+        internal void FreeLocal(ILocalSymbol symbol)
         {
-            var slot = GetLocal(identity);
-            LocalMap.Remove(identity);
+            var slot = GetLocal(symbol);
+            LocalMap.Remove(symbol);
             FreeSlot(slot);
         }
 
@@ -148,22 +163,80 @@ namespace Microsoft.CodeAnalysis.CodeGen
         /// Gets a local slot.
         /// </summary>
         internal LocalDefinition AllocateSlot(
-            ITypeReference type,
+            Cci.ITypeReference type,
             LocalSlotConstraints constraints,
-            ImmutableArray<TypedConstant> dynamicTransformFlags = default(ImmutableArray<TypedConstant>))
+            ImmutableArray<bool> dynamicTransformFlags = default(ImmutableArray<bool>),
+            ImmutableArray<string> tupleElementNames = default(ImmutableArray<string>))
         {
             LocalDefinition local;
             if (!FreeSlots.TryPop(new LocalSignature(type, constraints), out local))
             {
-                local = this.DeclareLocalInternal(
+                local = this.DeclareLocalImpl(
                     type: type,
-                    identity: null,
-                    name: null,
-                    isCompilerGenerated: true,
+                    symbolOpt: null,
+                    nameOpt: null,
+                    kind: SynthesizedLocalKind.EmitterTemp,
+                    id: LocalDebugId.None,
+                    pdbAttributes: LocalVariableAttributes.DebuggerHidden,
                     constraints: constraints,
-                    isDynamic: false,
-                    dynamicTransformFlags: dynamicTransformFlags);
+                    dynamicTransformFlags: dynamicTransformFlags,
+                    tupleElementNames: tupleElementNames);
             }
+
+            return local;
+        }
+
+        private LocalDefinition DeclareLocalImpl(
+            Cci.ITypeReference type,
+            ILocalSymbolInternal symbolOpt,
+            string nameOpt,
+            SynthesizedLocalKind kind,
+            LocalDebugId id,
+            LocalVariableAttributes pdbAttributes,
+            LocalSlotConstraints constraints,
+            ImmutableArray<bool> dynamicTransformFlags,
+            ImmutableArray<string> tupleElementNames)
+        {
+            if (_lazyAllLocals == null)
+            {
+                _lazyAllLocals = new ArrayBuilder<Cci.ILocalDefinition>(1);
+            }
+
+            LocalDefinition local;
+
+            if (symbolOpt != null && _slotAllocatorOpt != null)
+            {
+                local = _slotAllocatorOpt.GetPreviousLocal(
+                    type,
+                    symbolOpt,
+                    nameOpt,
+                    kind,
+                    id,
+                    pdbAttributes,
+                    constraints,
+                    dynamicTransformFlags: dynamicTransformFlags,
+                    tupleElementNames: tupleElementNames);
+                if (local != null)
+                {
+                    int slot = local.SlotIndex;
+                    _lazyAllLocals[slot] = local;
+                    return local;
+                }
+            }
+
+            local = new LocalDefinition(
+                symbolOpt: symbolOpt,
+                nameOpt: nameOpt,
+                type: type,
+                slot: _lazyAllLocals.Count,
+                synthesizedKind: kind,
+                id: id,
+                pdbAttributes: pdbAttributes,
+                constraints: constraints,
+                dynamicTransformFlags: dynamicTransformFlags,
+                tupleElementNames: tupleElementNames);
+
+            _lazyAllLocals.Add(local);
             return local;
         }
 
@@ -176,15 +249,16 @@ namespace Microsoft.CodeAnalysis.CodeGen
             FreeSlots.Push(new LocalSignature(slot.Type, slot.Constraints), slot);
         }
 
-        public abstract ImmutableArray<ILocalDefinition> LocalsInOrder();
-
-        protected abstract LocalDefinition DeclareLocalInternal(
-            ITypeReference type,
-            object identity,
-            string name,
-            bool isCompilerGenerated,
-            LocalSlotConstraints constraints,
-            bool isDynamic,
-            ImmutableArray<TypedConstant> dynamicTransformFlags);
+        public ImmutableArray<Cci.ILocalDefinition> LocalsInOrder()
+        {
+            if (_lazyAllLocals == null)
+            {
+                return ImmutableArray<Cci.ILocalDefinition>.Empty;
+            }
+            else
+            {
+                return _lazyAllLocals.ToImmutable();
+            }
+        }
     }
 }

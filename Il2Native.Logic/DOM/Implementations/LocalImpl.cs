@@ -101,6 +101,11 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool HasUnsupportedMetadata { get; private set; }
 
         public ITypeSymbol Type { get; set; }
@@ -112,5 +117,7 @@ namespace Il2Native.Logic.DOM.Implementations
         public object ConstantValue { get; private set; }
 
         public bool IsFunctionValue { get; private set; }
+
+        public bool IsRef => throw new NotImplementedException();
     }
 }

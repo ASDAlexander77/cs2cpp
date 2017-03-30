@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,13 +14,13 @@ namespace Microsoft.CodeAnalysis
     internal class CommonFieldEarlyWellKnownAttributeData : EarlyWellKnownAttributeData
     {
         #region ObsoleteAttribute
-        private ObsoleteAttributeData obsoleteAttributeData = ObsoleteAttributeData.Uninitialized;
+        private ObsoleteAttributeData _obsoleteAttributeData = ObsoleteAttributeData.Uninitialized;
         public ObsoleteAttributeData ObsoleteAttributeData
         {
             get
             {
                 VerifySealed(expected: true);
-                return this.obsoleteAttributeData.IsUninitialized ? null : this.obsoleteAttributeData;
+                return _obsoleteAttributeData.IsUninitialized ? null : _obsoleteAttributeData;
             }
             set
             {
@@ -28,7 +28,7 @@ namespace Microsoft.CodeAnalysis
                 Debug.Assert(value != null);
                 Debug.Assert(!value.IsUninitialized);
 
-                this.obsoleteAttributeData = value;
+                _obsoleteAttributeData = value;
                 SetDataStored();
             }
         }

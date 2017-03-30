@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -39,7 +39,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 Debug.Assert(node.DeclarationsOpt != null);
 
-                CSharpSyntaxNode usingSyntax = node.Syntax;
+                SyntaxNode usingSyntax = node.Syntax;
                 Conversion idisposableConversion = node.IDisposableConversion;
                 ImmutableArray<BoundLocalDeclaration> declarations = node.DeclarationsOpt.LocalDeclarations;
 
@@ -105,7 +105,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             //
 
             TypeSymbol expressionType = rewrittenExpression.Type;
-            CSharpSyntaxNode expressionSyntax = rewrittenExpression.Syntax;
+            SyntaxNode expressionSyntax = rewrittenExpression.Syntax;
             UsingStatementSyntax usingSyntax = (UsingStatementSyntax)node.Syntax;
 
             BoundAssignmentOperator tempAssignment;
@@ -113,26 +113,26 @@ namespace Microsoft.CodeAnalysis.CSharp
             if ((object)expressionType == null || expressionType.IsDynamic())
             {
                 // IDisposable temp = (IDisposable) expr;
-                BoundExpression tempInit = MakeConversion(
+                BoundExpression tempInit = MakeConversionNode(
                     expressionSyntax,
                     rewrittenExpression,
-                    node.IDisposableConversion.Kind,
-                    this.compilation.GetSpecialType(SpecialType.System_IDisposable),
+                    Conversion.GetTrivialConversion(node.IDisposableConversion.Kind),
+                    _compilation.GetSpecialType(SpecialType.System_IDisposable),
                     @checked: false,
                     constantValueOpt: rewrittenExpression.ConstantValue);
 
-                boundTemp = this.factory.StoreToTemp(tempInit, out tempAssignment);
+                boundTemp = _factory.StoreToTemp(tempInit, out tempAssignment, kind: SynthesizedLocalKind.Using);
             }
             else
             {
                 // ResourceType temp = expr;
-                boundTemp = this.factory.StoreToTemp(rewrittenExpression, out tempAssignment, kind: SynthesizedLocalKind.Using);
+                boundTemp = _factory.StoreToTemp(rewrittenExpression, out tempAssignment, syntaxOpt: usingSyntax, kind: SynthesizedLocalKind.Using);
             }
 
             BoundStatement expressionStatement = new BoundExpressionStatement(expressionSyntax, tempAssignment);
-            if (this.generateDebugInfo)
+            if (this.Instrument)
             {
-                expressionStatement = AddSequencePoint(usingSyntax, expressionStatement);
+                expressionStatement = _instrumenter.InstrumentUsingTargetCapture(node, expressionStatement);
             }
 
             BoundStatement tryFinally = RewriteUsingStatementTryFinally(usingSyntax, tryBlock, boundTemp);
@@ -151,9 +151,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// Assumes that the local symbol will be declared (i.e. in the LocalsOpt array) of an enclosing block.
         /// Assumes that using statements with multiple locals have already been split up into multiple using statements.
         /// </remarks>
-        private BoundBlock RewriteDeclarationUsingStatement(CSharpSyntaxNode usingSyntax, BoundLocalDeclaration localDeclaration, BoundBlock tryBlock, Conversion idisposableConversion)
+        private BoundBlock RewriteDeclarationUsingStatement(SyntaxNode usingSyntax, BoundLocalDeclaration localDeclaration, BoundBlock tryBlock, Conversion idisposableConversion)
         {
-            CSharpSyntaxNode declarationSyntax = localDeclaration.Syntax;
+            SyntaxNode declarationSyntax = localDeclaration.Syntax;
 
             LocalSymbol localSymbol = localDeclaration.LocalSymbol;
             TypeSymbol localType = localSymbol.Type;
@@ -175,15 +175,15 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (localType.IsDynamic())
             {
-                BoundExpression tempInit = MakeConversion(
+                BoundExpression tempInit = MakeConversionNode(
                     declarationSyntax,
                     boundLocal,
                     idisposableConversion,
-                    compilation.GetSpecialType(SpecialType.System_IDisposable),
+                    _compilation.GetSpecialType(SpecialType.System_IDisposable),
                     @checked: false);
 
                 BoundAssignmentOperator tempAssignment;
-                BoundLocal boundTemp = this.factory.StoreToTemp(tempInit, out tempAssignment);
+                BoundLocal boundTemp = _factory.StoreToTemp(tempInit, out tempAssignment, kind: SynthesizedLocalKind.Using);
 
                 BoundStatement tryFinally = RewriteUsingStatementTryFinally(usingSyntax, tryBlock, boundTemp);
 
@@ -204,7 +204,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private BoundStatement RewriteUsingStatementTryFinally(CSharpSyntaxNode syntax, BoundBlock tryBlock, BoundLocal local)
+        private BoundStatement RewriteUsingStatementTryFinally(SyntaxNode syntax, BoundBlock tryBlock, BoundLocal local)
         {
             // SPEC: When ResourceType is a non-nullable value type, the expansion is:
             // SPEC: 
@@ -278,7 +278,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (isNullableValueType)
             {
-                MethodSymbol getValueOrDefault = GetNullableMethod(syntax, local.Type, SpecialMember.System_Nullable_T_GetValueOrDefault);
+                MethodSymbol getValueOrDefault = UnsafeGetNullableMethod(syntax, local.Type, SpecialMember.System_Nullable_T_GetValueOrDefault);
                 // local.GetValueOrDefault()
                 disposedExpression = BoundCall.Synthesized(syntax, local, getValueOrDefault);
             }
@@ -292,7 +292,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundExpression disposeCall;
 
             MethodSymbol disposeMethodSymbol;
-            if (TryGetSpecialTypeMember(syntax, SpecialMember.System_IDisposable__Dispose, out disposeMethodSymbol))
+            if (Binder.TryGetSpecialTypeMember(_compilation, SpecialMember.System_IDisposable__Dispose, syntax, _diagnostics, out disposeMethodSymbol))
             {
                 disposeCall = BoundCall.Synthesized(syntax, disposedExpression, disposeMethodSymbol);
             }
@@ -308,9 +308,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (isNullableValueType)
             {
-                MethodSymbol hasValue = GetNullableMethod(syntax, local.Type, SpecialMember.System_Nullable_T_get_HasValue);
                 // local.HasValue
-                ifCondition = BoundCall.Synthesized(syntax, local, hasValue);
+                ifCondition = MakeNullableHasValue(syntax, local);
             }
             else if (local.Type.IsValueType)
             {
@@ -336,7 +335,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // if (local.HasValue) local.GetValueOrDefault().Dispose();
                 finallyStatement = RewriteIfStatement(
                     syntax: syntax,
-                    locals: ImmutableArray<LocalSymbol>.Empty,
                     rewrittenCondition: ifCondition,
                     rewrittenConsequence: disposeStatement,
                     rewrittenAlternativeOpt: null,

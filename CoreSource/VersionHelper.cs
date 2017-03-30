@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Diagnostics;
@@ -8,121 +8,197 @@ namespace Microsoft.CodeAnalysis
 {
     internal static class VersionHelper
     {
-        internal static bool Validate(ref Version v)
+        /// <summary>
+        /// Parses a version string of the form "major [ '.' minor [ '.' build [ '.' revision ] ] ]".
+        /// </summary>
+        /// <param name="s">The version string to parse.</param>
+        /// <param name="version">If parsing succeeds, the parsed version. Otherwise a version that represents as much of the input as could be parsed successfully.</param>
+        /// <returns>True when parsing succeeds completely (i.e. every character in the string was consumed), false otherwise.</returns>
+        internal static bool TryParse(string s, out Version version)
         {
-            Debug.Assert(v != null);
-
-            if (v.Major >= UInt16.MaxValue ||
-                v.Minor >= UInt16.MaxValue ||
-                v.Build >= UInt16.MaxValue ||
-                v.Revision >= UInt16.MaxValue)
-            {
-                v = null;
-                return false;
-            }
-
-            return true;
+            return TryParse(s, allowWildcard: false, maxValue: ushort.MaxValue, allowPartialParse: true, version: out version);
         }
 
         /// <summary>
-        /// sets as many fields as it can.
+        /// Parses a version string of the form "major [ '.' minor [ '.' ( '*' | ( build [ '.' ( '*' | revision ) ] ) ) ] ]"
+        /// as accepted by System.Reflection.AssemblyVersionAttribute.
         /// </summary>
-        /// <param name="s"></param>
-        /// <param name="version"></param>
-        /// <returns>True when the input was entirely parsable.</returns>
-        internal static bool TryParse(string s, out Version version)
+        /// <param name="s">The version string to parse.</param>
+        /// <param name="allowWildcard">Indicates whether or not a wildcard is accepted as the terminal component.</param>
+        /// <param name="version">
+        /// If parsing succeeded, the parsed version. Otherwise a version instance with all parts set to zero.
+        /// If <paramref name="s"/> contains * the version build and/or revision numbers are set to <see cref="ushort.MaxValue"/>.
+        /// </param>
+        /// <returns>True when parsing succeeds completely (i.e. every character in the string was consumed), false otherwise.</returns>
+        internal static bool TryParseAssemblyVersion(string s, bool allowWildcard, out Version version)
         {
-            if (s == null)
+            return TryParse(s, allowWildcard: allowWildcard, maxValue: ushort.MaxValue - 1, allowPartialParse: false, version: out version);
+        }
+
+        /// <summary>
+        /// Parses a version string of the form "major [ '.' minor [ '.' ( '*' | ( build [ '.' ( '*' | revision ) ] ) ) ] ]"
+        /// as accepted by System.Reflection.AssemblyVersionAttribute.
+        /// </summary>
+        /// <param name="s">The version string to parse.</param>
+        /// <param name="allowWildcard">Indicates whether or not we're parsing an assembly version string. If so, wildcards are accepted and each component must be less than 65535.</param>
+        /// <param name="maxValue">The maximum value that a version component may have.</param>
+        /// <param name="allowPartialParse">Allow the parsing of version elements where invalid characters exist. e.g. 1.2.2a.1</param>
+        /// <param name="version">
+        /// If parsing succeeded, the parsed version. When <paramref name="allowPartialParse"/> is true a version with values up to the first invalid character set. Otherwise a version with all parts set to zero.
+        /// If <paramref name="s"/> contains * and wildcard is allowed the version build and/or revision numbers are set to <see cref="ushort.MaxValue"/>.
+        /// </param>
+        /// <returns>True when parsing succeeds completely (i.e. every character in the string was consumed), false otherwise.</returns>
+        private static bool TryParse(string s, bool allowWildcard, ushort maxValue, bool allowPartialParse, out Version version)
+        {
+            Debug.Assert(!allowWildcard || maxValue < ushort.MaxValue);
+
+            if (string.IsNullOrWhiteSpace(s))
             {
-                version = new Version(0, 0, 0, 0);
+                version = AssemblyIdentity.NullVersion;
                 return false;
             }
 
             string[] elements = s.Split('.');
-            ushort[] values = new ushort[4];
-            bool result = elements.Length <= 4;
 
-            for (int i = 0; i < elements.Length && i < 4; i++)
+            // If the wildcard is being used, the first two elements must be specified explicitly, and
+            // the last must be a exactly single asterisk without whitespace.
+            bool hasWildcard = allowWildcard && elements[elements.Length - 1] == "*";
+
+            if ((hasWildcard && elements.Length < 3) || elements.Length > 4)
             {
-                if (!UInt16.TryParse(elements[i], NumberStyles.None, CultureInfo.InvariantCulture, out values[i]))
+                version = AssemblyIdentity.NullVersion;
+                return false;
+            }
+
+            ushort[] values = new ushort[4];
+            int lastExplicitValue = hasWildcard ? elements.Length - 1 : elements.Length;
+            bool parseError = false;
+            for (int i = 0; i < lastExplicitValue; i++)
+            {
+
+                if (!ushort.TryParse(elements[i], NumberStyles.None, CultureInfo.InvariantCulture, out values[i]) || values[i] > maxValue)
                 {
-                    result = false;
+                    if (!allowPartialParse)
+                    {
+                        version = AssemblyIdentity.NullVersion;
+                        return false;
+                    }
+
+                    parseError = true;
+
+                    if (string.IsNullOrWhiteSpace(elements[i]))
+                    {
+                        values[i] = 0;
+                        break;
+                    }
+
+                    
+                    if(values[i] > maxValue)
+                    {
+                        //The only way this can happen is if the value was 65536
+                        //The old compiler would continue parsing from here
+                        values[i] = 0;
+                        continue;
+                    }
+
+                    bool invalidFormat = false;
+                    System.Numerics.BigInteger number = 0;
+
+                    //There could be an invalid character in the input so check for the presence of one and
+                    //parse up to that point. examples of invalid characters are alphas and punctuation
+                    for (var idx = 0; idx < elements[i].Length; idx++)
+                    {
+                        if (!char.IsDigit(elements[i][idx]))
+                        {
+                            invalidFormat = true;
+
+                            TryGetValue(elements[i].Substring(0, idx), out values[i]);
+                            break;
+                        }
+                    }
+
+                    if (!invalidFormat)
+                    {
+                        //if we made it here then there weren't any alpha or punctuation chars in the input so the
+                        //element is either greater than ushort.MaxValue or possibly a fullwidth unicode digit.
+                        if (TryGetValue(elements[i], out values[i]))
+                        {
+                            //For this scenario the old compiler would continue processing the remaining version elements
+                            //so continue processing
+                            continue;
+                        }
+                    }
+
+                    //Don't process any more of the version elements
                     break;
                 }
             }
 
-            version = new Version(values[0], values[1], values[2], values[3]);
-            return result;
-        }
 
-        internal static bool TryParseWithWildcards(string s, out Version version)
-        {
-            if (s == null)
+
+
+            if (hasWildcard)
             {
-                version = null;
-                return false;
+                for (int i = lastExplicitValue; i < values.Length; i++)
+                {
+                    values[i] = ushort.MaxValue;
+                }
             }
 
-            int indexOfSplat = s.LastIndexOf('*');
-            if (indexOfSplat == -1)
+            version = new Version(values[0], values[1], values[2], values[3]);
+            return !parseError;
+        }
+
+        private static bool TryGetValue(string s, out ushort value)
+        {
+            System.Numerics.BigInteger number;
+            if (System.Numerics.BigInteger.TryParse(s, NumberStyles.None, CultureInfo.InvariantCulture, out number))
             {
-                if (VersionHelper.TryParse(s, out version))
-                {
-                    return Validate(ref version);
-                }
-                else
-                {
-                    version = null;
-                    return false;
-                }
+                //The old compiler would take the 16 least significant bits and use their value as the output
+                //so we'll do that too.
+                value = (ushort)(number % 65536);
+                return true;
+            }
+
+            //One case that will cause us to end up here is when the input is a Fullwidth unicode digit
+            //so we'll always return zero
+            value = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// If build and/or revision numbers are 65535 they are replaced with time-based values.
+        /// </summary>
+        public static Version GenerateVersionFromPatternAndCurrentTime(DateTime time, Version pattern)
+        {
+            if (pattern == null || pattern.Revision != ushort.MaxValue)
+            {
+                return pattern;
+            }
+
+            // MSDN doc on the attribute: 
+            // "The default build number increments daily. The default revision number is the number of seconds since midnight local time 
+            // (without taking into account time zone adjustments for daylight saving time), divided by 2."
+            if (time == default(DateTime))
+            {
+                time = DateTime.Now;
+            }
+
+            int revision = (int)time.TimeOfDay.TotalSeconds / 2;
+
+            // 24 * 60 * 60 / 2 = 43200 < 65535
+            Debug.Assert(revision < ushort.MaxValue);
+
+            if (pattern.Build == ushort.MaxValue)
+            {
+                TimeSpan days = time.Date - new DateTime(2000, 1, 1);
+                int build = Math.Min(ushort.MaxValue, (int)days.TotalDays);
+
+                return new Version(pattern.Major, pattern.Minor, (ushort)build, (ushort)revision);
             }
             else
             {
-                string[] elements = s.Split('.');
-
-                //to use the wildcard, the first two elements must be specified explicitly, and
-                //the last one has got to be a single asterisk w/o whitespace.
-                if (elements.Length < 3 ||
-                    elements.Length > 4 ||
-                    elements[elements.Length - 1] != "*")
-                {
-                    version = null;
-                    return false;
-                }
-
-                string beforeSplat = s.Substring(0, indexOfSplat - 1);  //take off the splat and the preceding dot
-
-                if (VersionHelper.TryParse(beforeSplat, out version))
-                {
-                    //the explicitly set portions were good
-                    int seconds = ((int)(DateTime.Now.TimeOfDay.TotalSeconds)) / 2;
-                    int build = version.Build;
-
-                    if (elements.Length == 3)
-                    {
-                        TimeSpan days = DateTime.Today - new DateTime(2000, 1, 1);
-                        build = (int)days.TotalDays;
-
-                        if (build < 0)
-                        {
-                            //alink would generate an error here saying "Cannot auto-generate build and 
-                            //revision version numbers for dates previous to January 1, 2000." Without
-                            //some refactoring here to relay the date problem, Roslyn
-                            //will generate an inaccurate error about the version string being of the wrong format.
-
-                            version = null;
-                            return false;
-                        }
-                    }
-
-                    version = new Version(version.Major, version.Minor, build, seconds);
-                    return Validate(ref version);
-                }
-                else
-                {
-                    version = null;
-                    return false;
-                }
+                return new Version(pattern.Major, pattern.Minor, pattern.Build, (ushort)revision);
             }
         }
     }

@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Diagnostics
 {
@@ -14,7 +13,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
     /// </remarks>
     public abstract class AnalyzerReference
     {
-        internal AnalyzerReference()
+        protected AnalyzerReference()
         {
         }
 
@@ -26,19 +25,37 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         /// <summary>
         /// Path or name used in error messages to identity the reference.
         /// </summary>
+        /// <remarks>
+        /// Should not be null.
+        /// </remarks>
         public virtual string Display
         {
             get { return null; }
         }
 
         /// <summary>
-        /// Returns true if this reference is an unresolved reference.
+        /// A unique identifier for this analyzer reference.
         /// </summary>
-        public virtual bool IsUnresolved
-        {
-            get { return false; }
-        }
+        /// <remarks>
+        /// Should not be null.
+        /// Note that this and <see cref="FullPath"/> serve different purposes. An analyzer reference may not
+        /// have a path, but it always has an ID. Further, two analyzer references with different paths may
+        /// represent two copies of the same analyzer, in which case the IDs should also be the same.
+        /// </remarks>
+        public abstract object Id { get; }
 
-        public abstract ImmutableArray<IDiagnosticAnalyzer> GetAnalyzers();
+        /// <summary>
+        /// Gets all the diagnostic analyzers defined in this assembly reference, irrespective of the language supported by the analyzer.
+        /// Use this method only if you need all the analyzers defined in the assembly, without a language context.
+        /// In most instances, either the analyzer reference is associated with a project or is being queried for analyzers in a particular language context.
+        /// If so, use <see cref="GetAnalyzers(string)"/> method.
+        /// </summary>
+        public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForAllLanguages();
+
+        /// <summary>
+        /// Gets all the diagnostic analyzers defined in this assembly reference for the given <paramref name="language"/>.
+        /// </summary>
+        /// <param name="language">Language name.</param>
+        public abstract ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string language);
     }
 }

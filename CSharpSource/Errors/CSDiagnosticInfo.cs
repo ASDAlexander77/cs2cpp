@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Roslyn.Utilities;
+using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -11,10 +12,10 @@ namespace Microsoft.CodeAnalysis.CSharp
         public static readonly DiagnosticInfo EmptyErrorInfo = new CSDiagnosticInfo(0);
         public static readonly DiagnosticInfo VoidDiagnosticInfo = new CSDiagnosticInfo(ErrorCode.Void);
 
-        private readonly ImmutableArray<Location> additionalLocations;
+        private readonly ImmutableArray<Location> _additionalLocations;
 
         internal CSDiagnosticInfo(ErrorCode code)
-            : this(code, SpecializedCollections.EmptyArray<object>(), ImmutableArray<Symbol>.Empty, ImmutableArray<Location>.Empty)
+            : this(code, Array.Empty<object>(), ImmutableArray<Symbol>.Empty, ImmutableArray<Location>.Empty)
         {
         }
 
@@ -31,35 +32,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal CSDiagnosticInfo(ErrorCode code, object[] args, ImmutableArray<Symbol> symbols, ImmutableArray<Location> additionalLocations)
             : base(code, args, symbols)
         {
-            this.additionalLocations = additionalLocations;
+            _additionalLocations = additionalLocations;
         }
 
-        private CSDiagnosticInfo(bool isWarningAsError, ErrorCode code, object[] args, ImmutableArray<Symbol> symbols, ImmutableArray<Location> additionalLocations)
-            : base(isWarningAsError, code, args, symbols)
-        {
-            this.additionalLocations = additionalLocations;
-        }
+        public override IReadOnlyList<Location> AdditionalLocations => _additionalLocations;
 
-        // Create a copy of this instance with a WarningAsError flag
-        internal override DiagnosticInfo GetInstanceWithReportWarning(bool isWarningAsError)
-        {
-            return new CSDiagnosticInfo(isWarningAsError, this.Code, this.Arguments, this.Symbols, this.additionalLocations);
-        }
+        internal new ErrorCode Code => (ErrorCode)base.Code;
 
-        public override IReadOnlyList<Location> AdditionalLocations
-        {
-            get
-            {
-                return additionalLocations;
-            }
-        }
-
-        internal new ErrorCode Code
-        {
-            get
-            {
-                return (ErrorCode)base.Code;
-            }
-        }
+        internal static bool IsEmpty(DiagnosticInfo info) => (object)info == EmptyErrorInfo;
     }
 }

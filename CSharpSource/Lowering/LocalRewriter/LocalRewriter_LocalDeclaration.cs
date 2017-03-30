@@ -1,10 +1,9 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Immutable;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -12,10 +11,10 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         public override BoundNode VisitLocalDeclaration(BoundLocalDeclaration node)
         {
-            return RewriteLocalDeclaration(node.Syntax, node.LocalSymbol, VisitExpression(node.InitializerOpt), node.WasCompilerGenerated, node.HasErrors);
+            return RewriteLocalDeclaration(node, node.Syntax, node.LocalSymbol, VisitExpression(node.InitializerOpt), node.HasErrors);
         }
 
-        private BoundStatement RewriteLocalDeclaration(CSharpSyntaxNode syntax, LocalSymbol localSymbol, BoundExpression rewrittenInitializer, bool wasCompilerGenerated = false, bool hasErrors = false)
+        private BoundStatement RewriteLocalDeclaration(BoundLocalDeclaration originalOpt, SyntaxNode syntax, LocalSymbol localSymbol, BoundExpression rewrittenInitializer, bool hasErrors = false)
         {
             // A declaration of a local variable without an initializer has no associated IL.
             // Simply remove the declaration from the bound tree. The local symbol will
@@ -44,7 +43,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             // lowered local declaration node is associated with declaration (not whole statement)
-            // this is done to make sure that debugger stepping is is same as before
+            // this is done to make sure that debugger stepping is same as before
             var localDeclaration = syntax as LocalDeclarationStatementSyntax;
             if (localDeclaration != null)
             {
@@ -62,47 +61,30 @@ namespace Microsoft.CodeAnalysis.CSharp
                         localSymbol.Type
                     ),
                     rewrittenInitializer,
-                    localSymbol.Type),
+                    localSymbol.Type,
+                    localSymbol.RefKind),
                 hasErrors);
 
-            return AddLocalDeclarationSequencePointIfNecessary(syntax, localSymbol, rewrittenLocalDeclaration, wasCompilerGenerated);
+            return InstrumentLocalDeclarationIfNecessary(originalOpt, localSymbol, rewrittenLocalDeclaration);
         }
 
-        private BoundStatement AddLocalDeclarationSequencePointIfNecessary(CSharpSyntaxNode syntax, LocalSymbol localSymbol, BoundStatement rewrittenLocalDeclaration, bool wasCompilerGenerated = false)
+        private BoundStatement InstrumentLocalDeclarationIfNecessary(BoundLocalDeclaration originalOpt, LocalSymbol localSymbol, BoundStatement rewrittenLocalDeclaration)
         {
             // Add sequence points, if necessary.
-            if (this.generateDebugInfo && !wasCompilerGenerated && !localSymbol.IsConst && syntax.Kind == SyntaxKind.VariableDeclarator)
+            if (this.Instrument && originalOpt?.WasCompilerGenerated == false && !localSymbol.IsConst && 
+                (originalOpt.Syntax.Kind() == SyntaxKind.VariableDeclarator || 
+                    (originalOpt.Syntax.Kind() == SyntaxKind.LocalDeclarationStatement && 
+                        ((LocalDeclarationStatementSyntax)originalOpt.Syntax).Declaration.Variables.Count == 1)))
             {
-                Debug.Assert(syntax.SyntaxTree != null);
-                rewrittenLocalDeclaration = AddSequencePoint((VariableDeclaratorSyntax)syntax, rewrittenLocalDeclaration);
+                rewrittenLocalDeclaration = _instrumenter.InstrumentLocalInitialization(originalOpt, rewrittenLocalDeclaration);
             }
 
             return rewrittenLocalDeclaration;
         }
 
-        public override BoundNode VisitDeclarationExpression(BoundDeclarationExpression node)
+        public override sealed BoundNode VisitOutVariablePendingInference(OutVariablePendingInference node)
         {
-            var local = new BoundLocal(node.Syntax, node.LocalSymbol, null, node.LocalSymbol.Type);
-
-            if (node.InitializerOpt == null)
-            {
-                return local;
-            }
-
-            return new BoundSequence(node.Syntax, 
-                                     ImmutableArray<LocalSymbol>.Empty, 
-                                     ImmutableArray.Create<BoundExpression>(new BoundAssignmentOperator(
-                                                                                                        node.Syntax,
-                                                                                                        new BoundLocal(
-                                                                                                            local.Syntax,
-                                                                                                            local.LocalSymbol,
-                                                                                                            null,
-                                                                                                            local.Type
-                                                                                                        ),
-                                                                                                        VisitExpression(node.InitializerOpt),
-                                                                                                        local.Type)),
-                                     local,
-                                     local.Type);
+            throw ExceptionUtilities.Unreachable;
         }
     }
 }

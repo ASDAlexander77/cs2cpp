@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Reflection.Metadata;
@@ -8,7 +8,7 @@ namespace Microsoft.CodeAnalysis
 {
     internal static class SpecialMembers
     {
-        private readonly static ImmutableArray<MemberDescriptor> descriptors;
+        private readonly static ImmutableArray<MemberDescriptor> s_descriptors;
 
         static SpecialMembers()
         {
@@ -965,7 +965,6 @@ namespace Microsoft.CodeAnalysis
                     1,                                                                                                      // Method Signature
                     (byte)SignatureTypeCode.GenericTypeParameter, 0,
                     (byte)SignatureTypeCode.TypeHandle, (byte)SpecialType.System_Nullable_T,
-
             };
 
             string[] allNames = new string[(int)SpecialMember.Count]
@@ -1088,12 +1087,12 @@ namespace Microsoft.CodeAnalysis
                 "op_Explicit",                              // System_Nullable_T__op_Explicit_ToT
             };
 
-            descriptors = MemberDescriptor.InitializeFromStream(new System.IO.MemoryStream(initializationBytes, writable: false), allNames);
+            s_descriptors = MemberDescriptor.InitializeFromStream(new System.IO.MemoryStream(initializationBytes, writable: false), allNames);
         }
 
         public static MemberDescriptor GetDescriptor(SpecialMember member)
         {
-            return descriptors[(int)member];
+            return s_descriptors[(int)member];
         }
     }
 }

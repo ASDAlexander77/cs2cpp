@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -37,8 +37,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return ImmutableArray<ParameterSymbol>.Empty;
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return ImmutableArray<ParameterSymbol>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -56,8 +55,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return ImmutableArray<TypeSymbol>.Empty;
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return ImmutableArray<TypeSymbol>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -71,8 +69,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return false;
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return false;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -90,8 +87,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return ImmutableArray<RefKind>.Empty;
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return ImmutableArray<RefKind>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -106,8 +102,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return 0;
                 default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    return 0;
+                    throw ExceptionUtilities.UnexpectedValue(member.Kind);
             }
         }
 
@@ -173,12 +168,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             int count = 0;
 
-            count += method.ReturnTypeCustomModifiers.Length;
+            count += method.ReturnTypeCustomModifiers.Length + method.RefCustomModifiers.Length;
             count += method.ReturnType.CustomModifierCount();
 
             foreach (ParameterSymbol param in method.Parameters)
             {
-                count += param.CustomModifiers.Length;
+                count += param.CustomModifiers.Length + param.RefCustomModifiers.Length;
                 count += param.Type.CustomModifierCount();
             }
 
@@ -202,8 +197,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Property:
                     return ((PropertySymbol)m).CustomModifierCount();
                 default:
-                    Debug.Assert(false);
-                    return 0;
+                    throw ExceptionUtilities.UnexpectedValue(m.Kind);
             }
         }
 
@@ -220,41 +214,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             int count = 0;
 
-            count += property.TypeCustomModifiers.Length;
+            count += property.TypeCustomModifiers.Length + property.RefCustomModifiers.Length;
             count += property.Type.CustomModifierCount();
 
             foreach (ParameterSymbol param in property.Parameters)
             {
-                count += param.CustomModifiers.Length;
+                count += param.CustomModifiers.Length + param.RefCustomModifiers.Length;
                 count += param.Type.CustomModifierCount();
             }
 
             return count;
         }
-
-        /// <summary>
-        /// Count the number of custom modifiers in/on the return type
-        /// and parameters of the specified method.
-        /// </summary>
-        public static bool HasCustomModifiers(this MethodSymbol method)
-        {
-            if (method.ReturnTypeCustomModifiers.Any() || method.ReturnType.HasCustomModifiers())
-            {
-                return true;
-            }
-
-            foreach (ParameterSymbol param in method.Parameters)
-            {
-                if (param.CustomModifiers.Any() || param.Type.HasCustomModifiers())
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        //UNDONE: HasCustomModifiers(PropertySymbol), HasCustomModifiers(FieldSymbol)
 
         internal static Symbol SymbolAsMember(this Symbol s, NamedTypeSymbol newOwner)
         {
@@ -325,8 +295,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return ImmutableArray<TypeParameterSymbol>.Empty;
                 default:
-                    Debug.Assert(false, String.Format("{0} is not a kind of member", symbol.Kind));
-                    return ImmutableArray<TypeParameterSymbol>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(symbol.Kind);
             }
         }
 
@@ -344,15 +313,28 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.Event:
                     return ImmutableArray<TypeSymbol>.Empty;
                 default:
-                    Debug.Assert(false, String.Format("{0} is not a kind of member", symbol.Kind));
-                    return ImmutableArray<TypeSymbol>.Empty;
+                    throw ExceptionUtilities.UnexpectedValue(symbol.Kind);
             }
         }
 
-        internal static bool IsParameterlessValueTypeConstructor(this MethodSymbol method, bool requireSynthesized = false)
+        /// <summary>
+        /// NOTE: every struct has a public parameterless constructor either used-defined or default one
+        /// </summary>
+        internal static bool IsParameterlessConstructor(this MethodSymbol method)
         {
-            return method.MethodKind == MethodKind.Constructor && method.ParameterCount == 0 &&
-                method.ContainingType.IsValueType && (!requireSynthesized || method.IsImplicitlyDeclared);
+            return method.MethodKind == MethodKind.Constructor && method.ParameterCount == 0;
+        }
+
+        /// <summary>
+        /// default zero-init constructor symbol is added to a struct when it does not define 
+        /// its own parameterless public constructor.
+        /// We do not emit this constructor and do not call it 
+        /// </summary>
+        internal static bool IsDefaultValueTypeConstructor(this MethodSymbol method)
+        {
+            return method.IsImplicitlyDeclared &&
+                   method.ContainingType.IsValueType &&
+                   method.IsParameterlessConstructor();
         }
 
         /// <summary>
@@ -421,19 +403,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal static bool IsPartialMethod(this Symbol member)
         {
             var sms = member as SourceMethodSymbol;
-            return (object)sms != null && sms.IsPartial;
+            return sms?.IsPartial == true;
         }
 
         internal static bool IsPartialImplementation(this Symbol member)
         {
             var sms = member as SourceMemberMethodSymbol;
-            return (object)sms != null && sms.IsPartialImplementation;
+            return sms?.IsPartialImplementation == true;
         }
 
         internal static bool IsPartialDefinition(this Symbol member)
         {
             var sms = member as SourceMemberMethodSymbol;
-            return (object)sms != null && sms.IsPartialDefinition;
+            return sms?.IsPartialDefinition == true;
         }
 
         internal static ImmutableArray<Symbol> GetExplicitInterfaceImplementations(this Symbol member)
@@ -448,46 +430,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return ((EventSymbol)member).ExplicitInterfaceImplementations.Cast<EventSymbol, Symbol>();
                 default:
                     return ImmutableArray<Symbol>.Empty;
-            }
-        }
-
-        internal static TypeSymbol GetTypeOrReturnType(this Symbol member)
-        {
-            TypeSymbol returnType;
-            ImmutableArray<CustomModifier> returnTypeCustomModifiers;
-            GetTypeOrReturnType(member, out returnType, out returnTypeCustomModifiers);
-            return returnType;
-        }
-
-        internal static void GetTypeOrReturnType(this Symbol member, out TypeSymbol returnType, out ImmutableArray<CustomModifier> returnTypeCustomModifiers)
-        {
-            switch (member.Kind)
-            {
-                case SymbolKind.Field:
-                    FieldSymbol field = (FieldSymbol)member;
-                    returnType = field.Type;
-                    returnTypeCustomModifiers = ImmutableArray<CustomModifier>.Empty;
-                    break;
-                case SymbolKind.Method:
-                    MethodSymbol method = (MethodSymbol)member;
-                    returnType = method.ReturnType;
-                    returnTypeCustomModifiers = method.ReturnTypeCustomModifiers;
-                    break;
-                case SymbolKind.Property:
-                    PropertySymbol property = (PropertySymbol)member;
-                    returnType = property.Type;
-                    returnTypeCustomModifiers = property.TypeCustomModifiers;
-                    break;
-                case SymbolKind.Event:
-                    EventSymbol @event = (EventSymbol)member;
-                    returnType = @event.Type;
-                    returnTypeCustomModifiers = ImmutableArray<CustomModifier>.Empty;
-                    break;
-                default:
-                    Debug.Assert(false, "Unexpected member kind " + member.Kind);
-                    returnType = null;
-                    returnTypeCustomModifiers = ImmutableArray<CustomModifier>.Empty;
-                    break;
             }
         }
 

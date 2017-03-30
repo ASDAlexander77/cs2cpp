@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -186,8 +186,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (!explicitInterfaceType.IsInterfaceType())
             {
                 //we'd like to highlight just the type part of the name
-                var explictInterfaceSyntax = explicitInterfaceSpecifierSyntax.Name;
-                var location = new SourceLocation(explictInterfaceSyntax);
+                var explicitInterfaceSyntax = explicitInterfaceSpecifierSyntax.Name;
+                var location = new SourceLocation(explicitInterfaceSyntax);
 
                 diagnostics.Add(ErrorCode.ERR_ExplicitInterfaceImplementationNotInterface, location, explicitInterfaceType);
                 return null;
@@ -200,8 +200,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (!containingType.InterfacesAndTheirBaseInterfacesNoUseSiteDiagnostics.Contains(explicitInterfaceNamedType))
             {
                 //we'd like to highlight just the type part of the name
-                var explictInterfaceSyntax = explicitInterfaceSpecifierSyntax.Name;
-                var location = new SourceLocation(explictInterfaceSyntax);
+                var explicitInterfaceSyntax = explicitInterfaceSpecifierSyntax.Name;
+                var location = new SourceLocation(explicitInterfaceSyntax);
 
                 diagnostics.Add(ErrorCode.ERR_ClassDoesntImplementInterface, location, implementingMember, explicitInterfaceNamedType);
                 //do a lookup anyway
@@ -258,6 +258,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // CONSIDER: we may wish to suppress this error in the event that another error
                 // has been reported about the signature.
                 diagnostics.Add(ErrorCode.ERR_InterfaceMemberNotFound, memberLocation, implementingMember);
+            }
+
+            if (MemberSignatureComparer.ConsideringTupleNamesCreatesDifference(implementingMember, implementedMember))
+            {
+                diagnostics.Add(ErrorCode.ERR_ImplBadTupleNames, memberLocation, implementingMember, implementedMember);
             }
 
             // In constructed types, it is possible that two method signatures could differ by only ref/out

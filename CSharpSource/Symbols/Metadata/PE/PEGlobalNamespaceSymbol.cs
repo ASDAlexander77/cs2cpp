@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -19,19 +19,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         /// The module containing the namespace.
         /// </summary>
         /// <remarks></remarks>
-        private readonly PEModuleSymbol moduleSymbol;
+        private readonly PEModuleSymbol _moduleSymbol;
 
         internal PEGlobalNamespaceSymbol(PEModuleSymbol moduleSymbol)
         {
             Debug.Assert((object)moduleSymbol != null);
-            this.moduleSymbol = moduleSymbol;
+            _moduleSymbol = moduleSymbol;
         }
 
         public override Symbol ContainingSymbol
         {
             get
             {
-                return moduleSymbol;
+                return _moduleSymbol;
             }
         }
 
@@ -39,7 +39,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             get
             {
-                return moduleSymbol;
+                return _moduleSymbol;
             }
         }
 
@@ -63,7 +63,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             get
             {
-                return moduleSymbol.ContainingAssembly;
+                return _moduleSymbol.ContainingAssembly;
             }
         }
 
@@ -71,7 +71,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             get
             {
-                return moduleSymbol;
+                return _moduleSymbol;
             }
         }
 
@@ -79,15 +79,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             if (lazyTypes == null || lazyNamespaces == null)
             {
-                IEnumerable<IGrouping<string, TypeHandle>> groups;
+                IEnumerable<IGrouping<string, TypeDefinitionHandle>> groups;
 
                 try
                 {
-                    groups = moduleSymbol.Module.GroupTypesByNamespaceOrThrow(System.StringComparer.Ordinal);
+                    groups = _moduleSymbol.Module.GroupTypesByNamespaceOrThrow(System.StringComparer.Ordinal);
                 }
                 catch (BadImageFormatException)
                 {
-                    groups = SpecializedCollections.EmptyEnumerable<IGrouping<string, TypeHandle>>();
+                    groups = SpecializedCollections.EmptyEnumerable<IGrouping<string, TypeDefinitionHandle>>();
                 }
 
                 LoadAllMembers(groups);

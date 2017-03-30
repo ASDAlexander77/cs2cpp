@@ -180,7 +180,7 @@
                     {
                         c.TextSpan("object_cast");
                     }
-                    else if (this.TypeSource.TypeKind == TypeKind.ArrayType && Type.TypeKind == TypeKind.ArrayType)
+                    else if (this.TypeSource.TypeKind == TypeKind.Array && Type.TypeKind == TypeKind.Array)
                     {
                         c.TextSpan("reinterpret_cast<");
                         c.WriteType(Type);
@@ -210,7 +210,7 @@
                     break;
                 case ConversionKind.Identity:
                     // for string
-                    if (this.TypeSource.SpecialType == SpecialType.System_String && Type.TypeKind == TypeKind.PointerType)
+                    if (this.TypeSource.SpecialType == SpecialType.System_String && Type.TypeKind == TypeKind.Pointer)
                     {
                         c.TextSpan("&");
                         this.Operand.WriteTo(c);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -13,11 +13,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     internal abstract class SynthesizedMethodBaseSymbol : SourceMethodSymbol
     {
         protected readonly MethodSymbol BaseMethod;
-        protected TypeMap TypeMap { get; private set; }
+        internal TypeMap TypeMap { get; private set; }
 
-        private readonly string name;
-        private ImmutableArray<TypeParameterSymbol> typeParameters;
-        private ImmutableArray<ParameterSymbol> parameters;
+        private readonly string _name;
+        private ImmutableArray<TypeParameterSymbol> _typeParameters;
+        private ImmutableArray<ParameterSymbol> _parameters;
+        private TypeSymbol _iteratorElementType;
 
         protected SynthesizedMethodBaseSymbol(NamedTypeSymbol containingType,
                                               MethodSymbol baseMethod,
@@ -32,9 +33,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert((object)baseMethod != null);
 
             this.BaseMethod = baseMethod;
-            this.name = name;
+            _name = name;
 
-            this.flags = MakeFlags(
+            this.MakeFlags(
                 methodKind: MethodKind.Ordinary,
                 declarationModifiers: declarationModifiers,
                 returnsVoid: baseMethod.ReturnsVoid,
@@ -47,9 +48,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert(typeMap != null);
             Debug.Assert(this.TypeMap == null);
             Debug.Assert(!typeParameters.IsDefault);
-            Debug.Assert(this.typeParameters.IsDefault);
+            Debug.Assert(_typeParameters.IsDefault);
             this.TypeMap = typeMap;
-            this.typeParameters = typeParameters;
+            _typeParameters = typeParameters;
         }
 
         protected override void MethodChecks(DiagnosticBag diagnostics)
@@ -70,29 +71,34 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var compilation = this.DeclaringCompilation;
 
             AddSynthesizedAttribute(ref attributes,
-                compilation.SynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
+                compilation.TrySynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
         }
 
         public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
         {
-            get { return typeParameters; }
+            get { return _typeParameters; }
         }
 
         internal override int ParameterCount
         {
-            get { return this.BaseMethod.ParameterCount; }
+            get { return this.Parameters.Length; }
         }
 
         public sealed override ImmutableArray<ParameterSymbol> Parameters
         {
             get
             {
-                if (parameters.IsDefault)
+                if (_parameters.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref parameters, MakeParameters(), default(ImmutableArray<ParameterSymbol>));
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _parameters, MakeParameters(), default(ImmutableArray<ParameterSymbol>));
                 }
-                return parameters;
+                return _parameters;
             }
+        }
+
+        protected virtual ImmutableArray<TypeSymbol> ExtraSynthesizedRefParameters
+        {
+            get { return default(ImmutableArray<TypeSymbol>); }
         }
 
         protected virtual ImmutableArray<ParameterSymbol> BaseMethodParameters
@@ -107,14 +113,27 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var parameters = this.BaseMethodParameters;
             foreach (var p in parameters)
             {
-                builder.Add(new SynthesizedParameterSymbol(this, this.TypeMap.SubstituteType(((ParameterSymbol)p.OriginalDefinition).Type), ordinal++, p.RefKind, p.Name));
+                builder.Add(SynthesizedParameterSymbol.Create(this, this.TypeMap.SubstituteType(p.OriginalDefinition.Type).Type, ordinal++, p.RefKind, p.Name));
+            }
+            var extraSynthed = ExtraSynthesizedRefParameters;
+            if (!extraSynthed.IsDefaultOrEmpty)
+            {
+                foreach (var extra in extraSynthed)
+                {
+                    builder.Add(SynthesizedParameterSymbol.Create(this, this.TypeMap.SubstituteType(extra).Type, ordinal++, RefKind.Ref));
+                }
             }
             return builder.ToImmutableAndFree();
         }
 
+        internal sealed override RefKind RefKind
+        {
+            get { return this.BaseMethod.RefKind; }
+        }
+
         public sealed override TypeSymbol ReturnType
         {
-            get { return this.TypeMap.SubstituteType(((MethodSymbol)this.BaseMethod.OriginalDefinition).ReturnType); }
+            get { return this.TypeMap.SubstituteType(this.BaseMethod.OriginalDefinition.ReturnType).Type; }
         }
 
         public sealed override bool IsVararg
@@ -124,7 +143,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public sealed override string Name
         {
-            get { return name; }
+            get { return _name; }
         }
 
         public sealed override bool IsImplicitlyDeclared
@@ -135,6 +154,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal override bool IsExpressionBodied
         {
             get { return false; }
+        }
+
+        internal override TypeSymbol IteratorElementType
+        {
+            get
+            {
+                if (_iteratorElementType == null)
+                {
+                    _iteratorElementType = TypeMap.SubstituteType(BaseMethod.IteratorElementType).Type;
+                }
+                return _iteratorElementType;
+            }
+            set
+            {
+                Debug.Assert(value != null);
+                _iteratorElementType = value;
+            }
         }
     }
 }

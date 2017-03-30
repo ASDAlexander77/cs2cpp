@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,20 +13,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     {
         public static readonly ErrorMethodSymbol UnknownMethod = new ErrorMethodSymbol(ErrorTypeSymbol.UnknownResultType, ErrorTypeSymbol.UnknownResultType, string.Empty);
 
-        private readonly TypeSymbol containingType;
-        private readonly TypeSymbol returnType;
-        private readonly string name;
+        private readonly TypeSymbol _containingType;
+        private readonly TypeSymbol _returnType;
+        private readonly string _name;
 
         public ErrorMethodSymbol(TypeSymbol containingType, TypeSymbol returnType, string name)
         {
-            this.containingType = containingType;
-            this.returnType = returnType;
-            this.name = name;
+            _containingType = containingType;
+            _returnType = returnType;
+            _name = name;
         }
 
         public override string Name
         {
-            get { return this.name; }
+            get { return _name; }
         }
 
         internal sealed override bool HasSpecialName
@@ -99,7 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return this.containingType; }
+            get { return _containingType; }
         }
 
         internal override Microsoft.Cci.CallingConvention CallingConvention
@@ -113,6 +113,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
+        {
+            get { return ImmutableArray<CustomModifier>.Empty; }
+        }
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
         {
             get { return ImmutableArray<CustomModifier>.Empty; }
         }
@@ -147,9 +152,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return ImmutableArray<TypeSymbol>.Empty; }
         }
 
+        internal override RefKind RefKind
+        {
+            get { return RefKind.None; }
+        }
+
         public override TypeSymbol ReturnType
         {
-            get { return this.returnType; }
+            get { return _returnType; }
         }
 
         public override bool ReturnsVoid
@@ -181,7 +191,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                switch (name)
+                switch (_name)
                 {
                     case WellKnownMemberNames.InstanceConstructorName:
                         return MethodKind.Constructor;
@@ -202,9 +212,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return false;
         }
 
-        internal override bool IsMetadataFinal()
+        internal override bool IsMetadataFinal
         {
-            return false;
+            get
+            {
+                return false;
+            }
         }
 
         internal sealed override bool RequiresSecurityObject
@@ -232,7 +245,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return false; }
         }
 
-        internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
+        internal sealed override IEnumerable<Cci.SecurityAttribute> GetSecurityInformation()
+        {
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
         {
             throw ExceptionUtilities.Unreachable;
         }

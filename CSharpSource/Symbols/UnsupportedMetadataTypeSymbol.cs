@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 
@@ -6,11 +6,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal sealed class UnsupportedMetadataTypeSymbol : ErrorTypeSymbol
     {
-        private readonly BadImageFormatException mrEx;
+        private readonly BadImageFormatException _mrEx;
 
         internal UnsupportedMetadataTypeSymbol(BadImageFormatException mrEx = null)
         {
-            this.mrEx = mrEx;
+            _mrEx = mrEx;
         }
 
         internal override DiagnosticInfo ErrorInfo

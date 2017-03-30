@@ -1,11 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -18,7 +14,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Returns the referenced Compilation.
         /// </summary>
-        public new CSharpCompilation Compilation { get; private set; }
+        public new CSharpCompilation Compilation { get; }
 
         internal override Compilation CompilationCore
         {
@@ -38,6 +34,17 @@ namespace Microsoft.CodeAnalysis.CSharp
             : base(GetProperties(compilation, aliases, embedInteropTypes))
         {
             this.Compilation = compilation;
+        }
+
+        private CSharpCompilationReference(CSharpCompilation compilation, MetadataReferenceProperties properties)
+            : base(properties)
+        {
+            this.Compilation = compilation;
+        }
+
+        internal override CompilationReference WithPropertiesImpl(MetadataReferenceProperties properties)
+        {
+            return new CSharpCompilationReference(Compilation, properties);
         }
 
         private string GetDebuggerDisplay()

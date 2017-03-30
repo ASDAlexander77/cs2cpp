@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.Text;
 
@@ -11,15 +11,14 @@ namespace Microsoft.CodeAnalysis
     public abstract class SyntaxWalker
     {
         /// <summary>
-        /// True if this walker will descend into structured trivia.
+        /// Syntax the <see cref="SyntaxWalker"/> should descent into.
         /// </summary>
-        protected readonly SyntaxWalkerDepth Depth;
+        protected SyntaxWalkerDepth Depth { get; }
 
         /// <summary>
         /// Creates a new walker instance.
         /// </summary>
-        /// <param name="depth">specify how much this walker will descent into
-        /// trivia.</param>
+        /// <param name="depth">Syntax the <see cref="SyntaxWalker"/> should descent into.</param>
         protected SyntaxWalker(SyntaxWalkerDepth depth = SyntaxWalkerDepth.Node)
         {
             this.Depth = depth;

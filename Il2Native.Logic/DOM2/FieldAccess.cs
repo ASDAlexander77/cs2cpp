@@ -33,7 +33,7 @@ namespace Il2Native.Logic.DOM2
             var memberAccessExpressionSyntax = boundFieldAccess.Syntax as MemberAccessExpressionSyntax;
             if (memberAccessExpressionSyntax != null)
             {
-                this.PointerAccess = memberAccessExpressionSyntax.Kind == SyntaxKind.PointerMemberAccessExpression;
+                this.PointerAccess = memberAccessExpressionSyntax.Kind() == SyntaxKind.PointerMemberAccessExpression;
             }
         }
 

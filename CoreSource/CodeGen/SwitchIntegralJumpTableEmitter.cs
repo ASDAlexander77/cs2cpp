@@ -1,10 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
+using System.Reflection.Metadata;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeGen
@@ -14,33 +14,32 @@ namespace Microsoft.CodeAnalysis.CodeGen
     /// </summary>
     internal partial struct SwitchIntegralJumpTableEmitter
     {
-        private readonly ILBuilder builder;
+        private readonly ILBuilder _builder;
 
         /// <summary>
         /// Switch key for the jump table
         /// </summary>
-        private readonly LocalDefinition keyLocal;
-        private readonly int keyArgument;
+        private readonly LocalOrParameter _key;
 
         /// <summary>
         /// Primitive type of the switch key
         /// </summary>
-        private readonly Microsoft.Cci.PrimitiveTypeCode keyTypeCode;
+        private readonly Cci.PrimitiveTypeCode _keyTypeCode;
 
         /// <summary>
         /// Fall through label for the jump table
         /// </summary>
-        private readonly object fallThroughLabel;
+        private readonly object _fallThroughLabel;
 
         /// <summary>
         /// Integral case labels sorted and indexed by their ConstantValue
         /// </summary>
-        private readonly ImmutableArray<KeyValuePair<ConstantValue, object>> sortedCaseLabels;
+        private readonly ImmutableArray<KeyValuePair<ConstantValue, object>> _sortedCaseLabels;
 
         // threshold at which binary search stops partitioning.
         // if a search leaf has less than LinearSearchThreshold buckets
         // we just go through buckets linearly.
-        // We chose 3 here because it is where number of branches to reach fallthrough 
+        // We chose 3 here because it is where number of branches to reach fall-through 
         // is the same for linear and binary search.
         private const int LinearSearchThreshold = 3;
 
@@ -48,36 +47,18 @@ namespace Microsoft.CodeAnalysis.CodeGen
             ILBuilder builder,
             KeyValuePair<ConstantValue, object>[] caseLabels,
             object fallThroughLabel,
-            Microsoft.Cci.PrimitiveTypeCode keyTypeCode,
-            LocalDefinition keyLocal = null,
-            int keyArgument = -1)
+            Cci.PrimitiveTypeCode keyTypeCode,
+            LocalOrParameter key)
         {
-            Debug.Assert(keyArgument == -1 ^ keyLocal == null, "cannot have both valid key argument and valid key local");
-
-            this.builder = builder;
-            this.keyLocal = keyLocal;
-            this.keyArgument = keyArgument;
-            this.keyTypeCode = keyTypeCode;
-            this.fallThroughLabel = fallThroughLabel;
+            _builder = builder;
+            _key = key;
+            _keyTypeCode = keyTypeCode;
+            _fallThroughLabel = fallThroughLabel;
 
             // Sort the switch case labels, see comments below for more details.
             Debug.Assert(caseLabels.Length > 0);
             Array.Sort(caseLabels, CompareIntegralSwitchLabels);
-            sortedCaseLabels = ImmutableArray.Create<KeyValuePair<ConstantValue, object>>(caseLabels);
-        }
-
-        private void EmitKeyLoad()
-        {
-            var local = this.keyLocal;
-
-            if (local != null)
-            {
-                builder.EmitLocalLoad(this.keyLocal);
-            }
-            else
-            {
-                builder.EmitLoadArgumentOpcode(this.keyArgument);
-            }
+            _sortedCaseLabels = ImmutableArray.Create(caseLabels);
         }
 
         internal void EmitJumpTable()
@@ -114,14 +95,14 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
             // (a) Sort switch labels: This was done in the constructor
 
-            Debug.Assert(!this.sortedCaseLabels.IsEmpty);
-            var sortedCaseLabels = this.sortedCaseLabels;
+            Debug.Assert(!_sortedCaseLabels.IsEmpty);
+            var sortedCaseLabels = _sortedCaseLabels;
 
             int endLabelIndex = sortedCaseLabels.Length - 1;
             int startLabelIndex;
 
             // Check for a label with ConstantValue.Null.
-            // Soring ensures that if we do have one, it will be
+            // Sorting ensures that if we do have one, it will be
             // the first label in the sorted list.
             if (sortedCaseLabels[0].Key != ConstantValue.Null)
             {
@@ -137,13 +118,17 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
             if (startLabelIndex <= endLabelIndex)
             {
-                // We have atleast one non-null case label, emit jump table
+                // We have at least one non-null case label, emit jump table
 
                 // (b) Generate switch buckets
                 ImmutableArray<SwitchBucket> switchBuckets = this.GenerateSwitchBuckets(startLabelIndex, endLabelIndex);
 
                 // (c) Emit switch buckets
                 this.EmitSwitchBuckets(switchBuckets, 0, switchBuckets.Length - 1);
+            }
+            else
+            {
+                _builder.EmitBranch(ILOpCode.Br, _fallThroughLabel);
             }
         }
 
@@ -191,7 +176,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         private ImmutableArray<SwitchBucket> GenerateSwitchBuckets(int startLabelIndex, int endLabelIndex)
         {
             Debug.Assert(startLabelIndex >= 0 && startLabelIndex <= endLabelIndex);
-            Debug.Assert(this.sortedCaseLabels.Length > endLabelIndex);
+            Debug.Assert(_sortedCaseLabels.Length > endLabelIndex);
 
             //  Start with empty stack of buckets.
             var switchBucketsStack = ArrayBuilder<SwitchBucket>.GetInstance();
@@ -232,22 +217,28 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
             Debug.Assert(!switchBucketsStack.IsEmpty());
 
-            // crumble leaf buckets that are too small
+            // crumble leaf buckets into degenerate buckets where possible
             var crumbled = ArrayBuilder<SwitchBucket>.GetInstance();
             foreach (var uncrumbled in switchBucketsStack)
             {
-                if (uncrumbled.BucketCost > uncrumbled.LabelsCount)
+                var degenerateSplit = uncrumbled.DegenerateBucketSplit;
+                switch (degenerateSplit)
                 {
-                    // this bucket is no better than testing each label individually.
-                    // we do not want to keep it.
-                    for (int i = uncrumbled.StartLabelIndex, l = uncrumbled.EndLabelIndex; i <= l; i++)
-                    {
-                        crumbled.Add(new SwitchBucket(sortedCaseLabels, i));
-                    }
-                }
-                else
-                {
-                    crumbled.Add(uncrumbled);
+                    case -1:
+                        // cannot be split
+                        crumbled.Add(uncrumbled);
+                        break;
+
+                    case 0:
+                        // already degenerate
+                        crumbled.Add(new SwitchBucket(_sortedCaseLabels, uncrumbled.StartLabelIndex, uncrumbled.EndLabelIndex, isDegenerate: true));
+                        break;
+
+                    default:
+                        // can split
+                        crumbled.Add(new SwitchBucket(_sortedCaseLabels, uncrumbled.StartLabelIndex, degenerateSplit - 1, isDegenerate: true));
+                        crumbled.Add(new SwitchBucket(_sortedCaseLabels, degenerateSplit, uncrumbled.EndLabelIndex, isDegenerate: true));
+                        break;
                 }
             }
 
@@ -258,7 +249,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
         private SwitchBucket CreateNextBucket(int startLabelIndex, int endLabelIndex)
         {
             Debug.Assert(startLabelIndex >= 0 && startLabelIndex <= endLabelIndex);
-            return new SwitchBucket(this.sortedCaseLabels, startLabelIndex);
+            return new SwitchBucket(_sortedCaseLabels, startLabelIndex);
         }
 
         #endregion
@@ -273,10 +264,10 @@ namespace Microsoft.CodeAnalysis.CodeGen
                 this.EmitSwitchBucket(switchBuckets[i], nextBucketLabel);
 
                 //  nextBucketLabel:
-                builder.MarkLabel(nextBucketLabel);
+                _builder.MarkLabel(nextBucketLabel);
             }
 
-            this.EmitSwitchBucket(switchBuckets[high], this.fallThroughLabel);
+            this.EmitSwitchBucket(switchBuckets[high], _fallThroughLabel);
         }
 
         private void EmitSwitchBuckets(ImmutableArray<SwitchBucket> switchBuckets, int low, int high)
@@ -305,7 +296,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
             //  if(key > midLabelConstant)
             //      goto secondHalfLabel;
             this.EmitCondBranchForSwitch(
-                this.keyTypeCode.IsUnsigned() ? ILOpCode.Bgt_un : ILOpCode.Bgt,
+                _keyTypeCode.IsUnsigned() ? ILOpCode.Bgt_un : ILOpCode.Bgt,
                 pivotConstant,
                 secondHalfLabel);
 
@@ -314,11 +305,11 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
             // NOTE:    Typically marking a synthetic label needs a hidden sequence point.
             // NOTE:    Otherwise if you step (F11) to this label debugger may highlight previous (lexically) statement.
-            // NOTE:    We do not need a hiden point in this implementation since we do not interleave jump table
+            // NOTE:    We do not need a hidden point in this implementation since we do not interleave jump table
             // NOTE:    and cases so the "previous" statement will always be "switch".
 
             //  secondHalfLabel:
-            builder.MarkLabel(secondHalfLabel);
+            _builder.MarkLabel(secondHalfLabel);
 
             // Emit second half
             this.EmitSwitchBuckets(switchBuckets, mid, high);
@@ -337,20 +328,26 @@ namespace Microsoft.CodeAnalysis.CodeGen
             }
             else
             {
-                //  Emit key normalized to startConstant (i.e. key - startConstant)
-                //  switch (N, label1, label2... labelN)
-                //  goto fallThroughLabel;
+                if (switchBucket.IsDegenerate)
+                {
+                    EmitRangeCheckedBranch(switchBucket.StartConstant, switchBucket.EndConstant, switchBucket[0].Value);
+                }
+                else
+                {
+                    //  Emit key normalized to startConstant (i.e. key - startConstant)
+                    this.EmitNormalizedSwitchKey(switchBucket.StartConstant, switchBucket.EndConstant, bucketFallThroughLabel);
 
-                this.EmitNormalizedSwitchKey(switchBucket.StartConstant, switchBucket.EndConstant, bucketFallThroughLabel);
+                    // Create the labels array for emitting a switch instruction for the bucket
+                    object[] labels = this.CreateBucketLabels(switchBucket);
 
-                // Create the labels array for emitting a switch instruction for the bucket
-                object[] labels = this.CreateBucketLabels(switchBucket);
-
-                // Emit the switch instruction
-                builder.EmitSwitch(labels);
+                    //  switch (N, label1, label2... labelN)
+                    // Emit the switch instruction
+                    _builder.EmitSwitch(labels);
+                }
             }
 
-            builder.EmitBranch(ILOpCode.Br, bucketFallThroughLabel);
+            //  goto fallThroughLabel;
+            _builder.EmitBranch(ILOpCode.Br, bucketFallThroughLabel);
         }
 
         private object[] CreateBucketLabels(SwitchBucket switchBucket)
@@ -401,7 +398,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
                     continue;
                 }
 
-                labels[i] = fallThroughLabel;
+                labels[i] = _fallThroughLabel;
             }
 
             Debug.Assert(nextCaseIndex >= switchBucket.LabelsCount);
@@ -414,7 +411,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
         private void EmitCondBranchForSwitch(ILOpCode branchCode, ConstantValue constant, object targetLabel)
         {
-            Debug.Assert(branchCode.IsBranchToLabel());
+            Debug.Assert(branchCode.IsBranch());
             Debug.Assert(constant != null &&
                 SwitchConstantValueHelper.IsValidSwitchCaseLabelConstant(constant));
             Debug.Assert(targetLabel != null);
@@ -423,9 +420,9 @@ namespace Microsoft.CodeAnalysis.CodeGen
             // ldc constant
             // branch branchCode targetLabel
 
-            EmitKeyLoad();
-            builder.EmitConstantValue(constant);
-            builder.EmitBranch(branchCode, targetLabel, GetReverseBranchCode(branchCode));
+            _builder.EmitLoad(_key);
+            _builder.EmitConstantValue(constant);
+            _builder.EmitBranch(branchCode, targetLabel, GetReverseBranchCode(branchCode));
         }
 
         private void EmitEqBranchForSwitch(ConstantValue constant, object targetLabel)
@@ -434,19 +431,45 @@ namespace Microsoft.CodeAnalysis.CodeGen
                 SwitchConstantValueHelper.IsValidSwitchCaseLabelConstant(constant));
             Debug.Assert(targetLabel != null);
 
-            EmitKeyLoad();
+            _builder.EmitLoad(_key);
 
             if (constant.IsDefaultValue)
             {
                 // ldloc key
                 // brfalse targetLabel
-                builder.EmitBranch(ILOpCode.Brfalse, targetLabel);
+                _builder.EmitBranch(ILOpCode.Brfalse, targetLabel);
             }
             else
             {
-                builder.EmitConstantValue(constant);
-                builder.EmitBranch(ILOpCode.Beq, targetLabel);
+                _builder.EmitConstantValue(constant);
+                _builder.EmitBranch(ILOpCode.Beq, targetLabel);
             }
+        }
+
+        private void EmitRangeCheckedBranch(ConstantValue startConstant, ConstantValue endConstant, object targetLabel)
+        {
+            _builder.EmitLoad(_key);
+
+            // Normalize the key to 0 if needed
+
+            // Emit:    ldc constant
+            //          sub
+            if (!startConstant.IsDefaultValue)
+            {
+                _builder.EmitConstantValue(startConstant);
+                _builder.EmitOpCode(ILOpCode.Sub);
+            }
+
+            if (_keyTypeCode.Is64BitIntegral())
+            {
+                _builder.EmitLongConstant(endConstant.Int64Value - startConstant.Int64Value);
+            }
+            else
+            {
+                _builder.EmitIntConstant(endConstant.Int32Value - startConstant.Int32Value);
+            }
+
+            _builder.EmitBranch(ILOpCode.Ble_un, targetLabel, ILOpCode.Bgt_un);
         }
 
         private static ILOpCode GetReverseBranchCode(ILOpCode branchCode)
@@ -469,14 +492,13 @@ namespace Microsoft.CodeAnalysis.CodeGen
                     return ILOpCode.Ble_un;
 
                 default:
-                    Debug.Assert(false, "Unhandled branch opcode for switch emitter");
-                    return ILOpCode.Nop;
+                    throw ExceptionUtilities.UnexpectedValue(branchCode);
             }
         }
 
         private void EmitNormalizedSwitchKey(ConstantValue startConstant, ConstantValue endConstant, object bucketFallThroughLabel)
         {
-            EmitKeyLoad();
+            _builder.EmitLoad(_key);
 
             // Normalize the key to 0 if needed
 
@@ -484,15 +506,15 @@ namespace Microsoft.CodeAnalysis.CodeGen
             //          sub
             if (!startConstant.IsDefaultValue)
             {
-                builder.EmitConstantValue(startConstant);
-                builder.EmitOpCode(ILOpCode.Sub);
+                _builder.EmitConstantValue(startConstant);
+                _builder.EmitOpCode(ILOpCode.Sub);
             }
 
             // range-check normalized value if needed
             EmitRangeCheckIfNeeded(startConstant, endConstant, bucketFallThroughLabel);
 
             // truncate key to 32bit
-            builder.EmitNumericConversion(this.keyTypeCode, Microsoft.Cci.PrimitiveTypeCode.UInt32, false);
+            _builder.EmitNumericConversion(_keyTypeCode, Microsoft.Cci.PrimitiveTypeCode.UInt32, false);
         }
 
         private void EmitRangeCheckIfNeeded(ConstantValue startConstant, ConstantValue endConstant, object bucketFallThroughLabel)
@@ -500,7 +522,7 @@ namespace Microsoft.CodeAnalysis.CodeGen
             // switch treats key as an unsigned int.
             // this ensures that normalization does not introduce [over|under]flows issues with 32bit or shorter keys.
             // 64bit values, however must be checked before 32bit truncation happens.
-            if (this.keyTypeCode.Is64BitIntegral())
+            if (_keyTypeCode.Is64BitIntegral())
             {
                 // Dup(normalized);
                 // if ((ulong)(normalized) > (ulong)(endConstant - startConstant)) 
@@ -512,19 +534,18 @@ namespace Microsoft.CodeAnalysis.CodeGen
 
                 var inRangeLabel = new object();
 
-                builder.EmitOpCode(ILOpCode.Dup);
-                builder.EmitLongConstant(endConstant.Int64Value - startConstant.Int64Value);
-                builder.EmitBranch(ILOpCode.Ble_un, inRangeLabel, ILOpCode.Bgt_un);
-                builder.EmitOpCode(ILOpCode.Pop);
-                builder.EmitBranch(ILOpCode.Br, bucketFallThroughLabel);
+                _builder.EmitOpCode(ILOpCode.Dup);
+                _builder.EmitLongConstant(endConstant.Int64Value - startConstant.Int64Value);
+                _builder.EmitBranch(ILOpCode.Ble_un, inRangeLabel, ILOpCode.Bgt_un);
+                _builder.EmitOpCode(ILOpCode.Pop);
+                _builder.EmitBranch(ILOpCode.Br, bucketFallThroughLabel);
                 // If we get to inRangeLabel, we should have key on stack, adjust for that.
                 // builder cannot infer this since it has not seen all branches, 
                 // but it will verify that our Adjustment is valid when more branches are known.
-                builder.AdjustStack(+1);
-                builder.MarkLabel(inRangeLabel);
+                _builder.AdjustStack(+1);
+                _builder.MarkLabel(inRangeLabel);
             }
         }
-
         #endregion
     }
 }

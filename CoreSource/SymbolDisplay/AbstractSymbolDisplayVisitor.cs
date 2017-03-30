@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Linq;
@@ -6,23 +6,22 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.SymbolDisplay
 {
-    internal abstract partial class AbstractSymbolDisplayVisitor<TSemanticModel> : SymbolVisitor
-        where TSemanticModel : SemanticModel
+    internal abstract partial class AbstractSymbolDisplayVisitor : SymbolVisitor
     {
         protected readonly ArrayBuilder<SymbolDisplayPart> builder;
         protected readonly SymbolDisplayFormat format;
         protected readonly bool isFirstSymbolVisited;
 
-        protected readonly TSemanticModel semanticModelOpt;
+        protected readonly SemanticModel semanticModelOpt;
         protected readonly int positionOpt;
 
-        private AbstractSymbolDisplayVisitor<TSemanticModel> lazyNotFirstVisitor;
+        private AbstractSymbolDisplayVisitor _lazyNotFirstVisitor;
 
         protected AbstractSymbolDisplayVisitor(
             ArrayBuilder<SymbolDisplayPart> builder,
             SymbolDisplayFormat format,
             bool isFirstSymbolVisited,
-            TSemanticModel semanticModelOpt,
+            SemanticModel semanticModelOpt,
             int positionOpt)
         {
             Debug.Assert(format != null);
@@ -37,24 +36,24 @@ namespace Microsoft.CodeAnalysis.SymbolDisplay
             // If we're not the first symbol visitor, then we will just recurse into ourselves.
             if (!isFirstSymbolVisited)
             {
-                lazyNotFirstVisitor = this;
+                _lazyNotFirstVisitor = this;
             }
         }
 
-        protected AbstractSymbolDisplayVisitor<TSemanticModel> NotFirstVisitor
+        protected AbstractSymbolDisplayVisitor NotFirstVisitor
         {
             get
             {
-                if (lazyNotFirstVisitor == null)
+                if (_lazyNotFirstVisitor == null)
                 {
-                    lazyNotFirstVisitor = MakeNotFirstVisitor();
+                    _lazyNotFirstVisitor = MakeNotFirstVisitor();
                 }
 
-                return lazyNotFirstVisitor;
+                return _lazyNotFirstVisitor;
             }
         }
 
-        protected abstract AbstractSymbolDisplayVisitor<TSemanticModel> MakeNotFirstVisitor();
+        protected abstract AbstractSymbolDisplayVisitor MakeNotFirstVisitor();
 
         protected abstract void AddLiteralValue(SpecialType type, object value);
         protected abstract void AddExplicitlyCastedLiteralValue(INamedTypeSymbol namedType, SpecialType type, object value);
@@ -166,7 +165,7 @@ namespace Microsoft.CodeAnalysis.SymbolDisplay
             var result = constantValueULong;
 
             // We will not optimize this code further to keep it maintainable. There are some
-            // boundary checks that can be applied to minimize the comparsions required. This code
+            // boundary checks that can be applied to minimize the comparisons required. This code
             // works the same for the best/worst case. In general the number of items in an enum are
             // sufficiently small and not worth the optimization.
             if (result != 0)
@@ -233,7 +232,7 @@ namespace Microsoft.CodeAnalysis.SymbolDisplay
             }
         }
 
-        private void GetSortedEnumFields(
+        private static void GetSortedEnumFields(
             INamedTypeSymbol enumType,
             ArrayBuilder<EnumField> enumFields)
         {

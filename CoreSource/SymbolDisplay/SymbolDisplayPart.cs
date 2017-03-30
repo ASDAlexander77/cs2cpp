@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 
@@ -13,24 +13,21 @@ namespace Microsoft.CodeAnalysis
     /// <seealso cref="SymbolDisplayPartKind"/>
     public struct SymbolDisplayPart
     {
-        private const string KindKey = "Kind";
-        private const string TextKey = "Text";
-
-        private readonly SymbolDisplayPartKind kind;
-        private readonly string text;
-        private readonly ISymbol symbol;
+        private readonly SymbolDisplayPartKind _kind;
+        private readonly string _text;
+        private readonly ISymbol _symbol;
 
         /// <summary>
         /// Gets the kind of this display part.
         /// </summary>
-        public SymbolDisplayPartKind Kind { get { return kind; } }
+        public SymbolDisplayPartKind Kind { get { return _kind; } }
 
         /// <summary>
         /// Gets the symbol associated with this display part, if there is one.
         /// For example, the <see cref="ITypeSymbol"/> associated with a class name.
         /// </summary>
         /// <returns></returns>
-        public ISymbol Symbol { get { return symbol; } }
+        public ISymbol Symbol { get { return _symbol; } }
 
         /// <summary>
         /// Construct a non-formattable <see cref="SymbolDisplayPart"/> (i.e. with a fixed string value).
@@ -42,17 +39,17 @@ namespace Microsoft.CodeAnalysis
         {
             if (!kind.IsValid())
             {
-                throw new ArgumentOutOfRangeException("kind");
+                throw new ArgumentOutOfRangeException(nameof(kind));
             }
 
             if (text == null)
             {
-                throw new ArgumentNullException("text");
+                throw new ArgumentNullException(nameof(text));
             }
 
-            this.kind = kind;
-            this.text = text;
-            this.symbol = symbol;
+            _kind = kind;
+            _text = text;
+            _symbol = symbol;
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public override string ToString()
         {
-            return text;
+            return _text;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Roslyn.Utilities;
@@ -18,19 +17,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     // That is, for a generic type C<T> this is the instance type C<T>.  
     internal sealed partial class SourceNamedTypeSymbol : SourceMemberContainerTypeSymbol, IAttributeTargetSymbol
     {
-        private ImmutableArray<TypeParameterSymbol> lazyTypeParameters;
+        private ImmutableArray<TypeParameterSymbol> _lazyTypeParameters;
 
         /// <summary>
         /// A collection of type parameter constraints, populated when
         /// constraints for the first type parameter are requested.
         /// </summary>
-        private ImmutableArray<TypeParameterConstraintClause> lazyTypeParameterConstraints;
+        private ImmutableArray<TypeParameterConstraintClause> _lazyTypeParameterConstraints;
 
-        private CustomAttributesBag<CSharpAttributeData> lazyCustomAttributesBag;
+        private CustomAttributesBag<CSharpAttributeData> _lazyCustomAttributesBag;
 
-        private string lazyDocComment;
+        private string _lazyDocComment;
 
-        private ThreeState lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.Unknown;
+        private ThreeState _lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.Unknown;
 
         protected override Location GetCorrespondingBaseListLocation(NamedTypeSymbol @base)
         {
@@ -45,20 +44,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     continue;
                 }
-                SeparatedSyntaxList<TypeSyntax> inheritedTypeDecls = typeBlock.BaseList.Types;
+                SeparatedSyntaxList<BaseTypeSyntax> inheritedTypeDecls = bases.Types;
 
                 var baseBinder = this.DeclaringCompilation.GetBinder(bases);
                 baseBinder = baseBinder.WithAdditionalFlagsAndContainingMemberOrLambda(BinderFlags.SuppressConstraintChecks, this);
 
                 if ((object)backupLocation == null)
                 {
-                    backupLocation = ((TypeSyntax)inheritedTypeDecls[0]).GetLocation();
+                    backupLocation = inheritedTypeDecls[0].Type.GetLocation();
                 }
 
-                foreach (TypeSyntax t in inheritedTypeDecls)
+                foreach (BaseTypeSyntax baseTypeSyntax in inheritedTypeDecls)
                 {
+                    TypeSyntax t = baseTypeSyntax.Type;
                     TypeSymbol bt = baseBinder.BindType(t, unusedDiagnostics);
-                   
+
                     if (bt == @base)
                     {
                         unusedDiagnostics.Free();
@@ -82,7 +82,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (containingSymbol.Kind == SymbolKind.NamedType)
             {
                 // Nested types are never unified.
-                lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.False;
+                _lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.False;
+            }
+
+            if (declaration.Arity == 0 && declaration.HasConstraints)
+            {
+                foreach (var syntaxRef in this.SyntaxReferences)
+                {
+                    var constraintClauses = GetConstraintClauses((CSharpSyntaxNode)syntaxRef.GetSyntax());
+                    ReportErrorIfHasConstraints(constraintClauses, diagnostics);
+                }
             }
         }
 
@@ -90,7 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private static SyntaxToken GetName(CSharpSyntaxNode node)
         {
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 case SyntaxKind.EnumDeclaration:
                     return ((EnumDeclarationSyntax)node).Identifier;
@@ -107,7 +116,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override string GetDocumentationCommentXml(CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return SourceDocumentationCommentUtils.GetAndCacheDocumentationComment(this, expandIncludes, ref lazyDocComment);
+            return SourceDocumentationCommentUtils.GetAndCacheDocumentationComment(this, expandIncludes, ref _lazyDocComment);
         }
 
         #endregion
@@ -132,7 +141,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 var syntaxTree = syntaxRef.SyntaxTree;
 
                 TypeParameterListSyntax tpl;
-                switch (typeDecl.Kind)
+                SyntaxKind typeKind = typeDecl.Kind();
+                switch (typeKind)
                 {
                     case SyntaxKind.ClassDeclaration:
                     case SyntaxKind.StructDeclaration:
@@ -147,14 +157,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     case SyntaxKind.EnumDeclaration:
                     default:
                         // there is no such thing as a generic enum, so code should never reach here.
-                        throw ExceptionUtilities.UnexpectedValue(typeDecl.Kind);
+                        throw ExceptionUtilities.UnexpectedValue(typeDecl.Kind());
                 }
 
+                bool isInterfaceOrDelegate = typeKind == SyntaxKind.InterfaceDeclaration || typeKind == SyntaxKind.DelegateDeclaration;
                 var parameterBuilder = new List<TypeParameterBuilder>();
                 parameterBuilders1.Add(parameterBuilder);
                 int i = 0;
                 foreach (var tp in tpl.Parameters)
                 {
+                    if (tp.VarianceKeyword.Kind() != SyntaxKind.None &&
+                        !isInterfaceOrDelegate)
+                    {
+                        diagnostics.Add(ErrorCode.ERR_IllegalVarianceSyntax, tp.VarianceKeyword.GetLocation());
+                    }
+
                     var name = typeParameterNames[i];
                     var location = new SourceLocation(tp.Identifier);
                     var varianceKind = typeParameterVarianceKeywords[i];
@@ -231,17 +248,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private TypeParameterConstraintClause GetTypeParameterConstraintClause(int ordinal)
         {
-            if (this.lazyTypeParameterConstraints.IsDefault)
+            if (_lazyTypeParameterConstraints.IsDefault)
             {
                 var diagnostics = DiagnosticBag.GetInstance();
-                if (ImmutableInterlocked.InterlockedInitialize(ref this.lazyTypeParameterConstraints, MakeTypeParameterConstraints(diagnostics)))
+                if (ImmutableInterlocked.InterlockedInitialize(ref _lazyTypeParameterConstraints, MakeTypeParameterConstraints(diagnostics)))
                 {
-                    this.AddSemanticDiagnostics(diagnostics);
+                    this.AddDeclarationDiagnostics(diagnostics);
                 }
                 diagnostics.Free();
             }
 
-            var clauses = this.lazyTypeParameterConstraints;
+            var clauses = _lazyTypeParameterConstraints;
             return (clauses.Length > 0) ? clauses[ordinal] : null;
         }
 
@@ -268,7 +285,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     // Wrap binder from factory in a generic constraints specific binder 
                     // to avoid checking constraints when binding type names.
                     Debug.Assert(!binder.Flags.Includes(BinderFlags.GenericConstraintsClause));
-                    binder = binder.WithAdditionalFlags(BinderFlags.GenericConstraintsClause | BinderFlags.SuppressConstraintChecks);
+                    binder = binder.WithContainingMemberOrLambda(this).WithAdditionalFlags(BinderFlags.GenericConstraintsClause | BinderFlags.SuppressConstraintChecks);
 
                     var constraints = binder.BindTypeParameterConstraintClauses(this, typeParameters, constraintClauses, diagnostics);
                     Debug.Assert(constraints.Length == arity);
@@ -299,7 +316,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private static SyntaxList<TypeParameterConstraintClauseSyntax> GetConstraintClauses(CSharpSyntaxNode node)
         {
-            switch (node.Kind)
+            switch (node.Kind())
             {
                 case SyntaxKind.ClassDeclaration:
                 case SyntaxKind.StructDeclaration:
@@ -308,7 +325,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SyntaxKind.DelegateDeclaration:
                     return ((DelegateDeclarationSyntax)node).ConstraintClauses;
                 default:
-                    throw ExceptionUtilities.UnexpectedValue(node.Kind);
+                    throw ExceptionUtilities.UnexpectedValue(node.Kind());
             }
         }
 
@@ -362,22 +379,35 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
+        }
+
         public override ImmutableArray<TypeParameterSymbol> TypeParameters
         {
             get
             {
-                if (lazyTypeParameters.IsDefault)
+                if (_lazyTypeParameters.IsDefault)
                 {
                     var diagnostics = DiagnosticBag.GetInstance();
-                    if (ImmutableInterlocked.InterlockedInitialize(ref lazyTypeParameters, MakeTypeParameters(diagnostics)))
+                    if (ImmutableInterlocked.InterlockedInitialize(ref _lazyTypeParameters, MakeTypeParameters(diagnostics)))
                     {
-                        AddSemanticDiagnostics(diagnostics);
+                        AddDeclarationDiagnostics(diagnostics);
                     }
 
                     diagnostics.Free();
                 }
 
-                return lazyTypeParameters;
+                return _lazyTypeParameters;
             }
         }
 
@@ -415,12 +445,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     case TypeKind.Struct:
                     case TypeKind.Class:
-                        if ((object)this.PrimaryCtor != null)
-                        {
-                            // Primary Constructor attributes go on the type.
-                            return AttributeLocation.Type | AttributeLocation.Method;
-                        }
-
                         return AttributeLocation.Type;
 
                     default:
@@ -437,20 +461,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         private CustomAttributesBag<CSharpAttributeData> GetAttributesBag()
         {
-            var bag = this.lazyCustomAttributesBag;
+            var bag = _lazyCustomAttributesBag;
             if (bag != null && bag.IsSealed)
             {
                 return bag;
             }
 
-            if (LoadAndValidateAttributes(OneOrMany.Create(this.GetAttributeDeclarations()), ref lazyCustomAttributesBag))
+            if (LoadAndValidateAttributes(OneOrMany.Create(this.GetAttributeDeclarations()), ref _lazyCustomAttributesBag))
             {
                 var completed = state.NotePartComplete(CompletionPart.Attributes);
                 Debug.Assert(completed);
             }
 
-            Debug.Assert(lazyCustomAttributesBag.IsSealed);
-            return this.lazyCustomAttributesBag;
+            Debug.Assert(_lazyCustomAttributesBag.IsSealed);
+            return _lazyCustomAttributesBag;
         }
 
         /// <summary>
@@ -468,9 +492,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <remarks>
         /// Forces binding and decoding of attributes.
         /// </remarks>
-        internal TypeWellKnownAttributeData GetDecodedWellKnownAttributeData()
+        private TypeWellKnownAttributeData GetDecodedWellKnownAttributeData()
         {
-            var attributesBag = this.lazyCustomAttributesBag;
+            var attributesBag = _lazyCustomAttributesBag;
             if (attributesBag == null || !attributesBag.IsDecodedWellKnownAttributeDataComputed)
             {
                 attributesBag = this.GetAttributesBag();
@@ -487,7 +511,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         internal CommonTypeEarlyWellKnownAttributeData GetEarlyDecodedWellKnownAttributeData()
         {
-            var attributesBag = this.lazyCustomAttributesBag;
+            var attributesBag = _lazyCustomAttributesBag;
             if (attributesBag == null || !attributesBag.IsEarlyDecodedWellKnownAttributeDataComputed)
             {
                 attributesBag = this.GetAttributesBag();
@@ -591,7 +615,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                var lazyCustomAttributesBag = this.lazyCustomAttributesBag;
+                var lazyCustomAttributesBag = _lazyCustomAttributesBag;
                 if (lazyCustomAttributesBag != null && lazyCustomAttributesBag.IsEarlyDecodedWellKnownAttributeDataComputed)
                 {
                     var data = (CommonTypeEarlyWellKnownAttributeData)lazyCustomAttributesBag.EarlyDecodedWellKnownAttributeData;
@@ -646,6 +670,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 arguments.GetOrCreateData<TypeWellKnownAttributeData>().HasSerializableAttribute = true;
             }
+            else if (attribute.IsTargetAttribute(this, AttributeDescription.ExcludeFromCodeCoverageAttribute))
+            {
+                arguments.GetOrCreateData<TypeWellKnownAttributeData>().HasExcludeFromCodeCoverageAttribute = true;
+            }
             else if (attribute.IsTargetAttribute(this, AttributeDescription.StructLayoutAttribute))
             {
                 AttributeData.DecodeStructLayoutAttribute<TypeWellKnownAttributeData, AttributeSyntax, CSharpAttributeData, AttributeLocation>(
@@ -682,14 +710,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // DynamicAttribute should not be set explicitly.
                 arguments.Diagnostics.Add(ErrorCode.ERR_ExplicitDynamicAttr, arguments.AttributeSyntaxOpt.Location);
             }
+            else if (attribute.IsTargetAttribute(this, AttributeDescription.TupleElementNamesAttribute))
+            {
+                arguments.Diagnostics.Add(ErrorCode.ERR_ExplicitTupleElementNamesAttribute, arguments.AttributeSyntaxOpt.Location);
+            }
             else if (attribute.IsTargetAttribute(this, AttributeDescription.SecurityCriticalAttribute)
                 || attribute.IsTargetAttribute(this, AttributeDescription.SecuritySafeCriticalAttribute))
             {
                 arguments.GetOrCreateData<TypeWellKnownAttributeData>().HasSecurityCriticalAttributes = true;
             }
-            else if (lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown && attribute.IsTargetAttribute(this, AttributeDescription.TypeIdentifierAttribute))
+            else if (_lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown && attribute.IsTargetAttribute(this, AttributeDescription.TypeIdentifierAttribute))
             {
-                lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.True;
+                _lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.True;
             }
             else
             {
@@ -705,18 +737,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown)
+                if (_lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown)
                 {
                     GetAttributes();
 
-                    if (lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown)
+                    if (_lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.Unknown)
                     {
-                        lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.False;
+                        _lazyIsExplicitDefinitionOfNoPiaLocalType = ThreeState.False;
                     }
                 }
 
-                Debug.Assert(lazyIsExplicitDefinitionOfNoPiaLocalType != ThreeState.Unknown);
-                return lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.True;
+                Debug.Assert(_lazyIsExplicitDefinitionOfNoPiaLocalType != ThreeState.Unknown);
+                return _lazyIsExplicitDefinitionOfNoPiaLocalType == ThreeState.True;
             }
         }
 
@@ -742,7 +774,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 AttributeUsageInfo info = attribute.DecodeAttributeUsageAttribute();
 
-                // Validate first ctor argument for AtributeUsage specification is a valid AttributeTargets enum member
+                // Validate first ctor argument for AttributeUsage specification is a valid AttributeTargets enum member
                 if (!info.HasValidAttributeTargets)
                 {
                     if (diagnose)
@@ -850,6 +882,35 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal override bool IsDirectlyExcludedFromCodeCoverage =>
+            GetDecodedWellKnownAttributeData()?.HasExcludeFromCodeCoverageAttribute == true;
+
+        private bool HasInstanceFields()
+        {
+            var members = this.GetMembersUnordered();
+            for (var i = 0; i < members.Length; i++)
+            {
+                var m = members[i];
+                if (!m.IsStatic)
+                {
+                    switch (m.Kind)
+                    {
+                        case SymbolKind.Field:
+                            return true;
+
+                        case SymbolKind.Event:
+                            if (((EventSymbol)m).AssociatedField != null)
+                            {
+                                return true;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         internal sealed override TypeLayout Layout
         {
             get
@@ -865,11 +926,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     // CLI spec 22.37.16:
                     // "A ValueType shall have a non-zero size - either by defining at least one field, or by providing a non-zero ClassSize"
                     // 
-                    // Dev11 compiler sets the value to 1 for structs with no fields and no size specified.
+                    // Dev11 compiler sets the value to 1 for structs with no instance fields and no size specified.
                     // It does not change the size value if it was explicitly specified to be 0, nor does it report an error.
-                    int size = this.GetMembersUnordered().Any(m => m.Kind == SymbolKind.Field) ? 0 : 1;
-
-                    return new TypeLayout(LayoutKind.Sequential, size, alignment: 0);
+                    return new TypeLayout(LayoutKind.Sequential, this.HasInstanceFields() ? 0 : 1, alignment: 0);
                 }
 
                 return default(TypeLayout);
@@ -939,8 +998,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert(!boundAttributes.IsDefault);
             Debug.Assert(!allAttributeSyntaxNodes.IsDefault);
             Debug.Assert(boundAttributes.Length == allAttributeSyntaxNodes.Length);
-            Debug.Assert(this.lazyCustomAttributesBag != null);
-            Debug.Assert(this.lazyCustomAttributesBag.IsDecodedWellKnownAttributeDataComputed);
+            Debug.Assert(_lazyCustomAttributesBag != null);
+            Debug.Assert(_lazyCustomAttributesBag.IsDecodedWellKnownAttributeDataComputed);
             Debug.Assert(symbolPart == AttributeLocation.None);
 
             var data = (TypeWellKnownAttributeData)decodedData;
@@ -970,9 +1029,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         foreach (var initializerGroup in initializers)
                         {
-                            foreach (var singleInitializer in initializerGroup.Initializers)
+                            foreach (var singleInitializer in initializerGroup)
                             {
-                                if (!singleInitializer.Field.IsMetadataConstant)
+                                if (!singleInitializer.FieldOpt.IsMetadataConstant)
                                 {
                                     // CS8028: '{0}': a class with the ComImport attribute cannot specify field initializers.
                                     diagnostics.Add(ErrorCode.ERR_ComImportWithInitializers, singleInitializer.Syntax.GetLocation(), this.Name);
@@ -986,7 +1045,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         foreach (var initializerGroup in initializers)
                         {
-                            foreach (var singleInitializer in initializerGroup.Initializers)
+                            foreach (var singleInitializer in initializerGroup)
                             {
                                 // CS8028: '{0}': a class with the ComImport attribute cannot specify field initializers.
                                 diagnostics.Add(ErrorCode.ERR_ComImportWithInitializers, singleInitializer.Syntax.GetLocation(), this.Name);
@@ -1030,7 +1089,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 // No need to check if [Extension] attribute was explicitly set since
                 // we'll issue CS1112 error in those cases and won't generate IL.
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_ExtensionAttribute__ctor));
+                AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_ExtensionAttribute__ctor));
             }
 
             if (this.Indexers.Any())
@@ -1038,15 +1097,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 string defaultMemberName = this.Indexers.First().MetadataName; // UNDONE: IndexerNameAttribute
                 var defaultMemberNameConstant = new TypedConstant(compilation.GetSpecialType(SpecialType.System_String), TypedConstantKind.Primitive, defaultMemberName);
 
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(
+                AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(
                     WellKnownMember.System_Reflection_DefaultMemberAttribute__ctor,
                     ImmutableArray.Create(defaultMemberNameConstant)));
             }
 
             NamedTypeSymbol baseType = this.BaseTypeNoUseSiteDiagnostics;
-            if ((object)baseType != null && baseType.ContainsDynamic())
+            if ((object)baseType != null)
             {
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(baseType, customModifiersCount: 0));
+                if (baseType.ContainsDynamic())
+                {
+                    AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(baseType, customModifiersCount: 0));
+                }
+
+                if (baseType.ContainsTupleNames())
+                {
+                    AddSynthesizedAttribute(ref attributes, compilation.SynthesizeTupleNamesAttribute(baseType));
+                }
             }
         }
 

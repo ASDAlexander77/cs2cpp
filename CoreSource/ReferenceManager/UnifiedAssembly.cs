@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
@@ -15,7 +15,7 @@ namespace Microsoft.CodeAnalysis
         where TAssemblySymbol : class, IAssemblySymbol
     {
         /// <summary>
-        /// Original reference that was unified to the identity of the <see cref="P:TargetAssembly"/>.
+        /// Original reference that was unified to the identity of the <see cref="TargetAssembly"/>.
         /// </summary>
         internal readonly AssemblyIdentity OriginalReference;
 

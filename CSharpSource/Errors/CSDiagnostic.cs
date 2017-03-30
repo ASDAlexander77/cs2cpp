@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Runtime.Serialization;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -10,8 +9,8 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class CSDiagnostic : DiagnosticWithInfo
     {
-        internal CSDiagnostic(DiagnosticInfo info, Location location)
-            : base(info, location)
+        internal CSDiagnostic(DiagnosticInfo info, Location location, bool isSuppressed = false)
+            : base(info, location, isSuppressed)
         {
         }
 
@@ -24,22 +23,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (location == null)
             {
-                throw new ArgumentNullException("location");
+                throw new ArgumentNullException(nameof(location));
             }
 
             if (location != this.Location)
             {
-                return new CSDiagnostic(this.Info, location);
-            }
-
-            return this;
-        }
-
-        internal override Diagnostic WithWarningAsError(bool isWarningAsError)
-        {
-            if (this.IsWarningAsError != isWarningAsError)
-            {
-                return new CSDiagnostic(this.Info.GetInstanceWithReportWarning(isWarningAsError), this.Location);
+                return new CSDiagnostic(this.Info, location, this.IsSuppressed);
             }
 
             return this;
@@ -49,7 +38,17 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (this.Severity != severity)
             {
-                return new CSDiagnostic(this.Info.GetInstanceWithSeverity(severity), this.Location);
+                return new CSDiagnostic(this.Info.GetInstanceWithSeverity(severity), this.Location, this.IsSuppressed);
+            }
+
+            return this;
+        }
+
+        internal override Diagnostic WithIsSuppressed(bool isSuppressed)
+        {
+            if (this.IsSuppressed != isSuppressed)
+            {
+                return new CSDiagnostic(this.Info, this.Location, isSuppressed);
             }
 
             return this;

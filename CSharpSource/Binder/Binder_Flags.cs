@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 using System.Diagnostics;
 
 namespace Microsoft.CodeAnalysis.CSharp
@@ -12,23 +13,27 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         private sealed class BinderWithContainingMemberOrLambda : Binder
         {
-            private readonly Symbol containingMemberOrLambda;
+            private readonly Symbol _containingMemberOrLambda;
 
             internal BinderWithContainingMemberOrLambda(Binder next, Symbol containingMemberOrLambda)
                 : base(next)
             {
-                this.containingMemberOrLambda = containingMemberOrLambda;
+                Debug.Assert(containingMemberOrLambda != null);
+
+                _containingMemberOrLambda = containingMemberOrLambda;
             }
 
             internal BinderWithContainingMemberOrLambda(Binder next, BinderFlags flags, Symbol containingMemberOrLambda)
                 : base(next, flags)
             {
-                this.containingMemberOrLambda = containingMemberOrLambda;
+                Debug.Assert(containingMemberOrLambda != null);
+
+                _containingMemberOrLambda = containingMemberOrLambda;
             }
 
             internal override Symbol ContainingMemberOrLambda
             {
-                get { return this.containingMemberOrLambda; }
+                get { return _containingMemberOrLambda; }
             }
         }
 
@@ -38,12 +43,19 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         private sealed class BinderWithConditionalReceiver : Binder
         {
-            internal readonly BoundExpression receiverExpression;
+            private readonly BoundExpression _receiverExpression;
 
             internal BinderWithConditionalReceiver(Binder next, BoundExpression receiverExpression)
                 : base(next)
             {
-                this.receiverExpression = receiverExpression;
+                Debug.Assert(receiverExpression != null);
+
+                _receiverExpression = receiverExpression;
+            }
+
+            internal override BoundExpression ConditionalReceiverExpression
+            {
+                get { return _receiverExpression; }
             }
         }
 

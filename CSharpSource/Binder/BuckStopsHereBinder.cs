@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,20 +19,17 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
         }
 
-        public override ConsList<LocalSymbol> ImplicitlyTypedLocalsBeingBound
+        internal override ImportChain ImportChain
         {
             get
             {
-                return ConsList<LocalSymbol>.Empty;
+                return null;
             }
         }
 
-        internal override ConsList<Imports> ImportsList
+        internal override Imports GetImports(ConsList<Symbol> basesBeingResolved)
         {
-            get
-            {
-                return ConsList<Imports>.Empty;
-            }
+            return Imports.Empty;
         }
 
         protected override SourceLocalSymbol LookupLocal(SyntaxToken nameToken)
@@ -40,10 +37,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             return null;
         }
 
-        internal override bool IsAccessible(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved = null)
+        protected override LocalFunctionSymbol LookupLocalFunction(SyntaxToken nameToken)
+        {
+            return null;
+        }
+
+        internal override bool IsAccessibleHelper(Symbol symbol, TypeSymbol accessThroughType, out bool failedThroughTypeCheck, ref HashSet<DiagnosticInfo> useSiteDiagnostics, ConsList<Symbol> basesBeingResolved)
         {
             failedThroughTypeCheck = false;
-            return this.IsSymbolAccessibleConditional(symbol, Compilation.Assembly, ref useSiteDiagnostics);
+            return IsSymbolAccessibleConditional(symbol, Compilation.Assembly, ref useSiteDiagnostics);
         }
 
         internal override ConstantFieldsInProgress ConstantFieldsInProgress
@@ -73,6 +75,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         protected override bool IsUnboundTypeAllowed(GenericNameSyntax syntax)
         {
             return false;
+        }
+
+        internal override bool IsInMethodBody
+        {
+            get
+            {
+                return false;
+            }
         }
 
         internal override bool IsDirectlyInIterator
@@ -107,6 +117,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        internal override BoundExpression ConditionalReceiverExpression
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         // This should only be called in the context of syntactically incorrect programs.  In other
         // contexts statements are surrounded by some enclosing method or lambda.
         internal override TypeSymbol GetIteratorElementType(YieldStatementSyntax node, DiagnosticBag diagnostics)
@@ -123,17 +141,28 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        internal override Binder GetBinder(CSharpSyntaxNode node)
+        internal override Binder GetBinder(SyntaxNode node)
         {
             return null;
         }
 
-        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(CSharpSyntaxNode node)
+        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(SyntaxNode scopeDesignator)
         {
             throw ExceptionUtilities.Unreachable;
         }
 
-        internal override BoundSwitchStatement BindSwitchExpressionAndSections(SwitchStatementSyntax node, Binder originalBinder, DiagnosticBag diagnostics)
+        internal override ImmutableArray<LocalFunctionSymbol> GetDeclaredLocalFunctionsForScope(CSharpSyntaxNode scopeDesignator)
+        {
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override BoundStatement BindSwitchExpressionAndSections(SwitchStatementSyntax node, Binder originalBinder, DiagnosticBag diagnostics)
+        {
+            // There's supposed to be a SwitchBinder (or other overrider of this method) in the chain.
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override void BindPatternSwitchLabelForInference(CasePatternSwitchLabelSyntax node, DiagnosticBag diagnostics)
         {
             // There's supposed to be a SwitchBinder (or other overrider of this method) in the chain.
             throw ExceptionUtilities.Unreachable;
@@ -146,6 +175,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         internal override BoundStatement BindForEachParts(DiagnosticBag diagnostics, Binder originalBinder)
+        {
+            // There's supposed to be a ForEachLoopBinder (or other overrider of this method) in the chain.
+            throw ExceptionUtilities.Unreachable;
+        }
+
+        internal override BoundStatement BindForEachDeconstruction(DiagnosticBag diagnostics, Binder originalBinder)
         {
             // There's supposed to be a ForEachLoopBinder (or other overrider of this method) in the chain.
             throw ExceptionUtilities.Unreachable;
@@ -173,30 +208,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             // There's supposed to be a LockBinder (or other overrider of this method) in the chain.
             throw ExceptionUtilities.Unreachable;
-        }
-
-        internal override BoundIfStatement BindIfParts(DiagnosticBag diagnostics, Binder originalBinder)
-        {
-            // There's supposed to be a IfBinder (or other overrider of this method) in the chain.
-            throw ExceptionUtilities.Unreachable;
-        }
-
-        internal override ImmutableArray<LocalSymbol> Locals
-        {
-            get
-            {
-                // There's supposed to be a LocalScopeBinder (or other overrider of this method) in the chain.
-                throw ExceptionUtilities.Unreachable;
-            }
-        }
-
-        internal override ImmutableArray<LabelSymbol> Labels
-        {
-            get
-            {
-                // There's supposed to be a LocalScopeBinder (or other overrider of this method) in the chain.
-                throw ExceptionUtilities.Unreachable;
-            }
         }
 
         internal override ImmutableHashSet<Symbol> LockedOrDisposedVariables

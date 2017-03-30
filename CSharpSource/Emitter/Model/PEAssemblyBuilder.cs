@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -11,11 +11,11 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Emit
 {
-    internal abstract class PEAssemblyBuilderBase : PEModuleBuilder, Cci.IAssembly
+    internal abstract class PEAssemblyBuilderBase : PEModuleBuilder, Cci.IAssemblyReference
     {
-        private readonly SourceAssemblySymbol sourceAssembly;
-        private readonly ImmutableArray<NamedTypeSymbol> additionalTypes;
-        private ImmutableArray<Cci.IFileReference> lazyFiles;
+        private readonly SourceAssemblySymbol _sourceAssembly;
+        private readonly ImmutableArray<NamedTypeSymbol> _additionalTypes;
+        private ImmutableArray<Cci.IFileReference> _lazyFiles;
 
         /// <summary>
         /// The behavior of the C# command-line compiler is as follows:
@@ -34,47 +34,41 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
         /// <remarks>
         /// In cases 1 and 2b, we expect (metadataName == sourceAssembly.MetadataName).
         /// </remarks>
-        private readonly string metadataName;
+        private readonly string _metadataName;
 
         public PEAssemblyBuilderBase(
             SourceAssemblySymbol sourceAssembly,
-            string outputName,
+            EmitOptions emitOptions,
             OutputKind outputKind,
-            ModulePropertiesForSerialization serializationProperties,
+            Cci.ModulePropertiesForSerialization serializationProperties,
             IEnumerable<ResourceDescription> manifestResources,
-            Func<AssemblySymbol, AssemblyIdentity> assemblySymbolMapper,
-            ImmutableArray<NamedTypeSymbol> additionalTypes,
-            bool metadataOnly)
-            : base((SourceModuleSymbol)sourceAssembly.Modules[0], outputName, outputKind, serializationProperties, manifestResources, assemblySymbolMapper, metadataOnly)
+            ImmutableArray<NamedTypeSymbol> additionalTypes)
+            : base((SourceModuleSymbol)sourceAssembly.Modules[0], emitOptions, outputKind, serializationProperties, manifestResources)
         {
             Debug.Assert((object)sourceAssembly != null);
 
-            this.sourceAssembly = sourceAssembly;
-            this.additionalTypes = additionalTypes.NullToEmpty();
-            this.metadataName = outputName == null ? sourceAssembly.MetadataName : FileNameUtilities.ChangeExtension(outputName, extension: null);
+            _sourceAssembly = sourceAssembly;
+            _additionalTypes = additionalTypes.NullToEmpty();
+            _metadataName = (emitOptions.OutputNameOverride == null) ? sourceAssembly.MetadataName : FileNameUtilities.ChangeExtension(emitOptions.OutputNameOverride, extension: null);
 
             AssemblyOrModuleSymbolToModuleRefMap.Add(sourceAssembly, this);
         }
 
-        public override void Dispatch(Cci.MetadataVisitor visitor)
-        {
-            visitor.Visit((Cci.IAssembly)this);
-        }
-
+        public override ISourceAssemblySymbolInternal SourceAssemblyOpt => _sourceAssembly;
 
         internal override ImmutableArray<NamedTypeSymbol> GetAdditionalTopLevelTypes()
         {
-            return this.additionalTypes;
+            return _additionalTypes;
         }
 
-        IEnumerable<Cci.IFileReference> Cci.IAssembly.GetFiles(EmitContext context)
+        public sealed override IEnumerable<Cci.IFileReference> GetFiles(EmitContext context)
         {
-            if (lazyFiles.IsDefault)
+            if (_lazyFiles.IsDefault)
             {
                 var builder = ArrayBuilder<Cci.IFileReference>.GetInstance();
                 try
                 {
-                    var modules = sourceAssembly.Modules;
+                    var modules = _sourceAssembly.Modules;
                     for (int i = 1; i < modules.Length; i++)
                     {
                         builder.Add((Cci.IFileReference)Translate(modules[i], context.Diagnostics));
@@ -89,9 +83,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                     }
 
                     // Dev12 compilers don't report ERR_CryptoHashFailed if there are no files to be hashed.
-                    if (ImmutableInterlocked.InterlockedInitialize(ref lazyFiles, builder.ToImmutable()) && lazyFiles.Length > 0)
+                    if (ImmutableInterlocked.InterlockedInitialize(ref _lazyFiles, builder.ToImmutable()) && _lazyFiles.Length > 0)
                     {
-                        if (!CryptographicHashProvider.IsSupportedAlgorithm(sourceAssembly.AssemblyHashAlgorithm))
+                        if (!CryptographicHashProvider.IsSupportedAlgorithm(_sourceAssembly.HashAlgorithm))
                         {
                             context.Diagnostics.Add(new CSDiagnostic(new CSDiagnosticInfo(ErrorCode.ERR_CryptoHashFailed), NoLocation.Singleton));
                         }
@@ -103,41 +97,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 }
             }
 
-            return lazyFiles;
-        }
-
-        uint Cci.IAssembly.Flags
-        {
-            get
-            {
-                AssemblyNameFlags result = sourceAssembly.Flags & ~AssemblyNameFlags.PublicKey;
-
-                if (!sourceAssembly.PublicKey.IsDefaultOrEmpty)
-                    result |= AssemblyNameFlags.PublicKey;
-
-                return (uint)result;
-            }
-        }
-
-        string Cci.IAssembly.SignatureKey
-        {
-            get
-            {
-                return sourceAssembly.SignatureKey;
-            }
-        }
-
-        IEnumerable<byte> Cci.IAssembly.PublicKey
-        {
-            get
-            {
-                return sourceAssembly.Identity.PublicKey;
-            }
+            return _lazyFiles;
         }
 
         protected override void AddEmbeddedResourcesFromAddedModules(ArrayBuilder<Cci.ManagedResource> builder, DiagnosticBag diagnostics)
         {
-            var modules = sourceAssembly.Modules;
+            var modules = _sourceAssembly.Modules;
             int count = modules.Length;
 
             for (int i = 1; i < count; i++)
@@ -163,67 +128,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             }
         }
 
-        string Cci.IAssemblyReference.Culture
-        {
-            get
-            {
-                return sourceAssembly.Identity.CultureName;
-            }
-        }
-
-        bool Cci.IAssemblyReference.IsRetargetable
-        {
-            get
-            {
-                return sourceAssembly.Identity.IsRetargetable;
-            }
-        }
-
-        AssemblyContentType Cci.IAssemblyReference.ContentType
-        {
-            get
-            {
-                return sourceAssembly.Identity.ContentType;
-            }
-        }
-
-        IEnumerable<byte> Cci.IAssemblyReference.PublicKeyToken
-        {
-            get { return sourceAssembly.Identity.PublicKeyToken; }
-        }
-
-        Version Cci.IAssemblyReference.Version
-        {
-            get { return sourceAssembly.Identity.Version; }
-        }
-
-        internal override string Name
-        {
-            get { return metadataName; }
-        }
-
-        AssemblyHashAlgorithm Cci.IAssembly.HashAlgorithm
-        {
-            get
-            {
-                return sourceAssembly.AssemblyHashAlgorithm;
-            }
-        }
+        public override string Name => _metadataName;
+        public AssemblyIdentity Identity => _sourceAssembly.Identity;
+        public Version AssemblyVersionPattern => _sourceAssembly.AssemblyVersionPattern;
     }
 
     internal sealed class PEAssemblyBuilder : PEAssemblyBuilderBase
     {
         public PEAssemblyBuilder(
             SourceAssemblySymbol sourceAssembly,
-            string outputName,
+            EmitOptions emitOptions,
             OutputKind outputKind,
-            ModulePropertiesForSerialization serializationProperties,
-            IEnumerable<ResourceDescription> manifestResources,
-            Func<AssemblySymbol, AssemblyIdentity> assemblySymbolMapper = null,
-            ImmutableArray<NamedTypeSymbol> additionalTypes = default(ImmutableArray<NamedTypeSymbol>),
-            bool metadataOnly = false)
-            : base(sourceAssembly, outputName, outputKind, serializationProperties, manifestResources, assemblySymbolMapper, additionalTypes, metadataOnly)
+            Cci.ModulePropertiesForSerialization serializationProperties,
+            IEnumerable<ResourceDescription> manifestResources)
+            : base(sourceAssembly, emitOptions, outputKind, serializationProperties, manifestResources, ImmutableArray<NamedTypeSymbol>.Empty)
         {
         }
+
+        public override int CurrentGenerationOrdinal => 0;
     }
 }

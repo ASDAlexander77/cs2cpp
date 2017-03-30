@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    partial class ConversionsBase
+    internal partial class ConversionsBase
     {
         private UserDefinedConversionResult AnalyzeExplicitUserDefinedConversions(
            BoundExpression sourceExpression,
@@ -189,7 +189,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     source.IsNullableType() &&
                     EncompassingExplicitConversion(null, source.GetNullableUnderlyingType(), convertsFrom, ref useSiteDiagnostics).Exists)
                 {
-                    fromConversion = ClassifyConversion(source, convertsFrom, ref useSiteDiagnostics, builtinOnly: true);
+                    fromConversion = ClassifyBuiltInConversion(source, convertsFrom, ref useSiteDiagnostics);
                 }
 
                 // As in dev11 (and the revised spec), we also accept candidates for which the return type is encompassed by the *stripped* target type.
@@ -198,7 +198,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     target.IsNullableType() &&
                     EncompassingExplicitConversion(null, convertsTo, target.GetNullableUnderlyingType(), ref useSiteDiagnostics).Exists)
                 {
-                    toConversion = ClassifyConversion(convertsTo, target, ref useSiteDiagnostics, builtinOnly: true);
+                    toConversion = ClassifyBuiltInConversion(convertsTo, target, ref useSiteDiagnostics);
                 }
 
                 // In the corresponding implicit conversion code we can get away with first 
@@ -240,7 +240,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                     else
                     {
-
                         // There is an additional spec violation in the native compiler. Suppose
                         // we have a conversion from X-->Y and are asked to do "Y? y = new X();"  Clearly
                         // the intention is to convert from X-->Y via the implicit conversion, and then

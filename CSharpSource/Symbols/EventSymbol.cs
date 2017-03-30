@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,7 +13,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal abstract partial class EventSymbol : Symbol, IEventSymbol
     {
-
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Changes to the public interface of this class should remain synchronized with the VB version.
         // Do not make any changes to the public interface without making the corresponding change
@@ -82,6 +81,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         public abstract bool IsWindowsRuntimeEvent { get; }
 
         /// <summary>
+        /// True if the event itself is excluded from code covarage instrumentation.
+        /// True for source events marked with <see cref="AttributeDescription.ExcludeFromCodeCoverageAttribute"/>.
+        /// </summary>
+        internal virtual bool IsDirectlyExcludedFromCodeCoverage { get => false; }
+
+        /// <summary>
         /// True if this symbol has a special name (metadata flag SpecialName is set).
         /// </summary>
         internal abstract bool HasSpecialName { get; }
@@ -118,7 +123,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 if (this.IsOverride)
                 {
-                    return (EventSymbol)OverriddenOrHiddenMembers.GetOverriddenMember();
+                    if (IsDefinition)
+                    {
+                        return (EventSymbol)OverriddenOrHiddenMembers.GetOverriddenMember();
+                    }
+
+                    return (EventSymbol)OverriddenOrHiddenMembersResult.GetOverriddenMember(this, OriginalDefinition.OverriddenEvent);
                 }
                 return null;
             }
@@ -298,6 +308,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
+        /// <summary>
+        /// Is this an event of a tuple type?
+        /// </summary>
+        public virtual bool IsTupleEvent
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// If this is an event of a tuple type, return corresponding underlying event from the
+        /// tuple underlying type. Otherwise, null. 
+        /// </summary>
+        public virtual EventSymbol TupleUnderlyingEvent
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         #region IEventSymbol Members
 
         ITypeSymbol IEventSymbol.Type
@@ -375,7 +408,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #region Equality
 
-        public sealed override bool Equals(object obj)
+        public override bool Equals(object obj)
         {
             EventSymbol other = obj as EventSymbol;
 

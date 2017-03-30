@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Roslyn.Utilities;
 
@@ -23,20 +24,23 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class IteratorFinallyMethodSymbol : SynthesizedInstanceMethodSymbol, ISynthesizedMethodBodyImplementationSymbol
     {
-        private readonly IteratorStateMachine stateMachineType;
-        private readonly string name;
+        private readonly IteratorStateMachine _stateMachineType;
+        private readonly string _name;
 
         public IteratorFinallyMethodSymbol(IteratorStateMachine stateMachineType, string name)
         {
-            this.stateMachineType = stateMachineType;
-            this.name = name;
+            Debug.Assert(stateMachineType != null);
+            Debug.Assert(name != null);
+
+            _stateMachineType = stateMachineType;
+            _name = name;
         }
 
         public override string Name
         {
             get
             {
-                return name;
+                return _name;
             }
         }
 
@@ -50,9 +54,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             return false;
         }
 
-        internal override bool IsMetadataFinal()
+        internal override bool IsMetadataFinal
         {
-            return false;
+            get
+            {
+                return false;
+            }
         }
 
         public override MethodKind MethodKind
@@ -125,6 +132,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             get { return false; }
         }
 
+        internal override RefKind RefKind
+        {
+            get { return RefKind.None; }
+        }
+
         public override TypeSymbol ReturnType
         {
             get { return ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
@@ -155,6 +167,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             get { return ImmutableArray<CustomModifier>.Empty; }
         }
 
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
+        {
+            get { return ImmutableArray<CustomModifier>.Empty; }
+        }
+
         public override Symbol AssociatedSymbol
         {
             get { return null; }
@@ -177,7 +194,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override Symbol ContainingSymbol
         {
-            get { return stateMachineType; }
+            get { return _stateMachineType; }
         }
 
         public override ImmutableArray<Location> Locations
@@ -222,12 +239,17 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         IMethodSymbol ISynthesizedMethodBodyImplementationSymbol.Method
         {
-            get { return stateMachineType.IteratorMethod; }
+            get { return _stateMachineType.KickoffMethod; }
         }
 
         bool ISynthesizedMethodBodyImplementationSymbol.HasMethodBodyDependency
         {
             get { return true; }
+        }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            return _stateMachineType.KickoffMethod.CalculateLocalSyntaxOffset(localPosition, localTree);
         }
     }
 }

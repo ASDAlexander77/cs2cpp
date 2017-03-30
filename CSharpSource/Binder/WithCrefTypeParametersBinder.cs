@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Threading;
@@ -14,26 +14,26 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class WithCrefTypeParametersBinder : WithTypeParametersBinder
     {
-        private readonly CrefSyntax crefSyntax;
-        private MultiDictionary<string, TypeParameterSymbol> lazyTypeParameterMap;
+        private readonly CrefSyntax _crefSyntax;
+        private MultiDictionary<string, TypeParameterSymbol> _lazyTypeParameterMap;
 
         internal WithCrefTypeParametersBinder(CrefSyntax crefSyntax, Binder next)
             : base(next)
         {
-            this.crefSyntax = crefSyntax;
+            _crefSyntax = crefSyntax;
         }
 
         protected override MultiDictionary<string, TypeParameterSymbol> TypeParameterMap
         {
             get
             {
-                if (this.lazyTypeParameterMap == null)
+                if (_lazyTypeParameterMap == null)
                 {
                     MultiDictionary<string, TypeParameterSymbol> map = CreateTypeParameterMap();
-                    Interlocked.CompareExchange(ref this.lazyTypeParameterMap, map, null);
+                    Interlocked.CompareExchange(ref _lazyTypeParameterMap, map, null);
                 }
 
-                return lazyTypeParameterMap;
+                return _lazyTypeParameterMap;
             }
         }
 
@@ -41,16 +41,16 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var map = new MultiDictionary<string, TypeParameterSymbol>();
 
-            switch (crefSyntax.Kind)
+            switch (_crefSyntax.Kind())
             {
                 case SyntaxKind.TypeCref:
                     {
-                        AddTypeParameters(((TypeCrefSyntax)crefSyntax).Type, map);
+                        AddTypeParameters(((TypeCrefSyntax)_crefSyntax).Type, map);
                         break;
                     }
                 case SyntaxKind.QualifiedCref:
                     {
-                        QualifiedCrefSyntax qualifiedCrefSyntax = ((QualifiedCrefSyntax)crefSyntax);
+                        QualifiedCrefSyntax qualifiedCrefSyntax = ((QualifiedCrefSyntax)_crefSyntax);
                         AddTypeParameters(qualifiedCrefSyntax.Member, map);
                         AddTypeParameters(qualifiedCrefSyntax.Container, map);
                         break;
@@ -60,13 +60,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.OperatorMemberCref:
                 case SyntaxKind.ConversionOperatorMemberCref:
                     {
-                        AddTypeParameters((MemberCrefSyntax)crefSyntax, map);
+                        AddTypeParameters((MemberCrefSyntax)_crefSyntax, map);
                         break;
                     }
                 default:
                     {
-                        Debug.Assert(false, "Unexpected cref syntax kind " + crefSyntax.Kind);
-                        break;
+                        throw ExceptionUtilities.UnexpectedValue(_crefSyntax.Kind());
                     }
             }
             return map;
@@ -74,8 +73,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private void AddTypeParameters(TypeSyntax typeSyntax, MultiDictionary<string, TypeParameterSymbol> map)
         {
-
-            switch (typeSyntax.Kind)
+            switch (typeSyntax.Kind())
             {
                 case SyntaxKind.AliasQualifiedName:
                     AddTypeParameters(((AliasQualifiedNameSyntax)typeSyntax).Name, map);
@@ -94,15 +92,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.PredefinedType:
                     break;
                 default:
-                    Debug.Assert(false, "Unexpected type syntax kind " + typeSyntax.Kind);
-                    break;
+                    throw ExceptionUtilities.UnexpectedValue(typeSyntax.Kind());
             }
         }
 
         private void AddTypeParameters(MemberCrefSyntax memberSyntax, MultiDictionary<string, TypeParameterSymbol> map)
         {
             // Other members have arity 0.
-            if (memberSyntax.Kind == SyntaxKind.NameMemberCref)
+            if (memberSyntax.Kind() == SyntaxKind.NameMemberCref)
             {
                 AddTypeParameters(((NameMemberCrefSyntax)memberSyntax).Name, map);
             }
@@ -120,7 +117,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 // Other types (non-identifiers) are allowed in error scenarios, but they do not introduce new 
                 // cref type parameters.
-                if (typeArguments[i].Kind == SyntaxKind.IdentifierName)
+                if (typeArguments[i].Kind() == SyntaxKind.IdentifierName)
                 {
                     IdentifierNameSyntax typeParameterSyntax = (IdentifierNameSyntax)typeArguments[i];
                     Debug.Assert(typeParameterSyntax != null, "Syntactic requirement of crefs");
@@ -137,16 +134,16 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override void AddLookupSymbolsInfoInSingleBinder(LookupSymbolsInfo result, LookupOptions options, Binder originalBinder)
         {
-            if (options.CanConsiderTypeParameters())
+            if (CanConsiderTypeParameters(options))
             {
-                foreach (string name in TypeParameterMap.Keys)
+                foreach (var kvp in TypeParameterMap)
                 {
-                    foreach (TypeParameterSymbol typeParameter in TypeParameterMap[name])
+                    foreach (TypeParameterSymbol typeParameter in kvp.Value)
                     {
                         // In any context where this binder applies, the type parameters are always viable/speakable.
                         Debug.Assert(originalBinder.CanAddLookupSymbolInfo(typeParameter, options, null));
 
-                        result.AddSymbol(typeParameter, name, 0);
+                        result.AddSymbol(typeParameter, kvp.Key, 0);
                     }
                 }
             }

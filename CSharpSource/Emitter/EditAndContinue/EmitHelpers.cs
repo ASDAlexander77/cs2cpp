@@ -1,14 +1,14 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection.Metadata;
+using System.Threading;
 using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.CodeAnalysis.Emit;
 using Roslyn.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
 
 namespace Microsoft.CodeAnalysis.CSharp.Emit
 {
@@ -18,39 +18,40 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             CSharpCompilation compilation,
             EmitBaseline baseline,
             IEnumerable<SemanticEdit> edits,
+            Func<ISymbol, bool> isAddedSymbol,
             Stream metadataStream,
             Stream ilStream,
             Stream pdbStream,
-            ICollection<uint> updatedMethodTokens,
+            ICollection<MethodDefinitionHandle> updatedMethods,
             CompilationTestData testData,
             CancellationToken cancellationToken)
         {
-            Guid moduleVersionId;
-            try
-            {
-                moduleVersionId = baseline.OriginalMetadata.GetModuleVersionId();
-            }
-            catch (BadImageFormatException)
-            {
-                // return MakeEmitResult(success: false, diagnostics: ..., baseline: null);
-                throw;
-            }
-
-            var pdbName = FileNameUtilities.ChangeExtension(compilation.SourceModule.Name, "pdb");
             var diagnostics = DiagnosticBag.GetInstance();
-            string runtimeMDVersion = compilation.GetRuntimeMetadataVersion(diagnostics);
-            var serializationProperties = compilation.ConstructModuleSerializationProperties(runtimeMDVersion, moduleVersionId);
+
+            var emitOptions = EmitOptions.Default.WithDebugInformationFormat(baseline.HasPortablePdb ? DebugInformationFormat.PortablePdb : DebugInformationFormat.Pdb);
+            string runtimeMDVersion = compilation.GetRuntimeMetadataVersion(emitOptions, diagnostics);
+            var serializationProperties = compilation.ConstructModuleSerializationProperties(emitOptions, runtimeMDVersion, baseline.ModuleVersionId);
             var manifestResources = SpecializedCollections.EmptyEnumerable<ResourceDescription>();
 
-            var moduleBeingBuilt = new PEDeltaAssemblyBuilder(
-                compilation.SourceAssembly,
-                outputName: null,
-                outputKind: compilation.Options.OutputKind,
-                serializationProperties: serializationProperties,
-                manifestResources: manifestResources,
-                assemblySymbolMapper: null,
-                previousGeneration: baseline,
-                edits: edits);
+            PEDeltaAssemblyBuilder moduleBeingBuilt;
+            try
+            {
+                moduleBeingBuilt = new PEDeltaAssemblyBuilder(
+                    compilation.SourceAssembly,
+                    emitOptions: emitOptions,
+                    outputKind: compilation.Options.OutputKind,
+                    serializationProperties: serializationProperties,
+                    manifestResources: manifestResources,
+                    previousGeneration: baseline,
+                    edits: edits,
+                    isAddedSymbol: isAddedSymbol);
+            }
+            catch (NotSupportedException)
+            {
+                // TODO: better error code (https://github.com/dotnet/roslyn/issues/8910)
+                diagnostics.Add(ErrorCode.ERR_ModuleEmitFailure, NoLocation.Singleton, compilation.AssemblyName);
+                return new EmitDifferenceResult(success: false, diagnostics: diagnostics.ToReadOnlyAndFree(), baseline: null);
+            }
 
             if (testData != null)
             {
@@ -58,64 +59,41 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 testData.Module = moduleBeingBuilt;
             }
 
-            baseline = moduleBeingBuilt.PreviousGeneration;
-
             var definitionMap = moduleBeingBuilt.PreviousDefinitions;
             var changes = moduleBeingBuilt.Changes;
 
+            EmitBaseline newBaseline = null;
+
             if (compilation.Compile(
                 moduleBeingBuilt,
-                outputName: null,
-                win32Resources: null,
-                xmlDocStream: null,
-                cancellationToken: cancellationToken,
-                generateDebugInfo: true,
+                emittingPdb: true,
                 diagnostics: diagnostics,
-                filterOpt: changes.RequiresCompilation))
+                filterOpt: changes.RequiresCompilation,
+                cancellationToken: cancellationToken))
             {
                 // Map the definitions from the previous compilation to the current compilation.
                 // This must be done after compiling above since synthesized definitions
                 // (generated when compiling method bodies) may be required.
-                baseline = MapToCompilation(compilation, moduleBeingBuilt);
+                var mappedBaseline = MapToCompilation(compilation, moduleBeingBuilt);
 
-                using (var pdbWriter = new Cci.PdbWriter(pdbName, pdbStream, (testData != null) ? testData.SymWriterFactory : null))
-                {
-                    var context = new EmitContext(moduleBeingBuilt, null, diagnostics);
-                    var encId = Guid.NewGuid();
-
-                    try
-                    {
-                        var writer = new DeltaPeWriter(
-                            context,
-                            compilation.MessageProvider,
-                            pdbWriter,
-                            baseline,
-                            encId,
-                            definitionMap,
-                            changes,
-                            cancellationToken);
-
-                        Cci.MetadataSizes metadataSizes;
-                        writer.WriteMetadataAndIL(metadataStream, ilStream, out metadataSizes);
-                        writer.GetMethodTokens(updatedMethodTokens);
-
-                        return new EmitDifferenceResult(
-                            success: true,
-                            diagnostics: diagnostics.ToReadOnlyAndFree(),
-                            baseline: writer.GetDelta(baseline, compilation, encId, metadataSizes));
-                    }
-                    catch (Cci.PdbWritingException e)
-                    {
-                        diagnostics.Add(ErrorCode.FTL_DebugEmitFailure, Location.None, e.Message);
-                    }
-                    catch (PermissionSetFileReadException e)
-                    {
-                        diagnostics.Add(ErrorCode.ERR_PermissionSetAttributeFileReadError, Location.None, e.FileName, e.PropertyName, e.Message);
-                    }
-                }
+                newBaseline = compilation.SerializeToDeltaStreams(
+                    moduleBeingBuilt,
+                    mappedBaseline,
+                    definitionMap,
+                    changes,
+                    metadataStream,
+                    ilStream,
+                    pdbStream,
+                    updatedMethods,
+                    diagnostics,
+                    testData?.SymWriterFactory,
+                    cancellationToken);
             }
 
-            return new EmitDifferenceResult(success: false, diagnostics: diagnostics.ToReadOnlyAndFree(), baseline: null);
+            return new EmitDifferenceResult(
+                success: newBaseline != null,
+                diagnostics: diagnostics.ToReadOnlyAndFree(),
+                baseline: newBaseline);
         }
 
         /// <summary>
@@ -140,97 +118,38 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 return previousGeneration;
             }
 
-            var map = new SymbolMatcher(
-                moduleBeingBuilt.GetAnonymousTypeMap(),
-                ((CSharpCompilation)previousGeneration.Compilation).SourceAssembly,
-                new EmitContext((PEModuleBuilder)previousGeneration.PEModuleBuilder, null, new DiagnosticBag()),
+            var currentSynthesizedMembers = moduleBeingBuilt.GetSynthesizedMembers();
+
+            // Mapping from previous compilation to the current.
+            var anonymousTypeMap = moduleBeingBuilt.GetAnonymousTypeMap();
+            var sourceAssembly = ((CSharpCompilation)previousGeneration.Compilation).SourceAssembly;
+            var sourceContext = new EmitContext((PEModuleBuilder)previousGeneration.PEModuleBuilder, null, new DiagnosticBag());
+            var otherContext = new EmitContext(moduleBeingBuilt, null, new DiagnosticBag());
+
+            var matcher = new CSharpSymbolMatcher(
+                anonymousTypeMap,
+                sourceAssembly,
+                sourceContext,
                 compilation.SourceAssembly,
-                new EmitContext((Cci.IModule)moduleBeingBuilt, null, new DiagnosticBag()));
+                otherContext,
+                currentSynthesizedMembers);
 
-            // Map all definitions to this compilation.
-            var typesAdded = MapDefinitions(map, previousGeneration.TypesAdded);
-            var eventsAdded = MapDefinitions(map, previousGeneration.EventsAdded);
-            var fieldsAdded = MapDefinitions(map, previousGeneration.FieldsAdded);
-            var methodsAdded = MapDefinitions(map, previousGeneration.MethodsAdded);
-            var propertiesAdded = MapDefinitions(map, previousGeneration.PropertiesAdded);
+            var mappedSynthesizedMembers = matcher.MapSynthesizedMembers(previousGeneration.SynthesizedMembers, currentSynthesizedMembers);
 
-            // Map anonymous types to this compilation.
-            var anonymousTypeMap = new Dictionary<AnonymousTypeKey, AnonymousTypeValue>();
-            foreach (var pair in previousGeneration.AnonymousTypeMap)
-            {
-                var key = pair.Key;
-                var value = pair.Value;
-                var type = (Cci.ITypeDefinition)map.MapDefinition(value.Type);
-                Debug.Assert(type != null);
-                anonymousTypeMap.Add(key, new AnonymousTypeValue(value.Name, value.UniqueIndex, type));
-            }
+            // TODO: can we reuse some data from the previous matcher?
+            var matcherWithAllSynthesizedMembers = new CSharpSymbolMatcher(
+                anonymousTypeMap,
+                sourceAssembly,
+                sourceContext,
+                compilation.SourceAssembly,
+                otherContext,
+                mappedSynthesizedMembers);
 
-            // Map locals (specifically, local types) to this compilation.
-            var locals = new Dictionary<uint, ImmutableArray<EncLocalInfo>>();
-            foreach (var pair in previousGeneration.LocalsForMethodsAddedOrChanged)
-            {
-                locals.Add(pair.Key, pair.Value.SelectAsArray((l, m) => MapLocalInfo(m, l), map));
-            }
-
-            return previousGeneration.With(
+            return matcherWithAllSynthesizedMembers.MapBaselineToCompilation(
+                previousGeneration,
                 compilation,
                 moduleBeingBuilt,
-                previousGeneration.Ordinal,
-                previousGeneration.EncId,
-                typesAdded,
-                eventsAdded,
-                fieldsAdded,
-                methodsAdded,
-                propertiesAdded,
-                eventMapAdded: previousGeneration.EventMapAdded,
-                propertyMapAdded: previousGeneration.PropertyMapAdded,
-                methodImplsAdded: previousGeneration.MethodImplsAdded,
-                tableEntriesAdded: previousGeneration.TableEntriesAdded,
-                blobStreamLengthAdded: previousGeneration.BlobStreamLengthAdded,
-                stringStreamLengthAdded: previousGeneration.StringStreamLengthAdded,
-                userStringStreamLengthAdded: previousGeneration.UserStringStreamLengthAdded,
-                guidStreamLengthAdded: previousGeneration.GuidStreamLengthAdded,
-                anonymousTypeMap: anonymousTypeMap,
-                localsForMethodsAddedOrChanged: locals,
-                localNames: previousGeneration.LocalNames);
-        }
-
-        private static IReadOnlyDictionary<K, V> MapDefinitions<K, V>(
-            SymbolMatcher map,
-            IReadOnlyDictionary<K, V> items)
-            where K : Cci.IDefinition
-        {
-            var result = new Dictionary<K, V>();
-            foreach (var pair in items)
-            {
-                var key = (K)map.MapDefinition(pair.Key);
-                // Result may be null if the definition was deleted, or if the definition
-                // was synthesized (e.g.: an iterator type) and the method that generated
-                // the synthesized definition was unchanged and not recompiled.
-                if (key != null)
-                {
-                    result.Add(key, pair.Value);
-                }
-            }
-            return result;
-        }
-
-        private static EncLocalInfo MapLocalInfo(
-            SymbolMatcher map,
-            EncLocalInfo localInfo)
-        {
-            Debug.Assert(!localInfo.IsDefault);
-            if (localInfo.Type == null)
-            {
-                Debug.Assert(localInfo.Signature != null);
-                return localInfo;
-            }
-            else
-            {
-                var type = map.MapReference(localInfo.Type);
-                Debug.Assert(type != null);
-                return new EncLocalInfo(localInfo.Offset, type, localInfo.Constraints, localInfo.TempKind, localInfo.Signature);
-            }
+                mappedSynthesizedMembers);
         }
     }
 }

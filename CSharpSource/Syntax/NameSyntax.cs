@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis.CSharp.Syntax
 {
     public abstract partial class NameSyntax
@@ -25,6 +26,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
         /// </returns>
         internal abstract SimpleNameSyntax GetUnqualifiedName();
 
+        /// <summary>
+        /// Return the name in string form, without trivia or generic arguments, for use in diagnostics.
+        /// </summary>
+        internal abstract string ErrorDisplayName();
+
         /// <remarks>
         /// This inspection is entirely syntactic.  We are not trying to find the alias corresponding to the assembly symbol
         /// containing the explicitly implemented interface symbol - there may be more than one.  We just want to know
@@ -35,7 +41,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
             NameSyntax name = this;
             while (true)
             {
-                switch (name.Kind)
+                switch (name.Kind())
                 {
                     case SyntaxKind.QualifiedName:
                         name = ((QualifiedNameSyntax)name).Left;

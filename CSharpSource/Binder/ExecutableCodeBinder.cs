@@ -1,7 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -14,73 +18,149 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class ExecutableCodeBinder : Binder
     {
-        private readonly Symbol memberSymbol;
-        private readonly CSharpSyntaxNode root;
-        private readonly MethodSymbol owner;
-        private SmallDictionary<CSharpSyntaxNode, Binder> lazyBinderMap;
+        private readonly Symbol _memberSymbol;
+        private readonly SyntaxNode _root;
+        private readonly Func<Binder, SyntaxNode, Binder> _rootBinderAdjusterOpt;
+        private SmallDictionary<SyntaxNode, Binder> _lazyBinderMap;
+        private ImmutableArray<MethodSymbol> _methodSymbolsWithYield;
 
-        internal ExecutableCodeBinder(CSharpSyntaxNode root, Symbol memberSymbol, Binder next)
+        internal ExecutableCodeBinder(SyntaxNode root, Symbol memberSymbol, Binder next, Func<Binder, SyntaxNode, Binder> rootBinderAdjusterOpt = null)
             : this(root, memberSymbol, next, next.Flags)
         {
+            _rootBinderAdjusterOpt = rootBinderAdjusterOpt;
         }
 
-        internal ExecutableCodeBinder(CSharpSyntaxNode root, Symbol memberSymbol, Binder next, BinderFlags additionalFlags)
+        internal ExecutableCodeBinder(SyntaxNode root, Symbol memberSymbol, Binder next, BinderFlags additionalFlags)
             : base(next, (next.Flags | additionalFlags) & ~BinderFlags.AllClearedAtExecutableCodeBoundary)
         {
-            this.memberSymbol = memberSymbol;
-            this.root = root;
-            this.owner = memberSymbol as MethodSymbol;
+            Debug.Assert((object)memberSymbol == null ||
+                         (memberSymbol.Kind != SymbolKind.Local && memberSymbol.Kind != SymbolKind.RangeVariable && memberSymbol.Kind != SymbolKind.Parameter));
+
+            _memberSymbol = memberSymbol;
+            _root = root;
         }
 
         internal override Symbol ContainingMemberOrLambda
         {
-            get { return this.owner ?? Next.ContainingMemberOrLambda; }
+            get { return _memberSymbol ?? Next.ContainingMemberOrLambda; }
         }
 
-        internal Symbol MemberSymbol { get { return this.memberSymbol; } }
+        internal Symbol MemberSymbol { get { return _memberSymbol; } }
 
-        internal override Binder GetBinder(CSharpSyntaxNode node)
+        internal override Binder GetBinder(SyntaxNode node)
         {
             Binder binder;
             return this.BinderMap.TryGetValue(node, out binder) ? binder : Next.GetBinder(node);
         }
 
-        private SmallDictionary<CSharpSyntaxNode, Binder> BinderMap
+        private void ComputeBinderMap()
         {
-            get
-            {
-                if (this.lazyBinderMap == null)
-                {
-                    SmallDictionary<CSharpSyntaxNode, Binder> map;
-                    var methodSymbol = this.owner;
+            SmallDictionary<SyntaxNode, Binder> map;
+            ImmutableArray<MethodSymbol> methodSymbolsWithYield;
 
-                    // Ensure that the member symbol is a method symbol.
-                    if ((object)methodSymbol != null && this.root != null)
+            // Ensure that the member symbol is a method symbol.
+            if ((object)_memberSymbol != null && _root != null)
+            {
+                var methodsWithYield = ArrayBuilder<SyntaxNode>.GetInstance();
+                var symbolsWithYield = ArrayBuilder<MethodSymbol>.GetInstance();
+                map = LocalBinderFactory.BuildMap(_memberSymbol, _root, this, methodsWithYield, _rootBinderAdjusterOpt);
+                foreach (var methodWithYield in methodsWithYield)
+                {
+                    Binder binder;
+                    if (map.TryGetValue(methodWithYield, out binder))
                     {
-                        bool sawYield;
-                        map = LocalBinderFactory.BuildMap(methodSymbol, this.root, this, out sawYield);
-                        if (sawYield && ((MethodSymbol)this.ContainingMemberOrLambda).MethodKind != MethodKind.AnonymousFunction)
+                        Symbol containing = binder.ContainingMemberOrLambda;
+
+                        // get the closest inclosing InMethodBinder and make it an iterator
+                        InMethodBinder inMethod = null;
+                        while (binder != null)
                         {
-                            for (Binder b = this; b != null; b = b.Next)
-                            {
-                                var inMethod = b as InMethodBinder;
-                                if (inMethod != null)
-                                {
-                                    inMethod.MakeIterator();
-                                    break;
-                                }
-                            }
+                            inMethod = binder as InMethodBinder;
+                            if (inMethod != null)
+                                break;
+                            binder = binder.Next;
+                        }
+                        if (inMethod != null && (object)inMethod.ContainingMemberOrLambda == containing)
+                        {
+                            inMethod.MakeIterator();
+                            symbolsWithYield.Add((MethodSymbol)inMethod.ContainingMemberOrLambda);
+                        }
+                        else
+                        {
+                            Debug.Assert(methodWithYield == _root && methodWithYield is ExpressionSyntax);
                         }
                     }
                     else
                     {
-                        map = SmallDictionary<CSharpSyntaxNode, Binder>.Empty;
+                        // skip over it, this is an error
                     }
+                }
+                methodsWithYield.Free();
+                methodSymbolsWithYield = symbolsWithYield.ToImmutableAndFree();
+            }
+            else
+            {
+                map = SmallDictionary<SyntaxNode, Binder>.Empty;
+                methodSymbolsWithYield = ImmutableArray<MethodSymbol>.Empty;
+            }
 
-                    Interlocked.CompareExchange(ref this.lazyBinderMap, map, null);
+            Interlocked.CompareExchange(ref _lazyBinderMap, map, null);
+            ImmutableInterlocked.InterlockedCompareExchange(ref _methodSymbolsWithYield, methodSymbolsWithYield, default(ImmutableArray<MethodSymbol>));
+        }
+
+        private SmallDictionary<SyntaxNode, Binder> BinderMap
+        {
+            get
+            {
+                if (_lazyBinderMap == null)
+                {
+                    ComputeBinderMap();
                 }
 
-                return this.lazyBinderMap;
+                return _lazyBinderMap;
+            }
+        }
+
+        private ImmutableArray<MethodSymbol> MethodSymbolsWithYield
+        {
+            get
+            {
+                if (_methodSymbolsWithYield.IsDefault)
+                {
+                    ComputeBinderMap();
+                }
+
+                return _methodSymbolsWithYield;
+            }
+        }
+
+        public void ValidateIteratorMethods(DiagnosticBag diagnostics)
+        {
+            foreach (var iterator in MethodSymbolsWithYield)
+            {
+                foreach (var parameter in iterator.Parameters)
+                {
+                    if (parameter.RefKind != RefKind.None)
+                    {
+                        diagnostics.Add(ErrorCode.ERR_BadIteratorArgType, parameter.Locations[0]);
+                    }
+                    else if (parameter.Type.IsUnsafe())
+                    {
+                        diagnostics.Add(ErrorCode.ERR_UnsafeIteratorArgType, parameter.Locations[0]);
+                    }
+                }
+
+                if (iterator.IsVararg)
+                {
+                    // error CS1636: __arglist is not allowed in the parameter list of iterators
+                    diagnostics.Add(ErrorCode.ERR_VarargsIterator, iterator.Locations[0]);
+                }
+
+                if (((iterator as SourceMethodSymbol)?.IsUnsafe == true || (iterator as LocalFunctionSymbol)?.IsUnsafe == true)
+                    && Compilation.Options.AllowUnsafe) // Don't cascade
+                {
+                    diagnostics.Add(ErrorCode.ERR_IllegalInnerUnsafe, iterator.Locations[0]);
+                }
             }
         }
     }

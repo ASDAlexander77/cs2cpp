@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 
@@ -27,5 +27,10 @@ namespace Microsoft.CodeAnalysis
         /// For example "x = 1".
         /// </summary>
         IncludeConstantValue = 1 << 1,
+
+        /// <summary>
+        /// Includes the <c>ref</c> keyword for ref-locals.
+        /// </summary>
+        IncludeRef = 1 << 2,
     }
 }

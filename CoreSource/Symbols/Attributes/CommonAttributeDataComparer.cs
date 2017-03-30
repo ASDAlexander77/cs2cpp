@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -35,7 +35,7 @@ namespace Microsoft.CodeAnalysis
         {
             Debug.Assert(attr != null);
 
-            int hash = attr.AttributeClass != null ? attr.AttributeClass.GetHashCode() : 0;
+            int hash = attr.AttributeClass?.GetHashCode() ?? 0;
             hash = attr.AttributeConstructor != null ? Hash.Combine(attr.AttributeConstructor.GetHashCode(), hash) : hash;
             hash = Hash.Combine(attr.HasErrors, hash);
             hash = Hash.Combine(attr.IsConditionallyOmitted, hash);

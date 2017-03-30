@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -16,7 +16,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         // For switch statements, we have an option of completely rewriting the switch header
         // and switch sections into simpler constructs, i.e. we can rewrite the switch header
         // using bound conditional goto statements and the rewrite the switch sections into
-        // bound labeleled statements.
+        // bound labeled statements.
 
         // However, all the logic for emitting the switch jump tables is language agnostic
         // and includes IL optimizations. Hence we delay the switch jump table generation
@@ -36,48 +36,41 @@ namespace Microsoft.CodeAnalysis.CSharp
         // We need to emit this function to compute the hash value into the compiler generate
         // <PrivateImplementationDetails> class. 
         // If we have at least one string switch statement in a module that needs a
-        // hash table based jump table, we generate a single public string hash sythesized method
+        // hash table based jump table, we generate a single public string hash synthesized method
         // that is shared across the module.
 
         public override BoundNode VisitSwitchStatement(BoundSwitchStatement node)
         {
             var syntax = node.Syntax;
 
-            var rewrittenExpression = (BoundExpression)Visit(node.BoundExpression);
+            var rewrittenExpression = (BoundExpression)Visit(node.Expression);
             var rewrittenSections = VisitSwitchSections(node.SwitchSections);
 
-            var rewrittenStatement = MakeSwitchStatement(syntax, rewrittenExpression, rewrittenSections, node.ConstantTargetOpt, node.InnerLocals, node.BreakLabel, node);
-
-            if (!node.OuterLocals.IsEmpty)
+            // EnC: We need to insert a hidden sequence point to handle function remapping in case 
+            // the containing method is edited while methods invoked in the expression are being executed.
+            if (!node.WasCompilerGenerated && this.Instrument)
             {
-                rewrittenStatement = new BoundBlock(syntax, node.OuterLocals, ImmutableArray.Create(rewrittenStatement));
+                rewrittenExpression = _instrumenter.InstrumentSwitchStatementExpression(node, rewrittenExpression, _factory);
             }
 
-            // Create the sequence point if generating debug info and
-            // node is not compiler generated
-            if (this.generateDebugInfo && !node.WasCompilerGenerated)
-            {
-                SwitchStatementSyntax switchSyntax = (SwitchStatementSyntax)syntax;
-                TextSpan switchSequencePointSpan = TextSpan.FromBounds(
-                    switchSyntax.SwitchKeyword.SpanStart,
-                    switchSyntax.CloseParenToken.Span.End);
+            var rewrittenStatement = MakeSwitchStatement(syntax, rewrittenExpression, rewrittenSections, node.ConstantTargetOpt, node.InnerLocals, node.InnerLocalFunctions, node.BreakLabel, node);
 
-                return new BoundSequencePointWithSpan(
-                    syntax: syntax,
-                    statementOpt: rewrittenStatement,
-                    span: switchSequencePointSpan,
-                    hasErrors: false);
+            // Only add instrumentation (such as a sequence point) if the node is not compiler-generated.
+            if (this.Instrument && !node.WasCompilerGenerated)
+            {
+                rewrittenStatement = _instrumenter.InstrumentSwitchStatement(node, rewrittenStatement);
             }
 
             return rewrittenStatement;
         }
 
         private BoundStatement MakeSwitchStatement(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenExpression,
             ImmutableArray<BoundSwitchSection> rewrittenSections,
             LabelSymbol constantTargetOpt,
             ImmutableArray<LocalSymbol> locals,
+            ImmutableArray<LocalFunctionSymbol> localFunctions,
             GeneratedLabelSymbol breakLabel,
             BoundSwitchStatement oldNode)
         {
@@ -85,16 +78,18 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert((object)rewrittenExpression.Type != null);
 
             return rewrittenExpression.Type.IsNullableType() ?
-                MakeSwitchStatementWithNullableExpression(syntax, rewrittenExpression, rewrittenSections, constantTargetOpt, locals, breakLabel, oldNode) :
-                MakeSwitchStatementWithNonNullableExpression(syntax, rewrittenExpression, rewrittenSections, constantTargetOpt, locals, breakLabel, oldNode);
+                MakeSwitchStatementWithNullableExpression(syntax, rewrittenExpression, rewrittenSections, constantTargetOpt, locals, localFunctions, breakLabel, oldNode) :
+                MakeSwitchStatementWithNonNullableExpression(syntax, null, rewrittenExpression, rewrittenSections, constantTargetOpt, locals, localFunctions, breakLabel, oldNode);
         }
 
         private BoundStatement MakeSwitchStatementWithNonNullableExpression(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
+            BoundStatement preambleOpt,
             BoundExpression rewrittenExpression,
             ImmutableArray<BoundSwitchSection> rewrittenSections,
             LabelSymbol constantTargetOpt,
             ImmutableArray<LocalSymbol> locals,
+            ImmutableArray<LocalFunctionSymbol> localFunctions,
             GeneratedLabelSymbol breakLabel,
             BoundSwitchStatement oldNode)
         {
@@ -109,25 +104,27 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (rewrittenExpression.Type.SpecialType == SpecialType.System_String)
             {
                 EnsureStringHashFunction(rewrittenSections, syntax);
-                stringEquality = GetSpecialTypeMethod(syntax, SpecialMember.System_String__op_Equality);
+                stringEquality = UnsafeGetSpecialTypeMethod(syntax, SpecialMember.System_String__op_Equality);
             }
 
             return oldNode.Update(
-                outerLocals: ImmutableArray<LocalSymbol>.Empty,
-                boundExpression: rewrittenExpression,
+                loweredPreambleOpt: preambleOpt,
+                expression: rewrittenExpression,
                 constantTargetOpt: constantTargetOpt,
                 innerLocals: locals,
+                innerLocalFunctions: localFunctions,
                 switchSections: rewrittenSections,
                 breakLabel: breakLabel,
                 stringEquality: stringEquality);
         }
 
         private BoundStatement MakeSwitchStatementWithNullableExpression(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenExpression,
             ImmutableArray<BoundSwitchSection> rewrittenSections,
             LabelSymbol constantTargetOpt,
             ImmutableArray<LocalSymbol> locals,
+            ImmutableArray<LocalFunctionSymbol> localFunctions,
             GeneratedLabelSymbol breakLabel,
             BoundSwitchStatement oldNode)
         {
@@ -144,7 +141,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (rewrittenExpression.Kind != BoundKind.Local)
             {
                 BoundAssignmentOperator assignmentToTemp;
-                BoundLocal boundTemp = this.factory.StoreToTemp(rewrittenExpression, out assignmentToTemp);
+                BoundLocal boundTemp = _factory.StoreToTemp(rewrittenExpression, out assignmentToTemp);
                 var tempAssignment = new BoundExpressionStatement(exprSyntax, assignmentToTemp);
                 statementBuilder.Add(tempAssignment);
                 tempLocal = boundTemp.LocalSymbol;
@@ -161,22 +158,32 @@ namespace Microsoft.CodeAnalysis.CSharp
                 condition: MakeNullCheck(exprSyntax, rewrittenExpression, BinaryOperatorKind.NullableNullEqual),
                 jumpIfTrue: true,
                 label: GetNullValueTargetSwitchLabel(rewrittenSections, breakLabel));
-            statementBuilder.Add(condGotoNullValueTargetLabel);
 
             // Rewrite the switch statement using nullable expression's underlying value as the switch expression.
 
             // rewrittenExpression.GetValueOrDefault()
-            MethodSymbol getValueOrDefault = GetNullableMethod(syntax, exprNullableType, SpecialMember.System_Nullable_T_GetValueOrDefault);
+            MethodSymbol getValueOrDefault = UnsafeGetNullableMethod(syntax, exprNullableType, SpecialMember.System_Nullable_T_GetValueOrDefault);
             BoundCall callGetValueOrDefault = BoundCall.Synthesized(exprSyntax, rewrittenExpression, getValueOrDefault);
             rewrittenExpression = callGetValueOrDefault;
 
             // rewrite switch statement
-            BoundStatement rewrittenSwitchStatement = MakeSwitchStatementWithNonNullableExpression(syntax,
-                rewrittenExpression, rewrittenSections, constantTargetOpt, locals, breakLabel, oldNode);
+            BoundStatement rewrittenSwitchStatement = MakeSwitchStatementWithNonNullableExpression(
+                syntax,
+                condGotoNullValueTargetLabel,
+                rewrittenExpression, 
+                rewrittenSections, 
+                constantTargetOpt, 
+                locals, 
+                localFunctions, 
+                breakLabel, 
+                oldNode);
 
             statementBuilder.Add(rewrittenSwitchStatement);
 
-            return new BoundBlock(syntax, locals: (object)tempLocal == null ? ImmutableArray<LocalSymbol>.Empty : ImmutableArray.Create<LocalSymbol>(tempLocal), statements: statementBuilder.ToImmutableAndFree());
+            return new BoundBlock(
+                syntax,
+                locals: (object)tempLocal == null ? ImmutableArray<LocalSymbol>.Empty : ImmutableArray.Create<LocalSymbol>(tempLocal),
+                statements: statementBuilder.ToImmutableAndFree());
         }
 
         private static LabelSymbol GetNullValueTargetSwitchLabel(ImmutableArray<BoundSwitchSection> sections, GeneratedLabelSymbol breakLabel)
@@ -185,10 +192,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             foreach (var section in sections)
             {
-                foreach (BoundSwitchLabel boundLabel in section.BoundSwitchLabels)
+                foreach (BoundSwitchLabel boundLabel in section.SwitchLabels)
                 {
                     var label = (SourceLabelSymbol)boundLabel.Label;
-                    var labelConstant = label.SwitchCaseLabelConstant;
+                    var labelConstant = boundLabel.ConstantValueOpt;
 
                     if (labelConstant == ConstantValue.Null)
                     {
@@ -197,7 +204,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     else if (labelConstant == null)
                     {
                         // Default label
-                        Debug.Assert(label.IdentifierNodeOrToken.CSharpKind() == SyntaxKind.DefaultSwitchLabel);
+                        Debug.Assert(label.IdentifierNodeOrToken.Kind() == SyntaxKind.DefaultSwitchLabel);
                         Debug.Assert(fallThroughLabel == breakLabel);
 
                         fallThroughLabel = label;
@@ -227,7 +234,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override BoundNode VisitSwitchSection(BoundSwitchSection node)
         {
-            return node.Update(VisitList(node.BoundSwitchLabels), VisitList(node.Statements));
+            return node.Update(VisitList(node.SwitchLabels), VisitList(node.Statements));
         }
 
         private static int CountLabels(ImmutableArray<BoundSwitchSection> rewrittenSections)
@@ -235,13 +242,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             int count = 0;
             foreach (var section in rewrittenSections)
             {
-                foreach (var boundLabel in section.BoundSwitchLabels)
+                foreach (var boundLabel in section.SwitchLabels)
                 {
-                    if (boundLabel.Label.IdentifierNodeOrToken.CSharpKind() == SyntaxKind.CaseSwitchLabel)
+                    if (boundLabel.ConstantValueOpt != null)
                     {
-                        Debug.Assert(((SourceLabelSymbol)boundLabel.Label).SwitchCaseLabelConstant.IsString ||
-                            ((SourceLabelSymbol)boundLabel.Label).SwitchCaseLabelConstant.IsNull);
-
+                        var value = boundLabel.ConstantValueOpt;
+                        Debug.Assert(value.IsString || value.IsNull);
                         count++;
                     }
                 }
@@ -253,7 +259,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         // Checks whether we are generating a hash table based string switch and
         // we need to generate a new helper method for computing string hash value.
         // Creates the method if needed.
-        private void EnsureStringHashFunction(ImmutableArray<BoundSwitchSection> rewrittenSections, CSharpSyntaxNode syntaxNode)
+        private void EnsureStringHashFunction(ImmutableArray<BoundSwitchSection> rewrittenSections, SyntaxNode syntaxNode)
         {
             var module = this.EmitModule;
             if (module == null)
@@ -269,21 +275,21 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // If we have already generated the helper, possibly for another switch
             // or on another thread, we don't need to regenerate it.
-            var privateImplClass = module.GetPrivateImplClass(syntaxNode, diagnostics);
+            var privateImplClass = module.GetPrivateImplClass(syntaxNode, _diagnostics);
             if (privateImplClass.GetMethod(PrivateImplementationDetails.SynthesizedStringHashFunctionName) != null)
             {
                 return;
             }
 
             // cannot emit hash method if have no access to Chars.
-            var charsMember = this.compilation.GetSpecialTypeMember(SpecialMember.System_String__Chars);
+            var charsMember = _compilation.GetSpecialTypeMember(SpecialMember.System_String__Chars);
             if ((object)charsMember == null || charsMember.GetUseSiteDiagnostic() != null)
             {
                 return;
             }
 
-            TypeSymbol returnType = factory.SpecialType(SpecialType.System_UInt32);
-            TypeSymbol paramType = factory.SpecialType(SpecialType.System_String);
+            TypeSymbol returnType = _factory.SpecialType(SpecialType.System_UInt32);
+            TypeSymbol paramType = _factory.SpecialType(SpecialType.System_String);
 
             var method = new SynthesizedStringSwitchHashMethod(module.SourceModule, privateImplClass, returnType, paramType);
             privateImplClass.TryAddSynthesizedMethod(method);

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -17,26 +17,27 @@ namespace Microsoft.CodeAnalysis.CSharp
             var rewrittenConsequence = VisitStatement(node.Consequence);
             var rewrittenAlternative = VisitStatement(node.AlternativeOpt);
             var syntax = (IfStatementSyntax)node.Syntax;
-            var result = RewriteIfStatement(syntax, node.Locals, rewrittenCondition, rewrittenConsequence, rewrittenAlternative, node.HasErrors);
+
+            // EnC: We need to insert a hidden sequence point to handle function remapping in case 
+            // the containing method is edited while methods invoked in the condition are being executed.
+            if (this.Instrument && !node.WasCompilerGenerated)
+            {
+                rewrittenCondition = _instrumenter.InstrumentIfStatementCondition(node, rewrittenCondition, _factory);
+            }
+
+            var result = RewriteIfStatement(syntax, rewrittenCondition, rewrittenConsequence, rewrittenAlternative, node.HasErrors);
 
             // add sequence point before the whole statement
-            if (this.generateDebugInfo && !node.WasCompilerGenerated)
+            if (this.Instrument && !node.WasCompilerGenerated)
             {
-                result = new BoundSequencePointWithSpan(
-                    syntax,
-                    result,
-                    TextSpan.FromBounds(
-                        syntax.IfKeyword.SpanStart,
-                        syntax.CloseParenToken.Span.End),
-                    node.HasErrors);
+                result = _instrumenter.InstrumentIfStatement(node, result);
             }
 
             return result;
         }
 
         private static BoundStatement RewriteIfStatement(
-            CSharpSyntaxNode syntax,
-            ImmutableArray<LocalSymbol> locals,
+            SyntaxNode syntax,
             BoundExpression rewrittenCondition,
             BoundStatement rewrittenConsequence,
             BoundStatement rewrittenAlternativeOpt,
@@ -58,6 +59,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 builder.Add(new BoundConditionalGoto(rewrittenCondition.Syntax, rewrittenCondition, false, afterif));
                 builder.Add(rewrittenConsequence);
+                builder.Add(new BoundLabelStatement(syntax, afterif));
+                var statements = builder.ToImmutableAndFree();
+                return new BoundStatementList(syntax, statements, hasErrors);
             }
             else
             {
@@ -82,16 +86,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 builder.Add(new BoundGotoStatement(syntax, afterif));
                 builder.Add(new BoundLabelStatement(syntax, alt));
                 builder.Add(rewrittenAlternativeOpt);
+                builder.Add(new BoundLabelStatement(syntax, afterif));
+                return new BoundStatementList(syntax, builder.ToImmutableAndFree(), hasErrors);
             }
 
-            builder.Add(new BoundLabelStatement(syntax, afterif));
-
-            if (!locals.IsDefaultOrEmpty)
-            {
-                return new BoundBlock(syntax, locals, builder.ToImmutableAndFree(), hasErrors);
-            }
-
-            return new BoundStatementList(syntax, builder.ToImmutableAndFree(), hasErrors);
         }
     }
 }

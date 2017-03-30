@@ -7,11 +7,16 @@ namespace Il2Native.Logic.DOM
 {
     using System.Collections.Immutable;
     using System.Linq;
+
     using DOM2;
     using Implementations;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+
     using Synthesized;
+
+    using Expression = DOM2.Expression;
 
     /// <summary>
     /// </summary>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -239,11 +239,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// by this module. Items at the same position from GetReferencedAssemblies and 
         /// from GetReferencedAssemblySymbols should correspond to each other. If reference is 
         /// not resolved by compiler, GetReferencedAssemblySymbols returns MissingAssemblySymbol in the
-        /// correspnding item.
+        /// corresponding item.
         /// 
         /// The array and its content is provided by ReferenceManager and must not be modified.
         /// </summary>
         internal abstract ImmutableArray<AssemblySymbol> GetReferencedAssemblySymbols(); // TODO: Remove this method and make ReferencedAssemblySymbols property abstract instead.
+
+        internal AssemblySymbol GetReferencedAssemblySymbol(int referencedAssemblyIndex)
+        {
+            var referencedAssemblies = GetReferencedAssemblySymbols();
+            if (referencedAssemblyIndex < referencedAssemblies.Length)
+            {
+                return referencedAssemblies[referencedAssemblyIndex];
+            }
+
+            // This module must be a corlib where the original metadata contains assembly
+            // references (see https://github.com/dotnet/roslyn/issues/13275).
+            var assembly = ContainingAssembly;
+            if ((object)assembly != assembly.CorLibrary)
+            {
+                throw new ArgumentOutOfRangeException(nameof(referencedAssemblyIndex));
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// A helper method for ReferenceManager to set assembly identities for assemblies 
@@ -318,7 +337,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (namespaceSymbol == null)
             {
-                throw new ArgumentNullException("namespaceSymbol");
+                throw new ArgumentNullException(nameof(namespaceSymbol));
             }
 
             var moduleNs = namespaceSymbol as NamespaceSymbol;
@@ -359,7 +378,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return ImmutableArray.Create<IAssemblySymbol, AssemblySymbol>(ReferencedAssemblySymbols);
+                return ImmutableArray<IAssemblySymbol>.CastUp(ReferencedAssemblySymbols);
             }
         }
 
@@ -376,6 +395,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             return visitor.VisitModule(this);
         }
+
+        /// <summary>
+        /// If this symbol represents a metadata module returns the underlying <see cref="ModuleMetadata"/>.
+        /// 
+        /// Otherwise, this returns <code>null</code>.
+        /// </summary>
+        public abstract ModuleMetadata GetMetadata();
 
         #endregion
     }

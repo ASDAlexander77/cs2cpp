@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Text
@@ -85,25 +86,26 @@ namespace Microsoft.CodeAnalysis.Text
             return this.GetEnumerator();
         }
 
+        [SuppressMessage("Performance", "CA1067", Justification = "Equality not actually implemented")]
         public struct Enumerator : IEnumerator<TextLine>, IEnumerator
         {
-            private readonly TextLineCollection lines;
-            private int index;
+            private readonly TextLineCollection _lines;
+            private int _index;
 
             internal Enumerator(TextLineCollection lines, int index = -1)
             {
-                this.lines = lines;
-                this.index = index;
+                _lines = lines;
+                _index = index;
             }
 
             public TextLine Current
             {
                 get
                 {
-                    var ndx = this.index;
-                    if (ndx >= 0 && ndx < this.lines.Count)
+                    var ndx = _index;
+                    if (ndx >= 0 && ndx < _lines.Count)
                     {
-                        return this.lines[ndx];
+                        return _lines[ndx];
                     }
                     else
                     {
@@ -114,9 +116,9 @@ namespace Microsoft.CodeAnalysis.Text
 
             public bool MoveNext()
             {
-                if (index < lines.Count - 1)
+                if (_index < _lines.Count - 1)
                 {
-                    index = index + 1;
+                    _index = _index + 1;
                     return true;
                 }
 

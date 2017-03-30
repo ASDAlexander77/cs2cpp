@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
@@ -11,21 +11,41 @@ namespace Microsoft.CodeAnalysis
     internal class CommonPropertyWellKnownAttributeData : WellKnownAttributeData
     {
         #region SpecialNameAttribute
-        private bool hasSpecialNameAttribute;
+        private bool _hasSpecialNameAttribute;
         public bool HasSpecialNameAttribute
         {
             get
             {
                 VerifySealed(expected: true);
-                return this.hasSpecialNameAttribute;
+                return _hasSpecialNameAttribute;
             }
             set
             {
                 VerifySealed(expected: false);
-                this.hasSpecialNameAttribute = value;
+                _hasSpecialNameAttribute = value;
                 SetDataStored();
             }
         }
+        #endregion
+
+        #region ExcludeFromCodeCoverageAttribute
+
+        private bool _hasExcludeFromCodeCoverageAttribute;
+        public bool HasExcludeFromCodeCoverageAttribute
+        {
+            get
+            {
+                VerifySealed(expected: true);
+                return _hasExcludeFromCodeCoverageAttribute;
+            }
+            set
+            {
+                VerifySealed(expected: false);
+                _hasExcludeFromCodeCoverageAttribute = value;
+                SetDataStored();
+            }
+        }
+
         #endregion
     }
 }

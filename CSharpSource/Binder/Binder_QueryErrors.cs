@@ -1,10 +1,12 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Roslyn.Utilities;
+using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -17,14 +19,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// This is a clone of the Dev10 logic for reporting query errors.
         /// </summary>
         internal void ReportQueryLookupFailed(
-            CSharpSyntaxNode queryClause,
+            SyntaxNode queryClause,
             BoundExpression instanceArgument,
             string name,
             ImmutableArray<Symbol> symbols,
             DiagnosticBag diagnostics)
         {
             FromClauseSyntax fromClause = null;
-            for (CSharpSyntaxNode node = queryClause; ; node = node.Parent)
+            for (SyntaxNode node = queryClause; ; node = node.Parent)
             {
                 var e = node as QueryExpressionSyntax;
                 if (e != null)
@@ -40,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 // CS1979: Query expressions over source type 'dynamic' or with a join sequence of type 'dynamic' are not allowed
                 diagnostics.Add(
-                    new DiagnosticInfoWithSymbols(ErrorCode.ERR_BadDynamicQuery, new object[] { }, symbols),
+                    new DiagnosticInfoWithSymbols(ErrorCode.ERR_BadDynamicQuery, Array.Empty<object>(), symbols),
                     new SourceLocation(queryClause));
             }
             else if (ImplementsStandardQueryInterface(instanceArgument.Type, name, ref useSiteDiagnostics))
@@ -73,7 +75,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private bool ImplementsStandardQueryInterface(TypeSymbol instanceType, string name, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
-            if (instanceType.TypeKind == TypeKind.ArrayType || name == "Cast" && HasCastToQueryProvider(instanceType, ref useSiteDiagnostics))
+            if (instanceType.TypeKind == TypeKind.Array || name == "Cast" && HasCastToQueryProvider(instanceType, ref useSiteDiagnostics))
             {
                 return true;
             }
@@ -129,7 +131,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             for (CSharpSyntaxNode parent = node.Parent; parent != null; parent = parent.Parent)
             {
-                if (parent.Kind == SyntaxKind.JoinClause)
+                if (parent.Kind() == SyntaxKind.JoinClause)
                 {
                     var join = parent as JoinClauseSyntax;
                     if (join.LeftExpression.Span.Contains(node.Span) && join.Identifier.ValueText == node.Identifier.ValueText) return true;
@@ -145,7 +147,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // variable of the enclosing query.
             for (CSharpSyntaxNode parent = node.Parent; parent != null; parent = parent.Parent)
             {
-                if (parent.Kind == SyntaxKind.JoinClause)
+                if (parent.Kind() == SyntaxKind.JoinClause)
                 {
                     var join = parent as JoinClauseSyntax;
                     if (join.RightExpression.Span.Contains(node.Span)) return true;
@@ -159,32 +161,32 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             string clauseKind = null;
             bool multiple = false;
-            switch (queryClause.Kind)
+            switch (queryClause.Kind())
             {
                 case SyntaxKind.JoinClause:
-                    clauseKind = "join"; // TODO: should be ErrorCode.IDS_JoinClause.Localize();
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.JoinKeyword);
                     multiple = true;
                     break;
                 case SyntaxKind.LetClause:
-                    clauseKind = "let"; // TODO: ErrorCode.IDS_LetClause
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.LetKeyword);
                     break;
                 case SyntaxKind.SelectClause:
-                    clauseKind = "select"; // TODO ErrorCode.IDS_Select
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.SelectKeyword);
                     break;
                 case SyntaxKind.WhereClause:
-                    clauseKind = "where"; // TODO: ErrorCode.IDS_Where
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.WhereKeyword);
                     break;
                 case SyntaxKind.OrderByClause:
                 case SyntaxKind.AscendingOrdering:
                 case SyntaxKind.DescendingOrdering:
-                    clauseKind = "order by"; // TODO: ErrorCode.IDS_OrderByClause
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.OrderByKeyword);
                     multiple = true;
                     break;
                 case SyntaxKind.QueryContinuation:
-                    clauseKind = "into"; // TODO: ErrorCode.IDS_ContinuationClause
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.IntoKeyword);
                     break;
                 case SyntaxKind.GroupClause:
-                    clauseKind = "group by"; // TODO: ErrorCode.IDS_GroupByClause
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.GroupKeyword) + " " + SyntaxFacts.GetText(SyntaxKind.ByKeyword);
                     multiple = true;
                     break;
                 case SyntaxKind.FromClause:
@@ -192,12 +194,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         return;
                     }
-                    clauseKind = "from"; // TODO: ErrorCode.IDS_FromClause
+                    clauseKind = SyntaxFacts.GetText(SyntaxKind.FromKeyword);
                     break;
                 default:
-                    clauseKind = "unknown";
-                    Debug.Assert(false, "invalid query clause kind " + queryClause.Kind);
-                    break;
+                    throw ExceptionUtilities.UnexpectedValue(queryClause.Kind());
             }
 
             diagnostics.Add(new DiagnosticInfoWithSymbols(
@@ -231,7 +231,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return false;
             }
 
-            TypeSymbol receiverType = receiver != null ? receiver.Type : null;
+            TypeSymbol receiverType = receiver?.Type;
             diagnostics.Add(new DiagnosticInfoWithSymbols(
                 ErrorCode.ERR_QueryTypeInferenceFailedSelectMany,
                 new object[] { type, receiverType, methodName },

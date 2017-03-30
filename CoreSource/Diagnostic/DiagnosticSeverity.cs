@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -15,19 +15,19 @@ namespace Microsoft.CodeAnalysis
         Hidden = 0,
 
         /// <summary>
-        /// Information that does not indicate a problem (i.e. not proscriptive).
+        /// Information that does not indicate a problem (i.e. not prescriptive).
         /// </summary>
-        Info,
+        Info = 1,
 
         /// <summary>
         /// Something suspicious but allowed.
         /// </summary>
-        Warning,
+        Warning = 2,
 
         /// <summary>
         /// Something not allowed by the rules of the language or other authority.
         /// </summary>
-        Error
+        Error = 3,
     }
 
     /// <summary>

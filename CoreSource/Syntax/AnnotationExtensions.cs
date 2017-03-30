@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -55,7 +55,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Creates a new node identical to this node with the annotions of the specified kind removed.
+        /// Creates a new node identical to this node with the annotations of the specified kind removed.
         /// </summary>
         /// <param name="node">Original node.</param>
         /// <param name="annotationKind">The kind of annotation to remove.</param>

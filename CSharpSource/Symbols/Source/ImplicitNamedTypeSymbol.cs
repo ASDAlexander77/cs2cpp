@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -48,11 +48,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return NoLocation.Singleton;
         }
 
+        /// <summary>
+        /// Returns null for a submission class.
+        /// This ensures that a submission class does not inherit methods such as ToString or GetHashCode.
+        /// </summary>
         internal override NamedTypeSymbol BaseTypeNoUseSiteDiagnostics
         {
             get
             {
-                return (this.TypeKind == TypeKind.Submission) ? null : this.DeclaringCompilation.GetSpecialType(Microsoft.CodeAnalysis.SpecialType.System_Object);
+                return IsScriptClass ? null : this.DeclaringCompilation.GetSpecialType(Microsoft.CodeAnalysis.SpecialType.System_Object);
             }
         }
 
@@ -72,9 +76,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return BaseTypeNoUseSiteDiagnostics;
         }
 
-        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
+        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved)
         {
-            get { return ImmutableArray<NamedTypeSymbol>.Empty; }
+            return ImmutableArray<NamedTypeSymbol>.Empty;
         }
 
         internal override ImmutableArray<NamedTypeSymbol> GetDeclaredInterfaces(ConsList<Symbol> basesBeingResolved)
@@ -95,6 +99,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal override ImmutableArray<TypeSymbol> TypeArgumentsNoUseSiteDiagnostics
         {
             get { return ImmutableArray<TypeSymbol>.Empty; }
+        }
+
+        internal override bool HasTypeArgumentsCustomModifiers
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal)
+        {
+            return GetEmptyTypeArgumentCustomModifiers(ordinal);
         }
 
         internal override bool IsComImport

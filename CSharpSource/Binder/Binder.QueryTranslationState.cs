@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -91,11 +91,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            int nextTransparentIdentifierNumber = 0;
+            private int _nextTransparentIdentifierNumber;
 
             internal string TransparentRangeVariableName()
             {
-                return transparentIdentifierPrefix + nextTransparentIdentifierNumber++;
+                return transparentIdentifierPrefix + _nextTransparentIdentifierNumber++;
             }
 
             internal RangeVariableSymbol TransparentRangeVariable(Binder binder)

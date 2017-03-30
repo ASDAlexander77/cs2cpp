@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    partial class ConversionsBase
+    internal partial class ConversionsBase
     {
         private static TypeSymbol GetUnderlyingEffectiveType(TypeSymbol type, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
@@ -47,11 +47,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // optimization:
             bool excludeExisting = result.Count > 0;
 
-            // The decimal type does not contribute its user-defined conversions to the mix; though its 
-            // conversions are actually implemented via user-defined operators, we logically treat it as 
-            // though those conversions were built-in.  
-
-            if (type.IsClassType() || type.IsStructType() && type.SpecialType != SpecialType.System_Decimal)
+            if (type.IsClassType() || type.IsStructType())
             {
                 var namedType = (NamedTypeSymbol)type;
                 if (!excludeExisting || !HasIdentityConversionToAny(namedType, result))

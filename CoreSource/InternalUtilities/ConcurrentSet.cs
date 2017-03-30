@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace Roslyn.Utilities
     /// A concurrent, simplified HashSet.
     /// </summary>
     [DebuggerDisplay("Count = {Count}")]
-    internal sealed class ConcurrentSet<T> : IEnumerable<T>
+    internal sealed class ConcurrentSet<T> : ICollection<T>
     {
         /// <summary>
         /// The default concurrency level is 2. That means the collection can cope with up to two
@@ -29,14 +30,14 @@ namespace Roslyn.Utilities
         /// <summary>
         /// The backing dictionary. The values are never used; just the keys.
         /// </summary>
-        private readonly ConcurrentDictionary<T, byte> dictionary;
+        private readonly ConcurrentDictionary<T, byte> _dictionary;
 
         /// <summary>
         /// Construct a concurrent set with the default concurrency level.
         /// </summary>
         public ConcurrentSet()
         {
-            dictionary = new ConcurrentDictionary<T, byte>(DefaultConcurrencyLevel, DefaultCapacity);
+            _dictionary = new ConcurrentDictionary<T, byte>(DefaultConcurrencyLevel, DefaultCapacity);
         }
 
         /// <summary>
@@ -45,25 +46,21 @@ namespace Roslyn.Utilities
         /// <param name="equalityComparer">The equality comparer for values in the set.</param>
         public ConcurrentSet(IEqualityComparer<T> equalityComparer)
         {
-            dictionary = new ConcurrentDictionary<T, byte>(DefaultConcurrencyLevel, DefaultCapacity, equalityComparer);
+            _dictionary = new ConcurrentDictionary<T, byte>(DefaultConcurrencyLevel, DefaultCapacity, equalityComparer);
         }
 
         /// <summary>
         /// Obtain the number of elements in the set.
         /// </summary>
         /// <returns>The number of elements in the set.</returns>
-        public int Count
-        {
-            get { return dictionary.Count; }
-        }
+        public int Count => _dictionary.Count;
 
         /// <summary>
         /// Determine whether the set is empty.</summary>
         /// <returns>true if the set is empty; otherwise, false.</returns>
-        public bool IsEmpty
-        {
-            get { return dictionary.IsEmpty; }
-        }
+        public bool IsEmpty => _dictionary.IsEmpty;
+
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Determine whether the given value is in the set.
@@ -72,7 +69,7 @@ namespace Roslyn.Utilities
         /// <returns>true if the set contains the specified value; otherwise, false.</returns>
         public bool Contains(T value)
         {
-            return dictionary.ContainsKey(value);
+            return _dictionary.ContainsKey(value);
         }
 
         /// <summary>
@@ -82,7 +79,18 @@ namespace Roslyn.Utilities
         /// <returns>true if the value was added to the set. If the value already exists, this method returns false.</returns>
         public bool Add(T value)
         {
-            return dictionary.TryAdd(value, 0);
+            return _dictionary.TryAdd(value, 0);
+        }
+
+        public void AddRange(IEnumerable<T> values)
+        {
+            if (values != null)
+            {
+                foreach (var v in values)
+                {
+                    Add(v);
+                }
+            }
         }
 
         /// <summary>
@@ -92,32 +100,36 @@ namespace Roslyn.Utilities
         /// <returns>true if the value was removed successfully; otherwise false.</returns>
         public bool Remove(T value)
         {
-            byte b;
-            return dictionary.TryRemove(value, out b);
+            return _dictionary.TryRemove(value, out var b);
+        }
+
+        /// <summary>
+        /// Clear the set
+        /// </summary>
+        public void Clear()
+        {
+            _dictionary.Clear();
         }
 
         public struct KeyEnumerator
         {
-            private readonly IEnumerator<KeyValuePair<T, byte>> kvpEnumerator;
+            private readonly IEnumerator<KeyValuePair<T, byte>> _kvpEnumerator;
 
             internal KeyEnumerator(IEnumerable<KeyValuePair<T, byte>> data)
             {
-                kvpEnumerator = data.GetEnumerator();
+                _kvpEnumerator = data.GetEnumerator();
             }
 
-            public T Current
-            {
-                get { return kvpEnumerator.Current.Key; }
-            }
+            public T Current => _kvpEnumerator.Current.Key;
 
             public bool MoveNext()
             {
-                return kvpEnumerator.MoveNext();
+                return _kvpEnumerator.MoveNext();
             }
 
             public void Reset()
             {
-                kvpEnumerator.Reset();
+                _kvpEnumerator.Reset();
             }
         }
 
@@ -130,7 +142,7 @@ namespace Roslyn.Utilities
             // PERF: Do not use dictionary.Keys here because that creates a snapshot
             // of the collection resulting in a List<T> allocation. Instead, use the
             // KeyValuePair enumerator and pick off the Key part.
-            return new KeyEnumerator(dictionary);
+            return new KeyEnumerator(_dictionary);
         }
 
         private IEnumerator<T> GetEnumeratorImpl()
@@ -138,7 +150,7 @@ namespace Roslyn.Utilities
             // PERF: Do not use dictionary.Keys here because that creates a snapshot
             // of the collection resulting in a List<T> allocation. Instead, use the
             // KeyValuePair enumerator and pick off the Key part.
-            foreach (var kvp in dictionary)
+            foreach (var kvp in _dictionary)
             {
                 yield return kvp.Key;
             }
@@ -152,6 +164,16 @@ namespace Roslyn.Utilities
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumeratorImpl();
+        }
+
+        void ICollection<T>.Add(T item)
+        {
+            Add(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
         }
     }
 }

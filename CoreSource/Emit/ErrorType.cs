@@ -1,6 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Reflection;
 using System.Reflection.Metadata;
 using Roslyn.Utilities;
 
@@ -17,7 +20,7 @@ namespace Microsoft.CodeAnalysis.Emit
         /// <summary>
         /// For the name we will use a word "Error" followed by a guid, generated on the spot.
         /// </summary>
-        private static readonly string name = "Error" + Guid.NewGuid().ToString("B");
+        private static readonly string s_name = "Error" + Guid.NewGuid().ToString("B");
 
         Cci.IUnitReference Cci.INamespaceTypeReference.GetUnit(EmitContext context)
         {
@@ -69,16 +72,19 @@ namespace Microsoft.CodeAnalysis.Emit
             return null;
         }
 
-        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode(EmitContext context)
-        {
-            return Cci.PrimitiveTypeCode.NotPrimitive;
-        }
-
-        TypeHandle Cci.ITypeReference.TypeDef
+        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode
         {
             get
             {
-                return default(TypeHandle);
+                return Cci.PrimitiveTypeCode.NotPrimitive;
+            }
+        }
+
+        TypeDefinitionHandle Cci.ITypeReference.TypeDef
+        {
+            get
+            {
+                return default(TypeDefinitionHandle);
             }
         }
 
@@ -145,7 +151,7 @@ namespace Microsoft.CodeAnalysis.Emit
             return null;
         }
 
-        System.Collections.Generic.IEnumerable<Cci.ICustomAttribute> Cci.IReference.GetAttributes(EmitContext context)
+        IEnumerable<Cci.ICustomAttribute> Cci.IReference.GetAttributes(EmitContext context)
         {
             return SpecializedCollections.EmptyEnumerable<Cci.ICustomAttribute>();
         }
@@ -164,67 +170,38 @@ namespace Microsoft.CodeAnalysis.Emit
         {
             get
             {
-                return name;
+                return s_name;
             }
         }
 
         /// <summary>
         /// A fake containing assembly for an ErrorType object.
         /// </summary>
-        private class ErrorAssembly : Cci.IAssemblyReference
+        private sealed class ErrorAssembly : Cci.IAssemblyReference
         {
             public static readonly ErrorAssembly Singleton = new ErrorAssembly();
+            
             /// <summary>
             /// For the name we will use a word "Error" followed by a guid, generated on the spot.
             /// </summary>
-            private static readonly string name = "Error" + Guid.NewGuid().ToString("B");
+            private static readonly AssemblyIdentity s_identity = new AssemblyIdentity(
+                name: "Error" + Guid.NewGuid().ToString("B"),
+                version: AssemblyIdentity.NullVersion,
+                cultureName: "",
+                publicKeyOrToken: ImmutableArray<byte>.Empty,
+                hasPublicKey: false,
+                isRetargetable: false,
+                contentType: AssemblyContentType.Default);
 
-            string Cci.IAssemblyReference.Culture
-            {
-                get
-                {
-                    return "";
-                }
-            }
-
-            bool Cci.IAssemblyReference.IsRetargetable
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            System.Reflection.AssemblyContentType Cci.IAssemblyReference.ContentType
-            {
-                get
-                {
-                    return System.Reflection.AssemblyContentType.Default;
-                }
-            }
-
-            System.Collections.Generic.IEnumerable<byte> Cci.IAssemblyReference.PublicKeyToken
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
-            System.Version Cci.IAssemblyReference.Version
-            {
-                get
-                {
-                    return new System.Version(0, 0, 0, 0);
-                }
-            }
+            AssemblyIdentity Cci.IAssemblyReference.Identity => s_identity;
+            Version Cci.IAssemblyReference.AssemblyVersionPattern => null;
 
             Cci.IAssemblyReference Cci.IModuleReference.GetContainingAssembly(EmitContext context)
             {
                 return this;
             }
 
-            System.Collections.Generic.IEnumerable<Cci.ICustomAttribute> Cci.IReference.GetAttributes(EmitContext context)
+            IEnumerable<Cci.ICustomAttribute> Cci.IReference.GetAttributes(EmitContext context)
             {
                 return SpecializedCollections.EmptyEnumerable<Cci.ICustomAttribute>();
             }
@@ -239,13 +216,7 @@ namespace Microsoft.CodeAnalysis.Emit
                 return null;
             }
 
-            string Cci.INamedEntity.Name
-            {
-                get
-                {
-                    return name;
-                }
-            }
+            string Cci.INamedEntity.Name => s_identity.Name;
         }
     }
 }

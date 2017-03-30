@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Roslyn.Utilities;
@@ -38,7 +38,7 @@ namespace Microsoft.CodeAnalysis.Emit.NoPia
         TEmbeddedProperty,
         TEmbeddedParameter,
         TEmbeddedTypeParameter> : CommonEmbeddedTypesManager
-        where TPEModuleBuilder : CommonPEModuleBuilder, Cci.IModule
+        where TPEModuleBuilder : CommonPEModuleBuilder
         where TModuleCompilationState : CommonModuleCompilationState
         where TEmbeddedTypesManager : EmbeddedTypesManager<TPEModuleBuilder, TModuleCompilationState, TEmbeddedTypesManager, TSyntaxNode, TAttributeData, TSymbol, TAssemblySymbol, TNamedTypeSymbol, TFieldSymbol, TMethodSymbol, TEventSymbol, TPropertySymbol, TParameterSymbol, TTypeParameterSymbol, TEmbeddedType, TEmbeddedField, TEmbeddedMethod, TEmbeddedEvent, TEmbeddedProperty, TEmbeddedParameter, TEmbeddedTypeParameter>
         where TSyntaxNode : SyntaxNode
@@ -67,7 +67,7 @@ namespace Microsoft.CodeAnalysis.Emit.NoPia
         public readonly ConcurrentDictionary<TPropertySymbol, TEmbeddedProperty> EmbeddedPropertiesMap = new ConcurrentDictionary<TPropertySymbol, TEmbeddedProperty>(ReferenceEqualityComparer.Instance);
         public readonly ConcurrentDictionary<TEventSymbol, TEmbeddedEvent> EmbeddedEventsMap = new ConcurrentDictionary<TEventSymbol, TEmbeddedEvent>(ReferenceEqualityComparer.Instance);
 
-        private ImmutableArray<TEmbeddedType> frozen;
+        private ImmutableArray<TEmbeddedType> _frozen;
 
         protected EmbeddedTypesManager(TPEModuleBuilder moduleBeingBuilt)
         {
@@ -78,54 +78,54 @@ namespace Microsoft.CodeAnalysis.Emit.NoPia
         {
             get
             {
-                return !frozen.IsDefault;
+                return !_frozen.IsDefault;
             }
         }
 
         public override ImmutableArray<Cci.INamespaceTypeDefinition> GetTypes(DiagnosticBag diagnostics, HashSet<string> namesOfTopLevelTypes)
         {
-            if (frozen.IsDefault)
+            if (_frozen.IsDefault)
             {
                 var builder = ArrayBuilder<TEmbeddedType>.GetInstance();
                 builder.AddRange(EmbeddedTypesMap.Values);
                 builder.Sort(TypeComparer.Instance);
 
-                if (ImmutableInterlocked.InterlockedInitialize(ref frozen, builder.ToImmutableAndFree()))
+                if (ImmutableInterlocked.InterlockedInitialize(ref _frozen, builder.ToImmutableAndFree()))
                 {
-                    if (frozen.Length > 0)
+                    if (_frozen.Length > 0)
                     {
-                        Cci.INamespaceTypeDefinition prev = frozen[0];
-                        bool reportedDuplicate = HasNameConflict(namesOfTopLevelTypes, frozen[0], diagnostics);
+                        Cci.INamespaceTypeDefinition prev = _frozen[0];
+                        bool reportedDuplicate = HasNameConflict(namesOfTopLevelTypes, _frozen[0], diagnostics);
 
-                        for (int i = 1; i < frozen.Length; i++)
+                        for (int i = 1; i < _frozen.Length; i++)
                         {
-                            Cci.INamespaceTypeDefinition current = frozen[i];
+                            Cci.INamespaceTypeDefinition current = _frozen[i];
 
                             if (prev.NamespaceName == current.NamespaceName &&
                                 prev.Name == current.Name)
                             {
                                 if (!reportedDuplicate)
                                 {
-                                    Debug.Assert(frozen[i - 1] == prev);
+                                    Debug.Assert(_frozen[i - 1] == prev);
 
                                     // ERR_DuplicateLocalTypes3/ERR_InteropTypesWithSameNameAndGuid
-                                    ReportNameCollisionBetweenEmbeddedTypes(frozen[i - 1], frozen[i], diagnostics);
+                                    ReportNameCollisionBetweenEmbeddedTypes(_frozen[i - 1], _frozen[i], diagnostics);
                                     reportedDuplicate = true;
                                 }
                             }
                             else
                             {
                                 prev = current;
-                                reportedDuplicate = HasNameConflict(namesOfTopLevelTypes, frozen[i], diagnostics);
+                                reportedDuplicate = HasNameConflict(namesOfTopLevelTypes, _frozen[i], diagnostics);
                             }
                         }
 
-                        OnGetTypesCompleted(frozen, diagnostics);
+                        OnGetTypesCompleted(_frozen, diagnostics);
                     }
                 }
             }
 
-            return StaticCast<Cci.INamespaceTypeDefinition>.From(frozen);
+            return StaticCast<Cci.INamespaceTypeDefinition>.From(_frozen);
         }
 
         private bool HasNameConflict(HashSet<string> namesOfTopLevelTypes, TEmbeddedType type, DiagnosticBag diagnostics)
@@ -155,6 +155,7 @@ namespace Microsoft.CodeAnalysis.Emit.NoPia
         protected abstract void OnGetTypesCompleted(ImmutableArray<TEmbeddedType> types, DiagnosticBag diagnostics);
         protected abstract void ReportNameCollisionBetweenEmbeddedTypes(TEmbeddedType typeA, TEmbeddedType typeB, DiagnosticBag diagnostics);
         protected abstract void ReportNameCollisionWithAlreadyDeclaredType(TEmbeddedType type, DiagnosticBag diagnostics);
+        protected abstract TAttributeData CreateCompilerGeneratedAttribute();
 
         private sealed class TypeComparer : IComparer<TEmbeddedType>
         {

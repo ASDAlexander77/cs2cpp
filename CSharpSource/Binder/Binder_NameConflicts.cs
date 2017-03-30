@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -30,15 +30,15 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         internal void ValidateParameterNameConflicts(
-            ImmutableArray<TypeParameterSymbol> typeParameters, 
-            ImmutableArray<ParameterSymbol> parameters, 
+            ImmutableArray<TypeParameterSymbol> typeParameters,
+            ImmutableArray<ParameterSymbol> parameters,
             DiagnosticBag diagnostics)
         {
             PooledHashSet<string> tpNames = null;
             if (!typeParameters.IsDefaultOrEmpty)
             {
                 tpNames = PooledHashSet<string>.GetInstance();
-                foreach(var tp in typeParameters)
+                foreach (var tp in typeParameters)
                 {
                     var name = tp.Name;
                     if (string.IsNullOrEmpty(name))
@@ -89,8 +89,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            if (tpNames != null) tpNames.Free();
-            if (pNames != null) pNames.Free();
+            tpNames?.Free();
+            pNames?.Free();
         }
 
         /// <remarks>
@@ -109,7 +109,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // no local scopes enclose members
                 if (binder is InContainerBinder || error)
                 {
-                    break; 
+                    break;
                 }
 
                 var scope = binder as LocalScopeBinder;

@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using Microsoft.CodeAnalysis.CSharp.Symbols;
+using System;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal sealed class SourceUserDefinedOperatorSymbol : SourceUserDefinedOperatorSymbolBase
@@ -37,30 +38,40 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 containingType,
                 location,
                 syntax.GetReference(),
-                syntax.Body.GetReferenceOrNull()
-                ?? syntax.ExpressionBody.GetReferenceOrNull(),
+                syntax.Body?.GetReference() ?? syntax.ExpressionBody?.GetReference(),
                 syntax.Modifiers,
                 diagnostics,
                 isExpressionBodied)
         {
+            CheckForBlockAndExpressionBody(
+                syntax.Body, syntax.ExpressionBody, syntax, diagnostics);
         }
 
-        override protected ParameterListSyntax ParameterListSyntax
+        internal new OperatorDeclarationSyntax GetSyntax()
+        {
+            Debug.Assert(syntaxReferenceOpt != null);
+            return (OperatorDeclarationSyntax)syntaxReferenceOpt.GetSyntax();
+        }
+
+        protected override ParameterListSyntax ParameterListSyntax
         {
             get
             {
-                var syntax = (OperatorDeclarationSyntax)syntaxReference.GetSyntax();
-                return syntax.ParameterList;
+                return GetSyntax().ParameterList;
             }
         }
 
-        override protected TypeSyntax ReturnTypeSyntax
+        protected override TypeSyntax ReturnTypeSyntax
         {
             get
             {
-                var syntax = (OperatorDeclarationSyntax)syntaxReference.GetSyntax();
-                return syntax.ReturnType;
+                return GetSyntax().ReturnType;
             }
+        }
+
+        internal override bool GenerateDebugInfo
+        {
+            get { return true; }
         }
     }
 }

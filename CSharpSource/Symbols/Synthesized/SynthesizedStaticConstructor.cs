@@ -1,28 +1,25 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal sealed class SynthesizedStaticConstructor : MethodSymbol
     {
-        private readonly NamedTypeSymbol containingType;
+        private readonly NamedTypeSymbol _containingType;
 
         internal SynthesizedStaticConstructor(NamedTypeSymbol containingType)
         {
-            this.containingType = containingType;
+            _containingType = containingType;
         }
 
         public override Symbol ContainingSymbol
         {
             get
             {
-                return this.containingType;
+                return _containingType;
             }
         }
 
@@ -30,7 +27,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.containingType;
+                return _containingType;
             }
         }
 
@@ -84,12 +81,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override ParameterSymbol ThisParameter
+        internal override bool TryGetThisParameter(out ParameterSymbol thisParameter)
         {
-            get
-            {
-                return null;
-            }
+            thisParameter = null;
+            return true;
         }
 
         public override Accessibility DeclaredAccessibility
@@ -104,7 +99,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override LexicalSortKey GetLexicalSortKey()
         {
-            return ContainingType.GetLexicalSortKey();
+            //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
+            //This is not critical, but it makes it easier on tools that are comparing metadata.
+            return LexicalSortKey.SynthesizedCCtor;
         }
 
         public override ImmutableArray<Location> Locations
@@ -123,6 +120,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        internal override RefKind RefKind
+        {
+            get
+            {
+                return RefKind.None;
+            }
+        }
+
         public override TypeSymbol ReturnType
         {
             get
@@ -132,6 +137,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
+        {
+            get
+            {
+                return ImmutableArray<CustomModifier>.Empty;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
         {
             get
             {
@@ -300,9 +313,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return false;
         }
 
-        internal override bool IsMetadataFinal()
+        internal override bool IsMetadataFinal
         {
-            return false;
+            get
+            {
+                return false;
+            }
         }
 
         internal override bool RequiresSecurityObject
@@ -341,6 +357,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal override ImmutableArray<string> GetAppliedConditionalSymbols()
         {
             return ImmutableArray<string>.Empty;
+        }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            var containingType = (SourceMemberContainerTypeSymbol)this.ContainingType;
+            return containingType.CalculateSyntaxOffsetInSynthesizedConstructor(localPosition, localTree, isStatic: true);
         }
     }
 }

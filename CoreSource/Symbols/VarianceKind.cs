@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -10,16 +10,16 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Invariant.
         /// </summary>
-        None,
+        None = 0,
 
         /// <summary>
         /// Covariant (<c>out</c>).
         /// </summary>
-        Out,
+        Out = 1,
 
         /// <summary>
         /// Contravariant (<c>in</c>).
         /// </summary>
-        In,
+        In = 2,
     }
 }

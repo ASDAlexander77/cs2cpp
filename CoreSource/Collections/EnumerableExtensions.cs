@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,16 @@ namespace Microsoft.CodeAnalysis
             }
 
             return ImmutableDictionary.CreateRange(items);
+        }
+
+        public static ImmutableDictionary<K, V> ToImmutableDictionaryOrEmpty<K, V>(this IEnumerable<KeyValuePair<K, V>> items, IEqualityComparer<K> keyComparer)
+        {
+            if (items == null)
+            {
+                return ImmutableDictionary.Create<K, V>(keyComparer);
+            }
+
+            return ImmutableDictionary.CreateRange(keyComparer, items);
         }
 
         internal static IList<IList<T>> Transpose<T>(this IEnumerable<IEnumerable<T>> data)
@@ -96,7 +106,7 @@ namespace Microsoft.CodeAnalysis
 
         /// <summary>
         /// Returns the only element of specified sequence if it has exactly one, and default(TSource) otherwise.
-        /// Unlike <see cref="M: Enumerable.SingleOrDefault()"/> doesn't throw if there is more than one element in the sequence.
+        /// Unlike <see cref="Enumerable.SingleOrDefault{TSource}(IEnumerable{TSource})"/> doesn't throw if there is more than one element in the sequence.
         /// </summary>
         internal static TSource AsSingleton<TSource>(this IEnumerable<TSource> source)
         {

@@ -1,12 +1,8 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Immutable;
 using System.Threading;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -19,54 +15,54 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal class CSharpControlFlowAnalysis : ControlFlowAnalysis
     {
-        private readonly RegionAnalysisContext context;
+        private readonly RegionAnalysisContext _context;
 
-        private IEnumerable<SyntaxNode> entryPoints;
-        private IEnumerable<SyntaxNode> exitPoints;
-        private object regionStartPointIsReachable;
-        private object regionEndPointIsReachable;
-        private bool? succeeded = null;
+        private ImmutableArray<SyntaxNode> _entryPoints;
+        private ImmutableArray<SyntaxNode> _exitPoints;
+        private object _regionStartPointIsReachable;
+        private object _regionEndPointIsReachable;
+        private bool? _succeeded;
 
         internal CSharpControlFlowAnalysis(RegionAnalysisContext context)
         {
-            this.context = context;
+            _context = context;
         }
 
         /// <summary>
         /// A collection of statements outside the region that jump into the region.
         /// </summary>
-        public override IEnumerable<SyntaxNode> EntryPoints
+        public override ImmutableArray<SyntaxNode> EntryPoints
         {
             get
             {
-                if (entryPoints == null)
+                if (_entryPoints == null)
                 {
-                    this.succeeded = !context.Failed;
-                    var result = context.Failed ? Enumerable.Empty<SyntaxNode>() :
-                            EntryPointsWalker.Analyze(context.Compilation, context.Member, context.BoundNode, context.FirstInRegion, context.LastInRegion, out this.succeeded);
-                    Interlocked.CompareExchange(ref entryPoints, result, null);
+                    _succeeded = !_context.Failed;
+                    var result = _context.Failed ? ImmutableArray<SyntaxNode>.Empty :
+                            ((IEnumerable<SyntaxNode>)EntryPointsWalker.Analyze(_context.Compilation, _context.Member, _context.BoundNode, _context.FirstInRegion, _context.LastInRegion, out _succeeded)).ToImmutableArray();
+                    ImmutableInterlocked.InterlockedInitialize(ref _entryPoints, result);
                 }
 
-                return entryPoints;
+                return _entryPoints;
             }
         }
 
         /// <summary>
         /// A collection of statements inside the region that jump to locations outside the region.
         /// </summary>
-        public override IEnumerable<SyntaxNode> ExitPoints
+        public override ImmutableArray<SyntaxNode> ExitPoints
         {
             get
             {
-                if (exitPoints == null)
+                if (_exitPoints == null)
                 {
                     var result = Succeeded
-                        ? ExitPointsWalker.Analyze(context.Compilation, context.Member, context.BoundNode, context.FirstInRegion, context.LastInRegion)
-                        : Enumerable.Empty<SyntaxNode>();
-                    Interlocked.CompareExchange(ref exitPoints, result, null);
+                        ? ((IEnumerable<SyntaxNode>)ExitPointsWalker.Analyze(_context.Compilation, _context.Member, _context.BoundNode, _context.FirstInRegion, _context.LastInRegion)).ToImmutableArray()
+                        : ImmutableArray<SyntaxNode>.Empty;
+                    ImmutableInterlocked.InterlockedInitialize(ref _exitPoints, result);
                 }
 
-                return exitPoints;
+                return _exitPoints;
             }
         }
 
@@ -80,12 +76,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             // its last statement completes normally.
             get
             {
-                if (regionEndPointIsReachable == null)
+                if (_regionEndPointIsReachable == null)
                 {
                     ComputeReachability();
                 }
 
-                return (bool)regionEndPointIsReachable;
+                return (bool)_regionEndPointIsReachable;
             }
         }
 
@@ -95,12 +91,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             // its last statement completes normally.
             get
             {
-                if (regionStartPointIsReachable == null)
+                if (_regionStartPointIsReachable == null)
                 {
                     ComputeReachability();
                 }
 
-                return (bool)regionStartPointIsReachable;
+                return (bool)_regionStartPointIsReachable;
             }
         }
 
@@ -109,27 +105,26 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool startIsReachable, endIsReachable;
             if (Succeeded)
             {
-                RegionReachableWalker.Analyze(context.Compilation, context.Member, context.BoundNode, context.FirstInRegion, context.LastInRegion, out startIsReachable, out endIsReachable);
+                RegionReachableWalker.Analyze(_context.Compilation, _context.Member, _context.BoundNode, _context.FirstInRegion, _context.LastInRegion, out startIsReachable, out endIsReachable);
             }
             else
             {
                 startIsReachable = endIsReachable = true;
             }
-            Interlocked.CompareExchange(ref regionEndPointIsReachable, endIsReachable, null);
-            Interlocked.CompareExchange(ref regionStartPointIsReachable, startIsReachable, null);
+            Interlocked.CompareExchange(ref _regionEndPointIsReachable, endIsReachable, null);
+            Interlocked.CompareExchange(ref _regionStartPointIsReachable, startIsReachable, null);
         }
 
         /// <summary>
         /// A collection of return (or yield break) statements found within the region that return from the enclosing method or lambda.
         /// </summary>
-        // [Obsolete("The return statements in a region are now included in the result of ExitPoints.", false)]
-        public override IEnumerable<SyntaxNode> ReturnStatements
+        public override ImmutableArray<SyntaxNode> ReturnStatements
         {
             // Return statements out of the region are computed in precisely the same
             // way that jumps out of the region are computed.
             get
             {
-                return ExitPoints.Where(s => s.IsKind(SyntaxKind.ReturnStatement) || s.IsKind(SyntaxKind.YieldBreakStatement));
+                return ExitPoints.WhereAsArray(s => s.IsKind(SyntaxKind.ReturnStatement) || s.IsKind(SyntaxKind.YieldBreakStatement));
             }
         }
 
@@ -141,12 +136,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (succeeded == null)
+                if (_succeeded == null)
                 {
                     var discarded = EntryPoints;
                 }
 
-                return succeeded.Value;
+                return _succeeded.Value;
             }
         }
     }

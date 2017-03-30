@@ -30,17 +30,19 @@ namespace Il2Native.Logic.DOM2
                 throw new ArgumentNullException();
             }
 
+            /*
             if (boundSwitchStatement.OuterLocals != null)
             {
                 AddLocals(boundSwitchStatement.OuterLocals, this.statements);
             }
+            */
 
             if (boundSwitchStatement.InnerLocals != null)
             {
                 AddLocals(boundSwitchStatement.InnerLocals, this.statements);
             }
 
-            this.expression = Deserialize(boundSwitchStatement.BoundExpression) as Expression;
+            this.expression = Deserialize(boundSwitchStatement.Expression) as Expression;
             foreach (var boundSwitchSection in boundSwitchStatement.SwitchSections)
             {
                 var switchSection = new SwitchSection();

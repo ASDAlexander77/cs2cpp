@@ -1,32 +1,29 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CodeGen;
+using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 {
-    partial class CodeGenerator
+    internal partial class CodeGenerator
     {
         private void EmitConversionExpression(BoundConversion conversion, bool used)
         {
             switch (conversion.ConversionKind)
             {
                 case ConversionKind.MethodGroup:
-                    EmitMethodGroupConversion(conversion, used);
-                    return;
+                    throw ExceptionUtilities.UnexpectedValue(conversion.ConversionKind);
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
-                    builder.EmitIntConstant(0);
-                    builder.EmitOpCode(ILOpCode.Conv_u);
+                    _builder.EmitIntConstant(0);
+                    _builder.EmitOpCode(ILOpCode.Conv_u);
+                    EmitPopIfUnused(used);
                     return;
             }
 
-            if (!used && !ConversionHasSideEffects(conversion))
+            if (!used && !conversion.ConversionHasSideEffects())
             {
                 EmitExpression(conversion.Operand, false); // just do expr side effects
                 return;
@@ -71,8 +68,13 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 case ConversionKind.ExplicitUserDefined:
                 case ConversionKind.AnonymousFunction:
                 case ConversionKind.MethodGroup:
+                case ConversionKind.ImplicitTupleLiteral:
+                case ConversionKind.ImplicitTuple:
+                case ConversionKind.ExplicitTupleLiteral:
+                case ConversionKind.ExplicitTuple:
                 case ConversionKind.ImplicitDynamic:
                 case ConversionKind.ExplicitDynamic:
+                case ConversionKind.ImplicitThrow:
                     // None of these things should reach codegen (yet? maybe?)
                     throw ExceptionUtilities.UnexpectedValue(conversion.ConversionKind);
                 case ConversionKind.PointerToVoid:
@@ -104,7 +106,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                     }
 #endif
 
-                    builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
+                    _builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
                     break;
                 case ConversionKind.NullToPointer:
                     throw ExceptionUtilities.UnexpectedValue(conversion.ConversionKind); // Should be handled by caller.
@@ -113,30 +115,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 default:
                     throw ExceptionUtilities.UnexpectedValue(conversion.ConversionKind);
             }
-        }
-
-        private static bool ConversionHasSideEffects(BoundConversion conversion)
-        {
-            // only some intrinsic conversions are side effect free the only side effect of an
-            // intrinsic conversion is a throw when we fail to convert.
-            switch (conversion.ConversionKind)
-            {
-                case ConversionKind.Identity:
-                // NOTE: even explicit float/double identity conversion does not have side
-                // effects since it does not throw
-                case ConversionKind.ImplicitNumeric:
-                case ConversionKind.ImplicitEnumeration:
-                // implicit ref cast does not throw ...
-                case ConversionKind.ImplicitReference:
-                case ConversionKind.Boxing:
-                    return false;
-
-                // unchecked numeric conversion does not throw 
-                case ConversionKind.ExplicitNumeric:
-                    return conversion.Checked;
-            }
-
-            return true;
         }
 
         private void EmitIdentityConversion(BoundConversion conversion)
@@ -179,7 +157,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             var toPredefTypeKind = toType.PrimitiveTypeCode;
             Debug.Assert(toPredefTypeKind.IsNumeric());
 
-            builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
+            _builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
         }
 
         private void EmitImplicitReferenceConversion(BoundConversion conversion)
@@ -198,7 +176,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             // we need to unbox to targetType to keep verifier happy.
             if (!conversion.Type.IsVerifierReference())
             {
-                builder.EmitOpCode(ILOpCode.Unbox_any);
+                _builder.EmitOpCode(ILOpCode.Unbox_any);
                 EmitSymbolToken(conversion.Type, conversion.Syntax);
             }
 
@@ -222,12 +200,12 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             // verifier.
             if (conversion.Type.IsVerifierReference())
             {
-                builder.EmitOpCode(ILOpCode.Castclass);
+                _builder.EmitOpCode(ILOpCode.Castclass);
                 EmitSymbolToken(conversion.Type, conversion.Syntax);
             }
             else
             {
-                builder.EmitOpCode(ILOpCode.Unbox_any);
+                _builder.EmitOpCode(ILOpCode.Unbox_any);
                 EmitSymbolToken(conversion.Type, conversion.Syntax);
             }
         }
@@ -256,7 +234,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             var toPredefTypeKind = toType.PrimitiveTypeCode;
             Debug.Assert(toPredefTypeKind.IsNumeric());
 
-            builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
+            _builder.EmitNumericConversion(fromPredefTypeKind, toPredefTypeKind, conversion.Checked);
         }
 
         private void EmitDelegateCreation(BoundExpression node, BoundExpression receiver, bool isExtensionMethod, MethodSymbol method, TypeSymbol delegateType, bool used)
@@ -275,7 +253,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             // emit the receiver
             if (isStatic)
             {
-                builder.EmitNullConstant();
+                _builder.EmitNullConstant();
             }
             else
             {
@@ -294,27 +272,27 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             if (method.IsMetadataVirtual() && !method.ContainingType.IsDelegateType() && !receiver.SuppressVirtualCalls)
             {
                 // NOTE: method.IsMetadataVirtual -> receiver != null
-                builder.EmitOpCode(ILOpCode.Dup);
-                builder.EmitOpCode(ILOpCode.Ldvirtftn);
+                _builder.EmitOpCode(ILOpCode.Dup);
+                _builder.EmitOpCode(ILOpCode.Ldvirtftn);
 
                 //  substitute the method with original virtual method
-                method = method.GetConstructedLeastOverriddenMethod(this.method.ContainingType);
+                method = method.GetConstructedLeastOverriddenMethod(_method.ContainingType);
             }
             else
             {
-                builder.EmitOpCode(ILOpCode.Ldftn);
+                _builder.EmitOpCode(ILOpCode.Ldftn);
             }
 
             EmitSymbolToken(method, node.Syntax, null);
 
             // call delegate constructor
-            builder.EmitOpCode(ILOpCode.Newobj, -1); // pop 2 args and push delegate object
+            _builder.EmitOpCode(ILOpCode.Newobj, -1); // pop 2 args and push delegate object
 
             var ctor = DelegateConstructor(node.Syntax, delegateType);
             if ((object)ctor != null) EmitSymbolToken(ctor, node.Syntax, null);
         }
 
-        private MethodSymbol DelegateConstructor(CSharpSyntaxNode syntax, TypeSymbol delegateType)
+        private MethodSymbol DelegateConstructor(SyntaxNode syntax, TypeSymbol delegateType)
         {
             foreach (var possibleCtor in delegateType.GetMembers(WellKnownMemberNames.InstanceConstructorName))
             {
@@ -331,14 +309,8 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
 
             // The delegate '{0}' does not have a valid constructor
-            diagnostics.Add(ErrorCode.ERR_BadDelegateConstructor, syntax.Location, delegateType);
+            _diagnostics.Add(ErrorCode.ERR_BadDelegateConstructor, syntax.Location, delegateType);
             return null;
-        }
-
-        private void EmitMethodGroupConversion(BoundConversion conversion, bool used)
-        {
-            var group = (BoundMethodGroup)conversion.Operand;
-            EmitDelegateCreation(conversion, group.InstanceOpt, conversion.IsExtensionMethod, conversion.SymbolOpt, conversion.Type, used);
         }
     }
 }

@@ -145,6 +145,11 @@ namespace Il2Native.Logic
         public IAssemblySymbol Load()
         {
             var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
+            if (assemblyMetadata == null)
+            {
+                return null;
+            }
+
             return this.LoadAssemblySymbol(assemblyMetadata);
         }
 
@@ -188,16 +193,15 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-            if (added.Add(metadata.Assembly.Identity))
+            var metadata = AssemblyMetadata.CreateFromStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            if (added.Add(metadata.GetAssembly().Identity))
             {
-                var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-                assemblies.Add(metadataImageReference);
+                assemblies.Add(new MetadataImageReference(metadata, new MetadataReferenceProperties(), null, resolvedFilePath, null));
 
                 this.LoadAssemblySymbol(metadata, true);
 
                 // process nested
-                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                foreach (var refAssemblyIdentity in metadata.GetAssembly().AssemblyReferences)
                 {
                     this.AddAsseblyReference(assemblies, added, refAssemblyIdentity);
                 }
@@ -206,17 +210,16 @@ namespace Il2Native.Logic
 
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
         {
-            var metadata = AssemblyMetadata.CreateFromImageStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
-            var metadataImageReference = new MetadataImageReference(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
+            var metadata = AssemblyMetadata.CreateFromStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
 
-            if (added.Add(metadata.Assembly.Identity))
+            if (added.Add(metadata.GetAssembly().Identity))
             {
-                assemblies.Add(metadataImageReference);
+                assemblies.Add(new MetadataImageReference(metadata, new MetadataReferenceProperties(), null, resolvedFilePath, null));
 
                 this.LoadAssemblySymbol(metadata, true);
 
                 // process nested
-                foreach (var refAssemblyIdentity in metadata.Assembly.AssemblyReferences)
+                foreach (var refAssemblyIdentity in metadata.GetAssembly().AssemblyReferences)
                 {
                     this.AddAsseblyReference(assemblies, added, refAssemblyIdentity);
                 }
@@ -235,7 +238,7 @@ namespace Il2Native.Logic
                         CSharpSyntaxTree.ParseText(
                         SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
                             new CSharpParseOptions(
-                            LanguageVersion.Experimental,
+                            LanguageVersion.Latest,
                             preprocessorSymbols: this.Options["DefineConstants"].Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
                             s));
 
@@ -245,8 +248,8 @@ namespace Il2Native.Logic
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
-                                                                                 .WithOptimizations(!DebugOutput)
-                                                                                 .WithRuntimeMetadataVersion("4.5");
+                                                                                 .WithOptimizationLevel(DebugOutput ? OptimizationLevel.Debug : OptimizationLevel.Release)
+                                                                                 .WithConcurrentBuild(true);
 
             var compilation = CSharpCompilation.Create(assemblyName, syntaxTrees, assemblies.ToArray(), options);
 
@@ -290,6 +293,11 @@ namespace Il2Native.Logic
                 {
                     Console.WriteLine(diagnostic);
                 }
+
+                if (errors.Count > 0)
+                {
+                    return null;
+                }
             }
 
             dllStream.Flush();
@@ -299,7 +307,7 @@ namespace Il2Native.Logic
             pdbStream.Position = 0;
 
             // Successful Compile
-            return AssemblyMetadata.CreateFromImageStream(dllStream);
+            return AssemblyMetadata.CreateFromStream(dllStream, false);
         }
 
         /// <summary>
@@ -316,7 +324,7 @@ namespace Il2Native.Logic
                 return null;
             }
 
-            return AssemblyMetadata.CreateFromImageStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
+            return AssemblyMetadata.CreateFromStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
         }
 
         private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
@@ -385,15 +393,15 @@ namespace Il2Native.Logic
         private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata, bool noCache = false)
         {
             AssemblySymbol symbol;
-            if (!noCache && this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
+            if (!noCache && this.cache.TryGetValue(assemblyMetadata.GetAssembly().Identity, out symbol))
             {
                 return symbol;
             }
 
-            var assemblySymbol = new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+            var assemblySymbol = new PEAssemblySymbol(assemblyMetadata.GetAssembly(), DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
-            this.cache[assemblyMetadata.Assembly.Identity] = assemblySymbol;
-            this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.Assembly.Identity));
+            this.cache[assemblyMetadata.GetAssembly().Identity] = assemblySymbol;
+            this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.GetAssembly().Identity));
 
             var moduleReferences = this.LoadReferences(assemblyMetadata);
             foreach (var module in assemblySymbol.Modules)
@@ -538,10 +546,10 @@ namespace Il2Native.Logic
         /// </returns>
         private ModuleReferences<AssemblySymbol> LoadReferences(AssemblyMetadata assemblyMetadata)
         {
-            var peReferences = ImmutableArray.CreateRange(assemblyMetadata.Assembly.AssemblyReferences.Select(this.LoadAssemblySymbolOrMissingAssemblySymbol));
+            var peReferences = ImmutableArray.CreateRange(assemblyMetadata.GetAssembly().AssemblyReferences.Select(this.LoadAssemblySymbolOrMissingAssemblySymbol));
 
             var moduleReferences = new ModuleReferences<AssemblySymbol>(
-                assemblyMetadata.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(this.unifiedAssemblies));
+                assemblyMetadata.GetAssembly().AssemblyReferences, peReferences, ImmutableArray.CreateRange(this.unifiedAssemblies));
 
             return moduleReferences;
         }

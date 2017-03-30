@@ -1,35 +1,42 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace Roslyn.Utilities
 {
     internal static class StringExtensions
     {
+        private static ImmutableArray<string> s_lazyNumerals;
+
+        internal static string GetNumeral(int number)
+        {
+            var numerals = s_lazyNumerals;
+            if (numerals.IsDefault)
+            {
+                numerals = ImmutableArray.Create("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+                ImmutableInterlocked.InterlockedInitialize(ref s_lazyNumerals, numerals);
+            }
+
+            Debug.Assert(number >= 0);
+            return (number < numerals.Length) ? numerals[number] : number.ToString();
+        }
+
         public static string Join(this IEnumerable<string> source, string separator)
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             if (separator == null)
             {
-                throw new ArgumentNullException("separator");
+                throw new ArgumentNullException(nameof(separator));
             }
 
             return string.Join(separator, source);
-        }
-
-        /// <summary>
-        /// Used to indicate places where we are hard-coding strings that will later need to be
-        /// localized.  This way, we can use a "Find All References" to find and fix these.
-        /// </summary>
-        public static string NeedsLocalization(this string value)
-        {
-            return value;
         }
 
         public static bool LooksLikeInterfaceName(this string name)
@@ -42,21 +49,21 @@ namespace Roslyn.Utilities
             return name.Length >= 3 && name[0] == 'T' && char.IsUpper(name[1]) && char.IsLower(name[2]);
         }
 
-        private static readonly Func<char, char> toLower = char.ToLower;
-        private static readonly Func<char, char> toUpper = char.ToUpper;
+        private static readonly Func<char, char> s_toLower = char.ToLower;
+        private static readonly Func<char, char> s_toUpper = char.ToUpper;
 
         public static string ToPascalCase(
             this string shortName,
             bool trimLeadingTypePrefix = true)
         {
-            return ConvertCase(shortName, trimLeadingTypePrefix, toUpper);
+            return ConvertCase(shortName, trimLeadingTypePrefix, s_toUpper);
         }
 
         public static string ToCamelCase(
             this string shortName,
             bool trimLeadingTypePrefix = true)
         {
-            return ConvertCase(shortName, trimLeadingTypePrefix, toLower);
+            return ConvertCase(shortName, trimLeadingTypePrefix, s_toLower);
         }
 
         private static string ConvertCase(
@@ -135,8 +142,7 @@ namespace Roslyn.Utilities
             this string name,
             bool isCaseSensitive)
         {
-            string result;
-            return TryGetWithoutAttributeSuffix(name, isCaseSensitive, out result) ? result : null;
+            return TryGetWithoutAttributeSuffix(name, isCaseSensitive, out var result) ? result : null;
         }
 
         internal static bool TryGetWithoutAttributeSuffix(
@@ -191,8 +197,7 @@ namespace Roslyn.Utilities
         /// </summary>
         internal static string Unquote(this string arg)
         {
-            bool quoted;
-            return Unquote(arg, out quoted);
+            return Unquote(arg, out var quoted);
         }
 
         internal static string Unquote(this string arg, out bool quoted)
@@ -207,6 +212,31 @@ namespace Roslyn.Utilities
                 quoted = false;
                 return arg;
             }
+        }
+
+        internal static int IndexOfBalancedParenthesis(this string str, int openingOffset, char closing)
+        {
+            char opening = str[openingOffset];
+
+            int depth = 1;
+            for (int i = openingOffset + 1; i < str.Length; i++)
+            {
+                var c = str[i];
+                if (c == opening)
+                {
+                    depth++;
+                }
+                else if (c == closing)
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
         }
 
         // String isn't IEnumerable<char> in the current Portable profile. 
@@ -233,6 +263,18 @@ namespace Roslyn.Utilities
             }
 
             return true;
+        }
+
+        public static int GetCaseInsensitivePrefixLength(this string string1, string string2)
+        {
+            int x = 0;
+            while (x < string1.Length && x < string2.Length &&
+                   char.ToUpper(string1[x]) == char.ToUpper(string2[x]))
+            {
+                x++;
+            }
+
+            return x;
         }
     }
 }

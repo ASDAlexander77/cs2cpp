@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Roslyn.Utilities;
+using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -16,24 +17,27 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal partial class Binder
     {
-        internal CSharpCompilation Compilation { get; private set; }
-        private readonly Binder next;
+        internal CSharpCompilation Compilation { get; }
+        private readonly Binder _next;
 
         internal readonly BinderFlags Flags;
+
+        /// <summary>
+        /// Used to create a root binder.
+        /// </summary>
+        internal Binder(CSharpCompilation compilation)
+        {
+            Debug.Assert(compilation != null);
+            this.Flags = compilation.Options.TopLevelBinderFlags;
+            this.Compilation = compilation;
+        }
 
         internal Binder(Binder next)
         {
             Debug.Assert(next != null);
-            this.next = next;
+            _next = next;
             this.Flags = next.Flags;
             this.Compilation = next.Compilation;
-        }
-
-        internal Binder(CSharpCompilation compilation)
-        {
-            Debug.Assert(compilation != null);
-            this.Flags = BinderFlags.None;
-            this.Compilation = compilation;
         }
 
         protected Binder(Binder next, BinderFlags flags)
@@ -41,7 +45,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(next != null);
             // Mutually exclusive.
             Debug.Assert(!flags.Includes(BinderFlags.UncheckedRegion | BinderFlags.CheckedRegion));
-            this.next = next;
+            // Implied.
+            Debug.Assert(!flags.Includes(BinderFlags.InNestedFinallyBlock) || flags.Includes(BinderFlags.InFinallyBlock | BinderFlags.InCatchBlock));
+            _next = next;
             this.Flags = flags;
             this.Compilation = next.Compilation;
         }
@@ -63,6 +69,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        // Return the nearest enclosing node being bound as a nameof(...) argument, if any, or null if none.
+        protected virtual SyntaxNode EnclosingNameofArgument => null;
+
         /// <summary>
         /// Get the next binder in which to look up a name, if not found by this binder.
         /// </summary>
@@ -70,13 +79,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return next;
+                return _next;
             }
         }
 
         /// <summary>
         /// <see cref="OverflowChecks.Enabled"/> if we are in an explicitly checked context (within checked block or expression).
-        /// <see cref="OverflowChecks.Disabled"/> if we are in an explcitly unchecked context (within unchecked block or expression).
+        /// <see cref="OverflowChecks.Disabled"/> if we are in an explicitly unchecked context (within unchecked block or expression).
         /// <see cref="OverflowChecks.Implicit"/> otherwise.
         /// </summary>
         protected OverflowChecks CheckOverflow
@@ -137,19 +146,55 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
-        /// Some nodes have special binder's for their contents (like Block's)
+        /// Some nodes have special binders for their contents (like Blocks)
         /// </summary>
-        internal virtual Binder GetBinder(CSharpSyntaxNode node)
+        internal virtual Binder GetBinder(SyntaxNode node)
         {
             return this.Next.GetBinder(node);
         }
 
         /// <summary>
-        /// Get locals declared immediately in scope represented by the node.
+        /// Get locals declared immediately in scope designated by the node.
         /// </summary>
-        internal virtual ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(CSharpSyntaxNode node)
+        internal virtual ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(SyntaxNode scopeDesignator)
         {
-            return this.Next.GetDeclaredLocalsForScope(node);
+            return this.Next.GetDeclaredLocalsForScope(scopeDesignator);
+        }
+
+        /// <summary>
+        /// Get local functions declared immediately in scope designated by the node.
+        /// </summary>
+        internal virtual ImmutableArray<LocalFunctionSymbol> GetDeclaredLocalFunctionsForScope(CSharpSyntaxNode scopeDesignator)
+        {
+            return this.Next.GetDeclaredLocalFunctionsForScope(scopeDesignator);
+        }
+
+        /// <summary>
+        /// If this binder owns a scope for locals, return syntax node that is used
+        /// as the scope designator. Otherwise, null.
+        /// </summary>
+        internal virtual SyntaxNode ScopeDesignator
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        internal virtual bool IsLocalFunctionsScopeBinder
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        internal virtual bool IsLabelsScopeBinder
+        {
+            get
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -161,6 +206,21 @@ namespace Microsoft.CodeAnalysis.CSharp
             get
             {
                 return Next.ContainingMemberOrLambda;
+            }
+        }
+
+        /// <summary>
+        /// Is the contained code within a member method body?
+        /// </summary>
+        /// <remarks>
+        /// May be false in lambdas that are outside of member method bodies, e.g. lambdas in
+        /// field initializers.
+        /// </remarks>
+        internal virtual bool IsInMethodBody
+        {
+            get
+            {
+                return Next.IsInMethodBody;
             }
         }
 
@@ -231,23 +291,21 @@ namespace Microsoft.CodeAnalysis.CSharp
             return Next.GetIteratorElementType(node, diagnostics);
         }
 
-        public virtual ConsList<LocalSymbol> ImplicitlyTypedLocalsBeingBound
+        /// <summary>
+        /// The imports for all containing namespace declarations (innermost-to-outermost, including global),
+        /// or null if there are none.
+        /// </summary>
+        internal virtual ImportChain ImportChain
         {
             get
             {
-                return this.next.ImplicitlyTypedLocalsBeingBound;
+                return _next.ImportChain;
             }
         }
 
-        /// <summary>
-        /// The Imports for all containing namespace declarations (innermost-to-outermost, including global).
-        /// </summary>
-        internal virtual ConsList<Imports> ImportsList
+        internal virtual Imports GetImports(ConsList<Symbol> basesBeingResolved)
         {
-            get
-            {
-                return this.next.ImportsList;
-            }
+            return _next.GetImports(basesBeingResolved);
         }
 
         /// <summary>
@@ -258,20 +316,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             get
             {
                 var member = this.ContainingMemberOrLambda;
-                var type = member as NamedTypeSymbol;
-                if ((object)type == null && (object)member != null)
-                {
-                    type = member.ContainingType;
-                }
-
-                return type;
+                Debug.Assert((object)member == null || member.Kind != SymbolKind.ErrorType);
+                return (object)member == null
+                    ? null
+                    : member.Kind == SymbolKind.NamedType
+                        ? (NamedTypeSymbol)member
+                        : member.ContainingType;
             }
         }
 
-        internal ParameterSymbol ThisParameter
-        {
-            get { return this.ContainingMemberOrLambda.EnclosingThisSymbol(); }
-        }
 
         /// <summary>
         /// Returns true if the binder is binding top-level script code.
@@ -285,7 +338,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     case SymbolKind.Method:
                         // global statements
-                        return ((MethodSymbol)containingMember).IsScriptConstructor;
+                        return ((MethodSymbol)containingMember).IsScriptInitializer;
 
                     case SymbolKind.NamedType:
                         // script variable initializers
@@ -321,35 +374,43 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        Conversions lazyConversions;
+        internal virtual BoundExpression ConditionalReceiverExpression
+        {
+            get
+            {
+                return this.Next.ConditionalReceiverExpression;
+            }
+        }
+
+        private Conversions _lazyConversions;
         internal Conversions Conversions
         {
             get
             {
-                if (this.lazyConversions == null)
+                if (_lazyConversions == null)
                 {
-                    Interlocked.CompareExchange(ref this.lazyConversions, new Conversions(this), null);
+                    Interlocked.CompareExchange(ref _lazyConversions, new Conversions(this), null);
                 }
 
-                return lazyConversions;
+                return _lazyConversions;
             }
         }
 
-        OverloadResolution lazyOverloadResolution;
+        private OverloadResolution _lazyOverloadResolution;
         internal OverloadResolution OverloadResolution
         {
             get
             {
-                if (this.lazyOverloadResolution == null)
+                if (_lazyOverloadResolution == null)
                 {
-                    Interlocked.CompareExchange(ref this.lazyOverloadResolution, new OverloadResolution(this), null);
+                    Interlocked.CompareExchange(ref _lazyOverloadResolution, new OverloadResolution(this), null);
                 }
 
-                return this.lazyOverloadResolution;
+                return _lazyOverloadResolution;
             }
         }
 
-        internal static void Error(DiagnosticBag diagnostics, DiagnosticInfo info, CSharpSyntaxNode syntax)
+        internal static void Error(DiagnosticBag diagnostics, DiagnosticInfo info, SyntaxNode syntax)
         {
             diagnostics.Add(new CSDiagnostic(info, syntax.Location));
         }
@@ -369,14 +430,29 @@ namespace Microsoft.CodeAnalysis.CSharp
             diagnostics.Add(new CSDiagnostic(new CSDiagnosticInfo(code, args), syntax.Location));
         }
 
+        internal static void Error(DiagnosticBag diagnostics, ErrorCode code, SyntaxToken token)
+        {
+            diagnostics.Add(new CSDiagnostic(new CSDiagnosticInfo(code), token.GetLocation()));
+        }
+
         internal static void Error(DiagnosticBag diagnostics, ErrorCode code, SyntaxToken token, params object[] args)
         {
             diagnostics.Add(new CSDiagnostic(new CSDiagnosticInfo(code, args), token.GetLocation()));
         }
 
+        internal static void Error(DiagnosticBag diagnostics, ErrorCode code, SyntaxNodeOrToken syntax)
+        {
+            Error(diagnostics, code, syntax.GetLocation());
+        }
+
         internal static void Error(DiagnosticBag diagnostics, ErrorCode code, SyntaxNodeOrToken syntax, params object[] args)
         {
             Error(diagnostics, code, syntax.GetLocation(), args);
+        }
+
+        internal static void Error(DiagnosticBag diagnostics, ErrorCode code, Location location)
+        {
+            diagnostics.Add(new CSDiagnostic(new CSDiagnosticInfo(code), location));
         }
 
         internal static void Error(DiagnosticBag diagnostics, ErrorCode code, Location location, params object[] args)
@@ -479,7 +555,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// 
         /// NOTE: The return value reflects obsolete-ness, not whether or not the diagnostic was reported.
         /// </returns>
-        private static ThreeState ReportDiagnosticsIfObsoleteInternal(DiagnosticBag diagnostics, Symbol symbol, SyntaxNodeOrToken node, Symbol containingMember, BinderFlags location)
+        internal static ThreeState ReportDiagnosticsIfObsoleteInternal(DiagnosticBag diagnostics, Symbol symbol, SyntaxNodeOrToken node, Symbol containingMember, BinderFlags location)
         {
             Debug.Assert(diagnostics != null);
 
@@ -534,55 +610,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             return ThreeState.True;
         }
 
-        internal void ResolveOverloads<TMember>(
-            ImmutableArray<TMember> members,
-            ImmutableArray<TypeSymbol> typeArguments,
-            ImmutableArray<ArgumentSyntax> arguments,
-            OverloadResolutionResult<TMember> result,
-            ref HashSet<DiagnosticInfo> useSiteDiagnostics,
-            bool allowRefOmittedArguments)
-            where TMember : Symbol
-        {
-            var methodsBuilder = ArrayBuilder<TMember>.GetInstance(members.Length);
-            methodsBuilder.AddRange(members);
-
-            var typeArgumentsBuilder = ArrayBuilder<TypeSymbol>.GetInstance(typeArguments.Length);
-            typeArgumentsBuilder.AddRange(typeArguments);
-
-            var analyzedArguments = AnalyzedArguments.GetInstance();
-            var unusedDiagnostics = DiagnosticBag.GetInstance();
-            foreach (var argumentSyntax in arguments)
-            {
-                BindArgumentAndName(analyzedArguments, unusedDiagnostics, false, argumentSyntax, allowArglist: false);
-            }
-
-            OverloadResolution.MethodOrPropertyOverloadResolution(
-                methodsBuilder,
-                typeArgumentsBuilder,
-                analyzedArguments,
-                result,
-                isMethodGroupConversion: false,
-                allowRefOmittedArguments: allowRefOmittedArguments,
-                useSiteDiagnostics: ref useSiteDiagnostics);
-
-            methodsBuilder.Free();
-            typeArgumentsBuilder.Free();
-            analyzedArguments.Free();
-            unusedDiagnostics.Free();
-        }
-
-        internal bool IsSymbolAccessibleConditional(
+        internal static bool IsSymbolAccessibleConditional(
             Symbol symbol,
             AssemblySymbol within,
             ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
-            if (this.Flags.Includes(BinderFlags.SuppressAccessChecks))
-            {
-                // This is an untested code path. If we
-                // reach here, add a corresponding test.
-                throw ExceptionUtilities.Unreachable;
-            }
-
             return AccessCheck.IsSymbolAccessible(symbol, within, ref useSiteDiagnostics);
         }
 
@@ -592,11 +624,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             ref HashSet<DiagnosticInfo> useSiteDiagnostics,
             TypeSymbol throughTypeOpt = null)
         {
-            if (this.Flags.Includes(BinderFlags.SuppressAccessChecks))
-            {
-                return true;
-            }
-            return AccessCheck.IsSymbolAccessible(symbol, within, ref useSiteDiagnostics, throughTypeOpt);
+            return this.Flags.Includes(BinderFlags.IgnoreAccessibility) || AccessCheck.IsSymbolAccessible(symbol, within, ref useSiteDiagnostics, throughTypeOpt);
         }
 
         internal bool IsSymbolAccessibleConditional(
@@ -607,11 +635,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             ref HashSet<DiagnosticInfo> useSiteDiagnostics,
             ConsList<Symbol> basesBeingResolved = null)
         {
-            if (this.Flags.Includes(BinderFlags.SuppressAccessChecks))
+            if (this.Flags.Includes(BinderFlags.IgnoreAccessibility))
             {
                 failedThroughTypeCheck = false;
                 return true;
             }
+
             return AccessCheck.IsSymbolAccessible(symbol, within, throughTypeOpt, out failedThroughTypeCheck, ref useSiteDiagnostics, basesBeingResolved);
         }
 
@@ -654,9 +683,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             CompoundAssignment,
 
             /// <summary>
-            /// Expression is an out parameter.
+            /// Expression is passed as a ref or out parameter or assigned to a byref variable.
             /// </summary>
-            OutParameter,
+            RefOrOut,
 
             /// <summary>
             /// Expression is the operand of an address-of operation (&amp;).
@@ -667,6 +696,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             /// Expression is the receiver of a fixed buffer field access
             /// </summary>
             FixedReceiver,
+
+            /// <summary>
+            /// Expression is assigned by reference.
+            /// </summary>
+            RefAssign,
+
+            /// <summary>
+            /// Expression is returned by reference.
+            /// </summary>
+            RefReturn,
         }
 
         /// <summary>
@@ -701,17 +740,102 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 #endif
 
-        internal virtual Binder WithPrimaryConstructorParametersIfNecessary(NamedTypeSymbol containingType)
+        internal BoundExpression WrapWithVariablesIfAny(CSharpSyntaxNode scopeDesignator, BoundExpression expression)
         {
-            var container = containingType as SourceMemberContainerTypeSymbol;
-
-            if ((object)container != null && container.PrimaryCtor != null && container.PrimaryCtor.ParameterCount > 0)
-            {
-                return new WithPrimaryConstructorParametersBinder(container.PrimaryCtor, this);
-            }
-
-            return this;
+            var locals = this.GetDeclaredLocalsForScope(scopeDesignator);
+            return (locals.IsEmpty)
+                ? expression
+                : new BoundSequence(scopeDesignator, locals, ImmutableArray<BoundExpression>.Empty, expression, expression.Type) { WasCompilerGenerated = true };
         }
 
+        internal BoundStatement WrapWithVariablesIfAny(CSharpSyntaxNode scopeDesignator, BoundStatement statement)
+        {
+            var locals = this.GetDeclaredLocalsForScope(scopeDesignator);
+            if (locals.IsEmpty)
+            {
+                return statement;
+            }
+
+            return new BoundBlock(statement.Syntax, locals, ImmutableArray.Create(statement))
+                { WasCompilerGenerated = true };
+        }
+
+        /// <summary>
+        /// Should only be used with scopes that could declare local functions.
+        /// </summary>
+        internal BoundStatement WrapWithVariablesAndLocalFunctionsIfAny(CSharpSyntaxNode scopeDesignator, BoundStatement statement)
+        {
+            var locals = this.GetDeclaredLocalsForScope(scopeDesignator);
+            var localFunctions = this.GetDeclaredLocalFunctionsForScope(scopeDesignator);
+            if (locals.IsEmpty && localFunctions.IsEmpty)
+            {
+                return statement;
+            }
+
+            return new BoundBlock(statement.Syntax, locals, localFunctions,
+                                  ImmutableArray.Create(statement))
+            { WasCompilerGenerated = true };
+        }
+
+        internal string Dump()
+        {
+            return TreeDumper.DumpCompact(DumpAncestors());
+
+            TreeDumperNode DumpAncestors()
+            {
+                TreeDumperNode current = null;
+
+                for (Binder scope = this; scope != null; scope = scope.Next)
+                {
+                    var(description, snippet, locals) = Print(scope);
+                    var sub = new List<TreeDumperNode>();
+                    if (!locals.IsEmpty())
+                    {
+                        sub.Add(new TreeDumperNode("locals", locals, null));
+                    }
+                    var currentContainer = scope.ContainingMemberOrLambda;
+                    if (currentContainer != null && currentContainer != scope.Next?.ContainingMemberOrLambda)
+                    {
+                        sub.Add(new TreeDumperNode("containing symbol", currentContainer.ToDisplayString(), null));
+                    }
+                    if (snippet != null)
+                    {
+                        sub.Add(new TreeDumperNode($"scope", $"{snippet} ({scope.ScopeDesignator.Kind()})", null));
+                    }
+                    if (current != null)
+                    {
+                        sub.Add(current);
+                    }
+                    current = new TreeDumperNode(description, null, sub);
+                }
+
+                return current;
+            }
+
+            (string description, string snippet, string locals) Print(Binder scope)
+            {
+                var locals = string.Join(", ", scope.Locals.SelectAsArray(s => s.Name));
+                string snippet = null;
+                if (scope.ScopeDesignator != null)
+                {
+                    var lines = scope.ScopeDesignator.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    if (lines.Length == 1)
+                    {
+                        snippet = lines[0];
+                    }
+                    else
+                    {
+                        var first = lines[0];
+                        var last = lines[lines.Length - 1].Trim();
+                        var lastSize = Math.Min(last.Length, 12);
+                        snippet = first.Substring(0, Math.Min(first.Length, 12)) + " ... " + last.Substring(last.Length - lastSize, lastSize);
+                    }
+                    snippet = snippet.IsEmpty() ? null : snippet;
+                }
+
+                var description = scope.GetType().Name;
+                return (description, snippet, locals);
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Threading;
@@ -10,8 +10,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal partial class SourceNamedTypeSymbol
     {
-        private SynthesizedEnumValueFieldSymbol lazyEnumValueField;
-        private NamedTypeSymbol lazyEnumUnderlyingType = ErrorTypeSymbol.UnknownResultType;
+        private SynthesizedEnumValueFieldSymbol _lazyEnumValueField;
+        private NamedTypeSymbol _lazyEnumUnderlyingType = ErrorTypeSymbol.UnknownResultType;
 
         /// <summary>
         /// For enum types, gets the underlying type. Returns null on all other
@@ -21,19 +21,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (ReferenceEquals(this.lazyEnumUnderlyingType, ErrorTypeSymbol.UnknownResultType))
+                if (ReferenceEquals(_lazyEnumUnderlyingType, ErrorTypeSymbol.UnknownResultType))
                 {
                     DiagnosticBag diagnostics = DiagnosticBag.GetInstance();
-                    if ((object)Interlocked.CompareExchange(ref this.lazyEnumUnderlyingType, this.GetEnumUnderlyingType(diagnostics), ErrorTypeSymbol.UnknownResultType) ==
+                    if ((object)Interlocked.CompareExchange(ref _lazyEnumUnderlyingType, this.GetEnumUnderlyingType(diagnostics), ErrorTypeSymbol.UnknownResultType) ==
                         (object)ErrorTypeSymbol.UnknownResultType)
                     {
-                        AddSemanticDiagnostics(diagnostics);
+                        AddDeclarationDiagnostics(diagnostics);
                         this.state.NotePartComplete(CompletionPart.EnumUnderlyingType);
                     }
                     diagnostics.Free();
                 }
 
-                return this.lazyEnumUnderlyingType;
+                return _lazyEnumUnderlyingType;
             }
         }
 
@@ -52,7 +52,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 var types = bases.Types;
                 if (types.Count > 0)
                 {
-                    var typeSyntax = types[0];
+                    var typeSyntax = types[0].Type;
 
                     var baseBinder = compilation.GetBinder(bases);
                     var type = baseBinder.BindType(typeSyntax, diagnostics);
@@ -87,15 +87,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return null;
                 }
 
-                if ((object)this.lazyEnumValueField == null)
+                if ((object)_lazyEnumValueField == null)
                 {
                     Debug.Assert((object)this.EnumUnderlyingType != null);
-                    Interlocked.CompareExchange(ref this.lazyEnumValueField, new SynthesizedEnumValueFieldSymbol(this), null);
+                    Interlocked.CompareExchange(ref _lazyEnumValueField, new SynthesizedEnumValueFieldSymbol(this), null);
                 }
 
-                return this.lazyEnumValueField;
+                return _lazyEnumValueField;
             }
         }
-
     }
 }

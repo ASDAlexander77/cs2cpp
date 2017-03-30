@@ -1,34 +1,35 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
     /// <summary>
     /// Represents the results of overload resolution for a single member.
     /// </summary>
+    [SuppressMessage("Performance", "CA1067", Justification = "Equality not actually implemented")]
     internal struct MemberResolutionResult<TMember> where TMember : Symbol
     {
-        private readonly TMember member;
-        private readonly TMember leastOverriddenMember;
-        private readonly MemberAnalysisResult result;
+        private readonly TMember _member;
+        private readonly TMember _leastOverriddenMember;
+        private readonly MemberAnalysisResult _result;
 
         internal MemberResolutionResult(TMember member, TMember leastOverriddenMember, MemberAnalysisResult result)
         {
-            this.member = member;
-            this.leastOverriddenMember = leastOverriddenMember;
-            this.result = result;
+            _member = member;
+            _leastOverriddenMember = leastOverriddenMember;
+            _result = result;
         }
 
         internal bool IsNull
         {
-            get { return (object)member == null; }
+            get { return (object)_member == null; }
         }
 
         internal bool IsNotNull
         {
-            get { return (object)member != null; }
+            get { return (object)_member != null; }
         }
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         public TMember Member
         {
-            get { return member; }
+            get { return _member; }
         }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </remarks>
         internal TMember LeastOverriddenMember
         {
-            get { return leastOverriddenMember; }
+            get { return _leastOverriddenMember; }
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return this.result.HasUseSiteDiagnosticToReportFor(this.member);
+                return _result.HasUseSiteDiagnosticToReportFor(_member);
             }
         }
 
@@ -94,34 +95,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal MemberAnalysisResult Result
         {
-            get { return result; }
-        }
-
-        internal CommonMemberResolutionResult<TSymbol> ToCommon<TSymbol>()
-            where TSymbol : ISymbol
-        {
-            return new CommonMemberResolutionResult<TSymbol>(
-                (TSymbol)(ISymbol)this.Member,
-                ConvertKind(this.Resolution),
-                this.IsValid);
-        }
-
-        private static CommonMemberResolutionKind ConvertKind(MemberResolutionKind kind)
-        {
-            switch (kind)
-            {
-                case MemberResolutionKind.ApplicableInExpandedForm:
-                case MemberResolutionKind.ApplicableInNormalForm:
-                    return CommonMemberResolutionKind.Applicable;
-                case MemberResolutionKind.UseSiteError:
-                case MemberResolutionKind.UnsupportedMetadata:
-                    return CommonMemberResolutionKind.UseSiteError;
-                case MemberResolutionKind.TypeInferenceFailed:
-                case MemberResolutionKind.TypeInferenceExtensionInstanceArgument:
-                    return CommonMemberResolutionKind.TypeInferenceFailed;
-                default:
-                    return CommonMemberResolutionKind.Worse;
-            }
+            get { return _result; }
         }
 
         public override bool Equals(object obj)

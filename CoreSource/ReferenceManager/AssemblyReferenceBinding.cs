@@ -1,11 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis
 {
-    partial class CommonReferenceManager<TCompilation, TAssemblySymbol>
+    internal partial class CommonReferenceManager<TCompilation, TAssemblySymbol>
     {
         /// <summary>
         /// Result of binding an AssemblyRef to an AssemblyDef. 
@@ -13,9 +13,9 @@ namespace Microsoft.CodeAnalysis
         [DebuggerDisplay("{GetDebuggerDisplay(), nq}")]
         internal struct AssemblyReferenceBinding
         {
-            private readonly AssemblyIdentity referenceIdentity;
-            private readonly int definitionIndex;
-            private readonly int versionDifference;
+            private readonly AssemblyIdentity _referenceIdentity;
+            private readonly int _definitionIndex;
+            private readonly int _versionDifference;
 
             /// <summary>
             /// Failed binding.
@@ -24,9 +24,9 @@ namespace Microsoft.CodeAnalysis
             {
                 Debug.Assert(referenceIdentity != null);
 
-                this.referenceIdentity = referenceIdentity;
-                this.definitionIndex = -1;
-                this.versionDifference = 0;
+                _referenceIdentity = referenceIdentity;
+                _definitionIndex = -1;
+                _versionDifference = 0;
             }
 
             /// <summary>
@@ -38,9 +38,9 @@ namespace Microsoft.CodeAnalysis
                 Debug.Assert(definitionIndex >= 0);
                 Debug.Assert(versionDifference >= -1 && versionDifference <= +1);
 
-                this.referenceIdentity = referenceIdentity;
-                this.definitionIndex = definitionIndex;
-                this.versionDifference = versionDifference;
+                _referenceIdentity = referenceIdentity;
+                _definitionIndex = definitionIndex;
+                _versionDifference = versionDifference;
             }
 
             /// <summary>
@@ -48,7 +48,7 @@ namespace Microsoft.CodeAnalysis
             /// </summary>
             internal bool BoundToAssemblyBeingBuilt
             {
-                get { return definitionIndex == 0; }
+                get { return _definitionIndex == 0; }
             }
 
             /// <summary>
@@ -58,7 +58,7 @@ namespace Microsoft.CodeAnalysis
             {
                 get
                 {
-                    return definitionIndex >= 0;
+                    return _definitionIndex >= 0;
                 }
             }
 
@@ -67,27 +67,27 @@ namespace Microsoft.CodeAnalysis
             /// -1 if version of the matched definition is lower than version of the reference, but the reference otherwise matches the definition.
             /// +1 if version of the matched definition is higher than version of the reference, but the reference otherwise matches the definition.
             ///   
-            /// Undefined unless <see cref="P:IsBound"/> is true.
+            /// Undefined unless <see cref="IsBound"/> is true.
             /// </summary>
             internal int VersionDifference
             {
                 get
                 {
                     Debug.Assert(IsBound);
-                    return versionDifference;
+                    return _versionDifference;
                 }
             }
 
             /// <summary>
             /// Index into assembly definition list.
-            /// Undefined unless <see cref="P:IsBound"/> is true.
+            /// Undefined unless <see cref="IsBound"/> is true.
             /// </summary>
             internal int DefinitionIndex
             {
                 get
                 {
                     Debug.Assert(IsBound);
-                    return definitionIndex;
+                    return _definitionIndex;
                 }
             }
 
@@ -95,8 +95,7 @@ namespace Microsoft.CodeAnalysis
             {
                 get
                 {
-                    Debug.Assert(IsBound);
-                    return referenceIdentity;
+                    return _referenceIdentity;
                 }
             }
 

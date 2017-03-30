@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
@@ -9,9 +10,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     internal sealed class SubstitutedParameterSymbol : WrappedParameterSymbol
     {
         // initially set to map which is only used to get the type, which is once computed is stored here.
-        private object mapOrType;
+        private object _mapOrType;
 
-        private readonly Symbol containingSymbol;
+        private readonly Symbol _containingSymbol;
 
         internal SubstitutedParameterSymbol(MethodSymbol containingSymbol, TypeMap map, ParameterSymbol originalParameter) :
             this((Symbol)containingSymbol, map, originalParameter)
@@ -27,40 +28,85 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             base(originalParameter)
         {
             Debug.Assert(originalParameter.IsDefinition);
-            this.containingSymbol = containingSymbol;
-            this.mapOrType = map;
+            _containingSymbol = containingSymbol;
+            _mapOrType = map;
         }
 
         public override ParameterSymbol OriginalDefinition
         {
-            get { return underlyingParameter.OriginalDefinition; }
+            get { return _underlyingParameter.OriginalDefinition; }
         }
 
         public override Symbol ContainingSymbol
         {
-            get { return containingSymbol; }
+            get { return _containingSymbol; }
         }
 
         public override TypeSymbol Type
         {
             get
             {
-                var mapOrType = this.mapOrType;
+                var mapOrType = _mapOrType;
                 var type = mapOrType as TypeSymbol;
                 if (type != null)
                 {
                     return type;
                 }
 
-                type = ((TypeMap)mapOrType).SubstituteType(this.underlyingParameter.Type);
-                this.mapOrType = type;
+                TypeWithModifiers substituted = ((TypeMap)mapOrType).SubstituteTypeWithTupleUnification(this._underlyingParameter.Type);
+
+                type = substituted.Type;
+
+                if (substituted.CustomModifiers.IsEmpty && 
+                    this._underlyingParameter.CustomModifiers.IsEmpty &&
+                    this._underlyingParameter.RefCustomModifiers.IsEmpty)
+                {
+                    _mapOrType = type;
+                }
+
                 return type;
             }
         }
 
-        public override string GetDocumentationCommentXml(CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default(CancellationToken))
+        public override ImmutableArray<CustomModifier> CustomModifiers
         {
-            return underlyingParameter.GetDocumentationCommentXml(preferredCulture, expandIncludes, cancellationToken);
+            get
+            {
+                var map = _mapOrType as TypeMap;
+                return map != null ? map.SubstituteCustomModifiers(this._underlyingParameter.Type, this._underlyingParameter.CustomModifiers) : this._underlyingParameter.CustomModifiers;
+            }
+        }
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
+        {
+            get
+            {
+                var map = _mapOrType as TypeMap;
+                return map != null ? map.SubstituteCustomModifiers(this._underlyingParameter.RefCustomModifiers) : this._underlyingParameter.RefCustomModifiers;
+            }
+        }
+
+        public sealed override bool Equals(object obj)
+        {
+            if ((object)this == obj)
+            {
+                return true;
+            }
+
+            // Equality of ordinal and containing symbol is a correct
+            // implementation for all ParameterSymbols, but we don't 
+            // define it on the base type because most can simply use
+            // ReferenceEquals.
+
+            var other = obj as SubstitutedParameterSymbol;
+            return (object)other != null &&
+                this.Ordinal == other.Ordinal &&
+                this.ContainingSymbol.Equals(other.ContainingSymbol);
+        }
+
+        public sealed override int GetHashCode()
+        {
+            return Roslyn.Utilities.Hash.Combine(ContainingSymbol, _underlyingParameter.Ordinal);
         }
     }
 }

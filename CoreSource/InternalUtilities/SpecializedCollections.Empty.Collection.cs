@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace Roslyn.Utilities
 
                 public void Clear()
                 {
+                    throw new NotSupportedException();
                 }
 
                 public bool Contains(T item)
@@ -35,21 +36,9 @@ namespace Roslyn.Utilities
                 {
                 }
 
-                public int Count
-                {
-                    get
-                    {
-                        return 0;
-                    }
-                }
+                public int Count => 0;
 
-                public bool IsReadOnly
-                {
-                    get
-                    {
-                        return true;
-                    }
-                }
+                public bool IsReadOnly => true;
 
                 public bool Remove(T item)
                 {

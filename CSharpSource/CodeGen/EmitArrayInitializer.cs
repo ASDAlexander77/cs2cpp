@@ -1,31 +1,16 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.CodeAnalysis.CodeGen;
+using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 {
-    partial class CodeGenerator
+    internal partial class CodeGenerator
     {
-        // In CLR4.0, block array initializers do not work
-        // on all combinations of {32/64 X Debug/Retail} when array elements are enums.
-        //
-        // This is fixed in 4.5 thus enabling block array 
-        // initialization for a very common case.
-        private bool IsTargetHigherThan40
-        {
-            // Currently we can never be sure that 
-            // the target will not be executing on 4.0 or older runtime.
-            get { return false; }
-        }
-
         private enum ArrayInitializerStyle
         {
             // Initialize every element
@@ -36,7 +21,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             // Mixed case where there are some initializers that are constants and
             // there is enough of them so that it makes sense to use block initialization
-            // followed by individual initialization of nonconstant elements
+            // followed by individual initialization of non-constant elements
             Mixed,
         }
 
@@ -45,7 +30,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         /// Assumes that we have newly created array on the stack.
         /// 
         /// inits could be an array of values for a single dimensional array
-        /// or an   array (of array)+  of values for a multidimensional case
+        /// or an array (of array)+ of values for a multidimensional case
         /// 
         /// in either case it is expected that number of leaf values will match number 
         /// of elements in the array and nesting level should match the rank of the array.
@@ -62,7 +47,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             else
             {
                 ImmutableArray<byte> data = this.GetRawData(initExprs);
-                builder.EmitArrayBlockInitializer(data, inits.Syntax, diagnostics);
+                _builder.EmitArrayBlockInitializer(data, inits.Syntax, _diagnostics);
 
                 if (initializationStyle == ArrayInitializerStyle.Mixed)
                 {
@@ -94,8 +79,8 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 var init = inits[i];
                 if (ShouldEmitInitExpression(includeConstants, init))
                 {
-                    builder.EmitOpCode(ILOpCode.Dup);
-                    builder.EmitIntConstant(i);
+                    _builder.EmitOpCode(ILOpCode.Dup);
+                    _builder.EmitIntConstant(i);
                     EmitExpression(init, true);
                     EmitVectorElementStore(arrayType, init.Syntax);
                 }
@@ -197,18 +182,18 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                     if (ShouldEmitInitExpression(includeConstants, init))
                     {
                         // emit array ref
-                        builder.EmitOpCode(ILOpCode.Dup);
+                        _builder.EmitOpCode(ILOpCode.Dup);
 
                         Debug.Assert(indices.Count == arrayType.Rank - 1);
 
                         // emit values of all indices that are in progress
                         foreach (var row in indices)
                         {
-                            builder.EmitIntConstant(row.Index);
+                            _builder.EmitIntConstant(row.Index);
                         }
 
                         // emit the leaf index
-                        builder.EmitIntConstant(i);
+                        _builder.EmitIntConstant(i);
 
                         var initExpr = inits[i];
                         EmitExpression(initExpr, true);
@@ -235,14 +220,14 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
         private ArrayInitializerStyle ShouldEmitBlockInitializer(TypeSymbol elementType, ImmutableArray<BoundExpression> inits)
         {
-            if (!this.module.SupportsPrivateImplClass)
+            if (!_module.SupportsPrivateImplClass)
             {
                 return ArrayInitializerStyle.Element;
             }
 
             if (elementType.IsEnumType())
             {
-                if (!this.IsTargetHigherThan40)
+                if (!_module.Compilation.EnableEnumArrayBlockInitialization)
                 {
                     return ArrayInitializerStyle.Element;
                 }
@@ -251,7 +236,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             if (elementType.SpecialType.IsBlittable())
             {
-                if (module.GetInitArrayHelper() == null)
+                if (_module.GetInitArrayHelper() == null)
                 {
                     return ArrayInitializerStyle.Element;
                 }
@@ -315,22 +300,21 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
         /// <summary>
         /// Produces a serialized blob of all constant initializers.
-        /// Nonconstat initializers are matched with a zero of corresponding size.
+        /// Non-constant initializers are matched with a zero of corresponding size.
         /// </summary>
         private ImmutableArray<byte> GetRawData(ImmutableArray<BoundExpression> initializers)
         {
             // the initial size is a guess.
             // there is no point to be precise here as MemoryStream always has N + 1 storage 
             // and will need to be trimmed regardless
-            var stream = new Cci.MemoryStream((uint)(initializers.Length * 4));
-            var writer = new Cci.BinaryWriter(stream);
+            var writer = new BlobBuilder(initializers.Length * 4);
 
             SerializeArrayRecursive(writer, initializers);
 
-            return ImmutableArray.Create(stream.Buffer, 0, (int)stream.Position);
+            return writer.ToImmutableArray();
         }
 
-        private void SerializeArrayRecursive(Microsoft.Cci.BinaryWriter bw, ImmutableArray<BoundExpression> inits)
+        private void SerializeArrayRecursive(BlobBuilder bw, ImmutableArray<BoundExpression> inits)
         {
             if (inits.Length != 0)
             {

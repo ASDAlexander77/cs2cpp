@@ -1,7 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 
 namespace Microsoft.CodeAnalysis.CodeGen
 {
@@ -11,95 +13,55 @@ namespace Microsoft.CodeAnalysis.CodeGen
     /// </summary>
     internal sealed class LocalConstantDefinition : Cci.ILocalDefinition
     {
-        private readonly string name;
-        private readonly Location location;
-        private readonly Cci.IMetadataConstant compileTimeValue;
-        private readonly bool isDynamic;
-
-        //Gives the synthesized dynamic attributes of the local definition
-        private readonly ImmutableArray<TypedConstant> dynamicTransformFlags;
-
-        public LocalConstantDefinition(string name, Location location, Cci.IMetadataConstant compileTimeValue, bool isDynamic = false,
-            ImmutableArray<TypedConstant> dynamicTransformFlags = default(ImmutableArray<TypedConstant>))
+        public LocalConstantDefinition(
+            string name,
+            Location location,
+            MetadataConstant compileTimeValue,
+            ImmutableArray<bool> dynamicTransformFlags,
+            ImmutableArray<string> tupleElementNames)
         {
             Debug.Assert(!string.IsNullOrEmpty(name));
             Debug.Assert(compileTimeValue != null);
 
-            this.name = name;
-            this.location = location;
-            this.compileTimeValue = compileTimeValue;
-            this.isDynamic = isDynamic;
-            this.dynamicTransformFlags = dynamicTransformFlags;
+            Name = name;
+            Location = location;
+            CompileTimeValue = compileTimeValue;
+            DynamicTransformFlags = dynamicTransformFlags.NullToEmpty();
+            TupleElementNames = tupleElementNames.NullToEmpty();
         }
 
-        public string Name
-        {
-            get { return name; }
-        }
+        public string Name { get; }
 
-        public Location Location
-        {
-            get { return location; }
-        }
+        public Location Location { get; }
 
-        public Cci.IMetadataConstant CompileTimeValue
-        {
-            get { return compileTimeValue; }
-        }
+        public MetadataConstant CompileTimeValue { get; }
 
-        public Cci.ITypeReference Type
-        {
-            get { return this.compileTimeValue.Type; }
-        }
+        public Cci.ITypeReference Type => CompileTimeValue.Type;
 
-        public bool IsConstant
-        {
-            get { return true; }
-        }
+        public bool IsConstant => true;
 
         public ImmutableArray<Cci.ICustomModifier> CustomModifiers
-        {
-            get { return ImmutableArray<Cci.ICustomModifier>.Empty; }
-        }
+            => ImmutableArray<Cci.ICustomModifier>.Empty;
 
-        public bool IsModified
-        {
-            get { return false; }
-        }
+        public bool IsModified => false;
 
-        public bool IsPinned
-        {
-            get { return false; }
-        }
+        public bool IsPinned => false;
 
-        public bool IsReference
-        {
-            get { return false; }
-        }
+        public bool IsReference => false;
 
-        public bool IsDynamic
-        {
-            get { return this.isDynamic; }
-        }
+        public LocalSlotConstraints Constraints => LocalSlotConstraints.None;
 
-        public bool IsCompilerGenerated
-        {
-            get { return false; }
-        }
+        public LocalVariableAttributes PdbAttributes => LocalVariableAttributes.None;
 
-        public ImmutableArray<TypedConstant> DynamicTransformFlags
-        {
-            get { return this.dynamicTransformFlags; }
-        }
+        public ImmutableArray<bool> DynamicTransformFlags { get; }
 
-        public int SlotIndex
-        {
-            get { return -1; }
-        }
+        public ImmutableArray<string> TupleElementNames { get; }
 
-        public byte[] Signature
-        {
-            get { return null; }
-        }
+        public int SlotIndex => -1;
+
+        public byte[] Signature => null;
+
+        public LocalSlotDebugInfo SlotInfo
+            => new LocalSlotDebugInfo(SynthesizedLocalKind.UserDefined, LocalDebugId.None);
     }
 }

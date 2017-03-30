@@ -7,7 +7,6 @@ namespace Il2Native.Logic
     using System.CodeDom.Compiler;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -18,7 +17,7 @@ namespace Il2Native.Logic
     using DOM2;
     using Microsoft.CodeAnalysis;
     using Properties;
-    using Roslyn.Utilities;
+    using System.Security.Cryptography;
 
     public class CCodeFilesGenerator
     {

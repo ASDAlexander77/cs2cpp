@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,8 +13,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed partial class PointerTypeSymbol : TypeSymbol, IPointerTypeSymbol
     {
-        private readonly TypeSymbol pointedAtType;
-        private readonly ImmutableArray<CustomModifier> customModifiers;
+        private readonly TypeSymbol _pointedAtType;
+        private readonly ImmutableArray<CustomModifier> _customModifiers;
 
         /// <summary>
         /// Create a new PointerTypeSymbol.
@@ -34,8 +34,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             Debug.Assert((object)pointedAtType != null);
 
-            this.pointedAtType = pointedAtType;
-            this.customModifiers = customModifiers.NullToEmpty();
+            _pointedAtType = pointedAtType;
+            _customModifiers = customModifiers.NullToEmpty();
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return customModifiers;
+                return _customModifiers;
             }
         }
 
@@ -85,7 +85,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return pointedAtType;
+                return _pointedAtType;
             }
         }
 
@@ -98,13 +98,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
+        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved)
         {
-            get
-            {
-                // Pointers do not support boxing, so they really have no interfaces
-                return ImmutableArray<NamedTypeSymbol>.Empty;
-            }
+            // Pointers do not support boxing, so they really have no interfaces
+            return ImmutableArray<NamedTypeSymbol>.Empty;
         }
 
         public override bool IsReferenceType
@@ -173,7 +170,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return TypeKind.PointerType;
+                return TypeKind.Pointer;
             }
         }
 
@@ -223,7 +220,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             int indirections = 0;
             TypeSymbol current = this;
-            while (current.TypeKind == TypeKind.PointerType)
+            while (current.TypeKind == TypeKind.Pointer)
             {
                 indirections += 1;
                 current = ((PointerTypeSymbol)current).PointedAtType;
@@ -232,29 +229,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return Hash.Combine(current, indirections);
         }
 
-        internal override bool Equals(TypeSymbol t2, bool ignoreCustomModifiers, bool ignoreDynamic)
+        internal override bool Equals(TypeSymbol t2, TypeCompareKind comparison)
         {
-            return this.Equals(t2 as PointerTypeSymbol, ignoreCustomModifiers, ignoreDynamic);
+            return this.Equals(t2 as PointerTypeSymbol, comparison);
         }
 
         internal bool Equals(PointerTypeSymbol other)
         {
-            return this.Equals(other, false, false);
+            return this.Equals(other, TypeCompareKind.IgnoreTupleNames);
         }
 
-        private bool Equals(PointerTypeSymbol other, bool ignoreCustomModifiers, bool ignoreDynamic)
+        private bool Equals(PointerTypeSymbol other, TypeCompareKind comparison)
         {
             if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            if ((object)other == null || !other.pointedAtType.Equals(pointedAtType, ignoreCustomModifiers, ignoreDynamic))
+            if ((object)other == null || !other._pointedAtType.Equals(_pointedAtType, comparison))
             {
                 return false;
             }
 
-            if (!ignoreCustomModifiers)
+            if ((comparison & TypeCompareKind.IgnoreCustomModifiersAndArraySizesAndLowerBounds) == 0)
             {
                 // Make sure custom modifiers are the same.
                 var mod = this.CustomModifiers;

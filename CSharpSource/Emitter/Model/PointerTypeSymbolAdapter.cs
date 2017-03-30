@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis.CSharp.Emit;
@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    partial class PointerTypeSymbol :
+    internal partial class PointerTypeSymbol :
         Cci.IPointerTypeReference
     {
         Cci.ITypeReference Cci.IPointerTypeReference.GetTargetType(EmitContext context)
@@ -38,14 +38,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return null;
         }
 
-        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode(EmitContext context)
+        Cci.PrimitiveTypeCode Cci.ITypeReference.TypeCode
         {
-            return Cci.PrimitiveTypeCode.Pointer;
+            get { return Cci.PrimitiveTypeCode.Pointer; }
         }
 
-        TypeHandle Cci.ITypeReference.TypeDef
+        TypeDefinitionHandle Cci.ITypeReference.TypeDef
         {
-            get { return default(TypeHandle); }
+            get { return default(TypeDefinitionHandle); }
         }
 
         Cci.IGenericMethodParameterReference Cci.ITypeReference.AsGenericMethodParameterReference

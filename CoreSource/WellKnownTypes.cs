@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +26,9 @@ namespace Microsoft.CodeAnalysis
         System_Convert,
         System_Exception,
         System_FlagsAttribute,
+        System_FormattableString,
         System_Guid,
+        System_IFormattable,
         System_RuntimeTypeHandle,
         System_RuntimeFieldHandle,
         System_RuntimeMethodHandle,
@@ -40,6 +42,7 @@ namespace Microsoft.CodeAnalysis
         System_Reflection_FieldInfo,
         System_Reflection_MemberInfo,
         System_Reflection_Missing,
+        System_Runtime_CompilerServices_FormattableStringFactory,
         System_Runtime_CompilerServices_RuntimeHelpers,
         System_Runtime_ExceptionServices_ExceptionDispatchInfo,
         System_Runtime_InteropServices_StructLayoutAttribute,
@@ -47,6 +50,7 @@ namespace Microsoft.CodeAnalysis
         System_Runtime_InteropServices_DispatchWrapper,
         System_Runtime_InteropServices_CallingConvention,
         System_Runtime_InteropServices_ClassInterfaceAttribute,
+        System_Runtime_InteropServices_ClassInterfaceType,
         System_Runtime_InteropServices_CoClassAttribute,
         System_Runtime_InteropServices_ComAwareEventInfo,
         System_Runtime_InteropServices_ComEventInterfaceAttribute,
@@ -68,8 +72,6 @@ namespace Microsoft.CodeAnalysis
         System_Threading_Interlocked,
         System_Threading_Monitor,
         System_Threading_Thread,
-        Microsoft_CSharp_RuntimeHelpers_Session,
-        Microsoft_CSharp_RuntimeHelpers_SessionHelpers,
         Microsoft_CSharp_RuntimeBinder_Binder,
         Microsoft_CSharp_RuntimeBinder_CSharpArgumentInfo,
         Microsoft_CSharp_RuntimeBinder_CSharpArgumentInfoFlags,
@@ -98,8 +100,6 @@ namespace Microsoft.CodeAnalysis
         Microsoft_VisualBasic_ApplicationServices_WindowsFormsApplicationBase,
         Microsoft_VisualBasic_Information,
         Microsoft_VisualBasic_Interaction,
-
-        My_InternalXmlHelper,
 
         // standard Func delegates - must be ordered by arity
         System_Func_T,
@@ -200,14 +200,15 @@ namespace Microsoft.CodeAnalysis
         System_ComponentModel_EditorBrowsableAttribute,
         System_ComponentModel_EditorBrowsableState,
 
-        System_Linq_IQueryable,
-        System_Linq_IQueryable_T,
+        System_Linq_Enumerable,
         System_Linq_Expressions_Expression,
         System_Linq_Expressions_Expression_T,
         System_Linq_Expressions_ParameterExpression,
         System_Linq_Expressions_ElementInit,
         System_Linq_Expressions_MemberBinding,
         System_Linq_Expressions_ExpressionType,
+        System_Linq_IQueryable,
+        System_Linq_IQueryable_T,
 
         System_Xml_Linq_Extensions,
         System_Xml_Linq_XAttribute,
@@ -235,14 +236,35 @@ namespace Microsoft.CodeAnalysis
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T,
         System_Runtime_CompilerServices_AsyncStateMachineAttribute,
+        System_Runtime_CompilerServices_IteratorStateMachineAttribute,
 
         System_Windows_Forms_Form,
         System_Windows_Forms_Application,
 
         System_Environment,
 
-        Available,
-        Last = Available - 1,
+        System_Runtime_GCLatencyMode,
+        System_IFormatProvider,
+
+        CSharp7Sentinel = System_IFormatProvider, // all types that were known before CSharp7 should remain above this sentinel
+
+        System_ValueTuple_T1,
+        System_ValueTuple_T2,
+        System_ValueTuple_T3,
+        System_ValueTuple_T4,
+        System_ValueTuple_T5,
+        System_ValueTuple_T6,
+
+        ExtSentinel, // Not a real type, just a marker for types above 255 and strictly below 512
+
+        System_ValueTuple_T7,
+        System_ValueTuple_TRest,
+
+        System_Runtime_CompilerServices_TupleElementNamesAttribute,
+
+        Microsoft_CodeAnalysis_Runtime_Instrumentation,
+
+        NextAvailable,
     }
 
     internal static class WellKnownTypes
@@ -250,7 +272,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Number of well known types in WellKnownType enum
         /// </summary>
-        internal const int Count = WellKnownType.Last - WellKnownType.First + 1;
+        internal const int Count = WellKnownType.NextAvailable - WellKnownType.First;
 
         /// <summary>
         /// Array of names for types.
@@ -258,7 +280,7 @@ namespace Microsoft.CodeAnalysis
         /// that we could use ids to index into the array
         /// </summary>
         /// <remarks></remarks>
-        private static readonly string[] metadataNames = new string[]
+        private static readonly string[] s_metadataNames = new string[]
         {
             "System.Math",
             "System.Array",
@@ -267,7 +289,9 @@ namespace Microsoft.CodeAnalysis
             "System.Convert",
             "System.Exception",
             "System.FlagsAttribute",
+            "System.FormattableString",
             "System.Guid",
+            "System.IFormattable",
             "System.RuntimeTypeHandle",
             "System.RuntimeFieldHandle",
             "System.RuntimeMethodHandle",
@@ -281,6 +305,7 @@ namespace Microsoft.CodeAnalysis
             "System.Reflection.FieldInfo",
             "System.Reflection.MemberInfo",
             "System.Reflection.Missing",
+            "System.Runtime.CompilerServices.FormattableStringFactory",
             "System.Runtime.CompilerServices.RuntimeHelpers",
             "System.Runtime.ExceptionServices.ExceptionDispatchInfo",
             "System.Runtime.InteropServices.StructLayoutAttribute",
@@ -288,6 +313,7 @@ namespace Microsoft.CodeAnalysis
             "System.Runtime.InteropServices.DispatchWrapper",
             "System.Runtime.InteropServices.CallingConvention",
             "System.Runtime.InteropServices.ClassInterfaceAttribute",
+            "System.Runtime.InteropServices.ClassInterfaceType",
             "System.Runtime.InteropServices.CoClassAttribute",
             "System.Runtime.InteropServices.ComAwareEventInfo",
             "System.Runtime.InteropServices.ComEventInterfaceAttribute",
@@ -309,8 +335,6 @@ namespace Microsoft.CodeAnalysis
             "System.Threading.Interlocked",
             "System.Threading.Monitor",
             "System.Threading.Thread",
-            "Roslyn.Scripting.Session",
-            "Microsoft.CSharp.RuntimeHelpers.SessionHelpers",
             "Microsoft.CSharp.RuntimeBinder.Binder",
             "Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo",
             "Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfoFlags",
@@ -339,8 +363,6 @@ namespace Microsoft.CodeAnalysis
             "Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase",
             "Microsoft.VisualBasic.Information",
             "Microsoft.VisualBasic.Interaction",
-
-            "My.InternalXmlHelper",
 
             "System.Func`1",
             "System.Func`2",
@@ -436,14 +458,15 @@ namespace Microsoft.CodeAnalysis
             "System.ComponentModel.EditorBrowsableAttribute",
             "System.ComponentModel.EditorBrowsableState",
 
-            "System.Linq.IQueryable",
-            "System.Linq.IQueryable`1",
+            "System.Linq.Enumerable",
             "System.Linq.Expressions.Expression",
             "System.Linq.Expressions.Expression`1",
             "System.Linq.Expressions.ParameterExpression",
             "System.Linq.Expressions.ElementInit",
             "System.Linq.Expressions.MemberBinding",
             "System.Linq.Expressions.ExpressionType",
+            "System.Linq.IQueryable",
+            "System.Linq.IQueryable`1",
 
             "System.Xml.Linq.Extensions",
             "System.Xml.Linq.XAttribute",
@@ -471,39 +494,121 @@ namespace Microsoft.CodeAnalysis
             "System.Runtime.CompilerServices.AsyncTaskMethodBuilder",
             "System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1",
             "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
+            "System.Runtime.CompilerServices.IteratorStateMachineAttribute",
 
             "System.Windows.Forms.Form",
             "System.Windows.Forms.Application",
 
             "System.Environment",
+
+            "System.Runtime.GCLatencyMode",
+
+            "System.IFormatProvider",
+
+            "System.ValueTuple`1",
+            "System.ValueTuple`2",
+            "System.ValueTuple`3",
+            "System.ValueTuple`4",
+            "System.ValueTuple`5",
+            "System.ValueTuple`6",
+
+            "", // extension marker
+
+            "System.ValueTuple`7",
+            "System.ValueTuple`8",
+
+            "System.Runtime.CompilerServices.TupleElementNamesAttribute",
+
+            "Microsoft.CodeAnalysis.Runtime.Instrumentation"
         };
 
-        private readonly static Dictionary<string, WellKnownType> nameToTypeIdMap = new Dictionary<string, WellKnownType>((int)Count);
+        private readonly static Dictionary<string, WellKnownType> s_nameToTypeIdMap = new Dictionary<string, WellKnownType>((int)Count);
 
         static WellKnownTypes()
         {
-            for (int i = 0; i < metadataNames.Length; i++)
+            AssertEnumAndTableInSync();
+
+            for (int i = 0; i < s_metadataNames.Length; i++)
             {
-                var name = metadataNames[i];
+                var name = s_metadataNames[i];
                 var typeId = (WellKnownType)(i + WellKnownType.First);
-                Debug.Assert(name == "Roslyn.Scripting.Session"
-                          || name == "Microsoft.VisualBasic.CompilerServices.ObjectFlowControl+ForLoopControl"
-                          || name.IndexOf('`') > 0 // a generic type
-                          || name == (typeId.ToString() == "First" ? "System.Math" : typeId.ToString().Replace("__", "+").Replace('_', '.')));
-                nameToTypeIdMap.Add(name, typeId);
+                s_nameToTypeIdMap.Add(name, typeId);
             }
+        }
+
+        [Conditional("DEBUG")]
+        private static void AssertEnumAndTableInSync()
+        {
+            for (int i = 0; i < s_metadataNames.Length; i++)
+            {
+                var name = s_metadataNames[i];
+                var typeId = (WellKnownType)(i + WellKnownType.First);
+
+                string typeIdName;
+                switch (typeId)
+                {
+                    case WellKnownType.First:
+                        typeIdName = "System.Math";
+                        break;
+                    case WellKnownType.Microsoft_VisualBasic_CompilerServices_ObjectFlowControl_ForLoopControl:
+                        typeIdName = "Microsoft.VisualBasic.CompilerServices.ObjectFlowControl+ForLoopControl";
+                        break;
+                    case WellKnownType.CSharp7Sentinel:
+                        typeIdName = "System.IFormatProvider";
+                        break;
+                    case WellKnownType.ExtSentinel:
+                        typeIdName = "";
+                        continue;
+                    case (WellKnownType.NextAvailable - 1):
+                        typeIdName = "Microsoft.CodeAnalysis.Runtime.Instrumentation";
+                        continue;
+                    default:
+                        typeIdName = typeId.ToString().Replace("__", "+").Replace('_', '.');
+                        break;
+                }
+
+                int separator = name.IndexOf('`');
+                if (separator >= 0)
+                {
+                    // Ignore type parameter qualifier for generic types.
+                    name = name.Substring(0, separator);
+                    typeIdName = typeIdName.Substring(0, separator);
+                }
+
+                Debug.Assert(name == typeIdName);
+            }
+
+            Debug.Assert((int)WellKnownType.ExtSentinel == 255);
+            Debug.Assert((int)WellKnownType.NextAvailable <= 512);
+        }
+
+        public static bool IsWellKnownType(this WellKnownType typeId)
+        {
+            Debug.Assert(typeId != WellKnownType.ExtSentinel);
+            return typeId >= WellKnownType.First && typeId < WellKnownType.NextAvailable;
+        }
+
+        public static bool IsValueTupleType(this WellKnownType typeId)
+        {
+            Debug.Assert(typeId != WellKnownType.ExtSentinel);
+            return typeId >= WellKnownType.System_ValueTuple_T1 && typeId <= WellKnownType.System_ValueTuple_TRest;
+        }
+
+        public static bool IsValid(this WellKnownType typeId)
+        {
+            return typeId >= WellKnownType.First && typeId < WellKnownType.NextAvailable && typeId != WellKnownType.ExtSentinel;
         }
 
         public static string GetMetadataName(this WellKnownType id)
         {
-            return metadataNames[(int)(id - WellKnownType.First)];
+            return s_metadataNames[(int)(id - WellKnownType.First)];
         }
 
         public static WellKnownType GetTypeFromMetadataName(string metadataName)
         {
             WellKnownType id;
 
-            if (nameToTypeIdMap.TryGetValue(metadataName, out id))
+            if (s_nameToTypeIdMap.TryGetValue(metadataName, out id))
             {
                 return id;
             }

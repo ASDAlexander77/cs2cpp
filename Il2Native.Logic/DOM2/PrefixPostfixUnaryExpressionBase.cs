@@ -87,7 +87,7 @@ namespace Il2Native.Logic.DOM2
         private static BoundExpression CheckValue(BoundExpression left)
         {
             var boundLocal = left as BoundLocal;
-            if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedLocalKind == SynthesizedLocalKind.None)
+            if (boundLocal != null && boundLocal.LocalSymbol.SynthesizedKind == default(SynthesizedLocalKind))
             {
                 if (boundLocal.Type.TypeKind != TypeKind.Class)
                 {

@@ -233,7 +233,7 @@ namespace Il2Native.Logic.DOM2
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
         {
-            if (type.TypeKind == TypeKind.ArrayType)
+            if (type.TypeKind == TypeKind.Array)
             {
                 var sourceArrayType = (IArrayTypeSymbol)type;
                 var arrayType = new ArrayTypeImpl(sourceArrayType);
@@ -241,7 +241,7 @@ namespace Il2Native.Logic.DOM2
                 return arrayType;
             }
 
-            if (type.TypeKind == TypeKind.PointerType)
+            if (type.TypeKind == TypeKind.Pointer)
             {
                 var sourcePointerType = (IPointerTypeSymbol)type;
                 var pointerType = new PointerTypeImpl();

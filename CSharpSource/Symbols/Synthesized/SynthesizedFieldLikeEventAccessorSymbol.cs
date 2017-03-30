@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,27 +18,27 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     internal sealed class SynthesizedFieldLikeEventAccessorSymbol : SourceEventAccessorSymbol
     {
         // Since we don't have a syntax reference, we'll have to use another object for locking.
-        private readonly object methodChecksLockObject = new object();
+        private readonly object _methodChecksLockObject = new object();
 
-        private readonly string name;
+        private readonly string _name;
 
         internal SynthesizedFieldLikeEventAccessorSymbol(SourceFieldLikeEventSymbol @event, bool isAdder)
             : base(@event, null, null, @event.Locations)
         {
-            this.flags = MakeFlags(
+            this.MakeFlags(
                 isAdder ? MethodKind.EventAdd : MethodKind.EventRemove,
                 @event.Modifiers,
                 returnsVoid: false, // until we learn otherwise (in LazyMethodChecks).
                 isExtensionMethod: false,
                 isMetadataVirtualIgnoringModifiers: false);
 
-            this.name = GetOverriddenAccessorName(@event, isAdder) ??
+            _name = GetOverriddenAccessorName(@event, isAdder) ??
                 SourceEventSymbol.GetAccessorName(@event.Name, isAdder);
         }
 
         public override string Name
         {
-            get { return this.name; }
+            get { return _name; }
         }
 
         public override bool IsImplicitlyDeclared
@@ -79,12 +80,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             base.AddSynthesizedAttributes(compilationState, ref attributes);
 
             var compilation = this.DeclaringCompilation;
-            AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
+            AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
         }
 
         protected override object MethodChecksLockObject
         {
-            get { return methodChecksLockObject; }
+            get { return _methodChecksLockObject; }
+        }
+
+        internal override MethodImplAttributes ImplementationAttributes
+        {
+            get
+            {
+                MethodImplAttributes result = base.ImplementationAttributes;
+
+                if (!IsAbstract && !AssociatedEvent.IsWindowsRuntimeEvent && !ContainingType.IsStructType() &&
+                    (object)DeclaringCompilation.GetWellKnownTypeMember(WellKnownMember.System_Threading_Interlocked__CompareExchange_T) == null)
+                {
+                    // Under these conditions, this method needs to be synchronized.
+                    result |= MethodImplAttributes.Synchronized;
+                }
+
+                return result;
+            }
         }
     }
 }

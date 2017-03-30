@@ -1,11 +1,13 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
+    [SuppressMessage("Performance", "CA1067", Justification = "Equality not actually implemented")]
     internal struct MemberAnalysisResult
     {
         // put these first for better packing
@@ -84,6 +86,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     case MemberResolutionKind.ApplicableInNormalForm:
                     case MemberResolutionKind.ApplicableInExpandedForm:
                     case MemberResolutionKind.Worse:
+                    case MemberResolutionKind.Worst:
                         return true;
                     default:
                         return false;
@@ -151,8 +154,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ArgumentAnalysisResultKind.NameUsedForPositional:
                     return NameUsedForPositional(argAnalysis.ArgumentPosition);
                 default:
-                    Debug.Assert(false, "Missing case in argument parameter mismatch analysis.");
-                    goto case ArgumentAnalysisResultKind.NoCorrespondingParameter;
+                    throw ExceptionUtilities.UnexpectedValue(argAnalysis.Kind);
             }
         }
 
@@ -257,6 +259,11 @@ namespace Microsoft.CodeAnalysis.CSharp
         public static MemberAnalysisResult Worse()
         {
             return new MemberAnalysisResult(MemberResolutionKind.Worse);
+        }
+
+        public static MemberAnalysisResult Worst()
+        {
+            return new MemberAnalysisResult(MemberResolutionKind.Worst);
         }
     }
 }

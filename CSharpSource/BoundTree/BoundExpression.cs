@@ -1,12 +1,16 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Roslyn.Utilities;
+using System;
+
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    partial class BoundExpression
+    internal partial class BoundExpression
     {
         public virtual ConstantValue ConstantValue
         {
@@ -46,7 +50,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundCall
+    internal partial class BoundCall
     {
         public override Symbol ExpressionSymbol
         {
@@ -63,10 +67,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
         public ImmutableArray<MethodSymbol> OriginalMethodsOpt { get; private set; }
     }
 
-    partial class BoundTypeExpression
+    internal partial class BoundTypeExpression
     {
         public override Symbol ExpressionSymbol
         {
@@ -86,7 +92,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundNamespaceExpression
+    internal partial class BoundNamespaceExpression
     {
         public override Symbol ExpressionSymbol
         {
@@ -94,7 +100,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundLocal
+    internal partial class BoundLocal
     {
         public override ConstantValue ConstantValue
         {
@@ -105,17 +111,24 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get { return this.LocalSymbol; }
         }
-    }
 
-    partial class BoundDeclarationExpression
-    {
-        public override Symbol ExpressionSymbol
+        public BoundLocal(SyntaxNode syntax, LocalSymbol localSymbol, ConstantValue constantValueOpt, TypeSymbol type, bool hasErrors)
+            : this(syntax, localSymbol, false, constantValueOpt, type, hasErrors)
         {
-            get { return this.LocalSymbol; }
+        }
+
+        public BoundLocal(SyntaxNode syntax, LocalSymbol localSymbol, ConstantValue constantValueOpt, TypeSymbol type)
+            : this(syntax, localSymbol, false, constantValueOpt, type)
+        {
+        }
+
+        public BoundLocal Update(LocalSymbol localSymbol, ConstantValue constantValueOpt, TypeSymbol type)
+        {
+            return this.Update(localSymbol, this.IsDeclaration, constantValueOpt, type);
         }
     }
 
-    partial class BoundFieldAccess
+    internal partial class BoundFieldAccess
     {
         public override ConstantValue ConstantValue
         {
@@ -128,7 +141,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundPropertyAccess
+    internal partial class BoundPropertyAccess
     {
         public override Symbol ExpressionSymbol
         {
@@ -136,7 +149,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundIndexerAccess
+    internal partial class BoundIndexerAccess
     {
         public override Symbol ExpressionSymbol
         {
@@ -150,6 +163,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
         public ImmutableArray<PropertySymbol> OriginalIndexersOpt { get; private set; }
 
         public override LookupResultKind ResultKind
@@ -161,7 +176,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundDynamicIndexerAccess
+    internal partial class BoundDynamicIndexerAccess
     {
         internal string TryGetIndexedPropertyName()
         {
@@ -177,7 +192,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundEventAccess
+    internal partial class BoundEventAccess
     {
         public override Symbol ExpressionSymbol
         {
@@ -185,7 +200,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundParameter
+    internal partial class BoundParameter
     {
         public override Symbol ExpressionSymbol
         {
@@ -193,7 +208,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundBinaryOperator
+    internal partial class BoundBinaryOperator
     {
         public override ConstantValue ConstantValue
         {
@@ -212,10 +227,31 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
-        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; private set; }
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; }
     }
 
-    partial class BoundUnaryOperator
+    internal partial class BoundUserDefinedConditionalLogicalOperator
+    {
+        public override Symbol ExpressionSymbol
+        {
+            get { return this.LogicalOperator; }
+        }
+
+        /// <summary>
+        /// The set of method symbols from which this operator's method was chosen. 
+        /// Only kept in the tree if the operator was an error and overload resolution
+        /// was unable to choose a best method.
+        /// </summary>
+        // (Note that this property is not automatically generated; we typically
+        // will not be visiting or rewriting this error-recovery information.)
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; }
+    }
+
+    internal partial class BoundUnaryOperator
     {
         public override ConstantValue ConstantValue
         {
@@ -234,10 +270,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
-        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; private set; }
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; }
     }
 
-    partial class BoundIncrementOperator
+    internal partial class BoundIncrementOperator
     {
         public override Symbol ExpressionSymbol
         {
@@ -251,10 +289,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
-        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; private set; }
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; }
     }
 
-    partial class BoundCompoundAssignmentOperator
+    internal partial class BoundCompoundAssignmentOperator
     {
         public override Symbol ExpressionSymbol
         {
@@ -268,10 +308,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
-        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; private set; }
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedOperatorsOpt { get; }
     }
 
-    partial class BoundLiteral
+    internal partial class BoundLiteral
     {
         public override ConstantValue ConstantValue
         {
@@ -279,11 +321,26 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundConversion
+    internal partial class BoundConversion
     {
         public override ConstantValue ConstantValue
         {
             get { return this.ConstantValueOpt; }
+        }
+
+        public ConversionKind ConversionKind
+        {
+            get { return this.Conversion.Kind; }
+        }
+
+        public bool IsExtensionMethod
+        {
+            get { return this.Conversion.IsExtensionMethod; }
+        }
+
+        public MethodSymbol SymbolOpt
+        {
+            get { return this.Conversion.Method; }
         }
 
         public override Symbol ExpressionSymbol
@@ -298,15 +355,47 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         // (Note that this property is not automatically generated; we typically
         // will not be visiting or rewriting this error-recovery information.)
-        public ImmutableArray<MethodSymbol> OriginalUserDefinedConversionsOpt { get; private set; }
+        //
+        // DevDiv 1087283 tracks deciding whether or not to refactor this into BoundNodes.xml.
+        public ImmutableArray<MethodSymbol> OriginalUserDefinedConversionsOpt { get; }
 
         public override bool SuppressVirtualCalls
         {
             get { return this.IsBaseConversion; }
         }
+
+        /// <summary>
+        /// Returns true when conversion itself (not the operand) may have side-effects
+        /// A typical side-effect of a conversion is an exception when conversion is unsuccessful.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ConversionHasSideEffects()
+        {
+            // only some intrinsic conversions are side effect free 
+            // the only side effect of an intrinsic conversion is a throw when we fail to convert.
+            // and some intrinsic conversion always succeed
+            switch (this.ConversionKind)
+            {
+                case ConversionKind.Identity:
+                // NOTE: even explicit float/double identity conversion does not have side
+                // effects since it does not throw
+                case ConversionKind.ImplicitNumeric:
+                case ConversionKind.ImplicitEnumeration:
+                // implicit ref cast does not throw ...
+                case ConversionKind.ImplicitReference:
+                case ConversionKind.Boxing:
+                    return false;
+
+                // unchecked numeric conversion does not throw 
+                case ConversionKind.ExplicitNumeric:
+                    return this.Checked;
+            }
+
+            return true;
+        }
     }
 
-    partial class BoundObjectCreationExpression
+    internal partial class BoundObjectCreationExpression
     {
         public override ConstantValue ConstantValue
         {
@@ -339,7 +428,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundAnonymousObjectCreationExpression
+    internal partial class BoundAnonymousObjectCreationExpression
     {
         public override Symbol ExpressionSymbol
         {
@@ -347,7 +436,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundAnonymousPropertyDeclaration
+    internal partial class BoundAnonymousPropertyDeclaration
     {
         public override Symbol ExpressionSymbol
         {
@@ -355,7 +444,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundLambda
+    internal partial class BoundLambda
     {
         public override Symbol ExpressionSymbol
         {
@@ -363,7 +452,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundAttribute
+    internal partial class BoundAttribute
     {
         public override Symbol ExpressionSymbol
         {
@@ -371,7 +460,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundDefaultOperator
+    internal partial class BoundDefaultOperator
     {
         public override ConstantValue ConstantValue
         {
@@ -379,7 +468,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundConditionalOperator
+    internal partial class BoundConditionalOperator
     {
         public override ConstantValue ConstantValue
         {
@@ -400,7 +489,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundSizeOfOperator
+    internal partial class BoundSizeOfOperator
     {
         public override ConstantValue ConstantValue
         {
@@ -411,7 +500,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundRangeVariable
+    internal partial class BoundRangeVariable
     {
         public override Symbol ExpressionSymbol
         {
@@ -422,7 +511,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundLabel
+    internal partial class BoundLabel
     {
         public override Symbol ExpressionSymbol
         {
@@ -433,18 +522,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundTypeOrValueExpression
-    {
-        public BoundExpression GetValueExpression()
-        {
-            DiagnosticBag discardedDiagnostics = DiagnosticBag.GetInstance();
-            BoundExpression valueExpr = this.Binder.BindExpression((ExpressionSyntax)this.Syntax, discardedDiagnostics);
-            discardedDiagnostics.Free();
-            return valueExpr;
-        }
-    }
-
-    partial class BoundObjectInitializerMember
+    internal partial class BoundObjectInitializerMember
     {
         public override Symbol ExpressionSymbol
         {
@@ -455,7 +533,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundAwaitExpression : BoundExpression
+    internal partial class BoundAwaitExpression : BoundExpression
     {
         internal bool IsDynamic
         {
@@ -463,7 +541,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundCollectionElementInitializer
+    internal partial class BoundCollectionElementInitializer
     {
         public override Symbol ExpressionSymbol
         {
@@ -474,11 +552,105 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
     }
 
-    partial class BoundBaseReference
+    internal partial class BoundBaseReference
     {
         public override bool SuppressVirtualCalls
         {
             get { return true; }
+        }
+    }
+
+    internal partial class BoundNameOfOperator
+    {
+        public override ConstantValue ConstantValue
+        {
+            get
+            {
+                return this.ConstantValueOpt;
+            }
+        }
+    }
+
+    // NOTE: this type exists in order to hide the presence of {Value,Type}Expression inside of a
+    //       BoundTypeOrValueExpression from the bound tree generator, which would otherwise generate
+    //       a constructor that may spuriously set hasErrors to true if either field had errors.
+    //       A BoundTypeOrValueExpression should never have errors if it is present in the tree.
+    internal struct BoundTypeOrValueData : System.IEquatable<BoundTypeOrValueData>
+    {
+        public Symbol ValueSymbol { get; }
+        public BoundExpression ValueExpression { get; }
+        public DiagnosticBag ValueDiagnostics { get; }
+        public BoundExpression TypeExpression { get; }
+        public DiagnosticBag TypeDiagnostics { get; }
+
+        public BoundTypeOrValueData(Symbol valueSymbol, BoundExpression valueExpression, DiagnosticBag valueDiagnostics, BoundExpression typeExpression, DiagnosticBag typeDiagnostics)
+        {
+            Debug.Assert(valueSymbol != null, "Field 'valueSymbol' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+            Debug.Assert(valueExpression != null, "Field 'valueExpression' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+            Debug.Assert(valueDiagnostics != null, "Field 'valueDiagnostics' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+            Debug.Assert(typeExpression != null, "Field 'typeExpression' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+            Debug.Assert(typeDiagnostics != null, "Field 'typeDiagnostics' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+
+            this.ValueSymbol = valueSymbol;
+            this.ValueExpression = valueExpression;
+            this.ValueDiagnostics = valueDiagnostics;
+            this.TypeExpression = typeExpression;
+            this.TypeDiagnostics = typeDiagnostics;
+        }
+
+        // operator==, operator!=, GetHashCode, and Equals are needed by the generated bound tree.
+
+        public static bool operator ==(BoundTypeOrValueData a, BoundTypeOrValueData b)
+        {
+            return (object)a.ValueSymbol == (object)b.ValueSymbol &&
+                (object)a.ValueExpression == (object)b.ValueExpression &&
+                (object)a.ValueDiagnostics == (object)b.ValueDiagnostics &&
+                (object)a.TypeExpression == (object)b.TypeExpression &&
+                (object)a.TypeDiagnostics == (object)b.TypeDiagnostics;
+        }
+
+        public static bool operator !=(BoundTypeOrValueData a, BoundTypeOrValueData b)
+        {
+            return !(a == b);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is BoundTypeOrValueData && (BoundTypeOrValueData)obj == this;
+        }
+
+        public override int GetHashCode()
+        {
+            return Hash.Combine(ValueSymbol.GetHashCode(),
+                Hash.Combine(ValueExpression.GetHashCode(),
+                Hash.Combine(ValueDiagnostics.GetHashCode(),
+                Hash.Combine(TypeExpression.GetHashCode(), TypeDiagnostics.GetHashCode()))));
+        }
+
+        bool System.IEquatable<BoundTypeOrValueData>.Equals(BoundTypeOrValueData b)
+        {
+            return b == this;
+        }
+    }
+
+    internal partial class BoundTupleExpression
+    {
+        /// <summary>
+        /// Applies action to all the nested elements of this tuple.
+        /// </summary>
+        internal void VisitAllElements<T>(Action<BoundExpression, T> action, T args)
+        {
+            foreach (var argument in this.Arguments)
+            {
+                if (argument.Kind == BoundKind.TupleLiteral)
+                {
+                    ((BoundTupleExpression)argument).VisitAllElements(action, args);
+                }
+                else
+                {
+                    action(argument, args);
+                }
+            }
         }
     }
 }

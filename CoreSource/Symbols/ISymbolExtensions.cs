@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -57,6 +57,48 @@ namespace Microsoft.CodeAnalysis
             }
 
             return reducedFrom.Construct(typeArgs);
+        }
+
+        /// <summary>
+        /// Returns true if a given field is a nondefault tuple element
+        /// </summary>
+        internal static bool IsDefaultTupleElement(this IFieldSymbol field)
+        {
+            return (object)field == field.CorrespondingTupleField;
+        }
+
+        /// <summary>
+        /// Returns true if a given field is a tuple element
+        /// </summary>
+        internal static bool IsTupleElement(this IFieldSymbol field)
+        {
+            return (object)field.CorrespondingTupleField != null;
+        }
+
+        /// <summary>
+        /// Return the name of the field if the field is an explicitly named tuple element.
+        /// Otherwise returns null.
+        /// </summary>
+        /// <remarks>
+        /// Note that it is possible for an element to be both "Default" and to have a user provided name.
+        /// That could happen if the provided name matches the default name such as "Item10"
+        /// </remarks>
+        internal static string ProvidedTupleElementNameOrNull(this IFieldSymbol field)
+        {
+            return field.IsTupleElement() && !field.IsImplicitlyDeclared ? field.Name : null;
+        }
+
+        internal static INamespaceSymbol GetNestedNamespace(this INamespaceSymbol container, string name)
+        {
+            foreach (var sym in container.GetMembers(name))
+            {
+                if (sym.Kind == SymbolKind.Namespace)
+                {
+                    return (INamespaceSymbol)sym;
+                }
+            }
+
+            return null;
         }
     }
 }

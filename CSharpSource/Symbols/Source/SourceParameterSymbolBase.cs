@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -12,14 +12,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal abstract class SourceParameterSymbolBase : ParameterSymbol
     {
-        private readonly Symbol containingSymbol;
-        private readonly ushort ordinal;
+        private readonly Symbol _containingSymbol;
+        private readonly ushort _ordinal;
 
         public SourceParameterSymbolBase(Symbol containingSymbol, int ordinal)
         {
             Debug.Assert((object)containingSymbol != null);
-            this.ordinal = (ushort)ordinal;
-            this.containingSymbol = containingSymbol;
+            _ordinal = (ushort)ordinal;
+            _containingSymbol = containingSymbol;
         }
 
         public sealed override bool Equals(object obj)
@@ -32,27 +32,27 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var symbol = obj as SourceParameterSymbolBase;
             return (object)symbol != null
                 && symbol.Ordinal == this.Ordinal
-                && Equals(symbol.containingSymbol, this.containingSymbol);
+                && Equals(symbol._containingSymbol, _containingSymbol);
         }
 
         public sealed override int GetHashCode()
         {
-            return Hash.Combine(this.containingSymbol.GetHashCode(), this.Ordinal);
+            return Hash.Combine(_containingSymbol.GetHashCode(), this.Ordinal);
         }
 
         public sealed override int Ordinal
         {
-            get { return this.ordinal; }
+            get { return _ordinal; }
         }
 
         public sealed override Symbol ContainingSymbol
         {
-            get { return containingSymbol; }
+            get { return _containingSymbol; }
         }
 
         public sealed override AssemblySymbol ContainingAssembly
         {
-            get { return containingSymbol.ContainingAssembly; }
+            get { return _containingSymbol.ContainingAssembly; }
         }
 
         internal abstract ConstantValue DefaultValueFromAttributes { get; }
@@ -65,7 +65,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             if (this.IsParams)
             {
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(WellKnownMember.System_ParamArrayAttribute__ctor));
+                AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(WellKnownMember.System_ParamArrayAttribute__ctor));
             }
 
             // Synthesize DecimalConstantAttribute if we don't have an explicit custom attribute already:
@@ -79,18 +79,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             if (this.Type.ContainsDynamic())
             {
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(this.Type, this.CustomModifiers.Length, this.RefKind));
+                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(this.Type, this.CustomModifiers.Length + this.RefCustomModifiers.Length, this.RefKind));
             }
-        }
 
-        internal override bool HasByRefBeforeCustomModifiers
-        {
-            get
+            if (Type.ContainsTupleNames())
             {
-                return false;
+                AddSynthesizedAttribute(ref attributes,
+                    compilation.SynthesizeTupleNamesAttribute(Type));
             }
         }
 
-        internal abstract ParameterSymbol WithCustomModifiersAndParams(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, bool hasByRefBeforeCustomModifiers, bool newIsParams);
+        internal abstract ParameterSymbol WithCustomModifiersAndParams(TypeSymbol newType, ImmutableArray<CustomModifier> newCustomModifiers, ImmutableArray<CustomModifier> newRefCustomModifiers, bool newIsParams);
     }
 }

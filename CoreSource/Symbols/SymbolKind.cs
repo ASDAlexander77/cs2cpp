@@ -1,7 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
-using Microsoft.CodeAnalysis.Text;
-using Roslyn.Utilities;
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -104,5 +101,10 @@ namespace Microsoft.CodeAnalysis
         /// Symbol is a preprocessing/conditional compilation constant.
         /// </summary>
         Preprocessing = 18,
+
+        /// <summary>
+        /// Symbol represents a value that is discarded, e.g. in M(out _)
+        /// </summary>
+        Discard = 19,
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -13,24 +13,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal abstract class LabelSymbol : Symbol, ILabelSymbol
     {
-        internal LabelSymbol(string name)
-        {
-            this.name = name;
-        }
-
-        private readonly string name;
-
-        /// <summary>
-        /// Gets the name of this label
-        /// </summary>
-        public override string Name
-        {
-            get
-            {
-                return this.name;
-            }
-        }
-
         /// <summary>
         /// Returns false because label can't be defined externally.
         /// </summary>

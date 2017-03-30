@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -41,6 +41,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.ErrorType:
                 case SymbolKind.NamedType:
                     {
+                        if (type.IsTupleType)
+                        {
+                            return type.TupleUnderlyingType.CustomModifierCount();
+                        }
+
                         bool isDefinition = type.IsDefinition;
 
                         if (!isDefinition)
@@ -55,6 +60,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                                 foreach (TypeSymbol typeArg in typeArgs)
                                 {
                                     count += typeArg.CustomModifierCount();
+                                }
+
+                                if (namedType.HasTypeArgumentsCustomModifiers)
+                                {
+                                    for (int i = 0; i < namedType.Arity; i++)
+                                    {
+                                        count += namedType.GetTypeArgumentCustomModifiers(i).Length;
+                                    }
                                 }
 
                                 namedType = namedType.ContainingType;
@@ -77,7 +90,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// A much less efficient implementation would be CustomModifierCount() == 0.
         /// CONSIDER: Could share a backing method with CustomModifierCount.
         /// </remarks>
-        public static bool HasCustomModifiers(this TypeSymbol type)
+        public static bool HasCustomModifiers(this TypeSymbol type, bool flagNonDefaultArraySizesOrLowerBounds)
         {
             if ((object)type == null)
             {
@@ -90,16 +103,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 case SymbolKind.ArrayType:
                     {
                         var array = (ArrayTypeSymbol)type;
-                        return array.CustomModifiers.Any() || array.ElementType.HasCustomModifiers();
+                        return array.CustomModifiers.Any() || array.ElementType.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds) ||
+                               (flagNonDefaultArraySizesOrLowerBounds && !array.HasDefaultSizesAndLowerBounds);
                     }
                 case SymbolKind.PointerType:
                     {
                         var pointer = (PointerTypeSymbol)type;
-                        return pointer.CustomModifiers.Any() || pointer.PointedAtType.HasCustomModifiers();
+                        return pointer.CustomModifiers.Any() || pointer.PointedAtType.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds);
                     }
                 case SymbolKind.ErrorType:
                 case SymbolKind.NamedType:
                     {
+                        if (type.IsTupleType)
+                        {
+                            return type.TupleUnderlyingType.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds);
+                        }
+
                         bool isDefinition = type.IsDefinition;
 
                         if (!isDefinition)
@@ -107,11 +126,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             var namedType = (NamedTypeSymbol)type;
                             while ((object)namedType != null)
                             {
+                                if (namedType.HasTypeArgumentsCustomModifiers)
+                                {
+                                    return true;
+                                }
+
                                 ImmutableArray<TypeSymbol> typeArgs = namedType.TypeArgumentsNoUseSiteDiagnostics;
 
                                 foreach (TypeSymbol typeArg in typeArgs)
                                 {
-                                    if (typeArg.HasCustomModifiers())
+                                    if (typeArg.HasCustomModifiers(flagNonDefaultArraySizesOrLowerBounds))
                                     {
                                         return true;
                                     }
@@ -161,7 +185,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 default:
                     // Enums and delegates know their own base types
                     // intrinsically (and do not include interface lists)
-                    // so there is not the possibility of a cycle.
+                    // so there is no possibility of a cycle.
                     return type.BaseTypeNoUseSiteDiagnostics;
             }
         }

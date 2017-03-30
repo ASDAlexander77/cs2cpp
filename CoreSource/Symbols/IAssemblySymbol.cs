@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
@@ -8,6 +8,10 @@ namespace Microsoft.CodeAnalysis
     /// <summary>
     /// Represents a .NET assembly, consisting of one or more modules.
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface IAssemblySymbol : ISymbol
     {
         /// <summary>
@@ -68,5 +72,11 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         INamedTypeSymbol ResolveForwardedType(string fullyQualifiedMetadataName);
 
+        /// <summary>
+        /// If this symbol represents a metadata assembly returns the underlying <see cref="AssemblyMetadata"/>.
+        /// 
+        /// Otherwise, this returns <code>null</code>.
+        /// </summary>
+        AssemblyMetadata GetMetadata();
     }
 }

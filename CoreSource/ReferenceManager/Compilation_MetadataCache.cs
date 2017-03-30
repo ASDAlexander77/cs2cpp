@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
-    partial class Compilation
+    public partial class Compilation
     {
         /// <summary>
         /// The list of RetargetingAssemblySymbol objects created for this Compilation. 
@@ -26,7 +26,7 @@ namespace Microsoft.CodeAnalysis
         /// 
         /// Guarded by <see cref="CommonReferenceManager.SymbolCacheAndReferenceManagerStateGuard"/>.
         /// </summary>
-        private readonly WeakList<IAssemblySymbol> retargetingAssemblySymbols = new WeakList<IAssemblySymbol>();
+        private readonly WeakList<IAssemblySymbol> _retargetingAssemblySymbols = new WeakList<IAssemblySymbol>();
 
         /// <summary>
         /// Adds given retargeting assembly for this compilation into the cache.
@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         internal void CacheRetargetingAssemblySymbolNoLock(IAssemblySymbol assembly)
         {
-            retargetingAssemblySymbols.Add(assembly);
+            _retargetingAssemblySymbols.Add(assembly);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         internal void AddRetargetingAssemblySymbolsNoLock<T>(List<T> result) where T : IAssemblySymbol
         {
-            foreach (var symbol in retargetingAssemblySymbols)
+            foreach (var symbol in _retargetingAssemblySymbols)
             {
                 result.Add((T)symbol);
             }
@@ -52,7 +52,7 @@ namespace Microsoft.CodeAnalysis
         // for testing only
         internal WeakList<IAssemblySymbol> RetargetingAssemblySymbols
         {
-            get { return retargetingAssemblySymbols; }
+            get { return _retargetingAssemblySymbols; }
         }
     }
 }

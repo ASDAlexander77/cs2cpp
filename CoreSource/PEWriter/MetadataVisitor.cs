@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
 using Roslyn.Utilities;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.CodeGen;
 
 namespace Microsoft.Cci
 {
@@ -20,27 +21,10 @@ namespace Microsoft.Cci
             this.Context = context;
         }
 
-        public void Visit(IEnumerable<ITypeExport> typeExports)
-        {
-            foreach (ITypeExport typeExport in typeExports)
-            {
-                this.Visit(typeExport);
-            }
-        }
-
-        public virtual void Visit(ITypeExport typeExport)
-        {
-            this.Visit(typeExport.ExportedType);
-            this.Visit(typeExport.GetAttributes(Context));
-            typeExport.Dispatch(this);
-        }
-
         public virtual void Visit(IArrayTypeReference arrayTypeReference)
         {
             this.Visit(arrayTypeReference.GetElementType(Context));
         }
-
-        public abstract void Visit(IAssembly assembly);
 
         public void Visit(IEnumerable<IAssemblyReference> assemblyReferences)
         {
@@ -215,20 +199,16 @@ namespace Microsoft.Cci
             this.Visit(localDefinition.Type);
         }
 
-        public virtual void Visit(IManagedPointerTypeReference managedPointerTypeReference)
-        {
-        }
-
         public virtual void Visit(IMarshallingInformation marshallingInformation)
         {
             throw ExceptionUtilities.Unreachable;
         }
 
-        public virtual void Visit(IMetadataConstant constant)
+        public virtual void Visit(MetadataConstant constant)
         {
         }
 
-        public virtual void Visit(IMetadataCreateArray createArray)
+        public virtual void Visit(MetadataCreateArray createArray)
         {
             this.Visit(createArray.ElementType);
             this.Visit(createArray.Elements);
@@ -261,7 +241,7 @@ namespace Microsoft.Cci
             this.Visit(namedArgument.ArgumentValue);
         }
 
-        public virtual void Visit(IMetadataTypeOf typeOf)
+        public virtual void Visit(MetadataTypeOf typeOf)
         {
             if (typeOf.TypeToGet != null)
             {
@@ -271,6 +251,11 @@ namespace Microsoft.Cci
 
         public virtual void Visit(IMethodBody methodBody)
         {
+            foreach (var scope in methodBody.LocalScopes)
+            {
+                this.Visit(scope.Constants);
+            }
+
             this.Visit(methodBody.LocalVariables);
             //this.Visit(methodBody.Operations);    //in Roslyn we don't break out each instruction as it's own operation.
             this.Visit(methodBody.ExceptionRegions);
@@ -348,7 +333,7 @@ namespace Microsoft.Cci
             this.Visit(modifiedTypeReference.UnmodifiedType);
         }
 
-        public abstract void Visit(IModule module);
+        public abstract void Visit(CommonPEModuleBuilder module);
 
         public void Visit(IEnumerable<IModuleReference> moduleReferences)
         {
@@ -378,11 +363,11 @@ namespace Microsoft.Cci
         {
         }
 
-        public virtual void VisitNestedTypes(IEnumerable<INamedTypeDefinition> nestedTypes)
+        public void VisitNestedTypes(IEnumerable<INamedTypeDefinition> nestedTypes)
         {
             foreach (ITypeDefinitionMember nestedType in nestedTypes)
             {
-                this.Visit((ITypeDefinitionMember)nestedType);
+                this.Visit(nestedType);
             }
         }
 
@@ -429,7 +414,7 @@ namespace Microsoft.Cci
             this.Visit(parameterDefinition.GetAttributes(Context));
             this.Visit(parameterDefinition.CustomModifiers);
 
-            IMetadataConstant defaultValue = parameterDefinition.GetDefaultValue(Context);
+            MetadataConstant defaultValue = parameterDefinition.GetDefaultValue(Context);
             if (defaultValue != null)
             {
                 this.Visit((IMetadataExpression)defaultValue);
@@ -462,7 +447,6 @@ namespace Microsoft.Cci
 
         public virtual void Visit(IPlatformInvokeInformation platformInvokeInformation)
         {
-
         }
 
         public virtual void Visit(IPointerTypeReference pointerTypeReference)
@@ -555,6 +539,15 @@ namespace Microsoft.Cci
             foreach (ITypeReference typeReference in typeReferences)
             {
                 this.Visit(typeReference);
+            }
+        }
+
+        public void Visit(IEnumerable<TypeReferenceWithAttributes> typeRefsWithAttributes)
+        {
+            foreach (var typeRefWithAttributes in typeRefsWithAttributes)
+            {
+                this.Visit(typeRefWithAttributes.TypeRef);
+                this.Visit(typeRefWithAttributes.Attributes);
             }
         }
 

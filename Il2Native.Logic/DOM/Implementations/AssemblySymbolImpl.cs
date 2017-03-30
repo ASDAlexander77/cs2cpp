@@ -108,5 +108,15 @@ namespace Il2Native.Logic.DOM.Implementations
         {
             throw new NotImplementedException();
         }
+
+        public AssemblyMetadata GetMetadata()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Equals(ISymbol other)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

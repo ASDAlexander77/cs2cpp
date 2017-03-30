@@ -1,16 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using Microsoft.CodeAnalysis.CSharp.Emit;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -22,13 +13,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private abstract class SynthesizedMethodBase : SynthesizedInstanceMethodSymbol
         {
-            private readonly NamedTypeSymbol containigType;
-            private readonly string name;
+            private readonly NamedTypeSymbol _containingType;
+            private readonly string _name;
 
-            public SynthesizedMethodBase(NamedTypeSymbol containigType, string name)
+            public SynthesizedMethodBase(NamedTypeSymbol containingType, string name)
             {
-                this.containigType = containigType;
-                this.name = name;
+                _containingType = containingType;
+                _name = name;
             }
 
             internal sealed override bool GenerateDebugInfo
@@ -43,14 +34,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol ContainingSymbol
             {
-                get { return this.containigType; }
+                get { return _containingType; }
             }
 
             public override NamedTypeSymbol ContainingType
             {
                 get
                 {
-                    return this.containigType;
+                    return _containingType;
                 }
             }
 
@@ -84,9 +75,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return default(System.Reflection.MethodImplAttributes); }
             }
 
-            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
+            internal sealed override Cci.CallingConvention CallingConvention
             {
-                get { return Microsoft.Cci.CallingConvention.HasThis; }
+                get { return Cci.CallingConvention.HasThis; }
             }
 
             public sealed override bool IsExtensionMethod
@@ -129,6 +120,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return ImmutableArray<CustomModifier>.Empty; }
             }
 
+            public sealed override ImmutableArray<CustomModifier> RefCustomModifiers
+            {
+                get { return ImmutableArray<CustomModifier>.Empty; }
+            }
+
             public override Symbol AssociatedSymbol
             {
                 get { return null; }
@@ -151,7 +147,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override string Name
             {
-                get { return this.name; }
+                get { return _name; }
             }
 
             internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
@@ -163,7 +159,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 base.AddSynthesizedAttributes(compilationState, ref attributes);
 
-                AddSynthesizedAttribute(ref attributes, Manager.Compilation.SynthesizeAttribute(
+                AddSynthesizedAttribute(ref attributes, Manager.Compilation.TrySynthesizeAttribute(
                     WellKnownMember.System_Diagnostics_DebuggerHiddenAttribute__ctor));
             }
 
@@ -171,8 +167,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get
                 {
-                    AnonymousTypeTemplateSymbol template = this.containigType as AnonymousTypeTemplateSymbol;
-                    return ((object)template != null) ? template.Manager : ((AnonymousTypePublicSymbol)this.containigType).Manager;
+                    AnonymousTypeTemplateSymbol template = _containingType as AnonymousTypeTemplateSymbol;
+                    return ((object)template != null) ? template.Manager : ((AnonymousTypePublicSymbol)_containingType).Manager;
                 }
             }
 
@@ -196,7 +192,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return false; }
             }
 
-            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
+            internal sealed override IEnumerable<Cci.SecurityAttribute> GetSecurityInformation()
             {
                 throw ExceptionUtilities.Unreachable;
             }
@@ -219,6 +215,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 var F = new SyntheticBoundNodeFactory(this, this.GetNonNullSyntaxNode(), compilationState, diagnostics);
                 F.CurrentMethod = this;
                 return F;
+            }
+
+            internal sealed override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+            {
+                throw ExceptionUtilities.Unreachable;
             }
         }
     }

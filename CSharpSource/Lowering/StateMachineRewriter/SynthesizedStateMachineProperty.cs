@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -10,51 +10,57 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal class SynthesizedStateMachineProperty : PropertySymbol, ISynthesizedMethodBodyImplementationSymbol
     {
-        private readonly SynthesizedStateMachineMethod getter;
-        private readonly string name;
+        private readonly SynthesizedStateMachineMethod _getter;
+        private readonly string _name;
 
         internal SynthesizedStateMachineProperty(
             MethodSymbol interfacePropertyGetter,
-            NamedTypeSymbol implementingType,
-            bool debuggerHidden,
-            bool hasMethodBodyDependency)
+            StateMachineTypeSymbol stateMachineType)
         {
-            this.name = ExplicitInterfaceHelpers.GetMemberName(interfacePropertyGetter.AssociatedSymbol.Name, interfacePropertyGetter.ContainingType, aliasQualifierOpt: null);
+            _name = ExplicitInterfaceHelpers.GetMemberName(interfacePropertyGetter.AssociatedSymbol.Name, interfacePropertyGetter.ContainingType, aliasQualifierOpt: null);
             var getterName = ExplicitInterfaceHelpers.GetMemberName(interfacePropertyGetter.Name, interfacePropertyGetter.ContainingType, aliasQualifierOpt: null);
 
-            getter = new SynthesizedStateMachineMethod(
+            _getter = new SynthesizedStateMachineDebuggerHiddenMethod(
                 getterName,
                 interfacePropertyGetter,
-                implementingType,
-                asyncKickoffMethod: null,
+                stateMachineType,
                 associatedProperty: this,
-                debuggerHidden: debuggerHidden,
-                hasMethodBodyDependency: hasMethodBodyDependency);
+                hasMethodBodyDependency: false);
         }
 
         public override string Name
         {
-            get { return name; }
+            get { return _name; }
+        }
+
+        internal override RefKind RefKind
+        {
+            get { return RefKind.None; }
         }
 
         public override TypeSymbol Type
         {
-            get { return getter.ReturnType; }
+            get { return _getter.ReturnType; }
         }
 
         public override ImmutableArray<CustomModifier> TypeCustomModifiers
         {
-            get { return getter.ReturnTypeCustomModifiers; }
+            get { return _getter.ReturnTypeCustomModifiers; }
+        }
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
+        {
+            get { return _getter.RefCustomModifiers; }
         }
 
         public override ImmutableArray<ParameterSymbol> Parameters
         {
-            get { return getter.Parameters; }
+            get { return _getter.Parameters; }
         }
 
         public override bool IsIndexer
         {
-            get { return !getter.Parameters.IsEmpty; }
+            get { return !_getter.Parameters.IsEmpty; }
         }
 
         internal override bool HasSpecialName
@@ -64,7 +70,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override MethodSymbol GetMethod
         {
-            get { return getter; }
+            get { return _getter; }
         }
 
         public override MethodSymbol SetMethod
@@ -74,7 +80,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override Cci.CallingConvention CallingConvention
         {
-            get { return getter.CallingConvention; }
+            get { return _getter.CallingConvention; }
         }
 
         internal override bool MustCallMethodsDirectly
@@ -86,7 +92,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (PropertySymbol)getter.ExplicitInterfaceImplementations[0].AssociatedSymbol;
+                return (PropertySymbol)_getter.ExplicitInterfaceImplementations[0].AssociatedSymbol;
             }
         }
 
@@ -97,7 +103,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return getter.ContainingSymbol; }
+            get { return _getter.ContainingSymbol; }
         }
 
         public override ImmutableArray<Location> Locations
@@ -112,17 +118,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Accessibility DeclaredAccessibility
         {
-            get { return getter.DeclaredAccessibility; }
+            get { return _getter.DeclaredAccessibility; }
         }
 
         public override bool IsStatic
         {
-            get { return getter.IsStatic; }
+            get { return _getter.IsStatic; }
         }
 
         public override bool IsVirtual
         {
-            get { return getter.IsVirtual; }
+            get { return _getter.IsVirtual; }
         }
 
         public override bool IsOverride
@@ -152,7 +158,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         bool ISynthesizedMethodBodyImplementationSymbol.HasMethodBodyDependency
         {
-            get { return getter.HasMethodBodyDependency; }
+            get { return _getter.HasMethodBodyDependency; }
         }
 
         IMethodSymbol ISynthesizedMethodBodyImplementationSymbol.Method

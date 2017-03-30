@@ -15,7 +15,7 @@ namespace Il2Native.Logic.DOM2
 
         public Local()
         {
-            this.SynthesizedLocalKind = SynthesizedLocalKind.None;
+            this.SynthesizedLocalKind = default(SynthesizedLocalKind);
         }
 
         public override Kinds Kind
@@ -94,27 +94,13 @@ namespace Il2Native.Logic.DOM2
 
         private void ParseName(LocalSymbol local)
         {
-            if (local.SynthesizedLocalKind != SynthesizedLocalKind.None)
+            if (local.SynthesizedKind != default(SynthesizedLocalKind))
             {
-                this.SynthesizedLocalKind = local.SynthesizedLocalKind;
+                this.SynthesizedLocalKind = local.SynthesizedKind;
 
-                var lbl = string.Empty;
-                if (local.SynthesizedLocalKind > SynthesizedLocalKind.ForEachArrayIndex0 &&
-                    local.SynthesizedLocalKind < SynthesizedLocalKind.ForEachArrayLimit0)
-                {
-                    lbl = string.Format("ForEachArrayIndex{0}", local.SynthesizedLocalKind - SynthesizedLocalKind.ForEachArrayIndex0);
-                }
-                else if (local.SynthesizedLocalKind > SynthesizedLocalKind.ForEachArrayLimit0 &&
-                    local.SynthesizedLocalKind < SynthesizedLocalKind.FixedString)
-                {
-                    lbl = string.Format("ForEachArrayLimit{0}", local.SynthesizedLocalKind - SynthesizedLocalKind.ForEachArrayLimit0);
-                }
-                else
-                {
-                    lbl = local.SynthesizedLocalKind.ToString();
-                    var firstTime = false;
-                    lbl += string.Format("_{0}", CCodeWriterBase.GetIdLocal(local, out firstTime));
-                }
+                var lbl = local.SynthesizedKind.ToString();
+                var firstTime = false;
+                lbl += string.Format("_{0}", CCodeWriterBase.GetIdLocal(local, out firstTime));
 
                 this.CustomName = lbl;
             }

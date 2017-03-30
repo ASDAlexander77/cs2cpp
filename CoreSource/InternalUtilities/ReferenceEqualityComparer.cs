@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -10,7 +10,7 @@ namespace Roslyn.Utilities
     /// </summary>
     internal class ReferenceEqualityComparer : IEqualityComparer<object>
     {
-        public static readonly IEqualityComparer<object> Instance = new ReferenceEqualityComparer();
+        public static readonly ReferenceEqualityComparer Instance = new ReferenceEqualityComparer();
 
         private ReferenceEqualityComparer()
         {
@@ -22,6 +22,11 @@ namespace Roslyn.Utilities
         }
 
         int IEqualityComparer<object>.GetHashCode(object a)
+        {
+            return ReferenceEqualityComparer.GetHashCode(a);
+        }
+
+        public static int GetHashCode(object a)
         {
             return RuntimeHelpers.GetHashCode(a);
         }

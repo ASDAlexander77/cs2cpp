@@ -1,27 +1,28 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal abstract class LoopBinder : LocalScopeBinder
     {
-        private readonly GeneratedLabelSymbol breakLabel;
-        private readonly GeneratedLabelSymbol continueLabel;
+        private readonly GeneratedLabelSymbol _breakLabel;
+        private readonly GeneratedLabelSymbol _continueLabel;
 
         protected LoopBinder(Binder enclosing)
             : base(enclosing)
         {
-            this.breakLabel = new GeneratedLabelSymbol("break");
-            this.continueLabel = new GeneratedLabelSymbol("continue");
+            _breakLabel = new GeneratedLabelSymbol("break");
+            _continueLabel = new GeneratedLabelSymbol("continue");
         }
 
         internal override GeneratedLabelSymbol BreakLabel
         {
             get
             {
-                return this.breakLabel;
+                return _breakLabel;
             }
         }
 
@@ -29,7 +30,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return this.continueLabel;
+                return _continueLabel;
             }
         }
     }

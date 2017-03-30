@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.Debugging;
+using Microsoft.CodeAnalysis.Emit;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeGen
@@ -11,55 +13,79 @@ namespace Microsoft.CodeAnalysis.CodeGen
     /// </summary>
     internal sealed class MethodBody : Cci.IMethodBody
     {
-        private readonly byte[] ilBits;
-        private readonly Cci.AsyncMethodBodyDebugInfo asyncMethodDebugInfo;
-        private readonly ushort maxStack;
-        private readonly Cci.IMethodDefinition parent;
-        private readonly ImmutableArray<Cci.ILocalDefinition> locals;    // built by someone else
-        private readonly SequencePointList sequencePoints;
-        private readonly DebugDocumentProvider debugDocumentProvider;
-        private readonly ImmutableArray<Cci.ExceptionHandlerRegion> exceptionHandlers;
-        private readonly ImmutableArray<Cci.LocalScope> localScopes;
-        private readonly ImmutableArray<Cci.NamespaceScope> namespaceScopes;
-        private readonly string iteratorClassName;
-        private readonly ImmutableArray<Cci.LocalScope> iteratorScopes;
-        private readonly Cci.CustomDebugInfoKind customDebugInfoKind;
-        private readonly bool hasDynamicLocalVariables;
+        private readonly Cci.IMethodDefinition _parent;
+
+        private readonly ImmutableArray<byte> _ilBits;
+        private readonly ushort _maxStack;
+        private readonly ImmutableArray<Cci.ILocalDefinition> _locals;
+        private readonly ImmutableArray<Cci.ExceptionHandlerRegion> _exceptionHandlers;
+
+        // Debug information emitted to Release & Debug PDBs supporting the debugger, EEs and other tools:
+        private readonly SequencePointList _sequencePoints;
+        private readonly DebugDocumentProvider _debugDocumentProvider;
+        private readonly ImmutableArray<Cci.LocalScope> _localScopes;
+        private readonly Cci.IImportScope _importScopeOpt;
+        private readonly string _stateMachineTypeNameOpt;
+        private readonly ImmutableArray<StateMachineHoistedLocalScope> _stateMachineHoistedLocalScopes;
+        private readonly bool _hasDynamicLocalVariables;
+        private readonly Cci.AsyncMethodBodyDebugInfo _asyncMethodDebugInfo;
+
+        // Debug information emitted to Debug PDBs supporting EnC:
+        private readonly DebugId _methodId;
+        private readonly ImmutableArray<EncHoistedLocalInfo> _stateMachineHoistedLocalSlots;
+        private readonly ImmutableArray<LambdaDebugInfo> _lambdaDebugInfo;
+        private readonly ImmutableArray<ClosureDebugInfo> _closureDebugInfo;
+
+        // Data used when emitting EnC delta:
+        private readonly ImmutableArray<Cci.ITypeReference> _stateMachineAwaiterSlots;
+
+        // Data used when emitting Dynamic Analysis resource:
+        private readonly DynamicAnalysisMethodBodyData _dynamicAnalysisDataOpt;
 
         public MethodBody(
-            byte[] ilBits,
+            ImmutableArray<byte> ilBits,
             ushort maxStack,
             Cci.IMethodDefinition parent,
+            DebugId methodId,
             ImmutableArray<Cci.ILocalDefinition> locals,
             SequencePointList sequencePoints,
             DebugDocumentProvider debugDocumentProvider,
             ImmutableArray<Cci.ExceptionHandlerRegion> exceptionHandlers,
             ImmutableArray<Cci.LocalScope> localScopes,
-            Cci.CustomDebugInfoKind customDebugInfoKind,
             bool hasDynamicLocalVariables,
-            ImmutableArray<Cci.NamespaceScope> namespaceScopes = default(ImmutableArray<Cci.NamespaceScope>),
-            string iteratorClassName = null,
-            ImmutableArray<Cci.LocalScope> iteratorScopes = default(ImmutableArray<Cci.LocalScope>),
-            Cci.AsyncMethodBodyDebugInfo asyncMethodDebugInfo = null)
+            Cci.IImportScope importScopeOpt,
+            ImmutableArray<LambdaDebugInfo> lambdaDebugInfo,
+            ImmutableArray<ClosureDebugInfo> closureDebugInfo,
+            string stateMachineTypeNameOpt,
+            ImmutableArray<StateMachineHoistedLocalScope> stateMachineHoistedLocalScopes,
+            ImmutableArray<EncHoistedLocalInfo> stateMachineHoistedLocalSlots,
+            ImmutableArray<Cci.ITypeReference> stateMachineAwaiterSlots,
+            Cci.AsyncMethodBodyDebugInfo asyncMethodDebugInfo,
+            DynamicAnalysisMethodBodyData dynamicAnalysisDataOpt)
         {
             Debug.Assert(!locals.IsDefault);
             Debug.Assert(!exceptionHandlers.IsDefault);
             Debug.Assert(!localScopes.IsDefault);
 
-            this.ilBits = ilBits;
-            this.asyncMethodDebugInfo = asyncMethodDebugInfo;
-            this.maxStack = maxStack;
-            this.parent = parent;
-            this.locals = locals;
-            this.sequencePoints = sequencePoints;
-            this.debugDocumentProvider = debugDocumentProvider;
-            this.exceptionHandlers = exceptionHandlers;
-            this.localScopes = localScopes;
-            this.customDebugInfoKind = customDebugInfoKind;
-            this.hasDynamicLocalVariables = hasDynamicLocalVariables;
-            this.namespaceScopes = namespaceScopes.IsDefault ? ImmutableArray<Cci.NamespaceScope>.Empty : namespaceScopes;
-            this.iteratorClassName = iteratorClassName;
-            this.iteratorScopes = iteratorScopes.IsDefault ? ImmutableArray<Cci.LocalScope>.Empty : iteratorScopes;
+            _ilBits = ilBits;
+            _asyncMethodDebugInfo = asyncMethodDebugInfo;
+            _maxStack = maxStack;
+            _parent = parent;
+            _methodId = methodId;
+            _locals = locals;
+            _sequencePoints = sequencePoints;
+            _debugDocumentProvider = debugDocumentProvider;
+            _exceptionHandlers = exceptionHandlers;
+            _localScopes = localScopes;
+            _hasDynamicLocalVariables = hasDynamicLocalVariables;
+            _importScopeOpt = importScopeOpt;
+            _lambdaDebugInfo = lambdaDebugInfo;
+            _closureDebugInfo = closureDebugInfo;
+            _stateMachineTypeNameOpt = stateMachineTypeNameOpt;
+            _stateMachineHoistedLocalScopes = stateMachineHoistedLocalScopes;
+            _stateMachineHoistedLocalSlots = stateMachineHoistedLocalSlots;
+            _stateMachineAwaiterSlots = stateMachineAwaiterSlots;
+            _dynamicAnalysisDataOpt = dynamicAnalysisDataOpt;
         }
 
         void Cci.IMethodBody.Dispatch(Cci.MetadataVisitor visitor)
@@ -67,118 +93,57 @@ namespace Microsoft.CodeAnalysis.CodeGen
             throw ExceptionUtilities.Unreachable;
         }
 
-        ImmutableArray<Cci.ExceptionHandlerRegion> Cci.IMethodBody.ExceptionRegions
-        {
-            get { return this.exceptionHandlers; }
-        }
+        DynamicAnalysisMethodBodyData Cci.IMethodBody.DynamicAnalysisData => _dynamicAnalysisDataOpt;
 
-        bool Cci.IMethodBody.LocalsAreZeroed
-        {
-            get { return true; }
-        }
+        ImmutableArray<Cci.ExceptionHandlerRegion> Cci.IMethodBody.ExceptionRegions => _exceptionHandlers;
 
-        ImmutableArray<Cci.ILocalDefinition> Cci.IMethodBody.LocalVariables
-        {
-            get { return this.locals; }
-        }
+        bool Cci.IMethodBody.LocalsAreZeroed => true;
 
-        Cci.IMethodDefinition Cci.IMethodBody.MethodDefinition
-        {
-            get { return parent; }
-        }
+        ImmutableArray<Cci.ILocalDefinition> Cci.IMethodBody.LocalVariables => _locals;
 
-        Cci.AsyncMethodBodyDebugInfo Cci.IMethodBody.AsyncMethodDebugInfo
-        {
-            get { return this.asyncMethodDebugInfo; }
-        }
+        Cci.IMethodDefinition Cci.IMethodBody.MethodDefinition => _parent;
 
-        ushort Cci.IMethodBody.MaxStack
-        {
-            get { return maxStack; }
-        }
+        Cci.AsyncMethodBodyDebugInfo Cci.IMethodBody.AsyncDebugInfo => _asyncMethodDebugInfo;
 
-        public byte[] IL
-        {
-            get { return ilBits; }
-        }
+        ushort Cci.IMethodBody.MaxStack => _maxStack;
 
-        public ImmutableArray<Cci.SequencePoint> GetSequencePoints()
+        public ImmutableArray<byte> IL => _ilBits;
+
+        public void GetSequencePoints(ArrayBuilder<Cci.SequencePoint> builder)
         {
-            return HasAnySequencePoints ?
-                this.sequencePoints.GetSequencePoints(debugDocumentProvider) :
-                ImmutableArray<Cci.SequencePoint>.Empty;
+            if (HasAnySequencePoints)
+            {
+                _sequencePoints.GetSequencePoints(_debugDocumentProvider, builder);
+            }
         }
 
         public bool HasAnySequencePoints
-        {
-            get
-            {
-                return this.sequencePoints != null && !this.sequencePoints.IsEmpty;
-            }
-        }
+            => _sequencePoints != null && !_sequencePoints.IsEmpty;
 
-        public ImmutableArray<Cci.SequencePoint> GetLocations()
-        {
-            return GetSequencePoints();
-        }
-
-        public bool HasAnyLocations
-        {
-            get
-            {
-                return this.HasAnySequencePoints;
-            }
-        }
-
-        ImmutableArray<Cci.LocalScope> Cci.IMethodBody.LocalScopes
-        {
-            get
-            {
-                return this.localScopes;
-            }
-        }
+        ImmutableArray<Cci.LocalScope> Cci.IMethodBody.LocalScopes => _localScopes;
 
         /// <summary>
         /// This is a list of the using directives that were in scope for this method body.
         /// </summary>
-        ImmutableArray<Cci.NamespaceScope> Cci.IMethodBody.NamespaceScopes
-        {
-            get
-            {
-                return this.namespaceScopes;
-            }
-        }
+        Cci.IImportScope Cci.IMethodBody.ImportScope => _importScopeOpt;
 
-        string Cci.IMethodBody.IteratorClassName
-        {
-            get
-            {
-                return iteratorClassName;
-            }
-        }
+        string Cci.IMethodBody.StateMachineTypeName => _stateMachineTypeNameOpt;
 
-        ImmutableArray<Cci.LocalScope> Cci.IMethodBody.IteratorScopes
-        {
-            get
-            {
-                return this.iteratorScopes;
-            }
-        }
+        ImmutableArray<StateMachineHoistedLocalScope> Cci.IMethodBody.StateMachineHoistedLocalScopes
+            => _stateMachineHoistedLocalScopes;
 
-        public Cci.CustomDebugInfoKind CustomDebugInfoKind
-        {
-            get
-            {
-                return this.customDebugInfoKind;
-            }
-        }
+        ImmutableArray<EncHoistedLocalInfo> Cci.IMethodBody.StateMachineHoistedLocalSlots
+            => _stateMachineHoistedLocalSlots;
 
-        public bool HasDynamicLocalVariables
-        {
-            get
-            {
-                return this.hasDynamicLocalVariables;
-            }
-        }
+        ImmutableArray<Cci.ITypeReference> Cci.IMethodBody.StateMachineAwaiterSlots
+            => _stateMachineAwaiterSlots;
+
+        bool Cci.IMethodBody.HasDynamicLocalVariables => _hasDynamicLocalVariables;
+
+        public DebugId MethodId => _methodId;
+
+        public ImmutableArray<LambdaDebugInfo> LambdaDebugInfo => _lambdaDebugInfo;
+
+        public ImmutableArray<ClosureDebugInfo> ClosureDebugInfo => _closureDebugInfo;
     }
 }

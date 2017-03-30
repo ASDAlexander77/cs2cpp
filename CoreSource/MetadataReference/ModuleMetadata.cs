@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -16,31 +17,27 @@ namespace Microsoft.CodeAnalysis
     /// <remarks>This object may allocate significant resources or lock files depending upon how it is constructed.</remarks>
     public sealed partial class ModuleMetadata : Metadata
     {
-        private bool isDisposed;
+        private bool _isDisposed;
 
-        private readonly bool isImageOwner;
-        private readonly PEModule module;
+        private readonly PEModule _module;
 
         private ModuleMetadata(PEReader peReader)
+            : base(isImageOwner: true, id: MetadataId.CreateNewId())
         {
-            this.module = new PEModule(peReader: peReader, metadataReader: null);
-            this.isImageOwner = true;
+            _module = new PEModule(this, peReader: peReader, metadataOpt: IntPtr.Zero, metadataSizeOpt: 0, includeEmbeddedInteropTypes: false, ignoreAssemblyRefs: false);
         }
 
-        private ModuleMetadata(MetadataReader metadataReader)
+        private ModuleMetadata(IntPtr metadata, int size, bool includeEmbeddedInteropTypes, bool ignoreAssemblyRefs)
+            : base(isImageOwner: true, id: MetadataId.CreateNewId())
         {
-            this.module = new PEModule(peReader: null, metadataReader: metadataReader);
-            this.isImageOwner = true;
+            _module = new PEModule(this, peReader: null, metadataOpt: metadata, metadataSizeOpt: size, includeEmbeddedInteropTypes: includeEmbeddedInteropTypes, ignoreAssemblyRefs: ignoreAssemblyRefs);
         }
 
+        // creates a copy
         private ModuleMetadata(ModuleMetadata metadata)
+            : base(isImageOwner: false, id: metadata.Id)
         {
-            this.module = metadata.Module;
-
-            // This instance will not be the owner of the
-            // resources backing the metadata. 
-
-            this.isImageOwner = false;
+            _module = metadata.Module;
         }
 
         /// <summary>
@@ -51,22 +48,26 @@ namespace Microsoft.CodeAnalysis
         /// <param name="size">The size of the metadata block.</param>
         /// <exception cref="ArgumentNullException"><paramref name="metadata"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="size"/> is not positive.</exception>
-        /// <exception cref="BadImageFormatException"><paramref name="metadata"/> doesn't contain valid metadata.</exception>
-        /// <exception cref="NotSupportedException"><paramref name="metadata"/> doesn't represent an assembly (manifest module).</exception>
         public static ModuleMetadata CreateFromMetadata(IntPtr metadata, int size)
         {
             if (metadata == IntPtr.Zero)
             {
-                throw new ArgumentNullException("metadata");
+                throw new ArgumentNullException(nameof(metadata));
             }
 
             if (size <= 0)
             {
-                throw new ArgumentOutOfRangeException(CodeAnalysisResources.SizeHasToBePositive, "size");
+                throw new ArgumentOutOfRangeException(CodeAnalysisResources.SizeHasToBePositive, nameof(size));
             }
 
-            var reader = new MetadataReader(metadata, size, MetadataReaderOptions.ApplyWindowsRuntimeProjections, stringInterner: StringTable.AddShared);
-            return new ModuleMetadata(reader);
+            return new ModuleMetadata(metadata, size, includeEmbeddedInteropTypes: false, ignoreAssemblyRefs: false);
+        }
+
+        internal static ModuleMetadata CreateFromMetadata(IntPtr metadata, int size, bool includeEmbeddedInteropTypes, bool ignoreAssemblyRefs = false)
+        {
+            Debug.Assert(metadata != IntPtr.Zero);
+            Debug.Assert(size > 0);
+            return new ModuleMetadata(metadata, size, includeEmbeddedInteropTypes, ignoreAssemblyRefs);
         }
 
         /// <summary>
@@ -76,44 +77,46 @@ namespace Microsoft.CodeAnalysis
         /// <param name="size">The size of the image pointed to by <paramref name="peImage"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="peImage"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="size"/> is not positive.</exception>
-        /// <exception cref="BadImageFormatException"><paramref name="peImage"/> is not valid portable executable image containing CLI metadata</exception>
-        public static ModuleMetadata CreateFromImage(IntPtr peImage, int size)
+        public static unsafe ModuleMetadata CreateFromImage(IntPtr peImage, int size)
         {
             if (peImage == IntPtr.Zero)
             {
-                throw new ArgumentNullException("peImage");
+                throw new ArgumentNullException(nameof(peImage));
             }
 
             if (size <= 0)
             {
-                throw new ArgumentOutOfRangeException(CodeAnalysisResources.SizeHasToBePositive, "size");
+                throw new ArgumentOutOfRangeException(CodeAnalysisResources.SizeHasToBePositive, nameof(size));
             }
 
-            return new ModuleMetadata(new PEReader(peImage, size));
+            return new ModuleMetadata(new PEReader((byte*)peImage, size));
         }
 
         /// <summary>
         /// Create metadata module from a sequence of bytes.
         /// </summary>
         /// <param name="peImage">The portable executable image beginning with the DOS header ("MZ").</param>
-        /// <exception cref="ArgumentException"><paramref name="peImage"/> is null.</exception>
-        /// <exception cref="BadImageFormatException"><paramref name="peImage"/> is not valid portable executable image containing CLI metadata</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="peImage"/> is null.</exception>
         public static ModuleMetadata CreateFromImage(IEnumerable<byte> peImage)
         {
-            return CreateFromImage(peImage.AsImmutableOrNull());
+            if (peImage == null)
+            {
+                throw new ArgumentNullException(nameof(peImage));
+            }
+
+            return CreateFromImage(ImmutableArray.CreateRange(peImage));
         }
 
         /// <summary>
         /// Create metadata module from a byte array.
         /// </summary>
         /// <param name="peImage">Portable executable image beginning with the DOS header ("MZ").</param>
-        /// <exception cref="ArgumentException"><paramref name="peImage"/> is null.</exception>
-        /// <exception cref="BadImageFormatException"><paramref name="peImage"/> is not valid portable executable image containing CLI metadata</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="peImage"/> is null.</exception>
         public static ModuleMetadata CreateFromImage(ImmutableArray<byte> peImage)
         {
             if (peImage.IsDefault)
             {
-                throw new ArgumentException("peImage");
+                throw new ArgumentNullException(nameof(peImage));
             }
 
             return new ModuleMetadata(new PEReader(peImage));
@@ -127,12 +130,11 @@ namespace Microsoft.CodeAnalysis
         /// False to close the stream upon disposal of the metadata (the responsibility for disposal of the stream is transferred upon entry of the constructor
         /// unless the arguments given are invalid).
         /// </param>
-        /// <exception cref="BadImageFormatException"><paramref name="peStream"/> is not valid portable executable image containing CLI metadata</exception>
-        /// <exception cref="ArgumentException">The stream doesn't support seek operations.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="peStream"/> is null.</exception>
-        public static ModuleMetadata CreateFromImageStream(Stream peStream, bool leaveOpen = false)
+        /// <exception cref="ArgumentException">The stream doesn't support seek operations.</exception>
+        public static ModuleMetadata CreateFromStream(Stream peStream, bool leaveOpen = false)
         {
-            return CreateFromImageStream(peStream, leaveOpen ? PEStreamOptions.LeaveOpen : PEStreamOptions.Default);
+            return CreateFromStream(peStream, leaveOpen ? PEStreamOptions.LeaveOpen : PEStreamOptions.Default);
         }
 
         /// <summary>
@@ -144,24 +146,54 @@ namespace Microsoft.CodeAnalysis
         /// Unless <see cref="PEStreamOptions.LeaveOpen"/> is specified, the responsibility for disposal of the stream is transferred upon entry of the constructor
         /// unless the arguments given are invalid.
         /// </param>
-        /// <exception cref="BadImageFormatException"><paramref name="peStream"/> is not valid portable executable image containing CLI metadata</exception>
-        /// <exception cref="ArgumentException">The stream doesn't support read and seek operations.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="peStream"/> is null.</exception>
+        /// <exception cref="ArgumentException">The stream doesn't support read and seek operations.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="options"/> has an invalid value.</exception>
-        public static ModuleMetadata CreateFromImageStream(Stream peStream, PEStreamOptions options)
+        /// <exception cref="BadImageFormatException">
+        /// <see cref="PEStreamOptions.PrefetchMetadata"/> or <see cref="PEStreamOptions.PrefetchEntireImage"/> is specified and the PE headers of the image are invalid.
+        /// </exception>
+        /// <exception cref="IOException">
+        /// <see cref="PEStreamOptions.PrefetchMetadata"/> or <see cref="PEStreamOptions.PrefetchEntireImage"/> is specified and an error occurs while reading the stream.
+        /// </exception>
+        public static ModuleMetadata CreateFromStream(Stream peStream, PEStreamOptions options)
         {
             if (peStream == null)
             {
-                throw new ArgumentNullException("peStream");
+                throw new ArgumentNullException(nameof(peStream));
             }
 
-            if (!peStream.CanRead || !peStream.CanSeek) 
+            if (!peStream.CanRead || !peStream.CanSeek)
             {
-                throw new ArgumentException(CodeAnalysisResources.StreamMustSupportReadAndSeek, "peImage");
+                throw new ArgumentException(CodeAnalysisResources.StreamMustSupportReadAndSeek, nameof(peStream));
+            }
+
+            // Workaround of issue https://github.com/dotnet/corefx/issues/1815: 
+            if (peStream.Length == 0 && (options & PEStreamOptions.PrefetchEntireImage) != 0 && (options & PEStreamOptions.PrefetchMetadata) != 0)
+            {
+                // throws BadImageFormatException:
+                new PEHeaders(peStream);
             }
 
             // ownership of the stream is passed on PEReader:
             return new ModuleMetadata(new PEReader(peStream, options));
+        }
+
+        /// <summary>
+        /// Creates metadata module from a file containing a portable executable image.
+        /// </summary>
+        /// <param name="path">File path.</param>
+        /// <remarks>
+        /// The file might remain mapped (and read-locked) until this object is disposed.
+        /// The memory map is only created for large files. Small files are read into memory.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="path"/> is invalid.</exception>
+        /// <exception cref="IOException">Error opening file <paramref name="path"/>. See <see cref="Exception.InnerException"/> for details.</exception>
+        /// <exception cref="FileNotFoundException">File <paramref name="path"/> not found.</exception>
+        /// <exception cref="NotSupportedException">Reading from a file path is not supported by the platform.</exception>
+        public static ModuleMetadata CreateFromFile(string path)
+        {
+            return CreateFromStream(FileUtilities.OpenFileStream(path));
         }
 
         /// <summary>
@@ -189,17 +221,17 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         public override void Dispose()
         {
-            isDisposed = true;
+            _isDisposed = true;
 
             if (IsImageOwner)
             {
-                module.Dispose();
+                _module.Dispose();
             }
         }
 
         internal bool IsDisposed
         {
-            get { return isDisposed || module.IsDisposed; }
+            get { return _isDisposed || _module.IsDisposed; }
         }
 
         internal PEModule Module
@@ -208,16 +240,17 @@ namespace Microsoft.CodeAnalysis
             {
                 if (IsDisposed)
                 {
-                    throw new ObjectDisposedException(GetType().Name);
+                    throw new ObjectDisposedException(nameof(ModuleMetadata));
                 }
 
-                return module;
+                return _module;
             }
         }
 
         /// <summary>
         /// Name of the module.
         /// </summary>
+        /// <exception cref="BadImageFormatException">Invalid metadata.</exception>
         /// <exception cref="ObjectDisposedException">Module has been disposed.</exception>
         public string Name
         {
@@ -252,14 +285,25 @@ namespace Microsoft.CodeAnalysis
             return Module.GetMetadataModuleNamesOrThrow();
         }
 
-        internal MetadataReader MetadataReader
-        {
-            get { return Module.MetadataReader; }
-        }
+        /// <summary>
+        /// Returns the metadata reader.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Module has been disposed.</exception>
+        /// <exception cref="BadImageFormatException">When an invalid module name is encountered.</exception>
+        public MetadataReader GetMetadataReader() => MetadataReader;
 
-        internal override bool IsImageOwner
+        internal MetadataReader MetadataReader => Module.MetadataReader;
+
+        /// <summary>
+        /// Creates a reference to the module metadata.
+        /// </summary>
+        /// <param name="documentation">Provider of XML documentation comments for the metadata symbols contained in the module.</param>
+        /// <param name="filePath">Path describing the location of the metadata, or null if the metadata have no location.</param>
+        /// <param name="display">Display string used in error messages to identity the reference.</param>
+        /// <returns>A reference to the module metadata.</returns>
+        public PortableExecutableReference GetReference(DocumentationProvider documentation = null, string filePath = null, string display = null)
         {
-            get { return isImageOwner; }
+            return new MetadataImageReference(this, MetadataReferenceProperties.Module, documentation, filePath, display);
         }
     }
 }

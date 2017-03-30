@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -11,10 +11,10 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// <remarks>
     /// This type exists to share code between UsingStatementBinder and LockBinder.
     /// </remarks>
-    internal abstract class LockOrUsingBinder : LocalScopeBinder 
+    internal abstract class LockOrUsingBinder : LocalScopeBinder
     {
-        private ImmutableHashSet<Symbol> lazyLockedOrDisposedVariables;
-        private ExpressionAndDiagnostics lazyExpressionAndDiagnostics;
+        private ImmutableHashSet<Symbol> _lazyLockedOrDisposedVariables;
+        private ExpressionAndDiagnostics _lazyExpressionAndDiagnostics;
 
         internal LockOrUsingBinder(Binder enclosing)
             : base(enclosing)
@@ -27,7 +27,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (lazyLockedOrDisposedVariables == null)
+                if (_lazyLockedOrDisposedVariables == null)
                 {
                     ImmutableHashSet<Symbol> lockedOrDisposedVariables = this.Next.LockedOrDisposedVariables;
 
@@ -35,6 +35,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     if (targetExpressionSyntax != null)
                     {
+                        // We rely on this in the GetBinder call below.
+                        Debug.Assert(targetExpressionSyntax.Parent.Kind() == SyntaxKind.LockStatement ||
+                                     targetExpressionSyntax.Parent.Kind() == SyntaxKind.UsingStatement);
+
                         // For some reason, dev11 only warnings about locals and parameters.  If you do the same thing
                         // with a field of a local or parameter (e.g. lock(p.x)), there's no warning when you modify
                         // the local/parameter or its field.  We're going to take advantage of this restriction to break
@@ -42,9 +46,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                         // which is going to bind the expression, which is going to check LockedOrDisposedVariables, etc.
                         // Fortunately, SyntaxKind.IdentifierName includes local and parameter accesses, but no expressions
                         // that require lvalue checks.
-                        if (targetExpressionSyntax.Kind == SyntaxKind.IdentifierName || targetExpressionSyntax.Kind == SyntaxKind.DeclarationExpression)
+                        if (targetExpressionSyntax.Kind() == SyntaxKind.IdentifierName)
                         {
-                            BoundExpression expression = BindTargetExpression(diagnostics: null); // Diagnostics reported by BindUsingStatementParts.
+                            BoundExpression expression = BindTargetExpression(diagnostics: null, // Diagnostics reported by BindUsingStatementParts.
+                                                                              originalBinder: GetBinder(targetExpressionSyntax.Parent));
+
                             switch (expression.Kind)
                             {
                                 case BoundKind.Local:
@@ -53,37 +59,34 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 case BoundKind.Parameter:
                                     lockedOrDisposedVariables = lockedOrDisposedVariables.Add(((BoundParameter)expression).ParameterSymbol);
                                     break;
-                                case BoundKind.DeclarationExpression:
-                                    lockedOrDisposedVariables = lockedOrDisposedVariables.Add(((BoundDeclarationExpression)expression).LocalSymbol);
-                                    break;
                             }
                         }
                     }
 
-                    Interlocked.CompareExchange(ref lazyLockedOrDisposedVariables, lockedOrDisposedVariables, null);
+                    Interlocked.CompareExchange(ref _lazyLockedOrDisposedVariables, lockedOrDisposedVariables, null);
                 }
-                Debug.Assert(lazyLockedOrDisposedVariables != null);
-                return lazyLockedOrDisposedVariables;
+                Debug.Assert(_lazyLockedOrDisposedVariables != null);
+                return _lazyLockedOrDisposedVariables;
             }
         }
 
-        protected BoundExpression BindTargetExpression(DiagnosticBag diagnostics)
+        protected BoundExpression BindTargetExpression(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            if (lazyExpressionAndDiagnostics == null)
+            if (_lazyExpressionAndDiagnostics == null)
             {
                 // Filter out method group in conversion.
                 DiagnosticBag expressionDiagnostics = DiagnosticBag.GetInstance();
-                BoundExpression boundExpression = this.BindValue(TargetExpressionSyntax, expressionDiagnostics, Binder.BindValueKind.RValueOrMethodGroup);
-                Interlocked.CompareExchange(ref lazyExpressionAndDiagnostics, new ExpressionAndDiagnostics(boundExpression, expressionDiagnostics.ToReadOnlyAndFree()), null);
+                BoundExpression boundExpression = originalBinder.BindValue(TargetExpressionSyntax, expressionDiagnostics, Binder.BindValueKind.RValueOrMethodGroup);
+                Interlocked.CompareExchange(ref _lazyExpressionAndDiagnostics, new ExpressionAndDiagnostics(boundExpression, expressionDiagnostics.ToReadOnlyAndFree()), null);
             }
-            Debug.Assert(lazyExpressionAndDiagnostics != null);
+            Debug.Assert(_lazyExpressionAndDiagnostics != null);
 
             if (diagnostics != null)
             {
-                diagnostics.AddRange(lazyExpressionAndDiagnostics.Diagnostics);
+                diagnostics.AddRange(_lazyExpressionAndDiagnostics.Diagnostics);
             }
 
-            return lazyExpressionAndDiagnostics.Expression;
+            return _lazyExpressionAndDiagnostics.Expression;
         }
 
         /// <remarks>

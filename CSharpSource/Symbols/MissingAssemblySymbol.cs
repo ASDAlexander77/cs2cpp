@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         protected readonly AssemblyIdentity identity;
         protected readonly MissingModuleSymbol moduleSymbol;
 
-        private ImmutableArray<ModuleSymbol> lazyModules;
+        private ImmutableArray<ModuleSymbol> _lazyModules;
 
         public MissingAssemblySymbol(AssemblyIdentity identity)
         {
@@ -60,6 +60,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
+        public override Version AssemblyVersionPattern => null;
+
         internal override ImmutableArray<byte> PublicKey
         {
             get { return Identity.PublicKey; }
@@ -69,12 +71,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (lazyModules.IsDefault)
+                if (_lazyModules.IsDefault)
                 {
-                    lazyModules = ImmutableArray.Create<ModuleSymbol>(moduleSymbol);
+                    _lazyModules = ImmutableArray.Create<ModuleSymbol>(moduleSymbol);
                 }
 
-                return lazyModules;
+                return _lazyModules;
             }
         }
 
@@ -184,5 +186,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return false;
             }
         }
+
+        public override AssemblyMetadata GetMetadata() => null;
     }
 }

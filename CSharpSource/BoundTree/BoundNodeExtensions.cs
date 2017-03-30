@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -38,8 +38,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (statement.Kind == BoundKind.ExpressionStatement)
             {
                 BoundExpression expression = ((BoundExpressionStatement)statement).Expression;
+                if (expression.Kind == BoundKind.Sequence && ((BoundSequence)expression).SideEffects.IsDefaultOrEmpty)
+                {
+                    // in case there is a pattern variable declared in a ctor-initializer, it gets wrapped in a bound sequence.
+                    expression = ((BoundSequence)expression).Value;
+                }
+
                 return expression.Kind == BoundKind.Call && ((BoundCall)expression).IsConstructorInitializer();
             }
+
             return false;
         }
 

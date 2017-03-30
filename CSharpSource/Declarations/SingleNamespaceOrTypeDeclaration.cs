@@ -1,15 +1,13 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal abstract class SingleNamespaceOrTypeDeclaration : Declaration
     {
-        private readonly SyntaxReference syntaxReference;
-        private readonly SourceLocation nameLocation;
+        private readonly SyntaxReference _syntaxReference;
+        private readonly SourceLocation _nameLocation;
 
         protected SingleNamespaceOrTypeDeclaration(
             string name,
@@ -17,8 +15,8 @@ namespace Microsoft.CodeAnalysis.CSharp
             SourceLocation nameLocation)
             : base(name)
         {
-            this.syntaxReference = syntaxReference;
-            this.nameLocation = nameLocation;
+            _syntaxReference = syntaxReference;
+            _nameLocation = nameLocation;
         }
 
         public SourceLocation Location
@@ -33,7 +31,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return syntaxReference;
+                return _syntaxReference;
             }
         }
 
@@ -41,7 +39,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return nameLocation;
+                return _nameLocation;
             }
         }
 

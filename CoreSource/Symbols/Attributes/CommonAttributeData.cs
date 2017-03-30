@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -178,12 +178,20 @@ namespace Microsoft.CodeAnalysis
                 low = unchecked((int)args[4].DecodeValue<uint>(SpecialType.System_UInt32));
             }
 
-            return Microsoft.CodeAnalysis.ConstantValue.Create(new decimal(low, mid, high, isNegative, scale));
+            return ConstantValue.Create(new decimal(low, mid, high, isNegative, scale));
         }
 
         internal ConstantValue DecodeDateTimeConstantValue()
         {
-            return ConstantValue.Create(new DateTime(this.CommonConstructorArguments[0].DecodeValue<long>(SpecialType.System_Int64)));
+            long value = this.CommonConstructorArguments[0].DecodeValue<long>(SpecialType.System_Int64);
+
+            // if value is outside this range, DateTime would throw when constructed
+            if (value < DateTime.MinValue.Ticks || value > DateTime.MaxValue.Ticks)
+            {
+                return ConstantValue.Bad;
+            }
+
+            return ConstantValue.Create(new DateTime(value));
         }
 
         #endregion
@@ -231,6 +239,7 @@ namespace Microsoft.CodeAnalysis
             {
                 // DeprecatedAttribute(String, DeprecationType, UInt32) 
                 // DeprecatedAttribute(String, DeprecationType, UInt32, Platform) 
+                // DeprecatedAttribute(String, DeprecationType, UInt32, String) 
 
                 message = (string)args[0].Value;
                 isError = ((int)args[1].Value == 1);
@@ -402,7 +411,7 @@ namespace Microsoft.CodeAnalysis
         internal static AttributeUsageInfo DecodeAttributeUsageAttribute(TypedConstant positionalArg, ImmutableArray<KeyValuePair<string, TypedConstant>> namedArgs)
         {
             // BREAKING CHANGE (C#):
-            //   If the well known attribute class System.AttributeUsage is overriden in source,
+            //   If the well known attribute class System.AttributeUsage is overridden in source,
             //   we will use the overriding AttributeUsage type for attribute usage validation,
             //   i.e. we try to find a constructor in that type with signature AttributeUsage(AttributeTargets)
             //   and public bool properties Inherited and AllowMultiple.

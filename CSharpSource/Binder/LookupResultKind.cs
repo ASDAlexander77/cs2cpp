@@ -1,9 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -21,7 +22,7 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// detected at lookup time (e.g., NotAVariable), so only occur in bound nodes.
     /// </summary>
     /// <remarks>
-    /// This enumeration is parallel to and almost the same as as the CandidateReason enumeration.
+    /// This enumeration is parallel to and almost the same as the CandidateReason enumeration.
     /// Changes to one should usually result in changes to the other.
     /// 
     /// There are two enumerations because:
@@ -51,11 +52,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         // Note: within LookupResult, LookupResultKind.Ambiguous is currently not used (in C#). Instead
         // ambiguous results are determined later by examining multiple viable results to determine if
         // they are ambiguous or overloaded. Thus, LookupResultKind.Ambiguous does not occur in a LookupResult,
-        // but can occur withing a BoundBadExpression.
+        // but can occur within a BoundBadExpression.
         Ambiguous,
 
-        // Indicates the symbol is totally fine.
-        Viable
+        // Indicates a set of symbols, and they are totally fine.
+        MemberGroup,
+
+        // Indicates a single symbol is totally fine.
+        Viable,
     }
 
     internal static class LookupResultKindExtensions
@@ -80,14 +84,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case LookupResultKind.StaticInstanceMismatch: return CandidateReason.StaticInstanceMismatch;
                 case LookupResultKind.OverloadResolutionFailure: return CandidateReason.OverloadResolutionFailure;
                 case LookupResultKind.Ambiguous: return CandidateReason.Ambiguous;
+                case LookupResultKind.MemberGroup: return CandidateReason.MemberGroup;
 
                 case LookupResultKind.Viable:
                     Debug.Assert(false, "Should not call this on LookupResultKind.Viable");
                     return CandidateReason.None;
 
                 default:
-                    Debug.Assert(false, "Unknown or unexpected LookupResultKind.");
-                    return CandidateReason.NotReferencable;  // most generic one.
+                    throw ExceptionUtilities.UnexpectedValue(resultKind);
             }
         }
 
@@ -103,6 +107,5 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
                 return resultKind2;
         }
-
     }
 }

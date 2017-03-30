@@ -1,11 +1,14 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.CodeAnalysis
 {
     /// <summary>
     /// Represents a local variable in method body.
     /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve the right to
+    /// change it in the future.
+    /// </remarks>
     public interface ILocalSymbol : ISymbol
     {
         /// <summary>
@@ -18,6 +21,11 @@ namespace Microsoft.CodeAnalysis
         /// Also returns true for an enum member.
         /// </summary>
         bool IsConst { get; }
+
+        /// <summary>
+        /// Returns true if this local is a ref-local.
+        /// </summary>
+        bool IsRef { get; }
 
         /// <summary>
         /// Returns false if the local variable wasn't declared as "const", or constant value was omitted or erroneous.

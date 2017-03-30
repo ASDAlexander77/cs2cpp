@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.CodeAnalysis.CSharp.Emit;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -15,25 +14,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal abstract class SynthesizedContainer : NamedTypeSymbol
     {
-        private readonly string name;
-        private readonly TypeMap typeMap;
-        private readonly ImmutableArray<TypeParameterSymbol> typeParameters;
+        private readonly ImmutableArray<TypeParameterSymbol> _typeParameters;
+        private readonly ImmutableArray<TypeParameterSymbol> _constructedFromTypeParameters;
 
         protected SynthesizedContainer(string name, int parameterCount, bool returnsVoid)
         {
             Debug.Assert(name != null);
-            this.name = name;
-            this.typeMap = TypeMap.Empty;
-            this.typeParameters = CreateTypeParameters(parameterCount, returnsVoid);
+            Name = name;
+            TypeMap = TypeMap.Empty;
+            _typeParameters = CreateTypeParameters(parameterCount, returnsVoid);
+            _constructedFromTypeParameters = default(ImmutableArray<TypeParameterSymbol>);
         }
 
-        protected SynthesizedContainer(string name, MethodSymbol topLevelMethod)
+        protected SynthesizedContainer(string name, MethodSymbol containingMethod)
         {
             Debug.Assert(name != null);
-            Debug.Assert(topLevelMethod != null);
-
-            this.name = name;
-            this.typeMap = TypeMap.Empty.WithAlphaRename(topLevelMethod, this, out this.typeParameters);
+            Name = name;
+            if (containingMethod == null)
+            {
+                TypeMap = TypeMap.Empty;
+                _typeParameters = ImmutableArray<TypeParameterSymbol>.Empty;
+            }
+            else
+            {
+                TypeMap = TypeMap.Empty.WithConcatAlphaRename(containingMethod, this, out _typeParameters, out _constructedFromTypeParameters);
+            }
         }
 
         protected SynthesizedContainer(string name, ImmutableArray<TypeParameterSymbol> typeParameters, TypeMap typeMap)
@@ -42,9 +47,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert(!typeParameters.IsDefault);
             Debug.Assert(typeMap != null);
 
-            this.name = name;
-            this.typeParameters = typeParameters;
-            this.typeMap = typeMap;
+            Name = name;
+            _typeParameters = typeParameters;
+            TypeMap = typeMap;
         }
 
         private ImmutableArray<TypeParameterSymbol> CreateTypeParameters(int parameterCount, bool returnsVoid)
@@ -63,20 +68,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return typeParameters.ToImmutableAndFree();
         }
 
-        internal TypeMap TypeMap
-        {
-            get { return typeMap; }
-        }
+        internal TypeMap TypeMap { get; }
 
-        internal virtual MethodSymbol Constructor
-        {
-            get { return null; }
-        }
+        internal virtual MethodSymbol Constructor => null;
 
-        internal sealed override bool IsInterface
-        {
-            get { return this.TypeKind == TypeKind.Interface; }
-        }
+        internal sealed override bool IsInterface => this.TypeKind == TypeKind.Interface;
 
         internal override void AddSynthesizedAttributes(ModuleCompilationState compilationState, ref ArrayBuilder<SynthesizedAttributeData> attributes)
         {
@@ -93,55 +89,37 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             // if this happens for whatever reason, we do not need "CompilerGenerated" anyways
             Debug.Assert(compilation != null, "SynthesizedClass is not contained in a source module?");
 
-            AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(
+            AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(
                 WellKnownMember.System_Runtime_CompilerServices_CompilerGeneratedAttribute__ctor));
         }
 
-        public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
-        {
-            get { return typeParameters; }
-        }
+        /// <summary>
+        /// Note: Can be default if this SynthesizedContainer was constructed with <see cref="SynthesizedContainer(string, int, bool)"/>
+        /// </summary>
+        internal ImmutableArray<TypeParameterSymbol> ConstructedFromTypeParameters => _constructedFromTypeParameters;
 
-        public sealed override string Name
-        {
-            get { return name; }
-        }
+        public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters => _typeParameters;
 
-        public override ImmutableArray<Location> Locations
-        {
-            get { return ImmutableArray<Location>.Empty; }
-        }
+        public sealed override string Name { get; }
 
-        public override ImmutableArray<SyntaxReference> DeclaringSyntaxReferences
-        {
-            get { return ImmutableArray<SyntaxReference>.Empty; }
-        }
+        public override ImmutableArray<Location> Locations => ImmutableArray<Location>.Empty;
 
-        public override IEnumerable<string> MemberNames
-        {
-            get { return SpecializedCollections.EmptyEnumerable<string>(); }
-        }
+        public override ImmutableArray<SyntaxReference> DeclaringSyntaxReferences => ImmutableArray<SyntaxReference>.Empty;
 
-        public override NamedTypeSymbol ConstructedFrom
-        {
-            get { return this; }
-        }
+        public override IEnumerable<string> MemberNames => SpecializedCollections.EmptyEnumerable<string>();
 
-        public override bool IsSealed
-        {
-            get { return true; }
-        }
+        public override NamedTypeSymbol ConstructedFrom => this;
 
-        public override bool IsAbstract
-        {
-            get { return (object)Constructor == null; }
-        }
+        public override bool IsSealed => true;
 
-        internal override ImmutableArray<TypeSymbol> TypeArgumentsNoUseSiteDiagnostics
-        {
-            get { return StaticCast<TypeSymbol>.From(TypeParameters); }
-        }
+        public override bool IsAbstract => (object)Constructor == null && this.TypeKind != TypeKind.Struct;
 
+        internal override ImmutableArray<TypeSymbol> TypeArgumentsNoUseSiteDiagnostics => StaticCast<TypeSymbol>.From(TypeParameters);
+
+        internal override bool HasTypeArgumentsCustomModifiers => false;
+
+        public override ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal) => GetEmptyTypeArgumentCustomModifiers(ordinal);
+ 
         public override ImmutableArray<Symbol> GetMembers()
         {
             Symbol constructor = this.Constructor;
@@ -167,144 +145,64 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override ImmutableArray<Symbol> GetEarlyAttributeDecodingMembers()
-        {
-            return this.GetMembersUnordered();
-        }
+        internal override ImmutableArray<Symbol> GetEarlyAttributeDecodingMembers() => this.GetMembersUnordered();
 
-        internal override ImmutableArray<Symbol> GetEarlyAttributeDecodingMembers(string name)
-        {
-            return this.GetMembers(name);
-        }
+        internal override ImmutableArray<Symbol> GetEarlyAttributeDecodingMembers(string name) => this.GetMembers(name);
 
-        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers()
-        {
-            return ImmutableArray<NamedTypeSymbol>.Empty;
-        }
+        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers() => ImmutableArray<NamedTypeSymbol>.Empty;
 
-        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers(string name)
-        {
-            return ImmutableArray<NamedTypeSymbol>.Empty;
-        }
+        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers(string name) => ImmutableArray<NamedTypeSymbol>.Empty;
 
-        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers(string name, int arity)
-        {
-            return ImmutableArray<NamedTypeSymbol>.Empty;
-        }
+        public override ImmutableArray<NamedTypeSymbol> GetTypeMembers(string name, int arity) => ImmutableArray<NamedTypeSymbol>.Empty;
 
-        public override Accessibility DeclaredAccessibility
-        {
-            get { return Accessibility.Private; }
-        }
+        public override Accessibility DeclaredAccessibility => Accessibility.Private;
 
-        public override bool IsStatic
-        {
-            get { return false; }
-        }
+        public override bool IsStatic => false;
 
-        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
-        {
-            get { return ImmutableArray<NamedTypeSymbol>.Empty; }
-        }
+        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved) => ImmutableArray<NamedTypeSymbol>.Empty;
 
-        internal override ImmutableArray<NamedTypeSymbol> GetInterfacesToEmit()
-        {
-            return CalculateInterfacesToEmit();
-        }
+        internal override ImmutableArray<NamedTypeSymbol> GetInterfacesToEmit() => CalculateInterfacesToEmit();
 
         internal override NamedTypeSymbol BaseTypeNoUseSiteDiagnostics
-        {
-            get { return ContainingAssembly.GetSpecialType(this.TypeKind == TypeKind.Struct ? SpecialType.System_ValueType : SpecialType.System_Object); }
-        }
+            => ContainingAssembly.GetSpecialType(this.TypeKind == TypeKind.Struct ? SpecialType.System_ValueType : SpecialType.System_Object);
 
-        internal override NamedTypeSymbol GetDeclaredBaseType(ConsList<Symbol> basesBeingResolved)
-        {
-            return BaseTypeNoUseSiteDiagnostics;
-        }
+        internal override NamedTypeSymbol GetDeclaredBaseType(ConsList<Symbol> basesBeingResolved) => BaseTypeNoUseSiteDiagnostics;
 
-        internal override ImmutableArray<NamedTypeSymbol> GetDeclaredInterfaces(ConsList<Symbol> basesBeingResolved)
-        {
-            return InterfacesNoUseSiteDiagnostics;
-        }
+        internal override ImmutableArray<NamedTypeSymbol> GetDeclaredInterfaces(ConsList<Symbol> basesBeingResolved) => InterfacesNoUseSiteDiagnostics(basesBeingResolved);
 
-        public override bool MightContainExtensionMethods
-        {
-            get { return false; }
-        }
+        public override bool MightContainExtensionMethods => false;
 
-        public override int Arity
-        {
-            get { return TypeParameters.Length; }
-        }
+        public override int Arity => TypeParameters.Length;
 
-        internal override bool MangleName
-        {
-            get { return Arity > 0; }
-        }
+        internal override bool MangleName => Arity > 0;
 
-        public override bool IsImplicitlyDeclared
-        {
-            get { return true; }
-        }
+        public override bool IsImplicitlyDeclared => true;
 
-        internal override bool ShouldAddWinRTMembers
-        {
-            get { return false; }
-        }
+        internal override bool ShouldAddWinRTMembers => false;
 
-        internal override bool IsWindowsRuntimeImport
-        {
-            get { return false; }
-        }
+        internal override bool IsWindowsRuntimeImport => false;
 
-        internal override bool IsComImport
-        {
-            get { return false; }
-        }
+        internal override bool IsComImport => false;
 
-        internal sealed override ObsoleteAttributeData ObsoleteAttributeData
-        {
-            get { return null; }
-        }
+        internal sealed override ObsoleteAttributeData ObsoleteAttributeData => null;
 
-        internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-        {
-            return ImmutableArray<string>.Empty;
-        }
+        internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols() => ImmutableArray<string>.Empty;
 
-        internal override bool HasDeclarativeSecurity
-        {
-            get { return false; }
-        }
+        internal override bool HasDeclarativeSecurity => false;
 
-        internal override CharSet MarshallingCharSet
-        {
-            get { return DefaultMarshallingCharSet; }
-        }
+        internal override CharSet MarshallingCharSet => DefaultMarshallingCharSet;
 
-        internal override bool IsSerializable
-        {
-            get { return false; }
-        }
+        internal override bool IsSerializable => false;
 
         internal override IEnumerable<Cci.SecurityAttribute> GetSecurityInformation()
         {
             throw ExceptionUtilities.Unreachable;
         }
 
-        internal override AttributeUsageInfo GetAttributeUsageInfo()
-        {
-            return default(AttributeUsageInfo);
-        }
+        internal override AttributeUsageInfo GetAttributeUsageInfo() => default(AttributeUsageInfo);
 
-        internal override TypeLayout Layout
-        {
-            get { return default(TypeLayout); }
-        }
+        internal override TypeLayout Layout => default(TypeLayout);
 
-        internal override bool HasSpecialName
-        {
-            get { return false; }
-        }
+        internal override bool HasSpecialName => false;
     }
 }

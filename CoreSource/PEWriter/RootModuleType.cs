@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -14,9 +14,9 @@ namespace Microsoft.Cci
     /// </summary>
     internal class RootModuleType : INamespaceTypeDefinition
     {
-        public TypeHandle TypeDef
+        public TypeDefinitionHandle TypeDef
         {
-            get { return default(TypeHandle); }
+            get { return default(TypeDefinitionHandle); }
         }
 
         public ITypeDefinition ResolvedType
@@ -69,9 +69,9 @@ namespace Microsoft.Cci
             get { return false; }
         }
 
-        public IEnumerable<ITypeReference> Interfaces(EmitContext context)
+        public IEnumerable<Cci.TypeReferenceWithAttributes> Interfaces(EmitContext context)
         {
-            return SpecializedCollections.EmptyEnumerable<ITypeReference>();
+            return SpecializedCollections.EmptyEnumerable<Cci.TypeReferenceWithAttributes>();
         }
 
         public bool IsAbstract
@@ -202,9 +202,9 @@ namespace Microsoft.Cci
             return this;
         }
 
-        PrimitiveTypeCode ITypeReference.TypeCode(EmitContext context)
+        PrimitiveTypeCode ITypeReference.TypeCode
         {
-            throw ExceptionUtilities.Unreachable;
+            get { throw ExceptionUtilities.Unreachable; }
         }
 
         ushort INamedTypeReference.GenericParameterCount

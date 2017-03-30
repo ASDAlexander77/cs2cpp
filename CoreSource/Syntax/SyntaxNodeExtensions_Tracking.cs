@@ -1,18 +1,20 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
     public static partial class SyntaxNodeExtensions
     {
-        private static readonly ConditionalWeakTable<SyntaxNode, SyntaxAnnotation> nodeToIdMap
+        private static readonly ConditionalWeakTable<SyntaxNode, SyntaxAnnotation> s_nodeToIdMap
             = new ConditionalWeakTable<SyntaxNode, SyntaxAnnotation>();
 
-        private static readonly ConditionalWeakTable<SyntaxNode, CurrentNodes> rootToCurrentNodesMap
+        private static readonly ConditionalWeakTable<SyntaxNode, CurrentNodes> s_rootToCurrentNodesMap
             = new ConditionalWeakTable<SyntaxNode, CurrentNodes>();
 
         internal const string IdAnnotationKind = "Id";
@@ -30,13 +32,18 @@ namespace Microsoft.CodeAnalysis
         {
             if (nodes == null)
             {
-                throw new ArgumentNullException("nodes");
+                throw new ArgumentNullException(nameof(nodes));
             }
 
             // create an id for each node
             foreach (var node in nodes)
             {
-                nodeToIdMap.GetValue(node, n => new SyntaxAnnotation(IdAnnotationKind));
+                if (!IsDescendant(root, node))
+                {
+                    throw new ArgumentException(CodeAnalysisResources.InvalidNodeToTrack);
+                }
+
+                s_nodeToIdMap.GetValue(node, n => new SyntaxAnnotation(IdAnnotationKind));
             }
 
             return root.ReplaceNodes(nodes, (n, r) => n.HasAnnotation(GetId(n)) ? r : r.WithAdditionalAnnotations(GetId(n)));
@@ -67,13 +74,10 @@ namespace Microsoft.CodeAnalysis
         {
             if (node == null)
             {
-                throw new ArgumentNullException("originalNode");
+                throw new ArgumentNullException(nameof(node));
             }
 
-            foreach (var newNode in GetCurrentNodeFromTrueRoots(GetRoot(root), node).OfType<TNode>())
-            {
-                yield return newNode;
-            }
+            return GetCurrentNodeFromTrueRoots(GetRoot(root), node).OfType<TNode>();
         }
 
         /// <summary>
@@ -99,7 +103,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (nodes == null)
             {
-                throw new ArgumentNullException("nodes");
+                throw new ArgumentNullException(nameof(nodes));
             }
 
             var trueRoot = GetRoot(root);
@@ -113,24 +117,24 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        private static List<SyntaxNode> GetCurrentNodeFromTrueRoots(SyntaxNode trueRoot, SyntaxNode node)
+        private static IReadOnlyList<SyntaxNode> GetCurrentNodeFromTrueRoots(SyntaxNode trueRoot, SyntaxNode node)
         {
             var id = GetId(node);
             if (id != null)
             {
-                CurrentNodes tracked = rootToCurrentNodesMap.GetValue(trueRoot, r => new CurrentNodes(r));
+                CurrentNodes tracked = s_rootToCurrentNodesMap.GetValue(trueRoot, r => new CurrentNodes(r));
                 return tracked.GetNodes(id);
             }
             else
             {
-                return null;
+                return SpecializedCollections.EmptyReadOnlyList<SyntaxNode>();
             }
         }
 
         private static SyntaxAnnotation GetId(SyntaxNode original)
         {
             SyntaxAnnotation id;
-            nodeToIdMap.TryGetValue(original, out id);
+            s_nodeToIdMap.TryGetValue(original, out id);
             return id;
         }
 
@@ -154,9 +158,35 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
+        private static bool IsDescendant(SyntaxNode root, SyntaxNode node)
+        {
+            while (node != null)
+            {
+                if (node == root)
+                {
+                    return true;
+                }
+
+                if (node.Parent != null)
+                {
+                    node = node.Parent;
+                }
+                else if (!node.IsStructuredTrivia)
+                {
+                    break;
+                }
+                else
+                {
+                    node = ((IStructuredTriviaSyntax)node).ParentTrivia.Token.Parent;
+                }
+            }
+
+            return false;
+        }
+
         private class CurrentNodes
         {
-            private readonly Dictionary<SyntaxAnnotation, List<SyntaxNode>> idToNodeMap;
+            private readonly Dictionary<SyntaxAnnotation, IReadOnlyList<SyntaxNode>> _idToNodeMap;
 
             public CurrentNodes(SyntaxNode root)
             {
@@ -179,14 +209,20 @@ namespace Microsoft.CodeAnalysis
                     }
                 }
 
-                this.idToNodeMap = map;
+                _idToNodeMap = map.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<SyntaxNode>)ImmutableArray.CreateRange(kv.Value));
             }
 
-            public List<SyntaxNode> GetNodes(SyntaxAnnotation id)
+            public IReadOnlyList<SyntaxNode> GetNodes(SyntaxAnnotation id)
             {
-                List<SyntaxNode> node;
-                this.idToNodeMap.TryGetValue(id, out node);
-                return node;
+                IReadOnlyList<SyntaxNode> nodes;
+                if (_idToNodeMap.TryGetValue(id, out nodes))
+                {
+                    return nodes;
+                }
+                else
+                {
+                    return SpecializedCollections.EmptyReadOnlyList<SyntaxNode>();
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -8,8 +8,8 @@ using Roslyn.Utilities;
 
 #if DEBUG
 using System.Text;
-#endif
 
+#endif
 namespace Microsoft.CodeAnalysis.CSharp
 {
     /// <summary>
@@ -20,8 +20,8 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal class OverloadResolutionResult<TMember> where TMember : Symbol
     {
-        private MemberResolutionResult<TMember> bestResult;
-        private ThreeState bestResultState;
+        private MemberResolutionResult<TMember> _bestResult;
+        private ThreeState _bestResultState;
         internal readonly ArrayBuilder<MemberResolutionResult<TMember>> ResultsBuilder;
 
         // Create an overload resolution result from a single result.
@@ -32,8 +32,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal void Clear()
         {
-            this.bestResult = default(MemberResolutionResult<TMember>);
-            this.bestResultState = ThreeState.Unknown;
+            _bestResult = default(MemberResolutionResult<TMember>);
+            _bestResultState = ThreeState.Unknown;
             this.ResultsBuilder.Clear();
         }
 
@@ -44,12 +44,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (!this.bestResultState.HasValue())
-                {
-                    this.bestResultState = TryGetBestResult(this.ResultsBuilder, out this.bestResult);
-                }
+                EnsureBestResultLoaded();
 
-                return this.bestResultState == ThreeState.True && bestResult.Result.IsValid;
+                return _bestResultState == ThreeState.True && _bestResult.Result.IsValid;
             }
         }
 
@@ -61,8 +58,18 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                Debug.Assert(this.bestResultState == ThreeState.True && bestResult.Result.IsValid);
-                return bestResult;
+                EnsureBestResultLoaded();
+
+                Debug.Assert(_bestResultState == ThreeState.True && _bestResult.Result.IsValid);
+                return _bestResult;
+            }
+        }
+
+        private void EnsureBestResultLoaded()
+        {
+            if (!_bestResultState.HasValue())
+            {
+                _bestResultState = TryGetBestResult(this.ResultsBuilder, out _bestResult);
             }
         }
 
@@ -76,8 +83,10 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                Debug.Assert(this.bestResultState == ThreeState.True);
-                return bestResult;
+                EnsureBestResultLoaded();
+
+                Debug.Assert(_bestResultState == ThreeState.True);
+                return _bestResult;
             }
         }
 
@@ -85,7 +94,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                return bestResultState.Value();
+                EnsureBestResultLoaded();
+
+                return _bestResultState.Value();
             }
         }
 
@@ -141,9 +152,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private static ThreeState TryGetBestResult(ArrayBuilder<MemberResolutionResult<TMember>> allResults, out MemberResolutionResult<TMember> best)
         {
-            ThreeState haveBest = ThreeState.False;
-
             best = default(MemberResolutionResult<TMember>);
+            ThreeState haveBest = ThreeState.False;
 
             foreach (var pair in allResults)
             {
@@ -171,7 +181,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         /// <remarks>
         /// Overload resolution (effectively) starts out assuming that all candidates are valid and then
-        /// gradually disqualifies them.  Therefore, our strategry will be to perform our checks in the
+        /// gradually disqualifies them.  Therefore, our strategy will be to perform our checks in the
         /// reverse order - the farther a candidate got through the process without being flagged, the
         /// "better" it was.
         /// 
@@ -194,6 +204,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool isMethodGroupConversion = false) where T : Symbol
         {
             Debug.Assert(!this.Succeeded, "Don't ask for diagnostic info on a successful overload resolution result.");
+
+            // Each argument must have non-null Display in case it is used in a diagnostic.
+            Debug.Assert(arguments.Arguments.All(a => a.Display != null));
 
             // This kind is only used for default(MemberResolutionResult<T>), so we should never see it in
             // the candidate list.
@@ -276,7 +289,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // a type that violates its own constraints then the first such method is 
             // the best bad method.
 
-            if (ConstraintsCheckFailed(binder.Conversions, binder.Compilation, diagnostics, arguments, location))
+            if (ConstraintsCheckFailed(binder.Conversions, binder.Compilation, diagnostics, location))
             {
                 return;
             }
@@ -287,7 +300,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Otherwise, if there is any such method where type inference succeeded but inferred
             // an inaccessible type then the first such method found is the best bad method.
 
-            if (InaccessibleTypeArgument(diagnostics, symbols, arguments, location))
+            if (InaccessibleTypeArgument(diagnostics, symbols, location))
             {
                 return;
             }
@@ -315,7 +328,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Otherwise, if there is any such method that cannot be used because it is
             // in an unreferenced assembly then the first such method is the best bad method.
 
-            if (UseSiteError(diagnostics, symbols, location))
+            if (UseSiteError())
             {
                 return;
             }
@@ -330,13 +343,19 @@ namespace Microsoft.CodeAnalysis.CSharp
             // and argument analysis.  We don't want to report unsupported metadata unless nothing else went wrong -
             // otherwise we'd report errors about losing candidates, effectively "pulling in" unnecessary assemblies.
 
-            bool haveMultipleSupported = false;
+            bool supportedRequiredParameterMissingConflicts = false;
             MemberResolutionResult<TMember> firstSupported = default(MemberResolutionResult<TMember>);
             MemberResolutionResult<TMember> firstUnsupported = default(MemberResolutionResult<TMember>);
 
+            var supportedInPriorityOrder = new MemberResolutionResult<TMember>[4]; // from highest to lowest priority
+            const int requiredParameterMissingPriority = 0;
+            const int nameUsedForPositionalPriority = 1;
+            const int noCorrespondingNamedParameterPriority = 2;
+            const int noCorrespondingParameterPriority = 3;
+
             foreach (MemberResolutionResult<TMember> result in this.ResultsBuilder)
             {
-                switch(result.Result.Kind)
+                switch (result.Result.Kind)
                 {
                     case MemberResolutionKind.UnsupportedMetadata:
                         if (firstSupported.IsNull)
@@ -345,17 +364,34 @@ namespace Microsoft.CodeAnalysis.CSharp
                         }
                         break;
                     case MemberResolutionKind.NoCorrespondingNamedParameter:
-                    case MemberResolutionKind.NoCorrespondingParameter:
-                    case MemberResolutionKind.RequiredParameterMissing:
-                    case MemberResolutionKind.NameUsedForPositional:
-                        if (firstSupported.IsNull)
+                        if (supportedInPriorityOrder[noCorrespondingNamedParameterPriority].IsNull ||
+                            result.Result.BadArgumentsOpt[0] > supportedInPriorityOrder[noCorrespondingNamedParameterPriority].Result.BadArgumentsOpt[0])
                         {
-                            firstSupported = result;
+                            supportedInPriorityOrder[noCorrespondingNamedParameterPriority] = result;
+                        }
+                        break;
+                    case MemberResolutionKind.NoCorrespondingParameter:
+                        if (supportedInPriorityOrder[noCorrespondingParameterPriority].IsNull)
+                        {
+                            supportedInPriorityOrder[noCorrespondingParameterPriority] = result;
+                        }
+                        break;
+                    case MemberResolutionKind.RequiredParameterMissing:
+                        if (supportedInPriorityOrder[requiredParameterMissingPriority].IsNull)
+                        {
+                            Debug.Assert(!supportedRequiredParameterMissingConflicts);
+                            supportedInPriorityOrder[requiredParameterMissingPriority] = result;
                         }
                         else
                         {
-                            haveMultipleSupported = true;
-                            break; // Optimization: Nothing else to be learned.
+                            supportedRequiredParameterMissingConflicts = true;
+                        }
+                        break;
+                    case MemberResolutionKind.NameUsedForPositional:
+                        if (supportedInPriorityOrder[nameUsedForPositionalPriority].IsNull ||
+                            result.Result.BadArgumentsOpt[0] > supportedInPriorityOrder[nameUsedForPositionalPriority].Result.BadArgumentsOpt[0])
+                        {
+                            supportedInPriorityOrder[nameUsedForPositionalPriority] = result;
                         }
                         break;
                     default:
@@ -366,12 +402,21 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
+            foreach (var supported in supportedInPriorityOrder)
+            {
+                if (supported.IsNotNull)
+                {
+                    firstSupported = supported;
+                    break;
+                }
+            }
+
             // If there are any supported candidates, we don't care about unsupported candidates.
             if (firstSupported.IsNotNull)
             {
                 // If there are multiple supported candidates, we don't have a good way to choose the best
                 // one so we report a general diagnostic (below).
-                if (!haveMultipleSupported && !isMethodGroupConversion)
+                if (!(firstSupported.Result.Kind == MemberResolutionKind.RequiredParameterMissing && supportedRequiredParameterMissingConflicts) && !isMethodGroupConversion)
                 {
                     switch (firstSupported.Result.Kind)
                     {
@@ -392,7 +437,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         // the best bad method.
                         case MemberResolutionKind.RequiredParameterMissing:
                             // CONSIDER: for consistency with dev12, we would goto default except in omitted ref cases.
-                            ReportMissingRequiredParameter(firstSupported, diagnostics, arguments, delegateTypeBeingInvoked, symbols, location);
+                            ReportMissingRequiredParameter(firstSupported, diagnostics, delegateTypeBeingInvoked, symbols, location);
                             return;
 
                         // NOTE: For some reason, there is no specific handling for this result kind.
@@ -443,7 +488,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             Symbol.ReportUseSiteDiagnostic(diagInfo, diagnostics, location);
         }
 
-        private bool UseSiteError(DiagnosticBag diagnostics, ImmutableArray<Symbol> symbols, Location location)
+        private bool UseSiteError()
         {
             var bad = GetFirstMemberKind(MemberResolutionKind.UseSiteError);
             if (bad.IsNull)
@@ -462,7 +507,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         private bool InaccessibleTypeArgument(
             DiagnosticBag diagnostics,
             ImmutableArray<Symbol> symbols,
-            AnalyzedArguments arguments,
             Location location)
         {
             var inaccessible = GetFirstMemberKind(MemberResolutionKind.InaccessibleTypeArgument);
@@ -533,7 +577,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private static void ReportNameUsedForPositional(
             MemberResolutionResult<TMember> bad,
-            DiagnosticBag diagnostics, 
+            DiagnosticBag diagnostics,
             AnalyzedArguments arguments,
             ImmutableArray<Symbol> symbols)
         {
@@ -555,9 +599,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         private static void ReportNoCorrespondingNamedParameter(
             MemberResolutionResult<TMember> bad,
             string methodName,
-            DiagnosticBag diagnostics, 
+            DiagnosticBag diagnostics,
             AnalyzedArguments arguments,
-            NamedTypeSymbol delegateTypeBeingInvoked, 
+            NamedTypeSymbol delegateTypeBeingInvoked,
             ImmutableArray<Symbol> symbols)
         {
             // We know that there is at least one method that had a number of arguments
@@ -593,7 +637,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         private static void ReportMissingRequiredParameter(
             MemberResolutionResult<TMember> bad,
             DiagnosticBag diagnostics,
-            AnalyzedArguments arguments,
             NamedTypeSymbol delegateTypeBeingInvoked,
             ImmutableArray<Symbol> symbols,
             Location location)
@@ -637,12 +680,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private static void ReportBadParameterCount(
-            DiagnosticBag diagnostics, 
-            string name, 
+            DiagnosticBag diagnostics,
+            string name,
             AnalyzedArguments arguments,
-            ImmutableArray<Symbol> symbols, 
-            Location location, 
-            NamedTypeSymbol typeContainingConstructor, 
+            ImmutableArray<Symbol> symbols,
+            Location location,
+            NamedTypeSymbol typeContainingConstructor,
             NamedTypeSymbol delegateTypeBeingInvoked)
         {
             // error CS1501: No overload for method 'M' takes n arguments
@@ -673,7 +716,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             ConversionsBase conversions,
             Compilation compilation,
             DiagnosticBag diagnostics,
-            AnalyzedArguments arguments,
             Location location)
         {
             // We know that there is at least one method that had a number of arguments
@@ -852,6 +894,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             int arg)
         {
             BoundExpression argument = arguments.Argument(arg);
+            if (argument.HasAnyErrors)
+            {
+                // If the argument had an error reported then do not report further errors for 
+                // overload resolution failure.
+                return;
+            }
+
             int parm = badArg.Result.ParameterFromArgument(arg);
             SourceLocation sourceLocation = new SourceLocation(argument.Syntax);
 
@@ -879,10 +928,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             // If the expression is untyped because it is a lambda, anonymous method, method group or null
             // then we never want to report the error "you need a ref on that thing". Rather, we want to
             // say that you can't convert "null" to "ref int".
-            if (!argument.HasExpressionType() && argument.Kind != BoundKind.UninitializedVarDeclarationExpression)
+            if (!argument.HasExpressionType() &&
+                argument.Kind != BoundKind.OutDeconstructVarPendingInference &&
+                argument.Kind != BoundKind.OutVariablePendingInference &&
+                argument.Kind != BoundKind.DiscardExpression)
             {
                 // If the problem is that a lambda isn't convertible to the given type, also report why.
-                if (argument.Kind == BoundKind.UnboundLambda)
+                // The argument and parameter type might match, but may not have same in/out modifiers
+                if (argument.Kind == BoundKind.UnboundLambda && refArg == refParm)
                 {
                     ((UnboundLambda)argument).GenerateAnonymousFunctionConversionError(diagnostics, parameter.Type);
                 }
@@ -923,14 +976,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                         refParm.ToDisplayString());
                 }
             }
-            else if (argument.Kind == BoundKind.UninitializedVarDeclarationExpression)
-            {
-                Debug.Assert(false);
-            }
             else
             {
-                TypeSymbol argType = argument.Display as TypeSymbol;
-                Debug.Assert((object)argType != null);
+                Debug.Assert(argument.Kind != BoundKind.OutDeconstructVarPendingInference);
+                Debug.Assert(argument.Kind != BoundKind.OutVariablePendingInference);
+                Debug.Assert(argument.Kind != BoundKind.DiscardExpression || argument.HasExpressionType());
+                Debug.Assert(argument.Display != null);
 
                 if (arguments.IsExtensionMethodThisArgument(arg))
                 {
@@ -944,7 +995,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             ErrorCode.ERR_BadExtensionArgTypes,
                             location,
                             symbols,
-                            argType,
+                            argument.Display,
                             name,
                             method);
                     }
@@ -955,7 +1006,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             ErrorCode.ERR_BadInstanceArgType,
                             sourceLocation,
                             symbols,
-                            argType,
+                            argument.Display,
                             name,
                             method,
                             parameter);
@@ -968,22 +1019,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                     // object that contains both values, so we have to construct our own.
                     // NOTE: since this is a symbol, it will use the SymbolDisplay options for parameters (i.e. will
                     // have the same format as the display value of the parameter).
-                    SignatureOnlyParameterSymbol displayArg = new SignatureOnlyParameterSymbol(
-                        argType,
-                        ImmutableArray<CustomModifier>.Empty,
-                        isParams: false,
-                        refKind: refArg);
+                    var argType = argument.Display as TypeSymbol;
+                    if (argType != null)
+                    {
+                        SignatureOnlyParameterSymbol displayArg = new SignatureOnlyParameterSymbol(
+                            argType,
+                            ImmutableArray<CustomModifier>.Empty,
+                            ImmutableArray<CustomModifier>.Empty,
+                            isParams: false,
+                            refKind: refArg);
 
-                    SymbolDistinguisher distinguisher = new SymbolDistinguisher(compilation, displayArg, UnwrapIfParamsArray(parameter));
+                        SymbolDistinguisher distinguisher = new SymbolDistinguisher(compilation, displayArg, UnwrapIfParamsArray(parameter));
 
-                    // CS1503: Argument {0}: cannot convert from '{1}' to '{2}'
-                    diagnostics.Add(
-                        ErrorCode.ERR_BadArgType,
-                        sourceLocation,
-                        symbols,
-                        arg + 1,
-                        distinguisher.First,
-                        distinguisher.Second);
+                        // CS1503: Argument {0}: cannot convert from '{1}' to '{2}'
+                        diagnostics.Add(
+                            ErrorCode.ERR_BadArgType,
+                            sourceLocation,
+                            symbols,
+                            arg + 1,
+                            distinguisher.First,
+                            distinguisher.Second);
+                    }
+                    else
+                    {
+                        diagnostics.Add(
+                            ErrorCode.ERR_BadArgType,
+                            sourceLocation,
+                            symbols,
+                            arg + 1,
+                            argument.Display,
+                            UnwrapIfParamsArray(parameter));
+                    }
                 }
             }
         }
@@ -998,7 +1064,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if (parameter.IsParams)
             {
                 ArrayTypeSymbol arrayType = parameter.Type as ArrayTypeSymbol;
-                if ((object)arrayType != null)
+                if ((object)arrayType != null && arrayType.IsSZArray)
                 {
                     return arrayType.ElementType;
                 }
@@ -1030,14 +1096,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 // error CS0121: The call is ambiguous between the following methods or properties: 'P.W(A)' and 'P.W(B)'
-                diagnostics.Add(new DiagnosticInfoWithSymbols(
-                    ErrorCode.ERR_AmbigCall,
-                    new object[]
-                {
-                    worseResult1.LeastOverriddenMember.OriginalDefinition,
-                    worseResult2.LeastOverriddenMember.OriginalDefinition
-                },
-                    symbols), location);
+                diagnostics.Add(
+                    CreateAmbiguousCallDiagnosticInfo(
+                        worseResult1.LeastOverriddenMember.OriginalDefinition,
+                        worseResult2.LeastOverriddenMember.OriginalDefinition,
+                        symbols),
+                    location);
             }
 
             return true;
@@ -1085,14 +1149,13 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // error CS0121: The call is ambiguous between the following methods or properties:
             // 'P.Ambiguous(object, string)' and 'P.Ambiguous(string, object)'
-            diagnostics.Add(new DiagnosticInfoWithSymbols(
-                ErrorCode.ERR_AmbigCall,
-                new object[]
-                {
+            diagnostics.Add(
+                CreateAmbiguousCallDiagnosticInfo(
                     validResult1.LeastOverriddenMember.OriginalDefinition,
-                    validResult2.LeastOverriddenMember.OriginalDefinition
-                },
-                symbols), location);
+                    validResult2.LeastOverriddenMember.OriginalDefinition,
+                    symbols),
+                location);
+
             return true;
         }
 
@@ -1123,6 +1186,22 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             return count;
+        }
+
+        private static DiagnosticInfoWithSymbols CreateAmbiguousCallDiagnosticInfo(Symbol first, Symbol second, ImmutableArray<Symbol> symbols)
+        {
+            var arguments = (first.ContainingNamespace != second.ContainingNamespace) ?
+                new object[]
+                    {
+                            new FormattedSymbol(first, SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            new FormattedSymbol(second, SymbolDisplayFormat.CSharpErrorMessageFormat)
+                    } :
+                new object[]
+                    {
+                            first,
+                            second
+                    };
+            return new DiagnosticInfoWithSymbols(ErrorCode.ERR_AmbigCall, arguments, symbols);
         }
 
         [Conditional("DEBUG")]
@@ -1186,18 +1265,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal static OverloadResolutionResult<TMember> GetInstance()
         {
-            return Pool.Allocate();
+            return s_pool.Allocate();
         }
 
         internal void Free()
         {
             this.Clear();
-            Pool.Free(this);
+            s_pool.Free(this);
         }
 
         //2) Expose the pool or the way to create a pool or the way to get an instance.
         //       for now we will expose both and figure which way works better
-        private static readonly ObjectPool<OverloadResolutionResult<TMember>> Pool = CreatePool();
+        private static readonly ObjectPool<OverloadResolutionResult<TMember>> s_pool = CreatePool();
 
         private static ObjectPool<OverloadResolutionResult<TMember>> CreatePool()
         {
@@ -1207,15 +1286,5 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         #endregion
-
-        internal CommonOverloadResolutionResult<TSymbol> ToCommon<TSymbol>()
-            where TSymbol : ISymbol
-        {
-            return new CommonOverloadResolutionResult<TSymbol>(
-                this.Succeeded,
-                this.Succeeded ? this.ValidResult.ToCommon<TSymbol>() : default(CommonMemberResolutionResult<TSymbol>?),
-                this.HasBestResult ? this.BestResult.ToCommon<TSymbol>() : default(CommonMemberResolutionResult<TSymbol>?),
-                this.Results.SelectAsArray(r => r.ToCommon<TSymbol>()));
-        }
     }
 }

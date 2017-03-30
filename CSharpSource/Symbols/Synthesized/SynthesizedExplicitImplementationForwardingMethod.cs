@@ -1,10 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Cci = Microsoft.Cci;
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -24,27 +18,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed partial class SynthesizedExplicitImplementationForwardingMethod : SynthesizedImplementationMethod
     {
-        private readonly MethodSymbol implementingMethod;
+        private readonly MethodSymbol _implementingMethod;
 
-        public SynthesizedExplicitImplementationForwardingMethod(
-            MethodSymbol interfaceMethod,
-            MethodSymbol implementingMethod,
-            NamedTypeSymbol implementingType) : base(interfaceMethod, implementingType)
+        public SynthesizedExplicitImplementationForwardingMethod(MethodSymbol interfaceMethod, MethodSymbol implementingMethod, NamedTypeSymbol implementingType)
+            : base(interfaceMethod, implementingType, generateDebugInfo: false)
         {
-            this.implementingMethod = implementingMethod;
+            _implementingMethod = implementingMethod;
         }
 
         public MethodSymbol ImplementingMethod
         {
-            get { return this.implementingMethod; }
+            get { return _implementingMethod; }
         }
 
         public override MethodKind MethodKind
         {
             get
             {
-                return implementingMethod.IsAccessor() ?
-                    implementingMethod.MethodKind :
+                return _implementingMethod.IsAccessor() ?
+                    _implementingMethod.MethodKind :
                     MethodKind.ExplicitInterfaceImplementation;
             }
         }

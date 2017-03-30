@@ -1,9 +1,10 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Emit;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CodeGen;
 
 namespace Microsoft.CodeAnalysis.CSharp.Emit.NoPia
 {
@@ -27,7 +28,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit.NoPia
             return UnderlyingField.GetCustomAttributesToEmit(compilationState);
         }
 
-        protected override Cci.IMetadataConstant GetCompileTimeValue(EmitContext context)
+        protected override MetadataConstant GetCompileTimeValue(EmitContext context)
         {
             return UnderlyingField.GetMetadataConstantValue(context);
         }

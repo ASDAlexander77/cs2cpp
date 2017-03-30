@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Roslyn.Utilities;
@@ -15,110 +15,193 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     internal abstract class SourceMethodSymbol : MethodSymbol, IAttributeTargetSymbol
     {
-#if DEBUG
-        static SourceMethodSymbol()
+        // The flags type is used to compact many different bits of information.
+        protected struct Flags
         {
-            // Verify a few things about the values we combine into flags.  This way, if they ever
-            // change, this will get hit and you will know you have to update this type as well.
+            // We currently pack everything into a 32 bit int with the following layout:
+            //
+            // |   |s|r|q|z|y|xxxxxxxxxxxxxxxxxxxxx|wwwww|
+            // 
+            // w = method kind.  5 bits.
+            //
+            // x = modifiers.  21 bits.
+            //
+            // y = returnsVoid. 1 bit.
+            //
+            // z = isExtensionMethod. 1 bit.
+            //
+            // q = isMetadataVirtualIgnoringInterfaceChanges. 1 bit.
+            //
+            // r = isMetadataVirtual. 1 bit. (At least as true as isMetadataVirtualIgnoringInterfaceChanges.)
+            //
+            // s = isMetadataVirtualLocked. 1 bit.
 
-            // 1) Verify that the range of method kinds doesn't fall outside the bounds of the
-            // method kind mask.
-            var methodKinds = EnumExtensions.GetValues<MethodKind>();
-            var maxMethodKind = (int)methodKinds.Aggregate((m1, m2) => m1 | m2);
-            Debug.Assert((maxMethodKind & (MethodKindMask >> MethodKindOffset)) == maxMethodKind);
+            private const int MethodKindOffset = 0;
+            private const int DeclarationModifiersOffset = 5;
 
-            // 1) Verify that the range of declaration modifiers doesn't fall outside the bounds of
-            // the declaration modifier mask.
-            var declarationModifiers = EnumExtensions.GetValues<DeclarationModifiers>();
-            var maxDeclarationModifier = (int)declarationModifiers.Aggregate((d1, d2) => d1 | d2);
-            Debug.Assert((maxDeclarationModifier & (DeclarationModifiersMask >> DeclarationModifiersOffset)) == maxDeclarationModifier);
-        }
+            private const int MethodKindMask = 0x1F;
+            private const int DeclarationModifiersMask = 0x1FFFFF;
+
+            private const int ReturnsVoidBit = 1 << 26;
+            private const int IsExtensionMethodBit = 1 << 27;
+            private const int IsMetadataVirtualIgnoringInterfaceChangesBit = 1 << 28;
+            private const int IsMetadataVirtualBit = 1 << 29;
+            private const int IsMetadataVirtualLockedBit = 1 << 30;
+
+            private int _flags;
+
+            public bool ReturnsVoid
+            {
+                get { return (_flags & ReturnsVoidBit) != 0; }
+                set { _flags = value ? (_flags | ReturnsVoidBit) : (_flags & ~ReturnsVoidBit); }
+            }
+
+            public MethodKind MethodKind
+            {
+                get { return (MethodKind)((_flags >> MethodKindOffset) & MethodKindMask); }
+            }
+
+            public bool IsExtensionMethod
+            {
+                get { return (_flags & IsExtensionMethodBit) != 0; }
+            }
+
+            public bool IsMetadataVirtualLocked
+            {
+                get { return (_flags & IsMetadataVirtualLockedBit) != 0; }
+            }
+
+            public DeclarationModifiers DeclarationModifiers
+            {
+                get { return (DeclarationModifiers)((_flags >> DeclarationModifiersOffset) & DeclarationModifiersMask); }
+            }
+
+#if DEBUG
+            static Flags()
+            {
+                // Verify a few things about the values we combine into flags.  This way, if they ever
+                // change, this will get hit and you will know you have to update this type as well.
+
+                // 1) Verify that the range of method kinds doesn't fall outside the bounds of the
+                // method kind mask.
+                var methodKinds = EnumExtensions.GetValues<MethodKind>();
+                var maxMethodKind = (int)methodKinds.Aggregate((m1, m2) => m1 | m2);
+                Debug.Assert((maxMethodKind & MethodKindMask) == maxMethodKind);
+
+                // 2) Verify that the range of declaration modifiers doesn't fall outside the bounds of
+                // the declaration modifier mask.
+                var declarationModifiers = EnumExtensions.GetValues<DeclarationModifiers>();
+                var maxDeclarationModifier = (int)declarationModifiers.Aggregate((d1, d2) => d1 | d2);
+                Debug.Assert((maxDeclarationModifier & DeclarationModifiersMask) == maxDeclarationModifier);
+            }
 #endif
+
+            private static bool ModifiersRequireMetadataVirtual(DeclarationModifiers modifiers)
+            {
+                return (modifiers & (DeclarationModifiers.Abstract | DeclarationModifiers.Virtual | DeclarationModifiers.Override)) != 0;
+            }
+
+            public Flags(
+                MethodKind methodKind,
+                DeclarationModifiers declarationModifiers,
+                bool returnsVoid,
+                bool isExtensionMethod,
+                bool isMetadataVirtualIgnoringModifiers = false)
+            {
+                bool isMetadataVirtual = isMetadataVirtualIgnoringModifiers || ModifiersRequireMetadataVirtual(declarationModifiers);
+
+                int methodKindInt = ((int)methodKind & MethodKindMask) << MethodKindOffset;
+                int declarationModifiersInt = ((int)declarationModifiers & DeclarationModifiersMask) << DeclarationModifiersOffset;
+                int returnsVoidInt = returnsVoid ? ReturnsVoidBit : 0;
+                int isExtensionMethodInt = isExtensionMethod ? IsExtensionMethodBit : 0;
+                int isMetadataVirtualIgnoringInterfaceImplementationChangesInt = isMetadataVirtual ? IsMetadataVirtualIgnoringInterfaceChangesBit : 0;
+                int isMetadataVirtualInt = isMetadataVirtual ? IsMetadataVirtualBit : 0;
+
+                _flags = methodKindInt | declarationModifiersInt | returnsVoidInt | isExtensionMethodInt | isMetadataVirtualIgnoringInterfaceImplementationChangesInt | isMetadataVirtualInt;
+            }
+
+            public bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
+            {
+                // This flag is immutable, so there's no reason to set a lock bit, as we do below.
+                if (ignoreInterfaceImplementationChanges)
+                {
+                    return (_flags & IsMetadataVirtualIgnoringInterfaceChangesBit) != 0;
+                }
+
+                if (!IsMetadataVirtualLocked)
+                {
+                    ThreadSafeFlagOperations.Set(ref _flags, IsMetadataVirtualLockedBit);
+                }
+
+                return (_flags & IsMetadataVirtualBit) != 0;
+            }
+
+            public void EnsureMetadataVirtual()
+            {
+                // ACASEY: This assert is here to check that we're not mutating the value of IsMetadataVirtual after
+                // someone has consumed it.  The best practice is to not access IsMetadataVirtual before ForceComplete
+                // has been called on all SourceNamedTypeSymbols.  If it is necessary to do so, then you can pass
+                // ignoreInterfaceImplementationChanges: true, but you must be conscious that seeing "false" may not
+                // reflect the final, emitted modifier.
+                Debug.Assert(!IsMetadataVirtualLocked);
+                if ((_flags & IsMetadataVirtualBit) == 0)
+                {
+                    ThreadSafeFlagOperations.Set(ref _flags, IsMetadataVirtualBit);
+                }
+            }
+        }
+
         protected SymbolCompletionState state;
 
-        // The flags int is used to compact many different bits of information efficiently into a 32
-        // bit int.  The layout is currently:
-        //
-        // |   |s|r|q|z|y|xxxxxxxxxxxxxxxxxxxxx|wwwww|
-        // 
-        // w = method kind.  5 bits.
-        //
-        // x = modifiers.  21 bits.
-        //
-        // y = returnsVoid. 1 bit.
-        //
-        // z = isExtensionMethod. 1 bit.
-        //
-        // q = isMetadataVirtualIgnoringInterfaceChanges. 1 bit.
-        //
-        // r = isMetadataVirtual. 1 bit.  (At least as true as isMetadataVirtualIgnoringInterfaceChanges.)
-        //
-        // s = isMetadataVirtualLocked. 1 bit.
-        //
-        // 2 bits remain for future purposes.
+        protected Flags flags;
 
-        private const int MethodKindOffset = 0;
-        private const int DeclarationModifiersOffset = 5;
-        private const int ReturnsVoidOffset = 26;
-        private const int IsExtensionMethodOffset = 27;
-        private const int IsMetadataVirtualIgnoringInterfaceChangesOffset = 28;
-        private const int IsMetadataVirtualOffset = 29;
-        private const int IsMetadataVirtualLockedOffset = 30;
+        private readonly NamedTypeSymbol _containingType;
+        private ParameterSymbol _lazyThisParameter;
+        private TypeSymbol _iteratorElementType;
 
-        private const int MethodKindMask = 0x1F << MethodKindOffset;
-        private const int DeclarationModifiersMask = 0x1FFFFF << DeclarationModifiersOffset;
-        private const int ReturnsVoidMask = 0x1 << ReturnsVoidOffset;
-        private const int IsExtensionMethodMask = 0x1 << IsExtensionMethodOffset;
-        private const int IsMetadataVirtualIgnoringInterfaceChangesMask = 0x1 << IsMetadataVirtualIgnoringInterfaceChangesOffset;
-        private const int IsMetadataVirtualMask = 0x1 << IsMetadataVirtualOffset;
-        private const int IsMetadataVirtualLockedMask = 0x1 << IsMetadataVirtualLockedOffset;
+        private CustomAttributesBag<CSharpAttributeData> _lazyCustomAttributesBag;
+        private CustomAttributesBag<CSharpAttributeData> _lazyReturnTypeCustomAttributesBag;
 
-        protected int flags;
+        private OverriddenOrHiddenMembersResult _lazyOverriddenOrHiddenMembers;
 
-        private readonly NamedTypeSymbol containingType;
-        private ParameterSymbol lazyThisParameter;
-        private TypeSymbol iteratorElementType;
+        // some symbols may not have a syntax (e.g. lambdas, synthesized event accessors)
+        protected readonly SyntaxReference syntaxReferenceOpt;
 
-        private CustomAttributesBag<CSharpAttributeData> lazyCustomAttributesBag;
-        private CustomAttributesBag<CSharpAttributeData> lazyReturnTypeCustomAttributesBag;
+        // some symbols may not have a body syntax (e.g. abstract and extern members, primary constructors, synthesized event accessors, etc.)
+        protected readonly SyntaxReference bodySyntaxReferenceOpt;
 
-        private OverriddenOrHiddenMembersResult lazyOverriddenOrHiddenMembers;
-
-        // syntax may not be available (some symbols have just signature, others body, or no syntax at all)
-        protected readonly SyntaxReference syntaxReference;
-        protected readonly SyntaxReference bodySyntaxReference;
         protected ImmutableArray<Location> locations;
         protected string lazyDocComment;
 
         //null if has never been computed. Initial binding diagnostics
         //are stashed here in service of API usage patterns
         //where method body diagnostics are requested multiple times.
-        private ImmutableArray<Diagnostic> cachedDiagnostics;
+        private ImmutableArray<Diagnostic> _cachedDiagnostics;
         internal ImmutableArray<Diagnostic> Diagnostics
         {
-            get { return cachedDiagnostics; }
+            get { return _cachedDiagnostics; }
         }
 
         internal ImmutableArray<Diagnostic> SetDiagnostics(ImmutableArray<Diagnostic> newSet, out bool diagsWritten)
         {
             //return the diagnostics that were actually saved in the event that there were two threads racing. 
-            diagsWritten = ImmutableInterlocked.InterlockedInitialize(ref cachedDiagnostics, newSet);
-            return cachedDiagnostics;
+            diagsWritten = ImmutableInterlocked.InterlockedInitialize(ref _cachedDiagnostics, newSet);
+            return _cachedDiagnostics;
         }
 
-        protected SourceMethodSymbol(NamedTypeSymbol containingType, SyntaxReference syntaxReference, SyntaxReference bodySyntaxReference, Location location)
-            : this(containingType, syntaxReference, bodySyntaxReference, ImmutableArray.Create(location))
+        protected SourceMethodSymbol(NamedTypeSymbol containingType, SyntaxReference syntaxReferenceOpt, SyntaxReference bodySyntaxReferenceOpt, Location location)
+            : this(containingType, syntaxReferenceOpt, bodySyntaxReferenceOpt, ImmutableArray.Create(location))
         {
         }
 
-        protected SourceMethodSymbol(NamedTypeSymbol containingType, SyntaxReference syntaxReference, SyntaxReference bodySyntaxReference, ImmutableArray<Location> locations)
+        protected SourceMethodSymbol(NamedTypeSymbol containingType, SyntaxReference syntaxReferenceOpt, SyntaxReference bodySyntaxReferenceOpt, ImmutableArray<Location> locations)
         {
             Debug.Assert((object)containingType != null);
             Debug.Assert(!locations.IsEmpty);
 
-            this.containingType = containingType;
-            this.syntaxReference = syntaxReference;
-            this.bodySyntaxReference = bodySyntaxReference;
+            _containingType = containingType;
+            this.syntaxReferenceOpt = syntaxReferenceOpt;
+            this.bodySyntaxReferenceOpt = bodySyntaxReferenceOpt;
             this.locations = locations;
         }
 
@@ -156,35 +239,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             diagnostics.Add(Locations[0], useSiteDiagnostics);
         }
 
-        private static bool ModifiersRequireMetadataVirtual(DeclarationModifiers modifiers)
-        {
-            return (modifiers & (DeclarationModifiers.Abstract | DeclarationModifiers.Virtual | DeclarationModifiers.Override)) != 0;
-        }
-
-        protected static int MakeFlags(
+        protected void MakeFlags(
             MethodKind methodKind,
             DeclarationModifiers declarationModifiers,
             bool returnsVoid,
             bool isExtensionMethod,
             bool isMetadataVirtualIgnoringModifiers = false)
         {
-            Debug.Assert((declarationModifiers & DeclarationModifiers.PrimaryCtor) == 0 || methodKind == MethodKind.Constructor);
-            bool isMetadataVirtual = isMetadataVirtualIgnoringModifiers || ModifiersRequireMetadataVirtual(declarationModifiers);
-
-            int methodKindInt = ((int)methodKind << MethodKindOffset) & MethodKindMask;
-            int declarationModifiersInt = ((int)declarationModifiers << DeclarationModifiersOffset) & DeclarationModifiersMask;
-            int returnsVoidInt = returnsVoid ? ReturnsVoidMask : 0;
-            int isExtensionMethodInt = isExtensionMethod ? IsExtensionMethodMask : 0;
-            int isMetadataVirtualIgnoringInterfaceImplementationChangesInt = isMetadataVirtual ? IsMetadataVirtualIgnoringInterfaceChangesMask : 0;
-            int isMetadataVirtualInt = isMetadataVirtual ? IsMetadataVirtualMask : 0;
-            int isMetadataVirtualLockedInt = 0;
-
-            return methodKindInt | declarationModifiersInt | returnsVoidInt | isExtensionMethodInt | isMetadataVirtualIgnoringInterfaceImplementationChangesInt | isMetadataVirtualInt | isMetadataVirtualLockedInt;
+            this.flags = new Flags(methodKind, declarationModifiers, returnsVoid, isExtensionMethod, isMetadataVirtualIgnoringModifiers);
         }
 
-        protected static int MakeReturnsVoidFlags(bool returnsVoid)
+        protected void SetReturnsVoid(bool returnsVoid)
         {
-            return returnsVoid ? ReturnsVoidMask : 0;
+            this.flags.ReturnsVoid = returnsVoid;
         }
 
         /// <remarks>
@@ -203,7 +270,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         protected virtual object MethodChecksLockObject
         {
-            get { return this.syntaxReference; }
+            get { return this.syntaxReferenceOpt; }
         }
 
         protected void LazyMethodChecks()
@@ -226,7 +293,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         try
                         {
                             MethodChecks(diagnostics);
-                            AddSemanticDiagnostics(diagnostics);
+                            AddDeclarationDiagnostics(diagnostics);
                         }
                         finally
                         {
@@ -251,10 +318,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         // allow the same thread to see the return type and parameters from the syntax (though
                         // they do not yet take on their final values), we return here.
 
-                        // Our normal pattern would be to wait for FinishMethodChecks to be set, but profiling
-                        // showed too many threads spinning at this location, so we switched to a lock.  Also,
-                        // the comment above seems to indicate that we might deadlock if we followed this pattern.
-                        // state.SpinWaitComplete(CompletionPart.FinishMethodChecks, CancellationToken.None)
+                        // Due to the fact that LazyMethodChecks is potentially reentrant, we must use a 
+                        // reentrant lock to avoid deadlock and cannot assert that at this point method checks
+                        // have completed (state.HasComplete(CompletionPart.FinishMethodChecks)).
                     }
                 }
             }
@@ -270,7 +336,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.containingType;
+                return _containingType;
             }
         }
 
@@ -278,7 +344,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.containingType;
+                return _containingType;
             }
         }
 
@@ -296,7 +362,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.flags & ReturnsVoidMask) != 0;
+                return this.flags.ReturnsVoid;
             }
         }
 
@@ -304,7 +370,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (MethodKind)((this.flags & MethodKindMask) >> MethodKindOffset);
+                return this.flags.MethodKind;
             }
         }
 
@@ -312,7 +378,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.flags & IsExtensionMethodMask) != 0;
+                return this.flags.IsExtensionMethod;
             }
         }
 
@@ -320,7 +386,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return (this.flags & IsMetadataVirtualLockedMask) != 0;
+                return this.flags.IsMetadataVirtualLocked;
             }
         }
 
@@ -339,50 +405,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         // TODO (tomat): sealed?
         internal override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
         {
-            // This flag is immutable, so there's no reason to set a lock bit, as we do below.
-            if (ignoreInterfaceImplementationChanges)
-            {
-                return (this.flags & IsMetadataVirtualIgnoringInterfaceChangesMask) != 0;
-            }
-
-            if (!IsMetadataVirtualLocked)
-            {
-                ThreadSafeFlagOperations.Set(ref this.flags, IsMetadataVirtualLockedMask);
-            }
-
-            return (this.flags & IsMetadataVirtualMask) != 0;
+            return this.flags.IsMetadataVirtual(ignoreInterfaceImplementationChanges);
         }
 
         internal void EnsureMetadataVirtual()
         {
-            // ACASEY: This assert is here to check that we're not mutating the value of IsMetadataVirtual after
-            // someone has consumed it.  The best practice is to not access IsMetadataVirtual before ForceComplete
-            // has been called on all SourceNamedTypeSymbols.  If it is necessary to do so, then you can pass
-            // ignoreInterfaceImplementationChanges: true, but you must be conscious that seeing "false" may not
-            // reflect the final, emitted modifier.
-            Debug.Assert(!IsMetadataVirtualLocked);
-            if ((this.flags & IsMetadataVirtualMask) == 0)
-            {
-                ThreadSafeFlagOperations.Set(ref this.flags, IsMetadataVirtualMask);
-            }
+            this.flags.EnsureMetadataVirtual();
         }
 
-        /// <summary>
-        /// This method indicates whether or not the runtime will regard the method
-        /// as final (as indicated by the presence of the "final" modifier in the
-        /// signature).
-        /// NOTE: The method is supposed to be called ONLY from emitter.
-        /// </summary>
-        internal override bool IsMetadataFinal()
-        {
-            return ((Cci.IMethodDefinition)this).IsSealed;
-        }
 
         protected DeclarationModifiers DeclarationModifiers
         {
             get
             {
-                return (DeclarationModifiers)((this.flags & DeclarationModifiersMask) >> DeclarationModifiersOffset);
+                return this.flags.DeclarationModifiers;
             }
         }
 
@@ -400,22 +436,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 return (this.DeclarationModifiers & DeclarationModifiers.Extern) != 0;
-            }
-        }
-
-        /// <summary>
-        /// Is this a declaration of a Primary constructor?
-        /// Note, more than one constructor in a type can return true for this property.
-        /// This happens for an error situation when more than one partial declaration declares Primary
-        /// Constructor. We will create a constructor symbol for each of them and all of them will have
-        /// IsPrimaryCtor == true. However, The first one that we create will be the "main" Primary Constructor,
-        /// SourceMemberContainerTypeSymbol.PrimaryCtor property returns it.
-        /// </summary>
-        public bool IsPrimaryCtor
-        {
-            get
-            {
-                return (this.DeclarationModifiers & DeclarationModifiers.PrimaryCtor) != 0;
             }
         }
 
@@ -515,11 +535,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #region Syntax
 
-        internal BlockSyntax BlockSyntax
+        internal SyntaxNode BodySyntax
         {
             get
             {
-                return (this.bodySyntaxReference == null) ? null : this.bodySyntaxReference.GetSyntax() as BlockSyntax;
+                return (this.bodySyntaxReferenceOpt == null) ? null : this.bodySyntaxReferenceOpt.GetSyntax();
             }
         }
 
@@ -527,7 +547,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.syntaxReference;
+                return this.syntaxReferenceOpt;
             }
         }
 
@@ -535,7 +555,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.syntaxReference == null ? null : (CSharpSyntaxNode)this.syntaxReference.GetSyntax();
+                return (this.syntaxReferenceOpt == null) ? null : (CSharpSyntaxNode)this.syntaxReferenceOpt.GetSyntax();
             }
         }
 
@@ -543,13 +563,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.syntaxReference == null ? null : this.syntaxReference.SyntaxTree;
+                return this.syntaxReferenceOpt == null ? null : this.syntaxReferenceOpt.SyntaxTree;
             }
-        }
-
-        internal override LexicalSortKey GetLexicalSortKey()
-        {
-            return new LexicalSortKey(locations[0], this.DeclaringCompilation);
         }
 
         /// <summary>
@@ -568,8 +583,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                CSharpSyntaxNode node = this.SyntaxNode;
-                return (node == null) ? ImmutableArray<SyntaxReference>.Empty : ImmutableArray.Create<SyntaxReference>(node.GetReference());
+                return (this.syntaxReferenceOpt == null) ? ImmutableArray<SyntaxReference>.Empty : ImmutableArray.Create(this.syntaxReferenceOpt);
             }
         }
 
@@ -580,12 +594,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
-        internal override bool GenerateDebugInfo
+        public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
         {
-            get { return true; }
+            get
+            {
+                return ImmutableArray<CustomModifier>.Empty;
+            }
         }
 
-        public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
+        public override ImmutableArray<CustomModifier> RefCustomModifiers
         {
             get
             {
@@ -609,31 +626,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal sealed override ParameterSymbol ThisParameter
+        internal sealed override bool TryGetThisParameter(out ParameterSymbol thisParameter)
         {
-            get
+            thisParameter = _lazyThisParameter;
+            if ((object)thisParameter != null || IsStatic)
             {
-                var thisParam = lazyThisParameter;
-                if ((object)thisParam != null || IsStatic)
-                {
-                    return thisParam;
-                }
-
-                    Interlocked.CompareExchange(ref lazyThisParameter, new ThisParameterSymbol(this), null);
-                return lazyThisParameter;
+                return true;
             }
+
+            Interlocked.CompareExchange(ref _lazyThisParameter, new ThisParameterSymbol(this), null);
+            thisParameter = _lazyThisParameter;
+            return true;
         }
 
         internal override TypeSymbol IteratorElementType
         {
             get
             {
-                return iteratorElementType;
+                return _iteratorElementType;
             }
             set
             {
-                Debug.Assert((object)iteratorElementType == null || iteratorElementType == value);
-                Interlocked.CompareExchange(ref iteratorElementType, value, null);
+                Debug.Assert((object)_iteratorElementType == null || _iteratorElementType == value);
+                Interlocked.CompareExchange(ref _iteratorElementType, value, null);
             }
         }
 
@@ -651,12 +666,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 this.LazyMethodChecks();
-                if (this.lazyOverriddenOrHiddenMembers == null)
+                if (_lazyOverriddenOrHiddenMembers == null)
                 {
-                    Interlocked.CompareExchange(ref this.lazyOverriddenOrHiddenMembers, this.MakeOverriddenOrHiddenMembers(), null);
+                    Interlocked.CompareExchange(ref _lazyOverriddenOrHiddenMembers, this.MakeOverriddenOrHiddenMembers(), null);
                 }
 
-                return this.lazyOverriddenOrHiddenMembers;
+                return _lazyOverriddenOrHiddenMembers;
             }
         }
 
@@ -793,7 +808,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Gets the syntax list of custom attributes that declares atributes for this method symbol.
+        /// Gets the syntax list of custom attributes that declares attributes for this method symbol.
         /// </summary>
         internal virtual OneOrMany<SyntaxList<AttributeListSyntax>> GetAttributeDeclarations()
         {
@@ -801,7 +816,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Gets the syntax list of custom attributes that declares atributes for return type of this method.
+        /// Gets the syntax list of custom attributes that declares attributes for return type of this method.
         /// </summary>
         internal virtual OneOrMany<SyntaxList<AttributeListSyntax>> GetReturnTypeAttributeDeclarations()
         {
@@ -818,7 +833,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         internal CommonMethodEarlyWellKnownAttributeData GetEarlyDecodedWellKnownAttributeData()
         {
-            var attributesBag = this.lazyCustomAttributesBag;
+            var attributesBag = _lazyCustomAttributesBag;
             if (attributesBag == null || !attributesBag.IsEarlyDecodedWellKnownAttributeDataComputed)
             {
                 attributesBag = this.GetAttributesBag();
@@ -833,9 +848,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <remarks>
         /// Forces binding and decoding of attributes.
         /// </remarks>
-        internal CommonMethodWellKnownAttributeData GetDecodedWellKnownAttributeData()
+        protected CommonMethodWellKnownAttributeData GetDecodedWellKnownAttributeData()
         {
-            var attributesBag = this.lazyCustomAttributesBag;
+            var attributesBag = _lazyCustomAttributesBag;
             if (attributesBag == null || !attributesBag.IsDecodedWellKnownAttributeDataComputed)
             {
                 attributesBag = this.GetAttributesBag();
@@ -852,7 +867,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         internal CommonReturnTypeWellKnownAttributeData GetDecodedReturnTypeWellKnownAttributeData()
         {
-            var attributesBag = this.lazyReturnTypeCustomAttributesBag;
+            var attributesBag = _lazyReturnTypeCustomAttributesBag;
             if (attributesBag == null || !attributesBag.IsDecodedWellKnownAttributeDataComputed)
             {
                 attributesBag = this.GetReturnTypeAttributesBag();
@@ -869,13 +884,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         private CustomAttributesBag<CSharpAttributeData> GetAttributesBag()
         {
-            var bag = this.lazyCustomAttributesBag;
+            var bag = _lazyCustomAttributesBag;
             if (bag != null && bag.IsSealed)
             {
                 return bag;
             }
 
-            return GetAttributesBag(ref lazyCustomAttributesBag, forReturnType: false);
+            return GetAttributesBag(ref _lazyCustomAttributesBag, forReturnType: false);
         }
 
         /// <summary>
@@ -886,13 +901,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         private CustomAttributesBag<CSharpAttributeData> GetReturnTypeAttributesBag()
         {
-            var bag = this.lazyReturnTypeCustomAttributesBag;
+            var bag = _lazyReturnTypeCustomAttributesBag;
             if (bag != null && bag.IsSealed)
             {
                 return bag;
             }
 
-            return GetAttributesBag(ref lazyReturnTypeCustomAttributesBag, forReturnType: true);
+            return GetAttributesBag(ref _lazyReturnTypeCustomAttributesBag, forReturnType: true);
         }
 
         private CustomAttributesBag<CSharpAttributeData> GetAttributesBag(ref CustomAttributesBag<CSharpAttributeData> lazyCustomAttributesBag, bool forReturnType)
@@ -910,15 +925,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
             else if (forReturnType)
             {
-                bagCreatedOnThisThread = LoadAndValidateAttributes(this.GetReturnTypeAttributeDeclarations(), ref lazyCustomAttributesBag, symbolPart: AttributeLocation.Return);
+                bagCreatedOnThisThread = LoadAndValidateAttributes(
+                    this.GetReturnTypeAttributeDeclarations(),
+                    ref lazyCustomAttributesBag,
+                    symbolPart: AttributeLocation.Return);
             }
             else
             {
                 bagCreatedOnThisThread = LoadAndValidateAttributes(this.GetAttributeDeclarations(), ref lazyCustomAttributesBag);
             }
 
-            var part = forReturnType ? CompletionPart.ReturnTypeAttributes : CompletionPart.Attributes;
-            state.NotePartComplete(part);
+            if (bagCreatedOnThisThread)
+            {
+                var part = forReturnType ? CompletionPart.ReturnTypeAttributes : CompletionPart.Attributes;
+                state.NotePartComplete(part);
+            }
+
             return lazyCustomAttributesBag;
         }
 
@@ -947,7 +969,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             if (this.ReturnType.ContainsDynamic())
             {
                 var compilation = this.DeclaringCompilation;
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(this.ReturnType, this.ReturnTypeCustomModifiers.Length));
+                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDynamicAttribute(this.ReturnType, this.ReturnTypeCustomModifiers.Length + this.RefCustomModifiers.Length, this.RefKind));
+            }
+
+            if (ReturnType.ContainsTupleNames())
+            {
+                AddSynthesizedAttribute(ref attributes,
+                    DeclaringCompilation.SynthesizeTupleNamesAttribute(ReturnType));
             }
         }
 
@@ -974,7 +1002,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     return null;
                 }
-                else 
+                else
                 {
                     CSharpAttributeData boundAttribute;
                     ObsoleteAttributeData obsoleteData;
@@ -986,9 +1014,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             arguments.GetOrCreateData<CommonMethodEarlyWellKnownAttributeData>().ObsoleteAttributeData = obsoleteData;
                         }
 
-                            return boundAttribute;
-                        }
+                        return boundAttribute;
                     }
+                }
             }
 
             return base.EarlyDecodeWellKnownAttribute(ref arguments);
@@ -1008,14 +1036,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     return null;
                 }
 
-                var lazyCustomAttributesBag = this.lazyCustomAttributesBag;
+                var lazyCustomAttributesBag = _lazyCustomAttributesBag;
                 if (lazyCustomAttributesBag != null && lazyCustomAttributesBag.IsEarlyDecodedWellKnownAttributeDataComputed)
                 {
                     var data = (CommonMethodEarlyWellKnownAttributeData)lazyCustomAttributesBag.EarlyDecodedWellKnownAttributeData;
                     return data != null ? data.ObsoleteAttributeData : null;
                 }
 
-                var reference = this.syntaxReference;
+                var reference = this.syntaxReferenceOpt;
                 if (reference == null)
                 {
                     // no references -> no attributes
@@ -1070,6 +1098,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 arguments.GetOrCreateData<CommonMethodWellKnownAttributeData>().HasSpecialNameAttribute = true;
             }
+            else if (attribute.IsTargetAttribute(this, AttributeDescription.ExcludeFromCodeCoverageAttribute))
+            {
+                arguments.GetOrCreateData<CommonMethodWellKnownAttributeData>().HasExcludeFromCodeCoverageAttribute = true;
+            }
             else if (attribute.IsTargetAttribute(this, AttributeDescription.ConditionalAttribute))
             {
                 ValidateConditionalAttribute(attribute, arguments.AttributeSyntaxOpt, arguments.Diagnostics);
@@ -1116,12 +1148,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             AttributeDescription description)
         {
             if (arguments.Attribute.IsTargetAttribute(this, description))
-        {
-            if (this.IsAccessor())
             {
-                // CS1667: Attribute '{0}' is not valid on property or event accessors. It is only valid on '{1}' declarations.
+                if (this.IsAccessor())
+                {
+                    // CS1667: Attribute '{0}' is not valid on property or event accessors. It is only valid on '{1}' declarations.
                     AttributeUsageInfo attributeUsage = arguments.Attribute.AttributeClass.GetAttributeUsageInfo();
-                    arguments.Diagnostics.Add(ErrorCode.ERR_AttributeNotOnAccessor, arguments.AttributeSyntaxOpt.Name.Location, description.FullName, attributeUsage.GetValidTargetsString());
+                    arguments.Diagnostics.Add(ErrorCode.ERR_AttributeNotOnAccessor, arguments.AttributeSyntaxOpt.Name.Location, description.FullName, attributeUsage.GetValidTargetsErrorArgument());
                 }
 
                 return true;
@@ -1138,7 +1170,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 // CS1667: Attribute '{0}' is not valid on property or event accessors. It is only valid on '{1}' declarations.
                 AttributeUsageInfo attributeUsage = attribute.AttributeClass.GetAttributeUsageInfo();
-                diagnostics.Add(ErrorCode.ERR_AttributeNotOnAccessor, node.Name.Location, node.GetErrorDisplayName(), attributeUsage.GetValidTargetsString());
+                diagnostics.Add(ErrorCode.ERR_AttributeNotOnAccessor, node.Name.Location, node.GetErrorDisplayName(), attributeUsage.GetValidTargetsErrorArgument());
             }
             else if (this.ContainingType.IsInterfaceType())
             {
@@ -1208,6 +1240,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // DynamicAttribute should not be set explicitly.
                 arguments.Diagnostics.Add(ErrorCode.ERR_ExplicitDynamicAttr, arguments.AttributeSyntaxOpt.Location);
             }
+            else if (attribute.IsTargetAttribute(this, AttributeDescription.TupleElementNamesAttribute))
+            {
+                arguments.Diagnostics.Add(ErrorCode.ERR_ExplicitTupleElementNamesAttribute, arguments.AttributeSyntaxOpt.Location);
+            }
         }
 
         private void DecodeDllImportAttribute(ref DecodeWellKnownAttributeArguments<AttributeSyntax, CSharpAttributeData, AttributeLocation> arguments)
@@ -1224,7 +1260,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 hasErrors = true;
             }
 
-            if (this.IsGenericMethod || (object)containingType != null && containingType.IsGenericType)
+            if (this.IsGenericMethod || (object)_containingType != null && _containingType.IsGenericType)
             {
                 arguments.Diagnostics.Add(ErrorCode.ERR_DllImportOnGenericMethod, arguments.AttributeSyntaxOpt.Name.Location);
                 hasErrors = true;
@@ -1333,10 +1369,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             if (symbolPart != AttributeLocation.Return)
             {
-                Debug.Assert(this.lazyCustomAttributesBag != null);
-                Debug.Assert(this.lazyCustomAttributesBag.IsDecodedWellKnownAttributeDataComputed);
+                Debug.Assert(_lazyCustomAttributesBag != null);
+                Debug.Assert(_lazyCustomAttributesBag.IsDecodedWellKnownAttributeDataComputed);
 
-                if (this.containingType.IsComImport && this.containingType.TypeKind == TypeKind.Class)
+                if (_containingType.IsComImport && _containingType.TypeKind == TypeKind.Class)
                 {
                     switch (this.MethodKind)
                     {
@@ -1354,7 +1390,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             if (!this.IsAbstract && !this.IsExtern)
                             {
                                 // CS0423: Since '{1}' has the ComImport attribute, '{0}' must be extern or abstract
-                                diagnostics.Add(ErrorCode.ERR_ComImportWithImpl, this.Locations[0], this, this.containingType);
+                                diagnostics.Add(ErrorCode.ERR_ComImportWithImpl, this.Locations[0], this, _containingType);
                             }
 
                             break;
@@ -1413,6 +1449,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return data != null && data.HasSpecialNameAttribute;
             }
         }
+
+        internal sealed override bool IsDirectlyExcludedFromCodeCoverage =>
+            GetDecodedWellKnownAttributeData()?.HasExcludeFromCodeCoverageAttribute == true;
 
         internal sealed override bool RequiresSecurityObject
         {
@@ -1486,26 +1525,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             base.AddSynthesizedAttributes(compilationState, ref attributes);
 
-            if (this.IsAsync)
+            if (this.IsAsync || this.IsIterator)
             {
                 var compilation = this.DeclaringCompilation;
 
-                AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(
-                    WellKnownMember.System_Diagnostics_DebuggerStepThroughAttribute__ctor));
-
                 // The async state machine type is not synthesized until the async method body is rewritten. If we are
                 // only emitting metadata the method body will not have been rewritten, and the async state machine
-                // type will not have been created. In this case, omit the AsyncStateMachineAttribute.
-                NamedTypeSymbol asyncStateMachineType;
-                if (compilationState.TryGetStateMachineType(this, out asyncStateMachineType))
+                // type will not have been created. In this case, omit the attribute.
+                NamedTypeSymbol stateMachineType;
+                if (compilationState.TryGetStateMachineType(this, out stateMachineType))
                 {
-                    AddSynthesizedAttribute(ref attributes, compilation.SynthesizeAttribute(
-                       WellKnownMember.System_Runtime_CompilerServices_AsyncStateMachineAttribute__ctor,
-                       ImmutableArray.Create(
-                           new TypedConstant(
-                               compilation.GetWellKnownType(WellKnownType.System_Type),
-                               TypedConstantKind.Type,
-                               asyncStateMachineType.ConstructUnboundGenericType()))));   
+                    WellKnownMember ctor = this.IsAsync ?
+                        WellKnownMember.System_Runtime_CompilerServices_AsyncStateMachineAttribute__ctor :
+                        WellKnownMember.System_Runtime_CompilerServices_IteratorStateMachineAttribute__ctor;
+
+                    var arg = new TypedConstant(compilation.GetWellKnownType(WellKnownType.System_Type), TypedConstantKind.Type, stateMachineType.GetUnboundGenericTypeOrSelf());
+
+                    AddSynthesizedAttribute(ref attributes, compilation.TrySynthesizeAttribute(ctor, ImmutableArray.Create(arg)));
+                }
+
+                if (this.IsAsync)
+                {
+                    // Async kick-off method calls MoveNext, which contains user code. 
+                    // This means we need to emit DebuggerStepThroughAttribute in order
+                    // to have correct stepping behavior during debugging.
+                    AddSynthesizedAttribute(ref attributes, compilation.SynthesizeDebuggerStepThroughAttribute());
                 }
             }
         }
@@ -1514,9 +1558,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Checks to see if a body is legal given the current modifiers.
         /// If it is not, a diagnostic is added with the current type.
         /// </summary>
-        protected void CheckModifiersForBody( Location location, DiagnosticBag diagnostics)
+        protected void CheckModifiersForBody(Location location, DiagnosticBag diagnostics)
         {
-            if (containingType.IsInterface)
+            if (_containingType.IsInterface)
             {
                 diagnostics.Add(ErrorCode.ERR_InterfaceMemberHasBody, location, this);
             }
@@ -1542,5 +1586,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// present, this is not treated as expression-bodied.
         /// </remarks>
         internal abstract bool IsExpressionBodied { get; }
+
+        internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree)
+        {
+            // Method without body doesn't declare locals.
+            Debug.Assert(this.BodySyntax != null);
+            Debug.Assert(this.BodySyntax.SyntaxTree == localTree);
+
+            // All locals are declared within the body of the method.
+            Debug.Assert(this.BodySyntax.Span.Contains(localPosition));
+
+            return localPosition - this.BodySyntax.SpanStart;
+        }
     }
 }

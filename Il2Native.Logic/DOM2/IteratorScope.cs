@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM2
     using Microsoft.CodeAnalysis.CSharp;
 
     /// TODO: join with lambda expression
-    public class IteratorScope : BlockStatement
+    public class StateMachineScope : BlockStatement
     {
         private readonly IList<IFieldSymbol> _fields = new List<IFieldSymbol>();
 
@@ -23,7 +23,7 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.IteratorScope; }
         }
 
-        internal void Parse(BoundIteratorScope boundIteratorScope)
+        internal void Parse(BoundStateMachineScope boundIteratorScope)
         {
             if (boundIteratorScope == null)
             {

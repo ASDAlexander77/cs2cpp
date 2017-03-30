@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -11,8 +12,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     internal partial class LocalScopeBinder : Binder
     {
-        private ImmutableArray<LocalSymbol> locals;
-        private ImmutableArray<LabelSymbol> labels;
+        private ImmutableArray<LocalSymbol> _locals;
+        private ImmutableArray<LocalFunctionSymbol> _localFunctions;
+        private ImmutableArray<LabelSymbol> _labels;
 
         internal LocalScopeBinder(Binder next)
             : this(next, next.Flags)
@@ -28,12 +30,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             get
             {
-                if (this.locals.IsDefault)
+                if (_locals.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref this.locals, BuildLocals(), default(ImmutableArray<LocalSymbol>));
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _locals, BuildLocals(), default(ImmutableArray<LocalSymbol>));
                 }
 
-                return this.locals;
+                return _locals;
             }
         }
 
@@ -42,31 +44,34 @@ namespace Microsoft.CodeAnalysis.CSharp
             return ImmutableArray<LocalSymbol>.Empty;
         }
 
-        protected ImmutableArray<LocalSymbol> BuildLocals(CSharpSyntaxNode node)
+        internal sealed override ImmutableArray<LocalFunctionSymbol> LocalFunctions
         {
-            Debug.Assert(node != null);
-            var walker = new BuildLocalsFromDeclarationsWalker(this, node);
-
-            walker.Visit(node);
-
-            if (walker.Locals != null)
+            get
             {
-                return walker.Locals.ToImmutableAndFree();
-            }
+                if (_localFunctions.IsDefault)
+                {
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _localFunctions, BuildLocalFunctions(), default(ImmutableArray<LocalFunctionSymbol>));
+                }
 
-            return ImmutableArray<LocalSymbol>.Empty;
+                return _localFunctions;
+            }
+        }
+
+        protected virtual ImmutableArray<LocalFunctionSymbol> BuildLocalFunctions()
+        {
+            return ImmutableArray<LocalFunctionSymbol>.Empty;
         }
 
         internal sealed override ImmutableArray<LabelSymbol> Labels
         {
             get
             {
-                if (this.labels.IsDefault)
+                if (_labels.IsDefault)
                 {
-                    ImmutableInterlocked.InterlockedCompareExchange(ref this.labels, BuildLabels(), default(ImmutableArray<LabelSymbol>));
+                    ImmutableInterlocked.InterlockedCompareExchange(ref _labels, BuildLabels(), default(ImmutableArray<LabelSymbol>));
                 }
 
-                return this.labels;
+                return _labels;
             }
         }
 
@@ -75,31 +80,45 @@ namespace Microsoft.CodeAnalysis.CSharp
             return ImmutableArray<LabelSymbol>.Empty;
         }
 
-        private SmallDictionary<string, LocalSymbol> lazyLocalsMap;
+        private SmallDictionary<string, LocalSymbol> _lazyLocalsMap;
         private SmallDictionary<string, LocalSymbol> LocalsMap
         {
             get
             {
-                if (this.lazyLocalsMap == null && this.Locals.Length > 0)
+                if (_lazyLocalsMap == null && this.Locals.Length > 0)
                 {
-                    this.lazyLocalsMap = BuildMap(this.Locals);
+                    _lazyLocalsMap = BuildMap(this.Locals);
                 }
 
-                return this.lazyLocalsMap;
+                return _lazyLocalsMap;
             }
         }
 
-        private SmallDictionary<string, LabelSymbol> lazyLabelsMap;
+        private SmallDictionary<string, LocalFunctionSymbol> _lazyLocalFunctionsMap;
+        private SmallDictionary<string, LocalFunctionSymbol> LocalFunctionsMap
+        {
+            get
+            {
+                if (_lazyLocalFunctionsMap == null && this.LocalFunctions.Length > 0)
+                {
+                    _lazyLocalFunctionsMap = BuildMap(this.LocalFunctions);
+                }
+
+                return _lazyLocalFunctionsMap;
+            }
+        }
+
+        private SmallDictionary<string, LabelSymbol> _lazyLabelsMap;
         private SmallDictionary<string, LabelSymbol> LabelsMap
         {
             get
             {
-                if (this.lazyLabelsMap == null && this.Labels.Length > 0)
+                if (_lazyLabelsMap == null && this.Labels.Length > 0)
                 {
-                    this.lazyLabelsMap = BuildMap(this.Labels);
+                    _lazyLabelsMap = BuildMap(this.Labels);
                 }
 
-                return this.lazyLabelsMap;
+                return _lazyLabelsMap;
             }
         }
 
@@ -120,302 +139,158 @@ namespace Microsoft.CodeAnalysis.CSharp
             return map;
         }
 
-        protected ImmutableArray<LocalSymbol> BuildLocals(SyntaxList<StatementSyntax> statements)
+        protected ImmutableArray<LocalSymbol> BuildLocals(SyntaxList<StatementSyntax> statements, Binder enclosingBinder)
         {
-            var walker = new BuildLocalsFromDeclarationsWalker(this, null);
+#if DEBUG
+            Binder currentBinder = enclosingBinder;
 
+            while (true)
+            {
+                if (this == currentBinder)
+                {
+                    break;
+                }
+
+                currentBinder = currentBinder.Next;
+            }
+#endif
+
+            ArrayBuilder<LocalSymbol> locals = ArrayBuilder<LocalSymbol>.GetInstance();
             foreach (var statement in statements)
             {
-                walker.ScopeSegmentRoot = statement;
-                walker.Visit(statement);
-            }
+                var innerStatement = statement;
 
-            walker.ScopeSegmentRoot = null;
-
-            if (walker.Locals != null)
-            {
-                return walker.Locals.ToImmutableAndFree();
-            }
-
-            return ImmutableArray<LocalSymbol>.Empty;
-        }
-
-        public class BuildLocalsFromDeclarationsWalker : CSharpSyntaxWalker 
-        {
-            public readonly Binder Binder;
-            public ArrayBuilder<LocalSymbol> Locals;
-
-            private CSharpSyntaxNode scopeSegmentRoot;
-
-            public BuildLocalsFromDeclarationsWalker(Binder binder, CSharpSyntaxNode scopeSegmentRoot)
-            {
-                Debug.Assert(binder != null);
-                this.Binder = binder;
-                this.scopeSegmentRoot = scopeSegmentRoot;
-            }
-
-            public CSharpSyntaxNode ScopeSegmentRoot
-            {
-                get
+                // drill into any LabeledStatements -- atomic LabelStatements have been bound into
+                // wrapped LabeledStatements by this point
+                while (innerStatement.Kind() == SyntaxKind.LabeledStatement)
                 {
-                    return scopeSegmentRoot;
-                }
-                set
-                {
-                    this.scopeSegmentRoot = value;
-                }
-            }
-
-            public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
-            {
-                Debug.Assert(scopeSegmentRoot != null);
-
-                if (Locals == null)
-                {
-                    Locals = ArrayBuilder<LocalSymbol>.GetInstance();
+                    innerStatement = ((LabeledStatementSyntax)innerStatement).Statement;
                 }
 
-                LocalDeclarationKind kind;
-
-                switch (node.Parent.CSharpKind())
+                switch (innerStatement.Kind())
                 {
                     case SyntaxKind.LocalDeclarationStatement:
-                        var localDecl = (LocalDeclarationStatementSyntax)node.Parent;
-                        kind = localDecl.IsConst ? LocalDeclarationKind.Constant : LocalDeclarationKind.RegularVariable;
+                        {
+                            Binder localDeclarationBinder = enclosingBinder.GetBinder(innerStatement) ?? enclosingBinder;
+                            var decl = (LocalDeclarationStatementSyntax)innerStatement;
+                            LocalDeclarationKind kind = decl.IsConst ? LocalDeclarationKind.Constant : LocalDeclarationKind.RegularVariable;
+                            foreach (var vdecl in decl.Declaration.Variables)
+                            {
+                                var localSymbol = MakeLocal(decl.Declaration, vdecl, kind, localDeclarationBinder);
+                                locals.Add(localSymbol);
+
+                                // also gather expression-declared variables from the bracketed argument lists and the initializers
+                                ExpressionVariableFinder.FindExpressionVariables(this, locals, vdecl, localDeclarationBinder);
+                            }
+
+                        }
                         break;
 
-                    case SyntaxKind.ForStatement:
-                        kind = LocalDeclarationKind.ForInitializerVariable;
+                    case SyntaxKind.ExpressionStatement:
+                    case SyntaxKind.IfStatement:
+                    case SyntaxKind.YieldReturnStatement:
+                    case SyntaxKind.ReturnStatement:
+                    case SyntaxKind.ThrowStatement:
+                        ExpressionVariableFinder.FindExpressionVariables(this, locals, innerStatement, enclosingBinder.GetBinder(innerStatement) ?? enclosingBinder);
                         break;
 
-                    case SyntaxKind.UsingStatement:
-                        kind = LocalDeclarationKind.UsingVariable;
+                    case SyntaxKind.SwitchStatement:
+                        var switchStatement = (SwitchStatementSyntax)innerStatement;
+                        ExpressionVariableFinder.FindExpressionVariables(this, locals, innerStatement, enclosingBinder.GetBinder(switchStatement.Expression) ?? enclosingBinder);
                         break;
 
-                    case SyntaxKind.FixedStatement:
-                        kind = LocalDeclarationKind.FixedVariable;
+                    case SyntaxKind.LockStatement:
+                        Binder statementBinder = enclosingBinder.GetBinder(innerStatement);
+                        Debug.Assert(statementBinder != null); // Lock always has a binder.
+                        ExpressionVariableFinder.FindExpressionVariables(this, locals, innerStatement, statementBinder);
                         break;
 
                     default:
-                        throw ExceptionUtilities.Unreachable;
+                        // no other statement introduces local variables into the enclosing scope
+                        break;
+                }
+            }
+
+            return locals.ToImmutableAndFree();
+        }
+        protected ImmutableArray<LocalFunctionSymbol> BuildLocalFunctions(SyntaxList<StatementSyntax> statements)
+        {
+            ArrayBuilder<LocalFunctionSymbol> locals = null;
+            foreach (var statement in statements)
+            {
+                var innerStatement = statement;
+
+                // drill into any LabeledStatements -- atomic LabelStatements have been bound into
+                // wrapped LabeledStatements by this point
+                while (innerStatement.Kind() == SyntaxKind.LabeledStatement)
+                {
+                    innerStatement = ((LabeledStatementSyntax)innerStatement).Statement;
                 }
 
-                foreach (var vdecl in node.Variables)
+                if (innerStatement.Kind() == SyntaxKind.LocalFunctionStatement)
                 {
-                    SourceLocalSymbol localSymbol;
-
-                    if (vdecl.Initializer == null)
+                    var decl = (LocalFunctionStatementSyntax)innerStatement;
+                    if (locals == null)
                     {
-                        localSymbol = SourceLocalSymbol.MakeLocal(
-                        Binder.ContainingMemberOrLambda,
-                        Binder,
-                        node.Type,
-                        vdecl.Identifier,
-                                            kind);
-                    }
-                    else
-                    {
-                        localSymbol = SourceLocalSymbol.MakeLocalWithInitializer(
-                                            Binder.ContainingMemberOrLambda,
-                                            Binder,
-                                            node.Type,
-                                            vdecl.Identifier,
-                        vdecl.Initializer,
-                        kind);
+                        locals = ArrayBuilder<LocalFunctionSymbol>.GetInstance();
                     }
 
-                    Locals.Add(localSymbol);
-
-                    Visit(vdecl.Initializer);
+                    var localSymbol = MakeLocalFunction(decl);
+                    locals.Add(localSymbol);
                 }
             }
 
-            public override void VisitDeclarationExpression(DeclarationExpressionSyntax node)
+            if (locals != null)
             {
-                Debug.Assert(scopeSegmentRoot != null);
-
-                if (Locals == null)
-                {
-                    Locals = ArrayBuilder<LocalSymbol>.GetInstance();
-                }
-
-                SourceLocalSymbol localSymbol;
-
-                if (node.Variable.Initializer == null)
-                {
-                    if (node.Type.IsVar)
-                    {
-                        localSymbol = SourceLocalSymbol.MakePossibleOutVarLocalWithoutInitializer(
-                            Binder.ContainingMemberOrLambda,
-                            Binder,
-                            node.Type,
-                            node.Variable.Identifier,
-                            scopeSegmentRoot,
-                            LocalDeclarationKind.RegularVariable);
-                    }
-                    else
-                    {
-                        localSymbol = SourceLocalSymbol.MakeLocal(
-                            Binder.ContainingMemberOrLambda,
-                            Binder,
-                            node.Type,
-                            node.Variable.Identifier,
-                            LocalDeclarationKind.RegularVariable);
-                    }
-                }
-                else
-                {
-                    localSymbol = SourceLocalSymbol.MakeLocalWithInitializer(
-                    Binder.ContainingMemberOrLambda,
-                    Binder,
-                    node.Type,
-                    node.Variable.Identifier,
-                    node.Variable.Initializer,
-                    LocalDeclarationKind.RegularVariable);
-                }
-
-                Locals.Add(localSymbol);
-
-                Visit(node.Variable.Initializer);
+                return locals.ToImmutableAndFree();
             }
 
-            public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
-            {
-                Debug.Assert(false);
-                base.VisitVariableDeclarator(node);
-            }
+            return ImmutableArray<LocalFunctionSymbol>.Empty;
+        }
 
-            public override void VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node)
-            {
-                return;
-            }
+        protected SourceLocalSymbol MakeLocal(VariableDeclarationSyntax declaration, VariableDeclaratorSyntax declarator, LocalDeclarationKind kind, Binder initializerBinderOpt = null)
+        {
+            return SourceLocalSymbol.MakeLocal(
+                this.ContainingMemberOrLambda,
+                this,
+                true,
+                declaration.Type,
+                declarator.Identifier,
+                kind,
+                declarator.Initializer,
+                initializerBinderOpt);
+        }
 
-            public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitFromClause(FromClauseSyntax node)
-            {
-                // Visit Expression only for a "from" clause that starts a query, it (the expression) doesn't become a body of a lambda.
-                var parent = node.Parent;
-
-                if (parent == null || (parent.Kind == SyntaxKind.QueryExpression && ((QueryExpressionSyntax)parent).FromClause == node))
-                {
-                    Visit(node.Expression);
-                }
-            }
-
-            public override void VisitLetClause(LetClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitJoinClause(JoinClauseSyntax node)
-            {
-                Visit(node.InExpression);
-            }
-
-            public override void VisitWhereClause(WhereClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitOrderByClause(OrderByClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitSelectClause(SelectClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitGroupClause(GroupClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitBlock(BlockSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitForStatement(ForStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitUsingStatement(UsingStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitLockStatement(LockStatementSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitFixedStatement(FixedStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitSwitchStatement(SwitchStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitForEachStatement(ForEachStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitWhileStatement(WhileStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitDoStatement(DoStatementSyntax node)
-            {
-                    return;
-                }
-
-            public override void VisitCatchClause(CatchClauseSyntax node)
-            {
-                return;
-            }
-
-            public override void VisitIfStatement(IfStatementSyntax node)
-            {
-                    return;
-                }
+        protected LocalFunctionSymbol MakeLocalFunction(LocalFunctionStatementSyntax declaration)
+        {
+            return new LocalFunctionSymbol(
+                this,
+                this.ContainingMemberOrLambda,
+                declaration);
         }
 
         protected void BuildLabels(SyntaxList<StatementSyntax> statements, ref ArrayBuilder<LabelSymbol> labels)
         {
-            var containingMethod = (MethodSymbol)this.ContainingMemberOrLambda; 
-
+            var containingMethod = (MethodSymbol)this.ContainingMemberOrLambda;
             foreach (var statement in statements)
             {
-                var stmt = statement;
-                while (stmt.Kind == SyntaxKind.LabeledStatement)
-                {
-                    var labeledStatement = (LabeledStatementSyntax)stmt;
-                    if (labels == null)
-                    {
-                        labels = ArrayBuilder<LabelSymbol>.GetInstance();
-                    }
+                BuildLabels(containingMethod, statement, ref labels);
+            }
+        }
 
-                    var labelSymbol = new SourceLabelSymbol(containingMethod, labeledStatement.Identifier);
-                    labels.Add(labelSymbol);
-                    stmt = labeledStatement.Statement;
+        internal static void BuildLabels(MethodSymbol containingMethod, StatementSyntax statement, ref ArrayBuilder<LabelSymbol> labels)
+        {
+            while (statement.Kind() == SyntaxKind.LabeledStatement)
+            {
+                var labeledStatement = (LabeledStatementSyntax)statement;
+                if (labels == null)
+                {
+                    labels = ArrayBuilder<LabelSymbol>.GetInstance();
                 }
+
+                var labelSymbol = new SourceLabelSymbol(containingMethod, labeledStatement.Identifier);
+                labels.Add(labelSymbol);
+                statement = labeledStatement.Statement;
             }
         }
 
@@ -442,7 +317,27 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.LookupLocal(nameToken);
         }
 
-        protected override void LookupSymbolsInSingleBinder(
+        protected override LocalFunctionSymbol LookupLocalFunction(SyntaxToken nameToken)
+        {
+            LocalFunctionSymbol result = null;
+            if (LocalFunctionsMap != null && LocalFunctionsMap.TryGetValue(nameToken.ValueText, out result))
+            {
+                if (result.NameToken == nameToken) return result;
+
+                // in error cases we might have more than one declaration of the same name in the same scope
+                foreach (var local in this.LocalFunctions)
+                {
+                    if (local.NameToken == nameToken)
+                    {
+                        return local;
+                    }
+                }
+            }
+
+            return base.LookupLocalFunction(nameToken);
+        }
+
+        internal override void LookupSymbolsInSingleBinder(
             LookupResult result, string name, int arity, ConsList<Symbol> basesBeingResolved, LookupOptions options, Binder originalBinder, bool diagnose, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             Debug.Assert(options.AreValid());
@@ -471,6 +366,16 @@ namespace Microsoft.CodeAnalysis.CSharp
                     result.MergeEqual(originalBinder.CheckViability(localSymbol, arity, options, null, diagnose, ref useSiteDiagnostics, basesBeingResolved));
                 }
             }
+
+            var localFunctionsMap = this.LocalFunctionsMap;
+            if (localFunctionsMap != null && options.CanConsiderLocals())
+            {
+                LocalFunctionSymbol localSymbol;
+                if (localFunctionsMap.TryGetValue(name, out localSymbol))
+                {
+                    result.MergeEqual(originalBinder.CheckViability(localSymbol, arity, options, null, diagnose, ref useSiteDiagnostics, basesBeingResolved));
+                }
+            }
         }
 
         protected override void AddLookupSymbolsInfoInSingleBinder(LookupSymbolsInfo result, LookupOptions options, Binder originalBinder)
@@ -487,37 +392,52 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
                 }
             }
-            else if (this.LocalsMap != null && options.CanConsiderLocals())
+            if (options.CanConsiderLocals())
             {
-                foreach (var local in this.LocalsMap)
+                if (this.LocalsMap != null)
                 {
-                    if (originalBinder.CanAddLookupSymbolInfo(local.Value, options, null))
+                    foreach (var local in this.LocalsMap)
                     {
-                        result.AddSymbol(local.Value, local.Key, 0);
+                        if (originalBinder.CanAddLookupSymbolInfo(local.Value, options, null))
+                        {
+                            result.AddSymbol(local.Value, local.Key, 0);
+                        }
+                    }
+                }
+                if (this.LocalFunctionsMap != null)
+                {
+                    foreach (var local in this.LocalFunctionsMap)
+                    {
+                        if (originalBinder.CanAddLookupSymbolInfo(local.Value, options, null))
+                        {
+                            result.AddSymbol(local.Value, local.Key, 0);
+                        }
                     }
                 }
             }
         }
 
-        private bool ReportConflictWithLocal(LocalSymbol local, Symbol newSymbol, string name, Location newLocation, DiagnosticBag diagnostics)
+        private bool ReportConflictWithLocal(Symbol local, Symbol newSymbol, string name, Location newLocation, DiagnosticBag diagnostics)
         {
-            // Quirk of the way we represent lambda parameters.                
+            // Quirk of the way we represent lambda parameters.
             SymbolKind newSymbolKind = (object)newSymbol == null ? SymbolKind.Parameter : newSymbol.Kind;
 
             if (newSymbolKind == SymbolKind.ErrorType) return true;
 
-            if (newSymbolKind == SymbolKind.Local)
+            var declaredInThisScope = false;
+
+            declaredInThisScope |= newSymbolKind == SymbolKind.Local && this.Locals.Contains((LocalSymbol)newSymbol);
+            declaredInThisScope |= newSymbolKind == SymbolKind.Method && this.LocalFunctions.Contains((LocalFunctionSymbol)newSymbol);
+
+            if (declaredInThisScope && newLocation.SourceSpan.Start >= local.Locations[0].SourceSpan.Start)
             {
-                if (this.Locals.Contains((LocalSymbol)newSymbol) && newLocation.SourceSpan.Start >= local.Locations[0].SourceSpan.Start)
-                {
-                    // A local variable named '{0}' is already defined in this scope
-                    diagnostics.Add(ErrorCode.ERR_LocalDuplicate, newLocation, name);
-                    return true;
-                }
+                // A local variable or function named '{0}' is already defined in this scope
+                diagnostics.Add(ErrorCode.ERR_LocalDuplicate, newLocation, name);
+                return true;
             }
 
-            if (newSymbolKind == SymbolKind.Local || newSymbolKind == SymbolKind.Parameter)
-            { 
+            if (newSymbolKind == SymbolKind.Local || newSymbolKind == SymbolKind.Parameter || newSymbolKind == SymbolKind.Method || newSymbolKind == SymbolKind.TypeParameter)
+            {
                 // A local or parameter named '{0}' cannot be declared in this scope because that name is used in an enclosing local scope to define a local or parameter
                 diagnostics.Add(ErrorCode.ERR_LocalIllegallyOverrides, newLocation, name);
                 return true;
@@ -537,25 +457,27 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal virtual bool EnsureSingleDefinition(Symbol symbol, string name, Location location, DiagnosticBag diagnostics)
         {
-            LocalSymbol existingLocal;
-            var map = this.LocalsMap;
-            if (map != null && map.TryGetValue(name, out existingLocal))
+            LocalSymbol existingLocal = null;
+            LocalFunctionSymbol existingLocalFunction = null;
+
+            var localsMap = this.LocalsMap;
+            var localFunctionsMap = this.LocalFunctionsMap;
+
+            // TODO: Handle case where 'name' exists in both localsMap and localFunctionsMap. Right now locals are preferred over local functions.
+            if ((localsMap != null && localsMap.TryGetValue(name, out existingLocal)) ||
+                (localFunctionsMap != null && localFunctionsMap.TryGetValue(name, out existingLocalFunction)))
             {
-                if (symbol == existingLocal)
+                var existingSymbol = (Symbol)existingLocal ?? existingLocalFunction;
+                if (symbol == existingSymbol)
                 {
                     // reference to same symbol, by far the most common case.
                     return false;
                 }
 
-                return ReportConflictWithLocal(existingLocal, symbol, name, location, diagnostics);
+                return ReportConflictWithLocal(existingSymbol, symbol, name, location, diagnostics);
             }
 
             return false;
-        }
-
-        internal override ImmutableArray<LocalSymbol> GetDeclaredLocalsForScope(CSharpSyntaxNode node)
-        {
-            throw ExceptionUtilities.Unreachable;
         }
     }
 }

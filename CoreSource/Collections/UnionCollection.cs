@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -22,8 +22,8 @@ namespace Microsoft.CodeAnalysis
     /// </summary>
     internal class UnionCollection<T> : ICollection<T>
     {
-        private readonly ImmutableArray<ICollection<T>> collections;
-        private int count = -1;
+        private readonly ImmutableArray<ICollection<T>> _collections;
+        private int _count = -1;
 
         public static ICollection<T> Create(ICollection<T> coll1, ICollection<T> coll2)
         {
@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis
                 return coll1;
             }
 
-            return new UnionCollection<T>(new ICollection<T>[] { coll1, coll2 });
+            return new UnionCollection<T>(ImmutableArray.Create(coll1, coll2));
         }
 
         public static ICollection<T> Create<TOrig>(ImmutableArray<TOrig> collections, Func<TOrig, ICollection<T>> selector)
@@ -56,14 +56,14 @@ namespace Microsoft.CodeAnalysis
                     return selector(collections[0]);
 
                 default:
-                    return new UnionCollection<T>(collections.Select(selector));
+                    return new UnionCollection<T>(ImmutableArray.CreateRange(collections, selector));
             }
         }
 
-        private UnionCollection(IEnumerable<ICollection<T>> collections)
+        private UnionCollection(ImmutableArray<ICollection<T>> collections)
         {
-            Debug.Assert(collections != null);
-            this.collections = collections.ToImmutableArray();
+            Debug.Assert(!collections.IsDefault);
+            _collections = collections;
         }
 
         public void Add(T item)
@@ -80,7 +80,7 @@ namespace Microsoft.CodeAnalysis
         {
             // PERF: Expansion of "return collections.Any(c => c.Contains(item));"
             // to avoid allocating a lambda.
-            foreach (var c in this.collections)
+            foreach (var c in _collections)
             {
                 if (c.Contains(item))
                 {
@@ -94,7 +94,7 @@ namespace Microsoft.CodeAnalysis
         public void CopyTo(T[] array, int arrayIndex)
         {
             var index = arrayIndex;
-            foreach (var collection in collections)
+            foreach (var collection in _collections)
             {
                 collection.CopyTo(array, index);
                 index += collection.Count;
@@ -105,12 +105,12 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                if (this.count == -1)
+                if (_count == -1)
                 {
-                    this.count = collections.Sum(c => c.Count);
+                    _count = _collections.Sum(c => c.Count);
                 }
 
-                return this.count;
+                return _count;
             }
         }
 
@@ -129,7 +129,7 @@ namespace Microsoft.CodeAnalysis
 
         public IEnumerator<T> GetEnumerator()
         {
-            return collections.SelectMany(c => c).GetEnumerator();
+            return _collections.SelectMany(c => c).GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()

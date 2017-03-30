@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Emit;
@@ -16,7 +16,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit.NoPia
             Debug.Assert(underlyingTypeParameter.IsDefinition);
         }
 
-        protected override IEnumerable<Cci.ITypeReference> GetConstraints(EmitContext context)
+        protected override IEnumerable<Cci.TypeReferenceWithAttributes> GetConstraints(EmitContext context)
         {
             return ((Cci.IGenericParameter)UnderlyingTypeParameter).GetConstraints(context);
         }

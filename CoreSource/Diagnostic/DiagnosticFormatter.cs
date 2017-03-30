@@ -1,9 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
@@ -24,7 +22,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (diagnostic == null)
             {
-                throw new ArgumentNullException("diagnostic");
+                throw new ArgumentNullException(nameof(diagnostic));
             }
 
             var culture = formatter as CultureInfo;
@@ -33,6 +31,7 @@ namespace Microsoft.CodeAnalysis
             {
                 case LocationKind.SourceFile:
                 case LocationKind.XmlFile:
+                case LocationKind.ExternalFile:
                     var span = diagnostic.Location.GetLineSpan();
                     var mappedSpan = diagnostic.Location.GetMappedLineSpan();
                     if (!span.IsValid || !mappedSpan.IsValid)
@@ -55,12 +54,12 @@ namespace Microsoft.CodeAnalysis
                     return string.Format(formatter, "{0}{1}: {2}: {3}",
                                          FormatSourcePath(path, basePath, formatter),
                                          FormatSourceSpan(mappedSpan.Span, formatter),
-                                         GetMessagePrefix(diagnostic, culture),
+                                         GetMessagePrefix(diagnostic),
                                          diagnostic.GetMessage(culture));
 
                 default:
                     return string.Format(formatter, "{0}: {1}",
-                                         GetMessagePrefix(diagnostic, culture),
+                                         GetMessagePrefix(diagnostic),
                                          diagnostic.GetMessage(culture));
             }
         }
@@ -76,21 +75,28 @@ namespace Microsoft.CodeAnalysis
             return string.Format("({0},{1})", span.Start.Line + 1, span.Start.Character + 1);
         }
 
-        internal string GetMessagePrefix(Diagnostic diagnostic, CultureInfo culture)
+        internal string GetMessagePrefix(Diagnostic diagnostic)
         {
-            return string.Format(culture, "{0} {1}{2}",
-                diagnostic.Severity == DiagnosticSeverity.Info
-                    ? "info"
-                    : diagnostic.Severity == DiagnosticSeverity.Error || diagnostic.IsWarningAsError
-                        ? "error"
-                        : "warning",
-                diagnostic.Id,
-                diagnostic.IsWarningAsError ? GetWarnAsErrorMessage(culture) : "");
-        }
+            string prefix;
+            switch (diagnostic.Severity)
+            {
+                case DiagnosticSeverity.Hidden:
+                    prefix = "hidden";
+                    break;
+                case DiagnosticSeverity.Info:
+                    prefix = "info";
+                    break;
+                case DiagnosticSeverity.Warning:
+                    prefix = "warning";
+                    break;
+                case DiagnosticSeverity.Error:
+                    prefix = "error";
+                    break;
+                default:
+                    throw ExceptionUtilities.UnexpectedValue(diagnostic.Severity);
+            }
 
-        internal virtual string GetWarnAsErrorMessage(CultureInfo culture)
-        {
-            return "";
+            return string.Format("{0} {1}", prefix, diagnostic.Id);
         }
 
         internal static readonly DiagnosticFormatter Instance = new DiagnosticFormatter();

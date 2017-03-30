@@ -1,14 +1,41 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Reflection;
 using System.Globalization;
+using System.Reflection;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal static partial class ErrorFacts
     {
+        private static readonly string s_titleSuffix = "_Title";
+        private static readonly string s_descriptionSuffix = "_Description";
+        private static readonly Lazy<ImmutableDictionary<ErrorCode, string>> s_helpLinksMap = new Lazy<ImmutableDictionary<ErrorCode, string>>(CreateHelpLinks);
+        private static readonly Lazy<ImmutableDictionary<ErrorCode, string>> s_categoriesMap = new Lazy<ImmutableDictionary<ErrorCode, string>>(CreateCategoriesMap);
+
+        private static ImmutableDictionary<ErrorCode, string> CreateHelpLinks()
+        {
+            var map = new Dictionary<ErrorCode, string>()
+            {
+                // { ERROR_CODE,    HELP_LINK }
+            };
+
+            return map.ToImmutableDictionary();
+        }
+
+        private static ImmutableDictionary<ErrorCode, string> CreateCategoriesMap()
+        {
+            var map = new Dictionary<ErrorCode, string>()
+            {
+                // { ERROR_CODE,    CATEGORY }
+            };
+
+            return map.ToImmutableDictionary();
+        }
+
         internal static DiagnosticSeverity GetSeverity(ErrorCode code)
         {
             if (code == ErrorCode.Void)
@@ -26,6 +53,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             else if (IsInfo(code))
             {
                 return DiagnosticSeverity.Info;
+            }
+            else if (IsHidden(code))
+            {
+                return DiagnosticSeverity.Hidden;
             }
             else
             {
@@ -49,50 +80,81 @@ namespace Microsoft.CodeAnalysis.CSharp
             return message;
         }
 
+        public static LocalizableResourceString GetMessageFormat(ErrorCode code)
+        {
+            return new LocalizableResourceString(code.ToString(), ResourceManager, typeof(ErrorFacts));
+        }
+
+        public static LocalizableResourceString GetTitle(ErrorCode code)
+        {
+            return new LocalizableResourceString(code.ToString() + s_titleSuffix, ResourceManager, typeof(ErrorFacts));
+        }
+
+        public static LocalizableResourceString GetDescription(ErrorCode code)
+        {
+            return new LocalizableResourceString(code.ToString() + s_descriptionSuffix, ResourceManager, typeof(ErrorFacts));
+        }
+
+        public static string GetHelpLink(ErrorCode code)
+        {
+            string helpLink;
+            if (s_helpLinksMap.Value.TryGetValue(code, out helpLink))
+            {
+                return helpLink;
+            }
+
+            return string.Empty;
+        }
+
+        public static string GetCategory(ErrorCode code)
+        {
+            string category;
+            if (s_categoriesMap.Value.TryGetValue(code, out category))
+            {
+                return category;
+            }
+
+            return Diagnostic.CompilerDiagnosticCategory;
+        }
+
         /// <remarks>Don't call this during a parse--it loads resources</remarks>
         public static string GetMessage(XmlParseErrorCode id, CultureInfo culture)
         {
             return ResourceManager.GetString(id.ToString(), culture);
         }
 
-        private static System.Resources.ResourceManager resourceManager;
+        private static System.Resources.ResourceManager s_resourceManager;
         private static System.Resources.ResourceManager ResourceManager
         {
             get
             {
-                if (resourceManager == null)
+                if (s_resourceManager == null)
                 {
-                    resourceManager = new System.Resources.ResourceManager("Microsoft.CodeAnalysis.CSharp.CSharpResources", typeof(ErrorCode).GetTypeInfo().Assembly);
+                    s_resourceManager = new System.Resources.ResourceManager("Microsoft.CodeAnalysis.CSharp.CSharpResources", typeof(ErrorCode).GetTypeInfo().Assembly);
                 }
 
-                return resourceManager;
+                return s_resourceManager;
             }
         }
 
         internal static int GetWarningLevel(ErrorCode code)
         {
+            if (IsInfo(code) || IsHidden(code))
+            {
+                // Info and hidden diagnostics have least warning level.
+                return Diagnostic.HighestValidWarningLevel;
+            }
+
             switch (code)
             {
-                case ErrorCode.WRN_OldWarning_AccessibleReadonly:
-                case ErrorCode.WRN_OldWarning_DocFileGenAndIncr:
-                case ErrorCode.WRN_OldWarning_FeatureDefaultDeprecated:
-                case ErrorCode.WRN_OldWarning_MultipleTypeDefs:
-                case ErrorCode.WRN_OldWarning_ProtectedInternal:
-                case ErrorCode.WRN_OldWarning_ReservedIdentifier:
-                case ErrorCode.WRN_OldWarning_UnsafeProp:
-                    // Some old warnings which are unused, but we still need to retain them to suppress CS1691 when "/nowarn:code" is specified on the command line.
-                    return 4;
                 case ErrorCode.WRN_InvalidMainSig:
                 case ErrorCode.WRN_LowercaseEllSuffix:
                 case ErrorCode.WRN_NewNotRequired:
                 case ErrorCode.WRN_MainCantBeGeneric:
-                case ErrorCode.WRN_IncrSwitchObsolete:
-                case ErrorCode.WRN_UnreachableExpr:
                 case ErrorCode.WRN_ProtectedInSealed:
                 case ErrorCode.WRN_UnassignedInternalField:
                 case ErrorCode.WRN_MissingParamTag:
                 case ErrorCode.WRN_MissingXMLComment:
-                case ErrorCode.WRN_DeleteAutoResFailed:
                 case ErrorCode.WRN_MissingTypeParamTag:
                 case ErrorCode.WRN_InvalidVersionFormat:
                     return 4;
@@ -133,12 +195,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_SameFullNameThisAggAgg:
                 case ErrorCode.WRN_SameFullNameThisAggNs:
                 case ErrorCode.WRN_GlobalAliasDefn:
-                case ErrorCode.WRN_UnexpectedPredefTypeLoc:
                 case ErrorCode.WRN_AlwaysNull:
                 case ErrorCode.WRN_CmpAlwaysFalse:
-                case ErrorCode.WRN_AmbigLookupMeth:
                 case ErrorCode.WRN_GotoCaseShouldConvert:
                 case ErrorCode.WRN_NubExprIsConstBool:
+                case ErrorCode.WRN_NubExprIsConstBool2:
                 case ErrorCode.WRN_ExplicitImplCollision:
                 case ErrorCode.WRN_DeprecatedSymbolStr:
                 case ErrorCode.WRN_VacuousIntegralComp:
@@ -149,7 +210,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_UnmatchedParamTag:
                 case ErrorCode.WRN_UnprocessedXMLComment:
                 case ErrorCode.WRN_InvalidSearchPathDir:
-                case ErrorCode.WRN_AssumedMatchThis:
                 case ErrorCode.WRN_UnifyReferenceMajMin:
                 case ErrorCode.WRN_DuplicateTypeParamTag:
                 case ErrorCode.WRN_UnmatchedTypeParamTag:
@@ -169,7 +229,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_ByRefNonAgileField:
                 case ErrorCode.WRN_VolatileByRef:
                 case ErrorCode.WRN_FinalizeMethod:
-                case ErrorCode.WRN_FeatureDeprecated:
                 case ErrorCode.WRN_DeprecatedSymbol:
                 case ErrorCode.WRN_ExternMethodNoImplementation:
                 case ErrorCode.WRN_AttributeLocationOnBadDeclaration:
@@ -180,12 +239,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_ExternCtorNoImplementation:
                 case ErrorCode.WRN_WarningDirective:
                 case ErrorCode.WRN_UnreachableGeneralCatch:
-                case ErrorCode.WRN_UninitializedField:
                 case ErrorCode.WRN_DefaultValueForUnconsumedLocation:
-                case ErrorCode.WRN_FeatureDeprecated2:
-                case ErrorCode.WRN_FeatureDeprecated3:
-                case ErrorCode.WRN_FeatureDeprecated4:
-                case ErrorCode.WRN_FeatureDeprecated5:
                 case ErrorCode.WRN_EmptySwitch:
                 case ErrorCode.WRN_XMLParseError:
                 case ErrorCode.WRN_BadXMLRef:
@@ -195,7 +249,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_FailedInclude:
                 case ErrorCode.WRN_InvalidInclude:
                 case ErrorCode.WRN_XMLParseIncludeError:
-                case ErrorCode.WRN_XMLParserNotFound:
                 case ErrorCode.WRN_ALinkWarn:
                 case ErrorCode.WRN_AssemblyAttributeFromModuleIsOverridden:
                 case ErrorCode.WRN_CmdOptionConflictsSource:
@@ -204,29 +257,19 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_BadRestoreNumber:
                 case ErrorCode.WRN_NonECMAFeature:
                 case ErrorCode.WRN_ErrorOverride:
-                case ErrorCode.WRN_MissingTypeNested:
-                case ErrorCode.WRN_MissingTypeInSource:
-                case ErrorCode.WRN_MissingTypeInAssembly:
                 case ErrorCode.WRN_MultiplePredefTypes:
                 case ErrorCode.WRN_TooManyLinesForDebugger:
                 case ErrorCode.WRN_CallOnNonAgileField:
-                case ErrorCode.WRN_BadWarningNumber:
                 case ErrorCode.WRN_InvalidNumber:
-                case ErrorCode.WRN_FileNameTooLong:
                 case ErrorCode.WRN_IllegalPPChecksum:
                 case ErrorCode.WRN_EndOfPPLineExpected:
                 case ErrorCode.WRN_ConflictingChecksum:
-                case ErrorCode.WRN_UseSwitchInsteadOfAttribute:
-                case ErrorCode.WRN_DelegateNewMethBind:
-                case ErrorCode.WRN_EmptyFileName:
                 case ErrorCode.WRN_DotOnDefault:
                 case ErrorCode.WRN_BadXMLRefTypeVar:
                 case ErrorCode.WRN_ReferencedAssemblyReferencesLinkedPIA:
-                case ErrorCode.WRN_TypeNotFoundForNoPIAWarning:
                 case ErrorCode.WRN_MultipleRuntimeImplementationMatches:
                 case ErrorCode.WRN_MultipleRuntimeOverrideMatches:
                 case ErrorCode.WRN_FileAlreadyIncluded:
-                case ErrorCode.WRN_UseNewSwitch:
                 case ErrorCode.WRN_NoConfigNotOnCommandLine:
                 case ErrorCode.WRN_AnalyzerCannotBeCreated:
                 case ErrorCode.WRN_NoAnalyzerInAssembly:
@@ -236,7 +279,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_CLS_BadArgType:
                 case ErrorCode.WRN_CLS_BadReturnType:
                 case ErrorCode.WRN_CLS_BadFieldPropType:
-                case ErrorCode.WRN_CLS_BadUnicode:
                 case ErrorCode.WRN_CLS_BadIdentifierCase:
                 case ErrorCode.WRN_CLS_OverloadRefOut:
                 case ErrorCode.WRN_CLS_OverloadUnnamed:
@@ -263,7 +305,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_CallerFilePathPreferredOverCallerMemberName:
                 case ErrorCode.WRN_CallerLineNumberPreferredOverCallerMemberName:
                 case ErrorCode.WRN_CallerLineNumberPreferredOverCallerFilePath:
-                case ErrorCode.WRN_UnknownOption:
                 case ErrorCode.WRN_DelaySignButNoKey:
                 case ErrorCode.WRN_UnimplementedCommandLineSwitch:
                 case ErrorCode.WRN_AsyncLacksAwaits:
@@ -271,8 +312,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_RefCultureMismatch:
                 case ErrorCode.WRN_ConflictingMachineAssembly:
                 case ErrorCode.WRN_FilterIsConstant:
-                case ErrorCode.WRN_StringOrNumericLiteralExpected:
+                case ErrorCode.WRN_IdentifierOrNumericLiteralExpected:
                 case ErrorCode.WRN_ReferencedAssemblyDoesNotHaveStrongName:
+                case ErrorCode.WRN_AlignmentMagnitude:
+                case ErrorCode.WRN_AttributeIgnoredWhenPublicSigning:
+                case ErrorCode.WRN_TupleLiteralNameMismatch:
                     return 1;
                 default:
                     return 0;

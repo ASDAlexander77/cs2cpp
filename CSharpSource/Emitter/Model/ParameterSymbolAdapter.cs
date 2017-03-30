@@ -1,15 +1,16 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.Emit;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    partial class ParameterSymbol :
+    internal partial class ParameterSymbol :
         Cci.IParameterTypeInformation,
         Cci.IParameterDefinition
     {
@@ -29,11 +30,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        bool Cci.IParameterTypeInformation.HasByRefBeforeCustomModifiers
+        ImmutableArray<Cci.ICustomModifier> Cci.IParameterTypeInformation.RefCustomModifiers
         {
             get
             {
-                return this.HasByRefBeforeCustomModifiers;
+                return this.RefCustomModifiers.As<Cci.ICustomModifier>();
             }
         }
 
@@ -55,13 +56,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <summary>
         /// Gets constant value to be stored in metadata Constant table.
         /// </summary>
-        Cci.IMetadataConstant Cci.IParameterDefinition.GetDefaultValue(EmitContext context)
+        MetadataConstant Cci.IParameterDefinition.GetDefaultValue(EmitContext context)
         {
             CheckDefinitionInvariant();
             return this.GetMetadataConstantValue(context);
         }
 
-        internal Cci.IMetadataConstant GetMetadataConstantValue(EmitContext context)
+        internal MetadataConstant GetMetadataConstantValue(EmitContext context)
         {
             if (!HasMetadataConstantValue)
             {
@@ -93,7 +94,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 CheckDefinitionInvariant();
                 // For a decimal value, DefaultValue won't be used directly, instead, DecimalConstantAttribute will be generated.
-                // Similarly for DateTime. (C# does not directly support optional parameters with datetime constants, but honors
+                // Similarly for DateTime. (C# does not directly support optional parameters with DateTime constants, but honors
                 // the attributes if [Optional][DateTimeConstant(whatever)] are on the parameter.)
                 return this.ExplicitDefaultConstantValue != null &&
                        this.ExplicitDefaultConstantValue.SpecialType != SpecialType.System_Decimal &&

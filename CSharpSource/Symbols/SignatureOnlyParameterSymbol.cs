@@ -1,10 +1,8 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using System.Diagnostics;
+using System.Linq;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -14,30 +12,39 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class SignatureOnlyParameterSymbol : ParameterSymbol
     {
-        private readonly TypeSymbol type;
-        private readonly ImmutableArray<CustomModifier> customModifiers;
-        private readonly bool isParams;
-        private readonly RefKind refKind;
+        private readonly TypeSymbol _type;
+        private readonly ImmutableArray<CustomModifier> _customModifiers;
+        private readonly ImmutableArray<CustomModifier> _refCustomModifiers;
+        private readonly bool _isParams;
+        private readonly RefKind _refKind;
 
         public SignatureOnlyParameterSymbol(
             TypeSymbol type,
             ImmutableArray<CustomModifier> customModifiers,
+            ImmutableArray<CustomModifier> refCustomModifiers,
             bool isParams,
             RefKind refKind)
         {
-            this.type = type;
-            this.customModifiers = customModifiers;
-            this.isParams = isParams;
-            this.refKind = refKind;
+            Debug.Assert(type != null);
+            Debug.Assert(!customModifiers.IsDefault);
+            Debug.Assert(!refCustomModifiers.IsDefault);
+
+            _type = type;
+            _customModifiers = customModifiers;
+            _refCustomModifiers = refCustomModifiers;
+            _isParams = isParams;
+            _refKind = refKind;
         }
 
-        public override TypeSymbol Type { get { return type; } }
+        public override TypeSymbol Type { get { return _type; } }
 
-        public override ImmutableArray<CustomModifier> CustomModifiers { get { return customModifiers; } }
+        public override ImmutableArray<CustomModifier> CustomModifiers { get { return _customModifiers; } }
 
-        public override bool IsParams { get { return isParams; } }
+        public override ImmutableArray<CustomModifier> RefCustomModifiers { get { return _refCustomModifiers; } }
 
-        public override RefKind RefKind { get { return refKind; } }
+        public override bool IsParams { get { return _isParams; } }
+
+        public override RefKind RefKind { get { return _refKind; } }
 
         public override string Name { get { return ""; } }
 
@@ -70,8 +77,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override bool IsCallerMemberName { get { throw ExceptionUtilities.Unreachable; } }
 
-        internal sealed override bool HasByRefBeforeCustomModifiers { get { throw ExceptionUtilities.Unreachable; } }
-
         public override Symbol ContainingSymbol { get { throw ExceptionUtilities.Unreachable; } }
 
         public override ImmutableArray<Location> Locations { get { throw ExceptionUtilities.Unreachable; } }
@@ -84,5 +89,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion Not used by MethodSignatureComparer
 
+        public override bool Equals(object obj)
+        {
+            if ((object)this == obj)
+            {
+                return true;
+            }
+
+            var other = obj as SignatureOnlyParameterSymbol;
+            return (object)other != null &&
+                _type == other._type &&
+                _customModifiers.SequenceEqual(other._customModifiers) &&
+                _refCustomModifiers.SequenceEqual(other._refCustomModifiers) &&
+                _isParams == other._isParams &&
+                _refKind == other._refKind;
+        }
+
+        public override int GetHashCode()
+        {
+            return Hash.Combine(
+                _type.GetHashCode(),
+                Hash.Combine(
+                    _isParams.GetHashCode(),
+                    _refKind.GetHashCode()));
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 namespace Microsoft.CodeAnalysis
 {
@@ -9,6 +9,7 @@ namespace Microsoft.CodeAnalysis
         System_Math__PowDoubleDouble,
 
         System_Array__get_Length,
+        System_Array__Empty,
 
         System_Convert__ToBooleanDecimal,
         System_Convert__ToBooleanInt32,
@@ -95,7 +96,7 @@ namespace Microsoft.CodeAnalysis
 
         System_Runtime_InteropServices_UnknownWrapper__ctor,
         System_Runtime_InteropServices_DispatchWrapper__ctor,
-        System_Runtime_InteropServices_ClassInterfaceAttribute__ctorInt16,
+        System_Runtime_InteropServices_ClassInterfaceAttribute__ctorClassInterfaceType,
         System_Runtime_InteropServices_CoClassAttribute__ctor,
         System_Runtime_InteropServices_ComAwareEventInfo__ctor,
         System_Runtime_InteropServices_ComAwareEventInfo__AddEventHandler,
@@ -163,9 +164,6 @@ namespace Microsoft.CodeAnalysis
 
         System_Threading_Thread__CurrentThread,
         System_Threading_Thread__ManagedThreadId,
-
-        Microsoft_CSharp_RuntimeHelpers_SessionHelpers__GetSubmission,
-        Microsoft_CSharp_RuntimeHelpers_SessionHelpers__SetSubmission,
 
         Microsoft_CSharp_RuntimeBinder_Binder__BinaryOperation,
         Microsoft_CSharp_RuntimeBinder_Binder__Convert,
@@ -308,11 +306,10 @@ namespace Microsoft.CodeAnalysis
         Microsoft_VisualBasic_Information__VbTypeName,
         Microsoft_VisualBasic_Interaction__CallByName,
 
-        My_InternalXmlHelper__Value,
-
         System_Runtime_CompilerServices_IAsyncStateMachine_MoveNext,
         System_Runtime_CompilerServices_IAsyncStateMachine_SetStateMachine,
 
+        System_Runtime_CompilerServices_AsyncVoidMethodBuilder__Create,
         System_Runtime_CompilerServices_AsyncVoidMethodBuilder__SetException,
         System_Runtime_CompilerServices_AsyncVoidMethodBuilder__SetResult,
         System_Runtime_CompilerServices_AsyncVoidMethodBuilder__AwaitOnCompleted,
@@ -320,6 +317,7 @@ namespace Microsoft.CodeAnalysis
         System_Runtime_CompilerServices_AsyncVoidMethodBuilder__Start_T,
         System_Runtime_CompilerServices_AsyncVoidMethodBuilder__SetStateMachine,
 
+        System_Runtime_CompilerServices_AsyncTaskMethodBuilder__Create,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder__SetException,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder__SetResult,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder__AwaitOnCompleted,
@@ -328,6 +326,7 @@ namespace Microsoft.CodeAnalysis
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder__SetStateMachine,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder__Task,
 
+        System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T__Create,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T__SetException,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T__SetResult,
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T__AwaitOnCompleted,
@@ -337,6 +336,7 @@ namespace Microsoft.CodeAnalysis
         System_Runtime_CompilerServices_AsyncTaskMethodBuilder_T__Task,
 
         System_Runtime_CompilerServices_AsyncStateMachineAttribute__ctor,
+        System_Runtime_CompilerServices_IteratorStateMachineAttribute__ctor,
 
         Microsoft_VisualBasic_Strings__AscCharInt32,
         Microsoft_VisualBasic_Strings__AscStringInt32,
@@ -354,6 +354,67 @@ namespace Microsoft.CodeAnalysis
         System_Environment__CurrentManagedThreadId,
 
         System_ComponentModel_EditorBrowsableAttribute__ctor,
+
+        System_Runtime_GCLatencyMode__SustainedLowLatency,
+
+        System_ValueTuple_T1__Item1,
+
+        System_ValueTuple_T2__Item1,
+        System_ValueTuple_T2__Item2,
+
+        System_ValueTuple_T3__Item1,
+        System_ValueTuple_T3__Item2,
+        System_ValueTuple_T3__Item3,
+
+        System_ValueTuple_T4__Item1,
+        System_ValueTuple_T4__Item2,
+        System_ValueTuple_T4__Item3,
+        System_ValueTuple_T4__Item4,
+
+        System_ValueTuple_T5__Item1,
+        System_ValueTuple_T5__Item2,
+        System_ValueTuple_T5__Item3,
+        System_ValueTuple_T5__Item4,
+        System_ValueTuple_T5__Item5,
+
+        System_ValueTuple_T6__Item1,
+        System_ValueTuple_T6__Item2,
+        System_ValueTuple_T6__Item3,
+        System_ValueTuple_T6__Item4,
+        System_ValueTuple_T6__Item5,
+        System_ValueTuple_T6__Item6,
+
+        System_ValueTuple_T7__Item1,
+        System_ValueTuple_T7__Item2,
+        System_ValueTuple_T7__Item3,
+        System_ValueTuple_T7__Item4,
+        System_ValueTuple_T7__Item5,
+        System_ValueTuple_T7__Item6,
+        System_ValueTuple_T7__Item7,
+
+        System_ValueTuple_TRest__Item1,
+        System_ValueTuple_TRest__Item2,
+        System_ValueTuple_TRest__Item3,
+        System_ValueTuple_TRest__Item4,
+        System_ValueTuple_TRest__Item5,
+        System_ValueTuple_TRest__Item6,
+        System_ValueTuple_TRest__Item7,
+        System_ValueTuple_TRest__Rest,
+
+        System_ValueTuple_T1__ctor,
+        System_ValueTuple_T2__ctor,
+        System_ValueTuple_T3__ctor,
+        System_ValueTuple_T4__ctor,
+        System_ValueTuple_T5__ctor,
+        System_ValueTuple_T6__ctor,
+        System_ValueTuple_T7__ctor,
+        System_ValueTuple_TRest__ctor,
+
+        System_Runtime_CompilerServices_TupleElementNamesAttribute__ctorTransformNames,
+
+        System_String__Format_IFormatProvider,
+
+        Microsoft_CodeAnalysis_Runtime_Instrumentation__CreatePayload,
 
         Count
     }

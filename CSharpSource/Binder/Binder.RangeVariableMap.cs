@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// query variable is starting with the current lambda's first parameter P, compute "P.Item1.Item1.Item2".
         /// See also WithQueryLambdaParametersBinder.
         /// </summary>
-        class RangeVariableMap : Dictionary<RangeVariableSymbol, ImmutableArray<string>>
+        private class RangeVariableMap : Dictionary<RangeVariableSymbol, ImmutableArray<string>>
         {
             public RangeVariableMap() { }
         }

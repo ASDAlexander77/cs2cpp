@@ -589,12 +589,12 @@ namespace Il2Native.Logic.DOM2
                 return noOpStatement;
             }
 
-            var boundIteratorScope = boundBody as BoundIteratorScope;
+            var boundIteratorScope = boundBody as BoundStateMachineScope;
             if (boundIteratorScope != null)
             {
-                var iteratorScope = new IteratorScope();
-                iteratorScope.Parse(boundIteratorScope);
-                return iteratorScope;
+                var stateMachineScope = new StateMachineScope();
+                stateMachineScope.Parse(boundIteratorScope);
+                return stateMachineScope;
             }
 
             var boundArgList = boundBody as BoundArgList;
@@ -684,7 +684,7 @@ namespace Il2Native.Logic.DOM2
 
                 if (!noFilter)
                 {
-                    if (local.SynthesizedLocalKind == SynthesizedLocalKind.None 
+                    if (local.SynthesizedKind == default(SynthesizedLocalKind)
                         && local.DeclarationKind != LocalDeclarationKind.FixedVariable
                         && local.DeclarationKind != LocalDeclarationKind.UsingVariable 
                         && !IsDeclarationWithoutInitializer(local))

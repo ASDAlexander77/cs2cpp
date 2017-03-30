@@ -1,4 +1,7 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
+using System;
+using System.ComponentModel;
 
 namespace Microsoft.CodeAnalysis
 {
@@ -15,7 +18,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Type is an array type.
         /// </summary>
-        ArrayType = 1,
+        Array = 1,
 
         /// <summary>
         /// Type is a class.
@@ -30,7 +33,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Type is dynamic.
         /// </summary>
-        DynamicType = 4,
+        Dynamic = 4,
 
         /// <summary>
         /// Type is an enumeration.
@@ -55,7 +58,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Type is a pointer.
         /// </summary>
-        PointerType = 9,
+        Pointer = 9,
 
         /// <summary>
         /// Type is a C# struct or VB Structure

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -17,15 +17,17 @@ namespace Microsoft.CodeAnalysis
     /// <remarks>
     /// May represent assembly definition or assembly reference identity.
     /// </remarks>
-    partial class AssemblyIdentity
+    public partial class AssemblyIdentity
     {
+        internal const string InvariantCultureDisplay = "neutral";
+
         /// <summary>
         /// Returns the display name of the assembly identity.
         /// </summary>
         /// <param name="fullKey">True if the full public key should be included in the name. Otherwise public key token is used.</param>
         /// <returns>The display name.</returns>
         /// <remarks>
-        /// Characters ',', '=', '"', '\'', '\' occuring in the simple name are escaped by backslash in the display name.
+        /// Characters ',', '=', '"', '\'', '\' occurring in the simple name are escaped by backslash in the display name.
         /// Any character '\t' is replaced by two characters '\' and 't',
         /// Any character '\n' is replaced by two characters '\' and 'n',
         /// Any character '\r' is replaced by two characters '\' and 'r',
@@ -39,12 +41,12 @@ namespace Microsoft.CodeAnalysis
                 return BuildDisplayName(fullKey: true);
             }
 
-            if (lazyDisplayName == null)
+            if (_lazyDisplayName == null)
             {
-                lazyDisplayName = BuildDisplayName(fullKey: false);
+                _lazyDisplayName = BuildDisplayName(fullKey: false);
             }
 
-            return lazyDisplayName;
+            return _lazyDisplayName;
         }
 
         /// <summary>
@@ -62,21 +64,28 @@ namespace Microsoft.CodeAnalysis
             EscapeName(sb, Name);
 
             sb.Append(", Version=");
-            sb.Append(version.Major);
+            sb.Append(_version.Major);
             sb.Append(".");
-            sb.Append(version.Minor);
+            sb.Append(_version.Minor);
             sb.Append(".");
-            sb.Append(version.Build);
+            sb.Append(_version.Build);
             sb.Append(".");
-            sb.Append(version.Revision);
+            sb.Append(_version.Revision);
 
             sb.Append(", Culture=");
-            sb.Append(cultureName.Length != 0 ? cultureName : "neutral");
+            if (_cultureName.Length == 0)
+            {
+                sb.Append(InvariantCultureDisplay);
+            }
+            else
+            {
+                EscapeName(sb, _cultureName);
+            }
 
             if (fullKey && HasPublicKey)
             {
                 sb.Append(", PublicKey=");
-                AppendKey(sb, publicKey);
+                AppendKey(sb, _publicKey);
             }
             else
             {
@@ -96,7 +105,7 @@ namespace Microsoft.CodeAnalysis
                 sb.Append(", Retargetable=Yes");
             }
 
-            switch (contentType)
+            switch (_contentType)
             {
                 case AssemblyContentType.Default:
                     break;
@@ -106,7 +115,7 @@ namespace Microsoft.CodeAnalysis
                     break;
 
                 default:
-                    throw ExceptionUtilities.UnexpectedValue(contentType);
+                    throw ExceptionUtilities.UnexpectedValue(_contentType);
             }
 
             string result = sb.ToString();
@@ -131,7 +140,7 @@ namespace Microsoft.CodeAnalysis
         {
             if (displayName == null)
             {
-                throw new ArgumentNullException("displayName");
+                throw new ArgumentNullException(nameof(displayName));
             }
 
             AssemblyIdentityParts parts;
@@ -164,7 +173,7 @@ namespace Microsoft.CodeAnalysis
 
             if (displayName == null)
             {
-                throw new ArgumentNullException("displayName");
+                throw new ArgumentNullException(nameof(displayName));
             }
 
             if (displayName.IndexOf('\0') >= 0)
@@ -173,8 +182,8 @@ namespace Microsoft.CodeAnalysis
             }
 
             int position = 0;
-            string simpleName = TryParseNameToken(displayName, ',', ref position);
-            if (simpleName == null)
+            string simpleName;
+            if (!TryParseNameToken(displayName, ref position, out simpleName))
             {
                 return false;
             }
@@ -191,18 +200,34 @@ namespace Microsoft.CodeAnalysis
 
             while (position < displayName.Length)
             {
-                string propertyName = TryParseNameToken(displayName, '=', ref position);
-                if (propertyName == null)
+                // Parse ',' name '=' value
+                if (displayName[position] != ',')
                 {
                     return false;
                 }
 
-                string propertyValue = TryParseNameToken(displayName, ',', ref position);
-                if (propertyValue == null)
+                position++;
+
+                string propertyName;
+                if (!TryParseNameToken(displayName, ref position, out propertyName))
                 {
                     return false;
                 }
 
+                if (position >= displayName.Length || displayName[position] != '=')
+                {
+                    return false;
+                }
+
+                position++;
+
+                string propertyValue;
+                if (!TryParseNameToken(displayName, ref position, out propertyValue))
+                {
+                    return false;
+                }
+
+                // Process property
                 if (string.Equals(propertyName, "Version", StringComparison.OrdinalIgnoreCase))
                 {
                     if ((seen & AssemblyIdentityParts.Version) != 0)
@@ -242,7 +267,7 @@ namespace Microsoft.CodeAnalysis
                         continue;
                     }
 
-                    culture = string.Equals(propertyValue, "neutral", StringComparison.OrdinalIgnoreCase) ? null : propertyValue;
+                    culture = string.Equals(propertyValue, InvariantCultureDisplay, StringComparison.OrdinalIgnoreCase) ? null : propertyValue;
                     parsedParts |= AssemblyIdentityParts.Culture;
                 }
                 else if (string.Equals(propertyName, "PublicKey", StringComparison.OrdinalIgnoreCase))
@@ -259,11 +284,15 @@ namespace Microsoft.CodeAnalysis
                         continue;
                     }
 
-                    ImmutableArray<byte> value = ParseKey(propertyValue);
-                    if (value.Length == 0)
+                    ImmutableArray<byte> value;
+                    if (!TryParsePublicKey(propertyValue, out value))
                     {
                         return false;
                     }
+
+                    // NOTE: Fusion would also set the public key token (as derived from the public key) here.
+                    //       We may need to do this as well for error cases, as Fusion would fail to parse the
+                    //       assembly name if public key token calculation failed.
 
                     publicKey = value;
                     parsedParts |= AssemblyIdentityParts.PublicKey;
@@ -283,18 +312,9 @@ namespace Microsoft.CodeAnalysis
                     }
 
                     ImmutableArray<byte> value;
-                    if (string.Equals(propertyValue, "null", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(propertyValue, "neutral", StringComparison.OrdinalIgnoreCase))
+                    if (!TryParsePublicKeyToken(propertyValue, out value))
                     {
-                        value = ImmutableArray.Create<byte>();
-                    }
-                    else
-                    {
-                        value = ParseKey(propertyValue);
-                        if (value.Length != PublicKeyTokenSize)
-                        {
-                            return false;
-                        }
+                        return false;
                     }
 
                     publicKeyToken = value;
@@ -381,21 +401,26 @@ namespace Microsoft.CodeAnalysis
             return true;
         }
 
-        private static string TryParseNameToken(string displayName, char terminator, ref int position)
+        private static bool TryParseNameToken(string displayName, ref int position, out string value)
         {
             Debug.Assert(displayName.IndexOf('\0') == -1);
 
             int i = position;
 
             // skip leading whitespace:
-            while (i < displayName.Length && IsWhiteSpace(displayName[i]))
+            while (true)
             {
-                i++;
-            }
+                if (i == displayName.Length)
+                {
+                    value = null;
+                    return false;
+                }
+                else if (!IsWhiteSpace(displayName[i]))
+                {
+                    break;
+                }
 
-            if (i == displayName.Length)
-            {
-                return null;
+                i++;
             }
 
             char quote;
@@ -410,75 +435,94 @@ namespace Microsoft.CodeAnalysis
 
             int valueStart = i;
             int valueEnd = displayName.Length;
-            int escapeCount = 0;
+            bool containsEscapes = false;
 
-            while (i < displayName.Length)
+            while (true)
             {
+                if (i >= displayName.Length)
+                {
+                    i = displayName.Length;
+                    break;
+                }
+
                 char c = displayName[i];
                 if (c == '\\')
                 {
-                    escapeCount++;
+                    containsEscapes = true;
                     i += 2;
                     continue;
                 }
 
-                if (quote == 0)
+                if (quote == '\0')
                 {
-                    if (c == terminator)
+                    if (IsNameTokenTerminator(c))
                     {
-                        int j = i - 1;
-                        while (j >= valueStart && IsWhiteSpace(displayName[j]))
-                        {
-                            j--;
-                        }
-
-                        valueEnd = j + 1;
                         break;
                     }
-
-                    if (IsQuote(c) || IsNameTokenTerminator(c))
+                    else if (IsQuote(c))
                     {
-                        return null;
+                        value = null;
+                        return false;
                     }
                 }
                 else if (c == quote)
                 {
                     valueEnd = i;
                     i++;
-
-                    // skip any whitespace following the quote
-                    while (i < displayName.Length && IsWhiteSpace(displayName[i]))
-                    {
-                        i++;
-                    }
-
-                    if (i < displayName.Length && displayName[i] != terminator)
-                    {
-                        return null;
-                    }
-
                     break;
                 }
 
                 i++;
             }
 
-            Debug.Assert(i >= displayName.Length || IsNameTokenTerminator(displayName[i]));
-            position = (i >= displayName.Length) ? displayName.Length : i + 1;
+            if (quote == '\0')
+            {
+                int j = i - 1;
+                while (j >= valueStart && IsWhiteSpace(displayName[j]))
+                {
+                    j--;
+                }
+
+                valueEnd = j + 1;
+            }
+            else
+            {
+                // skip any whitespace following the quote and check for the terminator
+                while (i < displayName.Length)
+                {
+                    char c = displayName[i];
+                    if (!IsWhiteSpace(c))
+                    {
+                        if (!IsNameTokenTerminator(c))
+                        {
+                            value = null;
+                            return false;
+                        }
+                        break;
+                    }
+
+                    i++;
+                }
+            }
+
+            Debug.Assert(i == displayName.Length || IsNameTokenTerminator(displayName[i]));
+            position = i;
 
             // empty
             if (valueEnd == valueStart)
             {
-                return null;
+                value = null;
+                return false;
             }
 
-            if (escapeCount == 0)
+            if (!containsEscapes)
             {
-                return displayName.Substring(valueStart, valueEnd - valueStart);
+                value = displayName.Substring(valueStart, valueEnd - valueStart);
+                return true;
             }
             else
             {
-                return Unescape(displayName, valueStart, valueEnd);
+                return TryUnescape(displayName, valueStart, valueEnd, out value);
             }
         }
 
@@ -575,23 +619,67 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        private static ImmutableArray<byte> ParseKey(string value)
+        private static bool TryParsePublicKey(string value, out ImmutableArray<byte> key)
         {
-            byte[] result = new byte[value.Length / 2];
-            for (int i = 0; i < result.Length; i++)
+            if (!TryParseHexBytes(value, out key) ||
+                !MetadataHelpers.IsValidPublicKey(key))
+            {
+                key = default(ImmutableArray<byte>);
+                return false;
+            }
+
+            return true;
+        }
+
+        private const int PublicKeyTokenBytes = 8;
+
+        private static bool TryParsePublicKeyToken(string value, out ImmutableArray<byte> token)
+        {
+            if (string.Equals(value, "null", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "neutral", StringComparison.OrdinalIgnoreCase))
+            {
+                token = ImmutableArray<byte>.Empty;
+                return true;
+            }
+
+            ImmutableArray<byte> result;
+            if (value.Length != (PublicKeyTokenBytes * 2) || !TryParseHexBytes(value, out result))
+            {
+                token = default(ImmutableArray<byte>);
+                return false;
+            }
+
+            token = result;
+            return true;
+        }
+
+        private static bool TryParseHexBytes(string value, out ImmutableArray<byte> result)
+        {
+            if (value.Length == 0 || (value.Length % 2) != 0)
+            {
+                result = default(ImmutableArray<byte>);
+                return false;
+            }
+
+            var length = value.Length / 2;
+            var bytes = ArrayBuilder<byte>.GetInstance(length);
+            for (int i = 0; i < length; i++)
             {
                 int hi = HexValue(value[i * 2]);
                 int lo = HexValue(value[i * 2 + 1]);
 
                 if (hi < 0 || lo < 0)
                 {
-                    return ImmutableArray.Create<byte>();
+                    result = default(ImmutableArray<byte>);
+                    bytes.Free();
+                    return false;
                 }
 
-                result[i] = (byte)((hi << 4) | lo);
+                bytes.Add((byte)((hi << 4) | lo));
             }
 
-            return result.AsImmutable();
+            result = bytes.ToImmutableAndFree();
+            return true;
         }
 
         internal static int HexValue(char c)
@@ -666,28 +754,7 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        private static bool CanBeEscaped(char c)
-        {
-            switch (c)
-            {
-                case ',':
-                case '=':
-                case '\\':
-                case '/':
-                case '"':
-                case '\'':
-                case 't':
-                case 'n':
-                case 'r':
-                case 'u':
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-        private static string Unescape(string str, int start, int end)
+        private static bool TryUnescape(string str, int start, int end, out string value)
         {
             var sb = PooledStringBuilder.GetInstance();
 
@@ -697,10 +764,10 @@ namespace Microsoft.CodeAnalysis
                 char c = str[i++];
                 if (c == '\\')
                 {
-                    Debug.Assert(CanBeEscaped(c));
                     if (!Unescape(sb.Builder, str, ref i))
                     {
-                        return null;
+                        value = null;
+                        return false;
                     }
                 }
                 else
@@ -709,7 +776,8 @@ namespace Microsoft.CodeAnalysis
                 }
             }
 
-            return sb.ToStringAndFree();
+            value = sb.ToStringAndFree();
+            return true;
         }
 
         private static bool Unescape(StringBuilder sb, string str, ref int i)

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Text;
@@ -12,11 +12,11 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         internal sealed class DummySyntaxTree : CSharpSyntaxTree
         {
-            private readonly CompilationUnitSyntax node;
+            private readonly CompilationUnitSyntax _node;
 
             public DummySyntaxTree()
             {
-                node = this.CloneNodeAsRoot(SyntaxFactory.ParseCompilationUnit(string.Empty));
+                _node = this.CloneNodeAsRoot(SyntaxFactory.ParseCompilationUnit(string.Empty));
             }
 
             public override string ToString()
@@ -33,6 +33,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 text = SourceText.From(string.Empty, Encoding.UTF8);
                 return true;
+            }
+
+            public override Encoding Encoding
+            {
+                get { return Encoding.UTF8; }
             }
 
             public override int Length
@@ -57,12 +62,12 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             public override CSharpSyntaxNode GetRoot(CancellationToken cancellationToken)
             {
-                return node;
+                return _node;
             }
 
             public override bool TryGetRoot(out CSharpSyntaxNode root)
             {
-                root = node;
+                root = _node;
                 return true;
             }
 
@@ -83,7 +88,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             public override SyntaxTree WithFilePath(string path)
             {
-                return SyntaxFactory.SyntaxTree(this.node, options: this.Options, path: path, encoding: null);
+                return SyntaxFactory.SyntaxTree(_node, options: this.Options, path: path, encoding: null);
             }
         }
     }

@@ -1,9 +1,8 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -14,10 +13,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             return (TNode)node.Green.SetAnnotations(annotations).CreateRed();
         }
 
-        public static bool IsAnonymousFunction(this CSharpSyntaxNode syntax)
+        public static bool IsAnonymousFunction(this SyntaxNode syntax)
         {
             Debug.Assert(syntax != null);
-            switch (syntax.Kind)
+            switch (syntax.Kind())
             {
                 case SyntaxKind.ParenthesizedLambdaExpression:
                 case SyntaxKind.SimpleLambdaExpression:
@@ -28,10 +27,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        public static bool IsQuery(this CSharpSyntaxNode syntax)
+        public static bool IsQuery(this SyntaxNode syntax)
         {
             Debug.Assert(syntax != null);
-            switch (syntax.Kind)
+            switch (syntax.Kind())
             {
                 case SyntaxKind.FromClause:
                 case SyntaxKind.GroupClause:
@@ -60,36 +59,117 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// default behaviors (e.g. FieldInitializerBinders).  Local binders are
         /// created by LocalBinderFactory.
         /// </summary>
-        internal static bool CanHaveAssociatedLocalBinder(this CSharpSyntaxNode syntax)
+        internal static bool CanHaveAssociatedLocalBinder(this SyntaxNode syntax)
         {
+            SyntaxKind kind;
             return syntax.IsAnonymousFunction() ||
-                syntax.Kind == SyntaxKind.CatchClause ||
-                syntax.Kind == SyntaxKind.CatchFilterClause ||
-                syntax is StatementSyntax;
+                syntax is StatementSyntax ||
+                (kind = syntax.Kind()) == SyntaxKind.CatchClause ||
+                kind == SyntaxKind.CatchFilterClause ||
+                kind == SyntaxKind.SwitchSection ||
+                kind == SyntaxKind.EqualsValueClause ||
+                kind == SyntaxKind.Attribute ||
+                kind == SyntaxKind.ArgumentList ||
+                kind == SyntaxKind.ArrowExpressionClause ||
+                IsValidScopeDesignator(syntax as ExpressionSyntax);
+        }
+
+        internal static bool IsValidScopeDesignator(this ExpressionSyntax expression)
+        {
+            // All these nodes are valid scope designators due to the pattern matching and out vars features.
+            CSharpSyntaxNode parent = expression?.Parent;
+            switch (parent?.Kind())
+            {
+                case SyntaxKind.SimpleLambdaExpression:
+                case SyntaxKind.ParenthesizedLambdaExpression:
+                    return ((LambdaExpressionSyntax)parent).Body == expression;
+
+                case SyntaxKind.SwitchStatement:
+                    return ((SwitchStatementSyntax)parent).Expression == expression;
+
+                case SyntaxKind.ForStatement:
+                    var forStmt = (ForStatementSyntax)parent;
+                    return forStmt.Condition == expression || forStmt.Incrementors.FirstOrDefault() == expression;
+
+                case SyntaxKind.ForEachStatement:
+                case SyntaxKind.ForEachVariableStatement:
+                    return ((CommonForEachStatementSyntax)parent).Expression == expression;
+
+                default:
+                    return false;
+            }
+        }
+
+        internal static CSharpSyntaxNode AnonymousFunctionBody(this SyntaxNode lambda)
+        {
+            switch (lambda.Kind())
+            {
+                case SyntaxKind.SimpleLambdaExpression:
+                    return ((SimpleLambdaExpressionSyntax)lambda).Body;
+                case SyntaxKind.ParenthesizedLambdaExpression:
+                    return ((ParenthesizedLambdaExpressionSyntax)lambda).Body;
+                case SyntaxKind.AnonymousMethodExpression:
+                    return ((AnonymousMethodExpressionSyntax)lambda).Block;
+
+                default:
+                    throw ExceptionUtilities.UnexpectedValue(lambda.Kind());
+            }
         }
 
         /// <summary>
         /// Given an initializer expression infer the name of anonymous property.
-        /// Returns None if unsuccessfull
+        /// Returns default(SyntaxToken) if unsuccessful
         /// </summary>
         internal static SyntaxToken ExtractAnonymousTypeMemberName(this ExpressionSyntax input)
         {
-            switch (input.Kind)
+            while (true)
             {
-                case SyntaxKind.IdentifierName:
-                    return ((IdentifierNameSyntax)input).Identifier;
+                switch (input.Kind())
+                {
+                    case SyntaxKind.IdentifierName:
+                        return ((IdentifierNameSyntax)input).Identifier;
 
-                case SyntaxKind.SimpleMemberAccessExpression:
-                    return ExtractAnonymousTypeMemberName(((MemberAccessExpressionSyntax)input).Name);
+                    case SyntaxKind.SimpleMemberAccessExpression:
+                        input = ((MemberAccessExpressionSyntax)input).Name;
+                        continue;
 
-                default:
-                    return default(SyntaxToken);
+                    case SyntaxKind.ConditionalAccessExpression:
+                        input = ((ConditionalAccessExpressionSyntax)input).WhenNotNull;
+                        if (input.Kind() == SyntaxKind.MemberBindingExpression)
+                        {
+                            return ((MemberBindingExpressionSyntax)input).Name.Identifier;
+                        }
+
+                        continue;
+
+                    default:
+                        return default(SyntaxToken);
+                }
             }
         }
 
-        public static SyntaxReference GetReferenceOrNull(this CSharpSyntaxNode nodeOpt)
+        internal static TypeSyntax SkipRef(this TypeSyntax syntax, out RefKind refKind)
         {
-            return (nodeOpt != null) ? nodeOpt.GetReference() : null;
+            refKind = RefKind.None;
+            if (syntax.Kind() == SyntaxKind.RefType)
+            {
+                refKind = RefKind.Ref;
+                syntax = ((RefTypeSyntax)syntax).Type;
+            }
+
+            return syntax;
+        }
+
+        internal static ExpressionSyntax SkipRef(this ExpressionSyntax syntax, out RefKind refKind)
+        {
+            refKind = RefKind.None;
+            if (syntax?.Kind() == SyntaxKind.RefExpression)
+            {
+                refKind = RefKind.Ref;
+                syntax = ((RefExpressionSyntax)syntax).Expression;
+            }
+
+            return syntax;
         }
     }
 }

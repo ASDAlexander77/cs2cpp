@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Create a map from type parameter name to ordinal.
             // No need to report duplicate names since duplicates
             // are reported when the type parameters are bound.
-            var names = new Dictionary<string, int>(n);
+            var names = new Dictionary<string, int>(n, StringOrdinalComparer.Instance);
             foreach (var typeParameter in typeParameters)
             {
                 var name = typeParameter.Name;
@@ -86,34 +86,64 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Bind and return a single type parameter constraint clause.
         /// </summary>
-        private TypeParameterConstraintClause BindTypeParameterConstraints(string name, SeparatedSyntaxList<TypeParameterConstraintSyntax> constraintsSyntax, DiagnosticBag diagnostics)
+        private TypeParameterConstraintClause BindTypeParameterConstraints(
+            string name, SeparatedSyntaxList<TypeParameterConstraintSyntax> constraintsSyntax, DiagnosticBag diagnostics)
         {
             var constraints = TypeParameterConstraintKind.None;
             var constraintTypes = ArrayBuilder<TypeSymbol>.GetInstance();
+            var isStruct = false;
 
-            foreach (var syntax in constraintsSyntax)
+            for (int i = 0, n = constraintsSyntax.Count; i < n; i++)
             {
-                switch (syntax.Kind)
+                var syntax = constraintsSyntax[i];
+                switch (syntax.Kind())
                 {
                     case SyntaxKind.ClassConstraint:
+                        if (i != 0)
+                        {
+                            diagnostics.Add(ErrorCode.ERR_RefValBoundMustBeFirst, syntax.GetFirstToken().GetLocation());
+                        }
+
                         constraints |= TypeParameterConstraintKind.ReferenceType;
-                        break;
+                        continue;
                     case SyntaxKind.StructConstraint:
+                        if (i != 0)
+                        {
+                            diagnostics.Add(ErrorCode.ERR_RefValBoundMustBeFirst, syntax.GetFirstToken().GetLocation());
+                        }
+
+                        isStruct = true;
                         constraints |= TypeParameterConstraintKind.ValueType;
-                        break;
+                        continue;
                     case SyntaxKind.ConstructorConstraint:
+                        if (isStruct)
+                        {
+                            diagnostics.Add(ErrorCode.ERR_NewBoundWithVal, syntax.GetFirstToken().GetLocation());
+                        }
+
+                        if (i != n - 1)
+                        {
+                            diagnostics.Add(ErrorCode.ERR_NewBoundMustBeLast, syntax.GetFirstToken().GetLocation());
+                        }
+
                         constraints |= TypeParameterConstraintKind.Constructor;
-                        break;
+                        continue;
                     case SyntaxKind.TypeConstraint:
                         {
-                            var typeSyntax = (TypeConstraintSyntax)syntax;
-                            var type = this.BindType(typeSyntax.Type, diagnostics);
+                            var typeConstraintSyntax = (TypeConstraintSyntax)syntax;
+                            var typeSyntax = typeConstraintSyntax.Type;
+                            if (typeSyntax.Kind() != SyntaxKind.PredefinedType && !SyntaxFacts.IsName(typeSyntax.Kind()))
+                            {
+                                diagnostics.Add(ErrorCode.ERR_BadConstraintType, typeSyntax.GetLocation());
+                            }
+
+                            var type = this.BindType(typeSyntax, diagnostics);
 
                             // Only valid constraint types are included in ConstraintTypes
                             // since, in general, it may be difficult to support all invalid types.
                             // In the future, we may want to include some invalid types
                             // though so the public binding API has the most information.
-                            if (!IsValidConstraintType(typeSyntax, type, diagnostics))
+                            if (!IsValidConstraintType(typeConstraintSyntax, type, diagnostics))
                             {
                                 continue;
                             }
@@ -148,9 +178,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                             constraintTypes.Add(type);
                         }
-                        break;
+                        continue;
                     default:
-                        throw ExceptionUtilities.UnexpectedValue(syntax.Kind);
+                        throw ExceptionUtilities.UnexpectedValue(syntax.Kind());
                 }
             }
 
@@ -185,7 +215,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case TypeKind.Interface:
                     break;
 
-                case TypeKind.DynamicType:
+                case TypeKind.Dynamic:
                     // "Constraint cannot be the dynamic type"
                     Error(diagnostics, ErrorCode.ERR_DynamicTypeAsBound, syntax);
                     return false;
@@ -210,17 +240,16 @@ namespace Microsoft.CodeAnalysis.CSharp
                     Error(diagnostics, ErrorCode.ERR_BadBoundType, syntax, type);
                     return false;
 
-                case TypeKind.ArrayType:
-                case TypeKind.PointerType:
+                case TypeKind.Array:
+                case TypeKind.Pointer:
                     // CS0706 already reported by parser.
                     return false;
 
                 case TypeKind.Submission:
-                // script class is synthetized, never used as a constraint
+                // script class is synthesized, never used as a constraint
 
                 default:
-                    Debug.Assert(false, "Unexpected type kind: " + type.TypeKind);
-                    return false;
+                    throw ExceptionUtilities.UnexpectedValue(type.TypeKind);
             }
 
             if (type.ContainsDynamic())

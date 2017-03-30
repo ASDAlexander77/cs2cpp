@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Immutable;
@@ -20,13 +20,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class IndexedTypeParameterSymbol : TypeParameterSymbol
     {
-        private static TypeParameterSymbol[] parameterPool = SpecializedCollections.EmptyArray<TypeParameterSymbol>();
+        private static TypeParameterSymbol[] s_parameterPool = Array.Empty<TypeParameterSymbol>();
 
-        private readonly int index;
+        private readonly int _index;
 
         private IndexedTypeParameterSymbol(int index)
         {
-            this.index = index;
+            _index = index;
         }
 
         public override TypeParameterKind TypeParameterKind
@@ -39,17 +39,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal static TypeParameterSymbol GetTypeParameter(int index)
         {
-            if (index >= parameterPool.Length)
+            if (index >= s_parameterPool.Length)
             {
                 GrowPool(index + 1);
             }
 
-            return parameterPool[index];
+            return s_parameterPool[index];
         }
 
         private static void GrowPool(int count)
         {
-            var initialPool = parameterPool;
+            var initialPool = s_parameterPool;
             while (count > initialPool.Length)
             {
                 var newPoolSize = ((count + 0x0F) & ~0xF); // grow in increments of 16
@@ -62,11 +62,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     newPool[i] = new IndexedTypeParameterSymbol(i);
                 }
 
-                Interlocked.CompareExchange(ref parameterPool, newPool, initialPool);
+                Interlocked.CompareExchange(ref s_parameterPool, newPool, initialPool);
 
                 // repeat if race condition occurred and someone else resized the pool before us
                 // and the new pool is still too small
-                initialPool = parameterPool;
+                initialPool = s_parameterPool;
             }
         }
 
@@ -78,7 +78,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <returns></returns>
         internal static ImmutableArray<TypeParameterSymbol> Take(int count)
         {
-            if (count > parameterPool.Length)
+            if (count > s_parameterPool.Length)
             {
                 GrowPool(count);
             }
@@ -95,18 +95,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override int Ordinal
         {
-            get { return index; }
+            get { return _index; }
         }
 
         // These object are unique (per index).
-        internal override bool Equals(TypeSymbol t2, bool ignoreCustomModifiers, bool ignoreDynamic)
+        internal override bool Equals(TypeSymbol t2, TypeCompareKind comparison)
         {
             return ReferenceEquals(this, t2);
         }
 
         public override int GetHashCode()
         {
-            return index;
+            return _index;
         }
 
         public override VarianceKind Variance

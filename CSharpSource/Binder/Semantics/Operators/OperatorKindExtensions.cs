@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -152,8 +152,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SpecialType.System_UInt64:
                     return kind | BinaryOperatorKind.ULong;
                 default:
-                    Debug.Assert(false, "Unexpected binary operator type.");
-                    return kind;
+                    throw ExceptionUtilities.UnexpectedValue(type);
             }
         }
 
@@ -171,8 +170,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SpecialType.System_UInt64:
                     return kind | UnaryOperatorKind.ULong;
                 default:
-                    Debug.Assert(false, "Unexpected unary operator type.");
-                    return kind;
+                    throw ExceptionUtilities.UnexpectedValue(type);
             }
         }
 

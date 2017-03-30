@@ -412,17 +412,17 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (type.TypeKind == TypeKind.PointerType)
+            if (type.TypeKind == TypeKind.Pointer)
             {
                 return true;
             }
 
-            if (type.TypeKind == TypeKind.ArrayType)
+            if (type.TypeKind == TypeKind.Array)
             {
                 return true;
             }
 
-            if (type.TypeKind == TypeKind.DynamicType)
+            if (type.TypeKind == TypeKind.Dynamic)
             {
                 return true;
             }
@@ -771,13 +771,13 @@ namespace Il2Native.Logic
 
             switch (type.TypeKind)
             {
-                case TypeKind.ArrayType:
+                case TypeKind.Array:
                     return CorElementType.Array;
                 case TypeKind.Class:
                     return CorElementType.Class;
                 case TypeKind.Delegate:
                     return CorElementType.FnPtr;
-                case TypeKind.PointerType:
+                case TypeKind.Pointer:
                     return CorElementType.Ptr;
                 case TypeKind.Struct:
                     return CorElementType.ValueType;
@@ -790,13 +790,13 @@ namespace Il2Native.Logic
 
         public static ITypeSymbol GetElementType(this ITypeSymbol type)
         {
-            if (type.TypeKind == TypeKind.ArrayType)
+            if (type.TypeKind == TypeKind.Array)
             {
                 var arrayType = (IArrayTypeSymbol)type;
                 return arrayType.ElementType;
             }
 
-            if (type.TypeKind == TypeKind.PointerType)
+            if (type.TypeKind == TypeKind.Pointer)
             {
                 var arrayType = (IPointerTypeSymbol)type;
                 return arrayType.PointedAtType;

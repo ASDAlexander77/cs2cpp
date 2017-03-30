@@ -1,10 +1,6 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -17,7 +13,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class SynthesizedFieldSymbol : SynthesizedFieldSymbolBase
     {
-        private readonly TypeSymbol type;
+        private readonly TypeSymbol _type;
 
         public SynthesizedFieldSymbol(
             NamedTypeSymbol containingType,
@@ -29,17 +25,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             : base(containingType, name, isPublic, isReadOnly, isStatic)
         {
             Debug.Assert((object)type != null);
-            this.type = type;
+            _type = type;
+        }
+
+        internal override bool SuppressDynamicAttribute
+        {
+            get { return true; }
         }
 
         internal override TypeSymbol GetFieldType(ConsList<FieldSymbol> fieldsBeingBound)
         {
-            return this.type;
-        }
-
-        internal override int IteratorLocalIndex
-        {
-            get { throw ExceptionUtilities.Unreachable; }
+            return _type;
         }
     }
 }

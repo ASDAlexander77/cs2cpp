@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private BoundExpression MakePropertyAccess(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenReceiverOpt,
             PropertySymbol propertySymbol,
             LookupResultKind resultKind,
@@ -32,22 +32,22 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             // check for System.Array.[Length|LongLength] on a single dimensional array,
             // we have a special node for such cases.
-            if (rewrittenReceiverOpt != null && rewrittenReceiverOpt.Type.IsArray())
+            if (rewrittenReceiverOpt != null && rewrittenReceiverOpt.Type.IsArray() && !isLeftOfAssignment)
             {
                 var asArrayType = (ArrayTypeSymbol)rewrittenReceiverOpt.Type;
-                if (asArrayType.Rank == 1)
+                if (asArrayType.IsSZArray)
                 {
                     // NOTE: we are not interested in potential badness of Array.Length property.
                     // If it is bad reference compare will not succeed.
-                    if (ReferenceEquals(propertySymbol, compilation.GetSpecialTypeMember(SpecialMember.System_Array__Length)) ||
-                        !inExpressionLambda && ReferenceEquals(propertySymbol, compilation.GetSpecialTypeMember(SpecialMember.System_Array__LongLength)))
+                    if (ReferenceEquals(propertySymbol, _compilation.GetSpecialTypeMember(SpecialMember.System_Array__Length)) ||
+                        !_inExpressionLambda && ReferenceEquals(propertySymbol, _compilation.GetSpecialTypeMember(SpecialMember.System_Array__LongLength)))
                     {
                         return new BoundArrayLength(syntax, rewrittenReceiverOpt, type);
                     }
                 }
             }
 
-            if (isLeftOfAssignment)
+            if (isLeftOfAssignment && propertySymbol.RefKind == RefKind.None)
             {
                 // This is a property set access. We return a BoundPropertyAccess node here.
                 // This node will be rewritten with MakePropertyAssignment when rewriting the enclosing BoundAssignmentOperator.
@@ -63,20 +63,20 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private BoundExpression MakePropertyGetAccess(CSharpSyntaxNode syntax, BoundExpression rewrittenReceiver, PropertySymbol property, BoundPropertyAccess oldNodeOpt)
+        private BoundExpression MakePropertyGetAccess(SyntaxNode syntax, BoundExpression rewrittenReceiver, PropertySymbol property, BoundPropertyAccess oldNodeOpt)
         {
             return MakePropertyGetAccess(syntax, rewrittenReceiver, property, ImmutableArray<BoundExpression>.Empty, null, oldNodeOpt);
         }
 
         private BoundExpression MakePropertyGetAccess(
-            CSharpSyntaxNode syntax,
+            SyntaxNode syntax,
             BoundExpression rewrittenReceiver,
             PropertySymbol property,
             ImmutableArray<BoundExpression> rewrittenArguments,
             MethodSymbol getMethodOpt = null,
             BoundPropertyAccess oldNodeOpt = null)
         {
-            if (inExpressionLambda && rewrittenArguments.IsEmpty)
+            if (_inExpressionLambda && rewrittenArguments.IsEmpty)
             {
                 return oldNodeOpt != null ?
                     oldNodeOpt.Update(rewrittenReceiver, property, LookupResultKind.Viable, property.Type) :

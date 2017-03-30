@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
@@ -20,13 +20,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         private sealed partial class AnonymousTypeEqualsMethodSymbol : SynthesizedMethodBase
         {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
+            private readonly ImmutableArray<ParameterSymbol> _parameters;
 
             internal AnonymousTypeEqualsMethodSymbol(NamedTypeSymbol container)
                 : base(container, WellKnownMemberNames.ObjectEquals)
             {
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                                      new SynthesizedParameterSymbol(this, this.Manager.System_Object, 0, RefKind.None, "value")
+                _parameters = ImmutableArray.Create<ParameterSymbol>(
+                                      SynthesizedParameterSymbol.Create(this, this.Manager.System_Object, 0, RefKind.None, "value")
                                   );
             }
 
@@ -40,6 +40,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 get { return false; }
             }
 
+            internal override RefKind RefKind
+            {
+                get { return RefKind.None; }
+            }
+
             public override TypeSymbol ReturnType
             {
                 get { return this.Manager.System_Boolean; }
@@ -47,7 +52,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public override ImmutableArray<ParameterSymbol> Parameters
             {
-                get { return this.parameters; }
+                get { return _parameters; }
             }
 
             public override bool IsOverride
@@ -60,9 +65,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return true;
             }
 
-            internal override bool IsMetadataFinal()
+            internal override bool IsMetadataFinal
             {
-                return false;
+                get
+                {
+                    return false;
+                }
             }
         }
     }

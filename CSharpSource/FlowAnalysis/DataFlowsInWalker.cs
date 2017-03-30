@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,7 @@ namespace Microsoft.CodeAnalysis.CSharp
     {
         // TODO: normalize the result by removing variables that are unassigned in an unmodified
         // flow analysis.
-        private readonly HashSet<Symbol> dataFlowsIn = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _dataFlowsIn = new HashSet<Symbol>();
 
         private DataFlowsInWalker(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion,
             HashSet<Symbol> unassignedVariables, HashSet<PrefixUnaryExpressionSyntax> unassignedVariableAddressOfSyntaxes)
@@ -43,10 +43,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        new HashSet<Symbol> Analyze(ref bool badRegion)
+        private new HashSet<Symbol> Analyze(ref bool badRegion)
         {
             base.Analyze(ref badRegion, null);
-            return dataFlowsIn;
+            return _dataFlowsIn;
         }
 
         private LocalState ResetState(LocalState state)
@@ -63,13 +63,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         protected override void EnterRegion()
         {
             this.State = ResetState(this.State);
-            this.dataFlowsIn.Clear();
+            _dataFlowsIn.Clear();
             base.EnterRegion();
         }
 
         protected override void NoteBranch(
             PendingBranch pending,
-            BoundStatement gotoStmt,
+            BoundNode gotoStmt,
             BoundStatement targetStmt)
         {
             targetStmt.AssertIsLabeledStatement();
@@ -85,20 +85,18 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             if (IsInside && !RegionContains(node.RangeVariableSymbol.Locations[0].SourceSpan))
             {
-                dataFlowsIn.Add(node.RangeVariableSymbol);
+                _dataFlowsIn.Add(node.RangeVariableSymbol);
             }
 
             return null;
         }
 
-        protected override void ReportUnassigned(
-            Symbol symbol,
-            CSharpSyntaxNode node)
+        protected override void ReportUnassigned(Symbol symbol, SyntaxNode node)
         {
             // TODO: how to handle fields of structs?
             if (RegionContains(node.Span) && !(symbol is FieldSymbol))
             {
-                dataFlowsIn.Add(symbol);
+                _dataFlowsIn.Add(symbol);
             }
 
             base.ReportUnassigned(symbol, node);
@@ -106,24 +104,24 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         protected override void ReportUnassignedOutParameter(
             ParameterSymbol parameter,
-            CSharpSyntaxNode node,
+            SyntaxNode node,
             Location location)
         {
             if (node != null && node is ReturnStatementSyntax && RegionContains(node.Span))
             {
-                dataFlowsIn.Add(parameter);
+                _dataFlowsIn.Add(parameter);
             }
 
             base.ReportUnassignedOutParameter(parameter, node, location);
         }
 
-        protected override void ReportUnassigned(FieldSymbol fieldSymbol, int unassignedSlot, CSharpSyntaxNode node)
+        protected override void ReportUnassigned(FieldSymbol fieldSymbol, int unassignedSlot, SyntaxNode node)
         {
             if (RegionContains(node.Span))
             {
                 //  if the field access is reported as unassigned it should mean the original local 
                 //  or parameter flows in, so we should get the symbol associated with the expression
-                dataFlowsIn.Add(GetNonFieldSymbol(unassignedSlot));
+                _dataFlowsIn.Add(GetNonFieldSymbol(unassignedSlot));
             }
 
             base.ReportUnassigned(fieldSymbol, unassignedSlot, node);

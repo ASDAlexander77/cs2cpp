@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -173,12 +173,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     }
                 }
 
-                if (lastUpdated != null)
-                {
-                    lastUpdated.Free();
-                    lastUpdated = null;
-                }
-
+                lastUpdated?.Free();
+                lastUpdated = null;
                 if (set.Count > 0)
                 {
                     var updated = PooledHashSet<SourceFieldSymbolWithSyntaxReference>.GetInstance();
@@ -254,10 +250,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 set.Free();
             }
 
-            if (lastUpdated != null)
-            {
-                lastUpdated.Free();
-            }
+            lastUpdated?.Free();
         }
 
         private static SourceFieldSymbolWithSyntaxReference GetStartOfFirstCycle(
@@ -422,18 +415,18 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private sealed class SourceLocationComparer : IComparer<SourceFieldSymbolWithSyntaxReference>
         {
-            private readonly Dictionary<Compilation, int> compilationOrdering;
+            private readonly Dictionary<Compilation, int> _compilationOrdering;
 
             internal SourceLocationComparer(Dictionary<Compilation, int> compilationOrdering)
             {
-                this.compilationOrdering = compilationOrdering;
+                _compilationOrdering = compilationOrdering;
             }
 
             public int Compare(SourceFieldSymbolWithSyntaxReference x, SourceFieldSymbolWithSyntaxReference y)
             {
                 var xComp = x.DeclaringCompilation;
                 var yComp = y.DeclaringCompilation;
-                var result = this.compilationOrdering[xComp] - this.compilationOrdering[yComp];
+                var result = _compilationOrdering[xComp] - _compilationOrdering[yComp];
                 if (result == 0)
                 {
                     Debug.Assert(xComp == yComp);

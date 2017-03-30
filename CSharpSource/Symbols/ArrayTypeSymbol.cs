@@ -1,96 +1,116 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting;
-    using Microsoft.CodeAnalysis.CodeGen;
-
     /// <summary>
     /// An ArrayTypeSymbol represents an array type, such as int[] or object[,].
     /// </summary>
-    internal sealed partial class ArrayTypeSymbol : TypeSymbol, IArrayTypeSymbol
+    internal abstract partial class ArrayTypeSymbol : TypeSymbol, IArrayTypeSymbol
     {
-        private readonly TypeSymbol elementType;
-        private readonly int rank;
-        private readonly NamedTypeSymbol baseType;
-        private readonly ImmutableArray<NamedTypeSymbol> interfaces;
-        private readonly ImmutableArray<CustomModifier> customModifiers;
+        private readonly TypeSymbol _elementType;
+        private readonly NamedTypeSymbol _baseType;
+        private readonly ImmutableArray<CustomModifier> _customModifiers;
 
-        /// <summary>
-        /// Create a new ArrayTypeSymbol.
-        /// </summary>
-        /// <param name="elementType">The element type of this array type.</param>
-        /// <param name="customModifiers">Custom modifiers for the element type of this array type.</param>
-        /// <param name="rank">The rank of this array type.</param>
-        /// <param name="declaringAssembly">The assembly "declaring"/using the array type.</param>
-        internal ArrayTypeSymbol(
-            AssemblySymbol declaringAssembly,
+        private ArrayTypeSymbol(
             TypeSymbol elementType,
-            ImmutableArray<CustomModifier> customModifiers = default(ImmutableArray<CustomModifier>),
-            int rank = 1)
-            : this(elementType,
-                   rank,
-                   declaringAssembly.GetSpecialType(SpecialType.System_Array),
-                   GetArrayInterfaces(elementType, rank, declaringAssembly),
-                   customModifiers.NullToEmpty())
-        {
-        }
-
-        internal ArrayTypeSymbol(
-            TypeSymbol elementType,
-            int rank,
             NamedTypeSymbol array,
-            ImmutableArray<NamedTypeSymbol> constructedInterfaces,
             ImmutableArray<CustomModifier> customModifiers)
         {
             Debug.Assert((object)elementType != null);
             Debug.Assert((object)array != null);
-            Debug.Assert(rank >= 1);
-            Debug.Assert(constructedInterfaces.Length <= 2);
-            Debug.Assert(constructedInterfaces.Length == 0 || rank == 1);
-            Debug.Assert(rank == 1 || !customModifiers.Any());
 
-            this.elementType = elementType;
-            this.rank = rank;
-            this.baseType = array;
-            this.interfaces = constructedInterfaces;
-            this.customModifiers = customModifiers;
+            _elementType = elementType;
+            _baseType = array;
+            _customModifiers = customModifiers.NullToEmpty();
         }
 
-        private static ImmutableArray<NamedTypeSymbol> GetArrayInterfaces(
+        internal static ArrayTypeSymbol CreateCSharpArray(
+            AssemblySymbol declaringAssembly,
+            TypeSymbol elementType,
+            ImmutableArray<CustomModifier> customModifiers = default(ImmutableArray<CustomModifier>),
+            int rank = 1)
+        {
+            if (rank == 1)
+            {
+                return CreateSZArray(declaringAssembly, elementType, customModifiers);
+            }
+
+            return CreateMDArray(declaringAssembly, elementType, rank, default(ImmutableArray<int>), default(ImmutableArray<int>), customModifiers);
+        }
+
+        internal static ArrayTypeSymbol CreateMDArray(
             TypeSymbol elementType,
             int rank,
+            ImmutableArray<int> sizes,
+            ImmutableArray<int> lowerBounds,
+            NamedTypeSymbol array,
+            ImmutableArray<CustomModifier> customModifiers)
+        {
+            // Optimize for most common case - no sizes and all dimensions are zero lower bound.
+            if (sizes.IsDefaultOrEmpty && lowerBounds.IsDefault)
+            {
+                return new MDArrayNoSizesOrBounds(elementType, rank, array, customModifiers);
+            }
+
+            return new MDArrayWithSizesAndBounds(elementType, rank, sizes, lowerBounds, array, customModifiers);
+        }
+
+        internal static ArrayTypeSymbol CreateMDArray(
+            AssemblySymbol declaringAssembly,
+            TypeSymbol elementType,
+            int rank,
+            ImmutableArray<int> sizes,
+            ImmutableArray<int> lowerBounds,
+            ImmutableArray<CustomModifier> customModifiers = default(ImmutableArray<CustomModifier>))
+        {
+            return CreateMDArray(elementType, rank, sizes, lowerBounds, declaringAssembly.GetSpecialType(SpecialType.System_Array), customModifiers);
+        }
+
+        internal static ArrayTypeSymbol CreateSZArray(
+            TypeSymbol elementType,
+            NamedTypeSymbol array,
+            ImmutableArray<NamedTypeSymbol> constructedInterfaces,
+            ImmutableArray<CustomModifier> customModifiers)
+        {
+            return new SZArray(elementType, array, constructedInterfaces, customModifiers);
+        }
+
+        internal static ArrayTypeSymbol CreateSZArray(
+            AssemblySymbol declaringAssembly,
+            TypeSymbol elementType,
+            ImmutableArray<CustomModifier> customModifiers = default(ImmutableArray<CustomModifier>))
+        {
+            return CreateSZArray(elementType, declaringAssembly.GetSpecialType(SpecialType.System_Array), GetSZArrayInterfaces(elementType, declaringAssembly), customModifiers);
+        }
+
+        internal abstract ArrayTypeSymbol WithElementType(TypeSymbol elementType);
+
+        private static ImmutableArray<NamedTypeSymbol> GetSZArrayInterfaces(
+            TypeSymbol elementType,
             AssemblySymbol declaringAssembly)
         {
             var constructedInterfaces = ArrayBuilder<NamedTypeSymbol>.GetInstance();
 
-            if (rank == 1)
+            //There are cases where the platform does contain the interfaces.
+            //So it is fine not to have them listed under the type
+            var iListOfT = declaringAssembly.GetSpecialType(SpecialType.System_Collections_Generic_IList_T);
+            if (!iListOfT.IsErrorType())
             {
-                //There are cases where the platform does contain the interfaces.
-                //So it is fine not to have them listed under the type
-                var iListOfT = declaringAssembly.GetSpecialType(SpecialType.System_Collections_Generic_IList_T);
-                if (!iListOfT.IsErrorType())
-                {
-                    constructedInterfaces.Add(new ConstructedNamedTypeSymbol(iListOfT, ImmutableArray.Create<TypeSymbol>(elementType)));
-                }
+                constructedInterfaces.Add(new ConstructedNamedTypeSymbol(iListOfT, ImmutableArray.Create(new TypeWithModifiers(elementType))));
+            }
 
-                var iReadOnlyListOfT = declaringAssembly.GetSpecialType(SpecialType.System_Collections_Generic_IReadOnlyList_T);
+            var iReadOnlyListOfT = declaringAssembly.GetSpecialType(SpecialType.System_Collections_Generic_IReadOnlyList_T);
 
-                if (!iReadOnlyListOfT.IsErrorType())
-                {
-                    constructedInterfaces.Add(new ConstructedNamedTypeSymbol(iReadOnlyListOfT, ImmutableArray.Create<TypeSymbol>(elementType)));
-                }
+            if (!iReadOnlyListOfT.IsErrorType())
+            {
+                constructedInterfaces.Add(new ConstructedNamedTypeSymbol(iReadOnlyListOfT, ImmutableArray.Create(new TypeWithModifiers(elementType))));
             }
 
             return constructedInterfaces.ToImmutableAndFree();
@@ -104,7 +124,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return customModifiers;
+                return _customModifiers;
             }
         }
 
@@ -112,13 +132,71 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// Gets the number of dimensions of the array. A regular single-dimensional array
         /// has rank 1, a two-dimensional array has rank 2, etc.
         /// </summary>
-        public int Rank
+        public abstract int Rank { get; }
+
+        /// <summary>
+        /// Is this a zero-based one-dimensional array, i.e. SZArray in CLR terms.
+        /// </summary>
+        public abstract bool IsSZArray { get; }
+
+        internal bool HasSameShapeAs(ArrayTypeSymbol other)
+        {
+            return Rank == other.Rank && IsSZArray == other.IsSZArray;
+        }
+
+        /// <summary>
+        /// Specified sizes for dimensions, by position. The length can be less than <see cref="Rank"/>,
+        /// meaning that some trailing dimensions don't have the size specified.
+        /// The most common case is none of the dimensions have the size specified - an empty array is returned.
+        /// </summary>
+        public virtual ImmutableArray<int> Sizes
         {
             get
             {
-                return rank;
+                return ImmutableArray<int>.Empty;
             }
         }
+
+        /// <summary>
+        /// Specified lower bounds for dimensions, by position. The length can be less than <see cref="Rank"/>,
+        /// meaning that some trailing dimensions don't have the lower bound specified.
+        /// The most common case is all dimensions are zero bound - a default array is returned in this case.
+        /// </summary>
+        public virtual ImmutableArray<int> LowerBounds
+        {
+            get
+            {
+                return default(ImmutableArray<int>);
+            }
+        }
+
+        /// <summary>
+        /// Note, <see cref="Rank"/> equality should be checked separately!!!
+        /// </summary>
+        internal bool HasSameSizesAndLowerBoundsAs(ArrayTypeSymbol other)
+        {
+            if (this.Sizes.SequenceEqual(other.Sizes))
+            {
+                var thisLowerBounds = this.LowerBounds;
+
+                if (thisLowerBounds.IsDefault)
+                {
+                    return other.LowerBounds.IsDefault;
+                }
+
+                var otherLowerBounds = other.LowerBounds;
+
+                return !otherLowerBounds.IsDefault && thisLowerBounds.SequenceEqual(otherLowerBounds);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Normally C# arrays have default sizes and lower bounds - sizes are not specified and all dimensions are zero bound.
+        /// This property should return false for any deviations.
+        /// </summary>
+        internal abstract bool HasDefaultSizesAndLowerBounds { get; }
 
         /// <summary>
         /// Gets the type of the elements stored in the array.
@@ -127,7 +205,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return elementType;
+                return _elementType;
             }
         }
 
@@ -135,15 +213,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return baseType;
-            }
-        }
-
-        internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics
-        {
-            get
-            {
-                return interfaces;
+                return _baseType;
             }
         }
 
@@ -183,26 +253,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override ImmutableArray<Symbol> GetMembers(string name)
         {
-            if (name == ".ctor")
-            {
-                return ImmutableArray.Create<Symbol>(new ArrayConstructor(this));
-            }
-
-            if (name == "Set")
-            {
-                return ImmutableArray.Create<Symbol>(new ArraySetValueMethod(this));
-            }
-
-            if (name == "Get")
-            {
-                return ImmutableArray.Create<Symbol>(new ArrayGetValueMethod(this));
-            }
-
-            if (name == "Address")
-            {
-                return ImmutableArray.Create<Symbol>(new ArrayAddressMethod(this));
-            }
-
             return ImmutableArray<Symbol>.Empty;
         }
 
@@ -233,7 +283,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return TypeKind.ArrayType;
+                return TypeKind.Array;
             }
         }
 
@@ -276,30 +326,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return visitor.VisitArrayType(this);
         }
 
-        internal override bool Equals(TypeSymbol t2, bool ignoreCustomModifiers, bool ignoreDynamic)
+        internal override bool Equals(TypeSymbol t2, TypeCompareKind comparison)
         {
-            return this.Equals(t2 as ArrayTypeSymbol, ignoreCustomModifiers, ignoreDynamic);
+            return this.Equals(t2 as ArrayTypeSymbol, comparison);
         }
 
         internal bool Equals(ArrayTypeSymbol other)
         {
-            return Equals(other, false, false);
+            return Equals(other, TypeCompareKind.ConsiderEverything);
         }
 
-        private bool Equals(ArrayTypeSymbol other, bool ignoreCustomModifiers, bool ignoreDynamic)
+        private bool Equals(ArrayTypeSymbol other, TypeCompareKind comparison)
         {
             if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            if ((object)other == null || other.Rank != Rank || !other.ElementType.Equals(ElementType, ignoreCustomModifiers, ignoreDynamic))
+            if ((object)other == null || !other.HasSameShapeAs(this) ||
+                !other.ElementType.Equals(ElementType, comparison))
             {
                 return false;
             }
 
-            // Make sure custom modifiers are the same.
-            if (!ignoreCustomModifiers)
+            // Make sure custom modifiers and bounds are the same.
+            if ((comparison & TypeCompareKind.IgnoreCustomModifiersAndArraySizesAndLowerBounds) == 0)
             {
                 var mod = this.CustomModifiers;
                 var otherMod = other.CustomModifiers;
@@ -317,6 +368,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         return false;
                     }
                 }
+
+                if (!this.HasSameSizesAndLowerBoundsAs(other))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -330,7 +386,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             int hash = 0;
             TypeSymbol current = this;
-            while (current.TypeKind == TypeKind.ArrayType)
+            while (current.TypeKind == TypeKind.Array)
             {
                 var cur = (ArrayTypeSymbol)current;
                 hash = Hash.Combine(cur.Rank, hash);
@@ -395,9 +451,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override bool GetUnificationUseSiteDiagnosticRecursive(ref DiagnosticInfo result, Symbol owner, ref HashSet<TypeSymbol> checkedTypes)
         {
-            return elementType.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes) ||
-                   ((object)baseType != null && baseType.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes)) ||
-                   GetUnificationUseSiteDiagnosticRecursive(ref result, this.InterfacesNoUseSiteDiagnostics, owner, ref checkedTypes) ||
+            return _elementType.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes) ||
+                   ((object)_baseType != null && _baseType.GetUnificationUseSiteDiagnosticRecursive(ref result, owner, ref checkedTypes)) ||
+                   GetUnificationUseSiteDiagnosticRecursive(ref result, this.InterfacesNoUseSiteDiagnostics(), owner, ref checkedTypes) ||
                    GetUnificationUseSiteDiagnosticRecursive(ref result, this.CustomModifiers, owner, ref checkedTypes);
         }
 
@@ -436,1026 +492,183 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
-        public sealed class ArrayConstructor : SynthesizedInstanceMethodSymbol
+        /// <summary>
+        /// Represents SZARRAY - zero-based one-dimensional array 
+        /// </summary>
+        private sealed class SZArray : ArrayTypeSymbol
         {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly ArrayTypeSymbol arrayTypeSymbol;
+            private readonly ImmutableArray<NamedTypeSymbol> _interfaces;
 
-            public ArrayConstructor(ArrayTypeSymbol arrayTypeSymbol)
+            internal SZArray(
+                TypeSymbol elementType,
+                NamedTypeSymbol array,
+                ImmutableArray<NamedTypeSymbol> constructedInterfaces,
+                ImmutableArray<CustomModifier> customModifiers)
+                : base(elementType, array, customModifiers)
             {
-                this.arrayTypeSymbol = arrayTypeSymbol;
-                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None)).ToArray<ParameterSymbol>());
+                Debug.Assert(constructedInterfaces.Length <= 2);
+                _interfaces = constructedInterfaces;
             }
 
-            public override ImmutableArray<ParameterSymbol> Parameters
+            internal override ArrayTypeSymbol WithElementType(TypeSymbol newElementType)
             {
-                get { return parameters; }
+                ImmutableArray<NamedTypeSymbol> newInterfaces = _interfaces;
+                if (newInterfaces.Length>0)
+                {
+                    newInterfaces = newInterfaces.SelectAsArray(i => i.OriginalDefinition.Construct(newElementType));
+                }
+
+                return new SZArray(newElementType, BaseTypeNoUseSiteDiagnostics, newInterfaces, CustomModifiers);
             }
 
-            //
-            // Consider overriding when implementing a synthesized subclass.
-            //
-
-            internal override bool GenerateDebugInfo
-            {
-                get { return false; }
-            }
-
-            public override Accessibility DeclaredAccessibility
-            {
-                get { return ContainingType.IsAbstract ? Accessibility.Protected : Accessibility.Public; }
-            }
-
-            internal override bool IsMetadataFinal()
-            {
-                return false;
-            }
-
-            #region Sealed
-
-            public sealed override Symbol ContainingSymbol
+            public override int Rank
             {
                 get
                 {
-                    return this.arrayTypeSymbol.BaseType;
+                    return 1;
                 }
             }
 
-            public sealed override NamedTypeSymbol ContainingType
+            /// <summary>
+            /// SZArray is an array type encoded in metadata with ELEMENT_TYPE_SZARRAY (always single-dim array with 0 lower bound).
+            /// Non-SZArray type is ecoded in metadata with ELEMENT_TYPE_ARRAY and with optional sizes and lower bounds. Even though 
+            /// non-SZArray can also be a single-dim array with 0 lower bound, the encoding of these types in metadata is distinct.
+            /// </summary>
+            public override bool IsSZArray
             {
                 get
                 {
-                    return this.arrayTypeSymbol.BaseType;
+                    return true;
                 }
             }
 
-            public override NamespaceSymbol ContainingNamespace
+            internal override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved = null)
             {
-                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
+                return _interfaces;
             }
 
-            public sealed override string Name
-            {
-                get { return WellKnownMemberNames.InstanceConstructorName; }
-            }
-
-            internal sealed override bool HasSpecialName
-            {
-                get { return true; }
-            }
-
-            internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
+            internal override bool HasDefaultSizesAndLowerBounds
             {
                 get
                 {
-                    var containingType = this.arrayTypeSymbol.BaseType;
-                    if (containingType.IsComImport)
-                    {
-                        Debug.Assert(containingType.TypeKind == TypeKind.Class);
-                        return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
-                    }
-
-                    if (containingType.TypeKind == TypeKind.Delegate)
-                    {
-                        return System.Reflection.MethodImplAttributes.Runtime;
-                    }
-
-                    return default(System.Reflection.MethodImplAttributes);
+                    return true;
                 }
-            }
-
-            internal sealed override bool RequiresSecurityObject
-            {
-                get { return false; }
-            }
-
-            public sealed override DllImportData GetDllImportData()
-            {
-                return null;
-            }
-
-            internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
-            {
-                get { return null; }
-            }
-
-            internal sealed override bool HasDeclarativeSecurity
-            {
-                get { return false; }
-            }
-
-            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-            {
-                throw ExceptionUtilities.Unreachable;
-            }
-
-            internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-            {
-                return ImmutableArray<string>.Empty;
-            }
-
-            public sealed override bool IsVararg
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
-            {
-                get { return ImmutableArray<TypeParameterSymbol>.Empty; }
-            }
-
-            internal sealed override LexicalSortKey GetLexicalSortKey()
-            {
-                //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
-                //This is not critical, but it makes it easier on tools that are comparing metadata.
-                return LexicalSortKey.Last;
-            }
-
-            public sealed override ImmutableArray<Location> Locations
-            {
-                get { return ContainingType.Locations; }
-            }
-
-            public sealed override TypeSymbol ReturnType
-            {
-                get { return this.arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
-            }
-
-            public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
-            {
-                get { return ImmutableArray<CustomModifier>.Empty; }
-            }
-
-            public sealed override ImmutableArray<TypeSymbol> TypeArguments
-            {
-                get { return ImmutableArray<TypeSymbol>.Empty; }
-            }
-
-            public sealed override Symbol AssociatedSymbol
-            {
-                get { return this.arrayTypeSymbol; }
-            }
-
-            public sealed override int Arity
-            {
-                get { return 0; }
-            }
-
-            public sealed override bool ReturnsVoid
-            {
-                get { return true; }
-            }
-
-            public sealed override MethodKind MethodKind
-            {
-                get { return MethodKind.Constructor; }
-            }
-
-            public sealed override bool IsExtern
-            {
-                get
-                {
-                    // Synthesized constructors of ComImport type are extern
-                    NamedTypeSymbol containingType = this.ContainingType;
-                    return (object)containingType != null && containingType.IsComImport;
-                }
-            }
-
-            public sealed override bool IsSealed
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAbstract
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsOverride
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsVirtual
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsStatic
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAsync
-            {
-                get { return false; }
-            }
-
-            public sealed override bool HidesBaseMethodsByName
-            {
-                get { return false; }
-            }
-
-            internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            public sealed override bool IsExtensionMethod
-            {
-                get { return false; }
-            }
-
-            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
-            {
-                get { return Microsoft.Cci.CallingConvention.HasThis; }
-            }
-
-            internal sealed override bool IsExplicitInterfaceImplementation
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
-            {
-                get { return ImmutableArray<MethodSymbol>.Empty; }
-            }
-
-            #endregion
-        }
-
-        public sealed class ArraySetValueMethod : SynthesizedInstanceMethodSymbol
-        {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly ArrayTypeSymbol arrayTypeSymbol;
-
-            internal ArraySetValueMethod(ArrayTypeSymbol arrayTypeSymbol)
-            {
-                this.arrayTypeSymbol = arrayTypeSymbol;
-                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
-                    .ToArray<ParameterSymbol>()
-                    .Append(new SynthesizedParameterSymbol(this, arrayTypeSymbol.ElementType, arrayTypeSymbol.Rank + 1, RefKind.None)));
-            }
-
-            public override ImmutableArray<ParameterSymbol> Parameters
-            {
-                get { return parameters; }
-            }
-
-            #region Sealed
-
-            public sealed override Symbol ContainingSymbol
-            {
-                get
-                {
-                    return this.arrayTypeSymbol.BaseType;
-                }
-            }
-
-            public sealed override NamedTypeSymbol ContainingType
-            {
-                get
-                {
-                    return this.arrayTypeSymbol.BaseType;
-                }
-            }
-
-            public override NamespaceSymbol ContainingNamespace
-            {
-                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
-            }
-
-            public sealed override string Name
-            {
-                get
-                {
-                    return "Set";
-                }
-            }
-
-            internal sealed override bool HasSpecialName
-            {
-                get { return true; }
-            }
-
-            internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
-            {
-                get
-                {
-                    var containingType = this.arrayTypeSymbol.BaseType;
-                    if (containingType.IsComImport)
-                    {
-                        Debug.Assert(containingType.TypeKind == TypeKind.Class);
-                        return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
-                    }
-
-                    if (containingType.TypeKind == TypeKind.Delegate)
-                    {
-                        return System.Reflection.MethodImplAttributes.Runtime;
-                    }
-
-                    return default(System.Reflection.MethodImplAttributes);
-                }
-            }
-
-            internal sealed override bool RequiresSecurityObject
-            {
-                get { return false; }
-            }
-
-            public sealed override DllImportData GetDllImportData()
-            {
-                return null;
-            }
-
-            internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
-            {
-                get { return null; }
-            }
-
-            internal sealed override bool HasDeclarativeSecurity
-            {
-                get { return false; }
-            }
-
-            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-            {
-                throw ExceptionUtilities.Unreachable;
-            }
-
-            internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-            {
-                return ImmutableArray<string>.Empty;
-            }
-
-            public sealed override bool IsVararg
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
-            {
-                get { return ImmutableArray<TypeParameterSymbol>.Empty; }
-            }
-
-            internal sealed override LexicalSortKey GetLexicalSortKey()
-            {
-                //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
-                //This is not critical, but it makes it easier on tools that are comparing metadata.
-                return LexicalSortKey.Last;
-            }
-
-            public sealed override ImmutableArray<Location> Locations
-            {
-                get { return ContainingType.Locations; }
-            }
-
-            public sealed override TypeSymbol ReturnType
-            {
-                get { return this.arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
-            }
-
-            public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
-            {
-                get { return ImmutableArray<CustomModifier>.Empty; }
-            }
-
-            public sealed override ImmutableArray<TypeSymbol> TypeArguments
-            {
-                get { return ImmutableArray<TypeSymbol>.Empty; }
-            }
-
-            public sealed override Symbol AssociatedSymbol
-            {
-                get { return this.arrayTypeSymbol; }
-            }
-
-            public sealed override int Arity
-            {
-                get { return 0; }
-            }
-
-            public sealed override bool ReturnsVoid
-            {
-                get { return true; }
-            }
-
-            public sealed override MethodKind MethodKind
-            {
-                get { return MethodKind.PropertySet; }
-            }
-
-            public sealed override bool IsExtern
-            {
-                get
-                {
-                    // Synthesized constructors of ComImport type are extern
-                    NamedTypeSymbol containingType = this.ContainingType;
-                    return (object)containingType != null && containingType.IsComImport;
-                }
-            }
-
-            public sealed override bool IsSealed
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAbstract
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsOverride
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsVirtual
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsStatic
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAsync
-            {
-                get { return false; }
-            }
-
-            public sealed override bool HidesBaseMethodsByName
-            {
-                get { return false; }
-            }
-
-            internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            public sealed override bool IsExtensionMethod
-            {
-                get { return false; }
-            }
-
-            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
-            {
-                get { return Microsoft.Cci.CallingConvention.HasThis; }
-            }
-
-            internal sealed override bool IsExplicitInterfaceImplementation
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
-            {
-                get { return ImmutableArray<MethodSymbol>.Empty; }
-            }
-
-            #endregion
-
-            internal override bool IsMetadataFinal()
-            {
-                return false;
-            }
-
-            internal override bool GenerateDebugInfo
-            {
-                get { return false; }
-            }
-
-            public override Accessibility DeclaredAccessibility
-            {
-                get { return Accessibility.Public; }
             }
         }
 
-        public sealed class ArrayGetValueMethod : SynthesizedInstanceMethodSymbol
+        /// <summary>
+        /// Represents MDARRAY - multi-dimensional array (possibly of rank 1)
+        /// </summary>
+        private abstract class MDArray : ArrayTypeSymbol
         {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly ArrayTypeSymbol arrayTypeSymbol;
+            private readonly int _rank;
 
-            internal ArrayGetValueMethod(ArrayTypeSymbol arrayTypeSymbol)
+            internal MDArray(
+                TypeSymbol elementType,
+                int rank,
+                NamedTypeSymbol array,
+                ImmutableArray<CustomModifier> customModifiers)
+                : base(elementType, array, customModifiers)
             {
-                this.arrayTypeSymbol = arrayTypeSymbol;
-                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
-                    .ToArray<ParameterSymbol>());
+                Debug.Assert(rank >= 1);
+                _rank = rank;
             }
 
-            public override ImmutableArray<ParameterSymbol> Parameters
-            {
-                get { return parameters; }
-            }
-
-            #region Sealed
-
-            public sealed override Symbol ContainingSymbol
+            public sealed override int Rank
             {
                 get
                 {
-                    return this.arrayTypeSymbol.BaseType;
+                    return _rank;
                 }
             }
 
-            public sealed override NamedTypeSymbol ContainingType
+            public sealed override bool IsSZArray
             {
                 get
                 {
-                    return this.arrayTypeSymbol.BaseType;
+                    return false;
                 }
             }
 
-            public override NamespaceSymbol ContainingNamespace
+            internal sealed override ImmutableArray<NamedTypeSymbol> InterfacesNoUseSiteDiagnostics(ConsList<Symbol> basesBeingResolved = null)
             {
-                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
-            }
-
-            public sealed override string Name
-            {
-                get
-                {
-                    return "Get";
-                }
-            }
-
-            internal sealed override bool HasSpecialName
-            {
-                get { return true; }
-            }
-
-            internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
-            {
-                get
-                {
-                    var containingType = this.arrayTypeSymbol.BaseType;
-                    if (containingType.IsComImport)
-                    {
-                        Debug.Assert(containingType.TypeKind == TypeKind.Class);
-                        return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
-                    }
-
-                    if (containingType.TypeKind == TypeKind.Delegate)
-                    {
-                        return System.Reflection.MethodImplAttributes.Runtime;
-                    }
-
-                    return default(System.Reflection.MethodImplAttributes);
-                }
-            }
-
-            internal sealed override bool RequiresSecurityObject
-            {
-                get { return false; }
-            }
-
-            public sealed override DllImportData GetDllImportData()
-            {
-                return null;
-            }
-
-            internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
-            {
-                get { return null; }
-            }
-
-            internal sealed override bool HasDeclarativeSecurity
-            {
-                get { return false; }
-            }
-
-            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-            {
-                throw ExceptionUtilities.Unreachable;
-            }
-
-            internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-            {
-                return ImmutableArray<string>.Empty;
-            }
-
-            public sealed override bool IsVararg
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
-            {
-                get { return ImmutableArray<TypeParameterSymbol>.Empty; }
-            }
-
-            internal sealed override LexicalSortKey GetLexicalSortKey()
-            {
-                //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
-                //This is not critical, but it makes it easier on tools that are comparing metadata.
-                return LexicalSortKey.Last;
-            }
-
-            public sealed override ImmutableArray<Location> Locations
-            {
-                get { return ContainingType.Locations; }
-            }
-
-            public sealed override TypeSymbol ReturnType
-            {
-                get { return this.arrayTypeSymbol.ElementType; }
-            }
-
-            public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
-            {
-                get { return ImmutableArray<CustomModifier>.Empty; }
-            }
-
-            public sealed override ImmutableArray<TypeSymbol> TypeArguments
-            {
-                get { return ImmutableArray<TypeSymbol>.Empty; }
-            }
-
-            public sealed override Symbol AssociatedSymbol
-            {
-                get { return this.arrayTypeSymbol; }
-            }
-
-            public sealed override int Arity
-            {
-                get { return 0; }
-            }
-
-            public sealed override bool ReturnsVoid
-            {
-                get { return false; }
-            }
-
-            public sealed override MethodKind MethodKind
-            {
-                get { return MethodKind.PropertyGet; }
-            }
-
-            public sealed override bool IsExtern
-            {
-                get
-                {
-                    // Synthesized constructors of ComImport type are extern
-                    NamedTypeSymbol containingType = this.ContainingType;
-                    return (object)containingType != null && containingType.IsComImport;
-                }
-            }
-
-            public sealed override bool IsSealed
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAbstract
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsOverride
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsVirtual
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsStatic
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAsync
-            {
-                get { return false; }
-            }
-
-            public sealed override bool HidesBaseMethodsByName
-            {
-                get { return false; }
-            }
-
-            internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            public sealed override bool IsExtensionMethod
-            {
-                get { return false; }
-            }
-
-            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
-            {
-                get { return Microsoft.Cci.CallingConvention.HasThis; }
-            }
-
-            internal sealed override bool IsExplicitInterfaceImplementation
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
-            {
-                get { return ImmutableArray<MethodSymbol>.Empty; }
-            }
-
-            #endregion
-
-            internal override bool IsMetadataFinal()
-            {
-                return false;
-            }
-
-            internal override bool GenerateDebugInfo
-            {
-                get { return false; }
-            }
-
-            public override Accessibility DeclaredAccessibility
-            {
-                get { return Accessibility.Public; }
+                return ImmutableArray<NamedTypeSymbol>.Empty;
             }
         }
 
-        public sealed class ArrayAddressMethod : SynthesizedInstanceMethodSymbol
+        private sealed class MDArrayNoSizesOrBounds : MDArray
         {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly ArrayTypeSymbol arrayTypeSymbol;
-
-            internal ArrayAddressMethod(ArrayTypeSymbol arrayTypeSymbol)
+            internal MDArrayNoSizesOrBounds(
+                TypeSymbol elementType,
+                int rank,
+                NamedTypeSymbol array,
+                ImmutableArray<CustomModifier> customModifiers)
+                : base(elementType, rank, array, customModifiers)
             {
-                this.arrayTypeSymbol = arrayTypeSymbol;
-                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
-                    .ToArray<ParameterSymbol>());
             }
 
-            public override ImmutableArray<ParameterSymbol> Parameters
+            internal override ArrayTypeSymbol WithElementType(TypeSymbol elementType)
             {
-                get { return parameters; }
+                return new MDArrayNoSizesOrBounds(elementType, Rank, BaseTypeNoUseSiteDiagnostics, CustomModifiers);
             }
 
-            #region Sealed
-
-            public sealed override Symbol ContainingSymbol
+            internal override bool HasDefaultSizesAndLowerBounds
             {
                 get
                 {
-                    return this.arrayTypeSymbol.BaseType;
+                    return true;
                 }
-            }
-
-            public sealed override NamedTypeSymbol ContainingType
-            {
-                get
-                {
-                    return this.arrayTypeSymbol.BaseType;
-                }
-            }
-
-            public override NamespaceSymbol ContainingNamespace
-            {
-                get { return this.arrayTypeSymbol.ElementType.ContainingNamespace; }
-            }
-
-            public sealed override string Name
-            {
-                get
-                {
-                    return "Address";
-                }
-            }
-
-            internal sealed override bool HasSpecialName
-            {
-                get { return true; }
-            }
-
-            internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
-            {
-                get
-                {
-                    var containingType = this.arrayTypeSymbol.BaseType;
-                    if (containingType.IsComImport)
-                    {
-                        Debug.Assert(containingType.TypeKind == TypeKind.Class);
-                        return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
-                    }
-
-                    if (containingType.TypeKind == TypeKind.Delegate)
-                    {
-                        return System.Reflection.MethodImplAttributes.Runtime;
-                    }
-
-                    return default(System.Reflection.MethodImplAttributes);
-                }
-            }
-
-            internal sealed override bool RequiresSecurityObject
-            {
-                get { return false; }
-            }
-
-            public sealed override DllImportData GetDllImportData()
-            {
-                return null;
-            }
-
-            internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
-            {
-                get { return null; }
-            }
-
-            internal sealed override bool HasDeclarativeSecurity
-            {
-                get { return false; }
-            }
-
-            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
-            {
-                throw ExceptionUtilities.Unreachable;
-            }
-
-            internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
-            {
-                return ImmutableArray<string>.Empty;
-            }
-
-            public sealed override bool IsVararg
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
-            {
-                get { return ImmutableArray<TypeParameterSymbol>.Empty; }
-            }
-
-            internal sealed override LexicalSortKey GetLexicalSortKey()
-            {
-                //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
-                //This is not critical, but it makes it easier on tools that are comparing metadata.
-                return LexicalSortKey.Last;
-            }
-
-            public sealed override ImmutableArray<Location> Locations
-            {
-                get { return ContainingType.Locations; }
-            }
-
-            public sealed override TypeSymbol ReturnType
-            {
-                get { return new ByRefReturnErrorTypeSymbol(this.arrayTypeSymbol.ElementType); }
-            }
-
-            public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
-            {
-                get { return ImmutableArray<CustomModifier>.Empty; }
-            }
-
-            public sealed override ImmutableArray<TypeSymbol> TypeArguments
-            {
-                get { return ImmutableArray<TypeSymbol>.Empty; }
-            }
-
-            public sealed override Symbol AssociatedSymbol
-            {
-                get { return this.arrayTypeSymbol; }
-            }
-
-            public sealed override int Arity
-            {
-                get { return 0; }
-            }
-
-            public sealed override bool ReturnsVoid
-            {
-                get { return false; }
-            }
-
-            public sealed override MethodKind MethodKind
-            {
-                get { return MethodKind.PropertyGet; }
-            }
-
-            public sealed override bool IsExtern
-            {
-                get
-                {
-                    // Synthesized constructors of ComImport type are extern
-                    NamedTypeSymbol containingType = this.ContainingType;
-                    return (object)containingType != null && containingType.IsComImport;
-                }
-            }
-
-            public sealed override bool IsSealed
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAbstract
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsOverride
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsVirtual
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsStatic
-            {
-                get { return false; }
-            }
-
-            public sealed override bool IsAsync
-            {
-                get { return false; }
-            }
-
-            public sealed override bool HidesBaseMethodsByName
-            {
-                get { return false; }
-            }
-
-            internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
-            {
-                return false;
-            }
-
-            public sealed override bool IsExtensionMethod
-            {
-                get { return false; }
-            }
-
-            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
-            {
-                get { return Microsoft.Cci.CallingConvention.HasThis; }
-            }
-
-            internal sealed override bool IsExplicitInterfaceImplementation
-            {
-                get { return false; }
-            }
-
-            public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
-            {
-                get { return ImmutableArray<MethodSymbol>.Empty; }
-            }
-
-            #endregion
-
-            internal override bool IsMetadataFinal()
-            {
-                return false;
-            }
-
-            internal override bool GenerateDebugInfo
-            {
-                get { return false; }
-            }
-
-            public override Accessibility DeclaredAccessibility
-            {
-                get { return Accessibility.Public; }
             }
         }
 
+        private sealed class MDArrayWithSizesAndBounds : MDArray
+        {
+            private readonly ImmutableArray<int> _sizes;
+            private readonly ImmutableArray<int> _lowerBounds;
+
+            internal MDArrayWithSizesAndBounds(
+                TypeSymbol elementType,
+                int rank,
+                ImmutableArray<int> sizes,
+                ImmutableArray<int> lowerBounds,
+                NamedTypeSymbol array,
+                ImmutableArray<CustomModifier> customModifiers)
+                : base(elementType, rank, array, customModifiers)
+            {
+                Debug.Assert(!sizes.IsDefaultOrEmpty || !lowerBounds.IsDefault);
+                Debug.Assert(lowerBounds.IsDefaultOrEmpty || (!lowerBounds.IsEmpty && (lowerBounds.Length != rank || !lowerBounds.All(b => b == 0))));
+                _sizes = sizes.NullToEmpty();
+                _lowerBounds = lowerBounds;
+            }
+
+            internal override ArrayTypeSymbol WithElementType(TypeSymbol elementType)
+            {
+                return new MDArrayWithSizesAndBounds(elementType, Rank, _sizes, _lowerBounds, BaseTypeNoUseSiteDiagnostics, CustomModifiers);
+            }
+
+            public override ImmutableArray<int> Sizes
+            {
+                get
+                {
+                    return _sizes;
+                }
+            }
+
+            public override ImmutableArray<int> LowerBounds
+            {
+                get
+                {
+                    return _lowerBounds;
+                }
+            }
+
+            internal override bool HasDefaultSizesAndLowerBounds
+            {
+                get
+                {
+                    return false;
+                }
+            }
+        }
     }
 }

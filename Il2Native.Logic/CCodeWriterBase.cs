@@ -5,16 +5,19 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
+
     using DOM;
     using DOM2;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+
     using Conversion = DOM2.Conversion;
+    using Expression = DOM2.Expression;
 
     public abstract class CCodeWriterBase
     {
@@ -951,7 +954,7 @@ namespace Il2Native.Logic
                     }
 
                     return;
-                case TypeKind.ArrayType:
+                case TypeKind.Array:
                     this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
                     return;
                 case TypeKind.Delegate:
@@ -964,7 +967,7 @@ namespace Il2Native.Logic
                     }
 
                     return;
-                case TypeKind.DynamicType:
+                case TypeKind.Dynamic:
                     break;
                 case TypeKind.Enum:
                     if (!valueTypeAsClass)
@@ -987,7 +990,7 @@ namespace Il2Native.Logic
                     return;
                 case TypeKind.Module:
                     break;
-                case TypeKind.PointerType:
+                case TypeKind.Pointer:
                     var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
                     if (wrapPointer)
                     {
@@ -1163,12 +1166,12 @@ namespace Il2Native.Logic
 
             switch (type.TypeKind)
             {
-                case TypeKind.ArrayType:
+                case TypeKind.Array:
                     var elementType = ((ArrayTypeSymbol)type).ElementType;
                     this.WriteTypeSuffix(elementType);
                     this.TextSpan("Array");
                     return;
-                case TypeKind.PointerType:
+                case TypeKind.Pointer:
                     var pointedAtType = ((PointerTypeSymbol)type).PointedAtType;
                     this.WriteTypeSuffix(pointedAtType);
                     this.TextSpan("Ptr");

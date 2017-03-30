@@ -30,7 +30,11 @@ namespace Il2Native.Logic
             var concurrent = true;
 
             var cs2CGenerator = new Cs2CGenerator(sources, args);
-            var assemblySymbol = cs2CGenerator.Load();            
+            var assemblySymbol = cs2CGenerator.Load();     
+            if (assemblySymbol == null)
+            {
+                return;
+            }
 
             var cgenerator = new CCodeUnitsBuilder(assemblySymbol, cs2CGenerator.BoundBodyByMethodSymbol, cs2CGenerator.SourceMethodByMethodSymbol);
             cgenerator.Concurrent = concurrent;

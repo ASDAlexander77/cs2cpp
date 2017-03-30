@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,16 +11,16 @@ namespace Microsoft.Cci
 {
     internal sealed class ModifiedTypeReference : IModifiedTypeReference
     {
-        private readonly ITypeReference modifiedType;
-        private readonly ImmutableArray<ICustomModifier> customModifiers;
+        private readonly ITypeReference _modifiedType;
+        private readonly ImmutableArray<ICustomModifier> _customModifiers;
 
         public ModifiedTypeReference(ITypeReference modifiedType, ImmutableArray<ICustomModifier> customModifiers)
         {
             Debug.Assert(modifiedType != null);
             Debug.Assert(!customModifiers.IsDefault);
 
-            this.modifiedType = modifiedType;
-            this.customModifiers = customModifiers;
+            _modifiedType = modifiedType;
+            _customModifiers = customModifiers;
         }
 
         ImmutableArray<ICustomModifier> IModifiedTypeReference.CustomModifiers
@@ -28,7 +28,7 @@ namespace Microsoft.Cci
             get
             {
                 // TODO: Should we thread this through Module.Translate? For example, can we run into Pia type here? 
-                return customModifiers;
+                return _customModifiers;
             }
         }
 
@@ -36,7 +36,7 @@ namespace Microsoft.Cci
         {
             get
             {
-                return modifiedType;
+                return _modifiedType;
             }
         }
 
@@ -55,12 +55,12 @@ namespace Microsoft.Cci
             throw ExceptionUtilities.Unreachable;
         }
 
-        PrimitiveTypeCode ITypeReference.TypeCode(EmitContext context)
+        PrimitiveTypeCode ITypeReference.TypeCode
         {
-            return PrimitiveTypeCode.NotPrimitive;
+            get { return PrimitiveTypeCode.NotPrimitive; }
         }
 
-        TypeHandle ITypeReference.TypeDef
+        TypeDefinitionHandle ITypeReference.TypeDef
         {
             get { throw ExceptionUtilities.Unreachable; }
         }

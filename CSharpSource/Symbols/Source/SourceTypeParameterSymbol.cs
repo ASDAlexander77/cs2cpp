@@ -1,13 +1,12 @@
-﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -16,30 +15,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal abstract class SourceTypeParameterSymbolBase : TypeParameterSymbol, IAttributeTargetSymbol
     {
-        private readonly ImmutableArray<SyntaxReference> syntaxRefs;
-        private readonly ImmutableArray<Location> locations;
-        private readonly string name;
-        private readonly short ordinal;
+        private readonly ImmutableArray<SyntaxReference> _syntaxRefs;
+        private readonly ImmutableArray<Location> _locations;
+        private readonly string _name;
+        private readonly short _ordinal;
 
-        private SymbolCompletionState state;
-        private CustomAttributesBag<CSharpAttributeData> lazyCustomAttributesBag;
-        private TypeParameterBounds lazyBounds = TypeParameterBounds.Unset;
+        private SymbolCompletionState _state;
+        private CustomAttributesBag<CSharpAttributeData> _lazyCustomAttributesBag;
+        private TypeParameterBounds _lazyBounds = TypeParameterBounds.Unset;
 
         protected SourceTypeParameterSymbolBase(string name, int ordinal, ImmutableArray<Location> locations, ImmutableArray<SyntaxReference> syntaxRefs)
         {
             Debug.Assert(!syntaxRefs.IsEmpty);
 
-            this.name = name;
-            this.ordinal = (short)ordinal;
-            this.locations = locations;
-            this.syntaxRefs = syntaxRefs;
+            _name = name;
+            _ordinal = (short)ordinal;
+            _locations = locations;
+            _syntaxRefs = syntaxRefs;
         }
 
         public override ImmutableArray<Location> Locations
         {
             get
             {
-                return locations;
+                return _locations;
             }
         }
 
@@ -47,7 +46,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return syntaxRefs;
+                return _syntaxRefs;
             }
         }
 
@@ -55,7 +54,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return syntaxRefs;
+                return _syntaxRefs;
             }
         }
 
@@ -63,7 +62,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return ordinal;
+                return _ordinal;
             }
         }
 
@@ -79,7 +78,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return name;
+                return _name;
             }
         }
 
@@ -113,7 +112,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 var mergedAttributesBuilder = ArrayBuilder<SyntaxList<AttributeListSyntax>>.GetInstance();
 
-                foreach (var syntaxRef in this.syntaxRefs)
+                foreach (var syntaxRef in _syntaxRefs)
                 {
                     var syntax = (TypeParameterSyntax)syntaxRef.GetSyntax();
                     mergedAttributesBuilder.Add(syntax.AttributeLists);
@@ -125,7 +124,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     var implementingPart = sourceMethod.SourcePartialImplementation;
                     if ((object)implementingPart != null)
                     {
-                        var typeParameter = (SourceTypeParameterSymbolBase)implementingPart.TypeParameters[this.ordinal];
+                        var typeParameter = (SourceTypeParameterSymbolBase)implementingPart.TypeParameters[_ordinal];
                         mergedAttributesBuilder.AddRange(typeParameter.MergedAttributeDeclarationSyntaxLists);
                     }
                 }
@@ -162,37 +161,45 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return this.GetAttributesBag().Attributes;
         }
 
-        internal override CustomAttributesBag<CSharpAttributeData> GetAttributesBag()
+        /// <summary>
+        /// Returns a bag of applied custom attributes and data decoded from well-known attributes. Returns null if there are no attributes applied on the symbol.
+        /// </summary>
+        /// <remarks>
+        /// Forces binding and decoding of attributes.
+        /// </remarks>
+        internal virtual CustomAttributesBag<CSharpAttributeData> GetAttributesBag()
         {
-            if (lazyCustomAttributesBag == null || !lazyCustomAttributesBag.IsSealed)
+            if (_lazyCustomAttributesBag == null || !_lazyCustomAttributesBag.IsSealed)
             {
                 bool lazyAttributesStored = false;
 
                 var sourceMethod = this.ContainingSymbol as SourceMemberMethodSymbol;
                 if ((object)sourceMethod == null || (object)sourceMethod.SourcePartialDefinition == null)
                 {
-                    lazyAttributesStored = LoadAndValidateAttributes(OneOrMany.Create(this.MergedAttributeDeclarationSyntaxLists), ref lazyCustomAttributesBag);
+                    lazyAttributesStored = LoadAndValidateAttributes(
+                        OneOrMany.Create(this.MergedAttributeDeclarationSyntaxLists),
+                        ref _lazyCustomAttributesBag);
                 }
                 else
                 {
-                    var typeParameter = (SourceTypeParameterSymbolBase)sourceMethod.SourcePartialDefinition.TypeParameters[this.ordinal];
+                    var typeParameter = (SourceTypeParameterSymbolBase)sourceMethod.SourcePartialDefinition.TypeParameters[_ordinal];
                     CustomAttributesBag<CSharpAttributeData> attributesBag = typeParameter.GetAttributesBag();
 
-                    lazyAttributesStored = Interlocked.CompareExchange(ref lazyCustomAttributesBag, attributesBag, null) == null;
+                    lazyAttributesStored = Interlocked.CompareExchange(ref _lazyCustomAttributesBag, attributesBag, null) == null;
                 }
 
                 if (lazyAttributesStored)
                 {
-                    state.NotePartComplete(CompletionPart.Attributes);
+                    _state.NotePartComplete(CompletionPart.Attributes);
                 }
             }
 
-            return lazyCustomAttributesBag;
+            return _lazyCustomAttributesBag;
         }
 
         internal override void EnsureAllConstraintsAreResolved()
         {
-            if (ReferenceEquals(this.lazyBounds, TypeParameterBounds.Unset))
+            if (ReferenceEquals(_lazyBounds, TypeParameterBounds.Unset))
             {
                 EnsureAllConstraintsAreResolved(this.ContainerTypeParameters);
             }
@@ -208,21 +215,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert(!inProgress.ContainsReference(this));
             Debug.Assert(!inProgress.Any() || ReferenceEquals(inProgress.Head.ContainingSymbol, this.ContainingSymbol));
 
-            if (ReferenceEquals(this.lazyBounds, TypeParameterBounds.Unset))
+            if (ReferenceEquals(_lazyBounds, TypeParameterBounds.Unset))
             {
                 var diagnostics = DiagnosticBag.GetInstance();
                 var bounds = this.ResolveBounds(inProgress, diagnostics);
 
-                if (ReferenceEquals(Interlocked.CompareExchange(ref this.lazyBounds, bounds, TypeParameterBounds.Unset), TypeParameterBounds.Unset))
+                if (ReferenceEquals(Interlocked.CompareExchange(ref _lazyBounds, bounds, TypeParameterBounds.Unset), TypeParameterBounds.Unset))
                 {
                     this.CheckConstraintTypeConstraints(diagnostics);
-                    this.AddSemanticDiagnostics(diagnostics);
-                    state.NotePartComplete(CompletionPart.TypeParameterConstraints);
+                    this.AddDeclarationDiagnostics(diagnostics);
+                    _state.NotePartComplete(CompletionPart.TypeParameterConstraints);
                 }
 
                 diagnostics.Free();
             }
-            return this.lazyBounds;
+            return _lazyBounds;
         }
 
         protected abstract TypeParameterBounds ResolveBounds(ConsList<TypeParameterSymbol> inProgress, DiagnosticBag diagnostics);
@@ -243,7 +250,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             var corLibrary = this.ContainingAssembly.CorLibrary;
             var conversions = new TypeConversions(corLibrary);
-            var location = this.locations[0];
+            var location = _locations[0];
 
             foreach (var constraintType in constraintTypes)
             {
@@ -267,7 +274,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var incompletePart = state.NextIncompletePart;
+                var incompletePart = _state.NextIncompletePart;
                 switch (incompletePart)
                 {
                     case CompletionPart.Attributes:
@@ -289,25 +296,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                     default:
                         // any other values are completion parts intended for other kinds of symbols
-                        state.NotePartComplete(CompletionPart.All & ~CompletionPart.TypeParameterSymbolAll);
+                        _state.NotePartComplete(CompletionPart.All & ~CompletionPart.TypeParameterSymbolAll);
                         break;
                 }
 
-                state.SpinWaitComplete(incompletePart, cancellationToken);
+                _state.SpinWaitComplete(incompletePart, cancellationToken);
             }
         }
     }
 
     internal sealed class SourceTypeParameterSymbol : SourceTypeParameterSymbolBase
     {
-        private readonly SourceNamedTypeSymbol owner;
-        private readonly VarianceKind varianceKind;
+        private readonly SourceNamedTypeSymbol _owner;
+        private readonly VarianceKind _varianceKind;
 
         public SourceTypeParameterSymbol(SourceNamedTypeSymbol owner, string name, int ordinal, VarianceKind varianceKind, ImmutableArray<Location> locations, ImmutableArray<SyntaxReference> syntaxRefs)
             : base(name, ordinal, locations, syntaxRefs)
         {
-            this.owner = owner;
-            this.varianceKind = varianceKind;
+            _owner = owner;
+            _varianceKind = varianceKind;
         }
 
         public override TypeParameterKind TypeParameterKind
@@ -320,12 +327,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return this.owner; }
+            get { return _owner; }
         }
 
         public override VarianceKind Variance
         {
-            get { return this.varianceKind; }
+            get { return _varianceKind; }
         }
 
         public override bool HasConstructorConstraint
@@ -357,29 +364,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         protected override ImmutableArray<TypeParameterSymbol> ContainerTypeParameters
         {
-            get { return this.owner.TypeParameters; }
+            get { return _owner.TypeParameters; }
         }
 
         protected override TypeParameterBounds ResolveBounds(ConsList<TypeParameterSymbol> inProgress, DiagnosticBag diagnostics)
         {
-            var constraintTypes = this.owner.GetTypeParameterConstraintTypes(this.Ordinal);
+            var constraintTypes = _owner.GetTypeParameterConstraintTypes(this.Ordinal);
             return this.ResolveBounds(this.ContainingAssembly.CorLibrary, inProgress.Prepend(this), constraintTypes, false, this.DeclaringCompilation, diagnostics);
         }
 
         private TypeParameterConstraintKind GetDeclaredConstraints()
         {
-            return this.owner.GetTypeParameterConstraints(this.Ordinal);
+            return _owner.GetTypeParameterConstraints(this.Ordinal);
         }
     }
 
     internal sealed class SourceMethodTypeParameterSymbol : SourceTypeParameterSymbolBase
     {
-        private readonly SourceMemberMethodSymbol owner;
+        private readonly SourceMemberMethodSymbol _owner;
 
         public SourceMethodTypeParameterSymbol(SourceMemberMethodSymbol owner, string name, int ordinal, ImmutableArray<Location> locations, ImmutableArray<SyntaxReference> syntaxRefs)
             : base(name, ordinal, locations, syntaxRefs)
         {
-            this.owner = owner;
+            _owner = owner;
         }
 
         public override TypeParameterKind TypeParameterKind
@@ -392,7 +399,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         public override Symbol ContainingSymbol
         {
-            get { return this.owner; }
+            get { return _owner; }
         }
 
         public override bool HasConstructorConstraint
@@ -424,19 +431,62 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         protected override ImmutableArray<TypeParameterSymbol> ContainerTypeParameters
         {
-            get { return this.owner.TypeParameters; }
+            get { return _owner.TypeParameters; }
         }
 
         protected override TypeParameterBounds ResolveBounds(ConsList<TypeParameterSymbol> inProgress, DiagnosticBag diagnostics)
         {
-            var constraintTypes = this.owner.GetTypeParameterConstraintTypes(this.Ordinal);
+            var constraintTypes = _owner.GetTypeParameterConstraintTypes(this.Ordinal);
             return this.ResolveBounds(this.ContainingAssembly.CorLibrary, inProgress.Prepend(this), constraintTypes, false, this.DeclaringCompilation, diagnostics);
         }
 
         private TypeParameterConstraintKind GetDeclaredConstraints()
         {
-            return this.owner.GetTypeParameterConstraints(this.Ordinal);
+            return _owner.GetTypeParameterConstraints(this.Ordinal);
         }
+    }
+
+    // TODO: https://github.com/dotnet/roslyn/issues/17244 This type is probably not necessary
+    internal sealed class LocalFunctionTypeParameterSymbol : SourceTypeParameterSymbolBase
+    {
+        private readonly LocalFunctionSymbol _owner;
+
+        public LocalFunctionTypeParameterSymbol(
+            LocalFunctionSymbol owner,
+            string name,
+            int ordinal,
+            ImmutableArray<Location> locations,
+            ImmutableArray<SyntaxReference> syntaxRefs)
+            : base(name, ordinal, locations, syntaxRefs)
+        {
+            _owner = owner;
+        }
+
+        internal override void AddDeclarationDiagnostics(DiagnosticBag diagnostics)
+            => _owner.AddDeclarationDiagnostics(diagnostics);
+
+        public override TypeParameterKind TypeParameterKind => TypeParameterKind.Method;
+
+        public override Symbol ContainingSymbol => _owner;
+
+        public override bool HasConstructorConstraint
+            => (GetDeclaredConstraints() & TypeParameterConstraintKind.Constructor) != 0;
+
+        public override bool HasValueTypeConstraint
+            => (GetDeclaredConstraints() & TypeParameterConstraintKind.ValueType) != 0;
+
+        public override bool HasReferenceTypeConstraint
+            => (GetDeclaredConstraints() & TypeParameterConstraintKind.ReferenceType) != 0;
+
+        protected override ImmutableArray<TypeParameterSymbol> ContainerTypeParameters => _owner.TypeParameters;
+
+        protected override TypeParameterBounds ResolveBounds(ConsList<TypeParameterSymbol> inProgress, DiagnosticBag diagnostics)
+        {
+            var constraintTypes = _owner.GetTypeParameterConstraintTypes(this.Ordinal);
+            return this.ResolveBounds(this.ContainingAssembly.CorLibrary, inProgress.Prepend(this), constraintTypes, false, this.DeclaringCompilation, diagnostics);
+        }
+
+        private TypeParameterConstraintKind GetDeclaredConstraints() => _owner.GetTypeParameterConstraints(Ordinal);
     }
 
     /// <summary>
@@ -447,22 +497,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     internal abstract class OverriddenMethodTypeParameterMapBase
     {
         // Method representing overriding or explicit implementation.
-        private readonly SourceMemberMethodSymbol overridingMethod;
+        private readonly SourceMemberMethodSymbol _overridingMethod;
 
         // Type map shared by all type parameters for this explicit implementation.
-        private TypeMap lazyTypeMap;
+        private TypeMap _lazyTypeMap;
 
         // Overridden or explicitly implemented method. May be null in error cases.
-        private MethodSymbol lazyOverriddenMethod = ErrorMethodSymbol.UnknownMethod;
+        private MethodSymbol _lazyOverriddenMethod = ErrorMethodSymbol.UnknownMethod;
 
         protected OverriddenMethodTypeParameterMapBase(SourceMemberMethodSymbol overridingMethod)
         {
-            this.overridingMethod = overridingMethod;
+            _overridingMethod = overridingMethod;
         }
 
         public SourceMemberMethodSymbol OverridingMethod
         {
-            get { return this.overridingMethod; }
+            get { return _overridingMethod; }
         }
 
         public TypeParameterSymbol GetOverriddenTypeParameter(int ordinal)
@@ -475,22 +525,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (this.lazyTypeMap == null)
+                if (_lazyTypeMap == null)
                 {
                     var overriddenMethod = this.OverriddenMethod;
                     if ((object)overriddenMethod != null)
                     {
                         var overriddenTypeParameters = overriddenMethod.TypeParameters;
-                        var overridingTypeParameters = this.overridingMethod.TypeParameters;
+                        var overridingTypeParameters = _overridingMethod.TypeParameters;
 
                         Debug.Assert(overriddenTypeParameters.Length == overridingTypeParameters.Length);
 
                         var typeMap = new TypeMap(overriddenTypeParameters, overridingTypeParameters, allowAlpha: true);
-                        Interlocked.CompareExchange(ref this.lazyTypeMap, typeMap, null);
+                        Interlocked.CompareExchange(ref _lazyTypeMap, typeMap, null);
                     }
                 }
 
-                return this.lazyTypeMap;
+                return _lazyTypeMap;
             }
         }
 
@@ -498,11 +548,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                if (ReferenceEquals(this.lazyOverriddenMethod, ErrorMethodSymbol.UnknownMethod))
+                if (ReferenceEquals(_lazyOverriddenMethod, ErrorMethodSymbol.UnknownMethod))
                 {
-                    Interlocked.CompareExchange(ref this.lazyOverriddenMethod, this.GetOverriddenMethod(this.overridingMethod), ErrorMethodSymbol.UnknownMethod);
+                    Interlocked.CompareExchange(ref _lazyOverriddenMethod, this.GetOverriddenMethod(_overridingMethod), ErrorMethodSymbol.UnknownMethod);
                 }
-                return this.lazyOverriddenMethod;
+                return _lazyOverriddenMethod;
             }
         }
 
@@ -557,17 +607,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </remarks>
     internal sealed class SourceOverridingMethodTypeParameterSymbol : SourceTypeParameterSymbolBase
     {
-        private readonly OverriddenMethodTypeParameterMapBase map;
+        private readonly OverriddenMethodTypeParameterMapBase _map;
 
         public SourceOverridingMethodTypeParameterSymbol(OverriddenMethodTypeParameterMapBase map, string name, int ordinal, ImmutableArray<Location> locations, ImmutableArray<SyntaxReference> syntaxRefs)
             : base(name, ordinal, locations, syntaxRefs)
         {
-            this.map = map;
+            _map = map;
         }
 
         public SourceMemberMethodSymbol Owner
         {
-            get { return this.map.OverridingMethod; }
+            get { return _map.OverridingMethod; }
         }
 
         public override TypeParameterKind TypeParameterKind
@@ -623,10 +673,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 return null;
             }
 
-            var map = this.map.TypeMap;
+            var map = _map.TypeMap;
             Debug.Assert(map != null);
 
-            var constraintTypes = map.SubstituteTypes(typeParameter.ConstraintTypesNoUseSiteDiagnostics);
+            var constraintTypes = map.SubstituteTypesWithoutModifiers(typeParameter.ConstraintTypesNoUseSiteDiagnostics);
             return this.ResolveBounds(this.ContainingAssembly.CorLibrary, inProgress.Prepend(this), constraintTypes, true, this.DeclaringCompilation, diagnostics);
         }
 
@@ -639,7 +689,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             get
             {
-                return this.map.GetOverriddenTypeParameter(this.Ordinal);
+                return _map.GetOverriddenTypeParameter(this.Ordinal);
             }
         }
     }

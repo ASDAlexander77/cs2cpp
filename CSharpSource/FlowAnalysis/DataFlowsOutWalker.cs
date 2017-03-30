@@ -1,11 +1,11 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -16,17 +16,17 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// treats assignments in the region as unassigning the variable would
     /// cause "unassigned" errors outside the region.
     /// </summary>
-    class DataFlowsOutWalker : AbstractRegionDataFlowPass
+    internal class DataFlowsOutWalker : AbstractRegionDataFlowPass
     {
-        private readonly HashSet<Symbol> dataFlowsIn;
+        private readonly ImmutableArray<ISymbol> _dataFlowsIn;
 
-        DataFlowsOutWalker(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion, HashSet<Symbol> unassignedVariables, HashSet<Symbol> dataFlowsIn)
+        private DataFlowsOutWalker(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion, HashSet<Symbol> unassignedVariables, ImmutableArray<ISymbol> dataFlowsIn)
             : base(compilation, member, node, firstInRegion, lastInRegion, unassignedVariables, trackUnassignments: true)
         {
-            this.dataFlowsIn = dataFlowsIn;
+            _dataFlowsIn = dataFlowsIn;
         }
 
-        internal static HashSet<Symbol> Analyze(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion, HashSet<Symbol> unassignedVariables, HashSet<Symbol> dataFlowsIn)
+        internal static HashSet<Symbol> Analyze(CSharpCompilation compilation, Symbol member, BoundNode node, BoundNode firstInRegion, BoundNode lastInRegion, HashSet<Symbol> unassignedVariables, ImmutableArray<ISymbol> dataFlowsIn)
         {
             var walker = new DataFlowsOutWalker(compilation, member, node, firstInRegion, lastInRegion, unassignedVariables, dataFlowsIn);
             try
@@ -35,7 +35,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var result = walker.Analyze(ref badRegion);
 #if DEBUG
                 // Assert that DataFlowsOut only contains variables that were assigned to inside the region
-                Debug.Assert(badRegion || !result.Any((variable) => !walker.assignedInside.Contains(variable)));
+                Debug.Assert(badRegion || !result.Any((variable) => !walker._assignedInside.Contains(variable)));
 #endif
                 return badRegion ? new HashSet<Symbol>() : result;
             }
@@ -45,17 +45,17 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private readonly HashSet<Symbol> dataFlowsOut = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _dataFlowsOut = new HashSet<Symbol>();
 
 #if DEBUG
         // we'd like to ensure that only variables get returned in DataFlowsOut that were assigned to inside the region.
-        private readonly HashSet<Symbol> assignedInside = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _assignedInside = new HashSet<Symbol>();
 #endif
 
-        new HashSet<Symbol> Analyze(ref bool badRegion)
+        private new HashSet<Symbol> Analyze(ref bool badRegion)
         {
             base.Analyze(ref badRegion, null);
-            return dataFlowsOut;
+            return _dataFlowsOut;
         }
 
         protected override void EnterRegion()
@@ -63,12 +63,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             // to handle loops properly, we must assume that every variable that flows in is
             // assigned at the beginning of the loop.  If it isn't, then it must be in a loop
             // and flow out of the region in that loop (and into the region inside the loop).
-            foreach (var variable in dataFlowsIn)
+            foreach (Symbol variable in _dataFlowsIn)
             {
-                int slot = this.MakeSlot(variable);
+                int slot = this.GetOrCreateSlot(variable);
                 if (slot > 0 && !this.State.IsAssigned(slot))
                 {
-                    dataFlowsOut.Add(variable);
+                    _dataFlowsOut.Add(variable);
                 }
             }
 
@@ -83,13 +83,13 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var param = variable as ParameterSymbol;
                 if (FlowsOut(param))
                 {
-                    dataFlowsOut.Add(param);
+                    _dataFlowsOut.Add(param);
                 }
 
 #if DEBUG
                 if ((object)param != null)
                 {
-                    assignedInside.Add(param);
+                    _assignedInside.Add(param);
                 }
 #endif
             }
@@ -104,6 +104,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 switch (node.Kind)
                 {
+                    case BoundKind.DeclarationPattern:
+                        {
+                            return ((BoundDeclarationPattern)node).Variable as LocalSymbol;
+                        }
+
                     case BoundKind.FieldAccess:
                         {
                             var fieldAccess = (BoundFieldAccess)node;
@@ -131,11 +136,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                             return ((BoundLocal)node).LocalSymbol;
                         }
 
-                    case BoundKind.DeclarationExpression:
-                        {
-                            return ((BoundDeclarationExpression)node).LocalSymbol;
-                        }
-
                     case BoundKind.Parameter:
                         {
                             return ((BoundParameter)node).ParameterSymbol;
@@ -144,12 +144,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     case BoundKind.CatchBlock:
                         {
                             var local = ((BoundCatchBlock)node).Locals.FirstOrDefault();
-                            return (object)local != null && local.DeclarationKind == LocalDeclarationKind.CatchVariable ? local : null;
-                        }
-
-                    case BoundKind.ForEachStatement:
-                        {
-                            return ((BoundForEachStatement)node).IterationVariable;
+                            return local?.DeclarationKind == LocalDeclarationKind.CatchVariable ? local : null;
                         }
 
                     case BoundKind.RangeVariable:
@@ -172,6 +167,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                             return null;
                         }
 
+                    case BoundKind.LocalFunctionStatement:
+                        {
+                            return ((BoundLocalFunctionStatement)node).Symbol;
+                        }
+
                     default:
                         {
                             return null;
@@ -192,7 +192,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     Symbol variable = GetNodeSymbol(node);
                     if ((object)variable != null)
                     {
-                        assignedInside.Add(variable);
+                        _assignedInside.Add(variable);
                     }
                 }
 #endif
@@ -204,7 +204,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     ParameterSymbol param = Param(node);
                     if (FlowsOut(param))
                     {
-                        this.dataFlowsOut.Add(param);
+                        _dataFlowsOut.Add(param);
                     }
                 }
             }
@@ -232,34 +232,34 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.VisitQueryClause(node);
         }
 
-        protected override void ReportUnassigned(Symbol symbol, CSharpSyntaxNode node)
+        protected override void ReportUnassigned(Symbol symbol, SyntaxNode node)
         {
-            if (!dataFlowsOut.Contains(symbol) && !(symbol is FieldSymbol) && !IsInside)
+            if (!_dataFlowsOut.Contains(symbol) && !(symbol is FieldSymbol) && !IsInside)
             {
-                dataFlowsOut.Add(symbol);
+                _dataFlowsOut.Add(symbol);
             }
             base.ReportUnassigned(symbol, node);
         }
 
-        protected override void ReportUnassignedOutParameter(ParameterSymbol parameter, CSharpSyntaxNode node, Location location)
+        protected override void ReportUnassignedOutParameter(ParameterSymbol parameter, SyntaxNode node, Location location)
         {
-            if (!dataFlowsOut.Contains(parameter) && (node == null || node is ReturnStatementSyntax))
+            if (!_dataFlowsOut.Contains(parameter) && (node == null || node is ReturnStatementSyntax))
             {
-                dataFlowsOut.Add(parameter);
+                _dataFlowsOut.Add(parameter);
             }
             base.ReportUnassignedOutParameter(parameter, node, location);
         }
 
-        protected override void ReportUnassigned(FieldSymbol fieldSymbol, int unassignedSlot, CSharpSyntaxNode node)
+        protected override void ReportUnassigned(FieldSymbol fieldSymbol, int unassignedSlot, SyntaxNode node)
         {
             if (!IsInside)
             {
                 //  if the field access is reported as unassigned it should mean the original local 
                 //  or parameter flows out, so we should get the symbol associated with the expression
                 var symbol = GetNonFieldSymbol(unassignedSlot);
-                if (!dataFlowsOut.Contains(symbol))
+                if (!_dataFlowsOut.Contains(symbol))
                 {
-                    dataFlowsOut.Add(symbol);
+                    _dataFlowsOut.Add(symbol);
                 }
             }
             base.ReportUnassigned(fieldSymbol, unassignedSlot, node);
