@@ -130,11 +130,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             _synthesizedMethods.Add(new MethodWithBody(method, body, CurrentImportChain));
-
-            #region ASD: my addon
-            // ASD my addon
-            ModuleBuilderOpt.RaiseOnMethodBoundBodySynthesized(method.PartialDefinitionPart ?? method, body);
-            #endregion
         }
 
         /// <summary> 

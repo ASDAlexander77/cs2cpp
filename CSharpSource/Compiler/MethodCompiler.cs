@@ -224,6 +224,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     importChainOpt: null,
                     emittingPdb: false,
                     dynamicAnalysisSpans: ImmutableArray<SourceSpan>.Empty);
+
                 moduleBeingBuilt.SetMethodBody(synthesizedEntryPoint, emittedBody);
             }
 
@@ -635,6 +636,11 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     if (!diagnosticsThisMethod.HasAnyErrors() && !_globalHasErrors)
                     {
+                        #region ASD my addon
+                        // ASD: my addon
+                        _moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(method.PartialDefinitionPart ?? method, loweredBody);
+                        #endregion
+
                         emittedBody = GenerateMethodBody(
                             _moduleBeingBuiltOpt,
                             method,
@@ -646,7 +652,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             variableSlotAllocatorOpt,
                             diagnosticsThisMethod,
                             _debugDocumentProvider,
-                                method.GenerateDebugInfo ? importChain : null,
+                            method.GenerateDebugInfo ? importChain : null,
                             emittingPdb: _emittingPdb,
                             dynamicAnalysisSpans: ImmutableArray<SourceSpan>.Empty);
                     }
@@ -739,6 +745,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 if (!hasErrors && !_hasDeclarationErrors)
                 {
                     const int accessorOrdinal = -1;
+
+                    #region ASD my addon
+                    // ASD: my addon
+                    _moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(accessor.PartialDefinitionPart ?? accessor, boundBody);
+                    #endregion
 
                     MethodBody emittedBody = GenerateMethodBody(
                         _moduleBeingBuiltOpt,
@@ -1116,6 +1127,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                         CSharpSyntaxNode syntax = methodSymbol.GetNonNullSyntaxNode();
 
                         var boundBody = BoundStatementList.Synthesized(syntax, boundStatements);
+
+                        #region ASD my addon
+                        // ASD: my addon
+                        _moduleBeingBuiltOpt.RaiseOnMethodBoundBodySynthesized(methodSymbol.PartialDefinitionPart ?? methodSymbol, boundBody);
+                        #endregion
 
                         var emittedBody = GenerateMethodBody(
                             _moduleBeingBuiltOpt,
