@@ -39,7 +39,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 foreach (var typeArgument in classMethod.TypeArguments.Where(t => t.TypeKind == TypeKind.TypeParameter))
                 {
                     MethodBodyOpt.Statements.Add(
-                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = new TypeImpl(typeArgument) { ContainingSymbol = null } } });
+                        new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = TypeImpl.Wrap(typeArgument, null) } });
                 }
             }
 

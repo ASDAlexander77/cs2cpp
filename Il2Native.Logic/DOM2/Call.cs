@@ -268,7 +268,7 @@ namespace Il2Native.Logic.DOM2
             namedTypeImpl.TypeArguments =
                 ImmutableArray.Create(
                     namedTypeImpl.TypeArguments.Select(
-                        ta => method.TypeArguments.Contains(ta) ? new TypeImpl(ta) { ContainingSymbol = containingSymbol } : ta)
+                        ta => method.TypeArguments.Contains(ta) ? TypeImpl.Wrap(ta, containingSymbol) : ta)
                                  .OfType<ITypeSymbol>()
                                  .ToArray());
             return namedTypeImpl;

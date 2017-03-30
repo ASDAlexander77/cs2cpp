@@ -34,7 +34,8 @@ namespace Il2Native.Logic.DOM2
                 var methodGroup = new MethodGroup
                 {
                     ReceiverOpt = argument,
-                    Method = boundDelegateCreationExpression.MethodOpt
+                    Method = boundDelegateCreationExpression.MethodOpt,
+                    TypeArgumentsOpt = boundDelegateCreationExpression.MethodOpt.TypeArguments.Select(t => TypeImpl.Wrap(t)).ToList()
                 };
 
                 Arguments.Add(methodGroup);

@@ -15,7 +15,7 @@ namespace Il2Native.Logic.DOM.Implementations
         {
         }
 
-        public TypeImpl(ITypeSymbol typeSymbol)
+        protected TypeImpl(ITypeSymbol typeSymbol)
         {
             Kind = typeSymbol.Kind;
             Name = typeSymbol.Name;
@@ -44,6 +44,38 @@ namespace Il2Native.Logic.DOM.Implementations
             IsAnonymousType = typeSymbol.IsAnonymousType;
             IsNamespace = typeSymbol.IsNamespace;
             IsType = typeSymbol.IsType;
+        }
+
+        public static ITypeSymbol Wrap(ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol == null)
+            {
+                throw new ArgumentNullException("typeSymbol");
+            }
+
+            var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return new NamedTypeImpl(namedTypeSymbol);
+            }
+
+            return new TypeImpl(typeSymbol);
+        }
+
+        public static ITypeSymbol Wrap(ITypeSymbol typeSymbol, ISymbol newContainingSymbol)
+        {
+            if (typeSymbol == null)
+            {
+                throw new ArgumentNullException("typeSymbol");
+            }
+
+            var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return new NamedTypeImpl(namedTypeSymbol) { ContainingSymbol = newContainingSymbol };
+            }
+
+            return new TypeImpl(typeSymbol) { ContainingSymbol = newContainingSymbol };
         }
 
         public SymbolKind Kind { get; set; }
