@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using DOM.Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -26,6 +27,13 @@ namespace Il2Native.Logic.DOM2
             this.LeftOperand = Deserialize(boundNullCoalescingOperator.LeftOperand) as Expression;
             this.RightOperand = Deserialize(boundNullCoalescingOperator.RightOperand) as Expression;
             this.ConversionKind = boundNullCoalescingOperator.LeftConversion.Kind;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            base.Visit(visitor);
+            this.LeftOperand.Visit(visitor);
+            this.RightOperand.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

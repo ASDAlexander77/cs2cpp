@@ -80,6 +80,8 @@
     <Compile Include="DOM2\MethodGroup.cs" />
     <Compile Include="DOM2\MethodPointer.cs" />
     <Compile Include="DOM2\NoOpStatement.cs" />
+    <Compile Include="DOM2\LoweredConditionalAccess.cs" />
+    <Compile Include="DOM2\ConditionalReceiver.cs" />
     <Compile Include="DOM2\NullCoalescingOperator.cs" />
     <Compile Include="DOM2\Parenthesis.cs" />
     <Compile Include="DOM2\PointerIndirectionOperator.cs" />

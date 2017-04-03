@@ -615,6 +615,22 @@ namespace Il2Native.Logic.DOM2
                 return argListOperator;
             }
 
+            var boundLoweredConditionalAccess = boundBody as BoundLoweredConditionalAccess;
+            if (boundLoweredConditionalAccess != null)
+            {
+                var loweredConditionalAccess = new LoweredConditionalAccess();
+                loweredConditionalAccess.Parse(boundLoweredConditionalAccess);
+                return loweredConditionalAccess;
+            }
+
+            var boundConditionalReceiver = boundBody as BoundConditionalReceiver;
+            if (boundConditionalReceiver != null)
+            {
+                var conditionalReceiver = new ConditionalReceiver();
+                conditionalReceiver.Parse(boundConditionalReceiver);
+                return conditionalReceiver;
+            }
+
             var statemnentOrExpression = Unwrap(boundBody);
             if (statemnentOrExpression == null)
             {

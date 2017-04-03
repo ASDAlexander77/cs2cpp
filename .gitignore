@@ -5,6 +5,7 @@
 /Ll2NativeTests/obj
 /Ll2NativeTests/bin
 /TestResults
+/Il2Native.CmdLine.csproj.user
 /Il2Native.sln.DotSettings.user
 /Il2Bc.sln.DotSettings.user
 /*.suo
@@ -12,7 +13,7 @@
 /CoreLib/bin
 /CoreSource/obj
 /CoreSource/bin
-/CSharpSource/obj/Debug
+/CSharpSource/obj
 /CSharpSource/bin
 /PEAssemblyReader/obj
 /PEAssemblyReader/bin
@@ -21,10 +22,8 @@ StyleCop.Cache
 /PdbReader/obj
 /PdbReader/bin
 /Il2Native.Logic/Resources/Impl.zip
-/mscorlib/bin/Debug
-/mscorlib/obj/Debug
-/mscorlib/obj/Release
-/mscorlib/bin/Release
+/mscorlib/bin
+/mscorlib/obj
 /Il2Native.VC.db
 /Il2Native.VC.VC.opendb
 /.vs

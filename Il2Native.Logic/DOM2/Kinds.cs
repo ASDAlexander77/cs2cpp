@@ -78,6 +78,8 @@ namespace Il2Native.Logic.DOM2
         DoStatement,
         DelegateCreationExpression,
         CatchBlock,
-        MethodPointer
+        MethodPointer,
+        LoweredConditionalAccess,
+        ConditionalReceiver
     }
 }
