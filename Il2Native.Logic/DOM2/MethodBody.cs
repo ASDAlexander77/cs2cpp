@@ -263,10 +263,13 @@ namespace Il2Native.Logic.DOM2
                             var gotoStatement = (GotoStatement)e;
                             usedLabels.Add(gotoStatement.Label);
 
-                            var labelName = gotoStatement.Label.LabelName;
-                            if (!labelsByName.Contains(labelName))
+                            if (gotoStatement.Label.Kind != Kinds.SwitchLabel)
                             {
-                                activeGotoLabel.Add(labelName);
+                                var labelName = gotoStatement.Label.LabelName;
+                                if (!labelsByName.Contains(labelName))
+                                {
+                                    activeGotoLabel.Add(labelName);
+                                }
                             }
                         }
 
