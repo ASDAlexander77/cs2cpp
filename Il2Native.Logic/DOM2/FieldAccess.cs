@@ -76,7 +76,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                if (this.ReceiverOpt != null)
+                if (this.ReceiverOpt != null && this.ReceiverOpt.Kind != Kinds.ConditionalReceiver)
                 {
                     var primitiveValueAccess = this.Field.ContainingType != null &&
                                                                this.Field.ContainingType.IsPrimitiveValueType() &&

@@ -39,8 +39,13 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            this.Expression.WriteTo(c);
-            c.TextSpan("->operator[](");
+            if (this.Expression.Kind != Kinds.ConditionalReceiver)
+            {
+                this.Expression.WriteTo(c);
+                c.TextSpan("->");
+            }
+
+            c.TextSpan("operator[](");
 
             if (this._indices.Count > 1)
             {

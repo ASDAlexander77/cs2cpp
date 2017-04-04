@@ -38,18 +38,21 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteWrappedExpressionIfNeeded(this.ReceiverOpt);
-            switch (this.AccessType)
+            if (this.ReceiverOpt != null)
             {
-                case AccessTypes.Dot:
-                    c.TextSpan(".");
-                    break;
-                case AccessTypes.DoubleColon:
-                    c.TextSpan("::");
-                    break;
-                default:
-                    c.TextSpan("->");
-                    break;
+                c.WriteWrappedExpressionIfNeeded(this.ReceiverOpt);
+                switch (this.AccessType)
+                {
+                    case AccessTypes.Dot:
+                        c.TextSpan(".");
+                        break;
+                    case AccessTypes.DoubleColon:
+                        c.TextSpan("::");
+                        break;
+                    default:
+                        c.TextSpan("->");
+                        break;
+                }
             }
 
             this.Expression.WriteTo(c);

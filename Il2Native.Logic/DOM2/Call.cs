@@ -76,18 +76,15 @@ namespace Il2Native.Logic.DOM2
         {
             base.Parse(boundCall);
             this.Method = boundCall.Method;
-            if (boundCall.ReceiverOpt != null)
+            if (boundCall.ReceiverOpt != null && boundCall.ReceiverOpt.Kind != BoundKind.ConditionalReceiver)
             {
-                if (boundCall.ReceiverOpt.Kind != BoundKind.ConditionalReceiver)
+                this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
+                // special case to avoid calling (*xxx).method() and replace with xxx->method();
+                var pointerIndirectionOperator = this.ReceiverOpt as PointerIndirectionOperator;
+                if (pointerIndirectionOperator != null)
                 {
-                    this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
-                    // special case to avoid calling (*xxx).method() and replace with xxx->method();
-                    var pointerIndirectionOperator = this.ReceiverOpt as PointerIndirectionOperator;
-                    if (pointerIndirectionOperator != null)
-                    {
-                        this.ReceiverOpt = pointerIndirectionOperator.Operand;
-                        this.ReceiverOpt.IsReference = true;
-                    }
+                    this.ReceiverOpt = pointerIndirectionOperator.Operand;
+                    this.ReceiverOpt.IsReference = true;
                 }
             }
 

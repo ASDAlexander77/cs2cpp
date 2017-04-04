@@ -18,7 +18,6 @@ namespace Il2Native.Logic.DOM2
         internal void Parse(BoundConditionalReceiver boundConditionalReceiver)
         {
             base.Parse(boundConditionalReceiver);
-            throw new NotSupportedException("This should not be called.");
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -28,8 +27,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            // Finish it properly
-            c.TextSpan("TEST");
+            // do nothing
         }
     }
 }
