@@ -307,25 +307,17 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            if (fieldSymbol.IsStatic)
+            var isStaticWrap = fieldSymbol.IsStatic && !doNotWrapStatic;
+            var isVolatile = fieldSymbol.IsSupportedVolatile();
+            if (isStaticWrap && isVolatile)
             {
-                if (!doNotWrapStatic)
-                {
-                    if (fieldSymbol.IsSupportedVolatile())
-                    {
-                        this.TextSpan("__static_volatile<");
-                    }
-                    else
-                    {
-                        this.TextSpan("__static<");
-                    }
-                }
-                else if (fieldSymbol.IsSupportedVolatile())
-                {
-                    this.TextSpan("__volatile_t<");
-                }
+                this.TextSpan("__static_volatile<");
             }
-            else if (fieldSymbol.IsSupportedVolatile())
+            else if (isStaticWrap)
+            {
+                this.TextSpan("__static<");
+            }
+            else if (isVolatile)
             {
                 this.TextSpan("__volatile_t<");
             }

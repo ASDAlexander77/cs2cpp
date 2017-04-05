@@ -70,7 +70,8 @@
             }
 
             var effectiveExpression = this.Operand;
-            if (this.ConversionKind == ConversionKind.Boxing && this.Operand.IsStaticOrSupportedVolatileWrapperCall())
+            if ((this.ConversionKind == ConversionKind.Boxing || this.ConversionKind == ConversionKind.ImplicitReference) 
+                && this.Operand.IsStaticOrSupportedVolatileWrapperCall())
             {
                 effectiveExpression = new Cast
                 {
