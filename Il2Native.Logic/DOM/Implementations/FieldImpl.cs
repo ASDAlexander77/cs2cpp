@@ -11,6 +11,61 @@ namespace Il2Native.Logic.DOM.Implementations
 
     public class FieldImpl : IFieldSymbol
     {
+        public FieldImpl()
+        {
+        }
+
+        public FieldImpl(IFieldSymbol fieldSymbol)
+        {
+            Kind = fieldSymbol.Kind;
+            Name = fieldSymbol.Name;
+            MetadataName = fieldSymbol.MetadataName;
+            ContainingSymbol = fieldSymbol.ContainingSymbol;
+            ContainingAssembly = fieldSymbol.ContainingAssembly;
+            ContainingModule = fieldSymbol.ContainingModule;
+            ContainingType = fieldSymbol.ContainingType;
+            ContainingNamespace = fieldSymbol.ContainingNamespace;
+            IsDefinition = fieldSymbol.IsDefinition;
+            IsStatic = fieldSymbol.IsStatic;
+            IsVirtual = fieldSymbol.IsVirtual;
+            IsOverride = fieldSymbol.IsOverride;
+            IsAbstract = fieldSymbol.IsAbstract;
+            IsSealed = fieldSymbol.IsSealed;
+            IsExtern = fieldSymbol.IsExtern;
+            DeclaredAccessibility = fieldSymbol.DeclaredAccessibility;
+            OriginalDefinition = fieldSymbol.OriginalDefinition;
+            IsConst = fieldSymbol.IsConst;
+            IsReadOnly = fieldSymbol.IsReadOnly;
+            IsVolatile = fieldSymbol.IsVolatile;
+            Type = fieldSymbol.Type;
+            HasConstantValue = fieldSymbol.HasConstantValue;
+            ConstantValue = fieldSymbol.ConstantValue;
+            CustomModifiers = fieldSymbol.CustomModifiers;
+
+            CorrespondingTupleField = fieldSymbol.CorrespondingTupleField;
+        }
+
+        public FieldImpl(IEventSymbol eventSymbol)
+        {
+            Kind = SymbolKind.Field;
+            Name = eventSymbol.Name;
+            MetadataName = eventSymbol.MetadataName;
+            ContainingSymbol = eventSymbol.ContainingSymbol;
+            ContainingAssembly = eventSymbol.ContainingAssembly;
+            ContainingModule = eventSymbol.ContainingModule;
+            ContainingType = eventSymbol.ContainingType;
+            ContainingNamespace = eventSymbol.ContainingNamespace;
+            IsDefinition = eventSymbol.IsDefinition;
+            IsStatic = eventSymbol.IsStatic;
+            IsVirtual = eventSymbol.IsVirtual;
+            IsOverride = eventSymbol.IsOverride;
+            IsAbstract = eventSymbol.IsAbstract;
+            IsSealed = eventSymbol.IsSealed;
+            IsExtern = eventSymbol.IsExtern;
+            DeclaredAccessibility = eventSymbol.DeclaredAccessibility;
+            Type = eventSymbol.Type;
+        }
+
         public SymbolKind Kind { get; private set; }
         public string Language { get; private set; }
         public string Name { get; set; }

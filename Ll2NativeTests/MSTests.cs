@@ -1210,8 +1210,11 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             skip.Add(98); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
             skip.Add(100); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
 
+            // new C++ limitations
+            skip.Add(150);
+
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(119, 589-119).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

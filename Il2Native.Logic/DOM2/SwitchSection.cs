@@ -34,12 +34,18 @@ namespace Il2Native.Logic.DOM2
             base.Parse(boundSwitchSection);
             foreach (var boundSwitchLabel in boundSwitchSection.SwitchLabels)
             {
-                var sourceLabelSymbol = (boundSwitchLabel.Label as SourceLabelSymbol);
-                if (sourceLabelSymbol != null)
+                var labelSymbol = (boundSwitchLabel.Label as LabelSymbol);
+                if (labelSymbol != null)
                 {
                     var switchLabel = new SwitchLabel();
-                    switchLabel.Parse(sourceLabelSymbol);
+                    switchLabel.Parse(labelSymbol);
+                    if (boundSwitchLabel.ConstantValueOpt != null)
+                    {
+                        switchLabel.Value = boundSwitchLabel.ConstantValueOpt;
+                    }
+
                     this.Labels.Add(switchLabel);
+                    continue;
                 }
             }
         }

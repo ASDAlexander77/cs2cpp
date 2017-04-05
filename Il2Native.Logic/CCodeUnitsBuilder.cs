@@ -447,6 +447,11 @@ namespace Il2Native.Logic
                 this.BuildField(field, unit, hasStaticConstructor);
             }
 
+            foreach (var @event in type.GetMembers().OfType<IEventSymbol>())
+            {
+                this.BuildField(new FieldImpl(@event), unit, hasStaticConstructor);
+            }
+
             if (hasStaticConstructor)
             {
                 BuildStaticConstructorVariables(type, unit);
