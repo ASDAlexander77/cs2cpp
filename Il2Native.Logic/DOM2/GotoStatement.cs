@@ -27,15 +27,16 @@ namespace Il2Native.Logic.DOM2
             if (sourceLabelSymbol != null)
             {
                 var switchLabel = new SwitchLabel();
-                switchLabel.Parse(sourceLabelSymbol);
-                this.Label = switchLabel;
+                if (switchLabel.Parse(sourceLabelSymbol))
+                {
+                    this.Label = switchLabel;
+                    return;
+                }
             }
-            else
-            {
-                var label = new Label();
-                label.Parse(boundGotoStatement.Label);
-                this.Label = label;
-            }
+
+            var label = new Label();
+            label.Parse(boundGotoStatement.Label);
+            this.Label = label;
         }
 
         internal override void Visit(Action<Base> visitor)

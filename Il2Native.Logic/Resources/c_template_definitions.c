@@ -193,8 +193,7 @@ bool __array<T>::System_Collections_Generic_ICollectionT1_Remove(T t)
 template <typename T>
 CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::System_Collections_Generic_IEnumerableT1_GetEnumerator()
 {
-	// TODO: finish it
-	throw __new<CoreLib::System::NotImplementedException>();
+	return __new<CoreLib::System::ArraySegmentT1<T>>(this)->System_Collections_Generic_IEnumerableT1_GetEnumerator();
 }
 
 // IList

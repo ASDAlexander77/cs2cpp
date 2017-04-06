@@ -13,7 +13,7 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.SwitchLabel; }
         }
 
-        internal void Parse(SourceLabelSymbol sourceLabelSymbol)
+        internal bool Parse(SourceLabelSymbol sourceLabelSymbol)
         {
             if (sourceLabelSymbol == null)
             {
@@ -21,8 +21,8 @@ namespace Il2Native.Logic.DOM2
             }
 
             base.Parse(sourceLabelSymbol);
-
             Value = sourceLabelSymbol.SwitchCaseLabelConstant;
+            return Value != null;
         }
     }
 }
