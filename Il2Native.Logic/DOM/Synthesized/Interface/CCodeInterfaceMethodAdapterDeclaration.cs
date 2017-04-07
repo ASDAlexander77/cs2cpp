@@ -30,7 +30,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             }
 
             c.WriteMethodReturn(Method, true);
-            c.WriteMethodName(Method, allowKeywords: false);
+            c.WriteMethodName(Method, allowKeywords: false, addTypeArguments: true);
             c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
 
             if (MethodBodyOpt == null)
