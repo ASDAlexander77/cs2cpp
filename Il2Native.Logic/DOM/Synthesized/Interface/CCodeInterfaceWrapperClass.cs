@@ -89,9 +89,14 @@ namespace Il2Native.Logic.DOM
             c.EndBlockWithoutNewLine();
         }
 
-        private static void GetGenericNameRecursive(StringBuilder sb, INamedTypeSymbol @interface)
+        public static void GetGenericNameRecursive(StringBuilder sb, INamedTypeSymbol @interface)
         {
             sb.Append(@interface.MetadataName.CleanUpName());
+            GetGenericArgumentsRecursive(sb, @interface);
+        }
+
+        public static void GetGenericArgumentsRecursive(StringBuilder sb, INamedTypeSymbol @interface)
+        {
             if (@interface.IsGenericType)
             {
                 sb.Append("_");
@@ -125,6 +130,7 @@ namespace Il2Native.Logic.DOM
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
                 Method = method,
+                InterfaceWrapperSpecialCall = true
             };
 
             foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
@@ -147,9 +153,11 @@ namespace Il2Native.Logic.DOM
 
         private MethodImpl CreateWrapperMethod(IMethodSymbol method)
         {
+            var namedTypeSymbol = (INamedTypeSymbol)Type;
+
             return new MethodImpl(method)
             {
-                ReceiverType = new NamedTypeImpl { Name = GetName((INamedTypeSymbol)Type, this.@interface), ContainingType = (INamedTypeSymbol)Type },
+                ReceiverType = new NamedTypeImpl { Name = GetName(namedTypeSymbol, this.@interface), ContainingType = (INamedTypeSymbol)Type },
                 IsAbstract = false,
                 ContainingNamespace = Type.ContainingNamespace,
                 // special case to write method name as MetadataName

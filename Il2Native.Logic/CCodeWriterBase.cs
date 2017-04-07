@@ -18,6 +18,7 @@ namespace Il2Native.Logic
 
     using Conversion = DOM2.Conversion;
     using Expression = DOM2.Expression;
+    using System.Text;
 
     public abstract class CCodeWriterBase
     {
@@ -397,7 +398,7 @@ namespace Il2Native.Logic
             this.WriteMethodName(methodSymbol, false);
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, bool addTypeArguments = false, IMethodSymbol methodSymbolForName = null)
         {
             var specialCaseForInterfaceWrapper = methodSymbol.IsInterfaceGenericMethodSpecialCase();
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null && !specialCaseForInterfaceWrapper)
@@ -406,7 +407,7 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName);
+            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName, addTypeArguments);
 
             if (methodSymbol.IsGenericMethod)
             {
@@ -422,7 +423,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
+        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null, bool addTypeArguments = false)
         {
             // name
             ////if (methodSymbol.MethodKind == MethodKind.Destructor)
@@ -439,19 +440,42 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (methodSymbol.ContainingType != null && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
-            {
-                this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
-                this.TextSpan("_");
-            }
-
             var explicitInterfaceImplementation =
                 symbol.ExplicitInterfaceImplementations != null
                     ? symbol.ExplicitInterfaceImplementations.FirstOrDefault()
                     : null;
+
+            if (methodSymbol.ContainingType != null 
+                && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
+            {
+                this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+
+                if (addTypeArguments && explicitInterfaceImplementation == null)
+                {
+                    if (methodSymbol.ContainingType.IsGenericType
+                        && methodSymbol.ContainingType.GetTemplateArguments().Select(t => t as INamedTypeSymbol).All(t => t != null && !t.IsGenericType))
+                    {
+                        var sb = new StringBuilder();
+                        CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, methodSymbol.ContainingType);
+                        this.TextSpan(sb.ToString());
+                    }
+                }
+
+                this.TextSpan("_");
+            }
+
             if (explicitInterfaceImplementation != null)
             {
                 this.TextSpan(explicitInterfaceImplementation.ContainingType.GetTypeFullName());
+
+                if (explicitInterfaceImplementation.ContainingType.IsGenericType
+                    && explicitInterfaceImplementation.ContainingType.GetTemplateArguments().Select(t => t as INamedTypeSymbol).All(t => t != null && !t.IsGenericType))
+                {
+                    var sb = new StringBuilder();
+                    CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, explicitInterfaceImplementation.ContainingType);
+                    this.TextSpan(sb.ToString());
+                }
+
                 var dotIndex = symbol.MetadataName.LastIndexOf('.');
                 if (dotIndex > 0)
                 {
