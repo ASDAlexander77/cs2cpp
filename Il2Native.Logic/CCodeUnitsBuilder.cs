@@ -524,6 +524,7 @@ namespace Il2Native.Logic
                 if (!type.IsAbstract)
                 {
                     unit.Declarations.Add(new CCodeCloneVirtualMethod(namedTypeSymbol));
+                    unit.Declarations.Add(new CCodeGetSizeVirtualMethod(namedTypeSymbol));
                     unit.Declarations.Add(new CCodeHashVirtualMethod(namedTypeSymbol));
                     unit.Declarations.Add(new CCodeEqualsVirtualMethod(namedTypeSymbol));
                 }

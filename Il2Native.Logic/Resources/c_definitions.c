@@ -93,9 +93,15 @@ void GC_CALLBACK __finalizer(void * obj, void * client_data)
 	((object*)obj)->Finalize();
 }
 
-int32_t __hash_code(object* _obj, size_t _size)
+int32_t __hash_code(object* _obj)
 {
 	if (_obj == nullptr)
+	{
+		return 0;
+	}
+
+	size_t _size = _obj->__get_size();
+	if (_size == 0)
 	{
 		return 0;
 	}
@@ -119,14 +125,16 @@ int32_t __hash_code(object* _obj, size_t _size)
 	return hash;
 }
 
-bool __equals_helper(object* _obj1, size_t _size1, object* _obj2, size_t _size2)
+bool __equals_helper(object* _obj1, object* _obj2)
 {
-	if (_size1 != _size2)
+	if (_obj1 == nullptr || _obj2 == nullptr)
 	{
-		return false;
+		return _obj1 == _obj2;
 	}
 
-	if ((_obj1 == nullptr || _obj2 == nullptr) && _obj1 != _obj2)
+	size_t _size1 = _obj1->__get_size();
+	size_t _size2 = _obj2->__get_size();
+	if (_size1 != _size2)
 	{
 		return false;
 	}

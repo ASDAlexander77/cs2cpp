@@ -34,17 +34,11 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     {
                                         Name = "__hash_code",
                                         Parameters = ImmutableArray.Create<IParameterSymbol>(
-                                            new ParameterImpl { Name = "_class", Type = type },
-                                            new ParameterImpl
-                                            {
-                                                Name = "_size",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Int32 }
-                                            })
+                                            new ParameterImpl { Name = "_class", Type = type })
                                     },
                                 Arguments =
                                 {
-                                    new ThisReference { Type = type, ValueAsReference = true },
-                                    new SizeOfOperator { SourceType = new TypeExpression { Type = new ValueTypeAsClassTypeImpl(type), SuppressReference = true } }
+                                    new ThisReference { Type = type, ValueAsReference = true }
                                 }
                             }
                     }

@@ -121,6 +121,7 @@
     <Compile Include="DOM\CCodeDefinition.cs" />
     <Compile Include="CCodeUnitsBuilder.cs" />
     <Compile Include="DOM\CCodeFieldDeclaration.cs" />
+    <Compile Include="DOM\Synthesized\CCodeGetSizeVirtualMethod.cs" />
     <Compile Include="DOM\Synthesized\Interface\CCodeInterfaceWrapperClass.cs" />
     <Compile Include="DOM\CCodeMethodDefinition.cs" />
     <Compile Include="DOM\CCodeMethodDeclaration.cs" />

@@ -41,24 +41,13 @@ namespace Il2Native.Logic.DOM.Synthesized
                                             },
                                             new ParameterImpl
                                             {
-                                                Name = "_size1",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Int32 }
-                                            },
-                                            new ParameterImpl
-                                            {
                                                 Name = "_obj2",
                                                 Type = new TypeImpl { SpecialType = SpecialType.System_Object }
-                                            },
-                                            new ParameterImpl
-                                            {
-                                                Name = "_size2",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Int32 }
                                             })
                                     },
                                 Arguments =
                                 {
                                     new ThisReference { Type = type, ValueAsReference = true },
-                                    new SizeOfOperator { SourceType = new TypeExpression { Type = new ValueTypeAsClassTypeImpl(type), SuppressReference = true } },
                                     new Parameter
                                     {
                                         ParameterSymbol =
@@ -67,8 +56,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                                 Name = "obj",
                                                 Type = new TypeImpl { SpecialType = SpecialType.System_Object }
                                             }
-                                    },
-                                    new SizeOfOperator { SourceType = new TypeExpression { Type = new ValueTypeAsClassTypeImpl(type), SuppressReference = true } }
+                                    }
                                 }
                             }
                     }
