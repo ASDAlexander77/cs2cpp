@@ -39,6 +39,12 @@ bool  __array<T>::__is_primitive_type_array()
 }
 
 template <typename T>
+uint32_t  __array<T>::__get_size()
+{
+	return sizeof(__array<T>) + get_Length() * __array_element_size();
+}
+
+template <typename T>
 void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
 {
 	if (rank != 1)

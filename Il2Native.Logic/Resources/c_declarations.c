@@ -278,6 +278,7 @@ public:
 
 	virtual CoreLib::System::Type* __get_type() override;
 	virtual bool __is_type(CoreLib::System::Type*) override;
+	virtual uint32_t __get_size() override;
 
 	// Array
 	virtual int32_t __array_element_size() override;
