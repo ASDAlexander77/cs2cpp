@@ -93,7 +93,10 @@ namespace Il2Native.Logic.DOM2
                 else
                 {
                     c.TextSpan("default:");
-                    label.GenerateLabel = this.IsNullableType;
+                    if (this.IsNullableType)
+                    {
+                        label.GenerateLabel = true;
+                    }
                 }
 
                 c.NewLine();

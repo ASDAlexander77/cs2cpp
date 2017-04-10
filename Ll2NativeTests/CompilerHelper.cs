@@ -50,7 +50,7 @@
 
         /// <summary>
         /// </summary>
-        public static bool GcDebugEnabled = true;
+        public static bool GcDebugEnabled = false;
 
         /// <summary>
         /// </summary>

@@ -33,6 +33,8 @@ cd Il2Native
 MSBuild Il2Native.sln /p:Configuration=Release /p:Platform="Any CPU"
 ```
 
+or open Il2Native.sln in Visual Studio 2017 and compile it
+
 2) Build CoreLib (aka mscorlib)
 
 ```
@@ -51,7 +53,7 @@ cd playground
 4) Generating CoreLib C++ project
 
 ```
-..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe ..\Il2Native\CoreLib\CoreLib.csproj
+..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe /release ..\Il2Native\CoreLib\CoreLib.csproj
 ```
 
 5) Compile it
@@ -85,7 +87,7 @@ class X {
 ```
 
 ```
-..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe HelloWorld.cs /corelib:..\Il2Native\CoreLib\bin\Release\CoreLib.dll
+..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe /release HelloWorld.cs /corelib:..\Il2Native\CoreLib\bin\Release\CoreLib.dll
 cd HelloWorld
 build_vs2015_release.bat
 ```
