@@ -828,7 +828,7 @@ inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(objec
 }
 
 // Boxing internals
-template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box (T t)
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box(T t)
 {
 	// we do not need to call __new here as it already constructed
 	return new T(t);
@@ -853,6 +853,17 @@ object* __box_pointer(void* p);
 template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box (T t)
 {
 	return __box_pointer((void*)t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box(CoreLib::System::NullableT1<T> t)
+{
+	if (!t.get_HasValue())
+	{
+		return nullptr;
+	}
+
+	// we do not need to call __new here as it already constructed
+	return __box(t.GetValueOrDefault());
 }
 
 // box - DEBUG
@@ -880,6 +891,17 @@ template <typename T> inline typename std::enable_if<is_interface_type<T>::value
 template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
 {
 	return __box_pointer((void*)t);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_debug (const char* _file, int _line, CoreLib::System::NullableT1<T> t)
+{
+	if (!t.get_HasValue())
+	{
+		return nullptr;
+	}
+
+	// we do not need to call __new here as it already constructed
+	return __box_debug(_file, _line, t.GetValueOrDefault());
 }
 
 // Unboxing internals

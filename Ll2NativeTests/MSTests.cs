@@ -1220,10 +1220,10 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             skip.Add(275); // using __unbound_generic_type<void> casing compilation issues
             skip.Add(313); // enum to string - not implemented
             skip.Add(343); // using the same name for template and class
-            skip.Add(351); // BOX item to System.Enum cast is not working (can be fixed)
+            skip.Add(351); // BOX item to System.Enum cast is not working (can be fixed!!!)
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(373, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(378, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
