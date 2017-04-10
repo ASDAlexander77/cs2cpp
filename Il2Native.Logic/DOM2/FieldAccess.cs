@@ -101,6 +101,11 @@ namespace Il2Native.Logic.DOM2
         private Expression PrepareFieldReceiver(Expression receiverOpt, IFieldSymbol fieldSymbol)
         {
             var effectiveReceiverOpt = receiverOpt;
+            if (effectiveReceiverOpt.Type == null)
+            {
+                return effectiveReceiverOpt;
+            }
+
             if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Field.ContainingType != effectiveReceiverOpt.Type)
             {
                 effectiveReceiverOpt = new Cast

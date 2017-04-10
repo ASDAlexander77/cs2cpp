@@ -501,7 +501,16 @@ namespace Il2Native.Logic
             else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
             {
                 this.TextSpan("_");
-                this.WriteTypeSuffix(methodSymbol.ReturnType);
+
+                var effectiveType = methodSymbol.ReturnType;
+                var substitutedMethodSymbol = methodSymbol as SubstitutedMethodSymbol;
+                if (substitutedMethodSymbol != null 
+                    && substitutedMethodSymbol.UnderlyingMethod.ReturnType.TypeKind == TypeKind.TypeParameter)
+                {
+                    effectiveType = substitutedMethodSymbol.UnderlyingMethod.ReturnType;
+                }
+                
+                this.WriteTypeSuffix(effectiveType);
             }
 
             // write suffixes for ref & out parameters
