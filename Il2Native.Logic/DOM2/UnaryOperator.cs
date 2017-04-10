@@ -16,9 +16,9 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.UnaryOperator; }
         }
 
-        public Expression Operand { get; private set; }
+        public Expression Operand { get; set; }
 
-        internal UnaryOperatorKind OperatorKind { get; private set; }
+        internal UnaryOperatorKind OperatorKind { get; set; }
 
         internal static bool IsChecked(UnaryOperatorKind kind)
         {

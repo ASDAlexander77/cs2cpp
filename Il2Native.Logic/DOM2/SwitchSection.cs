@@ -29,6 +29,8 @@ namespace Il2Native.Logic.DOM2
 
         public ITypeSymbol SwitchType { get; set; }
 
+        public bool IsNullableType { get; set; }
+
         internal void Parse(BoundSwitchSection boundSwitchSection)
         {
             base.Parse(boundSwitchSection);
@@ -83,10 +85,15 @@ namespace Il2Native.Logic.DOM2
                         c.TextSpan(label.ToString());
                         c.TextSpan(":");
                     }
+                    else
+                    {
+                        label.GenerateLabel = this.IsNullableType;
+                    }
                 }
                 else
                 {
                     c.TextSpan("default:");
+                    label.GenerateLabel = this.IsNullableType;
                 }
 
                 c.NewLine();

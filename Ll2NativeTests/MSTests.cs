@@ -852,7 +852,7 @@ namespace Ll2NativeTests
             skip.Add(680);
             skip.Add(827); // compile error
 
-            foreach (var index in Enumerable.Range(827, 934).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 934).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

@@ -10,6 +10,7 @@ namespace Il2Native.Logic.DOM2
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using System.Collections.Immutable;
 
     public class SwitchStatement : Statement
     {
@@ -17,6 +18,7 @@ namespace Il2Native.Logic.DOM2
         private readonly IList<Statement> statements = new List<Statement>();
         private MethodSymbol stringEquality;
         private readonly IList<SwitchSection> switchCases = new List<SwitchSection>();
+        private bool isNullableType;
 
         public override Kinds Kind
         {
@@ -28,6 +30,12 @@ namespace Il2Native.Logic.DOM2
             if (boundSwitchStatement == null)
             {
                 throw new ArgumentNullException();
+            }
+
+            var boundCall = boundSwitchStatement.Expression as BoundCall;
+            if (boundCall != null && boundCall.ReceiverOpt != null)
+            {
+                this.isNullableType = boundCall.ReceiverOpt.Type.IsNullableType();
             }
 
             /*
@@ -48,6 +56,7 @@ namespace Il2Native.Logic.DOM2
                 var switchSection = new SwitchSection();
                 switchSection.SwitchType = this.expression.Type;
                 switchSection.Parse(boundSwitchSection);
+                switchSection.IsNullableType = this.isNullableType;
                 this.switchCases.Add(switchSection);
             }
 
@@ -197,6 +206,41 @@ namespace Il2Native.Logic.DOM2
                 statement.WriteTo(c);
             }
 
+            var generateDefaultLabel = this.isNullableType;
+            if (this.isNullableType)
+            {
+                var nullCase = this.switchCases.FirstOrDefault(sc => sc.Labels.Any(l => l.Value != null && l.Value.IsNull));
+                if (nullCase != null)
+                {
+                    generateDefaultLabel = false;
+                }
+
+                var nullCaseOrDefault = nullCase ?? this.switchCases.FirstOrDefault(sc => sc.Labels.Any(l => l.Value == null));
+                if (nullCaseOrDefault != null)
+                {
+                    var effectiveExpression = this.expression;
+
+                    var callExpression = this.expression as Call;
+                    if (callExpression != null)
+                    {
+                        effectiveExpression = new UnaryOperator
+                        {
+                            OperatorKind = UnaryOperatorKind.LogicalNegation,
+                            Operand = new Call { ReceiverOpt = callExpression.ReceiverOpt, Method = new MethodImpl { Name = "get_HasValue", Parameters = ImmutableArray<IParameterSymbol>.Empty } }
+                        };
+                    }
+
+                    // we need to insert nullable goto;
+                    var ifStatement = new IfStatement
+                    {
+                        Condition = effectiveExpression,
+                        IfStatements = new GotoStatement { Label = nullCaseOrDefault.Labels.First(l => l.Value == null || l.Value.IsNull) }
+                    };
+
+                    ifStatement.WriteTo(c);
+                }
+            }
+
             c.TextSpan("switch");
             c.WhiteSpace();
             c.TextSpan("(");
@@ -214,6 +258,11 @@ namespace Il2Native.Logic.DOM2
             c.OpenBlock();
             foreach (var switchSection in this.switchCases)
             {
+                if (!generateDefaultLabel && switchSection.Labels.Any(l => l.Value == null))
+                {
+                    switchSection.IsNullableType = false;
+                }
+
                 switchSection.WriteTo(c);
             }
 
