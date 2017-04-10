@@ -174,7 +174,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public bool IsGenericType
         {
-            get { return this.typeSymbol.IsGenericType; }
+            get { return this.typeSymbol.TypeKind == TypeKind.Enum ? false : this.typeSymbol.IsGenericType; }
         }
 
         public bool IsUnboundGenericType

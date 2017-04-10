@@ -89,12 +89,29 @@ namespace Il2Native.Logic.DOM2
                     }
                     else
                     {
-                        c.WriteAccess(this.ReceiverOpt);
+                        var effectiveReceiverOpt = PrepareFieldReceiver(this.ReceiverOpt, this.Field);
+                        c.WriteAccess(effectiveReceiverOpt);
                     }
                 }
 
                 c.WriteName(this.Field);
             }
+        }
+
+        private Expression PrepareFieldReceiver(Expression receiverOpt, IFieldSymbol fieldSymbol)
+        {
+            var effectiveReceiverOpt = receiverOpt;
+            if (effectiveReceiverOpt.Type.TypeKind == TypeKind.TypeParameter && this.Field.ContainingType != effectiveReceiverOpt.Type)
+            {
+                effectiveReceiverOpt = new Cast
+                {
+                    Constrained = true,
+                    Operand = effectiveReceiverOpt,
+                    Type = this.Field.ContainingType
+                };
+            }
+
+            return effectiveReceiverOpt;
         }
     }
 }

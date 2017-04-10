@@ -130,7 +130,7 @@ namespace Il2Native.Logic.DOM
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
                 Method = method,
-                InterfaceWrapperSpecialCall = true
+                InterfaceWrapperSpecialCall = Type.TypeKind != TypeKind.Interface
             };
 
             foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
