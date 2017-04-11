@@ -46,11 +46,10 @@ namespace System
         [System.Security.SecurityCritical]  // auto-generated
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal static extern void Copy(Array sourceArray, int sourceIndex, Array destinationArray, int destinationIndex, int length, bool reliable);
-       
-        public static void Clear(Array array, int index, int length)
-        {
-            throw new NotImplementedException();
-        }
+
+        [System.Security.SecuritySafeCritical]  // auto-generated
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern void Clear(Array array, int index, int length);
 
         public unsafe Object GetValue(params int[] indices)
         {

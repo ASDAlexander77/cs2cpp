@@ -62,7 +62,7 @@
             var interfaceCastRequired = this.ConversionKind == ConversionKind.Boxing && Type.TypeKind == TypeKind.Interface;
             if (interfaceCastRequired)
             {
-                c.TextSpan(this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type) ? "interface_cast" : "dynamic_interface_cast");
+                c.TextSpan(this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type) ? "interface_cast" : "dynamic_interface_cast_or_throw");
                 c.TextSpan("<");
                 c.WriteType(Type);
                 c.TextSpan(">");
@@ -167,7 +167,7 @@
                     }
                     else if (Type.TypeKind == TypeKind.Interface)
                     {
-                        c.TextSpan("dynamic_interface_cast<");
+                        c.TextSpan("dynamic_interface_cast_or_throw<");
                         c.WriteType(Type);
                         c.TextSpan(">");
                     }

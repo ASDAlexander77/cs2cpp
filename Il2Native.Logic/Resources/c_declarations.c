@@ -39,9 +39,27 @@ inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::valu
 }
 
 template <typename D, typename S> 
-inline typename std::enable_if<is_value_type<D>::value || is_value_type<S>::value, bool>::type is(S s)
+inline typename std::enable_if<is_value_type<D>::value && is_value_type<S>::value, bool>::type is(S s)
 {
 	return false;
+}
+
+template <typename D, typename S, typename _CLASS = typename valuetype_to_class<S>::type*>
+inline typename std::enable_if<!is_value_type<D>::value && is_value_type<S>::value && std::is_same<D, _CLASS>::value, bool>::type is(S s)
+{
+	return true;
+}
+
+template <typename D, typename S, typename _CLASS = typename valuetype_to_class<S>::type*>
+inline typename std::enable_if<!is_value_type<D>::value && is_value_type<S>::value && !std::is_same<D, _CLASS>::value, bool>::type is(S s)
+{
+	return false;
+}
+
+template <typename D, typename _CLASS = typename valuetype_to_class<D>::type*>
+inline typename std::enable_if<is_value_type<D>::value, bool>::type is(object* o)
+{
+	return dynamic_cast<_CLASS>(o) != nullptr;
 }
 
 // special case for interfaces

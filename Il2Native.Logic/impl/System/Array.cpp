@@ -56,6 +56,45 @@ int32_t CoreLib::System::Array::get_Length()
     throw 0xC000C000;
 }
 
+// Method : System.Array.Clear(System.Array, int, int)
+void CoreLib::System::Array::Clear(CoreLib::System::Array* sourceArray, int32_t sourceIndex, int32_t length)
+{
+	if (length == 0)
+	{
+		return;
+	}
+
+	if (sourceArray == nullptr)
+	{
+		throw __new<CoreLib::System::ArgumentNullException>();
+	}
+
+	if (length < 0)
+	{
+		throw __new<CoreLib::System::InvalidOperationException>();
+	}
+
+	if (sourceIndex < 0)
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}
+
+	if (sourceIndex + length > sourceArray->get_Length())
+	{
+		throw __new<CoreLib::System::IndexOutOfRangeException>();
+	}
+
+	CoreLib::System::TypedReference elemref;
+
+	int32_t index = sourceIndex;
+	sourceArray->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+	auto pSrc = (int8_t*)(void*)elemref.Value;
+
+	auto elementSize = sourceArray->__array_element_size();
+	std::memset(pSrc, 0, length * elementSize);
+}
+
+
 // Method : System.Array.Copy(System.Array, int, System.Array, int, int, bool)
 void CoreLib::System::Array::Copy(CoreLib::System::Array* sourceArray, int32_t sourceIndex, CoreLib::System::Array* destinationArray, int32_t destinationIndex, int32_t length, bool reliable)
 {

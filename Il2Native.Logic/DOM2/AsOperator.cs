@@ -29,6 +29,11 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            if (this.ConversionKind == ConversionKind.Unboxing)
+            {
+                c.TextSpan("__unbox(");
+            }
+
             c.TextSpan("as<");
             this.TargetType.IsReference = true;
             this.TargetType.WriteTo(c);
@@ -36,6 +41,11 @@ namespace Il2Native.Logic.DOM2
             c.TextSpan("(");
             c.WriteWrappedExpressionIfNeeded(this.Operand);
             c.TextSpan(")");
+
+            if (this.ConversionKind == ConversionKind.Unboxing)
+            {
+                c.TextSpan(")");
+            }
         }
     }
 }

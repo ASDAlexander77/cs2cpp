@@ -777,6 +777,40 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
 }
 
+template <typename C, typename T>
+inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_interface_cast_or_throw(T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto d = reinterpret_cast<C>(t->__get_interface(&std::remove_pointer<C>::type::__type));
+	if (d == nullptr)
+	{
+		throw __new<CoreLib::System::InvalidCastException>();
+	}
+
+	return d;
+}
+
+template <typename C, typename T>
+inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_interface_cast_or_throw(T t)
+{
+	if (t == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
+	if (d == nullptr)
+	{
+		throw __new<CoreLib::System::InvalidCastException>();
+	}
+
+	return d;
+}
+
 // cast internals
 template <typename D, typename S> inline typename std::enable_if<!is_value_type<D>::value && !is_interface_type<S>::value, D>::type cast(S s)
 {
@@ -932,7 +966,7 @@ inline typename std::enable_if<is_interface_type<T>::value || is_pointer_type<T>
 template <typename T> 
 inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(object* o)
 {
-	return dynamic_interface_cast<T>(o);
+	return dynamic_interface_cast_or_throw<T>(o);
 }
 
 void* __unbox_pointer(object* obj);
