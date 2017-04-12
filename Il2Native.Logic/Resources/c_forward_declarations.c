@@ -285,7 +285,7 @@ template <typename T, typename... Tp> inline T* __new(Tp... params)
 
 template <typename T, typename... Tp> inline T* __new_debug(const char* _file, int _line, Tp... params) 
 {
-	auto t = new T();		
+	auto t = new (_file, _line) T();
 	t->_ctor(params...);
 	return t;
 } 
