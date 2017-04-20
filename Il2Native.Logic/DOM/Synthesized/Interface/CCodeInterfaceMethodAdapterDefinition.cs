@@ -75,7 +75,7 @@ namespace Il2Native.Logic.DOM.Synthesized
 
             c.WriteMethodReturn(Method, true);
             c.WriteMethodNamespace(namedTypeSymbol);
-            c.WriteMethodName(Method, false, addTypeArguments: true);
+            c.WriteMethodName(Method, false, interfaceWrapperMethodSpecialCase: true);
             c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
 
             if (MethodBodyOpt == null)

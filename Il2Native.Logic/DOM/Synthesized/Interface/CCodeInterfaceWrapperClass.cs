@@ -37,7 +37,7 @@ namespace Il2Native.Logic.DOM
         {
             return this.@interface.GetMembers()
                 .OfType<IMethodSymbol>()
-                .Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                .Union(this.@interface.EnumerateUniqueInterfaceMethods())
                 .Select(this.CreateWrapperMethod)
                 .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
         }
@@ -118,7 +118,7 @@ namespace Il2Native.Logic.DOM
         private void CreateMemebers()
         {
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())))
+            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateUniqueInterfaceMethods()))
             {
                 Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
             }

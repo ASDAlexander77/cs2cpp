@@ -139,7 +139,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, addTypeArguments: InterfaceWrapperSpecialCall);
+                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, interfaceWrapperMethodSpecialCase: InterfaceWrapperSpecialCall);
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method);
