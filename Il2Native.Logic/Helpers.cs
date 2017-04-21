@@ -669,6 +669,72 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
+        internal static string ToKeyString(this IMethodSymbol methodSymbol, bool excludeReturn = false)
+        {
+            var sb = new StringBuilder();
+
+            if (methodSymbol.ContainingType != null)
+            {
+                sb.Append(((ITypeSymbol)methodSymbol.ContainingType).ToKeyString(false));
+                sb.Append(".");
+            }
+            else if (methodSymbol.ContainingNamespace != null)
+            {
+                sb.Append(methodSymbol.ContainingNamespace);
+                sb.Append(".");
+            }
+
+            sb.Append(methodSymbol.Name);
+            if (methodSymbol.IsGenericMethod)
+            {
+                sb.Append("<");
+                sb.Append(string.Join(",", methodSymbol.TypeParameters.OfType<ITypeSymbol>().Select(t => t.ToKeyString(false))));
+                sb.Append(">");
+            }
+
+            sb.Append("(");
+            var any = false;
+            if (methodSymbol.Parameters.Any())
+            {
+                foreach (var parameter in methodSymbol.Parameters)
+                {
+                    if (any)
+                    {
+                        sb.Append(", ");
+                    }
+
+                    if (parameter.RefKind.HasFlag(RefKind.Out))
+                    {
+                        sb.Append("out ");
+                    }
+
+                    if (parameter.RefKind.HasFlag(RefKind.Ref))
+                    {
+                        sb.Append("ref ");
+                    }
+
+                    sb.Append(parameter.Type.ToKeyString(false));
+                    any = true;
+                }
+            }
+
+            if (any && methodSymbol.IsVararg)
+            {
+                sb.Append(", ");
+                sb.Append("__argList");
+            }
+
+            sb.Append(")");
+
+            if (!excludeReturn)
+            {
+                sb.Append(" : ");
+                sb.Append(methodSymbol.ReturnType.ToKeyString(false));
+            }
+
+            return sb.ToString();
+        }
+
         public static bool IsAnonymousType(this ITypeSymbol type)
         {
             return type.IsAnonymousType || (type.Name != null && type.Name.StartsWith("<>f__AnonymousType"));
@@ -805,9 +871,170 @@ namespace Il2Native.Logic
             return null;
         }
 
+        public static int CompareTo(this INamespaceSymbol namespaceSymbol, INamespaceSymbol otherNamespaceSymbol)
+        {
+            if (namespaceSymbol == otherNamespaceSymbol)
+            {
+                return 0;
+            }
+
+            if (namespaceSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherNamespaceSymbol == null)
+            {
+                return 1;
+            }
+
+            return namespaceSymbol.GetNamespaceFullName().CompareTo(otherNamespaceSymbol.GetNamespaceFullName());
+        }
+
+        public static int CompareTo(this ITypeSymbol typeSymbol, ITypeSymbol otherTypeSymbol)
+        {
+            if (typeSymbol == otherTypeSymbol)
+            {
+                return 0;
+            }
+
+            if (typeSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherTypeSymbol == null)
+            {
+                return 1;
+            }
+
+            return typeSymbol.GetTypeFullName().CompareTo(otherTypeSymbol.GetTypeFullName());
+        }
+
+        public static int CompareTo(this IMethodSymbol methodSymbol, IMethodSymbol otherMethodSymbol, bool excludeReturnType = false, bool excludeContainingTypeOrNamespace = false)
+        {
+            if (methodSymbol == otherMethodSymbol)
+            {
+                return 0;
+            }
+
+            if (methodSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherMethodSymbol == null)
+            {
+                return 1;
+            }
+
+            if (!excludeContainingTypeOrNamespace)
+            {
+                if (methodSymbol.ContainingNamespace != otherMethodSymbol.ContainingNamespace)
+                {
+                    if (methodSymbol.ContainingNamespace == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ContainingNamespace == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ContainingNamespace.CompareTo(otherMethodSymbol.ContainingNamespace);
+                }
+
+                if (methodSymbol.ContainingType != otherMethodSymbol.ContainingType)
+                {
+                    if (methodSymbol.ContainingType == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ContainingType == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ContainingType.CompareTo(otherMethodSymbol.ContainingType);
+                }
+            }
+
+            var compare = methodSymbol.Name.CompareTo(otherMethodSymbol.Name);
+            if (compare != 0)
+            {
+                return compare;
+            }
+
+            compare = methodSymbol.Parameters.Length.CompareTo(otherMethodSymbol.Parameters.Length);
+            if (compare != 0)
+            {
+                return compare;
+            }
+
+            for (var i = 0; i < methodSymbol.Parameters.Length; i++)
+            {
+                compare = methodSymbol.Parameters[i].Type.CompareTo(otherMethodSymbol.Parameters[i].Type);
+                if (compare != 0)
+                {
+                    return compare;
+                }
+            }
+
+            if (!excludeReturnType)
+            {
+                if (methodSymbol.ReturnType != otherMethodSymbol.ReturnType)
+                {
+                    if (methodSymbol.ReturnType == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ReturnType == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ReturnType.CompareTo(otherMethodSymbol.ReturnType);
+                }
+            }
+
+            return 0;
+        }
+
         public static bool IsInterfaceGenericMethodSpecialCase(this IMethodSymbol methodSymbol)
         {
             return methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
+        }
+
+        public static IEnumerable<IMethodSymbol> EnumerateUniqueInterfaceMethods(this ITypeSymbol typeSymbol, IList<IMethodSymbol> usedMethodsFilter = null)
+        {
+            // add all methods from all interfaces
+            if (usedMethodsFilter == null)
+            {
+                usedMethodsFilter = typeSymbol.GetMembers().OfType<IMethodSymbol>().ToList();
+            }
+
+            foreach (var @interface in typeSymbol.Interfaces)
+            {
+                foreach (var method in @interface.GetMembers().OfType<IMethodSymbol>())
+                {
+                    if (usedMethodsFilter.Any(m => m.CompareTo(method, true, true) == 0))
+                    {
+                        continue;
+                    }
+
+                    usedMethodsFilter.Add(method);
+
+                    yield return method;
+                }
+
+                foreach (var method in @interface.EnumerateUniqueInterfaceMethods(usedMethodsFilter))
+                {
+                    yield return method;
+                }
+            }
         }
 
         internal static bool NeedsLabel(this LabelSymbol label, string name)
@@ -832,22 +1059,19 @@ namespace Il2Native.Logic
             return labelName.StartsWith(name1) || labelName.StartsWith(name2);
         }
 
-        internal static string ToKeyString(this TypeSymbol typeSymbol, bool metadata = true)
+        internal static string ToKeyString(this ITypeSymbol typeSymbol, bool metadata = true)
         {
             var sb = new StringBuilder();
 
-            var containingNamespaceOrType = typeSymbol.ContainingNamespaceOrType();
-            if (containingNamespaceOrType != null)
+            if (typeSymbol.ContainingType != null)
             {
-                if (containingNamespaceOrType.IsType)
-                {
-                    sb.Append(((TypeSymbol)containingNamespaceOrType).ToKeyString());
-                }
-                else
-                {
-                    sb.Append(containingNamespaceOrType);
-                    sb.Append(".");
-                }
+                sb.Append(typeSymbol.ContainingType.ToKeyString());
+                sb.Append(".");
+            }
+            else if (typeSymbol.ContainingNamespace != null)
+            {
+                sb.Append(typeSymbol.ContainingNamespace);
+                sb.Append(".");
             }
 
             if (metadata)
@@ -863,24 +1087,24 @@ namespace Il2Native.Logic
             }
             else
             {
-                var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
+                var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
                 if (typeSymbol.IsAnonymousType())
                 {
                     sb.Append("<>f__AnonymousType");
                     if (typeSymbol.IsAnonymousType)
                     {
-                        var parameterTypes = ((NamedTypeSymbol)typeSymbol).Constructors.First().ParameterTypes;
-                        sb.Append(parameterTypes.Length);
+                        var parameters = ((INamedTypeSymbol)typeSymbol).Constructors.First().Parameters;
+                        sb.Append(parameters.Length);
                         sb.Append("<");
                         var any = false;
-                        foreach (var typeArgument in parameterTypes)
+                        foreach (var typeArgument in parameters)
                         {
                             if (any)
                             {
                                 sb.Append(", ");
                             }
 
-                            sb.Append(typeArgument.ToKeyString(metadata));
+                            sb.Append(typeArgument.Type.ToKeyString(metadata));
                             any = true;
                         }
 
