@@ -976,6 +976,32 @@ inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(objec
 	return (T) __unbox_pointer(o);
 }
 
+template <typename T> inline CoreLib::System::NullableT1<T> __unbox(CoreLib::System::NullableT1<T>* t)
+{
+	if (t == nullptr)
+	{
+		return __default<CoreLib::System::NullableT1<T>>();
+	}
+
+	// we do not need to call __new here as it already constructed
+	return *t;
+}
+
+template <typename T> inline CoreLib::System::NullableT1<T> __unbox(T* t)
+{
+	if (t == nullptr)
+	{
+		return __default<CoreLib::System::NullableT1<T>>();
+	}
+
+	auto val = CoreLib::System::NullableT1<T>();
+	val.hasValue = true;
+	val.T = *t;
+
+	// we do not need to call __new here as it already constructed
+	return val;
+}
+
 // box - by ref
 template <typename T> inline object* __box_ref_t (T* t)
 {
