@@ -118,7 +118,7 @@ namespace Il2Native.Logic.DOM
         private void CreateMemebers()
         {
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateUniqueInterfaceMethods()))
+            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
             {
                 Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
             }

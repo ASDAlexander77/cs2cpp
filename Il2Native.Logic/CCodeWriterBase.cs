@@ -445,25 +445,22 @@ namespace Il2Native.Logic
                     ? symbol.ExplicitInterfaceImplementations.FirstOrDefault()
                     : null;
 
-            if (interfaceWrapperMethodSpecialCase)
+            if (methodSymbol.ContainingType != null
+                && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
-                if (methodSymbol.ContainingType != null
-                    && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
+                this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+                if (interfaceWrapperMethodSpecialCase && explicitInterfaceImplementation == null)
                 {
-                    this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
-                    if (explicitInterfaceImplementation == null)
+                    if (methodSymbol.ContainingType.IsGenericType
+                        && methodSymbol.ContainingType.GetTemplateArguments().Select(t => t as INamedTypeSymbol).All(t => t != null && !t.IsGenericType))
                     {
-                        if (methodSymbol.ContainingType.IsGenericType
-                            && methodSymbol.ContainingType.GetTemplateArguments().Select(t => t as INamedTypeSymbol).All(t => t != null && !t.IsGenericType))
-                        {
-                            var sb = new StringBuilder();
-                            CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, methodSymbol.ContainingType);
-                            this.TextSpan(sb.ToString());
-                        }
+                        var sb = new StringBuilder();
+                        CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, methodSymbol.ContainingType);
+                        this.TextSpan(sb.ToString());
                     }
-
-                    this.TextSpan("_");
                 }
+
+                this.TextSpan("_");
             }
 
             if (explicitInterfaceImplementation != null)

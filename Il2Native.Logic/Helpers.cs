@@ -1008,6 +1008,11 @@ namespace Il2Native.Logic
             return methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
         }
 
+        public static IEnumerable<IMethodSymbol> EnumerateInterfaceMethods(this ITypeSymbol typeSymbol)
+        {
+            return typeSymbol.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>());
+        }
+
         public static IEnumerable<IMethodSymbol> EnumerateUniqueInterfaceMethods(this ITypeSymbol typeSymbol, IList<IMethodSymbol> usedMethodsFilter = null)
         {
             // add all methods from all interfaces
