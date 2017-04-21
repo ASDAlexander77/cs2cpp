@@ -37,7 +37,7 @@ namespace Il2Native.Logic.DOM
         {
             return this.@interface.GetMembers()
                 .OfType<IMethodSymbol>()
-                .Union(this.@interface.EnumerateUniqueInterfaceMethods())
+                .Union(this.@interface.EnumerateInterfaceMethods())
                 .Select(this.CreateWrapperMethod)
                 .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
         }
