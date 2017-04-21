@@ -549,7 +549,7 @@ namespace Il2Native.Logic
             if (type.TypeKind == TypeKind.Interface)
             {
                 // add all methods from all interfaces
-                foreach (var method in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                foreach (var method in type.EnumerateUniqueInterfaceMethods())
                 {
                     unit.Declarations.Add(new CCodeMethodDeclaration(method));
                 }
@@ -569,7 +569,7 @@ namespace Il2Native.Logic
             if (isNotInterfaceOrModule)
             {
                 // append interface calls
-                foreach (var interfaceMethod in type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+                foreach (var interfaceMethod in type.EnumerateUniqueInterfaceMethods())
                 {
                     var method = interfaceMethod;
                     var implementationForInterfaceMember = type.FindImplementationForInterfaceMember(interfaceMethod) as IMethodSymbol;
