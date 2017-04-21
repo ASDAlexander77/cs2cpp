@@ -669,7 +669,7 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
-        internal static string ToKeyString(this IMethodSymbol methodSymbol)
+        internal static string ToKeyString(this IMethodSymbol methodSymbol, bool excludeReturn = false)
         {
             var sb = new StringBuilder();
 
@@ -726,8 +726,11 @@ namespace Il2Native.Logic
 
             sb.Append(")");
 
-            sb.Append(" : ");
-            sb.Append(methodSymbol.ReturnType.ToKeyString(false));
+            if (!excludeReturn)
+            {
+                sb.Append(" : ");
+                sb.Append(methodSymbol.ReturnType.ToKeyString(false));
+            }
 
             return sb.ToString();
         }
@@ -868,23 +871,169 @@ namespace Il2Native.Logic
             return null;
         }
 
+        public static int CompareTo(this INamespaceSymbol namespaceSymbol, INamespaceSymbol otherNamespaceSymbol)
+        {
+            if (namespaceSymbol == otherNamespaceSymbol)
+            {
+                return 0;
+            }
+
+            if (namespaceSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherNamespaceSymbol == null)
+            {
+                return 1;
+            }
+
+            return namespaceSymbol.GetNamespaceFullName().CompareTo(otherNamespaceSymbol.GetNamespaceFullName());
+        }
+
+        public static int CompareTo(this ITypeSymbol typeSymbol, ITypeSymbol otherTypeSymbol)
+        {
+            if (typeSymbol == otherTypeSymbol)
+            {
+                return 0;
+            }
+
+            if (typeSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherTypeSymbol == null)
+            {
+                return 1;
+            }
+
+            return typeSymbol.GetTypeFullName().CompareTo(otherTypeSymbol.GetTypeFullName());
+        }
+
+        public static int CompareTo(this IMethodSymbol methodSymbol, IMethodSymbol otherMethodSymbol, bool excludeReturnType = false, bool excludeContainingTypeOrNamespace = false)
+        {
+            if (methodSymbol == otherMethodSymbol)
+            {
+                return 0;
+            }
+
+            if (methodSymbol == null)
+            {
+                return -1;
+            }
+
+            if (otherMethodSymbol == null)
+            {
+                return 1;
+            }
+
+            if (!excludeContainingTypeOrNamespace)
+            {
+                if (methodSymbol.ContainingNamespace != otherMethodSymbol.ContainingNamespace)
+                {
+                    if (methodSymbol.ContainingNamespace == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ContainingNamespace == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ContainingNamespace.CompareTo(otherMethodSymbol.ContainingNamespace);
+                }
+
+                if (methodSymbol.ContainingType != otherMethodSymbol.ContainingType)
+                {
+                    if (methodSymbol.ContainingType == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ContainingType == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ContainingType.CompareTo(otherMethodSymbol.ContainingType);
+                }
+            }
+
+            var compare = methodSymbol.Name.CompareTo(otherMethodSymbol.Name);
+            if (compare != 0)
+            {
+                return compare;
+            }
+
+            compare = methodSymbol.Parameters.Length.CompareTo(otherMethodSymbol.Parameters.Length);
+            if (compare != 0)
+            {
+                return compare;
+            }
+
+            for (var i = 0; i < methodSymbol.Parameters.Length; i++)
+            {
+                compare = methodSymbol.Parameters[i].Type.CompareTo(otherMethodSymbol.Parameters[i].Type);
+                if (compare != 0)
+                {
+                    return compare;
+                }
+            }
+
+            if (!excludeReturnType)
+            {
+                if (methodSymbol.ReturnType != otherMethodSymbol.ReturnType)
+                {
+                    if (methodSymbol.ReturnType == null)
+                    {
+                        return -1;
+                    }
+
+                    if (otherMethodSymbol.ReturnType == null)
+                    {
+                        return 1;
+                    }
+
+                    return methodSymbol.ReturnType.CompareTo(otherMethodSymbol.ReturnType);
+                }
+            }
+
+            return 0;
+        }
+
         public static bool IsInterfaceGenericMethodSpecialCase(this IMethodSymbol methodSymbol)
         {
             return methodSymbol.Arity > 0 && methodSymbol.TypeArguments.IsEmpty;
         }
 
-        public static IEnumerable<IMethodSymbol> EnumerateUniqueInterfaceMethods(this ITypeSymbol typeSymbol)
+        public static IEnumerable<IMethodSymbol> EnumerateUniqueInterfaceMethods(this ITypeSymbol typeSymbol, IList<IMethodSymbol> usedMethodsFilter = null)
         {
             // add all methods from all interfaces
-            var usedMethodsFilter = typeSymbol.GetMembers().OfType<MethodSymbol>().SelectMany(ms => ms.OverriddenOrHiddenMembers.HiddenMembers.OfType<MethodSymbol>()).ToDictionary(k => k.ToKeyString(), i => i);
-            foreach (var method in typeSymbol.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()))
+            if (usedMethodsFilter == null)
             {
-                if (usedMethodsFilter.ContainsKey(method.ToKeyString()))
+                usedMethodsFilter = typeSymbol.GetMembers().OfType<IMethodSymbol>().ToList();
+            }
+
+            foreach (var @interface in typeSymbol.Interfaces)
+            {
+                foreach (var method in @interface.GetMembers().OfType<IMethodSymbol>())
                 {
-                    continue;
+                    if (usedMethodsFilter.Any(m => m.CompareTo(method, true, true) == 0))
+                    {
+                        continue;
+                    }
+
+                    usedMethodsFilter.Add(method);
+
+                    yield return method;
                 }
 
-                yield return method;
+                foreach (var method in @interface.EnumerateUniqueInterfaceMethods(usedMethodsFilter))
+                {
+                    yield return method;
+                }
             }
         }
 
