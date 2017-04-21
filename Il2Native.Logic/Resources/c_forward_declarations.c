@@ -90,6 +90,13 @@ template <typename T> struct bare_type
 	typedef typename valuetype_to_class<typename std::remove_pointer<T>::type>::type type;
 };
 
+template< typename T > struct is_nullable_type : std::false_type {};
+template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>> : std::true_type {};
+template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>*> : std::true_type {};
+
+template< typename T > struct remove_nullable { typedef T type; };
+template< typename T > struct remove_nullable<CoreLib::System::NullableT1<T>*> { typedef T type; };
+
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
 void throw_out_of_memory();
@@ -939,7 +946,7 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 }
 
 // Unboxing internals
-template <typename T> 
+template <typename T>
 inline T __unbox(T* t)
 {
 	return *t;
@@ -976,27 +983,17 @@ inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(objec
 	return (T) __unbox_pointer(o);
 }
 
-template <typename T> inline CoreLib::System::NullableT1<T> __unbox(CoreLib::System::NullableT1<T>* t)
+template <typename T, typename _VALUE = typename class_to_valuetype<T>::type> 
+inline CoreLib::System::NullableT1<_VALUE> __unbox_to_nullable(T* t)
 {
 	if (t == nullptr)
 	{
-		return __default<CoreLib::System::NullableT1<T>>();
+		return __default<CoreLib::System::NullableT1<_VALUE>>();
 	}
 
-	// we do not need to call __new here as it already constructed
-	return *t;
-}
-
-template <typename T> inline CoreLib::System::NullableT1<T> __unbox(T* t)
-{
-	if (t == nullptr)
-	{
-		return __default<CoreLib::System::NullableT1<T>>();
-	}
-
-	auto val = CoreLib::System::NullableT1<T>();
+	auto val = CoreLib::System::NullableT1<_VALUE>();
 	val.hasValue = true;
-	val.T = *t;
+	val.value = *t;
 
 	// we do not need to call __new here as it already constructed
 	return val;

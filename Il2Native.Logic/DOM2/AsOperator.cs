@@ -29,10 +29,18 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            var isUnboxing = this.ConversionKind == ConversionKind.Unboxing || (!this.TargetType.IsReference && this.TargetType.Type.IsValueType);
+            var targetType = this.TargetType.Type;
+            var isUnboxing = this.ConversionKind == ConversionKind.Unboxing || (!this.TargetType.IsReference && targetType.IsValueType);
+            var unboxingToNullable = targetType.Name == "Nullable" && targetType.ContainingNamespace != null && targetType.ContainingNamespace.Name == "System";
             if (isUnboxing)
             {
-                c.TextSpan("__unbox(");
+                c.TextSpan("__unbox");
+                if (unboxingToNullable)
+                {
+                    c.TextSpan("_to_nullable");
+                }
+
+                c.TextSpan("(");
             }
 
             c.TextSpan("as<");

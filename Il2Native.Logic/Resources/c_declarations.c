@@ -1,6 +1,6 @@
 // cast internals
 template <typename D, typename S> 
-inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, D>::type as(S s)
+inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value && !is_nullable_type<D>::value, D>::type as(S s)
 {
 	return dynamic_cast<D>(s);
 }
@@ -29,6 +29,17 @@ template <typename D, typename S>
 inline typename std::enable_if<is_interface_type<D>::value && is_interface_type<S>::value, D>::type as(S s)
 {
 	return dynamic_interface_cast<D>(object_cast(s));
+}
+
+template <typename TNullable, typename S, typename T = typename remove_nullable<TNullable>::type, typename _CLASS = typename valuetype_to_class<T>::type>
+inline typename std::enable_if<is_nullable_type<TNullable>::value && is_class_type<S>::value, _CLASS>::type* as(S s)
+{
+	if (s == nullptr)
+	{
+		return nullptr;
+	}
+
+	return as<_CLASS*>(s);
 }
 
 // cast internals
