@@ -699,8 +699,9 @@ namespace Il2Native.Logic.DOM2
                 {
                     if (local.SynthesizedKind == default(SynthesizedLocalKind)
                         && local.DeclarationKind != LocalDeclarationKind.FixedVariable
-                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable 
-                        && !IsDeclarationWithoutInitializer(local))
+                        && local.DeclarationKind != LocalDeclarationKind.UsingVariable
+                        && !IsDeclarationWithoutInitializer(local)
+                        && local.DeclarationKind != LocalDeclarationKind.PatternVariable)
                     {
                         continue;
                     }
