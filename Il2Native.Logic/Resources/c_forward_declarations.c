@@ -983,55 +983,6 @@ inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(objec
 	return (T) __unbox_pointer(o);
 }
 
-template <typename D, typename S, typename _S_VALUE = typename class_to_valuetype<S>::type, typename _NULLABLE_S = CoreLib::System::NullableT1<_S_VALUE>>
-inline typename std::enable_if<std::is_same<D, _NULLABLE_S>::value, D>::type __unbox(S* s)
-{
-	if (s == nullptr)
-	{
-		return __default<_NULLABLE_S>();
-	}
-
-	auto val = _NULLABLE_S();
-	val.hasValue = true;
-	val.value = *s;
-
-	// we do not need to call __new here as it already constructed
-	return val;
-}
-
-template <typename T, typename _VALUE = typename remove_nullable<T>::type, typename _CLASS = typename valuetype_to_class<_VALUE>::type>
-inline typename std::enable_if<is_nullable_type<T>::value, T>::type __unbox(object* o)
-{
-	if (o == nullptr)
-	{
-		return __default<T>();
-	}
-
-	auto val = T();
-	auto casted = dynamic_cast<_CLASS*>(o);
-	val.hasValue = casted != nullptr;
-	val.value = __unbox(casted);
-
-	// we do not need to call __new here as it already constructed
-	return val;
-}
-
-template <typename T, typename _VALUE = typename class_to_valuetype<T>::type> 
-inline CoreLib::System::NullableT1<_VALUE> __unbox_to_nullable(T* t)
-{
-	if (t == nullptr)
-	{
-		return __default<CoreLib::System::NullableT1<_VALUE>>();
-	}
-
-	auto val = CoreLib::System::NullableT1<_VALUE>();
-	val.hasValue = true;
-	val.value = *t;
-
-	// we do not need to call __new here as it already constructed
-	return val;
-}
-
 // box - by ref
 template <typename T> inline object* __box_ref_t (T* t)
 {

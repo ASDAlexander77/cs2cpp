@@ -31,15 +31,18 @@ inline typename std::enable_if<is_interface_type<D>::value && is_interface_type<
 	return dynamic_interface_cast<D>(object_cast(s));
 }
 
-template <typename TNullable, typename S, typename T = typename remove_nullable<TNullable>::type, typename _CLASS = typename valuetype_to_class<T>::type>
-inline typename std::enable_if<is_nullable_type<TNullable>::value && is_class_type<S>::value, _CLASS>::type* as(S s)
+template <typename TNullable, typename S, typename T = typename remove_nullable<TNullable>::type, typename _CLASS = typename valuetype_to_class<T>::type, typename _BareNullable = typename std::remove_pointer<TNullable>::type>
+inline typename std::enable_if<is_nullable_type<TNullable>::value && is_class_type<S>::value, _BareNullable>::type as(S s)
 {
-	if (s == nullptr)
+	auto casted = as<_CLASS*>(s);
+	auto val = __default<_BareNullable>();
+	if (casted != nullptr)
 	{
-		return nullptr;
+		val.hasValue = true;
+		val.value = __unbox(casted);
 	}
 
-	return as<_CLASS*>(s);
+	return val;
 }
 
 // cast internals
