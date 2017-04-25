@@ -136,7 +136,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public TypeKind TypeKind { get; set; }
 
-        public INamedTypeSymbol BaseType { get; private set; }
+        public INamedTypeSymbol BaseType { get; set; }
 
         public ImmutableArray<INamedTypeSymbol> Interfaces { get; private set; }
 
@@ -201,27 +201,27 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public ImmutableArray<ISymbol> GetMembers()
         {
-            throw new NotImplementedException();
+            return ImmutableArray<ISymbol>.Empty;
         }
 
         public ImmutableArray<ISymbol> GetMembers(string name)
         {
-            throw new NotImplementedException();
+            return ImmutableArray<ISymbol>.Empty;
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers()
         {
-            throw new NotImplementedException();
+            return ImmutableArray<INamedTypeSymbol>.Empty;
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name)
         {
-            throw new NotImplementedException();
+            return ImmutableArray<INamedTypeSymbol>.Empty;
         }
 
         public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name, int arity)
         {
-            throw new NotImplementedException();
+            return ImmutableArray<INamedTypeSymbol>.Empty;
         }
 
         public bool Equals(ISymbol other)

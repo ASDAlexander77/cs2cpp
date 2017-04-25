@@ -31,7 +31,7 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
             }
 
-            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference, wrapPointer: this.TypeOfExpression);
+            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference, typeOfExpression: this.TypeOfExpression);
         }
     }
 }

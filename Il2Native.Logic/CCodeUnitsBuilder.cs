@@ -24,8 +24,6 @@ namespace Il2Native.Logic
 
     public class CCodeUnitsBuilder
     {
-        private CCodeUnit[] _cunits;
-
         internal CCodeUnitsBuilder(IAssemblySymbol assembly, IDictionary<string, BoundStatement> boundBodyByMethodSymbol, IDictionary<string, SourceMethodSymbol> sourceMethodByMethodSymbol)
         {
             this.Assembly = assembly;
@@ -56,14 +54,14 @@ namespace Il2Native.Logic
 
             var assembliesInfoResolver = new AssembliesInfoResolver() { TypesByName = typesByNames };
 
-            this._cunits = new CCodeUnit[reordered.Count];
+            var _cunits = new IEnumerable<CCodeUnit>[reordered.Count];
             if (this.Concurrent)
             {
                 Parallel.ForEach(
                     reordered,
                     (type, state, index) =>
                     {
-                        this._cunits[index] = this.BuildUnit(type, assembliesInfoResolver);
+                        _cunits[index] = this.BuildUnit(type, assembliesInfoResolver);
                     });
             }
             else
@@ -71,11 +69,11 @@ namespace Il2Native.Logic
                 var index = 0;
                 foreach (var type in reordered)
                 {
-                    this._cunits[index++] = this.BuildUnit(type, assembliesInfoResolver);
+                    _cunits[index++] = this.BuildUnit(type, assembliesInfoResolver);
                 }
             }
 
-            return this._cunits;
+            return _cunits.SelectMany(u => u);
         }
 
         private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, AssemblyIdentity assembly, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)
@@ -224,7 +222,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void BuildRuntimeInfoVariables(ITypeSymbol type, CCodeUnit unit)
+        private static void BuildRuntimeInfoVariables(ITypeSymbol type, ITypeSymbol runtimeInfoType, CCodeUnit unit)
         {
             // add runtimeinfo
             var namedTypeSymbol = (INamedTypeSymbol)type;
@@ -236,7 +234,7 @@ namespace Il2Native.Logic
                                            ContainingNamespace = type.ContainingNamespace,
                                            IsStatic = true,
                                            HasConstantValue = true,
-                                           ConstantValue = CreateRuntimeInfoInitialization(namedTypeSymbol)
+                                           ConstantValue = CreateRuntimeInfoInitialization((INamedTypeSymbol)runtimeInfoType)
                                        };
 
             unit.Declarations.Add(new CCodeFieldDeclaration(runtimeInfoField) { DoNotWrapStatic = true });
@@ -343,12 +341,6 @@ namespace Il2Native.Logic
 
         private void BuildMethod(IMethodSymbol method, CCodeUnit unit)
         {
-            var isDefaultConstructor = method.MethodKind == MethodKind.Constructor && !method.IsStatic && method.Parameters.Length == 0;
-            if (isDefaultConstructor)
-            {
-                unit.HasDefaultConstructor = true;
-            }
-
             if (method.MethodKind == MethodKind.Ordinary && method.IsStatic && method.Name == "Main")
             {
                 unit.MainMethod = method;
@@ -433,7 +425,7 @@ namespace Il2Native.Logic
             return false;
         }
 
-        private CCodeUnit BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
+        private IEnumerable<CCodeUnit> BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
         {
             var unit = new CCodeUnit(type);
 
@@ -457,10 +449,12 @@ namespace Il2Native.Logic
                 BuildStaticConstructorVariables(type, unit);
             }
 
+            /*
             if (isNotModule)
             {
                 BuildTypeHolderVariables(type, unit);
             }
+            */
 
             var constructors = methodSymbols.Where(m => m.MethodKind == MethodKind.Constructor);
             foreach (var method in constructors)
@@ -563,7 +557,7 @@ namespace Il2Native.Logic
             if (isNotModule)
             {
                 BuildMethodTableVariables(type, unit);
-                BuildRuntimeInfoVariables(type, unit);
+                ////BuildRuntimeInfoVariables(type, unit);
             }
 
             if (isNotInterfaceOrModule)
@@ -585,7 +579,25 @@ namespace Il2Native.Logic
                 }
             }
 
-            return unit;
+            yield return unit;
+
+            if (!isNotModule)
+            {
+                yield break;
+            }
+
+            // return type holder class
+            var typeHolderType = (TypeImpl) TypeImpl.Wrap(type);
+            typeHolderType.Name = typeHolderType.Name + "__type";
+            typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
+            typeHolderType.BaseType = null;
+
+            var unitTypeHolder = new CCodeUnit(typeHolderType);
+            BuildTypeHolderVariables(typeHolderType, unitTypeHolder);
+            ////BuildMethodTableVariables(typeHolderType, unitTypeHolder);
+            BuildRuntimeInfoVariables(typeHolderType, type, unitTypeHolder);
+
+            yield return unitTypeHolder;
         }
     }
 }

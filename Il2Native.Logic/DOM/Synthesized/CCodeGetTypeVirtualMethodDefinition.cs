@@ -18,7 +18,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 {
                     new ReturnStatement
                     {
-                        ExpressionOpt =
+                        ExpressionOpt = new TypeOfOperator { SourceType = new TypeExpression { Type = type, TypeOfExpression = true } }
+                        /*
                             new AddressOfOperator
                             {
                                 Operand =
@@ -28,6 +29,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                             new FieldImpl { Name = "__type", ContainingType = type, IsStatic = true }
                                     }
                             }
+                        */
                     }
                 }
             };

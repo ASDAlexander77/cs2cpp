@@ -19,8 +19,6 @@ namespace Il2Native.Logic
 
         public IList<CCodeDefinition> Definitions { get; private set; }
 
-        public bool HasDefaultConstructor { get; set; }
-
         public IMethodSymbol MainMethod { get; set; }
 
         public ITypeSymbol Type { get; set; }

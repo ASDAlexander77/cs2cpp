@@ -15,13 +15,15 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             var binaryOperator = new BinaryOperator
             {
-                Left = new AddressOfOperator
+                Left = new TypeOfOperator { SourceType = new TypeExpression { Type = type, TypeOfExpression = true } }
+                /*
+                new AddressOfOperator
                 {
                     Operand = new FieldAccess
                     {
                         Field = new FieldImpl { Name = "__type", ContainingType = type, IsStatic = true }
                     }
-                },
+                }*/,
                 Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } },
                 OperatorKind = BinaryOperatorKind.Equal
             };
