@@ -45,6 +45,7 @@ namespace Il2Native.Logic.DOM2
                 case "break":
                 case "afterif":
                 case "alternative":
+                case "default:":
                     return true;
             }
 
