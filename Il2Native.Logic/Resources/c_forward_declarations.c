@@ -1035,6 +1035,11 @@ template <typename T> inline CoreLib::System::Type* _typeof()
 	return &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
+template <typename T> inline CoreLib::System::RuntimeType* _runtime_typeof()
+{
+	return &type_holder<typename bare_type<T>::type>::type::__type;
+}
+
 template <typename T> inline __methods_table* _typeMT()
 {
 	return &bare_type<T>::type::_methods_table;

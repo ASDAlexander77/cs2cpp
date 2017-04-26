@@ -14,6 +14,7 @@ namespace Il2Native.Logic.DOM2
         }
 
         public Expression SourceType { get; set; }
+        public bool RuntimeType { get; set; }
 
         internal void Parse(BoundTypeOfOperator boundTypeOfOperator)
         {
@@ -29,7 +30,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("_typeof<");
+            c.TextSpan(RuntimeType ? "_runtime_typeof<" : "_typeof<");
             this.SourceType.WriteTo(c);
             c.TextSpan(">()");
         }

@@ -887,7 +887,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.TextSpan("{ typedef");
                 c.WhiteSpace();
-                c.WriteType(namedTypeSymbol, true, false, true, typeOfExpression: true);
+                c.WriteType(namedTypeSymbol, true, false, true, typeOfName: true);
                 c.WhiteSpace();
                 c.TextSpanNewLine("type; };");
             }

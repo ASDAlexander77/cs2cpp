@@ -982,7 +982,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfExpression = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -994,7 +994,7 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     if (!this.WriteSpecialType(type))
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
                     }
 
                     return;
@@ -1004,7 +1004,7 @@ namespace Il2Native.Logic
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    this.WriteTypeFullName(type, allowKeywords, typeOfExpression: typeOfExpression);
+                    this.WriteTypeFullName(type, allowKeywords, typeOfName: typeOfName);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1016,11 +1016,11 @@ namespace Il2Native.Logic
                 case TypeKind.Enum:
                     if (!valueTypeAsClass)
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true, typeOfName: typeOfName);
                     }
                     else
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, typeOfName: typeOfName);
                         if (!suppressReference && valueTypeAsClass)
                         {
                             this.TextSpan("*");
@@ -1036,13 +1036,13 @@ namespace Il2Native.Logic
                     break;
                 case TypeKind.Pointer:
                     var pointedAtType = ((IPointerTypeSymbol)type).PointedAtType;
-                    if (typeOfExpression)
+                    if (typeOfName)
                     {
                         this.TextSpan("__pointer<");
                     }
 
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, typeOfExpression: typeOfExpression);
-                    if (typeOfExpression)
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
+                    if (typeOfName)
                     {
                         this.TextSpan(">");
                     }
@@ -1053,7 +1053,7 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.Struct:
-                    this.WriteTypeFullName((INamedTypeSymbol)type);
+                    this.WriteTypeFullName((INamedTypeSymbol)type, typeOfName: typeOfName);
                     if (valueTypeAsClass && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1108,7 +1108,7 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfExpression = false)
+        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfName = false)
         {
             if (type.TypeKind == TypeKind.TypeParameter)
             {
@@ -1119,11 +1119,11 @@ namespace Il2Native.Logic
             var namedType = type as INamedTypeSymbol;
             if (namedType != null)
             {
-                this.WriteTypeFullName(namedType, allowKeywords, typeOfExpression: typeOfExpression);
+                this.WriteTypeFullName(namedType, allowKeywords, typeOfName: typeOfName);
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfExpression = false)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -1137,12 +1137,7 @@ namespace Il2Native.Logic
                 this.TextSpan("::");
             }
 
-            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested);
-            if (typeOfExpression)
-            {
-                this.TextSpan("__type");
-            }
-
+            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
 
             if (type.IsGenericType || type.IsAnonymousType)
             {
@@ -1150,9 +1145,9 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false)
+        public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)
         {
-            if (allowKeywords)
+            if (allowKeywords && !typeOfName)
             {
                 if (type.SpecialType == SpecialType.System_Object)
                 {
@@ -1203,6 +1198,11 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteName(type);
+            }
+
+            if (typeOfName)
+            {
+                this.TextSpan("__type");
             }
         }
 

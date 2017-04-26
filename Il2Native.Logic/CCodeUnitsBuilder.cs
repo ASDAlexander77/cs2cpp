@@ -271,8 +271,7 @@ namespace Il2Native.Logic
                 return new Literal { Value = ConstantValue.Null };
             }
 
-            ////return new AddressOfOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "__type", ContainingType = (INamedTypeSymbol)type, IsStatic = true } } };
-            return new TypeOfOperator { SourceType = new TypeExpression { Type = type } };
+            return new TypeOfOperator { SourceType = new TypeExpression { Type = type }, RuntimeType = true };
         }
 
         private static void BuildMethodTableVariables(ITypeSymbol type, CCodeUnit unit)

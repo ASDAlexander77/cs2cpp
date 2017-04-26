@@ -23,15 +23,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                     {
                         Condition = new BinaryOperator
                         {
-                            Left = new TypeOfOperator { SourceType = new TypeExpression { Type = @interface } }
-                            /*
-                            new AddressOfOperator
-                            {
-                                Operand = new FieldAccess
-                                {
-                                    Field = new FieldImpl { Name = "__type", ContainingType = @interface, IsStatic = true }
-                                }
-                            }*/,
+                            Left = new TypeOfOperator { SourceType = new TypeExpression { Type = @interface } },
                             Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } },
                             OperatorKind = BinaryOperatorKind.Equal
                         },

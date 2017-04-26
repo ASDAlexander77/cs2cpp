@@ -19,17 +19,6 @@ namespace Il2Native.Logic.DOM.Synthesized
                     new ReturnStatement
                     {
                         ExpressionOpt = new TypeOfOperator { SourceType = new TypeExpression { Type = type } }
-                        /*
-                            new AddressOfOperator
-                            {
-                                Operand =
-                                    new FieldAccess
-                                    {
-                                        Field =
-                                            new FieldImpl { Name = "__type", ContainingType = type, IsStatic = true }
-                                    }
-                            }
-                        */
                     }
                 }
             };
