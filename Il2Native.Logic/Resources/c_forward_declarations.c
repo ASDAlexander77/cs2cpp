@@ -729,6 +729,23 @@ public:
 	}
 };
 
+// Typeof internals
+class __methods_table;
+template <typename T> inline CoreLib::System::Type* _typeof()
+{
+	return &type_holder<typename bare_type<T>::type>::type::__type;
+}
+
+template <typename T> inline CoreLib::System::RuntimeType* _runtime_typeof()
+{
+	return &type_holder<typename bare_type<T>::type>::type::__type;
+}
+
+template <typename T> inline __methods_table* _typeMT()
+{
+	return &bare_type<T>::type::_methods_table;
+}
+
 // object cast (interface etc)
 template <typename T> 
 inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
@@ -773,7 +790,7 @@ inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_in
 		return nullptr;
 	}
 
-	return reinterpret_cast<C>(t->__get_interface(&std::remove_pointer<C>::type::__type));
+	return reinterpret_cast<C>(t->__get_interface(_typeof<C>()));
 }
 
 template <typename C, typename T> 
@@ -784,7 +801,7 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 		return nullptr;
 	}
 
-	return reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
+	return reinterpret_cast<C>(object_cast(t)->__get_interface(_typeof<C>()));
 }
 
 template <typename C, typename T>
@@ -795,7 +812,7 @@ inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_in
 		return nullptr;
 	}
 
-	auto d = reinterpret_cast<C>(t->__get_interface(&std::remove_pointer<C>::type::__type));
+	auto d = reinterpret_cast<C>(t->__get_interface(_typeof<C>()));
 	if (d == nullptr)
 	{
 		throw __new<CoreLib::System::InvalidCastException>();
@@ -812,7 +829,7 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 		return nullptr;
 	}
 
-	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(&std::remove_pointer<C>::type::__type));
+	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(_typeof<C>()));
 	if (d == nullptr)
 	{
 		throw __new<CoreLib::System::InvalidCastException>();
@@ -1028,22 +1045,6 @@ public:
 		*(object**)ref = value;
 	}
 };
-
-// Typeof internals
-template <typename T> inline CoreLib::System::Type* _typeof()
-{
-	return &type_holder<typename bare_type<T>::type>::type::__type;
-}
-
-template <typename T> inline CoreLib::System::RuntimeType* _runtime_typeof()
-{
-	return &type_holder<typename bare_type<T>::type>::type::__type;
-}
-
-template <typename T> inline __methods_table* _typeMT()
-{
-	return &bare_type<T>::type::_methods_table;
-}
 
 struct __runtimetype_info
 {

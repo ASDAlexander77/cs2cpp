@@ -189,6 +189,9 @@ inline typename std::enable_if<std::is_void<T>::value, T>::type __create_instanc
 	return;
 }
 
+template<typename T>
+struct type_holder<__pointer<T>> { typedef __pointer<T> type; };
+
 template <typename T> struct __pointer
 {
 	static CoreLib::System::RuntimeType __type;
@@ -196,14 +199,20 @@ template <typename T> struct __pointer
 };
 
 // Arrays internals
+template <typename T> struct __array__type
+{
+	static CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+};
+
+template<typename T>
+struct type_holder<__array<T>> { typedef __array__type<T> type; };
+
 template <typename T> class __array : public CoreLib::System::Array
 {
 public:
 	int32_t _length;
 	T _data[0];
-
-	static CoreLib::System::RuntimeType __type;
-	static __runtimetype_info __rt_info;
 
 	typedef CoreLib::System::Array base;
 	__array(int32_t length) { _length = length; }
@@ -493,15 +502,21 @@ public:
 	}
 };
 
+template <typename T, int32_t RANK> struct __multi_array__type
+{
+	static CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+};
+
+template <typename T, int32_t RANK>
+struct type_holder<__multi_array<T, RANK>> { typedef __multi_array__type<T, RANK> type; };
+
 template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
 {
 public:
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
 	T _data[0];
-
-	static CoreLib::System::RuntimeType __type;
-	static __runtimetype_info __rt_info;
 
 	typedef CoreLib::System::Array base;
 
