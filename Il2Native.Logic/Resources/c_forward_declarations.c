@@ -1032,7 +1032,7 @@ public:
 // Typeof internals
 template <typename T> inline CoreLib::System::Type* _typeof()
 {
-	return &bare_type<T>::type::__type;
+	return &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
 template <typename T> inline __methods_table* _typeMT()

@@ -15,7 +15,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             var binaryOperator = new BinaryOperator
             {
-                Left = new TypeOfOperator { SourceType = new TypeExpression { Type = type, TypeOfExpression = true } }
+                Left = new TypeOfOperator { SourceType = new TypeExpression { Type = type } }
                 /*
                 new AddressOfOperator
                 {

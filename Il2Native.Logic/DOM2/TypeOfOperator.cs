@@ -19,11 +19,6 @@ namespace Il2Native.Logic.DOM2
         {
             base.Parse(boundTypeOfOperator);
             this.SourceType = Deserialize(boundTypeOfOperator.SourceType) as Expression;
-            var typeExpression = this.SourceType as TypeExpression;
-            if (typeExpression != null)
-            {
-                typeExpression.TypeOfExpression = true;
-            }
         }
 
         internal override void Visit(Action<Base> visitor)

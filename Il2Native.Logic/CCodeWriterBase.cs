@@ -945,7 +945,12 @@ namespace Il2Native.Logic
             }
 
             this.TextSpan("<");
+            WriteTemplateDefinitionArguments(typeSymbol);
+            this.TextSpan(">");
+        }
 
+        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol)
+        {
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateArguments())
             {
@@ -958,8 +963,23 @@ namespace Il2Native.Logic
 
                 anyTypeParam = true;
             }
+        }
 
-            this.TextSpan(">");
+        public void WriteTemplateDefinitionParameters(INamedTypeSymbol typeSymbol)
+        {
+            var anyTypeParam = false;
+            foreach (var typeParam in typeSymbol.GetTemplateParameters())
+            {
+                if (anyTypeParam)
+                {
+                    this.TextSpan(", ");
+                }
+
+                this.TextSpan("typename ");
+                this.WriteType(typeParam);
+
+                anyTypeParam = true;
+            }
         }
 
         public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfExpression = false)

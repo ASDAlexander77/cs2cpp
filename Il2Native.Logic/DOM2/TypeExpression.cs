@@ -11,8 +11,6 @@ namespace Il2Native.Logic.DOM2
 
         public bool SuppressReference { get; set; }
 
-        public bool TypeOfExpression { get; set; }
-
         public override Kinds Kind
         {
             get { return Kinds.TypeExpression; }
@@ -31,7 +29,7 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
             }
 
-            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference, typeOfExpression: this.TypeOfExpression);
+            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference);
         }
     }
 }

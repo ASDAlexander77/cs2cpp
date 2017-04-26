@@ -869,9 +869,16 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             // type holder
             var isTypeHolder = namedTypeSymbol.SpecialType == SpecialType.None && namedTypeSymbol.TypeKind == TypeKind.Struct && namedTypeSymbol.Name.EndsWith("__type");
-            if (!isTypeHolder)
+            var isNotModule = namedTypeSymbol.Name != "<Module>";
+            if (!isTypeHolder && isNotModule)
             {
-                c.TextSpanNewLine("template<>");
+                c.TextSpan("template<");
+                if (namedTypeSymbol.IsGenericType || namedTypeSymbol.IsAnonymousType)
+                {
+                    c.WriteTemplateDefinitionParameters(namedTypeSymbol);
+                }
+
+                c.TextSpanNewLine(">");
                 c.TextSpan("struct");
                 c.WhiteSpace();
                 c.TextSpan("type_holder<");
@@ -880,7 +887,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.WhiteSpace();
                 c.TextSpan("{ typedef");
                 c.WhiteSpace();
-                c.WriteType(namedTypeSymbol, typeOfExpression: true);
+                c.WriteType(namedTypeSymbol, true, false, true, typeOfExpression: true);
                 c.WhiteSpace();
                 c.TextSpanNewLine("type; };");
             }

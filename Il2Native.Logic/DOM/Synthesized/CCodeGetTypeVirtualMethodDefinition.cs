@@ -18,7 +18,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 {
                     new ReturnStatement
                     {
-                        ExpressionOpt = new TypeOfOperator { SourceType = new TypeExpression { Type = type, TypeOfExpression = true } }
+                        ExpressionOpt = new TypeOfOperator { SourceType = new TypeExpression { Type = type } }
                         /*
                             new AddressOfOperator
                             {
