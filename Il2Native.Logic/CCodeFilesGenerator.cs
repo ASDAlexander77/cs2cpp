@@ -31,63 +31,68 @@ namespace Il2Native.Logic
             itw.WriteLine("{0}.h\"", identity.Name);
         }
 
-        public static void WriteSourceMainEntry(CCodeWriterBase c, IndentedTextWriter itw, IMethodSymbol mainMethod)
+        public static void WriteSourceMainEntry(CCodeWriterBase c, IMethodSymbol mainMethod)
         {
-            itw.WriteLine();
+            c.Separate();
+
             var mainHasParameters = mainMethod.Parameters.Length > 0;
-            itw.Write("auto __main(");
+            c.TextSpan("auto __main(");
             if (mainHasParameters)
             {
-                itw.Write("int32_t argc, char* argv[]");
+                c.TextSpan("int32_t argc, char* argv[]");
             }
 
-            itw.WriteLine(") -> int32_t");
-            itw.WriteLine("{");
-            itw.Indent++;
+            c.TextSpanNewLine(") -> int32_t");
 
-            itw.WriteLine("__startup();");
+            c.OpenBlock();
+
+            c.TextSpan("__startup()");
+            c.EndStatement();
             if (!mainMethod.ReturnsVoid)
             {
-                itw.Write("auto exit_code = ");
+                c.TextSpan("auto exit_code = ");
             }
 
             c.WriteMethodFullName(mainMethod);
-            itw.Write("(");
+            c.TextSpan("(");
             if (mainHasParameters)
             {
-                itw.Write("__get_arguments(argc, argv)");
+                c.TextSpan("__get_arguments(argc, argv)");
             }
 
-            itw.WriteLine(");");
-            itw.WriteLine("__shutdown();");
-            itw.Write("return ");
+            c.TextSpan(")");
+            c.EndStatement();
+
+            c.TextSpan("__shutdown()");
+            c.EndStatement();
+
+            c.TextSpan("return ");
             if (!mainMethod.ReturnsVoid)
             {
-                itw.Write("exit_code");
+                c.TextSpan("exit_code");
             }
             else
             {
-                itw.Write("CoreLib::System::Environment::get_ExitCode()");
+                c.TextSpan("CoreLib::System::Environment::get_ExitCode()");
             }
 
-            itw.WriteLine(";");
+            c.TextSpanNewLine(";");
 
-            itw.Indent--;
-            itw.WriteLine("}");
-            itw.WriteLine();
+            c.EndBlock();
+
+            c.Separate();
 
             // main
-            itw.WriteLine("auto main(int32_t argc, char* argv[]) -> int32_t");
-            itw.WriteLine("{");
-            itw.Indent++;
-            itw.Write("return __main(");
+            c.TextSpanNewLine("auto main(int32_t argc, char* argv[]) -> int32_t");
+            c.OpenBlock();
+            c.TextSpan("return __main(");
             if (mainHasParameters)
             {
-                itw.Write("argc, argv");
+                c.TextSpan("argc, argv");
             }
-            itw.WriteLine(");");
-            itw.Indent--;
-            itw.WriteLine("}");
+
+            c.TextSpanNewLine(");");
+            c.EndBlock();
         }
 
         public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
@@ -346,6 +351,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     {
                         itw.WriteLine("#include \"{0}.h\"", reference.Name);
                     }
+
+                    c.Separate();
                 }
 
                 // write forward declaration
@@ -383,9 +390,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     if (namedTypeSymbol.TypeKind == TypeKind.Delegate)
                     {
                         itw.WriteLine();
-                        WriteNamespaceOpen(namedTypeSymbol, itw, c);
+                        WriteNamespaceOpen(namedTypeSymbol, c);
                         new CCodeDelegateWrapperClass(namedTypeSymbol).WriteTo(c);
-                        WriteNamespaceClose(namedTypeSymbol, itw);
+                        WriteNamespaceClose(namedTypeSymbol, c);
                     }
                 }
 
@@ -413,26 +420,26 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
         }
 
-        public void WriteSources(AssemblyIdentity identity, IEnumerable<CCodeUnit> units)
+        public void WriteSources(AssemblyIdentity identity, IEnumerable<IEnumerable<CCodeUnit>> units)
         {
             if (this.Concurrent)
             {
                 // write all sources
                 Parallel.ForEach(
-                    units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType),
-                    (unit) =>
+                    units.Where(unit => !((INamedTypeSymbol)unit.First().Type).IsGenericType),
+                    (unitGroup) =>
                     {
-                        this.WriteSource(identity, unit);
-                        this.WriteSource(identity, unit, true);
+                        this.WriteSource(identity, unitGroup);
+                        this.WriteSource(identity, unitGroup, true);
                     });
             }
             else
             {
                 // write all sources
-                foreach (var unit in units.Where(unit => !((INamedTypeSymbol)unit.Type).IsGenericType))
+                foreach (var unitGroup in units.Where(unit => !((INamedTypeSymbol)unit.First().Type).IsGenericType))
                 {
-                    this.WriteSource(identity, unit);
-                    this.WriteSource(identity, unit, true);
+                    this.WriteSource(identity, unitGroup);
+                    this.WriteSource(identity, unitGroup, true);
                 }
             }
         }
@@ -472,7 +479,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         itw.WriteLine("#define {0}", varName);
                     }
 
-                    WriteNamespaceOpen((INamedTypeSymbol)unit.Type, itw, c);
+                    WriteNamespaceOpen((INamedTypeSymbol)unit.Type, c);
 
                     foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
                     {
@@ -490,7 +497,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         }
                     }
 
-                    WriteNamespaceClose((INamedTypeSymbol)unit.Type, itw);
+                    WriteNamespaceClose((INamedTypeSymbol)unit.Type, c);
 
                     if (!stubs)
                     {
@@ -522,7 +529,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return headersToInclude;
         }
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<CCodeUnit> units, string outputFolder, string[] impl)
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<IEnumerable<CCodeUnit>> units, string outputFolder, string[] impl)
         {
             this.currentFolder = Path.Combine(outputFolder, identity.Name);
             if (!Directory.Exists(this.currentFolder))
@@ -540,9 +547,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 this.PopulateImpl(impl);
             }
 
-            var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
+            var joinedUnits = units.SelectMany(u => u);
 
-            this.WriteHeader(identity, references, isCoreLib, units, includeHeaders);
+            var includeHeaders = this.WriteTemplateSources(joinedUnits).Union(this.WriteTemplateSources(joinedUnits, true));
+
+            this.WriteHeader(identity, references, isCoreLib, joinedUnits, includeHeaders);
 
             this.WriteCoreLibSource(identity, isCoreLib);
 
@@ -708,7 +717,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             WriteTemplateTraits(c, namedTypeSymbol);
 
-            WriteNamespaceOpen(namedTypeSymbol, itw, c);
+            WriteNamespaceOpen(namedTypeSymbol, c);
 
             // write extern declaration
             var externDeclarations = unit.Declarations.Select(
@@ -794,6 +803,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (codeMethodDeclaration == null || !codeMethodDeclaration.IsExternDeclaration)
                 {
                     declaration.WriteTo(c);
+                    if (codeMethodDeclaration != null && codeMethodDeclaration.MethodBodyOpt != null)
+                    {
+                        c.Separate();
+                    }
                 }
             }
 
@@ -806,7 +819,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             itw.Indent--;
             itw.WriteLine("};");
 
-            WriteNamespaceClose(namedTypeSymbol, itw);
+            WriteNamespaceClose(namedTypeSymbol, c);
         }
 
         private static void WriteTemplateTraits(CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
@@ -852,33 +865,33 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
         }
 
-        private static void WriteNamespaceOpen(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw, CCodeWriterText c)
+        private static void WriteNamespaceOpen(INamedTypeSymbol namedTypeSymbol, CCodeWriterText c)
         {
             bool any = false;
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
             {
-                itw.Write("namespace ");
+                c.TextSpan("namespace ");
                 c.WriteNamespaceName(namespaceNode);
-                itw.Write(" { ");
+                c.TextSpan(" { ");
                 any = true;
             }
 
             if (any)
             {
-                itw.Indent++;
-                itw.WriteLine();
+                c.IncrementIndent();
+                c.NewLine();
             }
         }
 
-        private static void WriteNamespaceClose(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw)
+        private static void WriteNamespaceClose(INamedTypeSymbol namedTypeSymbol, CCodeWriterText c)
         {
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
             {
-                itw.Indent--;
-                itw.Write("}");
+                c.DecrementIndent();
+                c.TextSpan("}");
             }
 
-            itw.WriteLine();
+            c.NewLine();
         }
 
         private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
@@ -932,13 +945,15 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return fullPath;
         }
 
-        private void WriteSource(AssemblyIdentity identity, CCodeUnit unit, bool stubs = false)
+        private void WriteSource(AssemblyIdentity identity, IEnumerable<CCodeUnit> unitGroup, bool stubs = false)
         {
             int nestedLevel;
 
+            var firstUnit = unitGroup.First();
+
             if (stubs)
             {
-                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl", doNotCreateFolder: true);
+                var path = this.GetPath(firstUnit, out nestedLevel, folder: !stubs ? "src" : "impl", doNotCreateFolder: true);
                 if (File.Exists(path))
                 {
                     // do not overwrite an existing file
@@ -951,32 +966,35 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
                 var c = new CCodeWriterText(itw);
-
                 WriteSourceInclude(itw, identity);
-
-                var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-                WriteNamespaceOpen(namedTypeSymbol, itw, c);
-
-                foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
+                foreach (var unit in unitGroup)
                 {
-                    anyRecord = true;
-                    definition.WriteTo(c);
-                }
+                    c.Separate();
 
-                if (!stubs)
-                {
-                    // write interface wrappers
-                    foreach (var iface in unit.Type.Interfaces)
+                    var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
+                    WriteNamespaceOpen(namedTypeSymbol, c);
+
+                    foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
                     {
-                        anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol);
+                        anyRecord = true;
+                        definition.WriteTo(c);
                     }
-                }
 
-                WriteNamespaceClose(namedTypeSymbol, itw);
+                    if (!stubs)
+                    {
+                        // write interface wrappers
+                        foreach (var iface in unit.Type.Interfaces)
+                        {
+                            anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol);
+                        }
+                    }
 
-                if (!stubs && unit.MainMethod != null)
-                {
-                    WriteSourceMainEntry(c, itw, unit.MainMethod);
+                    WriteNamespaceClose(namedTypeSymbol, c);
+
+                    if (!stubs && unit.MainMethod != null)
+                    {
+                        WriteSourceMainEntry(c, unit.MainMethod);
+                    }
                 }
 
                 itw.Close();
@@ -984,7 +1002,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (anyRecord && text.Length > 0)
             {
-                var path = this.GetPath(unit, out nestedLevel, folder: !stubs ? "src" : "impl");
+                var path = this.GetPath(firstUnit, out nestedLevel, folder: !stubs ? "src" : "impl");
                 var newText = text.ToString();
 
                 if (IsNothingChanged(path, newText))

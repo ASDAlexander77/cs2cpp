@@ -39,7 +39,7 @@ namespace Il2Native.Logic
 
         internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; private set; }
 
-        public IEnumerable<CCodeUnit> Build()
+        public IEnumerable<IEnumerable<CCodeUnit>> Build()
         {
             var processedTypes = new HashSet<string>();
             var typeSymbols = this.Assembly.Modules.SelectMany(module => module.EnumAllTypes()).Where(TypesFilter).ToArray();
@@ -73,7 +73,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            return _cunits.SelectMany(u => u);
+            return _cunits;
         }
 
         private static void AddTypeIntoOrder(IList<ITypeSymbol> reordered, ITypeSymbol typeSymbol, AssemblyIdentity assembly, IDictionary<string, ITypeSymbol> bankOfTypes, ISet<string> added)

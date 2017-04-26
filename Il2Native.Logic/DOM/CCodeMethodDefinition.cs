@@ -30,7 +30,6 @@ namespace Il2Native.Logic.DOM
         {
             CCodeWriterBase.SetLocalObjectIDGenerator();
 
-            c.Separate();
             c.TextSpanNewLine(string.Format("// Method : {0}", this.Method.ToDisplayString()));
 
             c.WriteMethodDeclaration(this.Method, false);
@@ -43,6 +42,8 @@ namespace Il2Native.Logic.DOM
             {
                 c.WriteMethodBody(this.BoundBody, this.Method);
             }
+
+            c.Separate();
         }
     }
 }

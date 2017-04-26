@@ -124,6 +124,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             c.TextSpan(")");
 
             MethodBodyOpt.WriteTo(c);
+            c.Separate();
         }
 
         public class NewOperatorMethod : MethodImpl
