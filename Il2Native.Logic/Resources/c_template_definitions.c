@@ -23,7 +23,7 @@ template <typename T>
 CoreLib::System::RuntimeType __pointer<T>::__type = CoreLib::System::RuntimeType(&__pointer<T>::__rt_info);
 
 template <typename T>
-__runtimetype_info __pointer<T>::__rt_info = { nullptr, nullptr, 15, false, &CoreLib::System::Reflection::Pointer::__type, &bare_type<T>::type::__type };
+__runtimetype_info __pointer<T>::__rt_info = { nullptr, nullptr, 15, false, &CoreLib::System::Reflection::Pointer__type::__type, &type_holder<bare_type<T>::type>::type::__type };
 
 // Array
 template <typename T>
@@ -89,7 +89,7 @@ template <typename T>
 CoreLib::System::RuntimeType __array<T>::__type = CoreLib::System::RuntimeType(&__array<T>::__rt_info);
 
 template <typename T>
-__runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array::__type, &bare_type<T>::type::__type };
+__runtimetype_info __array<T>::__rt_info = { nullptr, nullptr, 20, false, &CoreLib::System::Array__type::__type, &type_holder<bare_type<T>::type>::type::__type };
 
 // Method : 
 template <typename T>

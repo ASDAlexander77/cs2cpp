@@ -138,9 +138,9 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public INamedTypeSymbol BaseType { get; set; }
 
-        public ImmutableArray<INamedTypeSymbol> Interfaces { get; private set; }
+        public ImmutableArray<INamedTypeSymbol> Interfaces { get; set; }
 
-        public ImmutableArray<INamedTypeSymbol> AllInterfaces { get; private set; }
+        public ImmutableArray<INamedTypeSymbol> AllInterfaces { get; set; }
 
         public bool IsReferenceType { get; set; }
 

@@ -44,6 +44,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             c.TextSpanNewLine("return GC_make_descriptor(bitmap, GC_WORD_LEN(__type));");
 
             c.EndBlock();
+            c.Separate();
         }
 
         public class GetTypeDescriptorMethod : MethodImpl

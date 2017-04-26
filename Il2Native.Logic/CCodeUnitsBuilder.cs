@@ -21,6 +21,7 @@ namespace Il2Native.Logic
 
     using MethodBody = DOM2.MethodBody;
     using Expression = DOM2.Expression;
+    using System.Collections.Immutable;
 
     public class CCodeUnitsBuilder
     {
@@ -196,9 +197,14 @@ namespace Il2Native.Logic
 
             unit.Declarations.Add(new CCodeFieldDeclaration(typeHolderField) { DoNotWrapStatic = true });
             unit.Definitions.Add(new CCodeFieldDefinition(typeHolderField) { DoNotWrapStatic = true });
+        }
 
+        private static void BuildTypeDescriptorVariables(ITypeSymbol type, CCodeUnit unit)
+        {
             if (!type.IsAtomicType())
             {
+                var namedTypeSymbol = (INamedTypeSymbol)type;
+                
                 // add type descriptor
                 // add call flag for static constructor
                 var typeDescriptorHolderField = new FieldImpl
@@ -265,7 +271,8 @@ namespace Il2Native.Logic
                 return new Literal { Value = ConstantValue.Null };
             }
 
-            return new AddressOfOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "__type", ContainingType = (INamedTypeSymbol)type, IsStatic = true } } };
+            ////return new AddressOfOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "__type", ContainingType = (INamedTypeSymbol)type, IsStatic = true } } };
+            return new TypeOfOperator { SourceType = new TypeExpression { Type = type, TypeOfExpression = true } };
         }
 
         private static void BuildMethodTableVariables(ITypeSymbol type, CCodeUnit unit)
@@ -449,12 +456,11 @@ namespace Il2Native.Logic
                 BuildStaticConstructorVariables(type, unit);
             }
 
-            /*
             if (isNotModule)
             {
-                BuildTypeHolderVariables(type, unit);
+                ////BuildTypeHolderVariables(type, unit);
+                BuildTypeDescriptorVariables(type, unit);
             }
-            */
 
             var constructors = methodSymbols.Where(m => m.MethodKind == MethodKind.Constructor);
             foreach (var method in constructors)
@@ -591,6 +597,10 @@ namespace Il2Native.Logic
             typeHolderType.Name = typeHolderType.Name + "__type";
             typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
             typeHolderType.BaseType = null;
+            typeHolderType.TypeKind = TypeKind.Struct;
+            typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.AllInterfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.SpecialType = SpecialType.None;
 
             var unitTypeHolder = new CCodeUnit(typeHolderType);
             BuildTypeHolderVariables(typeHolderType, unitTypeHolder);

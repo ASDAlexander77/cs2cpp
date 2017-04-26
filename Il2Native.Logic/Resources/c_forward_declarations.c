@@ -19,6 +19,9 @@ struct class_to_valuetype { typedef T type; };
 template<typename T> 
 struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
 
+template<typename T>
+struct type_holder { typedef T type; };
+
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
