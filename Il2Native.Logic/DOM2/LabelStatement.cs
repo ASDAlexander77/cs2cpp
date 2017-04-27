@@ -38,6 +38,11 @@ namespace Il2Native.Logic.DOM2
                 return true;
             }
 
+            if (lbl.StartsWith("case ") && lbl.EndsWith(":"))
+            {
+                return true;
+            }
+
             switch (lbl)
             {
                 case "stateMachine":
@@ -46,6 +51,10 @@ namespace Il2Native.Logic.DOM2
                 case "afterif":
                 case "alternative":
                 case "default:":
+                case "notNull":
+                case "byTypeDefault":
+                case "failedDecision":
+                case "patternMatched":
                     return true;
             }
 
