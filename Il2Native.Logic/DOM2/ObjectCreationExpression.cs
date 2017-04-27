@@ -99,6 +99,7 @@ namespace Il2Native.Logic.DOM2
                         c,
                         this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
                         this.Arguments,
+                        this.Method,
                         anyArgs: Cs2CGenerator.DebugOutput);
 
                     c.TextSpan(")");

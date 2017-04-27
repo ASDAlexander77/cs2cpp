@@ -54,6 +54,23 @@ namespace Il2Native.Logic.DOM2
                             Right = this.Receiver
                         }
                 });
+
+            // prepare access expression;
+            Expression access = new Access { ReceiverOpt = local, Expression = this.WhenNotNull };
+            var call = this.WhenNotNull as Call;
+            if (call != null)
+            {
+                access = call;
+                call.ReceiverOpt = local;
+            }
+
+            var fieldAccess = this.WhenNotNull as FieldAccess;
+            if (fieldAccess != null)
+            {
+                access = fieldAccess;
+                fieldAccess.ReceiverOpt = local;
+            }
+
             block.Statements.Add(
                 new ReturnStatement
                 {
@@ -63,19 +80,36 @@ namespace Il2Native.Logic.DOM2
                             Condition =
                                 new BinaryOperator
                                 {
-                                    Left = local,
+                                    Left = (Type.TypeKind == TypeKind.TypeParameter) ? (Expression) new Cast
+                                    {
+                                        Constrained = true,
+                                        Operand = local,
+                                        Type = new TypeImpl { SpecialType = SpecialType.System_Object }
+                                    } : local,
                                     Right = new Literal { Value = ConstantValue.Create(null) },
                                     OperatorKind = BinaryOperatorKind.NotEqual
                                 },
-                            Consequence = new Access { ReceiverOpt = local, Expression = this.WhenNotNull },
+                            Consequence = access,
                             Alternative = new Literal { Value = ConstantValue.Create(null) }
 
                         }
                 });
+
             new LambdaCall
             {
                 Lambda = new LambdaExpression { Statements = block, Type = Type }
             }.WriteTo(c);
+
+            // clean up
+            if (call != null)
+            {
+                call.ReceiverOpt = null;
+            }
+
+            if (fieldAccess != null)
+            {
+                fieldAccess.ReceiverOpt = null;
+            }
         }
     }
 }

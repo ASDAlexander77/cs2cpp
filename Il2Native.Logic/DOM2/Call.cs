@@ -225,6 +225,20 @@ namespace Il2Native.Logic.DOM2
                 };
             }
 
+            // to support anonymous types
+            /*
+            if (method != null && method.ContainingType.IsAnonymousType() && parameter.Type.IsValueType)
+            {
+                var namedTypeImpl = new TypeImpl { SpecialType = SpecialType.System_Object };
+                effectiveExpression = new Conversion
+                {
+                    Type = namedTypeImpl,
+                    ConversionKind = ConversionKind.Boxing,
+                    Operand = effectiveExpression,
+                };
+            }
+            */
+
             return effectiveExpression;
         }
 
