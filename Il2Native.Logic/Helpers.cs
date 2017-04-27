@@ -1095,9 +1095,9 @@ namespace Il2Native.Logic
                 var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
                 if (typeSymbol.IsAnonymousType())
                 {
-                    sb.Append("<>f__AnonymousType");
                     if (typeSymbol.IsAnonymousType)
                     {
+                        sb.Append("<>f__AnonymousType");
                         var parameters = ((INamedTypeSymbol)typeSymbol).Constructors.First().Parameters;
                         sb.Append(parameters.Length);
                         sb.Append("<");
@@ -1117,6 +1117,8 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        sb.Append(typeSymbol.Name);
+                        sb.Append("T");
                         sb.Append(namedTypeSymbol.TypeArguments.Length);
                     }
                 }

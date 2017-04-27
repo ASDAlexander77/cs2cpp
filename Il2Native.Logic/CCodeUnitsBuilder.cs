@@ -593,8 +593,19 @@ namespace Il2Native.Logic
 
             // return type holder class
             var typeHolderType = (TypeImpl) TypeImpl.Wrap(type);
-            typeHolderType.Name = typeHolderType.Name + "__type";
-            typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
+
+            if (!type.IsAnonymousType())
+            {
+                typeHolderType.Name = typeHolderType.Name + "__type";
+                typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
+            }
+            else
+            {
+                var namedType = (INamedTypeSymbol)type;
+                typeHolderType.Name = namedType.GetAnonymousTypeName() + "__type";
+                typeHolderType.MetadataName = namedType.GetAnonymousTypeName() + "__type";
+            }
+
             typeHolderType.BaseType = null;
             typeHolderType.TypeKind = TypeKind.Struct;
             typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
