@@ -60,9 +60,9 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             this.Operand.Visit(visitor);
             this.Index.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

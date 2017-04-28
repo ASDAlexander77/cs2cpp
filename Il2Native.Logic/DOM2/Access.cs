@@ -27,13 +27,13 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             if (this.ReceiverOpt != null)
             {
                 this.ReceiverOpt.Visit(visitor);
             }
 
             this.Expression.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

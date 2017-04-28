@@ -44,7 +44,6 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             if (this.InitializerOpt != null)
             {
                 this.InitializerOpt.Visit(visitor);
@@ -54,6 +53,7 @@ namespace Il2Native.Logic.DOM2
             {
                 bound.Visit(visitor);
             }
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

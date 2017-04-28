@@ -119,7 +119,6 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             foreach (var statement in this.Locals)
             {
                 statement.Visit(visitor);
@@ -127,6 +126,8 @@ namespace Il2Native.Logic.DOM2
 
             this.Initialization.Visit(visitor);
             this.TryStatement.Visit(visitor);
+
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

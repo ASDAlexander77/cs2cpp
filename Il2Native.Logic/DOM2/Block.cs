@@ -42,11 +42,12 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             foreach (var statement in this._statements)
             {
                 statement.Visit(visitor);
             }
+
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

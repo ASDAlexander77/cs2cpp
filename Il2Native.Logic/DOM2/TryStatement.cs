@@ -49,7 +49,6 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             this.TryBlock.Visit(visitor);
             foreach (var catchBlock in this.CatchBlocks)
             {
@@ -60,6 +59,8 @@ namespace Il2Native.Logic.DOM2
             {
                 this.FinallyBlockOpt.Visit(visitor);
             }
+
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

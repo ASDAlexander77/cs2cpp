@@ -74,8 +74,8 @@ namespace Il2Native.Logic.DOM2
 
         internal override void Visit(Action<Base> visitor)
         {
-            base.Visit(visitor);
             this.Value.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
