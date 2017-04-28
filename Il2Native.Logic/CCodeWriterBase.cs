@@ -110,6 +110,13 @@ namespace Il2Native.Logic
                 return;
             }
 
+            var elementAccessExpression = effectiveExpression as ElementAccessExpression;
+            if (elementAccessExpression != null && elementAccessExpression.Operand.Type.TypeKind == TypeKind.Pointer)
+            {
+                this.TextSpan("->");
+                return;
+            }
+
             var expressionType = effectiveExpression.Type;
             if (expressionType.TypeKind == TypeKind.Struct || expressionType.TypeKind == TypeKind.Enum)
             {
@@ -183,7 +190,7 @@ namespace Il2Native.Logic
             var parenthesis = expression is ArrayCreation ||
                               expression is DelegateCreationExpression || expression is BinaryOperator ||
                               expression is UnaryOperator || expression is UnaryAssignmentOperator || expression is ConditionalOperator ||
-                              expression is AssignmentOperator;
+                              expression is AssignmentOperator || expression is PointerIndirectionOperator;
 
             var conversion = expression as Conversion;
             if (conversion != null && (conversion.ConversionKind == ConversionKind.PointerToInteger ||
