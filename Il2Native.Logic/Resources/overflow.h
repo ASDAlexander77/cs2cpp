@@ -16,13 +16,19 @@ inline typename std::enable_if<!std::is_signed<T>::value || !std::is_integral<T>
 }
 
 template < typename D, typename S >
-inline D checked_static_cast(S operand)
+inline typename std::enable_if<!std::is_enum<S>::value, D>::type checked_static_cast(S operand)
 {
 	if (operand < std::numeric_limits<D>::min() || operand > std::numeric_limits<D>::max())
 	{
 		throw __new<CoreLib::System::OverflowException>();
 	}
 
+	return static_cast<D>(operand);
+}
+
+template < typename D, typename S >
+inline typename std::enable_if<std::is_enum<S>::value, D>::type checked_static_cast(S operand)
+{
 	return static_cast<D>(operand);
 }
 
