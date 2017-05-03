@@ -13,14 +13,14 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     template <typename T> 
     int32_t JitHelpers::UnsafeEnumCast(T val)
     {
-        return reinterpret_cast<int32_t>(val);
+        return static_cast<int32_t>(val);
     }
     
     // Method : System.Runtime.CompilerServices.JitHelpers.UnsafeEnumCastLong<T>(T)
     template <typename T> 
     int64_t JitHelpers::UnsafeEnumCastLong(T val)
     {
-        return reinterpret_cast<int64_t>(val);
+        return static_cast<int64_t>(val);
     }
     
     // Method : System.Runtime.CompilerServices.JitHelpers.UnsafeCastToStackPointer<T>(ref T)
