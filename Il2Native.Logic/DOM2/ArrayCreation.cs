@@ -123,6 +123,7 @@ namespace Il2Native.Logic.DOM2
 
             if (this.InitializerOpt != null)
             {
+                c.TextSpan("{");
                 foreach (var bound in initItems)
                 {
                     if (any)
@@ -134,6 +135,7 @@ namespace Il2Native.Logic.DOM2
                     c.WriteWrappedExpressionIfNeeded(bound);
                     any = true;
                 }
+                c.TextSpan("}");
             }
 
             c.TextSpan(")");

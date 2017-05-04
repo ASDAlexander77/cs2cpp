@@ -229,17 +229,17 @@ public:
 		return allocate_array_debug(_file, _line, length);
 	}
 
-	template <typename... Ta> static __array<T>* __new_array_init(Ta... items)
+	static __array<T>* __new_array_init(std::initializer_list<T> items)
 	{
-		auto instance = allocate_array(sizeof...(items));
-		__init_array(instance, items...);
+		auto instance = allocate_array(items.size());
+		std::copy(items.begin(), items.end(), instance->_data);
 		return instance;
 	}
 
-	template <typename... Ta> static __array<T>* __new_array_init_debug(const char* _file, int _line, Ta... items)
+	static __array<T>* __new_array_init_debug(const char* _file, int _line, std::initializer_list<T> items)
 	{
-		auto instance = allocate_array_debug(_file, _line, sizeof...(items));
-		__init_array(instance, items...);
+		auto instance = allocate_array_debug(_file, _line, items.size());
+		std::copy(items.begin(), items.end(), instance->_data);
 		return instance;
 	}
 
@@ -255,13 +255,6 @@ public:
 		auto size = sizeof(__array<T>) + length * sizeof(T);
 		auto pointer = ::operator new (size, gc_traits<T>::value, _file, _line);
 		return new (pointer) __array<T>(length);
-	}
-
-	template <typename... Ta> inline static void __init_array(__array<T>* instance, Ta... items)
-	{
-		T tmp[] = {items...};
-		auto data_size = sizeof...(items) * sizeof(T);
-		memcpy(&instance->_data[0], &tmp, data_size);
 	}
 
 	inline const T operator [](int32_t index) const 
@@ -594,27 +587,27 @@ public:
 		return index;
 	}
 
-	template <typename... Ta> static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)
+	static __multi_array<T, RANK>* __new_array(std::initializer_list<int32_t> boundries)
 	{
 		return allocate_multiarray(boundries);
 	}
 
-	template <typename... Ta> static __multi_array<T, RANK>* __new_array_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
+	static __multi_array<T, RANK>* __new_array_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries)
 	{
 		return allocate_multiarray_debug(_file, _line, boundries);
 	}
 
-	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, Ta... items)
+	static __multi_array<T, RANK>* __new_array_init(std::initializer_list<int32_t> boundries, std::initializer_list<T> items)
 	{
 		auto instance = allocate_multiarray(boundries);
-		__init_array(instance, items...);
+		std::copy(items.begin(), items.end(), instance->_data);
 		return instance;
 	}
 
-	template <typename... Ta> static __multi_array<T, RANK>* __new_array_init_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries, Ta... items)
+	static __multi_array<T, RANK>* __new_array_init_debug(const char* _file, int _line, std::initializer_list<int32_t> boundries, std::initializer_list<T> items)
 	{
 		auto instance = allocate_multiarray_debug(_file, _line, boundries);
-		__init_array(instance, items...);
+		std::copy(items.begin(), items.end(), instance->_data);
 		return instance;
 	}
 
@@ -639,14 +632,6 @@ public:
 		auto size = sizeof(__multi_array<T, RANK>) + length * sizeof(T);
 		auto pointer = ::operator new (size, gc_traits<T>::value, _file, _line);
 		return new (pointer) __multi_array<T, RANK>(boundries);
-	}
-
-	template <typename... Ta> inline static void __init_array(__multi_array<T, RANK>* instance, Ta... items)
-	{
-		// initialize
-		T tmp[] = {items...};
-		auto data_size =  sizeof...(items) * sizeof(T);
-		memcpy(&instance->_data[0], &tmp, data_size);
 	}
 
 	virtual object* __clone() override
