@@ -121,7 +121,7 @@ namespace Il2Native.Logic.DOM2
                 }
             }
 
-            if (this.InitializerOpt != null)
+            if (arrayInit)
             {
                 if (any)
                 {
