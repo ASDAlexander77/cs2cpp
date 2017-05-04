@@ -123,7 +123,14 @@ namespace Il2Native.Logic.DOM2
 
             if (this.InitializerOpt != null)
             {
+                if (any)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
                 c.TextSpan("{");
+                any = false;
                 foreach (var bound in initItems)
                 {
                     if (any)
