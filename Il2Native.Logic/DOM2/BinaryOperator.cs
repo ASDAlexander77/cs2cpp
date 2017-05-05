@@ -20,6 +20,8 @@ namespace Il2Native.Logic.DOM2
 
         internal BinaryOperatorKind OperatorKind { get; set; }
 
+        public bool IsPointerVoidOperator { get; set; }
+
         public bool IsRealRemainder
         {
             get
@@ -80,6 +82,23 @@ namespace Il2Native.Logic.DOM2
                 case BinaryOperatorKind.ULong:
                     c.TextSpan("_un");
                     break;
+            }
+        }
+
+        internal static void WritePointerVoidOperator(CCodeWriterBase c, BinaryOperatorKind operatorKind)
+        {
+            switch (GetOperatorKind(operatorKind))
+            {
+                case BinaryOperatorKind.Addition:
+                    c.TextSpan("__ptr_add");
+                    break;
+
+                case BinaryOperatorKind.Subtraction:
+                    c.TextSpan("__ptr_sub");
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
         }
 
@@ -168,6 +187,11 @@ namespace Il2Native.Logic.DOM2
         {
             base.Parse(boundBinaryOperator);
             this.OperatorKind = boundBinaryOperator.OperatorKind;
+
+            this.IsPointerVoidOperator = 
+                IsPointerOperation(this.OperatorKind) 
+                && (boundBinaryOperator.Left.Type.IsVoidPointer() || boundBinaryOperator.Right.Type.IsVoidPointer())
+                && (GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Addition || GetOperatorKind(this.OperatorKind) == BinaryOperatorKind.Subtraction);
 
             // special case for PointerAddition
             if (IsPointerOperation(this.OperatorKind))
@@ -258,6 +282,16 @@ namespace Il2Native.Logic.DOM2
             if (reminder)
             {
                 c.TextSpan("std::fmod(");
+                c.WriteWrappedExpressionIfNeeded(this.Left);
+                c.TextSpan(",");
+                c.WhiteSpace();
+                c.WriteWrappedExpressionIfNeeded(this.Right);
+                c.TextSpan(")");
+            }         
+            else if (this.IsPointerVoidOperator)
+            {
+                WritePointerVoidOperator(c, this.OperatorKind);
+                c.TextSpan("(");
                 c.WriteWrappedExpressionIfNeeded(this.Left);
                 c.TextSpan(",");
                 c.WhiteSpace();

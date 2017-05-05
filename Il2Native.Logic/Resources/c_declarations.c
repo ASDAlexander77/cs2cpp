@@ -145,6 +145,30 @@ inline typename std::enable_if<is_interface_type<S>::value && is_class_type<D>::
 	return object_cast(s);
 }
 
+// Pointers
+template <typename T>
+inline void* __ptr_add(void* p, T off)
+{
+	return static_cast<void*>(static_cast<int8_t*>(p) + off);
+}
+
+template <typename T>
+inline void* __ptr_sub(void* p, T off)
+{
+	return static_cast<void*>(static_cast<int8_t*>(p) - off);
+}
+
+inline T __ptr_add(T val, void* p)
+{
+	return val + static_cast<T>(p);
+}
+
+template <typename T>
+inline T __ptr_sub(T val, void* p)
+{
+	return val - static_cast<T>(p);
+}
+
 // Decimals
 int32_t DecAddSub(int32_t* d1, int32_t* d2, int32_t* res, uint8_t bSign);
 int32_t DecCmp(int32_t* d1, int32_t* d2);

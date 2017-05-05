@@ -365,6 +365,18 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsVoidPointer(this ITypeSymbol type)
+        {
+            switch (type.TypeKind)
+            {
+                case TypeKind.Pointer:
+                    var pointerType = (IPointerTypeSymbol) type;
+                    return pointerType.PointedAtType.SpecialType == SpecialType.System_Void;
+            }
+
+            return false;
+        }
+
         public static bool IsRealValueType(this ITypeSymbol type)
         {
             switch (type.SpecialType)
