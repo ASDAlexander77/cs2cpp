@@ -377,6 +377,18 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsPrimitiveValueTypePointer(this ITypeSymbol type)
+        {
+            switch (type.TypeKind)
+            {
+                case TypeKind.Pointer:
+                    var pointerType = (IPointerTypeSymbol)type;
+                    return pointerType.PointedAtType.IsPrimitiveValueType();
+            }
+
+            return false;
+        }
+
         public static bool IsRealValueType(this ITypeSymbol type)
         {
             switch (type.SpecialType)

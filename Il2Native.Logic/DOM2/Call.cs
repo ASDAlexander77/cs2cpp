@@ -339,6 +339,17 @@ namespace Il2Native.Logic.DOM2
                 };
             }
 
+            if (effectiveReceiverOpt.Type.IsPrimitiveValueTypePointer() && this.Method.ReceiverType != effectiveReceiverOpt.Type)
+            {
+                effectiveReceiverOpt = new Cast
+                {
+                    Operand = effectiveReceiverOpt,
+                    Type = this.Method.ReceiverType,
+                    BoxByRef = true,
+                    IsReference = true,
+                };
+            }
+
             return effectiveReceiverOpt;
         }
     }
