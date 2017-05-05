@@ -13,9 +13,19 @@ template <typename T> inline T& __refvalue(CoreLib::System::TypedReference tr)
 	return (T&)*(T*)((void*)tr.Value);
 }
 
-template <typename T> inline CoreLib::System::Type* __reftype(CoreLib::System::TypedReference tr)
+inline CoreLib::System::Type* __reftype(CoreLib::System::TypedReference tr)
 {
 	return ((__methods_table*) ((void*)tr.Type))->__get_type();
+}
+
+template <typename T> inline T& __refvalue(CoreLib::System::TypedReference* tr)
+{
+	return (T&)*(T*)((void*)tr->Value);
+}
+
+inline CoreLib::System::Type* __reftype(CoreLib::System::TypedReference* tr)
+{
+	return ((__methods_table*)((void*)tr->Type))->__get_type();
 }
 
 // Pointer
