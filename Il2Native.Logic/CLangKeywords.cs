@@ -18,6 +18,8 @@ namespace Il2Native.Logic
                 "and",
                 "and_eq",
                 "asm",
+                "_asm",
+                "__asm",
                 "auto",
                 "bitand",
                 "bitor",
