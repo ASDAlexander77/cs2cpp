@@ -158,6 +158,7 @@ inline void* __ptr_sub(void* p, T off)
 	return static_cast<void*>(static_cast<int8_t*>(p) - off);
 }
 
+template <typename T>
 inline T __ptr_add(T val, void* p)
 {
 	return val + static_cast<T>(p);
