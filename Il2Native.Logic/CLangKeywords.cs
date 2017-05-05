@@ -18,8 +18,6 @@ namespace Il2Native.Logic
                 "and",
                 "and_eq",
                 "asm",
-                "_asm",
-                "__asm",
                 "auto",
                 "bitand",
                 "bitor",
@@ -120,7 +118,7 @@ namespace Il2Native.Logic
             bool val;
             if (keywords.TryGetValue(value, out val))
             {
-                return "_" + value;
+                return "_" + value + "_1";
             }
 
             return value;
