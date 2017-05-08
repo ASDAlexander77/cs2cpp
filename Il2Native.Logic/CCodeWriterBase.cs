@@ -528,6 +528,12 @@ namespace Il2Native.Logic
                     this.TextSpan(parameter.RefKind.ToString());
                 }
             }
+
+            if (methodSymbol.IsGenericMethod && methodSymbol.Arity > 0)
+            {
+                this.TextSpan("T");
+                this.TextSpan(methodSymbol.Arity.ToString());
+            }
         }
 
         public void WriteMethodNamespace(IMethodSymbol methodSymbol, bool excludeNamespace)

@@ -4,7 +4,7 @@ namespace CoreLib { namespace System {
     
     // Method : System.Activator.CreateInstance<T>()
     template <typename T> 
-    T Activator::CreateInstance()
+    T Activator::CreateInstanceT1()
     {
 		return __create_instance<T>();
     }
