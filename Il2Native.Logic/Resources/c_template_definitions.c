@@ -55,6 +55,17 @@ uint32_t  __array<T>::__get_size()
 }
 
 template <typename T>
+void*  __array<T>::__get_interface(CoreLib::System::Type* value)
+{
+	if (_typeof<CoreLib::System::Collections::Generic::IEnumerableT1<T>*>() == value)
+	{
+		return interface_cast<CoreLib::System::Collections::Generic::IEnumerableT1<T>*>(this);
+	}
+
+	return base::__get_interface(value);
+}
+
+template <typename T>
 void __array<T>::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
 {
 	if (rank != 1)
