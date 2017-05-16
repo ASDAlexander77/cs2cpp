@@ -340,84 +340,84 @@ CoreLib::System::Collections::IEnumerator* __array<T>::System_Collections_IEnume
 
 // Method : 
 template <typename T> 
-T __array<T>::__array_IListT1::System_Collections_Generic_IListT1_get_Item(int32_t index)
+T __array<T>::__array_IListT1::get_Item(int32_t index)
 {
 	return this->_class->System_Collections_Generic_IListT1_get_Item(index);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_IListT1_set_Item(int32_t index, T value)
+void __array<T>::__array_IListT1::set_Item(int32_t index, T value)
 {
 	return this->_class->System_Collections_Generic_IListT1_set_Item(index, value);
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_IListT1::System_Collections_Generic_IListT1_IndexOf(T item)
+int32_t __array<T>::__array_IListT1::IndexOf(T item)
 {
 	return this->_class->System_Collections_Generic_IListT1_IndexOf(item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_IListT1_Insert(int32_t index, T item)
+void __array<T>::__array_IListT1::Insert(int32_t index, T item)
 {
 	return this->_class->System_Collections_Generic_IListT1_Insert(index, item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_IListT1_RemoveAt(int32_t index)
+void __array<T>::__array_IListT1::RemoveAt(int32_t index)
 {
 	return this->_class->System_Collections_Generic_IListT1_RemoveAt(index);
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_get_Count()
+int32_t __array<T>::__array_IListT1::get_Count()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_get_Count();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_get_IsReadOnly()
+bool __array<T>::__array_IListT1::get_IsReadOnly()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_get_IsReadOnly();
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_Add(T item)
+void __array<T>::__array_IListT1::Add(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Add(item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_Clear()
+void __array<T>::__array_IListT1::Clear()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Clear();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_Contains(T item)
+bool __array<T>::__array_IListT1::Contains(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Contains(item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_CopyTo(__array<T>* array, int32_t arrayIndex)
+void __array<T>::__array_IListT1::CopyTo(__array<T>* array, int32_t arrayIndex)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_CopyTo(array, arrayIndex);
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IListT1::System_Collections_Generic_ICollectionT1_Remove(T item)
+bool __array<T>::__array_IListT1::Remove(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Remove(item);
 }
@@ -431,56 +431,56 @@ CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::__array_ILi
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_IListT1::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_IListT1::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_get_Count()
+int32_t __array<T>::__array_ICollectionT1::get_Count()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_get_Count();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_get_IsReadOnly()
+bool __array<T>::__array_ICollectionT1::get_IsReadOnly()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_get_IsReadOnly();
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_Add(T item)
+void __array<T>::__array_ICollectionT1::Add(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Add(item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_Clear()
+void __array<T>::__array_ICollectionT1::Clear()
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Clear();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_Contains(T item)
+bool __array<T>::__array_ICollectionT1::Contains(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Contains(item);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_CopyTo(__array<T>* array, int32_t arrayIndex)
+void __array<T>::__array_ICollectionT1::CopyTo(__array<T>* array, int32_t arrayIndex)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_CopyTo(array, arrayIndex);
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_ICollectionT1::System_Collections_Generic_ICollectionT1_Remove(T item)
+bool __array<T>::__array_ICollectionT1::Remove(T item)
 {
 	return this->_class->System_Collections_Generic_ICollectionT1_Remove(item);
 }
@@ -494,7 +494,7 @@ CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::__array_ICo
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_ICollectionT1::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_ICollectionT1::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
@@ -508,161 +508,161 @@ CoreLib::System::Collections::Generic::IEnumeratorT1<T>* __array<T>::__array_IEn
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_IEnumerableT1::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_IEnumerableT1::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_IEnumerable::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_IEnumerable::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
 
 // Method : 
 template <typename T> 
-object* __array<T>::__array_IList::System_Collections_IList_get_Item(int32_t index)
+object* __array<T>::__array_IList::get_Item(int32_t index)
 {
 	return this->_class->System_Collections_IList_get_Item(index);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_IList_set_Item(int32_t index, object* value)
+void __array<T>::__array_IList::set_Item(int32_t index, object* value)
 {
 	return this->_class->System_Collections_IList_set_Item(index, value);
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_IList::System_Collections_IList_Add(object* value)
+int32_t __array<T>::__array_IList::Add(object* value)
 {
 	return this->_class->System_Collections_IList_Add(value);
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IList::System_Collections_IList_Contains(object* value)
+bool __array<T>::__array_IList::Contains(object* value)
 {
 	return this->_class->System_Collections_IList_Contains(value);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_IList_Clear()
+void __array<T>::__array_IList::Clear()
 {
 	return this->_class->System_Collections_IList_Clear();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IList::System_Collections_IList_get_IsReadOnly()
+bool __array<T>::__array_IList::get_IsReadOnly()
 {
 	return this->_class->System_Collections_IList_get_IsReadOnly();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IList::System_Collections_IList_get_IsFixedSize()
+bool __array<T>::__array_IList::get_IsFixedSize()
 {
 	return this->_class->System_Collections_IList_get_IsFixedSize();
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_IList::System_Collections_IList_IndexOf(object* value)
+int32_t __array<T>::__array_IList::IndexOf(object* value)
 {
 	return this->_class->System_Collections_IList_IndexOf(value);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_IList_Insert(int32_t index, object* value)
+void __array<T>::__array_IList::Insert(int32_t index, object* value)
 {
 	return this->_class->System_Collections_IList_Insert(index, value);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_IList_Remove(object* value)
+void __array<T>::__array_IList::Remove(object* value)
 {
 	return this->_class->System_Collections_IList_Remove(value);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_IList_RemoveAt(int32_t index)
+void __array<T>::__array_IList::RemoveAt(int32_t index)
 {
 	return this->_class->System_Collections_IList_RemoveAt(index);
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_IList::System_Collections_ICollection_CopyTo(CoreLib::System::Array* array, int32_t index)
+void __array<T>::__array_IList::CopyTo(CoreLib::System::Array* array, int32_t index)
 {
 	return this->_class->System_Collections_ICollection_CopyTo(array, index);
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_IList::System_Collections_ICollection_get_Count()
+int32_t __array<T>::__array_IList::get_Count()
 {
 	return this->_class->System_Collections_ICollection_get_Count();
 }
 
 // Method : 
 template <typename T> 
-object* __array<T>::__array_IList::System_Collections_ICollection_get_SyncRoot()
+object* __array<T>::__array_IList::get_SyncRoot()
 {
 	return this->_class->System_Collections_ICollection_get_SyncRoot();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_IList::System_Collections_ICollection_get_IsSynchronized()
+bool __array<T>::__array_IList::get_IsSynchronized()
 {
 	return this->_class->System_Collections_ICollection_get_IsSynchronized();
 }
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_IList::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_IList::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }
 
 // Method : 
 template <typename T> 
-void __array<T>::__array_ICollection::System_Collections_ICollection_CopyTo(CoreLib::System::Array* array, int32_t index)
+void __array<T>::__array_ICollection::CopyTo(CoreLib::System::Array* array, int32_t index)
 {
 	return this->_class->System_Collections_ICollection_CopyTo(array, index);
 }
 
 // Method : 
 template <typename T> 
-int32_t __array<T>::__array_ICollection::System_Collections_ICollection_get_Count()
+int32_t __array<T>::__array_ICollection::get_Count()
 {
 	return this->_class->System_Collections_ICollection_get_Count();
 }
 
 // Method : 
 template <typename T> 
-object* __array<T>::__array_ICollection::System_Collections_ICollection_get_SyncRoot()
+object* __array<T>::__array_ICollection::get_SyncRoot()
 {
 	return this->_class->System_Collections_ICollection_get_SyncRoot();
 }
 
 // Method : 
 template <typename T> 
-bool __array<T>::__array_ICollection::System_Collections_ICollection_get_IsSynchronized()
+bool __array<T>::__array_ICollection::get_IsSynchronized()
 {
 	return this->_class->System_Collections_ICollection_get_IsSynchronized();
 }
 
 // Method : 
 template <typename T> 
-CoreLib::System::Collections::IEnumerator* __array<T>::__array_ICollection::System_Collections_IEnumerable_GetEnumerator()
+CoreLib::System::Collections::IEnumerator* __array<T>::__array_ICollection::GetEnumerator()
 {
 	return this->_class->System_Collections_IEnumerable_GetEnumerator();
 }

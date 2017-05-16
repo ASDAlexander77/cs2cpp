@@ -455,7 +455,15 @@ namespace Il2Native.Logic
             if (methodSymbol.ContainingType != null
                 && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
-                this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+                // check if it hides base method
+                var separator = false;
+                var hidesBaseMethodOrInterfaceWrapper = interfaceWrapperMethodSpecialCase || methodSymbol.ContainingType.AllInterfaces.Any(i => i.GetMembers().OfType<IMethodSymbol>().Any(m => m.CompareTo(methodSymbol, true, true) == 0));
+                if (hidesBaseMethodOrInterfaceWrapper)
+                {
+                    this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
+                    separator = true;
+                }
+
                 if (interfaceWrapperMethodSpecialCase && explicitInterfaceImplementation == null)
                 {
                     if (methodSymbol.ContainingType.IsGenericType
@@ -464,10 +472,14 @@ namespace Il2Native.Logic
                         var sb = new StringBuilder();
                         CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, methodSymbol.ContainingType);
                         this.TextSpan(sb.ToString());
+                        separator = true;
                     }
                 }
 
-                this.TextSpan("_");
+                if (separator)
+                {
+                    this.TextSpan("_");
+                }
             }
 
             if (explicitInterfaceImplementation != null)
