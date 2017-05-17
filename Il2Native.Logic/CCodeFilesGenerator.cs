@@ -909,9 +909,32 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 c.IncrementIndent();
                 c.NewLine();
             }
+
+            /*
+            // include using of namespace
+            c.TextSpan("using");
+            c.WhiteSpace();
+            c.TextSpan("namespace");
+            c.WhiteSpace();
+            c.WriteNamespace(namedTypeSymbol.ContainingNamespace);
+            c.EndStatement();
+            c.Separate();
+            */
+
+            // write alias for _
+            c.TextSpan("namespace");
+            c.WhiteSpace();
+            c.TextSpan("_");
+            c.WhiteSpace();
+            c.TextSpan("=");
+            c.WhiteSpace();
+            c.WriteNamespace(namedTypeSymbol.ContainingNamespace);
+            c.EndStatement();
+            c.Separate();
+            c.NewLine();
         }
 
-        private static void WriteNamespaceClose(INamedTypeSymbol namedTypeSymbol, CCodeWriterText c)
+    private static void WriteNamespaceClose(INamedTypeSymbol namedTypeSymbol, CCodeWriterText c)
         {
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
             {

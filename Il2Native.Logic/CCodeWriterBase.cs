@@ -806,6 +806,31 @@ namespace Il2Native.Logic
             }
         }
 
+        public void WriteNamespace(INamespaceSymbol namespaceSymbol, INamespaceSymbol excludeNamespaceSymbol, string namespaceAlias)
+        {
+            this.TextSpan(namespaceAlias);
+
+            var exclude = excludeNamespaceSymbol.EnumNamespaces().GetEnumerator();
+
+            var any = !string.IsNullOrWhiteSpace(namespaceAlias);
+            foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
+            {
+                if (exclude.MoveNext() && exclude.Current.Name.CompareTo(namespaceNode.Name) == 0)
+                {
+                    continue;
+                }
+
+                if (any)
+                {
+                    this.TextSpan("::");
+                }
+
+                any = true;
+
+                this.WriteNamespaceName(namespaceNode);
+            }
+        }
+
         public void WriteNamespaceName(INamespaceSymbol namespaceNode)
         {
             if (namespaceNode.IsGlobalNamespace)
@@ -1156,9 +1181,17 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.ContainingNamespace != null && type.ContainingNamespace.CompareTo(containingNamespace) != 0)
+            if (type.ContainingNamespace != null)
             {
-                this.WriteNamespace(type.ContainingNamespace);
+                if (type.ContainingNamespace.StartsWith(containingNamespace))
+                {
+                    this.WriteNamespace(type.ContainingNamespace, containingNamespace, "_");
+                }
+                else
+                {
+                    this.WriteNamespace(type.ContainingNamespace);
+                }
+
                 this.TextSpan("::");
             }
 

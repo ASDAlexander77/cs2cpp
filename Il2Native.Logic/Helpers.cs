@@ -895,6 +895,42 @@ namespace Il2Native.Logic
             return null;
         }
 
+        public static bool StartsWith(this INamespaceSymbol namespaceSymbol, INamespaceSymbol otherNamespaceSymbol)
+        {
+            if (namespaceSymbol == otherNamespaceSymbol)
+            {
+                return true;
+            }
+
+            if (namespaceSymbol == null)
+            {
+                return false;
+            }
+
+            if (otherNamespaceSymbol == null)
+            {
+                return false;
+            }
+
+            var parts = namespaceSymbol.EnumNamespaces().GetEnumerator();
+            var partsOther = otherNamespaceSymbol.EnumNamespaces().GetEnumerator();
+            do
+            {
+                if (!partsOther.MoveNext())
+                {
+                    return true;
+                }
+
+                if (!parts.MoveNext())
+                {
+                    break;
+                }
+            }
+            while (parts.Current.Name.CompareTo(partsOther.Current.Name) == 0);
+
+            return false;
+        }
+
         public static int CompareTo(this INamespaceSymbol namespaceSymbol, INamespaceSymbol otherNamespaceSymbol)
         {
             if (namespaceSymbol == otherNamespaceSymbol)
