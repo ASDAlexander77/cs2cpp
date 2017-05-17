@@ -52,7 +52,7 @@ namespace Il2Native.Logic.DOM2
             c.TextSpan("(");
             if (this.ExceptionTypeOpt != null)
             {
-                c.WriteType(this.ExceptionTypeOpt);
+                c.WriteType(this.ExceptionTypeOpt, containingNamespace: MethodOwner.ContainingNamespace);
                 if (this.ExceptionSourceOpt != null)
                 {
                     c.WhiteSpace();

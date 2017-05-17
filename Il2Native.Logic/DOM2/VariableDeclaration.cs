@@ -72,7 +72,7 @@ namespace Il2Native.Logic.DOM2
 
             if (this.Local != null)
             {
-                c.WriteType(this.Local.Type);
+                c.WriteType(this.Local.Type, containingNamespace: MethodOwner.ContainingNamespace);
                 c.WhiteSpace();
                 this.Local.WriteTo(c);
             }

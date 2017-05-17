@@ -103,7 +103,7 @@ namespace Il2Native.Logic.DOM2
             if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
             {
                 c.TextSpan("((");
-                c.WriteType(this.Method.ReturnType);
+                c.WriteType(this.Method.ReturnType, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(")");
             }
 

@@ -150,7 +150,7 @@ namespace Il2Native.Logic.DOM2
             if (Type != null && Type.TypeKind == TypeKind.Enum)
             {
                 c.TextSpan("(");
-                c.WriteType(Type);
+                c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(")");
             }
 

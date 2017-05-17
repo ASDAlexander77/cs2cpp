@@ -20,7 +20,7 @@ namespace Il2Native.Logic.DOM2
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("__default<");
-            c.WriteType(Type);
+            c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
             c.TextSpan(">()");
         }
     }

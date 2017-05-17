@@ -274,7 +274,7 @@ namespace Il2Native.Logic.DOM2
             if (castOfResult)
             {
                 c.TextSpan("((");
-                c.WriteType(Type);
+                c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(")(");
             }
 

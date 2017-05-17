@@ -29,7 +29,7 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
             }
 
-            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference);
+            c.WriteType(Type, suppressReference: this.SuppressReference, valueTypeAsClass: IsReference, containingNamespace: MethodOwner?.ContainingNamespace);
         }
     }
 }

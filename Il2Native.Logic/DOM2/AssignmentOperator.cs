@@ -92,7 +92,7 @@ namespace Il2Native.Logic.DOM2
                 }
                 else if (Type != null)
                 {
-                    c.WriteType(Type);
+                    c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
                 }
 
                 if (this.IsRef || this.IsOut)

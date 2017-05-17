@@ -83,7 +83,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                c.WriteType(Type, true, true, true);
+                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner?.ContainingNamespace);
                 WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
             }
             else
@@ -152,7 +152,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.TextSpan("<");
-                c.WriteType(Type, true, true, true);
+                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(">");
 
                 return true;
@@ -160,7 +160,7 @@ namespace Il2Native.Logic.DOM2
             else
             {
                 c.TextSpan("__init<");
-                c.WriteType(Type, true, true, true);
+                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(">");
             }
 

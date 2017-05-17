@@ -51,7 +51,7 @@ namespace Il2Native.Logic.DOM2
             if (this.Constrained)
             {
                 c.TextSpan("constrained<");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(">(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");                
@@ -59,7 +59,7 @@ namespace Il2Native.Logic.DOM2
             else if (this.Reference)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan("&)");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -67,7 +67,7 @@ namespace Il2Native.Logic.DOM2
             else if (this.CCast)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan(")");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -91,7 +91,7 @@ namespace Il2Native.Logic.DOM2
             }
             else
             {
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");

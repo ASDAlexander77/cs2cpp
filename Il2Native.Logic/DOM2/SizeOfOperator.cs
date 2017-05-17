@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class SizeOfOperator : Expression
@@ -18,6 +19,12 @@ namespace Il2Native.Logic.DOM2
         {
             base.Parse(boundSizeOfOperator);
             this.SourceType = Deserialize(boundSizeOfOperator.SourceType) as Expression;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            this.SourceType.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

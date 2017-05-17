@@ -154,20 +154,20 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true)
+        public void WriteCArrayTemplate(IArrayTypeSymbol arrayTypeSymbol, bool reference = true, bool cleanName = false, bool allowKeywords = true, INamespaceSymbol containingNamespace = null)
         {
             var elementType = arrayTypeSymbol.ElementType;
 
             if (arrayTypeSymbol.Rank <= 1)
             {
                 this.TextSpan("__array<");
-                this.WriteType(elementType, allowKeywords: allowKeywords);
+                this.WriteType(elementType, allowKeywords: allowKeywords, containingNamespace: containingNamespace);
                 this.TextSpan(">");
             }
             else
             {
                 this.TextSpan("__multi_array<");
-                this.WriteType(elementType, allowKeywords: allowKeywords);
+                this.WriteType(elementType, allowKeywords: allowKeywords, containingNamespace: containingNamespace);
                 this.TextSpan(",");
                 this.WhiteSpace();
                 this.TextSpan(arrayTypeSymbol.Rank.ToString());
@@ -1007,7 +1007,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -1019,17 +1019,17 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     if (!this.WriteSpecialType(type))
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName, containingNamespace: containingNamespace);
                     }
 
                     return;
                 case TypeKind.Array:
-                    this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords);
+                    this.WriteCArrayTemplate((IArrayTypeSymbol)type, !suppressReference, true, allowKeywords, containingNamespace: containingNamespace);
                     return;
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    this.WriteTypeFullName(type, allowKeywords, typeOfName: typeOfName);
+                    this.WriteTypeFullName(type, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1041,11 +1041,11 @@ namespace Il2Native.Logic
                 case TypeKind.Enum:
                     if (!valueTypeAsClass)
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true, typeOfName: typeOfName);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true, typeOfName: typeOfName, containingNamespace: containingNamespace);
                     }
                     else
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, typeOfName: typeOfName);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
                         if (!suppressReference && valueTypeAsClass)
                         {
                             this.TextSpan("*");
@@ -1066,7 +1066,7 @@ namespace Il2Native.Logic
                         this.TextSpan("__pointer<");
                     }
 
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords);
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, containingNamespace: containingNamespace);
                     if (typeOfName)
                     {
                         this.TextSpan(">");
@@ -1078,7 +1078,7 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.Struct:
-                    this.WriteTypeFullName((INamedTypeSymbol)type, typeOfName: typeOfName);
+                    this.WriteTypeFullName((INamedTypeSymbol)type, typeOfName: typeOfName, containingNamespace: containingNamespace);
                     if (valueTypeAsClass && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1114,7 +1114,7 @@ namespace Il2Native.Logic
             throw new NotImplementedException();
         }
 
-        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments)
+        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments, INamespaceSymbol containingNamespace = null)
         {
             this.TextSpan("<");
 
@@ -1127,13 +1127,13 @@ namespace Il2Native.Logic
                 }
 
                 anyTypeArg = true;
-                this.WriteType(typeArg);
+                this.WriteType(typeArg, containingNamespace: containingNamespace);
             }
 
             this.TextSpan(">");
         }
 
-        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfName = false)
+        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
         {
             if (type.TypeKind == TypeKind.TypeParameter)
             {
@@ -1144,11 +1144,11 @@ namespace Il2Native.Logic
             var namedType = type as INamedTypeSymbol;
             if (namedType != null)
             {
-                this.WriteTypeFullName(namedType, allowKeywords, typeOfName: typeOfName);
+                this.WriteTypeFullName(namedType, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -1156,7 +1156,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.ContainingNamespace != null)
+            if (type.ContainingNamespace != null && type.ContainingNamespace.CompareTo(containingNamespace) != 0)
             {
                 this.WriteNamespace(type.ContainingNamespace);
                 this.TextSpan("::");

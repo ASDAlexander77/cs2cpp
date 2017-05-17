@@ -16,12 +16,12 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteType(this.Method.ReturnType);
+            c.WriteType(this.Method.ReturnType, containingNamespace: MethodOwner.ContainingNamespace);
             c.WhiteSpace();
             c.TextSpan("(");
             if (!this.Method.IsStatic)
             {
-                c.WriteType(this.Method.ContainingType, true, true, true);
+                c.WriteType(this.Method.ContainingType, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
                 c.TextSpan("::");
             }
 

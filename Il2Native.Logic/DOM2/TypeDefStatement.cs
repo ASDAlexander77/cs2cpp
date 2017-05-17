@@ -42,12 +42,12 @@ namespace Il2Native.Logic.DOM2
             }
             else if (this.PointerToMemberOpt != null)
             {
-                c.WriteType(this.PointerToMemberOpt.ReturnType);
+                c.WriteType(this.PointerToMemberOpt.ReturnType, containingNamespace: MethodOwner.ContainingNamespace);
                 c.WhiteSpace();
                 c.TextSpan("(");
                 if (!this.PointerToMemberOpt.IsStatic)
                 {
-                    c.WriteType(this.PointerToMemberOpt.ContainingType, true, true, true);
+                    c.WriteType(this.PointerToMemberOpt.ContainingType, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
                     c.TextSpan("::");
                 }
 
