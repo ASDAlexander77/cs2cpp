@@ -219,7 +219,7 @@ namespace Il2Native.Logic
         {
             if (expression.IsStaticOrSupportedVolatileWrapperCall())
             {
-                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = useEnumUnderlyingType, }.WriteTo(this);
+                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = useEnumUnderlyingType, MethodOwner = expression.MethodOwner }.WriteTo(this);
                 return true;
             }
 

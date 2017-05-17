@@ -84,7 +84,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.WriteType(Type, true, true, true, containingNamespace: MethodOwner?.ContainingNamespace);
-                WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
+                WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments, methodOwner: MethodOwner);
             }
             else
             {
@@ -101,7 +101,8 @@ namespace Il2Native.Logic.DOM2
                         this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
                         this.Arguments,
                         this.Method,
-                        anyArgs: Cs2CGenerator.DebugOutput);
+                        anyArgs: Cs2CGenerator.DebugOutput,
+                        methodOwner: MethodOwner);
 
                     c.TextSpan(")");
                 }
@@ -110,7 +111,8 @@ namespace Il2Native.Logic.DOM2
                     WriteCallArguments(
                         c,
                         this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
-                        this.Arguments);
+                        this.Arguments, 
+                        methodOwner: MethodOwner);
                 }
             }
         }
@@ -152,7 +154,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.TextSpan("<");
-                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">");
 
                 return true;
@@ -160,7 +162,7 @@ namespace Il2Native.Logic.DOM2
             else
             {
                 c.TextSpan("__init<");
-                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(Type, true, true, true, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">");
             }
 

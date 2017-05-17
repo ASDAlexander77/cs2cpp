@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class ConditionalOperator : Expression
@@ -24,6 +25,14 @@ namespace Il2Native.Logic.DOM2
             this.Condition = Deserialize(boundConditionalOperator.Condition) as Expression;
             this.Consequence = Deserialize(boundConditionalOperator.Consequence) as Expression;
             this.Alternative = Deserialize(boundConditionalOperator.Alternative) as Expression;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            this.Condition.Visit(visitor);
+            this.Consequence.Visit(visitor);
+            this.Alternative.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

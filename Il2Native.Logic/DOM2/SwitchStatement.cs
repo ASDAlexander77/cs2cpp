@@ -102,10 +102,18 @@ namespace Il2Native.Logic.DOM2
                 c.OpenBlock();
 
                 var localImpl = new LocalImpl { Name = "__SwitchExpression", Type = this.expression.Type };
-                var local = new Local { LocalSymbol = localImpl };
+                var local = new Local
+                {
+                    LocalSymbol = localImpl,
+                    MethodOwner = MethodOwner
+                };
 
                 var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
-                localCase = new Local { LocalSymbol = localImplCase };
+                localCase = new Local
+                {
+                    LocalSymbol = localImplCase,
+                    MethodOwner = MethodOwner
+                };
 
                 new VariableDeclaration
                 {
@@ -119,10 +127,13 @@ namespace Il2Native.Logic.DOM2
                                     TypeDeclaration = true,
                                     Type = new TypeImpl { SpecialType = SpecialType.System_Int32 },
                                     Left = localCase,
-                                    Right = new Literal { Value = ConstantValue.Create(0) }
-                                }
+                                    Right = new Literal { Value = ConstantValue.Create(0) },
+                                    MethodOwner = MethodOwner
+                                },
+                            MethodOwner = MethodOwner
                         }
-                    }
+                    },
+                    MethodOwner = MethodOwner
                 }.WriteTo(c);
                 new VariableDeclaration
                 {
@@ -136,10 +147,13 @@ namespace Il2Native.Logic.DOM2
                                     TypeDeclaration = true,
                                     Type = new TypeImpl { SpecialType = SpecialType.System_String },
                                     Left = local,
-                                    Right = this.expression
-                                }
+                                    Right = this.expression,
+                                    MethodOwner = MethodOwner
+                                },
+                            MethodOwner = MethodOwner
                         }
-                    }
+                    },
+                    MethodOwner = MethodOwner
                 }.WriteTo(c);
 
                 // first if

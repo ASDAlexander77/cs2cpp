@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -45,14 +46,14 @@ namespace Il2Native.Logic.DOM2
 
         public Expression ReceiverOpt { get; set; }
 
-        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null)
+        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null)
         {
             c.TextSpan("(");
-            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method);
+            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner);
             c.TextSpan(")");
         }
 
-        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false)
+        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null)
         {
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
@@ -69,9 +70,24 @@ namespace Il2Native.Logic.DOM2
                     c.WhiteSpace();
                 }
 
-                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method).WriteTo(c);
+                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method, methodOwner).WriteTo(c);
                 anyArgs = true;
             }
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            if (this.ReceiverOpt != null)
+            {
+                this.ReceiverOpt.Visit(visitor);
+            }
+
+            foreach (var argument in Arguments)
+            {
+                argument.Visit(visitor);
+            }
+
+            base.Visit(visitor);
         }
 
         internal void Parse(BoundCall boundCall)
@@ -103,7 +119,7 @@ namespace Il2Native.Logic.DOM2
             if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
             {
                 c.TextSpan("((");
-                c.WriteType(this.Method.ReturnType, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(this.Method.ReturnType, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(")");
             }
 
@@ -142,7 +158,7 @@ namespace Il2Native.Logic.DOM2
                 c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, interfaceWrapperMethodSpecialCase: InterfaceWrapperSpecialCall);
             }
 
-            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);
 
             if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
             {
@@ -150,7 +166,7 @@ namespace Il2Native.Logic.DOM2
             }
         }
 
-        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter, IMethodSymbol method)
+        private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter, IMethodSymbol method, IMethodSymbol methodOwner = null)
         {
             if (parameter == null)
             {
@@ -174,7 +190,8 @@ namespace Il2Native.Logic.DOM2
                     effectiveExpression = new Conversion
                     {
                         Type = typeDestination,
-                        Operand = effectiveExpression
+                        Operand = effectiveExpression,
+                        MethodOwner = methodOwner
                     };
                 }
             }
@@ -182,7 +199,11 @@ namespace Il2Native.Logic.DOM2
             var thisRef = expression as ThisReference;
             if (typeDestination.IsValueType && thisRef != null && !thisRef.ValueAsReference)
             {
-                effectiveExpression = new PointerIndirectionOperator { Operand = expression };
+                effectiveExpression = new PointerIndirectionOperator
+                {
+                    Operand = expression,
+                    MethodOwner = methodOwner
+                };
             }
 
             if (expression.IsStaticOrSupportedVolatileWrapperCall())
@@ -194,6 +215,7 @@ namespace Il2Native.Logic.DOM2
                     Reference = parameter.RefKind.HasFlag(RefKind.Ref) || parameter.RefKind.HasFlag(RefKind.Out),
                     CCast = true,
                     UseEnumUnderlyingType = true,
+                    MethodOwner = methodOwner
                 };
             }
 
@@ -206,7 +228,8 @@ namespace Il2Native.Logic.DOM2
                     IsReference = true,
                     Operand = expression,
                     TypeSource = effectiveExpression.Type,
-                    Type = parameter.Type
+                    Type = parameter.Type,
+                    MethodOwner = methodOwner
                 };
             }
 
@@ -222,6 +245,7 @@ namespace Il2Native.Logic.DOM2
                     Reference = parameter.RefKind.HasFlag(RefKind.Ref) || parameter.RefKind.HasFlag(RefKind.Out),
                     CCast = true,
                     UseEnumUnderlyingType = true,
+                    MethodOwner = methodOwner
                 };
             }
 
@@ -298,13 +322,13 @@ namespace Il2Native.Logic.DOM2
                 && methodSymbol.MethodKind == MethodKind.Constructor
                 && ((TypeSymbol)(MethodOwner.ContainingType)).ToKeyString() != ((TypeSymbol)methodSymbol.ContainingType).ToKeyString())
             {
-                effectiveReceiverOpt = new BaseReference { Type = this.Method.ContainingType, IsReference = true };
+                effectiveReceiverOpt = new BaseReference { Type = this.Method.ContainingType, IsReference = true, MethodOwner = MethodOwner };
             }
 
             if (!effectiveReceiverOpt.IsReference &&
                 (effectiveReceiverOpt.Type.IsPrimitiveValueType() || effectiveReceiverOpt.Type.TypeKind == TypeKind.Enum))
             {
-                effectiveReceiverOpt = new ObjectCreationExpression { Arguments = { receiverOpt }, Type = effectiveReceiverOpt.Type };
+                effectiveReceiverOpt = new ObjectCreationExpression { Arguments = { receiverOpt }, Type = effectiveReceiverOpt.Type, MethodOwner = MethodOwner };
             }
 
             if (effectiveReceiverOpt.IsReference && (effectiveReceiverOpt.Type.TypeKind == TypeKind.Interface) && methodSymbol.ContainingType.SpecialType == SpecialType.System_Object)
@@ -315,7 +339,8 @@ namespace Il2Native.Logic.DOM2
                     IsReference = true,
                     Operand = receiverOpt,
                     TypeSource = receiverOpt.Type,
-                    Type = methodSymbol.ContainingType
+                    Type = methodSymbol.ContainingType,
+                    MethodOwner = MethodOwner
                 };
             }
 
@@ -335,7 +360,8 @@ namespace Il2Native.Logic.DOM2
                 {
                     Constrained = true,
                     Operand = effectiveReceiverOpt,
-                    Type = this.Method.ReceiverType
+                    Type = this.Method.ReceiverType,
+                    MethodOwner = MethodOwner
                 };
             }
 
@@ -347,6 +373,7 @@ namespace Il2Native.Logic.DOM2
                     Type = this.Method.ReceiverType,
                     BoxByRef = true,
                     IsReference = true,
+                    MethodOwner = MethodOwner
                 };
             }
 

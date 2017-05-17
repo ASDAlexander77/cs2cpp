@@ -88,7 +88,7 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.WriteMethodName(newDelegateMethod, addTemplate: true);
-                WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments);
+                WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments, methodOwner: MethodOwner);
             }
         }
     }

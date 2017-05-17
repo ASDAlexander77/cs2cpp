@@ -79,7 +79,7 @@ namespace Il2Native.Logic.DOM2
                         if (this.SwitchType.TypeKind == TypeKind.Enum)
                         {
                             c.TextSpan("(");
-                            c.WriteType(this.SwitchType, containingNamespace: MethodOwner.ContainingNamespace);
+                            c.WriteType(this.SwitchType, containingNamespace: MethodOwner?.ContainingNamespace);
                             c.TextSpan(")");
                         }
 

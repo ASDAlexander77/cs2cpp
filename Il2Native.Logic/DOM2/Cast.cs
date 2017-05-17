@@ -51,7 +51,7 @@ namespace Il2Native.Logic.DOM2
             if (this.Constrained)
             {
                 c.TextSpan("constrained<");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");                
@@ -59,7 +59,7 @@ namespace Il2Native.Logic.DOM2
             else if (this.Reference)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan("&)");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -67,7 +67,7 @@ namespace Il2Native.Logic.DOM2
             else if (this.CCast)
             {
                 c.TextSpan("((");
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(")");
                 c.WriteExpressionInParenthesesIfNeeded(this.Operand);
                 c.TextSpan(")");
@@ -86,12 +86,12 @@ namespace Il2Native.Logic.DOM2
             {
                 c.TextSpan("__box_ref_t");
                 c.TextSpan("(");
-                new Cast { CCast = true, Type = new PointerTypeImpl { PointedAtType = Type }, Operand = Operand }.WriteTo(c);
+                new Cast { CCast = true, Type = new PointerTypeImpl { PointedAtType = Type }, Operand = Operand, MethodOwner = MethodOwner }.WriteTo(c);
                 c.TextSpan(")");                   
             }
             else
             {
-                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan("(");
                 this.Operand.WriteTo(c);
                 c.TextSpan(")");

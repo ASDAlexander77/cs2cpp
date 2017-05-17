@@ -41,10 +41,10 @@ namespace Il2Native.Logic.DOM2
             // Finish it properly
 
             var localImpl = new LocalImpl { Name = "__NullCoalescing", Type = Type };
-            var local = new Local { LocalSymbol = localImpl };
+            var local = new Local { LocalSymbol = localImpl, MethodOwner = MethodOwner };
 
             var block = new Block();
-            block.Statements.Add(new VariableDeclaration { Local = local });
+            block.Statements.Add(new VariableDeclaration { Local = local, MethodOwner = MethodOwner });
             block.Statements.Add(
                 new ExpressionStatement
                 {
@@ -52,8 +52,10 @@ namespace Il2Native.Logic.DOM2
                         new AssignmentOperator
                         {
                             Left = local,
-                            Right = this.LeftOperand
-                        }
+                            Right = this.LeftOperand,
+                            MethodOwner = MethodOwner
+                        },
+                    MethodOwner = MethodOwner
                 });
             block.Statements.Add(
                 new ReturnStatement
@@ -66,14 +68,18 @@ namespace Il2Native.Logic.DOM2
                                 {
                                     Left = local,
                                     Right = new Literal { Value = ConstantValue.Create(null) },
-                                    OperatorKind = BinaryOperatorKind.NotEqual
-                                }, Consequence = local, Alternative = this.RightOperand
-
-                        }
+                                    OperatorKind = BinaryOperatorKind.NotEqual,
+                                    MethodOwner = MethodOwner
+                                },
+                            Consequence = local,
+                            Alternative = this.RightOperand,
+                            MethodOwner = MethodOwner
+                        },
+                    MethodOwner = MethodOwner
                 });
             new LambdaCall
             {
-                Lambda = new LambdaExpression { Statements = block, Type = Type }
+                Lambda = new LambdaExpression { Statements = block, Type = Type, MethodOwner = MethodOwner }
             }.WriteTo(c);
         }
     }

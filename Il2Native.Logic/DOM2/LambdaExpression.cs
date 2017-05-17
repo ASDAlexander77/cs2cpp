@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using System.Collections.Generic;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -31,6 +32,12 @@ namespace Il2Native.Logic.DOM2
             var block = new Block();
             block.Parse(boundStatementList);
             this.Statements = block;
+        }
+
+        internal override void Visit(Action<Base> visitor)
+        {
+            this.Statements.Visit(visitor);
+            base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)

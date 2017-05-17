@@ -64,7 +64,7 @@
             {
                 c.TextSpan(this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type) ? "interface_cast" : "dynamic_interface_cast_or_throw");
                 c.TextSpan("<");
-                c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">");
                 c.TextSpan("(");
             }
@@ -79,6 +79,7 @@
                     Operand = effectiveExpression,
                     CCast = true,
                     UseEnumUnderlyingType = true,
+                    MethodOwner = MethodOwner
                 };
             }
 
@@ -89,7 +90,8 @@
                     Type = new NamedTypeImpl { SpecialType = SpecialType.System_Object },
                     TypeSource = this.TypeSource,
                     Operand = effectiveExpression,
-                    ConversionKind = ConversionKind.ImplicitReference
+                    ConversionKind = ConversionKind.ImplicitReference,
+                    MethodOwner = MethodOwner
                 };
             }
 
@@ -126,14 +128,14 @@
             switch (this.ConversionKind)
             {
                 case ConversionKind.MethodGroup:
-                    var newDelegate = new DelegateCreationExpression { Type = Type };
+                    var newDelegate = new DelegateCreationExpression { Type = Type, MethodOwner = MethodOwner };
                     newDelegate.Arguments.Add(this.Operand);
                     newDelegate.WriteTo(c);
                     return false;
                 case ConversionKind.NullToPointer:
                     // The null pointer is represented as 0u.
                     c.TextSpan("(");
-                    c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                    c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                     c.TextSpan(")");
                     c.TextSpan("nullptr");
                     return false;
@@ -147,7 +149,7 @@
                     break;
                 case ConversionKind.Unboxing:
                     c.TextSpan("__unbox<");
-                    c.WriteType(Type, true, false, true, containingNamespace: MethodOwner.ContainingNamespace);
+                    c.WriteType(Type, true, false, true, containingNamespace: MethodOwner?.ContainingNamespace);
                     c.TextSpan(">");
                     break;
                 case ConversionKind.ExplicitReference:
@@ -156,25 +158,25 @@
                     if (Type.TypeKind == TypeKind.TypeParameter)
                     {
                         c.TextSpan("cast<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");                        
                     }
                     else if (Type.TypeKind == TypeKind.Interface && this.TypeSource.AllInterfaces.Contains((INamedTypeSymbol)Type))
                     {
                         c.TextSpan("interface_cast<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");
                     }
                     else if (Type.TypeKind == TypeKind.Interface)
                     {
                         c.TextSpan("dynamic_interface_cast_or_throw<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");
                     }
                     else if (this.TypeSource.IsDerivedFrom(Type))
                     {
                         c.TextSpan("static_cast<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");
                     }
                     else if (this.TypeSource.TypeKind == TypeKind.Interface && Type.SpecialType == SpecialType.System_Object)
@@ -184,13 +186,13 @@
                     else if (this.TypeSource.TypeKind == TypeKind.Array && Type.TypeKind == TypeKind.Array)
                     {
                         c.TextSpan("reinterpret_cast<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");
                     }
                     else
                     {
                         c.TextSpan("cast<");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(">");
                     }
 
@@ -202,7 +204,7 @@
                     if (!Type.IsIntPtrType())
                     {
                         c.TextSpan("(");
-                        c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                        c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                         c.TextSpan(")");
 
                         parenthesis = true;
@@ -227,7 +229,7 @@
                     }
 
                     c.TextSpan("static_cast<");
-                    c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+                    c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
                     c.TextSpan(">");
                     break;
             }

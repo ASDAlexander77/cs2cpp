@@ -78,7 +78,7 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
             }
 
-            new Parenthesis { Operand = new MethodPointer { Method = this.Method } }.WriteTo(c);
+            new Parenthesis { Operand = new MethodPointer { Method = this.Method, MethodOwner = MethodOwner } }.WriteTo(c);
             c.TextSpan("&");
             c.WriteTypeFullName(this.Method.ContainingType);
             c.TextSpan("::");

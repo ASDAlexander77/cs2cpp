@@ -30,7 +30,7 @@ namespace Il2Native.Logic.DOM2
         {
             c.TextSpan("__refvalue");
             c.TextSpan("<");
-            c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+            c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
             c.TextSpan(">");
             c.TextSpan("(");
             this.Operand.WriteTo(c);

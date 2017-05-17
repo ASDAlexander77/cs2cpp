@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.DOM2
 {
+    using System;
     using Microsoft.CodeAnalysis.CSharp;
 
     public class StackAllocArrayCreation : Expression
@@ -20,10 +21,16 @@ namespace Il2Native.Logic.DOM2
             this.Count = Deserialize(boundStackAllocArrayCreation.Count) as Expression;
         }
 
+        internal override void Visit(Action<Base> visitor)
+        {
+            this.Count.Visit(visitor);
+            base.Visit(visitor);
+        }
+
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("reinterpret_cast<");
-            c.WriteType(Type, containingNamespace: MethodOwner.ContainingNamespace);
+            c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
             c.TextSpan(">(std::memset(alloca");
             c.TextSpan("("); 
             this.Count.WriteTo(c);
