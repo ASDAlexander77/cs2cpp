@@ -16,7 +16,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         private bool debugVersion;
 
         public CCodeNewOperatorDeclaration(INamedTypeSymbol type, bool withFinalization = false, bool withExtraParams = false, bool debugVersion = false)
-            : base(new NewOperatorMethod(type))
+            : base(type, new NewOperatorMethod(type))
         {
             this.withFinalization = withFinalization;
             this.withExtraParams = withExtraParams;

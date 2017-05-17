@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeHashVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeHashVirtualMethod(INamedTypeSymbol type)
-            : base(new CCodeHashMethod(type))
+            : base(type, new CCodeHashMethod(type))
         {
             if (type == null)
             {

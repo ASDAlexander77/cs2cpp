@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeGetSizeVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeGetSizeVirtualMethod(INamedTypeSymbol type)
-            : base(new CCodeGetSizeMethod(type))
+            : base(type, new CCodeGetSizeMethod(type))
         {
             if (type == null)
             {

@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeCloneVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeCloneVirtualMethod(INamedTypeSymbol type)
-            : base(new CCodeCloneMethod(type))
+            : base(type, new CCodeCloneMethod(type))
         {
             if (type == null)
             {

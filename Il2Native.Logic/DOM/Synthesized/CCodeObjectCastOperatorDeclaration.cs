@@ -10,7 +10,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeObjectCastOperatorDeclaration : CCodeMethodDeclaration
     {
         public CCodeObjectCastOperatorDeclaration(INamedTypeSymbol type)
-            : base(new ObjectCastOperatorMethod(type))
+            : base(type, new ObjectCastOperatorMethod(type))
         {
         }
 
@@ -18,7 +18,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             c.WriteMethodPrefixes(Method, true);
             c.TextSpan("operator object*");
-            c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
+            c.WriteMethodParameters(Method, true, MethodBodyOpt != null, containingNamespace: Method.ContainingNamespace);
             c.WriteMethodSuffixes(Method, true);
             if (MethodBodyOpt == null)
             {
@@ -38,6 +38,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
+                ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsAbstract = true;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;

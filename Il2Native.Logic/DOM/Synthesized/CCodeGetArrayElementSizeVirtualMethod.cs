@@ -10,7 +10,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeGetArrayElementSizeVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeGetArrayElementSizeVirtualMethod(INamedTypeSymbol type)
-            : base(new GetArrayElementSizeVirtualMethod(type))
+            : base(type, new GetArrayElementSizeVirtualMethod(type))
         {
         }
 

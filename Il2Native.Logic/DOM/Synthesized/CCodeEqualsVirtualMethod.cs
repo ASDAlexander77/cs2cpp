@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeEqualsVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeEqualsVirtualMethod(INamedTypeSymbol type)
-            : base(new CCodeEqualsMethod(type))
+            : base(type, new CCodeEqualsMethod(type))
         {
             if (type == null)
             {

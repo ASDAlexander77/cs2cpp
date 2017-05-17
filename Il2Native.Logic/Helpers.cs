@@ -926,7 +926,7 @@ namespace Il2Native.Logic
                     break;
                 }
             }
-            while (parts.Current.Name.CompareTo(partsOther.Current.Name) == 0);
+            while (parts.Current.Name != null && parts.Current.Name.CompareTo(partsOther.Current.Name) == 0);
 
             return false;
         }

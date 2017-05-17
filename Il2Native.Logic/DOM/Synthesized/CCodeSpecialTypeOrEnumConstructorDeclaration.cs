@@ -13,7 +13,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeSpecialTypeOrEnumConstructorDeclaration : CCodeMethodDeclaration
     {
         public CCodeSpecialTypeOrEnumConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
-            : base(new SpecialTypeConstructorMethod(type, cppConst))
+            : base(type, new SpecialTypeConstructorMethod(type, cppConst))
         {
             MethodBodyOpt = new MethodBody(Method)
             {

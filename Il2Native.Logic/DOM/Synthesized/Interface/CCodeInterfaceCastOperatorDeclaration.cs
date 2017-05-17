@@ -14,7 +14,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         private readonly INamedTypeSymbol type;
 
         public CCodeInterfaceCastOperatorDeclaration(INamedTypeSymbol type, INamedTypeSymbol interfaceSymbol)
-            : base(new InterfaceCastOperatorMethod(type))
+            : base(type, new InterfaceCastOperatorMethod(type))
         {
             this.type = type;
             this.interfaceSymbol = interfaceSymbol;

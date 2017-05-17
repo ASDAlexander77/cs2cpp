@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeArrowOperatorDeclaration : CCodeMethodDeclaration
     {
         public CCodeArrowOperatorDeclaration(INamedTypeSymbol type)
-            : base(new ArrowOperatorMethod(type))
+            : base(type, new ArrowOperatorMethod(type))
         {
             MethodBodyOpt = new MethodBody(Method)
             {

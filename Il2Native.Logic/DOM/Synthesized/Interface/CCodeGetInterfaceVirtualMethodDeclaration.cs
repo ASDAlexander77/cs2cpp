@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeGetInterfaceVirtualMethodDeclaration : CCodeMethodDeclaration
     {
         public CCodeGetInterfaceVirtualMethodDeclaration(INamedTypeSymbol type)
-            : base(new GetInterfaceVirtualMethod(type))
+            : base(type, new GetInterfaceVirtualMethod(type))
         {
         }
 

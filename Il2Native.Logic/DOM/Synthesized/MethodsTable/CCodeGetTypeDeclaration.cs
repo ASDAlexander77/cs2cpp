@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeGetTypeDeclaration : CCodeMethodDeclaration
     {
         public CCodeGetTypeDeclaration(INamedTypeSymbol type)
-            : base(new GetTypeMethod(type))
+            : base(type, new GetTypeMethod(type))
         {
             MethodBodyOpt = new MethodBody(Method) { Statements = { new ReturnStatement { ExpressionOpt = new TypeOfOperator { SourceType = new TypeExpression { Type = type } } } } };
         }

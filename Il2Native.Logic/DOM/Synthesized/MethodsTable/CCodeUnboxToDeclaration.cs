@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeUnboxToDeclaration : CCodeMethodDeclaration
     {
         public CCodeUnboxToDeclaration(INamedTypeSymbol type)
-            : base(new UnboxToMethod(type))
+            : base(type, new UnboxToMethod(type))
         {
             var parameterTarget = new Cast
                                       {

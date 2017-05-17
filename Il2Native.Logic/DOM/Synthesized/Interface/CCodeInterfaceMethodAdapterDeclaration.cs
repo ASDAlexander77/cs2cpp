@@ -13,10 +13,12 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeInterfaceMethodAdapterDeclaration : CCodeMethodDeclaration
     {
         private readonly IList<Statement> typeDefs = new List<Statement>();
+        private readonly ITypeSymbol type;
 
-        public CCodeInterfaceMethodAdapterDeclaration(IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
-            : base(interfaceMethod)
+        public CCodeInterfaceMethodAdapterDeclaration(ITypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol classMethod)
+            : base(type, interfaceMethod)
         {
+            this.type = type;
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -29,9 +31,9 @@ namespace Il2Native.Logic.DOM.Synthesized
                 statement.WriteTo(c);
             }
 
-            c.WriteMethodReturn(Method, true);
+            c.WriteMethodReturn(Method, true, containingNamespace: this.type.ContainingNamespace);
             c.WriteMethodName(Method, allowKeywords: false, interfaceWrapperMethodSpecialCase: true);
-            c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
+            c.WriteMethodParameters(Method, true, MethodBodyOpt != null, containingNamespace: this.type.ContainingNamespace);
 
             if (MethodBodyOpt == null)
             {

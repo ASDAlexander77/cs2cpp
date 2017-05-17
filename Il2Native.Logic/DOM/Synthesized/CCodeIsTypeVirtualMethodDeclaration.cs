@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeIsTypeVirtualMethodDeclaration : CCodeMethodDeclaration
     {
         public CCodeIsTypeVirtualMethodDeclaration(INamedTypeSymbol type)
-            : base(new IsTypeVirtualMethod(type))
+            : base(type, new IsTypeVirtualMethod(type))
         {
         }
 

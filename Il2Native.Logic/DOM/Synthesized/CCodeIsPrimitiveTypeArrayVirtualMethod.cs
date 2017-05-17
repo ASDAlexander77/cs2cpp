@@ -10,7 +10,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeIsPrimitiveTypeArrayVirtualMethod : CCodeMethodDeclaration
     {
         public CCodeIsPrimitiveTypeArrayVirtualMethod(INamedTypeSymbol type)
-            : base(new IsPrimitiveTypeArrayVirtualMethod(type))
+            : base(type, new IsPrimitiveTypeArrayVirtualMethod(type))
         {
         }
 

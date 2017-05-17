@@ -10,10 +10,12 @@ namespace Il2Native.Logic.DOM
 
     public class CCodeMethodDeclaration : CCodeDeclaration
     {
+        private readonly ITypeSymbol containingType;
         private MethodBody _methodBodyOpt;
 
-        public CCodeMethodDeclaration(IMethodSymbol method)
+        public CCodeMethodDeclaration(ITypeSymbol containingType, IMethodSymbol method)
         {
+            this.containingType = containingType;
             this.Method = method;
         }
 
@@ -47,7 +49,7 @@ namespace Il2Native.Logic.DOM
 
         public override void WriteTo(CCodeWriterBase c)
         {
-            c.WriteMethodDeclaration(this.Method, true, this.MethodBodyOpt != null);
+            c.WriteMethodDeclaration(this.Method, true, this.MethodBodyOpt != null, containingNamespace: containingType.ContainingNamespace);
             if (this.MethodBodyOpt == null)
             {
                 c.EndStatement();

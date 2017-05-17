@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeNewOperatorPointerDeclaration : CCodeMethodDeclaration
     {
         public CCodeNewOperatorPointerDeclaration(INamedTypeSymbol type)
-            : base(new NewOperatorMethod(type))
+            : base(type, new NewOperatorMethod(type))
         {
             var parameterSymbols = new List<IParameterSymbol>();
             var arguments = new List<Expression>();

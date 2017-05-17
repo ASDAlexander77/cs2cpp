@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeCastOperatorDeclaration : CCodeMethodDeclaration
     {
         public CCodeCastOperatorDeclaration(INamedTypeSymbol type)
-            : base(new CastOperatorMethod(type))
+            : base(type, new CastOperatorMethod(type))
         {
             MethodBodyOpt = new MethodBody(Method)
             {

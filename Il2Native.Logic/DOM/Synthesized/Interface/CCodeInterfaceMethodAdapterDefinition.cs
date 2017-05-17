@@ -73,10 +73,10 @@ namespace Il2Native.Logic.DOM.Synthesized
                 c.NewLine();
             }
 
-            c.WriteMethodReturn(Method, true);
+            c.WriteMethodReturn(Method, true, containingNamespace: this.type.ContainingNamespace);
             c.WriteMethodNamespace(namedTypeSymbol);
             c.WriteMethodName(Method, false, interfaceWrapperMethodSpecialCase: true);
-            c.WriteMethodParameters(Method, true, MethodBodyOpt != null);
+            c.WriteMethodParameters(Method, true, MethodBodyOpt != null, containingNamespace: this.type.ContainingNamespace);
 
             if (MethodBodyOpt == null)
             {

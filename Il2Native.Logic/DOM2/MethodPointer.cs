@@ -28,7 +28,7 @@ namespace Il2Native.Logic.DOM2
             c.TextSpan("*");
             c.WhiteSpace();
             c.TextSpan(")");
-            c.WriteMethodParameters(this.Method, true, false);
+            c.WriteMethodParameters(this.Method, true, false, containingNamespace: MethodOwner?.ContainingNamespace);
         }
     }
 }

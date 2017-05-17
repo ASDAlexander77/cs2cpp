@@ -361,14 +361,14 @@ namespace Il2Native.Logic
             if (!sourceMethodFound && !boundStatementFound && method.MethodKind == MethodKind.Constructor)
             {
                 // ignore empty constructor as they should call Object.ctor() only which is empty
-                unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                unit.Declarations.Add(new CCodeMethodDeclaration(unit.Type, method));
                 unit.Definitions.Add(new CCodeMethodDefinition(method));
                 return;
             }
 
             Debug.Assert(sourceMethodFound || boundStatementFound, "MethodBodyOpt information can't be found");
 
-            unit.Declarations.Add(new CCodeMethodDeclaration(method));
+            unit.Declarations.Add(new CCodeMethodDeclaration(unit.Type, method));
             var methodSymbol = sourceMethodFound ? sourceMethod : method;
             var requiresCompletion = sourceMethod != null && sourceMethod.RequiresCompletion;
             // so in case of Delegates you need to complete methods yourself
@@ -550,7 +550,7 @@ namespace Il2Native.Logic
                 // add all methods from all interfaces
                 foreach (var method in type.EnumerateInterfaceMethods())
                 {
-                    unit.Declarations.Add(new CCodeMethodDeclaration(method));
+                    unit.Declarations.Add(new CCodeMethodDeclaration(type, method));
                 }
             }
 
@@ -579,7 +579,7 @@ namespace Il2Native.Logic
                     }
 
                     Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
-                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(interfaceMethod, implementationForInterfaceMember));
+                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(type, interfaceMethod, implementationForInterfaceMember));
                     unit.Definitions.Add(new CCodeInterfaceMethodAdapterDefinition(type, interfaceMethod, implementationForInterfaceMember));
                 }
             }

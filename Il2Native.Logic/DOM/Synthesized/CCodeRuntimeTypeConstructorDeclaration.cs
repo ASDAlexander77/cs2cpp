@@ -13,7 +13,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeRuntimeTypeConstructorDeclaration : CCodeMethodDeclaration
     {
         public CCodeRuntimeTypeConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
-            : base(new RuntimeTypeConstructorMethod(type, cppConst))
+            : base(type, new RuntimeTypeConstructorMethod(type, cppConst))
         {
             MethodBodyOpt = new MethodBody(Method)
             {

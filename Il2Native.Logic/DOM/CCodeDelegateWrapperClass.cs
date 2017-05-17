@@ -226,7 +226,7 @@ namespace Il2Native.Logic.DOM
             };
 
             // invoke
-            var invokeMethod = new CCodeMethodDeclaration(methodImpl);
+            var invokeMethod = new CCodeMethodDeclaration(Type, methodImpl);
 
             var operand = @static
                               ? new PointerIndirectionOperator { Operand = new FieldAccess { Field = new FieldImpl { Name = "_memptr" } } }

@@ -392,10 +392,10 @@ namespace Il2Native.Logic
             this.WriteName(fieldSymbol);
         }
 
-        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false)
+        public void WriteMethodDeclaration(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody = false, INamespaceSymbol containingNamespace = null)
         {
-            this.WriteMethodPrefixesReturnTypeAndName(methodSymbol, declarationWithingClass);
-            this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody);
+            this.WriteMethodPrefixesReturnTypeAndName(methodSymbol, declarationWithingClass, containingNamespace: containingNamespace);
+            this.WriteMethodParameters(methodSymbol, declarationWithingClass, hasBody, containingNamespace: containingNamespace);
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
 
@@ -585,7 +585,7 @@ namespace Il2Native.Logic
             this.TextSpan("::");
         }
 
-        public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody)
+        public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody, INamespaceSymbol containingNamespace = null)
         {
             // parameters
             var anyParameter = false;
@@ -608,7 +608,7 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass, containingNamespace: methodSymbol.ContainingNamespace);
+                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass, containingNamespace: containingNamespace);
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     this.TextSpan("&");
@@ -701,10 +701,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodPrefixesReturnTypeAndName(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        public void WriteMethodPrefixesReturnTypeAndName(IMethodSymbol methodSymbol, bool declarationWithingClass, INamespaceSymbol containingNamespace = null)
         {
             this.WriteMethodPrefixes(methodSymbol, declarationWithingClass);
-            this.WriteMethodReturn(methodSymbol, declarationWithingClass);
+            this.WriteMethodReturn(methodSymbol, declarationWithingClass, containingNamespace: containingNamespace);
             this.WriteMethodAttributes(methodSymbol, declarationWithingClass);
 
             if (!declarationWithingClass)
@@ -742,7 +742,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass)
+        public void WriteMethodReturn(IMethodSymbol methodSymbol, bool declarationWithingClass, INamespaceSymbol containingNamespace = null)
         {
             if (methodSymbol.MethodKind == MethodKind.Constructor && methodSymbol.ReturnType == null)
             {
@@ -757,7 +757,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass, containingNamespace: methodSymbol.ContainingNamespace);
+                this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass, containingNamespace: containingNamespace);
             }
 
             this.WhiteSpace();

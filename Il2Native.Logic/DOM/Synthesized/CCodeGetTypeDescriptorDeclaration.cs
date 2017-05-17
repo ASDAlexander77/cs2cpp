@@ -12,7 +12,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeGetTypeDescriptorDeclaration : CCodeMethodDeclaration
     {
         public CCodeGetTypeDescriptorDeclaration(INamedTypeSymbol type)
-            : base(new GetTypeDescriptorMethod(type))
+            : base(type, new GetTypeDescriptorMethod(type))
         {
             this.Type = type;
         }

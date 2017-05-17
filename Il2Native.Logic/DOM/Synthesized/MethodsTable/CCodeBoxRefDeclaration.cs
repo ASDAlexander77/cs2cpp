@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeBoxRefDeclaration : CCodeMethodDeclaration
     {
         public CCodeBoxRefDeclaration(INamedTypeSymbol type)
-            : base(new BoxRefMethod(type))
+            : base(type, new BoxRefMethod(type))
         {
             var objectType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
             var returnStatement = new ReturnStatement { ExpressionOpt = new Cast { BoxByRef = true, Type = type, Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType } } } };

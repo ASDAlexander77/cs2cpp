@@ -120,7 +120,7 @@ namespace Il2Native.Logic.DOM
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
             foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
             {
-                Declarations.Add(new CCodeMethodDeclaration(this.CreateWrapperMethod(method)));
+                Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(method)));
             }
         }
 
@@ -159,6 +159,7 @@ namespace Il2Native.Logic.DOM
             {
                 ReceiverType = new NamedTypeImpl { Name = GetName(namedTypeSymbol, this.@interface), ContainingType = (INamedTypeSymbol)Type },
                 IsAbstract = false,
+                ContainingType = namedTypeSymbol,
                 ContainingNamespace = Type.ContainingNamespace,
                 // special case to write method name as MetadataName
                 TypeArguments = ImmutableArray<ITypeSymbol>.Empty

@@ -55,7 +55,7 @@ namespace Il2Native.Logic.DOM2
                 c.WhiteSpace();
                 this.Identifier.WriteTo(c);
                 c.TextSpan(")");
-                c.WriteMethodParameters(this.PointerToMemberOpt, true, false);
+                c.WriteMethodParameters(this.PointerToMemberOpt, true, false, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
             base.WriteTo(c);
