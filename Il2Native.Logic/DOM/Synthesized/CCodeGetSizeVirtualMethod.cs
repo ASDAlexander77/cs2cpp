@@ -39,6 +39,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 MetadataName = Name;
                 MethodKind = MethodKind.Ordinary;
                 ContainingType = type;
+                ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
                 ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_UInt32 };

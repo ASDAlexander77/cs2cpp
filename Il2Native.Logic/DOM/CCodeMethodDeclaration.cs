@@ -10,6 +10,8 @@ namespace Il2Native.Logic.DOM
 
     public class CCodeMethodDeclaration : CCodeDeclaration
     {
+        private MethodBody _methodBodyOpt;
+
         public CCodeMethodDeclaration(IMethodSymbol method)
         {
             this.Method = method;
@@ -17,7 +19,23 @@ namespace Il2Native.Logic.DOM
 
         public IMethodSymbol Method { get; set; }
 
-        public MethodBody MethodBodyOpt { get; set; }
+        public MethodBody MethodBodyOpt
+        {
+            get
+            {
+                return _methodBodyOpt;
+            }
+
+            set
+            {
+                if (value != null)
+                {
+                    value.Visit((e) => { e.MethodOwner = this.Method; });
+                }
+
+                _methodBodyOpt = value;
+            }
+        }
 
         public bool IsExternDeclaration
         {
