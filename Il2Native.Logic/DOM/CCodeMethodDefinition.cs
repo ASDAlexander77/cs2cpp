@@ -32,7 +32,7 @@ namespace Il2Native.Logic.DOM
 
             c.TextSpanNewLine(string.Format("// Method : {0}", this.Method.ToDisplayString()));
 
-            c.WriteMethodDeclaration(this.Method, false);
+            c.WriteMethodDeclaration(this.Method, false, containingNamespace: this.Method.ContainingNamespace);
 
             if (this.MethodBodyOpt != null)
             {
