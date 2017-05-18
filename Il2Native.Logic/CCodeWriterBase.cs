@@ -608,7 +608,7 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                this.WriteType(parameterSymbol.Type, allowKeywords: !declarationWithingClass, containingNamespace: containingNamespace);
+                this.WriteType(parameterSymbol.Type, allowKeywords: true, containingNamespace: containingNamespace);
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     this.TextSpan("&");
@@ -757,7 +757,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteType(methodSymbol.ReturnType, allowKeywords: !declarationWithingClass, containingNamespace: containingNamespace);
+                this.WriteType(methodSymbol.ReturnType, allowKeywords: true, containingNamespace: containingNamespace);
             }
 
             this.WhiteSpace();
