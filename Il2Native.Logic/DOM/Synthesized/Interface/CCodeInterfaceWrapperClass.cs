@@ -157,10 +157,9 @@ namespace Il2Native.Logic.DOM
 
             return new MethodImpl(method)
             {
-                ReceiverType = new NamedTypeImpl { Name = GetName(namedTypeSymbol, this.@interface), ContainingType = (INamedTypeSymbol)Type },
+                ReceiverType = new NamedTypeImpl { Name = GetName(namedTypeSymbol, this.@interface), ContainingType = namedTypeSymbol },
                 IsAbstract = false,
-                ContainingType = namedTypeSymbol,
-                ContainingNamespace = Type.ContainingNamespace,
+                ContainingNamespace = namedTypeSymbol.ContainingNamespace,
                 // special case to write method name as MetadataName
                 TypeArguments = ImmutableArray<ITypeSymbol>.Empty
             };

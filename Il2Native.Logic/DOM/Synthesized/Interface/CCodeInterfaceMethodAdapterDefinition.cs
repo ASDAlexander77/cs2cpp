@@ -31,19 +31,20 @@ namespace Il2Native.Logic.DOM.Synthesized
 
             var body = !interfaceMethod.ReturnsVoid ? (Statement)new ReturnStatement { ExpressionOpt = call } : (Statement)new ExpressionStatement { Expression = call };
 
-            MethodBodyOpt = new MethodBody(Method);
+            var methodBodyOpt = new MethodBody(Method);
 
             if (classMethod.IsGenericMethod)
             {
                 // set generic types
                 foreach (var typeArgument in classMethod.TypeArguments.Where(t => t.TypeKind == TypeKind.TypeParameter))
                 {
-                    MethodBodyOpt.Statements.Add(
+                    methodBodyOpt.Statements.Add(
                         new TypeDef { TypeExpressionOpt = new TypeExpression { Type = typeArgument.GetFirstConstraintType() ?? new TypeImpl { SpecialType = SpecialType.System_Object } }, Identifier = new TypeExpression { Type = TypeImpl.Wrap(typeArgument, null) } });
                 }
             }
 
-            MethodBodyOpt.Statements.Add(body);
+            methodBodyOpt.Statements.Add(body);
+            MethodBodyOpt = methodBodyOpt;
         }
 
         public override bool IsGeneric
