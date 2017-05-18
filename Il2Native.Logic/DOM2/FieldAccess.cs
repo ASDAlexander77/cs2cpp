@@ -53,11 +53,11 @@ namespace Il2Native.Logic.DOM2
             {
                 if (this.Field.ContainingType == null && this.Field.ContainingSymbol is ITypeSymbol)
                 {
-                    c.WriteTypeFullName((ITypeSymbol)this.Field.ContainingSymbol);
+                    c.WriteTypeFullName((ITypeSymbol)this.Field.ContainingSymbol, containingNamespace: MethodOwner?.ContainingNamespace);
                 }
                 else
                 {
-                    c.WriteTypeFullName(this.Field.ContainingType);
+                    c.WriteTypeFullName(this.Field.ContainingType, containingNamespace: MethodOwner?.ContainingNamespace);
                 }
 
                 c.TextSpan("::");
