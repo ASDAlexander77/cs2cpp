@@ -127,12 +127,12 @@ namespace Il2Native.Logic.DOM2
             {
                 if (!this.Method.IsExternDeclaration())
                 {
-                    c.WriteTypeFullName(this.Method.ContainingType);
+                    c.WriteTypeFullName(this.Method.ContainingType, containingNamespace: MethodOwner?.ContainingNamespace);
                     c.TextSpan("::");
                 }
                 else
                 {
-                    c.WriteNamespace(this.Method.ContainingType.ContainingNamespace);
+                    c.WriteNamespace(this.Method.ContainingType, containingNamespace: MethodOwner?.ContainingNamespace);
                     c.TextSpan("::");
                 }
 

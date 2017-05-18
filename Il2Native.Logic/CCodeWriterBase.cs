@@ -1181,9 +1181,21 @@ namespace Il2Native.Logic
                 return;
             }
 
+            WriteNamespace(type, containingNamespace);
+
+            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
+
+            if (type.IsGenericType || type.IsAnonymousType)
+            {
+                this.WriteTemplateDefinition(type);
+            }
+        }
+
+        public void WriteNamespace(INamedTypeSymbol type, INamespaceSymbol containingNamespace)
+        {
             if (type.ContainingNamespace != null)
             {
-                if (type.ContainingNamespace.StartsWith(containingNamespace))
+                if (containingNamespace != null && type.ContainingNamespace.StartsWith(containingNamespace))
                 {
                     this.WriteNamespace(type.ContainingNamespace, containingNamespace, "_");
                 }
@@ -1193,13 +1205,6 @@ namespace Il2Native.Logic
                 }
 
                 this.TextSpan("::");
-            }
-
-            this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
-
-            if (type.IsGenericType || type.IsAnonymousType)
-            {
-                this.WriteTemplateDefinition(type);
             }
         }
 
