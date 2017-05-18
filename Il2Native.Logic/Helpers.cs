@@ -912,19 +912,22 @@ namespace Il2Native.Logic
                 return false;
             }
 
+            var notGlobalNamespace = true;
             var parts = namespaceSymbol.EnumNamespaces().GetEnumerator();
             var partsOther = otherNamespaceSymbol.EnumNamespaces().GetEnumerator();
             do
             {
                 if (!partsOther.MoveNext())
                 {
-                    return true;
+                    return notGlobalNamespace;
                 }
 
                 if (!parts.MoveNext())
                 {
                     break;
                 }
+
+                notGlobalNamespace = !partsOther.Current.IsGlobalNamespace;
             }
             while (parts.Current.Name != null && parts.Current.Name.CompareTo(partsOther.Current.Name) == 0);
 
