@@ -333,7 +333,7 @@ namespace Il2Native.Logic
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
         {
-            if (field.IsConst && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
+            if (field.IsConst && field.Type.TypeKind != TypeKind.Enum && field.Type.SpecialType != SpecialType.System_Decimal && field.Type.SpecialType != SpecialType.System_DateTime)
             {
                 return;
             }

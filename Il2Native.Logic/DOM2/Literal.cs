@@ -7,6 +7,7 @@ namespace Il2Native.Logic.DOM2
     using System.Text;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using System.Linq;
 
     public class Literal : Expression
     {
@@ -147,7 +148,74 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (Type != null && Type.TypeKind == TypeKind.Enum)
+            var isEnum = Type != null && Type.TypeKind == TypeKind.Enum;
+            var flagsEnum = isEnum && Type.GetAttributes().Any(a => a.AttributeClass.Name == "FlagsAttribute" && a.AttributeClass.ContainingSymbol.Name == "System");
+
+            if (isEnum && !flagsEnum)
+            {
+                object value = null;
+                switch (this.Value.Discriminator)
+                {
+                    case ConstantValueTypeDiscriminator.Null:
+                        break;
+                    case ConstantValueTypeDiscriminator.SByte:
+                        value = this.Value.SByteValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.Byte:
+                        value = this.Value.ByteValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.Int16:
+                        value = this.Value.Int16Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.UInt16:
+                        value = this.Value.UInt16Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.Char:
+                        value = this.Value.CharValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.Int32:
+                        value = this.Value.Int32Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.UInt32:
+                        value = this.Value.UInt32Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.Int64:
+                        value = this.Value.Int64Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.UInt64:
+                        value = this.Value.UInt64Value;
+                        break;
+                    case ConstantValueTypeDiscriminator.Single:
+                        value = this.Value.SingleValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.Double:
+                        value = this.Value.DoubleValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.String:
+                        value = this.Value.StringValue;
+                        break;
+                    case ConstantValueTypeDiscriminator.Boolean:
+                        value = this.Value.BooleanValue;
+                        break;
+                    default:
+                        throw new NotSupportedException();
+                }
+
+                var field = Type.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(f => f.HasConstantValue && f.ConstantValue.Equals(value));
+                if (field != null)
+                {
+                    c.WriteNamespace(Type.ContainingNamespace, containingNamespace: MethodOwner?.ContainingNamespace);
+                    c.WriteFieldAccessAsStaticField(field);
+                    return;
+                }
+                else
+                {
+                    // treat it as flags (fallback scenario)
+                    flagsEnum = true;
+                }
+            }
+
+            if (flagsEnum)
             {
                 c.TextSpan("(");
                 c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);

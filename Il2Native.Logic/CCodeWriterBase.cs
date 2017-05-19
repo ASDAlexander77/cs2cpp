@@ -330,14 +330,14 @@ namespace Il2Native.Logic
                 this.TextSpan("__volatile_t<");
             }
 
-            this.WriteType(fieldSymbol.Type, dependantScope: true);
+            this.WriteType(fieldSymbol.Type, dependantScope: true, containingNamespace: fieldSymbol.ContainingType.ContainingNamespace);
             if (fieldSymbol.IsStatic)
             {
                 if (!doNotWrapStatic)
                 {
                     this.TextSpan(",");
                     this.WhiteSpace();
-                    this.WriteType(fieldSymbol.ContainingType, true, true, true);
+                    this.WriteType(fieldSymbol.ContainingType, true, true, true, containingNamespace: fieldSymbol.ContainingType.ContainingNamespace);
                     this.TextSpan(">");
                 }
                 else if (fieldSymbol.IsSupportedVolatile())
@@ -362,7 +362,7 @@ namespace Il2Native.Logic
 
             this.WriteFieldAccessAsStaticField(fieldSymbol);
 
-            if (fieldSymbol.HasConstantValue && !fieldSymbol.IsConst)
+            if (fieldSymbol.HasConstantValue/* && !fieldSymbol.IsConst*/)
             {
                 this.WhiteSpace();
                 this.TextSpan("=");
@@ -373,6 +373,13 @@ namespace Il2Native.Logic
                 }
                 else
                 {
+                    if (fieldSymbol.Type.TypeKind == TypeKind.Enum)
+                    {
+                        this.TextSpan("(");
+                        this.WriteType(fieldSymbol.Type, containingNamespace: fieldSymbol.ContainingType.ContainingNamespace);
+                        this.TextSpan(")");
+                    }
+
                     this.TextSpan(fieldSymbol.ConstantValue.ToString());
                 }
             }
