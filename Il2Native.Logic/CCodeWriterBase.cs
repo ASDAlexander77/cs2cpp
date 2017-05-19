@@ -399,13 +399,13 @@ namespace Il2Native.Logic
             this.WriteMethodSuffixes(methodSymbol, declarationWithingClass);
         }
 
-        public void WriteMethodFullName(IMethodSymbol methodSymbol, bool excludeNamespace = false)
+        public void WriteMethodFullName(IMethodSymbol methodSymbol, bool excludeNamespace = false, INamespaceSymbol containingNamespace = null)
         {
-            this.WriteMethodNamespace(methodSymbol, excludeNamespace);
-            this.WriteMethodName(methodSymbol, false);
+            this.WriteMethodNamespace(methodSymbol, excludeNamespace, containingNamespace: containingNamespace);
+            this.WriteMethodName(methodSymbol, false, containingNamespace: containingNamespace);
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, bool interfaceWrapperMethodSpecialCase = false, IMethodSymbol methodSymbolForName = null)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, bool interfaceWrapperMethodSpecialCase = false, IMethodSymbol methodSymbolForName = null, INamespaceSymbol containingNamespace = null)
         {
             var specialCaseForInterfaceWrapper = methodSymbol.IsInterfaceGenericMethodSpecialCase();
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null && !specialCaseForInterfaceWrapper)
@@ -425,7 +425,7 @@ namespace Il2Native.Logic
                 }
                 else if (addTemplate)
                 {
-                    this.WriteTypeArguments(methodSymbol.TypeArguments);
+                    this.WriteTypeArguments(methodSymbol.TypeArguments, containingNamespace: containingNamespace);
                 }
             }
         }
@@ -548,12 +548,12 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodNamespace(IMethodSymbol methodSymbol, bool excludeNamespace)
+        public void WriteMethodNamespace(IMethodSymbol methodSymbol, bool excludeNamespace, INamespaceSymbol containingNamespace = null)
         {
             // namespace
             if (!excludeNamespace && methodSymbol.ContainingNamespace != null)
             {
-                this.WriteNamespace(methodSymbol.ContainingNamespace);
+                this.WriteNamespace(methodSymbol.ContainingNamespace, containingNamespace);
                 this.TextSpan("::");
             }
 
@@ -561,25 +561,20 @@ namespace Il2Native.Logic
             this.WriteTypeName(receiverType, false);
             if (receiverType.IsGenericType)
             {
-                this.WriteTemplateDefinition(receiverType);
+                this.WriteTemplateDefinition(receiverType, containingNamespace: containingNamespace);
             }
 
             this.TextSpan("::");
         }
 
-        public void WriteMethodNamespace(INamedTypeSymbol typeSymbol)
+        public void WriteMethodNamespace(INamedTypeSymbol typeSymbol, INamespaceSymbol containingNamespace = null)
         {
             // namespace
-            if (typeSymbol.ContainingNamespace != null)
-            {
-                this.WriteNamespace(typeSymbol.ContainingNamespace);
-                this.TextSpan("::");
-            }
-
+            this.WriteNamespace(typeSymbol, containingNamespace: containingNamespace);
             this.WriteTypeName(typeSymbol, false);
             if (typeSymbol.IsGenericType)
             {
-                this.WriteTemplateDefinition(typeSymbol);
+                this.WriteTemplateDefinition(typeSymbol, containingNamespace: containingNamespace);
             }
 
             this.TextSpan("::");
@@ -709,11 +704,11 @@ namespace Il2Native.Logic
 
             if (!declarationWithingClass)
             {
-                this.WriteMethodFullName(methodSymbol, true);
+                this.WriteMethodFullName(methodSymbol, true, containingNamespace: containingNamespace);
             }
             else
             {
-                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass);
+                this.WriteMethodName(methodSymbol, allowKeywords: !declarationWithingClass, containingNamespace: containingNamespace);
             }
         }
 
@@ -987,7 +982,7 @@ namespace Il2Native.Logic
             this.TextSpan("> ");
         }
 
-        public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol)
+        public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol, INamespaceSymbol containingNamespace = null)
         {
             if (typeSymbol.TypeKind == TypeKind.Enum)
             {
@@ -995,11 +990,11 @@ namespace Il2Native.Logic
             }
 
             this.TextSpan("<");
-            WriteTemplateDefinitionArguments(typeSymbol);
+            WriteTemplateDefinitionArguments(typeSymbol, containingNamespace: containingNamespace);
             this.TextSpan(">");
         }
 
-        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol)
+        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol, INamespaceSymbol containingNamespace = null)
         {
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateArguments())
@@ -1009,7 +1004,7 @@ namespace Il2Native.Logic
                     this.TextSpan(", ");
                 }
 
-                this.WriteType(typeParam);
+                this.WriteType(typeParam, containingNamespace: containingNamespace);
 
                 anyTypeParam = true;
             }
@@ -1187,25 +1182,37 @@ namespace Il2Native.Logic
 
             if (type.IsGenericType || type.IsAnonymousType)
             {
-                this.WriteTemplateDefinition(type);
+                this.WriteTemplateDefinition(type, containingNamespace: containingNamespace);
             }
+        }
+
+        public void WriteNamespace(INamespaceSymbol @namespace, INamespaceSymbol containingNamespace)
+        {
+            if (@namespace == null)
+            {
+                return;
+            }
+
+            if (containingNamespace != null && @namespace.StartsWith(containingNamespace))
+            {
+                this.WriteNamespace(@namespace, containingNamespace, "_");
+            }
+            else
+            {
+                this.WriteNamespace(@namespace);
+            }
+
+            this.TextSpan("::");
         }
 
         public void WriteNamespace(INamedTypeSymbol type, INamespaceSymbol containingNamespace)
         {
-            if (type.ContainingNamespace != null)
+            if (type == null || type.ContainingNamespace == null)
             {
-                if (containingNamespace != null && type.ContainingNamespace.StartsWith(containingNamespace))
-                {
-                    this.WriteNamespace(type.ContainingNamespace, containingNamespace, "_");
-                }
-                else
-                {
-                    this.WriteNamespace(type.ContainingNamespace);
-                }
-
-                this.TextSpan("::");
+                return;
             }
+
+            WriteNamespace(type.ContainingNamespace, containingNamespace);
         }
 
         public void WriteTypeName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false)

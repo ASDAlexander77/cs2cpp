@@ -53,6 +53,7 @@ namespace Il2Native.Logic.DOM2
             {
                 bound.Visit(visitor);
             }
+
             base.Visit(visitor);
         }
 
@@ -63,7 +64,7 @@ namespace Il2Native.Logic.DOM2
 
             var initItems = IterateInitializers(arrayInitialization).ToList();
 
-            c.WriteCArrayTemplate(arrayTypeSymbol, false);
+            c.WriteCArrayTemplate(arrayTypeSymbol, false, containingNamespace: MethodOwner?.ContainingNamespace);
             c.TextSpan("::__new_array");
             var arrayInit = arrayInitialization != null && initItems.Count > 0;
             if (arrayInit)

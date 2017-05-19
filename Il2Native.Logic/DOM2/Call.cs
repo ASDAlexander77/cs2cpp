@@ -136,7 +136,7 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("::");
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true);
+                c.WriteMethodName(this.Method, addTemplate: true, containingNamespace: MethodOwner?.ContainingNamespace);
             }
             else
             {
@@ -155,7 +155,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, interfaceWrapperMethodSpecialCase: InterfaceWrapperSpecialCall);
+                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, interfaceWrapperMethodSpecialCase: InterfaceWrapperSpecialCall, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);

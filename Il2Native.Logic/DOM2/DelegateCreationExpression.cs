@@ -87,7 +87,7 @@ namespace Il2Native.Logic.DOM2
                     c.TextSpan("::");
                 }
 
-                c.WriteMethodName(newDelegateMethod, addTemplate: true);
+                c.WriteMethodName(newDelegateMethod, addTemplate: true, containingNamespace: MethodOwner?.ContainingNamespace);
                 WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this.Arguments, methodOwner: MethodOwner);
             }
         }
