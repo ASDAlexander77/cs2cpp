@@ -551,10 +551,9 @@ namespace Il2Native.Logic
         public void WriteMethodNamespace(IMethodSymbol methodSymbol, bool excludeNamespace, INamespaceSymbol containingNamespace = null)
         {
             // namespace
-            if (!excludeNamespace && methodSymbol.ContainingNamespace != null)
+            if (!excludeNamespace)
             {
                 this.WriteNamespace(methodSymbol.ContainingNamespace, containingNamespace);
-                this.TextSpan("::");
             }
 
             var receiverType = (INamedTypeSymbol)methodSymbol.ReceiverType;
