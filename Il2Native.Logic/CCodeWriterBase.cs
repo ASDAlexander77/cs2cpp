@@ -229,6 +229,12 @@ namespace Il2Native.Logic
 
         public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
+            if (fieldSymbol.HasConstantValue && fieldSymbol.IsConst)
+            {
+                this.TextSpan("constexpr");
+                this.WhiteSpace();
+            }
+
             if (fieldSymbol.IsStatic)
             {
                 this.TextSpan("static");
@@ -299,6 +305,14 @@ namespace Il2Native.Logic
                 this.TextSpan(fieldSymbolOriginal.FixedSize.ToString());
                 this.TextSpan("]");
             }
+
+            if (fieldSymbol.HasConstantValue && fieldSymbol.IsConst)
+            {
+                this.WhiteSpace();
+                this.TextSpan("=");
+                this.WhiteSpace();
+                this.WriteFieldConstValue(fieldSymbol);
+            }
         }
 
         public void WriteFieldDefinition(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
@@ -362,26 +376,31 @@ namespace Il2Native.Logic
 
             this.WriteFieldAccessAsStaticField(fieldSymbol);
 
-            if (fieldSymbol.HasConstantValue/* && !fieldSymbol.IsConst*/)
+            if (fieldSymbol.HasConstantValue && !fieldSymbol.IsConst)
             {
                 this.WhiteSpace();
                 this.TextSpan("=");
                 this.WhiteSpace();
-                if (fieldSymbol.ConstantValue == null)
-                {
-                    this.TextSpan("nullptr");
-                }
-                else
-                {
-                    if (fieldSymbol.Type.TypeKind == TypeKind.Enum)
-                    {
-                        this.TextSpan("(");
-                        this.WriteType(fieldSymbol.Type, containingNamespace: fieldSymbol.ContainingType.ContainingNamespace);
-                        this.TextSpan(")");
-                    }
+                this.WriteFieldConstValue(fieldSymbol);
+            }
+        }
 
-                    this.TextSpan(fieldSymbol.ConstantValue.ToString());
+        public void WriteFieldConstValue(IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.ConstantValue == null)
+            {
+                this.TextSpan("nullptr");
+            }
+            else
+            {
+                if (fieldSymbol.Type.TypeKind == TypeKind.Enum)
+                {
+                    this.TextSpan("(");
+                    this.WriteType(fieldSymbol.Type, containingNamespace: fieldSymbol.ContainingType.ContainingNamespace);
+                    this.TextSpan(")");
                 }
+
+                this.TextSpan(fieldSymbol.ConstantValue.ToString());
             }
         }
 

@@ -148,10 +148,9 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
+            var asIntValue = false;
             var isEnum = Type != null && Type.TypeKind == TypeKind.Enum;
-            var flagsEnum = isEnum && Type.GetAttributes().Any(a => a.AttributeClass.Name == "FlagsAttribute" && a.AttributeClass.ContainingSymbol.Name == "System");
-
-            if (isEnum && !flagsEnum)
+            if (isEnum)
             {
                 object value = null;
                 switch (this.Value.Discriminator)
@@ -211,11 +210,11 @@ namespace Il2Native.Logic.DOM2
                 else
                 {
                     // treat it as flags (fallback scenario)
-                    flagsEnum = true;
+                    asIntValue = true;
                 }
             }
 
-            if (flagsEnum)
+            if (asIntValue)
             {
                 c.TextSpan("(");
                 c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
