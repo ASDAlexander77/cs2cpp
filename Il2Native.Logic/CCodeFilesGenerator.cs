@@ -768,15 +768,18 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.WriteLine(" base;");
             }
 
-            foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNamesTakeOnlyOne())
+            if (namedTypeSymbol.TypeKind != TypeKind.Enum)
             {
-                c.TextSpan("using");
-                c.WhiteSpace();
-                c.WriteType(namedTypeSymbol.BaseType ?? method.ReceiverType, suppressReference: true, allowKeywords: true, containingNamespace: namedTypeSymbol.ContainingNamespace);
-                c.TextSpan("::");
-                c.WriteMethodName(method);
-                c.TextSpan(";");
-                c.NewLine();
+                foreach (var method in namedTypeSymbol.IterateAllMethodsWithTheSameNamesTakeOnlyOne())
+                {
+                    c.TextSpan("using");
+                    c.WhiteSpace();
+                    c.WriteType(namedTypeSymbol.BaseType ?? method.ReceiverType, suppressReference: true, allowKeywords: true, containingNamespace: namedTypeSymbol.ContainingNamespace);
+                    c.TextSpan("::");
+                    c.WriteMethodName(method);
+                    c.TextSpan(";");
+                    c.NewLine();
+                }
             }
 
             if (namedTypeSymbol.TypeKind == TypeKind.Enum)
