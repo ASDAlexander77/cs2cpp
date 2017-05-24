@@ -333,16 +333,10 @@ namespace Il2Native.Logic
 
         private void BuildField(IFieldSymbol field, CCodeUnit unit, bool hasStaticConstructor)
         {
-            var fieldOfEnum = field.ContainingType.TypeKind == TypeKind.Enum;
-            if (field.IsConst && fieldOfEnum)
-            {
-                unit.Declarations.Add(new CCodeFieldDeclaration(field) { DoNotWrapStatic = !hasStaticConstructor });
-                return;
-            }
-
             if (field.IsConst 
                 && field.Type.SpecialType != SpecialType.System_Decimal 
-                && field.Type.SpecialType != SpecialType.System_DateTime)
+                && field.Type.SpecialType != SpecialType.System_DateTime
+                && field.ContainingType.TypeKind != TypeKind.Enum)
             {
                 return;
             }

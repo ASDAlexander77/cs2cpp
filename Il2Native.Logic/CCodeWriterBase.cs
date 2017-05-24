@@ -229,15 +229,6 @@ namespace Il2Native.Logic
 
         public void WriteFieldDeclaration(IFieldSymbol fieldSymbol, bool doNotWrapStatic = false)
         {
-            var constExpr = fieldSymbol.HasConstantValue 
-                            && fieldSymbol.IsConst 
-                            && fieldSymbol.ContainingType.TypeKind == TypeKind.Enum;
-            if (constExpr)
-            {
-                this.TextSpan("constexpr");
-                this.WhiteSpace();
-            }
-
             if (fieldSymbol.IsStatic)
             {
                 this.TextSpan("static");
@@ -307,14 +298,6 @@ namespace Il2Native.Logic
                 this.TextSpan("[");
                 this.TextSpan(fieldSymbolOriginal.FixedSize.ToString());
                 this.TextSpan("]");
-            }
-
-            if (constExpr)
-            {
-                this.WhiteSpace();
-                this.TextSpan("=");
-                this.WhiteSpace();
-                this.WriteFieldConstValue(fieldSymbol);
             }
         }
 
