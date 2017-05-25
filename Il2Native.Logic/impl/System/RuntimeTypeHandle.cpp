@@ -224,7 +224,7 @@ void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeT
 	case TypeNameFormatFlags__enum::FormatNamespace:
 		*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 		break;
-	case (TypeNameFormatFlags__enum)((int32_t)TypeNameFormatFlags__enum::FormatNamespace | (int32_t)TypeNameFormatFlags__enum::FormatFullInst) :
+	case TypeNameFormatFlags__enum::FormatNamespace | TypeNameFormatFlags__enum::FormatFullInst:
 		*ref = string::Concat(string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace), u"."_s, string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
 		break;
 	}

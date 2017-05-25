@@ -1096,28 +1096,28 @@ inline string* operator "" _s(const char16_t* ptr, size_t length)
 
 // Enum operators
 template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
-inline T operator |(T left, T right)
+constexpr T operator |(T left, T right)
 {
 	typedef typename std::underlying_type<T>::type U;
 	return (T) ((U) left | (U) right);
 }
 
 template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
-inline T operator &(T left, T right)
+constexpr T operator &(T left, T right)
 {
 	typedef typename std::underlying_type<T>::type U;
 	return (T) ((U) left & (U) right);
 }
 
 template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
-inline T operator ^(T left, T right)
+constexpr T operator ^(T left, T right)
 {
 	typedef typename std::underlying_type<T>::type U;
 	return (T) ((U) left ^ (U) right);
 }
 
 template < typename T, class = typename std::enable_if<std::is_enum<T>::value, T>::type >
-inline T operator ~(T left)
+constexpr T operator ~(T left)
 {
 	typedef typename std::underlying_type<T>::type U;
 	return (T) ~((U) left);
