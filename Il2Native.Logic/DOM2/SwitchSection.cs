@@ -79,7 +79,7 @@ namespace Il2Native.Logic.DOM2
                         c.WhiteSpace();
                         if (label.Value != null)
                         {
-                            new Literal { Value = label.Value }.WriteTo(c);
+                            new Literal { Value = label.Value, Type = label.Type }.WriteTo(c);
                         }
                         else
                         {
