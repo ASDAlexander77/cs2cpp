@@ -18,6 +18,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool CppConstString { get; set; }
 
+        public bool EnumAsConst { get; set; }
+
         internal ConstantValue Value { get; set; }
 
         public static string UnicodeChar(char c)
@@ -204,7 +206,7 @@ namespace Il2Native.Logic.DOM2
                 if (field != null)
                 {
                     c.WriteNamespace(Type.ContainingNamespace, containingNamespace: MethodOwner?.ContainingNamespace);
-                    c.WriteFieldAccessAsStaticField(field);
+                    c.WriteFieldAccessAsStaticField(field, enumAsConst: true);
                     return;
                 }
                 else

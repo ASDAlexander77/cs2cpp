@@ -19,7 +19,7 @@ bool CoreLib::System::RuntimeFieldHandle::MatchesNameHash(CoreLib::System::Runti
 }
 
 // Method : System.RuntimeFieldHandle.GetAttributes(System.RuntimeFieldHandleInternal)
-CoreLib::System::Reflection::enum_FieldAttributes CoreLib::System::RuntimeFieldHandle::GetAttributes(CoreLib::System::RuntimeFieldHandleInternal field)
+CoreLib::System::Reflection::FieldAttributes__enum CoreLib::System::RuntimeFieldHandle::GetAttributes(CoreLib::System::RuntimeFieldHandleInternal field)
 {
     throw 0xC000C000;
 }
@@ -49,7 +49,7 @@ object* CoreLib::System::RuntimeFieldHandle::GetValueDirect(CoreLib::System::Ref
 }
 
 // Method : System.RuntimeFieldHandle.SetValue(System.Reflection.RtFieldInfo, object, object, System.RuntimeType, System.Reflection.FieldAttributes, System.RuntimeType, ref bool)
-void CoreLib::System::RuntimeFieldHandle::SetValue_Ref(CoreLib::System::Reflection::RtFieldInfo* field, object* obj, object* value, CoreLib::System::RuntimeType* fieldType, CoreLib::System::Reflection::enum_FieldAttributes fieldAttr, CoreLib::System::RuntimeType* declaringType, bool& domainInitialized)
+void CoreLib::System::RuntimeFieldHandle::SetValue_Ref(CoreLib::System::Reflection::RtFieldInfo* field, object* obj, object* value, CoreLib::System::RuntimeType* fieldType, CoreLib::System::Reflection::FieldAttributes__enum fieldAttr, CoreLib::System::RuntimeType* declaringType, bool& domainInitialized)
 {
     throw 0xC000C000;
 }

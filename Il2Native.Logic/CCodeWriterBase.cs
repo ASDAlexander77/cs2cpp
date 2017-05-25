@@ -362,7 +362,7 @@ namespace Il2Native.Logic
 
             this.WriteFieldAccessAsStaticField(fieldSymbol);
 
-            if (fieldSymbol.HasConstantValue && !fieldSymbol.IsConst)
+            if (fieldSymbol.HasConstantValue && (!fieldSymbol.IsConst || fieldSymbol.ContainingType.TypeKind == TypeKind.Enum))
             {
                 this.WhiteSpace();
                 this.TextSpan("=");
@@ -390,10 +390,10 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteFieldAccessAsStaticField(IFieldSymbol fieldSymbol)
+        public void WriteFieldAccessAsStaticField(IFieldSymbol fieldSymbol, bool enumAsConst = false)
         {
             var receiverType = fieldSymbol.ContainingType;
-            this.WriteTypeName(receiverType, false);
+            this.WriteTypeName(receiverType, false, valueName: enumAsConst);
             if (receiverType.IsGenericType)
             {
                 this.WriteTemplateDefinition(fieldSymbol.ContainingType);
@@ -1243,11 +1243,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (valueName && type.TypeKind == TypeKind.Enum)
-            {
-                this.TextSpan("enum_");
-            }
-
             if (type.ContainingType != null)
             {
                 var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
@@ -1279,6 +1274,11 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteName(type);
+            }
+
+            if (valueName && type.TypeKind == TypeKind.Enum)
+            {
+                this.TextSpan("__enum");
             }
 
             if (typeOfName)

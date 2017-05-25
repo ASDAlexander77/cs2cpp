@@ -37,9 +37,9 @@ object* CoreLib::System::RuntimeTypeHandle::CreateInstanceForAnotherGenericParam
 }
 
 // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)
-CoreLib::System::Reflection::enum_CorElementType CoreLib::System::RuntimeTypeHandle::GetCorElementType(CoreLib::System::RuntimeType* type)
+CoreLib::System::Reflection::CorElementType__enum CoreLib::System::RuntimeTypeHandle::GetCorElementType(CoreLib::System::RuntimeType* type)
 {
-	return CoreLib::System::Reflection::enum_CorElementType(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
+	return CoreLib::System::Reflection::CorElementType__enum(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
 }
 
 // TODO: temporary solution
@@ -67,7 +67,7 @@ CoreLib::System::RuntimeType* CoreLib::System::RuntimeTypeHandle::GetBaseType(Co
 }
 
 // Method : System.RuntimeTypeHandle.GetAttributes(System.RuntimeType)
-CoreLib::System::Reflection::enum_TypeAttributes CoreLib::System::RuntimeTypeHandle::GetAttributes(CoreLib::System::RuntimeType* type)
+CoreLib::System::Reflection::TypeAttributes__enum CoreLib::System::RuntimeTypeHandle::GetAttributes(CoreLib::System::RuntimeType* type)
 {
 	throw 0xC000C000;
 }
@@ -133,7 +133,7 @@ void CoreLib::System::RuntimeTypeHandle::GetConstraints(CoreLib::System::Runtime
 }
 
 // Method : System.RuntimeTypeHandle.GetGCHandle(System.RuntimeTypeHandle, System.Runtime.InteropServices.GCHandleType)
-CoreLib::System::IntPtr CoreLib::System::RuntimeTypeHandle::GetGCHandle(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::Runtime::InteropServices::enum_GCHandleType type)
+CoreLib::System::IntPtr CoreLib::System::RuntimeTypeHandle::GetGCHandle(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::Runtime::InteropServices::GCHandleType__enum type)
 {
 	auto gcHandle = __init<CoreLib::System::Runtime::InteropServices::GCHandle>(handle.m_type, type);
 	return gcHandle.m_handle;
@@ -212,22 +212,19 @@ bool CoreLib::System::RuntimeTypeHandle::IsValueType(CoreLib::System::RuntimeTyp
 }
 
 // Method : System.RuntimeTypeHandle.ConstructName(System.RuntimeTypeHandle, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)
-void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::enum_TypeNameFormatFlags formatFlags, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
+void CoreLib::System::RuntimeTypeHandle::ConstructName(CoreLib::System::RuntimeTypeHandle handle, CoreLib::System::TypeNameFormatFlags__enum formatFlags, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
 {
 	auto ref = (string**)(void*)retString.m_ptr;
 
-	switch ((int32_t)formatFlags)
+	switch (formatFlags)
 	{
-		// enum_TypeNameFormatFlags::c_FormatBasic
-	case 1:
+	case TypeNameFormatFlags__enum::FormatBasic:
 		*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 		break;
-		// enum_TypeNameFormatFlags::c_FormatNamespace
-	case 2:
+	case TypeNameFormatFlags__enum::FormatNamespace:
 		*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 		break;
-		// enum_TypeNameFormatFlags::c_FormatNamespace | enum_TypeNameFormatFlags::c_FormatFullInst
-	case 3:
+	case (TypeNameFormatFlags__enum)((int32_t)TypeNameFormatFlags__enum::FormatNamespace | (int32_t)TypeNameFormatFlags__enum::FormatFullInst) :
 		*ref = string::Concat(string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace), u"."_s, string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
 		break;
 	}

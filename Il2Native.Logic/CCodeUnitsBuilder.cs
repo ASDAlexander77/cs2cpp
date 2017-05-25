@@ -336,7 +336,7 @@ namespace Il2Native.Logic
             if (field.IsConst 
                 && field.Type.SpecialType != SpecialType.System_Decimal 
                 && field.Type.SpecialType != SpecialType.System_DateTime
-                && field.ContainingType.TypeKind != TypeKind.Enum)
+                /*&& field.ContainingType.TypeKind != TypeKind.Enum*/)
             {
                 return;
             }

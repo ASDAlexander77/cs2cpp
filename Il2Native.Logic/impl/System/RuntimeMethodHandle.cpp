@@ -19,25 +19,25 @@ bool CoreLib::System::RuntimeMethodHandle::IsCAVisibleFromDecoratedType(CoreLib:
 }
 
 // Method : System.RuntimeMethodHandle._GetCurrentMethod(ref System.Threading.StackCrawlMark)
-CoreLib::System::IRuntimeMethodInfo* CoreLib::System::RuntimeMethodHandle::_GetCurrentMethod_Ref(CoreLib::System::Threading::enum_StackCrawlMark& stackMark)
+CoreLib::System::IRuntimeMethodInfo* CoreLib::System::RuntimeMethodHandle::_GetCurrentMethod_Ref(CoreLib::System::Threading::StackCrawlMark__enum& stackMark)
 {
     throw 0xC000C000;
 }
 
 // Method : System.RuntimeMethodHandle.GetAttributes(System.RuntimeMethodHandleInternal)
-CoreLib::System::Reflection::enum_MethodAttributes CoreLib::System::RuntimeMethodHandle::GetAttributes(CoreLib::System::RuntimeMethodHandleInternal method)
+CoreLib::System::Reflection::MethodAttributes__enum CoreLib::System::RuntimeMethodHandle::GetAttributes(CoreLib::System::RuntimeMethodHandleInternal method)
 {
     throw 0xC000C000;
 }
 
 // Method : System.RuntimeMethodHandle.GetImplAttributes(System.IRuntimeMethodInfo)
-CoreLib::System::Reflection::enum_MethodImplAttributes CoreLib::System::RuntimeMethodHandle::GetImplAttributes(CoreLib::System::IRuntimeMethodInfo* method)
+CoreLib::System::Reflection::MethodImplAttributes__enum CoreLib::System::RuntimeMethodHandle::GetImplAttributes(CoreLib::System::IRuntimeMethodInfo* method)
 {
     throw 0xC000C000;
 }
 
 // Method : System.RuntimeMethodHandle.ConstructInstantiation(System.IRuntimeMethodInfo, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)
-void CoreLib::System::RuntimeMethodHandle::ConstructInstantiation(CoreLib::System::IRuntimeMethodInfo* method, CoreLib::System::enum_TypeNameFormatFlags format, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
+void CoreLib::System::RuntimeMethodHandle::ConstructInstantiation(CoreLib::System::IRuntimeMethodInfo* method, CoreLib::System::TypeNameFormatFlags__enum format, CoreLib::System::Runtime::CompilerServices::StringHandleOnStack retString)
 {
     throw 0xC000C000;
 }

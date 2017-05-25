@@ -115,7 +115,7 @@ void CoreLib::System::Reflection::RuntimeAssembly::GetSimpleName(CoreLib::System
 }
 
 // Method : System.Reflection.RuntimeAssembly.GetFlags(System.Reflection.RuntimeAssembly)
-CoreLib::System::Reflection::enum_AssemblyNameFlags CoreLib::System::Reflection::RuntimeAssembly::GetFlags(CoreLib::System::Reflection::RuntimeAssembly* assembly)
+CoreLib::System::Reflection::AssemblyNameFlags__enum CoreLib::System::Reflection::RuntimeAssembly::GetFlags(CoreLib::System::Reflection::RuntimeAssembly* assembly)
 {
     throw 0xC000C000;
 }

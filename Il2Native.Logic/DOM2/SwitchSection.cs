@@ -44,6 +44,8 @@ namespace Il2Native.Logic.DOM2
                     if (boundSwitchLabel.ConstantValueOpt != null)
                     {
                         switchLabel.Value = boundSwitchLabel.ConstantValueOpt;
+                        switchLabel.Type = this.SwitchType;
+                        switchLabel.EnumAsConst = true;
                     }
 
                     this.Labels.Add(switchLabel);
@@ -75,15 +77,15 @@ namespace Il2Native.Logic.DOM2
                     {
                         c.TextSpan("case");
                         c.WhiteSpace();
-
-                        if (this.SwitchType.TypeKind == TypeKind.Enum)
+                        if (label.Value != null)
                         {
-                            c.TextSpan("(");
-                            c.WriteType(this.SwitchType, containingNamespace: MethodOwner?.ContainingNamespace);
-                            c.TextSpan(")");
+                            new Literal { Value = label.Value }.WriteTo(c);
+                        }
+                        else
+                        {
+                            label.WriteTo(c);
                         }
 
-                        c.TextSpan(label.ToString());
                         c.TextSpan(":");
                     }
                     else

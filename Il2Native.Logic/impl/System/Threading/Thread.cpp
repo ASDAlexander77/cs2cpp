@@ -34,7 +34,7 @@ void* __stdcall __thread_inner_proc(void* params)
 }
 
 // Method : System.Threading.Thread.StartInternal(System.Security.Principal.IPrincipal, ref System.Threading.StackCrawlMark)
-void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Security::Principal::IPrincipal* principal, CoreLib::System::Threading::enum_StackCrawlMark& stackMark)
+void CoreLib::System::Threading::Thread::StartInternal_Ref(CoreLib::System::Security::Principal::IPrincipal* principal, CoreLib::System::Threading::StackCrawlMark__enum& stackMark)
 {
 	auto voidPtr = (void*)this->DONT_USE_InternalThread;
 	if (voidPtr != nullptr)

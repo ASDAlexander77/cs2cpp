@@ -68,13 +68,13 @@ int32_t CoreLib::System::String::LastIndexOf(char16_t value, int32_t startIndex,
 }
 
 // Method : string.LastIndexOf(string, System.StringComparison)
-int32_t CoreLib::System::String::LastIndexOf(string* value, CoreLib::System::enum_StringComparison sc)
+int32_t CoreLib::System::String::LastIndexOf(string* value, CoreLib::System::StringComparison__enum sc)
 {
     throw 0xC000C000;
 }
 
 // Method : string.LastIndexOf(string, int, System.StringComparison)
-int32_t CoreLib::System::String::LastIndexOf(string* value, int32_t startIndex, CoreLib::System::enum_StringComparison sc)
+int32_t CoreLib::System::String::LastIndexOf(string* value, int32_t startIndex, CoreLib::System::StringComparison__enum sc)
 {
     throw 0xC000C000;
 }

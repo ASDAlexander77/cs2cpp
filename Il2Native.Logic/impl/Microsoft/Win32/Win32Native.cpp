@@ -106,7 +106,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
-	CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::enum_FileShare dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::enum_FileMode dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
+	CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::FileShare__enum dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::FileMode__enum dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
 	{
 #ifndef GC_PTHREADS
 		auto hFile = CreateFileW((LPCWSTR)&lpFileName->m_firstChar,    // name of the write
@@ -156,9 +156,9 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
-		switch ((CoreLib::System::IO::enum_FileMode)dwCreationDisposition)
+		switch ((CoreLib::System::IO::FileMode__enum)dwCreationDisposition)
 		{
-		case CoreLib::System::IO::enum_FileMode::c_Create:
+		case CoreLib::System::IO::FileMode__enum::Create:
 			// check whether the file exists
 			if (access(path_urf8, F_OK) == 0)
 			{
@@ -167,13 +167,13 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 			open_flags |= O_CREAT | O_TRUNC;
 			break;
-		case CoreLib::System::IO::enum_FileMode::c_CreateNew:
+		case CoreLib::System::IO::FileMode__enum::CreateNew:
 			open_flags |= O_CREAT | O_EXCL;
 			break;
-		case CoreLib::System::IO::enum_FileMode::c_Open:
+		case CoreLib::System::IO::FileMode__enum::Open:
 			/* don't need to do anything here */
 			break;
-		case CoreLib::System::IO::enum_FileMode::c_OpenOrCreate:
+		case CoreLib::System::IO::FileMode__enum::OpenOrCreate:
 			if (access(path_urf8, F_OK) == 0)
 			{
 				fFileExists = true;
@@ -181,7 +181,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 			open_flags |= O_CREAT;
 			break;
-		case CoreLib::System::IO::enum_FileMode::c_Truncate:
+		case CoreLib::System::IO::FileMode__enum::Truncate:
 			open_flags |= O_TRUNC;
 			break;
 		default:
