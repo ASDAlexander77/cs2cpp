@@ -19,8 +19,6 @@ namespace Il2Native.Logic.DOM2
     {
         private readonly IList<Expression> _arguments = new List<Expression>();
 
-        public bool InterfaceWrapperSpecialCall { get; set; }
-
         public IList<Expression> Arguments
         {
             get
@@ -155,7 +153,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, interfaceWrapperMethodSpecialCase: InterfaceWrapperSpecialCall, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);

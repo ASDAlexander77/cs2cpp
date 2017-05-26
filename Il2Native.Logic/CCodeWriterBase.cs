@@ -417,7 +417,7 @@ namespace Il2Native.Logic
             this.WriteMethodName(methodSymbol, false, containingNamespace: containingNamespace);
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, bool interfaceWrapperMethodSpecialCase = false, IMethodSymbol methodSymbolForName = null, INamespaceSymbol containingNamespace = null)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null, INamespaceSymbol containingNamespace = null)
         {
             var specialCaseForInterfaceWrapper = methodSymbol.IsInterfaceGenericMethodSpecialCase();
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null && !specialCaseForInterfaceWrapper)
@@ -426,7 +426,7 @@ namespace Il2Native.Logic
                 this.WhiteSpace();
             }
 
-            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName, interfaceWrapperMethodSpecialCase);
+            this.WriteMethodNameNoTemplate(methodSymbol, methodSymbolForName);
 
             if (methodSymbol.IsGenericMethod)
             {
@@ -442,7 +442,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null, bool interfaceWrapperMethodSpecialCase = false)
+        public void WriteMethodNameNoTemplate(IMethodSymbol methodSymbol, IMethodSymbol methodSymbolForName = null)
         {
             // name
             ////if (methodSymbol.MethodKind == MethodKind.Destructor)
@@ -469,23 +469,11 @@ namespace Il2Native.Logic
             {
                 // check if it hides base method
                 var separator = false;
-                var hidesBaseMethodOrInterfaceWrapper = interfaceWrapperMethodSpecialCase || methodSymbol.ContainingType.AllInterfaces.Any(i => i.GetMembers().OfType<IMethodSymbol>().Any(m => m.CompareTo(methodSymbol, true, true) == 0));
+                var hidesBaseMethodOrInterfaceWrapper = methodSymbol.ContainingType.AllInterfaces.Any(i => i.GetMembers().OfType<IMethodSymbol>().Any(m => m.CompareTo(methodSymbol, true, true) == 0));
                 if (hidesBaseMethodOrInterfaceWrapper)
                 {
                     this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
                     separator = true;
-                }
-
-                if (interfaceWrapperMethodSpecialCase && explicitInterfaceImplementation == null)
-                {
-                    if (methodSymbol.ContainingType.IsGenericType
-                        && methodSymbol.ContainingType.GetTemplateArguments().Select(t => t as INamedTypeSymbol).All(t => t != null && !t.IsGenericType))
-                    {
-                        var sb = new StringBuilder();
-                        CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, methodSymbol.ContainingType);
-                        this.TextSpan(sb.ToString());
-                        separator = true;
-                    }
                 }
 
                 if (separator)

@@ -121,34 +121,34 @@ namespace Il2Native.Logic.DOM
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
             foreach (var interfaceMethod in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
             {
-                if (Type.TypeKind != TypeKind.Interface)
-                {
-                    var implementationForInterfaceMember = Type.FindImplementationForInterfaceMember(interfaceMethod) as IMethodSymbol;
-                    Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
-                    Declarations.Add(new CCodeMethodDeclaration(Type, implementationForInterfaceMember));
-                }
-                else
-                {
-                    Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(interfaceMethod)));
-                }
+                Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(interfaceMethod)));
             }
         }
 
-        private MethodBody CreateMethodBody(IMethodSymbol method)
+        private MethodBody CreateMethodBody(IMethodSymbol interfaceMethod)
         {
+            var actualMethodToCall = interfaceMethod;
+
+            if (Type.TypeKind != TypeKind.Interface)
+            {
+                var implementationForInterfaceMember = Type.FindImplementationForInterfaceMember(interfaceMethod.OriginalDefinition) as IMethodSymbol;
+                Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
+                actualMethodToCall = implementationForInterfaceMember;
+            }
+
             var callMethod = new Call()
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
-                Method = method
+                Method = actualMethodToCall
             };
 
-            foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
+            foreach (var paramExpression in actualMethodToCall.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
             {
                 callMethod.Arguments.Add(paramExpression);
             }
 
             Statement mainStatement;
-            if (!method.ReturnsVoid)
+            if (!actualMethodToCall.ReturnsVoid)
             {
                 mainStatement = new ReturnStatement { ExpressionOpt = callMethod };
             }
@@ -157,7 +157,7 @@ namespace Il2Native.Logic.DOM
                 mainStatement = new ExpressionStatement { Expression = callMethod };
             }
 
-            return new MethodBody(method) { Statements = { mainStatement } };
+            return new MethodBody(actualMethodToCall) { Statements = { mainStatement } };
         }
 
         private MethodImpl CreateWrapperMethod(IMethodSymbol method)
