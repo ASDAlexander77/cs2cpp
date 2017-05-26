@@ -568,25 +568,6 @@ namespace Il2Native.Logic
                 ////BuildRuntimeInfoVariables(type, unit);
             }
 
-            if (isNotInterfaceOrModule)
-            {
-                // append interface calls
-                foreach (var interfaceMethod in type.EnumerateInterfaceMethods())
-                {
-                    var method = interfaceMethod;
-                    var implementationForInterfaceMember = type.FindImplementationForInterfaceMember(interfaceMethod) as IMethodSymbol;
-                    if (implementationForInterfaceMember != null &&
-                        implementationForInterfaceMember.ExplicitInterfaceImplementations.Any(ei => ei.Equals(method)))
-                    {
-                        continue;
-                    }
-
-                    Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
-                    unit.Declarations.Add(new CCodeInterfaceMethodAdapterDeclaration(type, interfaceMethod, implementationForInterfaceMember));
-                    unit.Definitions.Add(new CCodeInterfaceMethodAdapterDefinition(type, interfaceMethod, implementationForInterfaceMember));
-                }
-            }
-
             yield return unit;
 
             if (!isNotModule)

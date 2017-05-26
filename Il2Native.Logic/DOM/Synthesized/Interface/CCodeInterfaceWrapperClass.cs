@@ -12,6 +12,7 @@ namespace Il2Native.Logic.DOM
     using Implementations;
     using Microsoft.CodeAnalysis;
     using Synthesized;
+    using System.Diagnostics;
 
     public class CCodeInterfaceWrapperClass : CCodeClass
     {
@@ -118,9 +119,18 @@ namespace Il2Native.Logic.DOM
         private void CreateMemebers()
         {
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
-            foreach (var method in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
+            foreach (var interfaceMethod in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
             {
-                Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(method)));
+                if (Type.TypeKind != TypeKind.Interface)
+                {
+                    var implementationForInterfaceMember = Type.FindImplementationForInterfaceMember(interfaceMethod) as IMethodSymbol;
+                    Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
+                    Declarations.Add(new CCodeMethodDeclaration(Type, implementationForInterfaceMember));
+                }
+                else
+                {
+                    Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(interfaceMethod)));
+                }
             }
         }
 
@@ -129,8 +139,7 @@ namespace Il2Native.Logic.DOM
             var callMethod = new Call()
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
-                Method = method,
-                InterfaceWrapperSpecialCall = Type.TypeKind != TypeKind.Interface
+                Method = method
             };
 
             foreach (var paramExpression in method.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
