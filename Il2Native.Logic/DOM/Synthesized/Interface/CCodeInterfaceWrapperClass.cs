@@ -142,7 +142,7 @@ namespace Il2Native.Logic.DOM
                 Method = actualMethodToCall
             };
 
-            foreach (var paramExpression in actualMethodToCall.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
+            foreach (var paramExpression in interfaceMethod.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
             {
                 callMethod.Arguments.Add(paramExpression);
             }
@@ -170,7 +170,8 @@ namespace Il2Native.Logic.DOM
                 IsAbstract = false,
                 ContainingNamespace = namedTypeSymbol.ContainingNamespace,
                 // special case to write method name as MetadataName
-                TypeArguments = ImmutableArray<ITypeSymbol>.Empty
+                TypeArguments = ImmutableArray<ITypeSymbol>.Empty,
+                OriginalDefinition = method
             };
         }
 

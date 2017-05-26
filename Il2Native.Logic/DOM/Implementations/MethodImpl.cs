@@ -93,7 +93,7 @@ namespace Il2Native.Logic.DOM.Implementations
         }
 
         public Accessibility DeclaredAccessibility { get; private set; }
-        public IMethodSymbol OriginalDefinition { get; private set; }
+        public IMethodSymbol OriginalDefinition { get; set; }
         public IMethodSymbol OverriddenMethod { get; private set; }
         public ITypeSymbol ReceiverType { get; set; }
         public IMethodSymbol ReducedFrom { get; private set; }
