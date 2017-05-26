@@ -129,17 +129,20 @@ namespace Il2Native.Logic.DOM
         {
             var actualMethodToCall = interfaceMethod;
 
+            var callGenericMethodFromInterfaceMethod = false;
             if (Type.TypeKind != TypeKind.Interface)
             {
                 var implementationForInterfaceMember = Type.FindImplementationForInterfaceMember(interfaceMethod.OriginalDefinition) as IMethodSymbol;
                 Debug.Assert(implementationForInterfaceMember != null, "Method for interface can't be found");
                 actualMethodToCall = implementationForInterfaceMember;
+                callGenericMethodFromInterfaceMethod = implementationForInterfaceMember.IsGenericMethod;
             }
 
             var callMethod = new Call()
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
-                Method = actualMethodToCall
+                Method = actualMethodToCall,
+                CallGenericMethodFromInterfaceMethod = callGenericMethodFromInterfaceMethod
             };
 
             foreach (var paramExpression in interfaceMethod.Parameters.Select(p => new Parameter { ParameterSymbol = p }))

@@ -43,6 +43,7 @@ namespace Il2Native.Logic.DOM2
         public IMethodSymbol Method { get; set; }
 
         public Expression ReceiverOpt { get; set; }
+        public bool CallGenericMethodFromInterfaceMethod { get; set; }
 
         internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null)
         {
@@ -114,10 +115,10 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
+            if (!this.Method.ReturnsVoid && (this.Method.IsVirtualGenericMethod() || this.CallGenericMethodFromInterfaceMethod))
             {
                 c.TextSpan("((");
-                c.WriteType(this.Method.ReturnType, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.WriteType(this.Method.ReturnType, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(")");
             }
 
@@ -153,12 +154,12 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true/*, methodSymbolForName: explicitMethod*/, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.WriteMethodName(this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);
 
-            if (!this.Method.ReturnsVoid && this.Method.IsVirtualGenericMethod())
+            if (!this.Method.ReturnsVoid && (this.Method.IsVirtualGenericMethod() || this.CallGenericMethodFromInterfaceMethod))
             {
                 c.TextSpan(")");
             }

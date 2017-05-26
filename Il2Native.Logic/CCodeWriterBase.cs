@@ -417,7 +417,7 @@ namespace Il2Native.Logic
             this.WriteMethodName(methodSymbol, false, containingNamespace: containingNamespace);
         }
 
-        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, IMethodSymbol methodSymbolForName = null, INamespaceSymbol containingNamespace = null)
+        public void WriteMethodName(IMethodSymbol methodSymbol, bool allowKeywords = true, bool addTemplate = false, bool callGenericMethodFromInterfaceMethod = false, IMethodSymbol methodSymbolForName = null, INamespaceSymbol containingNamespace = null)
         {
             var specialCaseForInterfaceWrapper = methodSymbol.IsInterfaceGenericMethodSpecialCase();
             if (addTemplate && methodSymbol.IsGenericMethod && !methodSymbol.IsVirtualGenericMethod() && methodSymbol.ContainingType != null && !specialCaseForInterfaceWrapper)
@@ -437,7 +437,7 @@ namespace Il2Native.Logic
                 }
                 else if (addTemplate)
                 {
-                    this.WriteTypeArguments(methodSymbol.TypeArguments, containingNamespace: containingNamespace);
+                    this.WriteTypeArguments(methodSymbol.TypeArguments, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                 }
             }
         }
@@ -1026,7 +1026,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
+        public void WriteType(ITypeSymbol type, bool suppressReference = false, bool allowKeywords = true, bool valueTypeAsClass = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             if (!valueTypeAsClass && this.WriteSpecialType(type))
             {
@@ -1107,7 +1107,7 @@ namespace Il2Native.Logic
                 case TypeKind.TypeParameter:
 
                     var methodSymbol = type.ContainingSymbol as IMethodSymbol;
-                    if (methodSymbol != null && methodSymbol.IsVirtualGenericMethod())
+                    if (methodSymbol != null && (methodSymbol.IsVirtualGenericMethod() || callGenericMethodFromInterfaceMethod))
                     {
                         this.TextSpan("object*");
                     }
@@ -1133,7 +1133,7 @@ namespace Il2Native.Logic
             throw new NotImplementedException();
         }
 
-        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments, INamespaceSymbol containingNamespace = null)
+        public void WriteTypeArguments(IEnumerable<ITypeSymbol> typeArguments, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             this.TextSpan("<");
 
@@ -1146,7 +1146,7 @@ namespace Il2Native.Logic
                 }
 
                 anyTypeArg = true;
-                this.WriteType(typeArg, containingNamespace: containingNamespace);
+                this.WriteType(typeArg, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             }
 
             this.TextSpan(">");
