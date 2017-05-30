@@ -45,15 +45,54 @@ namespace Il2Native.Logic.DOM2
         public Expression ReceiverOpt { get; set; }
         public bool CallGenericMethodFromInterfaceMethod { get; set; }
 
-        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null)
+        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null, bool specialCaseInterfaceCallWrapper = false)
         {
             c.TextSpan("(");
-            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner);
+            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner, specialCaseInterfaceCallWrapper: specialCaseInterfaceCallWrapper);
             c.TextSpan(")");
         }
 
-        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null)
+        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null, bool specialCaseInterfaceCallWrapper = false)
         {
+            if (method != null && method.IsGenericMethod && method.Arity > 0)
+            {
+                if (specialCaseInterfaceCallWrapper)
+                {
+                    foreach (var typeParameter in method.TypeParameters.Where(t => t.HasConstructorConstraint))
+                    {
+                        if (anyArgs)
+                        {
+                            c.TextSpan(", ");
+                        }
+
+                        anyArgs = true;
+
+                        c.TextSpan("construct_");
+                        c.WriteName(typeParameter);
+                    }
+                }
+                else
+                {
+                    var typeParameters = method.TypeParameters.GetEnumerator();
+                    foreach (var typeArgument in method.TypeArguments)
+                    {
+                        if (typeParameters.MoveNext() && !typeParameters.Current.HasConstructorConstraint)
+                        {
+                            continue;
+                        }
+
+                        if (anyArgs)
+                        {
+                            c.TextSpan(", ");
+                        }
+
+                        anyArgs = true;
+
+                        new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodOwner = methodOwner }.WriteTo(c);
+                    }
+                }
+            }
+
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
@@ -157,7 +196,7 @@ namespace Il2Native.Logic.DOM2
                 c.WriteMethodName(this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
-            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner, specialCaseInterfaceCallWrapper: this.CallGenericMethodFromInterfaceMethod);
 
             if (!this.Method.ReturnsVoid && (this.Method.IsVirtualGenericMethod() || this.CallGenericMethodFromInterfaceMethod))
             {

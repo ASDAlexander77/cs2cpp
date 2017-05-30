@@ -583,6 +583,26 @@ namespace Il2Native.Logic
             var parameterIndex = 0;
 
             this.TextSpan("(");
+
+            if (methodSymbol.IsGenericMethod && methodSymbol.Arity > 0)
+            {
+                foreach (var typeParameter in methodSymbol.TypeParameters.Where(t => t.HasConstructorConstraint))
+                {
+                    if (anyParameter)
+                    {
+                        this.TextSpan(", ");
+                    }
+
+                    this.WriteType("Type".ToSystemType());
+                    if (!declarationWithingClass)
+                    {
+                        this.WhiteSpace();
+                        this.TextSpan("construct_");
+                        this.WriteName(typeParameter);
+                    }
+                }
+            }
+
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
                 if (anyParameter)
