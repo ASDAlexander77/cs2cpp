@@ -430,12 +430,8 @@ namespace Il2Native.Logic
 
             if (methodSymbol.IsGenericMethod)
             {
-                if (methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride || specialCaseForInterfaceWrapper)
-                {
-                    this.TextSpan("T");
-                    this.TextSpan(methodSymbol.Arity.ToString());
-                }
-                else if (addTemplate)
+                var isVirtualGenericMethod = methodSymbol.IsAbstract || methodSymbol.IsVirtual || methodSymbol.IsOverride || specialCaseForInterfaceWrapper;
+                if (!isVirtualGenericMethod && addTemplate)
                 {
                     this.WriteTypeArguments(methodSymbol.TypeArguments, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                 }

@@ -353,6 +353,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     }
 
                     c.Separate();
+                    c.NewLine();
                 }
 
                 // write forward declaration
@@ -368,11 +369,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     itw.WriteLine(Resources.c_forward_declarations);
                 }
 
-                itw.WriteLine();
-
                 // write full declaration
                 foreach (var unit in units)
                 {
+                    itw.WriteLine();
                     WriteFullDeclarationForUnit(unit, itw, c);
                 }
 
