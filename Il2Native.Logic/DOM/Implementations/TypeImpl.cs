@@ -197,7 +197,7 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
-        public bool HasUnsupportedMetadata { get; private set; }
+        public bool HasUnsupportedMetadata { get; set; }
 
         public ImmutableArray<ISymbol> GetMembers()
         {

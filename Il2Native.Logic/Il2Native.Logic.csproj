@@ -128,6 +128,7 @@
     <Compile Include="DOM\CCodeUnit.cs" />
     <Compile Include="DOM\CCodeFieldDefinition.cs" />
     <Compile Include="DOM\CCodeDelegateWrapperClass.cs" />
+    <Compile Include="DOM\Synthesized\MethodsTable\CCodeNewDeclaration.cs" />
     <Compile Include="DOM\Synthesized\MethodsTable\CCodeMethodsTableClass.cs" />
     <Compile Include="DOM\Helpers.cs" />
     <Compile Include="DOM\Implementations\ArrayTypeImpl.cs" />

@@ -234,7 +234,7 @@ namespace Il2Native.Logic
                 this.TextSpan("static");
                 this.WhiteSpace();
 
-                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.IsThreadStatic()))
                 {
                     this.TextSpan("thread_local");
                     this.WhiteSpace();
@@ -309,7 +309,7 @@ namespace Il2Native.Logic
                 this.NewLine();
             }
 
-            if (fieldSymbol.IsStatic && fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name == "ThreadStaticAttribute" && a.AttributeClass.ContainingSymbol.Name == "System"))
+            if (fieldSymbol.IsStatic && fieldSymbol.GetAttributes().Any(a => a.AttributeClass.IsThreadStatic()))
             {
                 this.TextSpan("thread_local");
                 this.WhiteSpace();
@@ -593,7 +593,9 @@ namespace Il2Native.Logic
                         this.TextSpan(", ");
                     }
 
-                    this.WriteType("Type".ToSystemType());
+                    anyParameter = true;
+
+                    this.WriteType("__methods_table".ToType());
                     if (!declarationWithingClass)
                     {
                         this.WhiteSpace();
@@ -852,7 +854,10 @@ namespace Il2Native.Logic
                     return;
                 }
 
-                this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                if (namespaceNode.ContainingAssembly != null)
+                {
+                    this.TextSpan(namespaceNode.ContainingAssembly.MetadataName.CleanUpName());
+                }
             }
             else
             {
@@ -1038,6 +1043,26 @@ namespace Il2Native.Logic
                 this.TextSpan("typename ");
                 this.WriteType(typeParam);
 
+                anyTypeParam = true;
+            }
+
+            // append parameters with constrains
+            foreach (var typeParam in typeSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
+            {
+                if (anyTypeParam)
+                {
+                    this.TextSpan(", ");
+                }
+
+                ////this.WriteType("__methods_table".ToType());
+                this.TextSpan("auto");
+                this.WhiteSpace();
+                this.WriteType(typeParam);
+                this.TextSpan("_construct");
+                this.WhiteSpace();
+                this.TextSpan("=");
+                this.WhiteSpace();
+                new TypeOfOperator { SourceType = new TypeExpression { Type = typeParam }, MethodsTable = true }.WriteTo(this);
                 anyTypeParam = true;
             }
         }

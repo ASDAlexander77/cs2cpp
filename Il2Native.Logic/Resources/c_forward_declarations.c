@@ -731,17 +731,17 @@ public:
 
 // Typeof internals
 class __methods_table;
-template <typename T> inline CoreLib::System::Type* _typeof()
+template <typename T> constexpr CoreLib::System::Type* _typeof()
 {
 	return &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
-template <typename T> inline CoreLib::System::RuntimeType* _runtime_typeof()
+template <typename T> constexpr CoreLib::System::RuntimeType* _runtime_typeof()
 {
 	return &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
-template <typename T> inline __methods_table* _typeMT()
+template <typename T> constexpr __methods_table* _typeMT()
 {
 	return &bare_type<T>::type::_methods_table;
 }
@@ -1026,6 +1026,10 @@ template <typename D, typename S> inline D map_pointer_cast(S s)
 class __methods_table
 {
 public:
+	virtual object* __new()
+	{
+		throw 0xC000C000;
+	}
 
 	virtual CoreLib::System::Type* __get_type()
 	{
@@ -1053,7 +1057,7 @@ struct __runtimetype_info
 	////CoreLib::System::Reflection::RuntimeModule* __module;
 	const char16_t* __name;
 	const char16_t* __namespace;
-	int __cor_element_type;
+	int32_t __cor_element_type;
 	bool __is_generic_type_definition;
 	CoreLib::System::RuntimeType* __base_type;
 	CoreLib::System::RuntimeType* __element_type;

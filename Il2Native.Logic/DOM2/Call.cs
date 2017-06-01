@@ -44,51 +44,42 @@ namespace Il2Native.Logic.DOM2
 
         public Expression ReceiverOpt { get; set; }
         public bool CallGenericMethodFromInterfaceMethod { get; set; }
+        public bool SpecialCaseCreateInstanceNewObjectReplacement { get; set; }
 
-        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null, bool specialCaseInterfaceCallWrapper = false)
+        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null)
         {
             c.TextSpan("(");
-            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner, specialCaseInterfaceCallWrapper: specialCaseInterfaceCallWrapper);
+            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner);
             c.TextSpan(")");
         }
 
-        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null, bool specialCaseInterfaceCallWrapper = false)
+        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null)
         {
             if (method != null && method.IsGenericMethod && method.Arity > 0)
             {
-                if (specialCaseInterfaceCallWrapper)
+                var typeParameters = method.TypeParameters.GetEnumerator();
+                foreach (var typeArgument in method.TypeArguments)
                 {
-                    foreach (var typeParameter in method.TypeParameters.Where(t => t.HasConstructorConstraint))
+                    if (typeParameters.MoveNext() && !typeParameters.Current.HasConstructorConstraint)
                     {
-                        if (anyArgs)
-                        {
-                            c.TextSpan(", ");
-                        }
-
-                        anyArgs = true;
-
-                        c.TextSpan("construct_");
-                        c.WriteName(typeParameter);
+                        continue;
                     }
-                }
-                else
-                {
-                    var typeParameters = method.TypeParameters.GetEnumerator();
-                    foreach (var typeArgument in method.TypeArguments)
+
+                    if (anyArgs)
                     {
-                        if (typeParameters.MoveNext() && !typeParameters.Current.HasConstructorConstraint)
-                        {
-                            continue;
-                        }
+                        c.TextSpan(", ");
+                    }
 
-                        if (anyArgs)
-                        {
-                            c.TextSpan(", ");
-                        }
+                    anyArgs = true;
 
-                        anyArgs = true;
-
-                        new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodOwner = methodOwner }.WriteTo(c);
+                    if (typeArgument.TypeKind == TypeKind.TypeParameter)
+                    {
+                        c.TextSpan("construct_");
+                        c.WriteName(typeArgument);
+                    }
+                    else
+                    {
+                        new TypeOfOperator { MethodsTable = true, SourceType = new TypeExpression { Type = typeArgument }, MethodOwner = methodOwner }.WriteTo(c);
                     }
                 }
             }
@@ -131,7 +122,8 @@ namespace Il2Native.Logic.DOM2
         internal void Parse(BoundCall boundCall)
         {
             base.Parse(boundCall);
-            this.Method = boundCall.Method;
+            this.SpecialCaseCreateInstanceNewObjectReplacement = boundCall.Method.IsCreateInstaneNewReplacement();
+            this.Method = this.SpecialCaseCreateInstanceNewObjectReplacement ? GenerateNativeCreateInstanceMethod(boundCall.Method) : boundCall.Method;
             if (boundCall.ReceiverOpt != null && boundCall.ReceiverOpt.Kind != BoundKind.ConditionalReceiver)
             {
                 this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
@@ -196,12 +188,32 @@ namespace Il2Native.Logic.DOM2
                 c.WriteMethodName(this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
-            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner, specialCaseInterfaceCallWrapper: this.CallGenericMethodFromInterfaceMethod);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);
 
             if (!this.Method.ReturnsVoid && (this.Method.IsVirtualGenericMethod() || this.CallGenericMethodFromInterfaceMethod))
             {
                 c.TextSpan(")");
             }
+        }
+
+        private static IMethodSymbol GenerateNativeCreateInstanceMethod(IMethodSymbol methodSymbolOriginalCreateInstance)
+        {
+            return new MethodImpl()
+            {
+                ContainingNamespace = null,
+                Name = "__create_instance",
+                IsGenericMethod = methodSymbolOriginalCreateInstance.IsGenericMethod,
+                Arity = methodSymbolOriginalCreateInstance.Arity,
+                TypeArguments = methodSymbolOriginalCreateInstance.TypeArguments.ToImmutableArray<ITypeSymbol>(),
+                TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(
+                                    new TypeParameterSymbolImpl
+                                    {
+                                        TypeKind = TypeKind.TypeParameter,
+                                        HasConstructorConstraint = true,
+                                        Name = methodSymbolOriginalCreateInstance.TypeArguments.First().Name
+                                    }),
+                Parameters = methodSymbolOriginalCreateInstance.Parameters.ToImmutableArray<IParameterSymbol>()
+            };
         }
 
         private static Expression PreprocessParameter(Expression expression, IParameterSymbol parameter, IMethodSymbol method, IMethodSymbol methodOwner = null)

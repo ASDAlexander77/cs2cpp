@@ -133,7 +133,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
         public MethodKind MethodKind { get; set; }
-        public int Arity { get; private set; }
+        public int Arity { get; set; }
         public bool IsGenericMethod { get; set; }
         public bool IsExtensionMethod { get; private set; }
         public bool IsAsync { get; private set; }

@@ -76,7 +76,7 @@ namespace Il2Native.Logic.DOM.Implementations
 
         public bool HasValueTypeConstraint { get; private set; }
 
-        public bool HasConstructorConstraint { get; private set; }
+        public bool HasConstructorConstraint { get; set; }
 
         public ImmutableArray<ITypeSymbol> ConstraintTypes { get; private set; }
 
@@ -158,7 +158,7 @@ namespace Il2Native.Logic.DOM.Implementations
             throw new NotImplementedException();
         }
 
-        public bool HasUnsupportedMetadata { get; private set; }
+        public bool HasUnsupportedMetadata { get; set; }
 
         public ImmutableArray<ISymbol> GetMembers()
         {

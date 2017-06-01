@@ -214,6 +214,12 @@ inline typename std::enable_if<std::is_void<T>::value, T>::type __create_instanc
 	return;
 }
 
+template <typename T>
+inline T __create_instanceT1(__methods_table* construct_T)
+{
+	return cast<T>(construct_T->__new());
+}
+
 template<typename T>
 struct type_holder<__pointer<T>> { typedef __pointer<T> type; };
 

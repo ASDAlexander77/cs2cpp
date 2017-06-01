@@ -14,7 +14,10 @@ namespace Il2Native.Logic.DOM2
         }
 
         public Expression SourceType { get; set; }
+
         public bool RuntimeType { get; set; }
+
+        public bool MethodsTable { get; set; }
 
         internal void Parse(BoundTypeOfOperator boundTypeOfOperator)
         {
@@ -30,7 +33,15 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan(RuntimeType ? "_runtime_typeof<" : "_typeof<");
+            if (!this.MethodsTable)
+            {
+                c.TextSpan(RuntimeType ? "_runtime_typeof<" : "_typeof<");
+            }
+            else
+            {
+                c.TextSpan("_typeMT<");
+            }
+
             this.SourceType.WriteTo(c);
             c.TextSpan(">()");
         }

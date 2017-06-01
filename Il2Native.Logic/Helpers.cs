@@ -331,6 +331,20 @@ namespace Il2Native.Logic
             return type.Name == "RuntimeType" && type.ContainingNamespace.Name == "System";
         }
 
+        public static bool IsThreadStatic(this ITypeSymbol type)
+        {
+            return type.Name == "ThreadStaticAttribute" && type.ContainingSymbol.Name == "System";
+        }
+
+        public static bool IsCreateInstaneNewReplacement(this IMethodSymbol method)
+        {
+            return (method.Name == "CreateInstance"
+                && method.ContainingSymbol.Name == "Activator"
+                && method.ContainingNamespace.Name == "System"
+                && method.IsGenericMethod
+                && method.TypeArguments.OfType<ITypeParameterSymbol>().Any(t => t.HasConstructorConstraint));
+        }
+
         public static bool IsIntPtrType(this ITypeSymbol type)
         {
             switch (type.SpecialType)
@@ -806,6 +820,16 @@ namespace Il2Native.Logic
                                                ContainingAssembly = new AssemblySymbolImpl { MetadataName = "CoreLib" }
                                            }
                                },
+                TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
+                IsReferenceType = !@struct
+            };
+        }
+
+        public static ITypeSymbol ToType(this string typeName, bool @struct = false)
+        {
+            return new NamedTypeImpl
+            {
+                Name = typeName,
                 TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
                 IsReferenceType = !@struct
             };
