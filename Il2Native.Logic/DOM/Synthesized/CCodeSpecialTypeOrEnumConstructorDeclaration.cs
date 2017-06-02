@@ -10,7 +10,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeSpecialTypeOrEnumConstructorDeclaration : CCodeMethodDeclaration
+    public class CCodeSpecialTypeOrEnumConstructorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeSpecialTypeOrEnumConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
             : base(type, new SpecialTypeConstructorMethod(type, cppConst))

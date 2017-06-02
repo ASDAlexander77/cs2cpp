@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeHashVirtualMethod : CCodeMethodDeclaration
+    public class CCodeHashVirtualMethod : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeHashVirtualMethod(INamedTypeSymbol type)
             : base(type, new CCodeHashMethod(type))

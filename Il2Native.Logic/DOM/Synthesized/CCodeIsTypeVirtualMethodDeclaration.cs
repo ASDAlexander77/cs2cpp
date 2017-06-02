@@ -8,7 +8,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeIsTypeVirtualMethodDeclaration : CCodeMethodDeclaration
+    public class CCodeIsTypeVirtualMethodDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeIsTypeVirtualMethodDeclaration(INamedTypeSymbol type)
             : base(type, new IsTypeVirtualMethod(type))

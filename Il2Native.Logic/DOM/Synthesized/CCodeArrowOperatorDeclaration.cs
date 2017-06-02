@@ -8,7 +8,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeArrowOperatorDeclaration : CCodeMethodDeclaration
+    public class CCodeArrowOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeArrowOperatorDeclaration(INamedTypeSymbol type)
             : base(type, new ArrowOperatorMethod(type))

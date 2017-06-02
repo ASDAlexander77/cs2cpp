@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeCloneVirtualMethod : CCodeMethodDeclaration
+    public class CCodeCloneVirtualMethod : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeCloneVirtualMethod(INamedTypeSymbol type)
             : base(type, new CCodeCloneMethod(type))

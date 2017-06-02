@@ -7,7 +7,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeObjectCastOperatorDeclaration : CCodeMethodDeclaration
+    public class CCodeObjectCastOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeObjectCastOperatorDeclaration(INamedTypeSymbol type)
             : base(type, new ObjectCastOperatorMethod(type))

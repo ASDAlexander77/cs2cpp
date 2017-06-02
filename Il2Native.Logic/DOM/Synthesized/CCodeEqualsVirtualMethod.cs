@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeEqualsVirtualMethod : CCodeMethodDeclaration
+    public class CCodeEqualsVirtualMethod : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeEqualsVirtualMethod(INamedTypeSymbol type)
             : base(type, new CCodeEqualsMethod(type))

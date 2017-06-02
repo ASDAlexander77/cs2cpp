@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeNewOperatorPointerDeclaration : CCodeMethodDeclaration
+    public class CCodeNewOperatorPointerDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeNewOperatorPointerDeclaration(INamedTypeSymbol type)
             : base(type, new NewOperatorMethod(type))

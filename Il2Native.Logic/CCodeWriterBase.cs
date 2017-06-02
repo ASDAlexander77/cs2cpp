@@ -584,27 +584,6 @@ namespace Il2Native.Logic
 
             this.TextSpan("(");
 
-            if (methodSymbol.IsGenericMethod && methodSymbol.Arity > 0)
-            {
-                foreach (var typeParameter in methodSymbol.TypeParameters.Where(t => t.HasConstructorConstraint))
-                {
-                    if (anyParameter)
-                    {
-                        this.TextSpan(", ");
-                    }
-
-                    anyParameter = true;
-
-                    this.WriteType("__methods_table".ToType());
-                    if (!declarationWithingClass)
-                    {
-                        this.WhiteSpace();
-                        this.TextSpan("construct_");
-                        this.WriteName(typeParameter);
-                    }
-                }
-            }
-
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
                 if (anyParameter)
@@ -640,6 +619,35 @@ namespace Il2Native.Logic
                 }
 
                 parameterIndex++;
+            }
+
+            // TODO: temporary solution to detect real methods
+            if (methodSymbol.ConstructedFrom != null)
+            {
+                foreach (var typeParameter in methodSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
+                {
+                    if (anyParameter)
+                    {
+                        this.TextSpan(", ");
+                    }
+
+                    anyParameter = true;
+
+                    this.WriteType("__methods_table".ToType());
+                    if (!declarationWithingClass)
+                    {
+                        this.WhiteSpace();
+                        this.TextSpan("construct_");
+                        this.WriteName(typeParameter);
+                    }
+                    else
+                    {
+                        this.WhiteSpace();
+                        this.TextSpan("=");
+                        this.WhiteSpace();
+                        new TypeOfOperator { SourceType = new TypeExpression { Type = typeParameter }, MethodsTable = true }.WriteTo(this);
+                    }
+                }
             }
 
             if (methodSymbol.IsVararg)

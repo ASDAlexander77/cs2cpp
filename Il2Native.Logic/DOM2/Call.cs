@@ -46,19 +46,44 @@ namespace Il2Native.Logic.DOM2
         public bool CallGenericMethodFromInterfaceMethod { get; set; }
         public bool SpecialCaseCreateInstanceNewObjectReplacement { get; set; }
 
-        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null)
+        internal static void WriteCallArguments(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, IMethodSymbol methodOwner = null, bool specialCaseCreateInstanceNewObjectReplacement = false)
         {
             c.TextSpan("(");
-            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner);
+            WriteCallArgumentsWithoutParenthesis(c, parameterSymbols, arguments, method, methodOwner: methodOwner, specialCaseCreateInstanceNewObjectReplacement: specialCaseCreateInstanceNewObjectReplacement);
             c.TextSpan(")");
         }
 
-        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null)
+        internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null, bool specialCaseCreateInstanceNewObjectReplacement = false)
         {
-            if (method != null && method.IsGenericMethod && method.Arity > 0)
+            var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
+            foreach (var expression in arguments)
             {
-                var typeParameters = method.TypeParameters.GetEnumerator();
-                foreach (var typeArgument in method.TypeArguments)
+                var hasParameter = false;
+                if (paramEnum != null)
+                {
+                    hasParameter = paramEnum.MoveNext();
+                }
+
+                if (anyArgs)
+                {
+                    c.TextSpan(",");
+                    c.WhiteSpace();
+                }
+
+                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method, methodOwner).WriteTo(c);
+                anyArgs = true;
+            }
+
+            anyArgs = ProcessTemplateParametersForGenericCalls(c, method, anyArgs, methodOwner, specialCaseCreateInstanceNewObjectReplacement: specialCaseCreateInstanceNewObjectReplacement);
+        }
+
+        private static bool ProcessTemplateParametersForGenericCalls(CCodeWriterBase c, IMethodSymbol method, bool anyArgs, IMethodSymbol methodOwner, bool specialCaseCreateInstanceNewObjectReplacement = false)
+        {
+            // append generic parameters
+            if (method != null && (method.ConstructedFrom != null || specialCaseCreateInstanceNewObjectReplacement))
+            {
+                var typeParameters = method.GetTemplateParameters().GetEnumerator();
+                foreach (var typeArgument in method.GetTemplateArguments())
                 {
                     if (typeParameters.MoveNext() && !typeParameters.Current.HasConstructorConstraint)
                     {
@@ -81,7 +106,18 @@ namespace Il2Native.Logic.DOM2
                                 c.WriteName(typeArgument);
                                 break;
                             case ITypeSymbol t:
-                                new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodsTable = true }.SetOwner(methodOwner).WriteTo(c);
+
+                                var typeArgumentParameter = typeArgument as ITypeParameterSymbol;
+                                if (typeArgumentParameter != null && typeArgumentParameter.HasConstructorConstraint)
+                                {
+                                    c.TextSpan("construct_");
+                                    c.WriteName(typeArgument);
+                                }
+                                else
+                                {
+                                    new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodsTable = true }.SetOwner(methodOwner).WriteTo(c);
+                                }
+
                                 break;
                         }
 
@@ -93,24 +129,7 @@ namespace Il2Native.Logic.DOM2
                 }
             }
 
-            var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
-            foreach (var expression in arguments)
-            {
-                var hasParameter = false;
-                if (paramEnum != null)
-                {
-                    hasParameter = paramEnum.MoveNext();
-                }
-
-                if (anyArgs)
-                {
-                    c.TextSpan(",");
-                    c.WhiteSpace();
-                }
-
-                PreprocessParameter(expression, hasParameter ? paramEnum.Current : null, method, methodOwner).WriteTo(c);
-                anyArgs = true;
-            }
+            return anyArgs;
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -197,7 +216,7 @@ namespace Il2Native.Logic.DOM2
                 c.WriteMethodName(this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
-            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner);
+            WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner, specialCaseCreateInstanceNewObjectReplacement: this.SpecialCaseCreateInstanceNewObjectReplacement);
 
             if (!this.Method.ReturnsVoid && (this.Method.IsVirtualGenericMethod() || this.CallGenericMethodFromInterfaceMethod))
             {
@@ -207,7 +226,7 @@ namespace Il2Native.Logic.DOM2
 
         private static IMethodSymbol GenerateNativeCreateInstanceMethod(IMethodSymbol methodSymbolOriginalCreateInstance)
         {
-            var virtualTemplateMethodCall = methodSymbolOriginalCreateInstance.TypeArguments.Any(t => t.ContainingSymbol is IMethodSymbol);
+            var virtualTemplateMethodCall = true;// methodSymbolOriginalCreateInstance.TypeArguments.Any(t => t.ContainingSymbol is IMethodSymbol);
             var typeParameters = ImmutableArray.Create<ITypeParameterSymbol>(
                                     new TypeParameterSymbolImpl
                                     {

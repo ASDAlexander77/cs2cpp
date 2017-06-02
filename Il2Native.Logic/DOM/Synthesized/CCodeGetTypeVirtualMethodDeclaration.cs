@@ -8,7 +8,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeGetTypeVirtualMethodDeclaration : CCodeMethodDeclaration
+    public class CCodeGetTypeVirtualMethodDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeGetTypeVirtualMethodDeclaration(INamedTypeSymbol type)
             : base(type, new GetTypeVirtualMethod(type))

@@ -292,6 +292,16 @@ namespace Il2Native.Logic
             return namedTypeSymbol.EnumerateTemplateParametersRecursive().Distinct();
         }
 
+        public static IEnumerable<ITypeSymbol> GetTemplateArguments(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.EnumerateTemplateArgumentsRecusive();
+        }
+
+        public static IEnumerable<ITypeParameterSymbol> GetTemplateParameters(this IMethodSymbol methodSymbol)
+        {
+            return methodSymbol.EnumerateTemplateParametersRecursive().Distinct();
+        }
+
         public static string GetTypeFullName(this ITypeSymbol type)
         {
             if (type.TypeKind == TypeKind.TypeParameter)
@@ -1276,6 +1286,44 @@ namespace Il2Native.Logic
             foreach (var typeParam in namedTypeSymbol.TypeParameters)
             {
                 yield return typeParam;
+            }
+        }
+
+        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(this IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol.ContainingType != null)
+            {
+                foreach (var typeParam in methodSymbol.ContainingType.EnumerateTemplateArgumentsRecusive())
+                {
+                    yield return typeParam;
+                }
+            }
+
+            if (methodSymbol.IsGenericMethod)
+            {
+                foreach (var typeParam in methodSymbol.TypeArguments)
+                {
+                    yield return typeParam;
+                }
+            }
+        }
+
+        private static IEnumerable<ITypeParameterSymbol> EnumerateTemplateParametersRecursive(this IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol.ContainingType != null)
+            {
+                foreach (var typeParam in methodSymbol.ContainingType.EnumerateTemplateParametersRecursive())
+                {
+                    yield return typeParam;
+                }
+            }
+
+            if (methodSymbol.IsGenericMethod)
+            {
+                foreach (var typeParam in methodSymbol.TypeParameters)
+                {
+                    yield return typeParam;
+                }
             }
         }
     }

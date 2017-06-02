@@ -8,7 +8,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeUnboxToDeclaration : CCodeMethodDeclaration
+    public class CCodeUnboxToDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeUnboxToDeclaration(INamedTypeSymbol type)
             : base(type, new UnboxToMethod(type))

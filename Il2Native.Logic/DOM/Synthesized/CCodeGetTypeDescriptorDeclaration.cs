@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeGetTypeDescriptorDeclaration : CCodeMethodDeclaration
+    public class CCodeGetTypeDescriptorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeGetTypeDescriptorDeclaration(INamedTypeSymbol type)
             : base(type, new GetTypeDescriptorMethod(type))

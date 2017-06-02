@@ -10,7 +10,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeRuntimeTypeConstructorDeclaration : CCodeMethodDeclaration
+    public class CCodeRuntimeTypeConstructorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeRuntimeTypeConstructorDeclaration(INamedTypeSymbol type, bool cppConst)
             : base(type, new RuntimeTypeConstructorMethod(type, cppConst))

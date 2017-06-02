@@ -7,7 +7,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeGetArrayElementSizeVirtualMethod : CCodeMethodDeclaration
+    public class CCodeGetArrayElementSizeVirtualMethod : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeGetArrayElementSizeVirtualMethod(INamedTypeSymbol type)
             : base(type, new GetArrayElementSizeVirtualMethod(type))

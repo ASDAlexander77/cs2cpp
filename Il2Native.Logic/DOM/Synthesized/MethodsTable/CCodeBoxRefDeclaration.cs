@@ -8,7 +8,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeBoxRefDeclaration : CCodeMethodDeclaration
+    public class CCodeBoxRefDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeBoxRefDeclaration(INamedTypeSymbol type)
             : base(type, new BoxRefMethod(type))

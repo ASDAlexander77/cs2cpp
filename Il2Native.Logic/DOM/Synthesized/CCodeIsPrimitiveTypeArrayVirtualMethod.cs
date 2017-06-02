@@ -7,7 +7,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeIsPrimitiveTypeArrayVirtualMethod : CCodeMethodDeclaration
+    public class CCodeIsPrimitiveTypeArrayVirtualMethod : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeIsPrimitiveTypeArrayVirtualMethod(INamedTypeSymbol type)
             : base(type, new IsPrimitiveTypeArrayVirtualMethod(type))

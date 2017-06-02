@@ -9,7 +9,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     using Implementations;
     using Microsoft.CodeAnalysis;
 
-    public class CCodeNewOperatorDeclaration : CCodeMethodDeclaration
+    public class CCodeNewOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         private bool withFinalization;
         private bool withExtraParams;
