@@ -954,7 +954,7 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol)
+        public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol, bool forwardDeclaration = false)
         {
             if (namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
@@ -1030,7 +1030,7 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteTemplateDefinitionParameters(INamedTypeSymbol typeSymbol)
+        public void WriteTemplateDefinitionParameters(INamedTypeSymbol typeSymbol, bool forwardDeclaration = false)
         {
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateParameters())

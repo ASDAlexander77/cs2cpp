@@ -683,7 +683,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (namedTypeSymbol.IsGenericType)
             {
-                c.WriteTemplateDeclaration(namedTypeSymbol);
+                c.WriteTemplateDeclaration(namedTypeSymbol, true);
             }
 
             itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
