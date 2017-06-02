@@ -575,7 +575,7 @@ namespace Il2Native.Logic
             this.TextSpan("::");
         }
 
-        public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody, INamespaceSymbol containingNamespace = null)
+        public void WriteMethodParameters(IMethodSymbol methodSymbol, bool declarationWithingClass, bool hasBody, bool noDefaultParameterValues = false, INamespaceSymbol containingNamespace = null)
         {
             // parameters
             var anyParameter = false;
@@ -640,7 +640,7 @@ namespace Il2Native.Logic
                         this.TextSpan("construct_");
                         this.WriteName(typeParameter);
                     }
-                    else
+                    else if (!noDefaultParameterValues)
                     {
                         this.WhiteSpace();
                         this.TextSpan("=");

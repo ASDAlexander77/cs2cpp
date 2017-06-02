@@ -55,6 +55,12 @@ namespace Il2Native.Logic.DOM2
 
         internal static void WriteCallArgumentsWithoutParenthesis(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method = null, bool anyArgs = false, IMethodSymbol methodOwner = null, bool specialCaseCreateInstanceNewObjectReplacement = false)
         {
+            anyArgs = WriteCallArgumentWithoutParenthesisAndWithoutTemplateParametersForGenericCalls(c, parameterSymbols, arguments, method, anyArgs, methodOwner);
+            anyArgs = ProcessTemplateParametersForGenericCalls(c, method, anyArgs, methodOwner, specialCaseCreateInstanceNewObjectReplacement: specialCaseCreateInstanceNewObjectReplacement);
+        }
+
+        internal static bool WriteCallArgumentWithoutParenthesisAndWithoutTemplateParametersForGenericCalls(CCodeWriterBase c, IEnumerable<IParameterSymbol> parameterSymbols, IEnumerable<Expression> arguments, IMethodSymbol method, bool anyArgs, IMethodSymbol methodOwner)
+        {
             var paramEnum = parameterSymbols != null ? parameterSymbols.GetEnumerator() : null;
             foreach (var expression in arguments)
             {
@@ -74,7 +80,7 @@ namespace Il2Native.Logic.DOM2
                 anyArgs = true;
             }
 
-            anyArgs = ProcessTemplateParametersForGenericCalls(c, method, anyArgs, methodOwner, specialCaseCreateInstanceNewObjectReplacement: specialCaseCreateInstanceNewObjectReplacement);
+            return anyArgs;
         }
 
         private static bool ProcessTemplateParametersForGenericCalls(CCodeWriterBase c, IMethodSymbol method, bool anyArgs, IMethodSymbol methodOwner, bool specialCaseCreateInstanceNewObjectReplacement = false)
