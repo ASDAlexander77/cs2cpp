@@ -440,38 +440,6 @@ namespace Il2Native.Logic
 
             var isNotModule = type.Name != "<Module>";
 
-            // TypeHolder
-            if (isNotModule)
-            {
-                // return type holder class
-                var typeHolderType = (TypeImpl)TypeImpl.Wrap(type);
-
-                if (!type.IsAnonymousType())
-                {
-                    typeHolderType.Name = typeHolderType.Name + "__type";
-                    typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
-                }
-                else
-                {
-                    var namedType = (INamedTypeSymbol)type;
-                    typeHolderType.Name = namedType.GetAnonymousTypeName() + "__type";
-                    typeHolderType.MetadataName = namedType.GetAnonymousTypeName() + "__type";
-                }
-
-                typeHolderType.BaseType = null;
-                typeHolderType.TypeKind = TypeKind.Struct;
-                typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
-                typeHolderType.AllInterfaces = ImmutableArray<INamedTypeSymbol>.Empty;
-                typeHolderType.SpecialType = SpecialType.None;
-
-                var unitTypeHolder = new CCodeUnit(typeHolderType);
-                BuildTypeHolderVariables(typeHolderType, unitTypeHolder);
-                ////BuildMethodTableVariables(typeHolderType, unitTypeHolder);
-                BuildRuntimeInfoVariables(typeHolderType, type, unitTypeHolder);
-
-                yield return unitTypeHolder;
-            }
-
             // Class
             var isNotInterfaceOrModule = isNotModule && type.TypeKind != TypeKind.Interface;
             var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
@@ -603,6 +571,40 @@ namespace Il2Native.Logic
             }
 
             yield return unit;
+
+            // TypeHolder
+            if (!isNotModule)
+            {
+                yield break;
+            }
+
+            // return type holder class
+            var typeHolderType = (TypeImpl)TypeImpl.Wrap(type);
+
+            if (!type.IsAnonymousType())
+            {
+                typeHolderType.Name = typeHolderType.Name + "__type";
+                typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
+            }
+            else
+            {
+                var namedType = (INamedTypeSymbol)type;
+                typeHolderType.Name = namedType.GetAnonymousTypeName() + "__type";
+                typeHolderType.MetadataName = namedType.GetAnonymousTypeName() + "__type";
+            }
+
+            typeHolderType.BaseType = null;
+            typeHolderType.TypeKind = TypeKind.Struct;
+            typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.AllInterfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.SpecialType = SpecialType.None;
+
+            var unitTypeHolder = new CCodeUnit(typeHolderType);
+            BuildTypeHolderVariables(typeHolderType, unitTypeHolder);
+            ////BuildMethodTableVariables(typeHolderType, unitTypeHolder);
+            BuildRuntimeInfoVariables(typeHolderType, type, unitTypeHolder);
+
+            yield return unitTypeHolder;
         }
     }
 }

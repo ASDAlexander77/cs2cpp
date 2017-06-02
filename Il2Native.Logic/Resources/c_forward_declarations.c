@@ -733,7 +733,7 @@ public:
 class __methods_table;
 template <typename T> constexpr CoreLib::System::Type* _typeof()
 {
-	return &type_holder<typename bare_type<T>::type>::type::__type;
+	return (CoreLib::System::Type*) &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
 template <typename T> constexpr CoreLib::System::RuntimeType* _runtime_typeof()

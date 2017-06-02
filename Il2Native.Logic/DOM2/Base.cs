@@ -837,6 +837,12 @@ namespace Il2Native.Logic.DOM2
             return current;
         }
 
+        internal Base SetOwner(IMethodSymbol methodOwner)
+        {
+            this.Visit(t => t.MethodOwner = methodOwner);
+            return this;
+        }
+
         internal virtual void Visit(Action<Base> visitor)
         {
             visitor(this);

@@ -554,7 +554,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             var includeHeaders = this.WriteTemplateSources(units).Union(this.WriteTemplateSources(units, true));
 
-            this.WriteHeader(identity, references, isCoreLib, units.SelectMany(u => u), includeHeaders);
+            this.WriteHeader(identity, references, isCoreLib, units.SelectMany(u => u.Reverse()), includeHeaders);
 
             this.WriteCoreLibSource(identity, isCoreLib);
 

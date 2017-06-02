@@ -219,7 +219,7 @@ namespace Il2Native.Logic
         {
             if (expression.IsStaticOrSupportedVolatileWrapperCall())
             {
-                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = useEnumUnderlyingType, MethodOwner = expression.MethodOwner }.WriteTo(this);
+                new Cast { Type = expression.Type, Operand = expression, CCast = true, UseEnumUnderlyingType = useEnumUnderlyingType }.SetOwner(expression.MethodOwner).WriteTo(this);
                 return true;
             }
 
@@ -1043,26 +1043,6 @@ namespace Il2Native.Logic
                 this.TextSpan("typename ");
                 this.WriteType(typeParam);
 
-                anyTypeParam = true;
-            }
-
-            // append parameters with constrains
-            foreach (var typeParam in typeSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
-            {
-                if (anyTypeParam)
-                {
-                    this.TextSpan(", ");
-                }
-
-                ////this.WriteType("__methods_table".ToType());
-                this.TextSpan("auto");
-                this.WhiteSpace();
-                this.WriteType(typeParam);
-                this.TextSpan("_construct");
-                this.WhiteSpace();
-                this.TextSpan("=");
-                this.WhiteSpace();
-                new TypeOfOperator { SourceType = new TypeExpression { Type = typeParam }, MethodsTable = true }.WriteTo(this);
                 anyTypeParam = true;
             }
         }

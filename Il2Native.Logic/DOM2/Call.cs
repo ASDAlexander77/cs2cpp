@@ -74,12 +74,21 @@ namespace Il2Native.Logic.DOM2
 
                     if (typeArgument.TypeKind == TypeKind.TypeParameter)
                     {
-                        c.TextSpan("construct_");
-                        c.WriteName(typeArgument);
+                        switch (typeArgument.ContainingSymbol)
+                        {
+                            case IMethodSymbol m:
+                                c.TextSpan("construct_");
+                                c.WriteName(typeArgument);
+                                break;
+                            case ITypeSymbol t:
+                                new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodsTable = true }.SetOwner(methodOwner).WriteTo(c);
+                                break;
+                        }
+
                     }
                     else
                     {
-                        new TypeOfOperator { MethodsTable = true, SourceType = new TypeExpression { Type = typeArgument }, MethodOwner = methodOwner }.WriteTo(c);
+                        new TypeOfOperator { MethodsTable = true, SourceType = new TypeExpression { Type = typeArgument } }.SetOwner(methodOwner).WriteTo(c);
                     }
                 }
             }
@@ -198,21 +207,23 @@ namespace Il2Native.Logic.DOM2
 
         private static IMethodSymbol GenerateNativeCreateInstanceMethod(IMethodSymbol methodSymbolOriginalCreateInstance)
         {
+            var virtualTemplateMethodCall = methodSymbolOriginalCreateInstance.TypeArguments.Any(t => t.ContainingSymbol is IMethodSymbol);
+            var typeParameters = ImmutableArray.Create<ITypeParameterSymbol>(
+                                    new TypeParameterSymbolImpl
+                                    {
+                                        TypeKind = TypeKind.TypeParameter,
+                                        HasConstructorConstraint = virtualTemplateMethodCall,
+                                        Name = methodSymbolOriginalCreateInstance.TypeArguments.First().Name
+                                    });
             return new MethodImpl()
             {
                 ContainingNamespace = null,
                 Name = "__create_instance",
                 IsGenericMethod = methodSymbolOriginalCreateInstance.IsGenericMethod,
-                Arity = methodSymbolOriginalCreateInstance.Arity,
-                TypeArguments = methodSymbolOriginalCreateInstance.TypeArguments.ToImmutableArray<ITypeSymbol>(),
-                TypeParameters = ImmutableArray.Create<ITypeParameterSymbol>(
-                                    new TypeParameterSymbolImpl
-                                    {
-                                        TypeKind = TypeKind.TypeParameter,
-                                        HasConstructorConstraint = true,
-                                        Name = methodSymbolOriginalCreateInstance.TypeArguments.First().Name
-                                    }),
-                Parameters = methodSymbolOriginalCreateInstance.Parameters.ToImmutableArray<IParameterSymbol>()
+                Arity = virtualTemplateMethodCall ? methodSymbolOriginalCreateInstance.Arity : 0,
+                TypeArguments = methodSymbolOriginalCreateInstance.TypeArguments.ToImmutableArray(),
+                TypeParameters = typeParameters,
+                Parameters = methodSymbolOriginalCreateInstance.Parameters.ToImmutableArray()
             };
         }
 
