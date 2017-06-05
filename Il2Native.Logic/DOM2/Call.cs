@@ -365,11 +365,12 @@ namespace Il2Native.Logic.DOM2
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
         {
-            return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
+            return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
         }
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
         {
+            // new, we need template view
             if (type.TypeKind == TypeKind.Array)
             {
                 var sourceArrayType = (IArrayTypeSymbol)type;
