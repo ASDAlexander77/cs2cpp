@@ -128,17 +128,18 @@ namespace Il2Native.Logic.DOM2
 
                                     c.TextSpan("construct_");
                                     c.WriteName(typeArgument);
-                                }
-                                else
+                                }                                
+                                else if (method.IsVirtualGenericMethod())
                                 {
                                     new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodsTable = true }.SetOwner(methodOwner).WriteTo(c);
                                 }
+                                
 
                                 break;
                         }
 
                     }
-                    else
+                    else if (method.IsVirtualGenericMethod())
                     {
                         new TypeOfOperator { MethodsTable = true, SourceType = new TypeExpression { Type = typeArgument } }.SetOwner(methodOwner).WriteTo(c);
                     }
