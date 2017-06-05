@@ -142,7 +142,8 @@ namespace Il2Native.Logic.DOM
             {
                 ReceiverOpt = new FieldAccess { ReceiverOpt = new ThisReference(), Field = new FieldImpl { Name = "_class", Type = Type }, Type = Type },
                 Method = actualMethodToCall,
-                CallGenericMethodFromInterfaceMethod = callGenericMethodFromInterfaceMethod
+                CallGenericMethodFromInterfaceMethod = callGenericMethodFromInterfaceMethod,
+                SpecialCaseInterfaceWrapperCall = true
             };
 
             foreach (var paramExpression in interfaceMethod.Parameters.Select(p => new Parameter { ParameterSymbol = p }))
