@@ -86,6 +86,16 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpanNewLine("_cctor_being_called = true;");
             }
 
+            #region Virtual Generic methods support
+            if (MethodSymbol.MethodKind == MethodKind.Constructor)
+            {
+                foreach (var typeParameter in MethodSymbol.ContainingType.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
+                {
+                    c.TextSpanNewLine(string.Format("this->construct_{0} = construct_{0};", typeParameter.Name));
+                }
+            }
+            #endregion
+
             foreach (var statement in statements.Skip(skip))
             {
                 if (MethodSymbol.MethodKind == MethodKind.StaticConstructor && statement.Kind == Kinds.ReturnStatement)

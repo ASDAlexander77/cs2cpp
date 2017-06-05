@@ -114,9 +114,18 @@ namespace Il2Native.Logic.DOM2
                                 break;
                             case ITypeSymbol t:
                                 var typeArgumentParameter = typeArgument as ITypeParameterSymbol;
-                                var doesNotHaveConstructParameters = specialCaseInterfaceWrapperCall && !method.IsGenericMethod;
-                                if (!doesNotHaveConstructParameters && typeArgumentParameter != null && typeArgumentParameter.HasConstructorConstraint)
+                                var hasContructTypeParamsInClassInstance = !method.IsGenericMethod;
+                                if (typeArgumentParameter != null && typeArgumentParameter.HasConstructorConstraint)
                                 {
+                                    if (hasContructTypeParamsInClassInstance)
+                                    {
+                                        c.TextSpan("this->");
+                                        if (specialCaseInterfaceWrapperCall)
+                                        {
+                                            c.TextSpan("_class->");
+                                        }
+                                    }
+
                                     c.TextSpan("construct_");
                                     c.WriteName(typeArgument);
                                 }

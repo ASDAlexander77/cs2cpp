@@ -436,6 +436,8 @@ namespace Il2Native.Logic
 
         private IEnumerable<CCodeUnit> BuildUnit(ITypeSymbol type, IAssembliesInfoResolver assembliesInfoResolver)
         {
+            var namedTypeSymbol = (INamedTypeSymbol)type;
+
             var unit = new CCodeUnit(type);
 
             var isNotModule = type.Name != "<Module>";
@@ -444,6 +446,15 @@ namespace Il2Native.Logic
             var isNotInterfaceOrModule = isNotModule && type.TypeKind != TypeKind.Interface;
             var methodSymbols = type.GetMembers().OfType<IMethodSymbol>().ToList();
             var hasStaticConstructor = methodSymbols.Any(m => m.MethodKind == MethodKind.StaticConstructor);
+
+            // to support generic virtual methods
+            #region Virtual Generic methods support
+            var methodsTableType = "__methods_table".ToType();
+            foreach (var typeParameter in namedTypeSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
+            {
+                this.BuildField(new FieldImpl { Type = methodsTableType, Name = "construct_" + typeParameter.Name }, unit, false);
+            }
+            #endregion
 
             foreach (var field in type.GetMembers().OfType<IFieldSymbol>())
             {
@@ -474,7 +485,6 @@ namespace Il2Native.Logic
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
             var isAtomicType = type.IsAtomicType();
-            var namedTypeSymbol = (INamedTypeSymbol)type;
             if (isNotInterfaceOrModule)
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired));
