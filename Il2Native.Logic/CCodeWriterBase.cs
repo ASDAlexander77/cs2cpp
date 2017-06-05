@@ -1010,7 +1010,7 @@ namespace Il2Native.Logic
             this.TextSpan("> ");
         }
 
-        public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol, INamespaceSymbol containingNamespace = null)
+        public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             if (typeSymbol.TypeKind == TypeKind.Enum)
             {
@@ -1018,11 +1018,11 @@ namespace Il2Native.Logic
             }
 
             this.TextSpan("<");
-            WriteTemplateDefinitionArguments(typeSymbol, containingNamespace: containingNamespace);
+            WriteTemplateDefinitionArguments(typeSymbol, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             this.TextSpan(">");
         }
 
-        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol, INamespaceSymbol containingNamespace = null)
+        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateArguments())
@@ -1032,7 +1032,7 @@ namespace Il2Native.Logic
                     this.TextSpan(", ");
                 }
 
-                this.WriteType(typeParam, containingNamespace: containingNamespace);
+                this.WriteType(typeParam, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
 
                 anyTypeParam = true;
             }
@@ -1067,7 +1067,7 @@ namespace Il2Native.Logic
                 case TypeKind.Unknown:
                     if (!this.WriteSpecialType(type))
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     }
 
                     return;
@@ -1077,7 +1077,7 @@ namespace Il2Native.Logic
                 case TypeKind.Delegate:
                 case TypeKind.Interface:
                 case TypeKind.Class:
-                    this.WriteTypeFullName(type, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                    this.WriteTypeFullName(type, allowKeywords, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     if (type.IsReferenceType && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1089,11 +1089,11 @@ namespace Il2Native.Logic
                 case TypeKind.Enum:
                     if (!valueTypeAsClass)
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, valueName: true, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     }
                     else
                     {
-                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                        this.WriteTypeFullName((INamedTypeSymbol)type, allowKeywords, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                         if (!suppressReference && valueTypeAsClass)
                         {
                             this.TextSpan("*");
@@ -1114,7 +1114,7 @@ namespace Il2Native.Logic
                         this.TextSpan("__pointer<");
                     }
 
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, containingNamespace: containingNamespace);
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     if (typeOfName)
                     {
                         this.TextSpan(">");
@@ -1126,7 +1126,7 @@ namespace Il2Native.Logic
 
                     return;
                 case TypeKind.Struct:
-                    this.WriteTypeFullName((INamedTypeSymbol)type, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                    this.WriteTypeFullName((INamedTypeSymbol)type, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     if (valueTypeAsClass && !suppressReference)
                     {
                         this.TextSpan("*");
@@ -1181,7 +1181,7 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
+        public void WriteTypeFullName(ITypeSymbol type, bool allowKeywords = true, bool typeOfName = false, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             if (type.TypeKind == TypeKind.TypeParameter)
             {
@@ -1192,11 +1192,11 @@ namespace Il2Native.Logic
             var namedType = type as INamedTypeSymbol;
             if (namedType != null)
             {
-                this.WriteTypeFullName(namedType, allowKeywords, typeOfName: typeOfName, containingNamespace: containingNamespace);
+                this.WriteTypeFullName(namedType, allowKeywords, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             }
         }
 
-        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, INamespaceSymbol containingNamespace = null)
+        public void WriteTypeFullName(INamedTypeSymbol type, bool allowKeywords = true, bool valueName = false, bool dependantScope = false, bool shortNested = false, bool typeOfName = false, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
             if (allowKeywords && (type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_String))
             {
@@ -1210,7 +1210,7 @@ namespace Il2Native.Logic
 
             if (type.IsGenericType || type.IsAnonymousType)
             {
-                this.WriteTemplateDefinition(type, containingNamespace: containingNamespace);
+                this.WriteTemplateDefinition(type, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             }
         }
 
