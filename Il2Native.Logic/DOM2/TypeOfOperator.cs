@@ -13,7 +13,7 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.TypeOfOperator; }
         }
 
-        public Expression SourceType { get; set; }
+        public TypeExpression SourceType { get; set; }
 
         public bool RuntimeType { get; set; }
 
@@ -22,7 +22,8 @@ namespace Il2Native.Logic.DOM2
         internal void Parse(BoundTypeOfOperator boundTypeOfOperator)
         {
             base.Parse(boundTypeOfOperator);
-            this.SourceType = Deserialize(boundTypeOfOperator.SourceType) as Expression;
+            this.SourceType = (TypeExpression)Deserialize(boundTypeOfOperator.SourceType);
+            this.SourceType.TypeOfName = true;
         }
 
         internal override void Visit(Action<Base> visitor)

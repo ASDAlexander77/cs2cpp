@@ -1114,7 +1114,7 @@ namespace Il2Native.Logic
                         this.TextSpan("__pointer<");
                     }
 
-                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
+                    this.WriteType(pointedAtType, allowKeywords: allowKeywords, typeOfName: typeOfName, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
                     if (typeOfName)
                     {
                         this.TextSpan(">");
