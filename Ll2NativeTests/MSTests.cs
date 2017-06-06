@@ -1237,7 +1237,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
 
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(118, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(213, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
