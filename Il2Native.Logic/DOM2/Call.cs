@@ -97,18 +97,12 @@ namespace Il2Native.Logic.DOM2
                         continue;
                     }
 
-                    if (anyArgs)
-                    {
-                        c.TextSpan(", ");
-                    }
-
-                    anyArgs = true;
-
                     if (typeArgument.TypeKind == TypeKind.TypeParameter)
                     {
                         switch (typeArgument.ContainingSymbol)
                         {
                             case IMethodSymbol m:
+                                anyArgs = DelimiterParam(c, anyArgs);
                                 c.TextSpan("construct_");
                                 c.WriteName(typeArgument);
                                 break;
@@ -117,6 +111,7 @@ namespace Il2Native.Logic.DOM2
                                 var hasContructTypeParamsInClassInstance = !method.IsGenericMethod;
                                 if (typeArgumentParameter != null && typeArgumentParameter.HasConstructorConstraint)
                                 {
+                                    anyArgs = DelimiterParam(c, anyArgs);
                                     if (hasContructTypeParamsInClassInstance)
                                     {
                                         c.TextSpan("this->");
@@ -131,21 +126,32 @@ namespace Il2Native.Logic.DOM2
                                 }                                
                                 else if (method.IsVirtualGenericMethod())
                                 {
+                                    anyArgs = DelimiterParam(c, anyArgs);
                                     new TypeOfOperator { SourceType = new TypeExpression { Type = typeArgument }, MethodsTable = true }.SetOwner(methodOwner).WriteTo(c);
                                 }
-                                
 
                                 break;
                         }
-
                     }
                     else if (method.IsVirtualGenericMethod())
                     {
+                                anyArgs = DelimiterParam(c, anyArgs);
                         new TypeOfOperator { MethodsTable = true, SourceType = new TypeExpression { Type = typeArgument } }.SetOwner(methodOwner).WriteTo(c);
                     }
                 }
             }
 
+            return anyArgs;
+        }
+
+        private static bool DelimiterParam(CCodeWriterBase c, bool anyArgs)
+        {
+            if (anyArgs)
+            {
+                c.TextSpan(", ");
+            }
+
+            anyArgs = true;
             return anyArgs;
         }
 
@@ -365,7 +371,9 @@ namespace Il2Native.Logic.DOM2
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
         {
-            return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
+            // Review this code: GTEST-283
+            ////return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
+            return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
         }
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)

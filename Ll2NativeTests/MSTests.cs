@@ -1206,29 +1206,24 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             skip.Add(251); // casting IEnumerable<string*> to IEnumerable<object*>  - CAN BE FIXED
             skip.Add(253); // casting IEnumerable<string*> to IEnumerable<object*>  - CAN BE FIXED
 
-            skip.Add(283); // COOL EXAMPLE OF CONSTRAINTS ON VIRTUAL METHODS - Review it and use it - TODO: finish typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasReferenceTypeConstraint
+            ///skip.Add(283); // COOL EXAMPLE OF CONSTRAINTS ON VIRTUAL METHODS - Review it and use it - TODO: finish typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasReferenceTypeConstraint
 
-            /// !! LAST 326 - fix it
-
-            skip.Add(97); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
-            skip.Add(98); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
-            skip.Add(100); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
+            ///skip.Add(97); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
+            ///skip.Add(98); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
+            ///skip.Add(100); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
 
             // new C++ limitations
-            skip.Add(150);
-            skip.Add(267);
-            skip.Add(275); // using __unbound_generic_type<void> casing compilation issues
             skip.Add(313); // enum to string - not implemented
             skip.Add(343); // using the same name for template and class
             skip.Add(351); // BOX item to System.Enum cast is not working (can be fixed!!!)
-            skip.Add(395); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
-            skip.Add(398); // Generic class using "where" IFormattable but T is int (can be fixed!!!, INVESTIGATE!! if generic has contrains like "WHERE" it means that generic is not genetic any more)
-            skip.Add(414); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
+            ////skip.Add(395); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
+            ////skip.Add(398); // Generic class using "where" IFormattable but T is int (can be fixed!!!, INVESTIGATE!! if generic has contrains like "WHERE" it means that generic is not genetic any more)
+            ////skip.Add(414); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
             skip.Add(433); // enum to String
-            skip.Add(448); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
+            ////skip.Add(448); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
             skip.Add(453); // enum to String
-            skip.Add(509); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
-            skip.Add(519); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
+            ////skip.Add(509); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
+            ////skip.Add(519); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
             skip.Add(544); // Generic method in an abstract
             skip.Add(558); // Generic method in an abstract
             skip.Add(561); // Generic method in an abstract
@@ -1236,8 +1231,13 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
 
             skip.Add(584); // BUG! Can be fixed
 
+            // =============================================================
+            // new tests: (after im-plementing virtual generic methods
+            skip.Add(78); // BUG! Dispose throw exception but *nothing* catching it
+
+
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

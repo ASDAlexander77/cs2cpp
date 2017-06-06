@@ -96,7 +96,7 @@ namespace Il2Native.Logic.DOM2
                         c.TextSpan("__FILE__, __LINE__");
                     }
 
-                    WriteCallArgumentsWithoutParenthesis(
+                    WriteCallArgumentWithoutParenthesisAndWithoutTemplateParametersForGenericCalls(
                         c,
                         this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null,
                         this.Arguments,

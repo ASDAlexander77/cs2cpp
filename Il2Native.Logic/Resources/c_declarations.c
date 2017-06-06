@@ -115,8 +115,14 @@ inline typename std::enable_if<is_class_type<S>::value && is_interface_type<D>::
 	return interface_cast<D>(s);
 }
 
+template <typename D, typename S>
+inline typename std::enable_if<is_value_type<S>::value && is_interface_type<D>::value, D>::type constrained(const S& s)
+{
+	return interface_cast<D>(s);
+}
+
 template <typename D, typename S> 
-inline typename std::enable_if<is_value_type<S>::value && is_interface_type<D>::value, D>::type constrained (S& s)
+inline typename std::enable_if<is_value_type<S>::value && is_interface_type<D>::value, D>::type constrained(S& s)
 {
 	return interface_cast<D>(s);
 }

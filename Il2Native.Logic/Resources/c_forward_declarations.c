@@ -776,6 +776,12 @@ inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast
 	return t->operator C();
 }
 
+template <typename C, typename T>
+inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast(const T& t)
+{
+	return const_cast<T&>(t)->operator C();
+}
+
 template <typename C, typename T> 
 inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast (T& t)
 {
