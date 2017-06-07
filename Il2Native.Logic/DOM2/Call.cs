@@ -236,7 +236,7 @@ namespace Il2Native.Logic.DOM2
                         c.WriteWrappedExpressionIfNeeded(receiverOpt);
                     }
 
-                    if (receiverOpt.Type.TypeKind != TypeKind.Interface && this.Method.ReceiverType.TypeKind == TypeKind.Interface)
+                    if (receiverOpt.Type.TypeKind != TypeKind.Interface && this.Method.ReceiverType != null && this.Method.ReceiverType.TypeKind == TypeKind.Interface)
                     {
                         receiverIsNotInterfacesButAccessingExplicitInterfaceMethod = receiverOpt.Type.GetMembers().OfType<IMethodSymbol>().FirstOrDefault(m => m.ExplicitInterfaceImplementations.Any() && m.ExplicitInterfaceImplementations.First().CompareTo(this.Method) == 0);
                     }
