@@ -115,7 +115,7 @@ namespace Il2Native.Logic.DOM
             c.IncrementIndent();
 
             // typedef
-            c.TextSpanNewLine("typedef typename std::remove_pointer<_T>::type _Ty;");
+            c.TextSpanNewLine("typedef typename std::remove_pointer<typename valuetype_to_class<_T>::type>::type _Ty;");
             c.TextSpan("typedef ");
             c.WriteType(this.invoke.ReturnType);
             c.WhiteSpace();
@@ -452,6 +452,17 @@ namespace Il2Native.Logic.DOM
             foreach (var parameter in newNonStaticMethod.Parameters)
             {
                 Expression parameterExpression = new Parameter { ParameterSymbol = parameter };
+
+                if (parameter.Name == "t")
+                {
+                    parameterExpression = new DOM2.Conversion
+                    {                        
+                        Operand = parameterExpression,
+                        ConversionKind = ConversionKind.Boxing,
+                        Type = parameter.Type
+                    };
+                }
+
                 if (parameter.Name == "m")
                 {
                     parameterExpression = new Cast

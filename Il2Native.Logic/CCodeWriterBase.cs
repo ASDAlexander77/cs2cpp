@@ -464,16 +464,10 @@ namespace Il2Native.Logic
                 && methodSymbol.ContainingType.TypeKind == TypeKind.Interface)
             {
                 // check if it hides base method
-                var separator = false;
                 var hidesBaseMethodOrInterfaceWrapper = methodSymbol.ContainingType.AllInterfaces.Any(i => i.GetMembers().OfType<IMethodSymbol>().Any(m => m.CompareTo(methodSymbol, true, true) == 0));
                 if (hidesBaseMethodOrInterfaceWrapper)
                 {
                     this.TextSpan(methodSymbol.ContainingType.GetTypeFullName());
-                    separator = true;
-                }
-
-                if (separator)
-                {
                     this.TextSpan("_");
                 }
             }
