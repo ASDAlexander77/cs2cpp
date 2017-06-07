@@ -372,8 +372,15 @@ namespace Il2Native.Logic.DOM2
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
         {
             // Review this code: GTEST-283
-            ////return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
-            return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
+            INamedTypeSymbol type = (INamedTypeSymbol)parameter.Type;
+            if (type.IsGenericType && type.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T)
+            {
+                return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
+            }
+            else
+            {
+                return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
+            }
         }
 
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IMethodSymbol method, ITypeSymbol type, ISymbol containingSymbol)
@@ -414,10 +421,23 @@ namespace Il2Native.Logic.DOM2
             namedTypeImpl.TypeArguments =
                 ImmutableArray.Create(
                     namedTypeImpl.TypeArguments.Select(
-                        ta => method.TypeArguments.Contains(ta) ? TypeImpl.Wrap(ta, containingSymbol) : ta)
+                        ta => method.TypeArguments.Contains(ta) 
+                                ? SetContaningSymbol(TypeImpl.Wrap(ta), containingSymbol) 
+                                : ta)
                                  .OfType<ITypeSymbol>()
                                  .ToArray());
             return namedTypeImpl;
+        }
+
+        private static ITypeSymbol SetContaningSymbol(ITypeSymbol typeSymbol, ISymbol newContainingSymbol)
+        {
+            var typeImpl = typeSymbol as TypeImpl;
+            if (typeImpl != null)
+            {
+                typeImpl.ContainingSymbol = newContainingSymbol;
+            }
+
+            return typeSymbol;
         }
 
         private Expression PrepareMethodReceiver(Expression receiverOpt, IMethodSymbol methodSymbol)
