@@ -372,7 +372,12 @@ namespace Il2Native.Logic.DOM2
         private static ITypeSymbol GetTypeForVirtualGenericMethod(IParameterSymbol parameter, IMethodSymbol method)
         {
             // Review this code: GTEST-283
-            INamedTypeSymbol type = (INamedTypeSymbol)parameter.Type;
+            INamedTypeSymbol type = parameter.Type as INamedTypeSymbol;
+            if (type == null)
+            {
+                return parameter.Type;
+            }
+
             if (type.IsGenericType && type.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T)
             {
                 return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
