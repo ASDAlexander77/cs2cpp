@@ -221,6 +221,7 @@ namespace Il2Native.Logic.DOM2
             }
             else
             {
+                IMethodSymbol receiverIsNotInterfacesButAccessingExplicitInterfaceMethod = null;
                 var receiverOpt = this.ReceiverOpt;
                 if (receiverOpt != null)
                 {
@@ -234,9 +235,14 @@ namespace Il2Native.Logic.DOM2
                     {
                         c.WriteWrappedExpressionIfNeeded(receiverOpt);
                     }
+
+                    if (receiverOpt.Type.TypeKind != TypeKind.Interface && this.Method.ReceiverType.TypeKind == TypeKind.Interface)
+                    {
+                        receiverIsNotInterfacesButAccessingExplicitInterfaceMethod = receiverOpt.Type.GetMembers().OfType<IMethodSymbol>().FirstOrDefault(m => m.ExplicitInterfaceImplementations.Any() && m.ExplicitInterfaceImplementations.First().CompareTo(this.Method) == 0);
+                    }
                 }
 
-                c.WriteMethodName(this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.WriteMethodName(receiverIsNotInterfacesButAccessingExplicitInterfaceMethod ?? this.Method, addTemplate: true, callGenericMethodFromInterfaceMethod: this.CallGenericMethodFromInterfaceMethod, containingNamespace: MethodOwner?.ContainingNamespace);
             }
 
             WriteCallArguments(c, this.Method != null ? this.Method.Parameters : (IEnumerable<IParameterSymbol>)null, this._arguments, this.Method, methodOwner: MethodOwner, specialCaseInterfaceWrapperCall: this.SpecialCaseInterfaceWrapperCall, specialCaseCreateInstanceNewObjectReplacement: this.SpecialCaseCreateInstanceNewObjectReplacement);
