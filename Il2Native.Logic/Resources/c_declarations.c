@@ -1,6 +1,6 @@
 // cast internals
 template <typename D, typename S> 
-inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value && !is_nullable_type<D>::value, D>::type as(S s)
+inline typename std::enable_if<is_class_type<D>::value && is_class_type<S>::value, D>::type as(S s)
 {
 	return dynamic_cast<D>(s);
 }
@@ -31,11 +31,11 @@ inline typename std::enable_if<is_interface_type<D>::value && is_interface_type<
 	return dynamic_interface_cast<D>(object_cast(s));
 }
 
-template <typename TNullable, typename S, typename T = typename remove_nullable<TNullable>::type, typename _CLASS = typename valuetype_to_class<T>::type, typename _BareNullable = typename std::remove_pointer<TNullable>::type>
-inline typename std::enable_if<is_nullable_type<TNullable>::value && is_class_type<S>::value, _BareNullable>::type as(S s)
+template <typename D, typename S, typename _CLASS = typename valuetype_to_class<typename remove_nullable<D>::type>::type>
+inline typename std::enable_if<is_nullable_type<D>::value && is_value_type<D>::value && is_class_type<S>::value, D>::type as(S s)
 {
 	auto casted = as<_CLASS*>(s);
-	auto val = __default<_BareNullable>();
+	auto val = __default<D>();
 	if (casted != nullptr)
 	{
 		val.hasValue = true;
