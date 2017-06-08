@@ -59,7 +59,7 @@ namespace Il2Native.Logic.DOM2
 
             Debug.Assert(this.OperatorKind != SyntaxKind.None);
 
-            if (this.Value.Type.OriginalDefinition != null && this.Value.Type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            if (this.Value.Type.IsNullable())
             {
                 return false;
             }

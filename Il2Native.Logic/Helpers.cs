@@ -437,6 +437,11 @@ namespace Il2Native.Logic
                 (type.BaseType == null || type.BaseType.IsAtomicType());
         }
 
+        public static bool IsNullable(this ITypeSymbol type)
+        {
+            return type.OriginalDefinition != null && type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+        }
+
         public static IEnumerable<IFieldSymbol> EnumPossibleReferenceFields(this ITypeSymbol type)
         {
             if (type.BaseType != null)

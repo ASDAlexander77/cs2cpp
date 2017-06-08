@@ -384,7 +384,7 @@ namespace Il2Native.Logic.DOM2
                 return parameter.Type;
             }
 
-            if (type.IsGenericType && type.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T)
+            if (type.IsGenericType && !type.IsNullable())
             {
                 return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
             }

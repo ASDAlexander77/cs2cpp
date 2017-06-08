@@ -1323,7 +1323,7 @@ namespace Il2Native.Logic
                 default:
                     var namedTypeSymbol = (INamedTypeSymbol)type;
                     this.WriteTypeName(namedTypeSymbol);
-                    if (namedTypeSymbol.IsGenericType && !namedTypeSymbol.IsDefinition)
+                    if (namedTypeSymbol.IsNullable())
                     {
                         var sb = new StringBuilder();
                         CCodeInterfaceWrapperClass.GetGenericArgumentsRecursive(sb, namedTypeSymbol);
