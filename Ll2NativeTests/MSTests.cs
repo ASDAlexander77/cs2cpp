@@ -1081,7 +1081,6 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             // 297 - 'RuntimeCompatibility' could not be found
             // 305 - GetConstructors not implemented
             // 311 - extern is used with DllImport
-            // 329 - TDOD: FIX IT. Conflict __check_this with unboxing of Nullable
             // 340 - error CS1061: 'System.Type' does not contain a definition for 'GetMember'
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
             // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
@@ -1114,7 +1113,6 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
             // 528 - error CS0315: The type 'int' cannot be used as type parameter 'U' in the generic type or method 'GenericType<U>'. There is no boxing conversion from 'int' to 'System.IEquatable<int>'. TODO: Investigate
             // 529 - error CS0315: The type 'byte' cannot be used as type parameter 'V' in the generic type or method 'Base<V>'. There is no boxing conversion from 'byte' to 'System.IEquatable<byte>'.
             // 554 - error CS0246: The type or namespace name 'InterfaceMapping' could not be found
-            // 555 - Bug with Nullable in 'is' operator. TODO: Need to be fixed
             // 564 - error CS1061: 'System.Reflection.MethodInfo'
             // 582 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
             // 583 - lib with IL
@@ -1163,7 +1161,6 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
                 297,
                 305,
                 311,
-                329,
                 340,
                 341,
                 345,
@@ -1196,7 +1193,6 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
                 528,
                 529,
                 554,
-                555,
                 564,
                 582,
                 583
@@ -1210,37 +1206,27 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
 
             ///skip.Add(283); // COOL EXAMPLE OF CONSTRAINTS ON VIRTUAL METHODS - Review it and use it - TODO: finish typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasConstructorConstraint, typeParameterSymbol.HasReferenceTypeConstraint
 
-            ///skip.Add(97); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
-            ///skip.Add(98); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
-            ///skip.Add(100); // seems, generic method in an interface is not possible to impelement in C++ at all, TODO: Investigate
-
             // new C++ limitations
             skip.Add(313); // enum to string - not implemented
             skip.Add(343); // using the same name for template and class
             skip.Add(351); // BOX item to System.Enum cast is not working (can be fixed!!!)
-            ////skip.Add(395); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
-            ////skip.Add(398); // Generic class using "where" IFormattable but T is int (can be fixed!!!, INVESTIGATE!! if generic has contrains like "WHERE" it means that generic is not genetic any more)
-            ////skip.Add(414); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
             skip.Add(433); // enum to String
-            ////skip.Add(448); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
             skip.Add(453); // enum to String
-            ////skip.Add(509); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
-            ////skip.Add(519); // Generic method in an interface - just put <objct*> in method template (can be fixed!!!)
-            skip.Add(544); // Generic method in an abstract
-            skip.Add(558); // Generic method in an abstract
-            skip.Add(561); // Generic method in an abstract
-            skip.Add(576); // Generic method in an abstract
-
-            skip.Add(584); // BUG! Can be fixed
+            skip.Add(544); // Generic method in an abstract - need review
+            skip.Add(558); // Generic method in an abstract - need review
 
             // =============================================================
             // new tests: (after im-plementing virtual generic methods
-            skip.Add(78); // BUG! Dispose throw exception but *nothing* catching it
             skip.Add(354); // BUG! Conflict of names in base interfaces (can be reviewed and fixed)
+            skip.Add(590); // enum to String
 
+            // !!! NEW: NEEDS TO BE IMPLEMENTED
+            skip.Add(592); // Array does not contains "IReadOnlyList" & "IReadOnlyCollection" interfaces
+            skip.Add(595); // "is" for generic when T is struct is not implemented
+            skip.Add(598); // casting int to object* in virtual generic method
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(570, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(598, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

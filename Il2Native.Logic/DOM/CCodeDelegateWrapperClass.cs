@@ -455,10 +455,11 @@ namespace Il2Native.Logic.DOM
 
                 if (parameter.Name == "t")
                 {
-                    parameterExpression = new DOM2.Conversion
+                    parameterExpression = new DOM2.Cast
                     {                        
                         Operand = parameterExpression,
-                        ConversionKind = ConversionKind.Boxing,
+                        Constrained = true,
+                        ValueTypeToClass = true,
                         Type = parameter.Type
                     };
                 }

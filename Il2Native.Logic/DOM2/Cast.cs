@@ -14,6 +14,9 @@ namespace Il2Native.Logic.DOM2
         public bool ClassCast { get; set; }
 
         public bool Constrained { get; set; }
+        public bool ValueTypeToClass { get; set; }
+
+        public bool ClassToValueType { get; set; }
 
         public override Kinds Kind
         {
@@ -59,10 +62,39 @@ namespace Il2Native.Logic.DOM2
                 }
 
                 c.TextSpan("<");
+
+                if (this.ValueTypeToClass)
+                {
+                    c.TextSpan("typename valuetype_to_class<");
+                }
+
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
+                if (this.ValueTypeToClass)
+                {
+                    c.TextSpan(">::type");
+                }
+
+                c.TextSpan(">(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");
+            }
+            else if (this.ValueTypeToClass)
+            {
+                c.TextSpan("valuetype_to_class");
+                c.TextSpan("<");
                 c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">(");
                 this.Operand.WriteTo(c);
-                c.TextSpan(")");                
+                c.TextSpan(")");
+            }
+            else if (this.ClassToValueType)
+            {
+                c.TextSpan("class_to_valuetype");
+                c.TextSpan("<");
+                c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.TextSpan(">(");
+                this.Operand.WriteTo(c);
+                c.TextSpan(")");
             }
             else if (this.Reference)
             {
