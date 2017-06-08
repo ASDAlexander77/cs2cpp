@@ -50,7 +50,15 @@ namespace Il2Native.Logic.DOM2
 
             if (this.Constrained)
             {
-                c.TextSpan("constrained<");
+                c.TextSpan("constrained");
+
+                var localVar = this.Operand as Local;
+                if (localVar != null && localVar.IsRef)
+                {
+                    c.TextSpan("_ref");
+                }
+
+                c.TextSpan("<");
                 c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);
                 c.TextSpan(">(");
                 this.Operand.WriteTo(c);
