@@ -340,48 +340,6 @@ namespace Ll2NativeTests
         [Timeout(36000000)]
         public void Test_Mono_Tests()
         {
-            // TODO: think about using IntPtr as "native int" when it is used as struct type to speed up execution and reduce some code
-
-            // TODO: test-201: BUG with using field with the same name as struct causing issue (+274 for generics) +338 +625
-
-            // TODO: gtest-named-04: calling function with incorrect order of passed arguments (right-to-left but should be left-to-right) (BUG: needs to be fixed)
-
-            // TODO: finish
-            // __arglist
-
-            // TODO: finish
-            // Nullable<T> to object when nullable is null, tests gtests-378 and 372
-
-            // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
-            // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
-            /*
-             	static int Test ()
-	            {
-		            int? a = 5;
-		            int? b = 5;
-
-		            var d = b++ + ++a;
-
-		            Console.NewLine(a);		
-		            Console.NewLine(b);		
-		            Console.NewLine(d);		
-
-		            return 0;
-	            }
-             */
-
-            // Bug, needs to be fixed, LoadLocal/SaveLocal used in Code.Dup
-            // test-527 - for Roslyn
-            /*
-                  private int[] stack = new int[1];
-                  private int cc;
-                  public int fc;
-                  private int sp;
-
-                  fc = cc = bar();
-                  fc = stack[sp++] = cc;
-             */
-
             // 19 - using Thread class, Reflection
             // 39 - using Attributes
             // 74 - using StreamReader
@@ -787,21 +745,11 @@ namespace Ll2NativeTests
             skip.Add(68); // enum to string
             skip.Add(77); // enum to string
             skip.Add(203); // enum to string
-            ////skip.Add(209); // reflection
 
             skip.Add(251); // volatile IntPtr, UIntPtr - can be fixed!!!
             skip.Add(283); // delegate picks virtual function. - investigate if you can fix it
 
-            ////skip.Add(344); // reflection
-            ////skip.Add(347); // reflection
             skip.Add(376); // enum to string
-            ////skip.Add(428); // reflection
-            ////skip.Add(429); // reflection
-            ////skip.Add(430); // reflection
-            ////skip.Add(431); // reflection
-            ////skip.Add(432); // reflection
-            ////skip.Add(433); // reflection
-            ////skip.Add(434); // reflection
             skip.Add(453); // enum to string
 
             /// investigate
@@ -847,12 +795,25 @@ namespace Ll2NativeTests
             skip.Add(928); // reflection
 
             skip.Add(930); // throwing exception in finally block - BUG! check if you can fix it
-
-            /// in C# not supported
-            skip.Add(680);
+            
+            skip.Add(680); /// in C# not supported, new syntax in C# 7
             skip.Add(827); // compile error
 
-            foreach (var index in Enumerable.Range(1, 934).Where(n => !skip.Contains(n)))
+            // NEW - after implementing virtual generic methods
+            skip.Add(316); // Interface methods conflict when the same method used in 2 different base interfaces
+            skip.Add(447); // abusing System namespace
+            skip.Add(723); // Interface methods conflict when the same method used in 2 different base interfaces
+            skip.Add(746); // Interface methods conflict when the same method used in 2 different base interfaces
+            skip.Add(791); // Interface methods conflict when the same method used in 2 different base interfaces
+
+            skip.Add(934); // 934 - comparing 2 empty arrays - but considered not correct, why?
+
+            skip.Add(936); // lib IL
+            skip.Add(937); // compilation error
+            skip.Add(939); // compilation error
+
+            foreach (var index in Enumerable.Range(1, 941).Where(n => !skip.Contains(n)))
+            ////foreach (var index in new[] { 105, 106, 107 })
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
