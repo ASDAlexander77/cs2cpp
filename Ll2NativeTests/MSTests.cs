@@ -1408,7 +1408,7 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
                 25
             });
 
-            foreach (var index in Enumerable.Range(1, 31).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 37).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-lambda-{0:00}", index));
             }

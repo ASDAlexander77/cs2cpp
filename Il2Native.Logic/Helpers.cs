@@ -797,23 +797,11 @@ namespace Il2Native.Logic
         {
             var sb = new StringBuilder();
             sb.Append("__anonymous_type");
-
-            if (type.IsAnonymousType)
+            var parameters = type.Constructors.First().Parameters;
+            foreach (var parameterSymbol in parameters)
             {
-                var parameters = type.Constructors.First().Parameters;
-                foreach (var parameterSymbol in parameters)
-                {
-                    sb.Append("_");
-                    sb.Append(parameterSymbol.Name.CleanUpName());
-                }
-            }
-            else
-            {
-                foreach (var typeArgument in type.TypeArguments)
-                {
-                    sb.Append("_");
-                    sb.Append(typeArgument.Name.ExtractName().CleanUpName());
-                }
+                sb.Append("_");
+                sb.Append(parameterSymbol.Name.CleanUpName());
             }
 
             return sb.ToString();
