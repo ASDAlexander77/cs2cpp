@@ -939,6 +939,13 @@ namespace Il2Native.Logic
                 return false;
             }
 
+            if (namespaceSymbol.ContainingAssembly != null 
+                && otherNamespaceSymbol.ContainingAssembly != null 
+                && namespaceSymbol.ContainingAssembly.Name.CompareTo(otherNamespaceSymbol.ContainingAssembly.Name) != 0)
+            {
+                return false;
+            }
+
             var notGlobalNamespace = true;
             var parts = namespaceSymbol.EnumNamespaces().GetEnumerator();
             var partsOther = otherNamespaceSymbol.EnumNamespaces().GetEnumerator();

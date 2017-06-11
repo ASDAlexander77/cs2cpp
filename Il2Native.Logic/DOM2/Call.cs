@@ -216,7 +216,6 @@ namespace Il2Native.Logic.DOM2
                 else
                 {
                     c.WriteNamespace(this.Method.ContainingType, containingNamespace: MethodOwner?.ContainingNamespace);
-                    c.TextSpan("::");
                 }
 
                 c.WriteMethodName(this.Method, addTemplate: true, containingNamespace: MethodOwner?.ContainingNamespace);
