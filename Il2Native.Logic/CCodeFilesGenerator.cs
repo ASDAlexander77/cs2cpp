@@ -97,9 +97,16 @@ namespace Il2Native.Logic
 
         public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
         {
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("PrecompiledHeader", ".cmake"))))
+            {
+                itw.Write(Resources.cmake_precompiled_header);
+                itw.Close();
+            }
+
             // CMake file helper
-            var cmake = "# BEGIN INCLUDED CMAKE FILES\n" + Resources.cmake_precompiled_header + "# END INCLUDED CMAKE FILES\n\n" +
-@"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+            var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+
+include(PrecompiledHeader.cmake)
 
 file(GLOB_RECURSE <%name%>_SRC
     ""./src/*.cpp""
@@ -145,7 +152,9 @@ else()
 endif()
 
 add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
-add_precompiled_header (<%name%> ""<%name%>.h"" FORCEINCLUDE SOURCE_CXX ""${CMAKE_CURRENT_LIST_DIR}/./src/<%name%>.cpp"")
+if (MSVC)
+    add_precompiled_header (<%name%> ""<%name%>.h"" FORCEINCLUDE SOURCE_CXX ""${CMAKE_CURRENT_LIST_DIR}/./src/<%name%>.cpp"")
+endif()
 
 <%libraries%>";
 
@@ -364,7 +373,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             var newText = text.ToString();
-            var path = this.GetPath(identity.Name + "Impl", subFolder: "src", ext: ".cpp");
+            var path = this.GetPath(identity.Name, subFolder: "Impl", ext: ".cpp");
 
             if (IsNothingChanged(path, newText))
             {
