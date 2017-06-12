@@ -55,8 +55,20 @@ namespace Il2Native.Logic.DOM2
             {
                 c.TextSpan("constrained");
 
-                var localVar = this.Operand as Local;
-                if (localVar != null && localVar.IsRef)
+                var refValue = false;
+                switch (this.Operand)
+                {
+                    case Local localVar: refValue = localVar.IsRef || localVar.IsOut; break;
+
+                    case Parameter parameter:
+                        var refKind = parameter.ParameterSymbol.RefKind;
+                        refValue = refKind.HasFlag(Microsoft.CodeAnalysis.RefKind.Ref) || refKind.HasFlag(Microsoft.CodeAnalysis.RefKind.Out);
+                        break;
+
+                    case Cast cast: refValue = cast.BoxByRef; break;
+                }
+
+                if (refValue)
                 {
                     c.TextSpan("_ref");
                 }

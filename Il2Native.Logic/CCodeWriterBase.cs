@@ -512,12 +512,12 @@ namespace Il2Native.Logic
 
                 var effectiveType = methodSymbol.ReturnType;
                 var substitutedMethodSymbol = methodSymbol as SubstitutedMethodSymbol;
-                if (substitutedMethodSymbol != null 
+                if (substitutedMethodSymbol != null
                     && substitutedMethodSymbol.UnderlyingMethod.ReturnType.TypeKind == TypeKind.TypeParameter)
                 {
                     effectiveType = substitutedMethodSymbol.UnderlyingMethod.ReturnType;
                 }
-                
+
                 this.WriteTypeSuffix(effectiveType);
             }
 
@@ -616,7 +616,8 @@ namespace Il2Native.Logic
             }
 
             // TODO: temporary solution to detect real methods
-            if (methodSymbol.ConstructedFrom != null)
+            if (methodSymbol.ConstructedFrom != null
+                && methodSymbol.IsStatic || methodSymbol.MethodKind == MethodKind.Constructor)
             {
                 foreach (var typeParameter in methodSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
                 {
@@ -851,7 +852,7 @@ namespace Il2Native.Logic
             {
                 var assemblySymbol = namespaceNode.ContainingAssembly as AssemblySymbol;
                 if (assemblySymbol != null && namespaceNode.ContainingAssembly == assemblySymbol.CorLibrary)
-                { 
+                {
                     this.TextSpan("CoreLib");
                     return;
                 }
@@ -1202,7 +1203,7 @@ namespace Il2Native.Logic
 
             this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
 
-            if (type.IsGenericType || type.IsAnonymousType)
+            if (type.IsGenericType || (type.IsAnonymousType && type.GetTemplateArguments().Any()))
             {
                 this.WriteTemplateDefinition(type, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             }

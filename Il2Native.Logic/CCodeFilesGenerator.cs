@@ -97,9 +97,20 @@ namespace Il2Native.Logic
 
         public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
         {
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("PrecompiledHeader", ".cmake"))))
+            {
+                itw.Write(Resources.cmake_precompiled_header);
+                itw.Close();
+            }
+
             // CMake file helper
-            var cmake = "# BEGIN INCLUDED CMAKE FILES\n" + Resources.cmake_precompiled_header + "# END INCLUDED CMAKE FILES\n\n" +
-@"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+            var cmake = @"cmake_minimum_required (VERSION 2.8.9 FATAL_ERROR)
+
+include(PrecompiledHeader.cmake)
+
+file(GLOB <%name%>_H
+    ""./src/<%name%>.h""
+)
 
 file(GLOB_RECURSE <%name%>_SRC
     ""./src/*.cpp""
@@ -120,12 +131,6 @@ endif()
 if (MSVC)
     SET(BUILD_ARCH ""win32"")
 
-    if (MSVC_VERSION EQUAL 1900)
-        SET(VS_VERSION ""vs14"")
-    elseif(MSVC_VERSION EQUAL 1910)
-        SET(VS_VERSION ""vs15"")
-    endif()
-
     link_directories(""./"" <%links%>)
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /DDEBUG /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
@@ -144,8 +149,9 @@ else()
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
 endif()
 
-add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
-add_precompiled_header (<%name%> ""<%name%>.h"" FORCEINCLUDE SOURCE_CXX ""${CMAKE_CURRENT_LIST_DIR}/./src/<%name%>.cpp"")
+set_precompiled_header(<%name%> CXX ""${<%name%>_H}"" pchSrcVar)
+add_<%type%> (<%name%> ""${pchSrcVar}"" ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
+use_precompiled_header (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
 
 <%libraries%>";
 
@@ -158,7 +164,7 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}_{3}\" \"../{0}/__build_{1}_{2}_{3}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${VS_VERSION}", "${BUILD_TYPE}")));
+            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}\" \"../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}")));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             if (references.Any())
@@ -200,8 +206,8 @@ mingw32-make -j 8 2>log";
             }
 
             // build Visual Studio 2015 .bat
-            var buildVS2015 = @"md __build_win32_vs14_<%build_type_lowercase%>
-cd __build_win32_vs14_<%build_type_lowercase%>
+            var buildVS2015 = @"md __build_win32_<%build_type_lowercase%>
+cd __build_win32_<%build_type_lowercase%>
 cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
@@ -219,8 +225,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             // build Visual Studio 2017 .bat
-            var buildVS2017 = @"md __build_win32_vs15_<%build_type_lowercase%>
-cd __build_win32_vs15_<%build_type_lowercase%>
+            var buildVS2017 = @"md __build_win32_<%build_type_lowercase%>
+cd __build_win32_<%build_type_lowercase%>
 cmake -f .. -G ""Visual Studio 15"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
@@ -281,8 +287,8 @@ mingw32-make -j 8 2>log";
                 // build Visual Studio 2015 .bat
                 var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
-md __build_win32_vs14_<%build_type_lowercase%>_bdwgc
-cd __build_win32_vs14_<%build_type_lowercase%>_bdwgc
+md __build_win32_<%build_type_lowercase%>_bdwgc
+cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
@@ -302,8 +308,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 // build Visual Studio 2017 .bat
                 var buildVS2017Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
-md __build_win32_vs15_<%build_type_lowercase%>_bdwgc
-cd __build_win32_vs15_<%build_type_lowercase%>_bdwgc
+md __build_win32_<%build_type_lowercase%>_bdwgc
+cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""Visual Studio 15"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
@@ -364,7 +370,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             var newText = text.ToString();
-            var path = this.GetPath(identity.Name + "Impl", subFolder: "src", ext: ".cpp");
+            var path = this.GetPath(identity.Name, subFolder: "Impl", ext: ".cpp");
 
             if (IsNothingChanged(path, newText))
             {

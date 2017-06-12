@@ -797,23 +797,11 @@ namespace Il2Native.Logic
         {
             var sb = new StringBuilder();
             sb.Append("__anonymous_type");
-
-            if (type.IsAnonymousType)
+            var parameters = type.Constructors.First().Parameters;
+            foreach (var parameterSymbol in parameters)
             {
-                var parameters = type.Constructors.First().Parameters;
-                foreach (var parameterSymbol in parameters)
-                {
-                    sb.Append("_");
-                    sb.Append(parameterSymbol.Name.CleanUpName());
-                }
-            }
-            else
-            {
-                foreach (var typeArgument in type.TypeArguments)
-                {
-                    sb.Append("_");
-                    sb.Append(typeArgument.Name.ExtractName().CleanUpName());
-                }
+                sb.Append("_");
+                sb.Append(parameterSymbol.Name.CleanUpName());
             }
 
             return sb.ToString();
@@ -951,6 +939,13 @@ namespace Il2Native.Logic
                 return false;
             }
 
+            if (namespaceSymbol.ContainingAssembly != null 
+                && otherNamespaceSymbol.ContainingAssembly != null 
+                && namespaceSymbol.ContainingAssembly.Name.CompareTo(otherNamespaceSymbol.ContainingAssembly.Name) != 0)
+            {
+                return false;
+            }
+
             var notGlobalNamespace = true;
             var parts = namespaceSymbol.EnumNamespaces().GetEnumerator();
             var partsOther = otherNamespaceSymbol.EnumNamespaces().GetEnumerator();
@@ -958,8 +953,7 @@ namespace Il2Native.Logic
             {
                 if (!partsOther.MoveNext())
                 {
-                    return notGlobalNamespace 
-                           || namespaceSymbol.ContainingAssembly.Name.CompareTo(otherNamespaceSymbol.ContainingAssembly.Name) == 0;
+                    return notGlobalNamespace;
                 }
 
                 if (!parts.MoveNext())
@@ -1201,7 +1195,7 @@ namespace Il2Native.Logic
                     if (typeSymbol.IsAnonymousType)
                     {
                         sb.Append("<>f__AnonymousType");
-                        var parameters = ((INamedTypeSymbol)typeSymbol).Constructors.First().Parameters;
+                        var parameters = namedTypeSymbol.Constructors.First().Parameters;
                         sb.Append(parameters.Length);
                         sb.Append("<");
                         var any = false;
@@ -1220,8 +1214,9 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        sb.Append(typeSymbol.Name);
-                        sb.Append("T");
+                        sb.Append("<>f__AnonymousType");
+                        //sb.Append(typeSymbol.Name);
+                        //sb.Append("T");
                         sb.Append(namedTypeSymbol.TypeArguments.Length);
                     }
                 }

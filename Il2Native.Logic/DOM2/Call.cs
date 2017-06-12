@@ -87,7 +87,9 @@ namespace Il2Native.Logic.DOM2
         private static bool ProcessTemplateParametersForGenericCalls(CCodeWriterBase c, IMethodSymbol method, bool anyArgs, IMethodSymbol methodOwner, bool specialCaseInterfaceWrapperCall = false, bool specialCaseCreateInstanceNewObjectReplacement = false)
         {
             // append generic parameters
-            if (method != null && (method.ConstructedFrom != null || specialCaseCreateInstanceNewObjectReplacement))
+            if (method != null 
+                && (method.ConstructedFrom != null || specialCaseCreateInstanceNewObjectReplacement) 
+                && (method.IsStatic || method.MethodKind == MethodKind.Constructor))
             {
                 var typeParameters = method.GetTemplateParameters().GetEnumerator();
                 foreach (var typeArgument in method.GetTemplateArguments())
@@ -214,7 +216,6 @@ namespace Il2Native.Logic.DOM2
                 else
                 {
                     c.WriteNamespace(this.Method.ContainingType, containingNamespace: MethodOwner?.ContainingNamespace);
-                    c.TextSpan("::");
                 }
 
                 c.WriteMethodName(this.Method, addTemplate: true, containingNamespace: MethodOwner?.ContainingNamespace);
