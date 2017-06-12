@@ -258,6 +258,7 @@
     <Content Include="Resources\Android.mk" />
     <Content Include="Resources\Application.mk" />
     <Content Include="Resources\intrin_template.h" />
+    <None Include="Resources\PrecompiledHeader.txt" />
     <None Include="Resources\intrin.cpp" />
     <None Include="Resources\c_template_definitions.c" />
     <None Include="Resources\overflow.h" />
