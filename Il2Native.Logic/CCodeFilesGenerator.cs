@@ -131,12 +131,6 @@ endif()
 if (MSVC)
     SET(BUILD_ARCH ""win32"")
 
-    if (MSVC_VERSION EQUAL 1900)
-        SET(VS_VERSION ""vs14"")
-    elseif(MSVC_VERSION EQUAL 1910)
-        SET(VS_VERSION ""vs15"")
-    endif()
-
     link_directories(""./"" <%links%>)
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /DDEBUG /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8"")
@@ -170,7 +164,7 @@ endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}_{3}\" \"../{0}/__build_{1}_{2}_{3}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${VS_VERSION}", "${BUILD_TYPE}")));
+            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}\" \"../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}")));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             if (references.Any())
