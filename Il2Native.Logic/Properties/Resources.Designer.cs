@@ -209,6 +209,31 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to # Function for setting up precompiled headers. Usage:
+        ///#
+        ///#   add_library/executable(target
+        ///#       pchheader.c pchheader.cpp pchheader.h)
+        ///#
+        ///#   add_precompiled_header(target pchheader.h
+        ///#       [FORCEINCLUDE]
+        ///#       [SOURCE_C pchheader.c]
+        ///#       [SOURCE_CXX pchheader.cpp])
+        ///#
+        ///# Options:
+        ///#
+        ///#   FORCEINCLUDE: Add compiler flags to automatically include the
+        ///#   pchheader.h from every source file. Works with both GCC and
+        ///#   MSVC. This is recommended.
+        ///#
+        ///#   SOURCE_C/CXX: Specifies the .c/.cpp sou [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string cmake_precompiled_header {
+            get {
+                return ResourceManager.GetString("cmake_precompiled_header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to // Decimals
         ///extern &quot;C&quot; double pow(double value, double power);
         ///extern &quot;C&quot; double fabs(double value);
