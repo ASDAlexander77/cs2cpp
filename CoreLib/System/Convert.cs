@@ -1204,11 +1204,10 @@ namespace System
             }
             throw new OverflowException(Environment.GetResourceString("Overflow_Int32"));
         }
-
           
         public static int ToInt32(decimal value)
         {
-            return Decimal.FCallToInt32(value);
+            return Decimal.ToInt32(value);
         }
 
         public static int ToInt32(String value)

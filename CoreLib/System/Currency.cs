@@ -14,7 +14,7 @@
         //
         public Currency(Decimal value)
         {
-            m_value = Decimal.ToCurrency(value).m_value;
+            m_value = Decimal.ToOACurrency(value);
         }
 
         // Constructs a Currency from a long value without scaling. The

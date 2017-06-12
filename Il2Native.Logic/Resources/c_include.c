@@ -77,6 +77,7 @@
 #undef HKEY_DYN_DATA
 #undef DEBUG
 #undef EOF
+#undef UInt32x32To64
 
 #ifdef GC_ADD_CALLER
 # define GC_ALLOC_PARAMS GC_RETURN_ADDR, _file, _line

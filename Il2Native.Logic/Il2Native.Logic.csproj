@@ -215,7 +215,6 @@
     <Content Include="impl\System\Array.cpp" />
     <Content Include="impl\System\Buffer.cpp" />
     <Content Include="impl\System\DateTime.cpp" />
-    <Content Include="impl\System\Decimal.cpp" />
     <Content Include="impl\System\DefaultBinder.cpp" />
     <Content Include="impl\System\Diagnostics\Debugger.cpp" />
     <Content Include="impl\System\Environment.cpp" />
