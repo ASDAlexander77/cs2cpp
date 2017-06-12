@@ -206,8 +206,8 @@ mingw32-make -j 8 2>log";
             }
 
             // build Visual Studio 2015 .bat
-            var buildVS2015 = @"md __build_win32_vs14_<%build_type_lowercase%>
-cd __build_win32_vs14_<%build_type_lowercase%>
+            var buildVS2015 = @"md __build_win32_<%build_type_lowercase%>
+cd __build_win32_<%build_type_lowercase%>
 cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
@@ -225,8 +225,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             // build Visual Studio 2017 .bat
-            var buildVS2017 = @"md __build_win32_vs15_<%build_type_lowercase%>
-cd __build_win32_vs15_<%build_type_lowercase%>
+            var buildVS2017 = @"md __build_win32_<%build_type_lowercase%>
+cd __build_win32_<%build_type_lowercase%>
 cmake -f .. -G ""Visual Studio 15"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
@@ -287,8 +287,8 @@ mingw32-make -j 8 2>log";
                 // build Visual Studio 2015 .bat
                 var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
-md __build_win32_vs14_<%build_type_lowercase%>_bdwgc
-cd __build_win32_vs14_<%build_type_lowercase%>_bdwgc
+md __build_win32_<%build_type_lowercase%>_bdwgc
+cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
@@ -308,8 +308,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 // build Visual Studio 2017 .bat
                 var buildVS2017Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
 if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
-md __build_win32_vs15_<%build_type_lowercase%>_bdwgc
-cd __build_win32_vs15_<%build_type_lowercase%>_bdwgc
+md __build_win32_<%build_type_lowercase%>_bdwgc
+cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""Visual Studio 15"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
