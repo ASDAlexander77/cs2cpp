@@ -104,9 +104,13 @@ namespace Il2Native.Logic
             }
 
             // CMake file helper
-            var cmake = @"cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
+            var cmake = @"cmake_minimum_required (VERSION 2.8.9 FATAL_ERROR)
 
 include(PrecompiledHeader.cmake)
+
+file(GLOB <%name%>_H
+    ""./src/<%name%>.h""
+)
 
 file(GLOB_RECURSE <%name%>_SRC
     ""./src/*.cpp""
@@ -151,10 +155,9 @@ else()
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
 endif()
 
-add_<%type%> (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
-if (MSVC)
-    add_precompiled_header (<%name%> ""<%name%>.h"" FORCEINCLUDE SOURCE_CXX ""${CMAKE_CURRENT_LIST_DIR}/./src/<%name%>.cpp"")
-endif()
+set_precompiled_header(<%name%> CXX ""${<%name%>_H}"" pchSrcVar)
+add_<%type%> (<%name%> ""${pchSrcVar}"" ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
+use_precompiled_header (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
 
 <%libraries%>";
 
