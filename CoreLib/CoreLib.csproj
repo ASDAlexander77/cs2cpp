@@ -118,6 +118,7 @@
     <Compile Include="System\IO\PathHelper.cs" />
     <Compile Include="System\IO\PathTooLongException.cs" />
     <Compile Include="System\IO\SearchOption.cs" />
+    <Compile Include="System\Linq\IQueryable.cs" />
     <Compile Include="System\MemberAccessException.cs" />
     <Compile Include="System\MissingFieldException.cs">
       <SubType>

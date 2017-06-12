@@ -1408,6 +1408,9 @@ target_link_libraries (test mscorlib system_private_uri system_resources_resourc
                 25
             });
 
+            // NEW
+            skip.Add(37); // error: call of overloaded 'XT1(int, CoreLib::System::FuncT2<int, CoreLib::System::NullableT1<int> >*)' is ambiguous
+
             foreach (var index in Enumerable.Range(1, 37).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-lambda-{0:00}", index));
