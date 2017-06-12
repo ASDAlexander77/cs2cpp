@@ -449,13 +449,13 @@ namespace System
         public override String ToString()
         {
             Contract.Ensures(Contract.Result<String>() != null);
-            return Number.FormatDecimal(this, null, null);
+            return Number.FormatDecimal(this, null, NumberFormatInfo.CurrentInfo);
         }
 
         public String ToString(String format)
         {
             Contract.Ensures(Contract.Result<String>() != null);
-            return Number.FormatDecimal(this, format, null);
+            return Number.FormatDecimal(this, format, NumberFormatInfo.CurrentInfo);
         }
 
         public String ToString(IFormatProvider provider)
@@ -480,7 +480,7 @@ namespace System
         //
         public static Decimal Parse(String s)
         {
-            return Number.ParseDecimal(s, NumberStyles.Number, null);
+            return Number.ParseDecimal(s, NumberStyles.Number, NumberFormatInfo.CurrentInfo);
         }
 
         internal const NumberStyles InvalidNumberStyles = ~(NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite

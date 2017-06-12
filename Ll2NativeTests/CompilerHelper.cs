@@ -24,10 +24,6 @@
         public const string SscliSourcePath = @"C:\Dev\Unzipped\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
         public const string CoreCLRDlls = @"C:\Dev\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
-        
-        public const string OutputObjectFileExt = "obj";
-
-        public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
 #endif
 #if _DISK_D_
         public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -42,10 +38,6 @@
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
         public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
         public const string CoreCLRDlls = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
-        
-        public const string OutputObjectFileExt = "obj";
-        
-        public const string GcHeaders = @"E:\Gits\bdwgc\include";
 #endif
 
         /// <summary>
@@ -362,6 +354,54 @@
                 select def)
             {
                 def.AssertUiEnabled = enable;
+            }
+        }
+
+        public static void DownloadTests(string test)
+        {
+            switch (test)
+            {
+                case "mono":
+                    var testsFolderPath = Path.Combine(Environment.CurrentDirectory, "mono_tests");
+                    if (!Directory.Exists(testsFolderPath))
+                    {
+                        Directory.CreateDirectory(testsFolderPath);
+                        ExecCmd("git", "init", testsFolderPath);
+                        ExecCmd("git", "remote add -f origin https://github.com/mono/mono", testsFolderPath);
+                        ExecCmd("git", "config core.sparseCheckout true", testsFolderPath);
+                        ExecCmd("cmd", @"/C echo mono/mcs/tests/ >> .git/info/sparse-checkout", testsFolderPath);
+                        ExecCmd("git", "pull --depth=1 origin master", testsFolderPath);
+                    }
+
+                    break;
+
+                case "sscli":
+                    testsFolderPath = Path.Combine(Environment.CurrentDirectory, "sscli_tests");
+                    if (!Directory.Exists(testsFolderPath))
+                    {
+                        Directory.CreateDirectory(testsFolderPath);
+                        ExecCmd("git", "init", testsFolderPath);
+                        ExecCmd("git", "remote add -f origin https://github.com/lewischeng-ms/sscli", testsFolderPath);
+                        ExecCmd("git", "config core.sparseCheckout true", testsFolderPath);
+                        ExecCmd("cmd", @"/C echo tests/bcl/system/ >> .git/info/sparse-checkout", testsFolderPath);
+                        ExecCmd("git", "pull --depth=1 origin master", testsFolderPath);
+                    }
+
+                    break;
+
+                case "coreclr":
+                    testsFolderPath = Path.Combine(Environment.CurrentDirectory, "coreclr_tests");
+                    if (!Directory.Exists(testsFolderPath))
+                    {
+                        Directory.CreateDirectory(testsFolderPath);
+                        ExecCmd("git", "init", testsFolderPath);
+                        ExecCmd("git", "remote add -f origin https://github.com/dotnet/coreclr.git", testsFolderPath);
+                        ExecCmd("git", "config core.sparseCheckout true", testsFolderPath);
+                        ExecCmd("cmd", @"/C echo tests/src/ >> .git/info/sparse-checkout", testsFolderPath);
+                        ExecCmd("git", "pull --depth=1 origin master", testsFolderPath);
+                    }
+
+                    break;
             }
         }
     }
