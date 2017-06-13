@@ -33,6 +33,7 @@ namespace Ll2NativeTests
         public TestContext TestContext { get; set; }
 
         [TestInitialize]
+        [Timeout(36000000)]
         public void Initialize()
         {
             CompilerHelper.DownloadTests("mono");

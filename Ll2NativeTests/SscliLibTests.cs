@@ -14,6 +14,7 @@
         public class @argiterator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -77,6 +78,7 @@
         public class @array
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -469,6 +471,7 @@
         public class @attribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -546,6 +549,7 @@
         public class @bitconverter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -742,6 +746,7 @@
         public class @boolean
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -819,6 +824,7 @@
         public class @buffer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -868,6 +874,7 @@
         public class @byte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -994,6 +1001,7 @@
         public class @char
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -1302,6 +1310,7 @@
         public class @charenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -1351,6 +1360,7 @@
         public class @arraylist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -1743,6 +1753,7 @@
         public class @bitarray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -1918,6 +1929,7 @@
         public class @caseinsensitivecomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -1967,6 +1979,7 @@
         public class @caseinsensitivehashcodeprovider
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2016,6 +2029,7 @@
         public class @collectionbase
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2044,6 +2058,7 @@
         public class @comparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2072,6 +2087,7 @@
         public class @dictionaryentry
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2114,6 +2130,7 @@
         public class @hashtable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2268,6 +2285,7 @@
         public class @queue
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2380,6 +2398,7 @@
         public class @readonlycollectionbase
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2408,6 +2427,7 @@
         public class @sortedlist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2646,6 +2666,7 @@
         public class @bitvector32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2779,6 +2800,7 @@
         public class @hybriddictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -2919,6 +2941,7 @@
         public class @listdictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3052,6 +3075,7 @@
         public class @namevaluecollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3227,6 +3251,7 @@
         public class @stringcollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3360,6 +3385,7 @@
         public class @stringdictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3479,6 +3505,7 @@
         public class @stringenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3521,6 +3548,7 @@
         public class @stack
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3570,6 +3598,7 @@
         public class @convert
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -3752,6 +3781,7 @@
         public class @datetime
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -4249,6 +4279,7 @@
         public class @dbnull
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -4396,6 +4427,7 @@
         public class @decimal
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -4809,6 +4841,7 @@
         public class @delegate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -4893,6 +4926,7 @@
         public class @double
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5061,6 +5095,7 @@
         public class @enum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5222,6 +5257,7 @@
         public class @environment
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5341,6 +5377,7 @@
         public class @eventargs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5369,6 +5406,7 @@
         public class @exception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5460,6 +5498,7 @@
         public class @guid
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5586,6 +5625,7 @@
         public class @int16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5705,6 +5745,7 @@
         public class @int32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5831,6 +5872,7 @@
         public class @int64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -5950,6 +5992,7 @@
         public class @intptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6048,6 +6091,7 @@
         public class @binaryreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6237,6 +6281,7 @@
         public class @binarywriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6433,6 +6478,7 @@
         public class @bufferedstream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6566,6 +6612,7 @@
         public class @directory
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6755,6 +6802,7 @@
         public class @directoryinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -6972,6 +7020,7 @@
         public class @file
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7154,6 +7203,7 @@
         public class @fileinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7385,6 +7435,7 @@
         public class @filestream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7588,6 +7639,7 @@
         public class @memorystream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7798,6 +7850,7 @@
         public class @path
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7938,6 +7991,7 @@
         public class @stream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -7966,6 +8020,7 @@
         public class @streamreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8120,6 +8175,7 @@
         public class @streamwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8246,6 +8302,7 @@
         public class @stringreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8316,6 +8373,7 @@
         public class @stringwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8407,6 +8465,7 @@
         public class @math
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8806,6 +8865,7 @@
         public class @random
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8883,6 +8943,7 @@
         public class @formatterconverter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8911,6 +8972,7 @@
         public class @formatterservices
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -8967,6 +9029,7 @@
         public class @objectidgenerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9002,6 +9065,7 @@
         public class @objectmanager
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9100,6 +9164,7 @@
         public class @pseudomlformatter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9128,6 +9193,7 @@
         public class @serializationentry
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9170,6 +9236,7 @@
         public class @serializationinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9268,6 +9335,7 @@
         public class @serializationinfoenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9331,6 +9399,7 @@
         public class @streamingcontext
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9394,6 +9463,7 @@
         public class @surrogateselector
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9457,6 +9527,7 @@
         public class @sbyte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9590,6 +9661,7 @@
         public class @single
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -9751,6 +9823,7 @@
         public class @string
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -10388,6 +10461,7 @@
         public class @timespan
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -10661,6 +10735,7 @@
         public class @timezone
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -10689,6 +10764,7 @@
         public class @uint16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -10822,6 +10898,7 @@
         public class @uint32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -10955,6 +11032,7 @@
         public class @uint64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -11088,6 +11166,7 @@
         public class @uintptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -11186,6 +11265,7 @@
         public class @valuetype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
@@ -11228,6 +11308,7 @@
         public class @version
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
                 CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("sscli");
