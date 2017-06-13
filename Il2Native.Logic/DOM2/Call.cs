@@ -88,11 +88,12 @@ namespace Il2Native.Logic.DOM2
         {
             // append generic parameters
             if (method != null 
-                && (method.ConstructedFrom != null || specialCaseCreateInstanceNewObjectReplacement) 
-                && (method.IsStatic || method.MethodKind == MethodKind.Constructor))
+                && (method.ConstructedFrom != null || specialCaseCreateInstanceNewObjectReplacement))
             {
-                var typeParameters = method.GetTemplateParameters().GetEnumerator();
-                foreach (var typeArgument in method.GetTemplateArguments())
+                var typePatametersArray = !specialCaseInterfaceWrapperCall ? method.GetTemplateParameters() : method.TypeParameters;
+                var typeParameters = typePatametersArray.GetEnumerator();
+                var typeArguments = !specialCaseInterfaceWrapperCall ? method.GetTemplateArguments() : method.TypeArguments;
+                foreach (var typeArgument in typeArguments)
                 {
                     if (typeParameters.MoveNext() && !typeParameters.Current.HasConstructorConstraint)
                     {

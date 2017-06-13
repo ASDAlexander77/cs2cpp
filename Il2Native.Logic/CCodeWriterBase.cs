@@ -617,7 +617,7 @@ namespace Il2Native.Logic
 
             // TODO: temporary solution to detect real methods
             if (methodSymbol.ConstructedFrom != null
-                && methodSymbol.IsStatic || methodSymbol.MethodKind == MethodKind.Constructor)
+                && (methodSymbol.IsStatic || methodSymbol.MethodKind == MethodKind.Constructor || methodSymbol.IsGenericMethod))
             {
                 foreach (var typeParameter in methodSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
                 {
