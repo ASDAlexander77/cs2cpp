@@ -27,7 +27,5 @@ StyleCop.Cache
 /Il2Native.VC.db
 /Il2Native.VC.VC.opendb
 /.vs
-/Ll2NativeTests/bin/Debug/TestsOutput/CoreLib/bdwgc/
-/Ll2NativeTests/bin/Debug/sscli_tests/
-/Ll2NativeTests/bin/Debug/mono_tests/
-/Ll2NativeTests/bin/Debug/coreclr_tests/
+/Ll2NativeTests/bin
+/Ll2NativeTests/obj
