@@ -109,8 +109,16 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
+            var outputPath = Path.Combine(OutputPath, assemblyName);
+
+            // remove folder if exists
+            if (Directory.Exists(Path.Combine(outputPath, string.Format("__build_win32_{0}", debug ? "debug" : "release"))))
+            {
+                Directory.Delete(Path.Combine(outputPath, string.Format("__build_win32_{0}", debug ? "debug" : "release")), true);
+            }
+
             // file exe
-            ExecCmd(string.Format("build_vs2015_{0}.bat", debug ? "debug" : "release"), string.Empty, Path.Combine(OutputPath, assemblyName));
+            ExecCmd(string.Format("build_vs2015_{0}.bat", debug ? "debug" : "release"), string.Empty, outputPath);
 
             if (!justCompile)
             {
