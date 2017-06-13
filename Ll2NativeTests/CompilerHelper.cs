@@ -365,6 +365,10 @@
                     var testsFolderPath = Path.Combine(Environment.CurrentDirectory, "mono_tests");
                     if (!Directory.Exists(testsFolderPath))
                     {
+                        AssertUiEnabled(true);
+                        Debug.Assert(false, string.Format("This will download '{0}' git which will take time", test));
+                        AssertUiEnabled(false);
+
                         Directory.CreateDirectory(testsFolderPath);
                         ExecCmd("git", "init", testsFolderPath);
                         ExecCmd("git", "remote add -f origin https://github.com/mono/mono", testsFolderPath);
@@ -379,6 +383,10 @@
                     testsFolderPath = Path.Combine(Environment.CurrentDirectory, "sscli_tests");
                     if (!Directory.Exists(testsFolderPath))
                     {
+                        AssertUiEnabled(true);
+                        Debug.Assert(false, string.Format("This will download '{0}' git which will take time", test));
+                        AssertUiEnabled(false);
+
                         Directory.CreateDirectory(testsFolderPath);
                         ExecCmd("git", "init", testsFolderPath);
                         ExecCmd("git", "remote add -f origin https://github.com/lewischeng-ms/sscli", testsFolderPath);
@@ -393,6 +401,10 @@
                     testsFolderPath = Path.Combine(Environment.CurrentDirectory, "coreclr_tests");
                     if (!Directory.Exists(testsFolderPath))
                     {
+                        AssertUiEnabled(true);
+                        Debug.Assert(false, string.Format("This will download '{0}' git which will take time", test));
+                        AssertUiEnabled(false);
+
                         Directory.CreateDirectory(testsFolderPath);
                         ExecCmd("git", "init", testsFolderPath);
                         ExecCmd("git", "remote add -f origin https://github.com/dotnet/coreclr.git", testsFolderPath);

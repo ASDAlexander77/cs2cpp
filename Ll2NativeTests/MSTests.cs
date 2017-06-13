@@ -35,16 +35,8 @@ namespace Ll2NativeTests
         [TestInitialize]
         public void Initialize()
         {
-            var testsFolderPath = Path.Combine(Environment.CurrentDirectory, "mono_tests");
-            if (!Directory.Exists(testsFolderPath))
-            {
-                Directory.CreateDirectory(testsFolderPath);
-                CompilerHelper.ExecCmd("git", "init", testsFolderPath);
-                CompilerHelper.ExecCmd("git", "remote add -f origin https://github.com/mono/mono", testsFolderPath);
-                CompilerHelper.ExecCmd("git", "config core.sparseCheckout true", testsFolderPath);
-                CompilerHelper.ExecCmd("cmd", @"/C echo mono/mcs/tests/ >> .git/info/sparse-checkout", testsFolderPath);
-                CompilerHelper.ExecCmd("git", "pull --depth=1 origin master", testsFolderPath);
-            }
+            CompilerHelper.DownloadTests("mono");
+            CompilerHelper.AssertUiEnabled(true);
         }
 
         [TestCleanup]
