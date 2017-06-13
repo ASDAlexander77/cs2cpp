@@ -11,34 +11,16 @@
 
     public static class CompilerHelper
     {
-#if _DISK_C_
-        public const string SourcePath = @"C:\Dev\Gits\mono\mcs\tests\";
-        public const string SourcePathCustom = @"C:\Temp\tests\";
-        public const string OutputPath = @"C:\Temp\IlCTests\";
-        public const string CoreLibCSProjPath = @"C:\Dev\Gits\Il2Native\CoreLib\CoreLib.csproj";
-        public const string CoreLibDllPath = @"C:\Dev\Gits\Il2Native\CoreLib\bin\Release\CoreLib.dll";
-        public const string CoreLibPdbPath = @"C:\Dev\Gits\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
-        public const string MscorlibCSProjPath = @"C:\Dev\Gits\Il2Native\mscorlib\mscorlib.csproj";
-        public static string MscorlibDllPath = @"C:\Dev\Gits\Il2Native\mscorlib\bin\Release\mscorlib.dll";
-        public const string MscorlibPdbPath = @"C:\Dev\Gits\Il2Native\mscorlib\bin\Release\mscorlib.pdb";
-        public const string SscliSourcePath = @"C:\Dev\Unzipped\sscli20\tests\bcl\system\";
-        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
-        public const string CoreCLRDlls = @"C:\Dev\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
-#endif
-#if _DISK_D_
-        public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        public const string SourcePathCustom = @"D:\Temp\tests\";
-        public const string OutputPath = @"D:\Temp\IlCTests\";
+        public const string SourcePath = @"mono_tests\mcs\tests\";
+        public const string OutputPath = @"TestsOutput\";
         public const string CoreLibCSProjPath = @"..\..\..\CoreLib\CoreLib.csproj";
         public const string CoreLibDllPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         public const string MscorlibCSProjPath = @"..\..\..\mscorlib\mscorlib.csproj";
         public static string MscorlibDllPath = @"..\..\..\mscorlib\bin\Release\mscorlib.dll";
         public const string MscorlibPdbPath = @"..\..\..\mscorlib\bin\Release\mscorlib.pdb";
-        public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
-        public const string CoreCLRSourcePath = @"C:\Dev\Gits\coreclr\tests\src\";
-        public const string CoreCLRDlls = @"E:\Gits\coreclr\tests\packages\dnx-coreclr-win-x86.1.0.0-beta5-12101\bin\";
-#endif
+        public const string SscliSourcePath = @"sscli_tests\tests\bcl\system\";
+        public const string CoreCLRSourcePath = @"coreclr_tests\tests\src\";
 
         /// <summary>
         /// </summary>
@@ -78,8 +60,9 @@
                     
                     if (AddSystemLinq)
                     {
-                        //args.Add("ref:System.Core");
-                        args.Add(string.Format(@"ref:{0}System.Linq.dll", CoreCLRDlls));
+                        ////args.Add("ref:System.Core");
+                        ////args.Add(string.Format(@"ref:{0}System.Linq.dll", CoreCLRDlls));
+                        args.Add(string.Format(@"ref:System.Linq"));
                     }
                 }
                 else
@@ -357,6 +340,28 @@
             }
         }
 
+        public static void DownloadTestsAndBuildCoreLib(string test)
+        {
+            DownloadTests(test);
+            BuildCoreLib();
+        }
+
+        public static void BuildCoreLib()
+        {
+            var testOutput = Path.Combine(Environment.CurrentDirectory, OutputPath);
+            var buildCoreLibFolderPath = Path.Combine(testOutput, "CoreLib");
+            if (!Directory.Exists(buildCoreLibFolderPath))
+            {
+                AssertUiEnabled(true);
+                Debug.Assert(false, "This will generate and build CoreLib which will take time");
+                AssertUiEnabled(false);
+
+                ExecCmd(testOutput + "../../../../Il2Native/bin/Release/cs2cpp.exe", "/release ../../../../CoreLib/CoreLib.csproj", testOutput);
+                ExecCmd("build_prerequisite_vs2015_release.bat", "", buildCoreLibFolderPath);
+                ExecCmd("build_vs2015_release.bat", "", buildCoreLibFolderPath);
+            }
+        }
+
         public static void DownloadTests(string test)
         {
             switch (test)
@@ -373,7 +378,7 @@
                         ExecCmd("git", "init", testsFolderPath);
                         ExecCmd("git", "remote add -f origin https://github.com/mono/mono", testsFolderPath);
                         ExecCmd("git", "config core.sparseCheckout true", testsFolderPath);
-                        ExecCmd("cmd", @"/C echo mono/mcs/tests/ >> .git/info/sparse-checkout", testsFolderPath);
+                        ExecCmd("cmd", @"/C echo mcs/tests/ >> .git/info/sparse-checkout", testsFolderPath);
                         ExecCmd("git", "pull --depth=1 origin master", testsFolderPath);
                     }
 

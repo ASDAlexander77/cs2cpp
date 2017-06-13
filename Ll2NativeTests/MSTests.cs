@@ -36,7 +36,7 @@ namespace Ll2NativeTests
         [Timeout(36000000)]
         public void Initialize()
         {
-            CompilerHelper.DownloadTests("mono");
+            CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             CompilerHelper.AssertUiEnabled(true);
         }
 

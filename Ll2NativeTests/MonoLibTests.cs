@@ -17,7 +17,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -445,7 +445,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -474,7 +474,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -503,7 +503,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -532,7 +532,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -582,7 +582,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -618,7 +618,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -647,7 +647,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -676,7 +676,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -705,7 +705,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -741,7 +741,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -770,7 +770,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -4894,7 +4894,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5007,7 +5007,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5078,7 +5078,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5121,7 +5121,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5339,7 +5339,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5683,7 +5683,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5775,7 +5775,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5895,7 +5895,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5938,7 +5938,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6044,7 +6044,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6269,7 +6269,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6508,7 +6508,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6726,7 +6726,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6776,7 +6776,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6987,7 +6987,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7051,7 +7051,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7080,7 +7080,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7249,7 +7249,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7299,7 +7299,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7328,7 +7328,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7357,7 +7357,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -13420,7 +13420,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -14639,7 +14639,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -14997,7 +14997,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15131,7 +15131,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15174,7 +15174,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15385,7 +15385,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15470,7 +15470,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15667,7 +15667,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15738,7 +15738,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15977,7 +15977,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -16055,7 +16055,7 @@
             [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTests("mono");
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
