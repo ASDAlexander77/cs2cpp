@@ -491,6 +491,8 @@ namespace Il2Native.Logic
 
             foreach (var element in project.Root.Elements(ns + "Import"))
             {
+                // for now we only import shared projects; need to research and test
+                //  whatever range of imports we can do
                 var labelAttr = element.Attribute("Label");
                 if (labelAttr == null || labelAttr.Value != "Shared")
                     continue;
