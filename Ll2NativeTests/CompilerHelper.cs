@@ -263,12 +263,28 @@
 
             ExecCompile(fileName, returnCode: returnCode);
 
-            Thread.Sleep(400);
+            Thread.Sleep(50);
 
             // cleanup if success
-            foreach (var fileToDelete in Directory.GetFiles(OutputPath, string.Format("{0}.*", fileName)).ToList())
+            var tries = 3;
+            while (tries-- > 0)
             {
-                File.Delete(fileToDelete);
+                try
+                {
+                    Directory.Delete(Path.Combine(OutputPath, fileName), true);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (tries <= 0)
+                    {
+                        Debug.Fail(ex.ToString());
+                        break;
+                    }
+
+                    Thread.Sleep(500);
+                    continue;
+                }
             }
         }
 
