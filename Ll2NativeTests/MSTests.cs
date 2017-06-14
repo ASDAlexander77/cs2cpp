@@ -351,6 +351,7 @@ namespace Ll2NativeTests
         /// </summary>
         [TestMethod]
         [Timeout(36000000)]
+        [Priority(1)]
         public void Test_Mono_Tests()
         {
             // 19 - using Thread class, Reflection
@@ -836,6 +837,7 @@ namespace Ll2NativeTests
         /// </summary>
         [TestMethod]
         [Timeout(36000000)]
+        [Priority(1)]
         public void Test_Mono_Tests_Anon()
         {
             // 34 - error CS0234: The type or namespace name 'Timers' does not exist in the namespace 'System' (are you missing an assembly reference?)
@@ -869,6 +871,7 @@ namespace Ll2NativeTests
         /// </summary>
         [TestMethod]
         [Timeout(36000000)]
+        [Priority(1)]
         public void Test_Mono_GTests()
         {
             // 329 - DEBUG ASSERT - investigate
@@ -1066,6 +1069,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Anon()
         {
             // 9 - compiling with -Ofast causing C app to crash
@@ -1094,6 +1098,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_AnonType()
         {
             // 13 - rror CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System' (GetProprty not implemented)
@@ -1112,6 +1117,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Autoproperty()
         {
             // 3 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
@@ -1130,6 +1136,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_Tests_Iter()
         {
             // 18 - Reflection NotImplemented
@@ -1150,6 +1157,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Collectioninit()
         {
             // 
@@ -1168,6 +1176,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_ExMethod()
         {
             // 1 - error CS1061: 'System.Type' does not contain a definition for 'IsDefined'
@@ -1199,6 +1208,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_FixedBuffer()
         {
             // 1 - error CS0246: The type or namespace name 'DefaultCharSet' could not be found
@@ -1225,6 +1235,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_ImplicitArray()
         {
             foreach (var index in Enumerable.Range(1, 3))
@@ -1236,6 +1247,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Initialize()
         {
             foreach (var index in Enumerable.Range(1, 12))
@@ -1247,6 +1259,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Iter()
         {
             // 26 - error CS0246: The type or namespace name 'IteratorStateMachineAttribute' could not be found
@@ -1265,6 +1278,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Lambda()
         {
             // 3 - error CS0117: 'System.TimeSpan' does not contain a definition for 'Parse' (TODO: Review it)
@@ -1290,6 +1304,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Linq()
         {
             // 5 - BUG: in CoreLib, in C# Compare string depends on culture settings and can be case-sensitive or not (TODO: fix CoreLib)
@@ -1318,6 +1333,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_GTests_Named()
         {
             // 4 - Wrong order of calling parameters in methods call (TODO: fix it)
@@ -1365,6 +1381,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        [Priority(1)]
         public void Test_Mono_Tests_Async()
         {
             // 2 - WaitAll not implemented
