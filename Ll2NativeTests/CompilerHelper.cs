@@ -380,12 +380,11 @@
                 Debug.Assert(false, "This will generate and build CoreLib which will take time");
                 AssertUiEnabled(false);
 
-#if DEBUG
-                var cfg = "Debug";
-#else
-                var cfg = "Release";
-#endif
-                ExecCmd(testOutput + "../../../../Il2Native/bin/" + cfg + "/cs2cpp.exe", "/release ../../../../CoreLib/CoreLib.csproj", testOutput);
+                Il2Converter.Convert(
+                    "../../../CoreLib/CoreLib.csproj",
+                    testOutput,
+                    new[] { "/release" });
+
                 ExecCmd("build_prerequisite_vs2015_release.bat", "", buildCoreLibFolderPath);
                 ExecCmd("build_vs2015_release.bat", "", buildCoreLibFolderPath);
             }
