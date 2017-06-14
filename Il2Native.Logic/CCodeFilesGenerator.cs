@@ -109,7 +109,7 @@ namespace Il2Native.Logic
 include(PrecompiledHeader.cmake)
 
 file(GLOB <%name%>_H
-    ""./src/<%name%>.h""
+    ""./src/<%Name%>.h""
 )
 
 file(GLOB_RECURSE <%name%>_SRC
@@ -181,6 +181,7 @@ endif()";
                 itw.Write(
                     cmake.Replace("<%libraries%>", executable ? libraries : string.Empty)
                          .Replace("<%type%>", type)
+                         .Replace("<%Name%>", identity.Name)
                          .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())
                          .Replace("<%include%>", include)
                          .Replace("<%links%>", links));
