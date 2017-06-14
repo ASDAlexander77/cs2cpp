@@ -485,7 +485,7 @@ namespace Il2Native.Logic
 
             var finalizationRequired = type.BaseType != null && type.GetMembers().OfType<IMethodSymbol>().Any(m => m.MethodKind == MethodKind.Destructor);
             var isAtomicType = type.IsAtomicType();
-            if (isNotInterfaceOrModule)
+            if (isNotInterfaceOrModule && !type.IsAbstract)
             {
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired));
                 unit.Declarations.Add(new CCodeNewOperatorDeclaration(namedTypeSymbol, finalizationRequired, debugVersion: true));

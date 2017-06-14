@@ -1060,7 +1060,7 @@ namespace Ll2NativeTests
             skip.Add(598); // casting int to object* in virtual generic method
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(598, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
