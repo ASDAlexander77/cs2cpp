@@ -118,7 +118,7 @@
             }
 
             // file exe
-            ExecCmd(string.Format("build_vs2015_{0}.bat", debug ? "debug" : "release"), string.Empty, outputPath);
+            ExecCmd(string.Format("build_vs2017_{0}.bat", debug ? "debug" : "release"), string.Empty, outputPath);
 
             if (!justCompile)
             {
@@ -385,8 +385,8 @@
                     testOutput,
                     new[] { "/release" });
 
-                ExecCmd("build_prerequisite_vs2015_release.bat", "", buildCoreLibFolderPath);
-                ExecCmd("build_vs2015_release.bat", "", buildCoreLibFolderPath);
+                ExecCmd("build_prerequisite_vs2017_release.bat", "", buildCoreLibFolderPath);
+                ExecCmd("build_vs2017_release.bat", "", buildCoreLibFolderPath);
             }
         }
 
