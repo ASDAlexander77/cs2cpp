@@ -438,21 +438,34 @@ namespace Il2Native.Logic
             return new MissingAssemblySymbol(identity);
         }
 
-        private void LoadProject(string firstSource)
+        private static readonly IList<Tuple<string, string>> sourceSanitizationTuples = new List<Tuple<string, string>>
+        {
+            new Tuple<string, string>("$(MSBuildThisFileDirectory)", ".\\")
+        };
+
+        private static string SanitizeSourceFilePath(string sourceFilePath)
+        {
+            foreach (var saniTuple in sourceSanitizationTuples)
+                sourceFilePath = sourceFilePath.Replace(saniTuple.Item1, saniTuple.Item2);
+
+            return sourceFilePath;
+        }
+
+        private void ImportProject(string projectFile, out string[] sourceFiles, out string[] implFiles, out string[] refAssemblies)
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(firstSource);
-            var folder = Path.GetDirectoryName(firstSource);
-            this.Sources =
+            var project = XDocument.Load(projectFile);
+            var folder = Path.GetDirectoryName(projectFile);
+            var sources = new List<string>(
                 project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
-                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
-                    .ToArray();
+                    .Select(element => Path.Combine(folder, SanitizeSourceFilePath(element.Attribute("Include").Value)))
+            );
 
-            this.Impl =
+            var impls = new List<string>(
                 project.Root.Elements(ns + "ItemGroup").Elements(ns + "Content")
                     .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
                     .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
-                    .ToArray();
+            );
 
             var options = this.Options;
 
@@ -474,7 +487,43 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
+            var refs = new List<string>( this.LoadReferencesFromProject(projectFile, project, ns) );
+
+            foreach (var element in project.Root.Elements(ns + "Import"))
+            {
+                var labelAttr = element.Attribute("Label");
+                if (labelAttr == null || labelAttr.Value != "Shared")
+                    continue;
+
+                var importProjectPath = Path.Combine(folder, element.Attribute("Project").Value);
+                string[] importedProjectSources = null;
+                string[] importedProjectImpls = null;
+                string[] importedProjectRefs = null;
+
+                ImportProject(importProjectPath, out importedProjectSources, out importedProjectImpls, out importedProjectRefs);
+                sources.AddRange(importedProjectSources);
+                impls.AddRange(importedProjectImpls);
+                refs.AddRange(importedProjectRefs);
+            }
+
+            sourceFiles = sources.ToArray();
+            implFiles = impls.ToArray();
+            refAssemblies = refs.ToArray();
+        }
+
+        private void LoadProject(string firstSource)
+        {
+            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+
+            string[] sources = null;
+            string[] impls = null;
+            string[] refs = null;
+
+            ImportProject(firstSource, out sources, out impls, out refs);
+            this.Sources = sources;
+            this.Impl = impls;
+            this.ReferencesList = refs;
+
             DebugOutput = this.Options["Configuration"] != "Release";
         }
 
