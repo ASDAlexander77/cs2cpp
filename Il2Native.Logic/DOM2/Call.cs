@@ -92,7 +92,8 @@ namespace Il2Native.Logic.DOM2
                     (method.MethodKind == MethodKind.Constructor 
                      || method.IsStatic 
                      || method.IsVirtualGenericMethod())) 
-                    || specialCaseCreateInstanceNewObjectReplacement))
+                    || specialCaseCreateInstanceNewObjectReplacement
+                    || specialCaseInterfaceWrapperCall))
             {
                 var typePatametersArray = !specialCaseInterfaceWrapperCall ? method.GetTemplateParameters() : method.TypeParameters;
                 var typeParameters = typePatametersArray.GetEnumerator();
