@@ -14,9 +14,10 @@
         public class @argiterator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -77,9 +78,10 @@
         public class @array
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -469,9 +471,10 @@
         public class @attribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -546,9 +549,10 @@
         public class @bitconverter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -742,9 +746,10 @@
         public class @boolean
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -819,9 +824,10 @@
         public class @buffer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -868,9 +874,10 @@
         public class @byte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -994,9 +1001,10 @@
         public class @char
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -1302,9 +1310,10 @@
         public class @charenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -1351,9 +1360,10 @@
         public class @arraylist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -1743,9 +1753,10 @@
         public class @bitarray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -1918,9 +1929,10 @@
         public class @caseinsensitivecomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -1967,9 +1979,10 @@
         public class @caseinsensitivehashcodeprovider
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2016,9 +2029,10 @@
         public class @collectionbase
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2044,9 +2058,10 @@
         public class @comparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2072,9 +2087,10 @@
         public class @dictionaryentry
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2114,9 +2130,10 @@
         public class @hashtable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2268,9 +2285,10 @@
         public class @queue
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2380,9 +2398,10 @@
         public class @readonlycollectionbase
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2408,9 +2427,10 @@
         public class @sortedlist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2646,9 +2666,10 @@
         public class @bitvector32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2779,9 +2800,10 @@
         public class @hybriddictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -2919,9 +2941,10 @@
         public class @listdictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3052,9 +3075,10 @@
         public class @namevaluecollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3227,9 +3251,10 @@
         public class @stringcollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3360,9 +3385,10 @@
         public class @stringdictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3479,9 +3505,10 @@
         public class @stringenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3521,9 +3548,10 @@
         public class @stack
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3570,9 +3598,10 @@
         public class @convert
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -3752,9 +3781,10 @@
         public class @datetime
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -4249,9 +4279,10 @@
         public class @dbnull
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -4396,9 +4427,10 @@
         public class @decimal
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -4809,9 +4841,10 @@
         public class @delegate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -4893,9 +4926,10 @@
         public class @double
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5061,9 +5095,10 @@
         public class @enum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5222,9 +5257,10 @@
         public class @environment
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5341,9 +5377,10 @@
         public class @eventargs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5369,9 +5406,10 @@
         public class @exception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5460,9 +5498,10 @@
         public class @guid
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5586,9 +5625,10 @@
         public class @int16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5705,9 +5745,10 @@
         public class @int32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5831,9 +5872,10 @@
         public class @int64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -5950,9 +5992,10 @@
         public class @intptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6048,9 +6091,10 @@
         public class @binaryreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6237,9 +6281,10 @@
         public class @binarywriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6433,9 +6478,10 @@
         public class @bufferedstream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6566,9 +6612,10 @@
         public class @directory
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6755,9 +6802,10 @@
         public class @directoryinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -6972,9 +7020,10 @@
         public class @file
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7154,9 +7203,10 @@
         public class @fileinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7385,9 +7435,10 @@
         public class @filestream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7588,9 +7639,10 @@
         public class @memorystream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7798,9 +7850,10 @@
         public class @path
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7938,9 +7991,10 @@
         public class @stream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -7966,9 +8020,10 @@
         public class @streamreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8120,9 +8175,10 @@
         public class @streamwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8246,9 +8302,10 @@
         public class @stringreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8316,9 +8373,10 @@
         public class @stringwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8407,9 +8465,10 @@
         public class @math
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8806,9 +8865,10 @@
         public class @random
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8883,9 +8943,10 @@
         public class @formatterconverter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8911,9 +8972,10 @@
         public class @formatterservices
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -8967,9 +9029,10 @@
         public class @objectidgenerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9002,9 +9065,10 @@
         public class @objectmanager
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9100,9 +9164,10 @@
         public class @pseudomlformatter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9128,9 +9193,10 @@
         public class @serializationentry
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9170,9 +9236,10 @@
         public class @serializationinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9268,9 +9335,10 @@
         public class @serializationinfoenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9331,9 +9399,10 @@
         public class @streamingcontext
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9394,9 +9463,10 @@
         public class @surrogateselector
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9457,9 +9527,10 @@
         public class @sbyte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9590,9 +9661,10 @@
         public class @single
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9751,9 +9823,10 @@
         public class @string
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -9787,7 +9860,7 @@
             public void @co1030_compare_strstrbool()
             {
                 var file = Path.Combine(CompilerHelper.SscliSourcePath, @"string", "co1030compare_strstrbool.cs");
-                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, additionalFilesFolder: Path.Combine(CompilerHelper.SscliSourcePath, @"..\..\utilities"), additionalFilesPattern: new [] { "genstrings.cs" });
+                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", false, additionalFilesFolder: Path.Combine(CompilerHelper.SscliSourcePath, @"..\..\utilities"), additionalFilesPattern: new[] { "genstrings.cs" });
             }
 
             [TestMethod]
@@ -10388,9 +10461,10 @@
         public class @timespan
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -10661,9 +10735,10 @@
         public class @timezone
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -10689,9 +10764,10 @@
         public class @uint16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -10822,9 +10898,10 @@
         public class @uint32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -10955,9 +11032,10 @@
         public class @uint64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -11088,9 +11166,10 @@
         public class @uintptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -11186,9 +11265,10 @@
         public class @valuetype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]
@@ -11228,9 +11308,10 @@
         public class @version
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("sscli");
             }
 
             [TestCleanup]

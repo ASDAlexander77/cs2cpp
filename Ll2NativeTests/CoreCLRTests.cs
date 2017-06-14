@@ -14,9 +14,10 @@
         public class @testclass_dynamicobjectproperties
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -83,9 +84,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -632,9 +634,10 @@
         public class @testclass_emptystacktrace
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -661,9 +664,10 @@
         public class @testclass_simple
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -690,9 +694,10 @@
         public class @testclass_unittests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -775,9 +780,10 @@
         public class @testclass_finalization
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -804,9 +810,10 @@
         public class @testclass_currentculture
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -833,9 +840,10 @@
         public class @testclass_syncdelegate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1094,9 +1102,10 @@
         public class @testclass_threadstart
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1355,9 +1364,10 @@
         public class @testclass_add
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1416,9 +1426,10 @@
         public class @testclass_compareexchange
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1461,9 +1472,10 @@
         public class @testclass_exchange
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1514,9 +1526,10 @@
         public class @testclass_enter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1543,9 +1556,10 @@
         public class @testclass_exit
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1572,9 +1586,10 @@
         public class @testclass_pulse
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1601,9 +1616,10 @@
         public class @testclass_pulseall
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1630,9 +1646,10 @@
         public class @testclass_unownedlock
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1683,9 +1700,10 @@
         public class @testclass_paramthreadstart
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1896,9 +1914,10 @@
         public class @testclass_readerwriterlockslim
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -1941,9 +1960,10 @@
         public class @testclass_threadstatic
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2010,9 +2030,10 @@
         public class @testclass_visibility
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2039,9 +2060,10 @@
         public class @testclass_Coreclr_TestWrapper
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2068,9 +2090,10 @@
         public class @testclass_CoreCLRTestLibrary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2145,9 +2168,10 @@
         public class @testclass_fileversioninfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2174,9 +2198,10 @@
         public class @testclass_stopwatch
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2211,9 +2236,10 @@
         public class @testclass_action
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2248,9 +2274,10 @@
         public class @testclass_activator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2277,9 +2304,10 @@
         public class @testclass_argumentexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2306,9 +2334,10 @@
         public class @testclass_argumentnullexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2335,9 +2364,10 @@
         public class @testclass_argumentoutofrangeexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2372,9 +2402,10 @@
         public class @testclass_arithmeticexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -2401,9 +2432,10 @@
         public class @testclass_array
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3070,9 +3102,10 @@
         public class @testclass_arraytypemismatchexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3115,9 +3148,10 @@
         public class @testclass_attribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3152,9 +3186,10 @@
         public class @testclass_attributetargets
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3301,9 +3336,10 @@
         public class @testclass_attributeusageattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3338,9 +3374,10 @@
         public class @testclass_badimageformatexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3399,9 +3436,10 @@
         public class @testclass_boolean
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3612,9 +3650,10 @@
         public class @testclass_byte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -3841,9 +3880,10 @@
         public class @testclass_char
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4246,9 +4286,10 @@
         public class @testclass_charenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4307,9 +4348,10 @@
         public class @testclass_clscompliantattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4344,9 +4386,10 @@
         public class @testclass_dictionaryentry
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4389,9 +4432,10 @@
         public class @testclass_comparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4442,9 +4486,10 @@
         public class @testclass_dictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4831,9 +4876,10 @@
         public class @testclass_dictionaryenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -4916,9 +4962,10 @@
         public class @testclass_dictionarykeycollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5049,9 +5096,10 @@
         public class @testclass_dictionaryvaluecollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5182,9 +5230,10 @@
         public class @testclass_dictkeycollenum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5283,9 +5332,10 @@
         public class @testclass_dictvalcollenum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5344,9 +5394,10 @@
         public class @testclass_equalitycomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5389,9 +5440,10 @@
         public class @testclass_icollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5466,9 +5518,10 @@
         public class @testclass_idictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5527,9 +5580,10 @@
         public class @testclass_ienumerable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5556,9 +5610,10 @@
         public class @testclass_ienumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5585,9 +5640,10 @@
         public class @testclass_iequalitycomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5622,9 +5678,10 @@
         public class @testclass_ilist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5675,9 +5732,10 @@
         public class @testclass_keynotfoundexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5712,9 +5770,10 @@
         public class @testclass_keyvaluepair
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -5765,9 +5824,10 @@
         public class @testclass_list
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6146,9 +6206,10 @@
         public class @testclass_queue
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6263,9 +6324,10 @@
         public class @testclass_queueenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6308,9 +6370,10 @@
         public class @testclass_stack
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6425,9 +6488,10 @@
         public class @testclass_stackenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6470,9 +6534,10 @@
         public class @testclass_icollection
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6523,9 +6588,10 @@
         public class @testclass_icomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6552,9 +6618,10 @@
         public class @testclass_idictionary
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6629,9 +6696,10 @@
         public class @testclass_ienumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6674,9 +6742,10 @@
         public class @testclass_ilist
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6711,9 +6780,10 @@
         public class @testclass_comparison
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6756,9 +6826,10 @@
         public class @testclass_console
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -6793,9 +6864,10 @@
         public class @testclass_convert
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -8542,9 +8614,10 @@
         public class @testclass_datetime
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -8851,9 +8924,10 @@
         public class @testclass_datetimekind
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -8896,9 +8970,10 @@
         public class @testclass_dayofweek
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -8973,9 +9048,10 @@
         public class @testclass_decimal
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9394,9 +9470,10 @@
         public class @testclass_delegate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9479,9 +9556,10 @@
         public class @testclass_conditionalattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9516,9 +9594,10 @@
         public class @testclass_debuggingmodes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9577,9 +9656,10 @@
         public class @testclass_dividebyzeroexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9622,9 +9702,10 @@
         public class @testclass_dllnotfoundexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9667,9 +9748,10 @@
         public class @testclass_double
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -9928,9 +10010,10 @@
         public class @testclass_enum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10029,9 +10112,10 @@
         public class @testclass_environment
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10058,9 +10142,10 @@
         public class @testclass_eventargs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10087,9 +10172,10 @@
         public class @testclass_eventhandler
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10116,9 +10202,10 @@
         public class @testclass_eventhandler_generic
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10169,9 +10256,10 @@
         public class @testclass_exception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10222,9 +10310,10 @@
         public class @testclass_flagsattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10251,9 +10340,10 @@
         public class @testclass_formatexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10296,9 +10386,10 @@
         public class @testclass_gc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10373,9 +10464,10 @@
         public class @testclass_calendarweekrule
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10418,9 +10510,10 @@
         public class @testclass_charunicodeinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10471,9 +10564,10 @@
         public class @testclass_compareinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10508,9 +10602,10 @@
         public class @testclass_compareoptions
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10601,9 +10696,10 @@
         public class @testclass_cultureinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10734,9 +10830,10 @@
         public class @testclass_datetimeformatinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10867,9 +10964,10 @@
         public class @testclass_datetimestyles
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -10968,9 +11066,10 @@
         public class @testclass_numberformatinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11045,9 +11144,10 @@
         public class @testclass_numberstyles
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11202,9 +11302,10 @@
         public class @testclass_regioninfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11287,9 +11388,10 @@
         public class @testclass_stringinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11388,9 +11490,10 @@
         public class @testclass_textelementenumerator
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11449,9 +11552,10 @@
         public class @testclass_textinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11526,9 +11630,10 @@
         public class @testclass_unicodecategory
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11779,9 +11884,10 @@
         public class @testclass_guid
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11936,9 +12042,10 @@
         public class @testclass_icomparable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11965,9 +12072,10 @@
         public class @testclass_icomparable_generic
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -11994,9 +12102,10 @@
         public class @testclass_iconvertible
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12087,9 +12196,10 @@
         public class @testclass_idisposable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12116,9 +12226,10 @@
         public class @testclass_iformatable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12145,9 +12256,10 @@
         public class @testclass_indexoutofrangeexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12190,9 +12302,10 @@
         public class @testclass_int
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12427,9 +12540,10 @@
         public class @testclass_int16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12640,9 +12754,10 @@
         public class @testclass_int64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12869,9 +12984,10 @@
         public class @testclass_intptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -12970,9 +13086,10 @@
         public class @testclass_invalidcastexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13015,9 +13132,10 @@
         public class @testclass_invalidoperationexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13060,9 +13178,10 @@
         public class @testclass_invalidprogramexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13105,9 +13224,10 @@
         public class @testclass_binarywriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13134,9 +13254,10 @@
         public class @testclass_directorynotfoundexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13171,9 +13292,10 @@
         public class @testclass_endofstreamexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13208,9 +13330,10 @@
         public class @testclass_fileaccess
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13261,9 +13384,10 @@
         public class @testclass_fileattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13394,9 +13518,10 @@
         public class @testclass_filemode
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13471,9 +13596,10 @@
         public class @testclass_filenotfoundexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13540,9 +13666,10 @@
         public class @testclass_fileshare
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13601,9 +13728,10 @@
         public class @testclass_filestream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13630,9 +13758,10 @@
         public class @testclass_ioexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13667,9 +13796,10 @@
         public class @testclass_memorystream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13744,9 +13874,10 @@
         public class @testclass_pathtoolongexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13781,9 +13912,10 @@
         public class @testclass_seekorigin
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13834,9 +13966,10 @@
         public class @testclass_stream
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13895,9 +14028,10 @@
         public class @testclass_streamreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13924,9 +14058,10 @@
         public class @testclass_stringwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13953,9 +14088,10 @@
         public class @testclass_textreader
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -13982,9 +14118,10 @@
         public class @testclass_textwriter
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14011,9 +14148,10 @@
         public class @testclass_math
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14512,9 +14650,10 @@
         public class @testclass_memberaccessexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14557,9 +14696,10 @@
         public class @testclass_methodaccessexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14602,9 +14742,10 @@
         public class @testclass_missingfieldexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14655,9 +14796,10 @@
         public class @testclass_missingmemberexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14708,9 +14850,10 @@
         public class @testclass_missingmethodexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14761,9 +14904,10 @@
         public class @testclass_multicastdelegate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14830,9 +14974,10 @@
         public class @testclass_notimplementedexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14875,9 +15020,10 @@
         public class @testclass_notsupportedexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -14920,9 +15066,10 @@
         public class @testclass_nullable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15029,9 +15176,10 @@
         public class @testclass_nullreferenceexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15058,9 +15206,10 @@
         public class @testclass_object
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15143,9 +15292,10 @@
         public class @testclass_objectdisposedexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15180,9 +15330,10 @@
         public class @testclass_obsoleteattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15241,9 +15392,10 @@
         public class @testclass_outofmemoryexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15286,9 +15438,10 @@
         public class @testclass_overflowexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15331,9 +15484,10 @@
         public class @testclass_paramarrayattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15360,9 +15514,10 @@
         public class @testclass_platformnotsupportedexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15405,9 +15560,10 @@
         public class @testclass_predicate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15450,9 +15606,10 @@
         public class @testclass_random
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15535,9 +15692,10 @@
         public class @testclass_rankexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15580,9 +15738,10 @@
         public class @testclass_ambiguousmatchexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15625,9 +15784,10 @@
         public class @testclass_assembly
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15662,9 +15822,10 @@
         public class @testclass_assemblyconfigurationattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15699,9 +15860,10 @@
         public class @testclass_assemblydefaultaliasattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15736,9 +15898,10 @@
         public class @testclass_assemblydelaysignattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15773,9 +15936,10 @@
         public class @testclass_assemblydescriptionattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15810,9 +15974,10 @@
         public class @testclass_assemblykeyfileattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15847,9 +16012,10 @@
         public class @testclass_assemblykeynameattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15884,9 +16050,10 @@
         public class @testclass_assemblyname
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -15945,9 +16112,10 @@
         public class @testclass_assemblynameflags
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16006,9 +16174,10 @@
         public class @testclass_assemblytitleattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16043,9 +16212,10 @@
         public class @testclass_callingconventions
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16104,9 +16274,10 @@
         public class @testclass_constructorinfo
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16141,9 +16312,10 @@
         public class @testclass_defaultmemberattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16178,9 +16350,10 @@
         public class @testclass_flowcontrol
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -16255,9 +16428,10 @@
         public class @testclass_opcodes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18180,9 +18354,10 @@
         public class @testclass_opcodetype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18241,9 +18416,10 @@
         public class @testclass_operandtype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18398,9 +18574,10 @@
         public class @testclass_packingsize
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18491,9 +18668,10 @@
         public class @testclass_stackbehaviour
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18744,9 +18922,10 @@
         public class @testclass_eventattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18789,9 +18968,10 @@
         public class @testclass_fieldattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -18946,9 +19126,10 @@
         public class @testclass_methodattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19135,9 +19316,10 @@
         public class @testclass_methodimplattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19260,9 +19442,10 @@
         public class @testclass_parameterattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19329,9 +19512,10 @@
         public class @testclass_propertyattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19382,9 +19566,10 @@
         public class @testclass_targetinvocationexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19419,9 +19604,10 @@
         public class @testclass_targetparametercountexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19464,9 +19650,10 @@
         public class @testclass_typeattributes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19709,9 +19896,10 @@
         public class @testclass_missingmanifestresourceexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19754,9 +19942,10 @@
         public class @testclass_neutralresourceslanguageattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19791,9 +19980,10 @@
         public class @testclass_resourcemanager
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19820,9 +20010,10 @@
         public class @testclass_satellitecontractversionattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19857,9 +20048,10 @@
         public class @testclass_accessedthroughpropertyattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19894,9 +20086,10 @@
         public class @testclass_compilationrelaxations
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19923,9 +20116,10 @@
         public class @testclass_compilergeneratedattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19952,9 +20146,10 @@
         public class @testclass_customconstantattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -19981,9 +20176,10 @@
         public class @testclass_indexernameattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20010,9 +20206,10 @@
         public class @testclass_internalsvisibletoattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20047,9 +20244,10 @@
         public class @testclass_methodimploptions
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20084,9 +20282,10 @@
         public class @testclass_runtimecompatibilityattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20121,9 +20320,10 @@
         public class @testclass_runtimehelpers
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20166,9 +20366,10 @@
         public class @testclass_decimalconstantattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20203,9 +20404,10 @@
         public class @testclass_fixedbufferattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20248,9 +20450,10 @@
         public class @testclass_callingconvention
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20277,9 +20480,10 @@
         public class @testclass_charset
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20306,9 +20510,10 @@
         public class @testclass_dllimportattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20335,9 +20540,10 @@
         public class @testclass_fieldoffsetattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20372,9 +20578,10 @@
         public class @testclass_gchandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20425,9 +20632,10 @@
         public class @testclass_gchandletype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20478,9 +20686,10 @@
         public class @testclass_inattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20507,9 +20716,10 @@
         public class @testclass_layoutkind
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20544,9 +20754,10 @@
         public class @testclass_marshal
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20589,9 +20800,10 @@
         public class @testclass_marshalasattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20682,9 +20894,10 @@
         public class @testclass_outattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20711,9 +20924,10 @@
         public class @testclass_preservesigattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20740,9 +20954,10 @@
         public class @testclass_safehandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20849,9 +21064,10 @@
         public class @testclass_structlayoutattribute
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20910,9 +21126,10 @@
         public class @testclass_unmanagedtype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20939,9 +21156,10 @@
         public class @testclass_runtimefieldhandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -20976,9 +21194,10 @@
         public class @testclass_runtimemethodhandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -21013,9 +21232,10 @@
         public class @testclass_runtimetypehandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -21050,9 +21270,10 @@
         public class @testclass_sbyte
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -21239,9 +21460,10 @@
         public class @testclass_securityexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -21292,9 +21514,10 @@
         public class @testclass_single
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -21521,9 +21744,10 @@
         public class @testclass_string
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22062,9 +22286,10 @@
         public class @testclass_stringcompare
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22091,9 +22316,10 @@
         public class @testclass_stringcomparer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22144,9 +22370,10 @@
         public class @testclass_stringcomparison
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22197,9 +22424,10 @@
         public class @testclass_szarrayhelper
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22226,9 +22454,10 @@
         public class @testclass_decoder
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22263,9 +22492,10 @@
         public class @testclass_encoder
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22292,9 +22522,10 @@
         public class @testclass_encoding
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22561,9 +22792,10 @@
         public class @testclass_stringbuilder
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -22910,9 +23142,10 @@
         public class @testclass_unicodeencoding
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23043,9 +23276,10 @@
         public class @testclass_utf8encoding
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23200,9 +23434,10 @@
         public class @testclass_autoresetevent
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23245,9 +23480,10 @@
         public class @testclass_interlocked
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23378,9 +23614,10 @@
         public class @testclass_manualresetevent
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23407,9 +23644,10 @@
         public class @testclass_timeout
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23436,9 +23674,10 @@
         public class @testclass_waithandle
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23481,9 +23720,10 @@
         public class @testclass_timeoutexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23526,9 +23766,10 @@
         public class @testclass_timespan
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23779,9 +24020,10 @@
         public class @testclass_type
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -23936,9 +24178,10 @@
         public class @testclass_typecode
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24093,9 +24336,10 @@
         public class @testclass_typeloadexception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24146,9 +24390,10 @@
         public class @testclass_uint16
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24359,9 +24604,10 @@
         public class @testclass_uint32
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24580,9 +24826,10 @@
         public class @testclass_uint64
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24785,9 +25032,10 @@
         public class @testclass_uintptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24894,9 +25142,10 @@
         public class @testclass_valuetype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -24931,9 +25180,10 @@
         public class @testclass_version
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25032,9 +25282,10 @@
         public class @testclass_weakreference
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25117,9 +25368,10 @@
         public class @testclass_assembly
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25146,9 +25398,10 @@
         public class @testclass_buffer
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25175,9 +25428,10 @@
         public class @testclass_datetime
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25204,9 +25458,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25257,9 +25512,10 @@
         public class @testclass_miscellaneous
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25302,9 +25558,10 @@
         public class @testclass_public
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25339,9 +25596,10 @@
         public class @testclass_tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25392,9 +25650,10 @@
         public class @testclass_exception
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25421,9 +25680,10 @@
         public class @testclass_guid
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25450,9 +25710,10 @@
         public class @testclass_lazyt
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25479,9 +25740,10 @@
         public class @testclass_assembly
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25532,9 +25794,10 @@
         public class @testclass_resourcemanager
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25561,9 +25824,10 @@
         public class @testclass_encoding
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25590,9 +25854,10 @@
         public class @testclass_version
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25619,9 +25884,10 @@
         public class @testclass_Finalization
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25648,9 +25914,10 @@
         public class @testclass_GCSettings
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25701,9 +25968,10 @@
         public class @testclass_Coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25738,9 +26006,10 @@
         public class @testclass_HeapExpansion
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25783,9 +26052,10 @@
         public class @testclass_PinningOther
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25860,9 +26130,10 @@
         public class @testclass_Framework
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25897,9 +26168,10 @@
         public class @testclass_Metrics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -25942,9 +26214,10 @@
         public class @testclass_Builders
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26019,9 +26292,10 @@
         public class @testclass_Tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26112,9 +26386,10 @@
         public class @testclass_Boxing
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26141,9 +26416,10 @@
         public class @testclass_DoublinkList
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26170,9 +26446,10 @@
         public class @testclass_FinalNStruct
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26199,9 +26476,10 @@
         public class @testclass_sxshost
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26244,9 +26522,10 @@
         public class @testclass_usercode
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26273,9 +26552,10 @@
         public class @testclass_usercodedependency
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26302,9 +26582,10 @@
         public class @testclass_ICastable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26331,9 +26612,10 @@
         public class @testclass_NativeCallable
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26360,9 +26642,10 @@
         public class @testclass_Marshalling
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -26389,9 +26672,10 @@
         public class @testclass_CodeGenBringUpTests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27466,9 +27750,10 @@
         public class @testclass_Arrays
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27519,9 +27804,10 @@
         public class @testclass_CheckedCtor
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27684,9 +27970,10 @@
         public class @testclass_cmov
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27833,9 +28120,10 @@
         public class @testclass_Convert
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27862,9 +28150,10 @@
         public class @testclass_flowgraph
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27891,9 +28180,10 @@
         public class @testclass_oldtests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -27976,9 +28266,10 @@
         public class @testclass_forceinlining
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28021,9 +28312,10 @@
         public class @testclass_gettypetypeof
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28050,9 +28342,10 @@
         public class @testclass_interlocked
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28119,9 +28412,10 @@
         public class @testclass_pow
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28172,9 +28466,10 @@
         public class @testclass_lifetime
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28209,9 +28504,10 @@
         public class @testclass_localloc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28238,9 +28534,10 @@
         public class @testclass_gettype
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28267,9 +28564,10 @@
         public class @testclass_newarr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28296,9 +28594,10 @@
         public class @testclass_nullabletypes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28341,9 +28640,10 @@
         public class @testclass_commutativecse
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28370,9 +28670,10 @@
         public class @testclass_primitivevt
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28407,9 +28708,10 @@
         public class @testclass_pinvoke
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28444,9 +28746,10 @@
         public class @testclass_PrimitiveVT
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28489,9 +28792,10 @@
         public class @testclass_shift
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28566,9 +28870,10 @@
         public class @testclass_StrAccess
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28619,9 +28924,10 @@
         public class @testclass_StructABI
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28672,9 +28978,10 @@
         public class @testclass_StructPromote
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28789,9 +29096,10 @@
         public class @testclass_TypedReference
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28818,9 +29126,10 @@
         public class @testclass_UnrollLoop
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -28879,9 +29188,10 @@
         public class @testclass_Jagged
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29052,9 +29362,10 @@
         public class @testclass_MultiDim
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29121,9 +29432,10 @@
         public class @testclass_Jagged
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29158,9 +29470,10 @@
         public class @testclass_MultiDim
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29195,9 +29508,10 @@
         public class @testclass_ConstrainedCall
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29264,9 +29578,10 @@
         public class @testclass_Constraints
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29333,9 +29648,10 @@
         public class @testclass_Boxing
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29362,9 +29678,10 @@
         public class @testclass_Reference
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29455,9 +29772,10 @@
         public class @testclass_Coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29500,9 +29818,10 @@
         public class @testclass_Exceptions
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29617,9 +29936,10 @@
         public class @testclass_Fields
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29734,9 +30054,10 @@
         public class @testclass_Classes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29819,9 +30140,10 @@
         public class @testclass_Interfaces
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29920,9 +30242,10 @@
         public class @testclass_Structs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -29965,9 +30288,10 @@
         public class @testclass_Locals
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30082,9 +30406,10 @@
         public class @testclass_MemberAccess
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30167,9 +30492,10 @@
         public class @testclass_Parameters
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30284,9 +30610,10 @@
         public class @testclass_pinvoke
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30345,9 +30672,10 @@
         public class @testclass_Typeof
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30446,9 +30774,10 @@
         public class @testclass_TypeParameters
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30483,9 +30812,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30512,9 +30842,10 @@
         public class @testclass_basics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30541,9 +30872,10 @@
         public class @testclass_Common
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30570,9 +30902,10 @@
         public class @testclass_FinallyExec
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30623,9 +30956,10 @@
         public class @testclass_Leaves
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -30652,9 +30986,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31337,9 +31672,10 @@
         public class @testclass_dll
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31462,9 +31798,10 @@
         public class @testclass_testA
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31491,9 +31828,10 @@
         public class @testclass_testB
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31520,9 +31858,10 @@
         public class @testclass_testC
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31549,9 +31888,10 @@
         public class @testclass_testE
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31578,9 +31918,10 @@
         public class @testclass_testG
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31607,9 +31948,10 @@
         public class @testclass_CGRecurse
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31660,9 +32002,10 @@
         public class @testclass_cprop
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31697,9 +32040,10 @@
         public class @testclass_cse
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31926,9 +32270,10 @@
         public class @testclass_inl
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31955,9 +32300,10 @@
         public class @testclass_lim
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -31984,9 +32330,10 @@
         public class @testclass_lur
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32013,9 +32360,10 @@
         public class @testclass_osr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32042,9 +32390,10 @@
         public class @testclass_rngchk
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32127,9 +32476,10 @@
         public class @testclass_overflow
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32180,9 +32530,10 @@
         public class @testclass_box_unbox
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32209,9 +32560,10 @@
         public class @testclass_box_unbox
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32574,9 +32926,10 @@
         public class @testclass_enum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32619,9 +32972,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -32984,9 +33338,10 @@
         public class @testclass_interface
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -33149,9 +33504,10 @@
         public class @testclass_null
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -33514,9 +33870,10 @@
         public class @testclass_value
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -33879,9 +34236,10 @@
         public class @testclass_castclass
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -33908,9 +34266,10 @@
         public class @testclass_castclass
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -34273,9 +34632,10 @@
         public class @testclass_enum
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -34318,9 +34678,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -34683,9 +35044,10 @@
         public class @testclass_interface
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -34848,9 +35210,10 @@
         public class @testclass_null
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35213,9 +35576,10 @@
         public class @testclass_lcs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35298,9 +35662,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35343,9 +35708,10 @@
         public class @testclass_i4
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35380,9 +35746,10 @@
         public class @testclass_i8
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35417,9 +35784,10 @@
         public class @testclass_r4
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35454,9 +35822,10 @@
         public class @testclass_r8
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35491,9 +35860,10 @@
         public class @testclass_callconv
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35520,9 +35890,10 @@
         public class @testclass_functional
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35557,9 +35928,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35602,9 +35974,10 @@
         public class @testclass_morph
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35631,9 +36004,10 @@
         public class @testclass_seh
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35660,9 +36034,10 @@
         public class @testclass_xlang
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35697,9 +36072,10 @@
         public class @testclass_coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35782,9 +36158,10 @@
         public class @testclass_iface
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35811,9 +36188,10 @@
         public class @testclass_ilseq
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35840,9 +36218,10 @@
         public class @testclass_SEH
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35877,9 +36256,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35906,9 +36286,10 @@
         public class @testclass_Desktop
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35935,9 +36316,10 @@
         public class @testclass_simple
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -35988,9 +36370,10 @@
         public class @testclass_xassem
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36049,9 +36432,10 @@
         public class @testclass_Coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36078,9 +36462,10 @@
         public class @testclass_div
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36171,9 +36556,10 @@
         public class @testclass_rem
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36256,9 +36642,10 @@
         public class @testclass_doublearray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36301,9 +36688,10 @@
         public class @testclass_dynamic_methods
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36330,9 +36718,10 @@
         public class @testclass_basics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36463,9 +36852,10 @@
         public class @testclass_common
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36492,9 +36882,10 @@
         public class @testclass_cs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36521,9 +36912,10 @@
         public class @testclass_finallyexec
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36646,9 +37038,10 @@
         public class @testclass_generics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36691,9 +37084,10 @@
         public class @testclass_interactions
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36752,9 +37146,10 @@
         public class @testclass_leaves
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36805,9 +37200,10 @@
         public class @testclass_general
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36882,9 +37278,10 @@
         public class @testclass_nonlocalexit
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36927,9 +37324,10 @@
         public class @testclass_rethrow
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -36996,9 +37394,10 @@
         public class @testclass_basic
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37081,9 +37480,10 @@
         public class @testclass_coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37486,9 +37886,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37571,9 +37972,10 @@
         public class @testclass_rotate
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37624,9 +38026,10 @@
         public class @testclass_bug614098
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37653,9 +38056,10 @@
         public class @testclass_bug619534
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37714,9 +38118,10 @@
         public class @testclass_bug621705
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37743,9 +38148,10 @@
         public class @testclass_bug647189
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37772,9 +38178,10 @@
         public class @testclass_dev10_bug675304
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37809,9 +38216,10 @@
         public class @testclass_dev10_bug679008
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37870,9 +38278,10 @@
         public class @testclass_dev10_bug723489
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37899,9 +38308,10 @@
         public class @testclass_apps
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -37936,9 +38346,10 @@
         public class @testclass_exgen
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38061,9 +38472,10 @@
         public class @testclass_FPtrunc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38098,9 +38510,10 @@
         public class @testclass_bug505642
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38127,9 +38540,10 @@
         public class @testclass_arrays
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38164,9 +38578,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38201,9 +38616,10 @@
         public class @testclass_signed
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38294,9 +38710,10 @@
         public class @testclass_superlong
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38323,9 +38740,10 @@
         public class @testclass_unsigned
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38408,9 +38826,10 @@
         public class @testclass__25params
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38453,9 +38872,10 @@
         public class @testclass_callvirt
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38482,9 +38902,10 @@
         public class @testclass_ctor
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38511,9 +38932,10 @@
         public class @testclass_deep
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38540,9 +38962,10 @@
         public class @testclass_fptr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38569,9 +38992,10 @@
         public class @testclass_implicit
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38598,9 +39022,10 @@
         public class @testclass_SEH
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38635,9 +39060,10 @@
         public class @testclass_jitinterface
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38664,9 +39090,10 @@
         public class @testclass_basics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38725,9 +39152,10 @@
         public class @testclass_DataTypes
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38850,9 +39278,10 @@
         public class @testclass_GaussJordan
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38903,9 +39332,10 @@
         public class @testclass_InnerProd
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -38972,9 +39402,10 @@
         public class @testclass_NaN
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39089,9 +39520,10 @@
         public class @testclass_nonvirtualcall
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39158,9 +39590,10 @@
         public class @testclass_Overflow
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39195,9 +39628,10 @@
         public class @testclass_refany
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39272,9 +39706,10 @@
         public class @testclass_stringintern
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39341,9 +39776,10 @@
         public class @testclass_systemvbringup
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39394,9 +39830,10 @@
         public class @testclass_Desktop
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39423,9 +39860,10 @@
         public class @testclass_tailcall_v4
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39452,9 +39890,10 @@
         public class @testclass_unsafecsharp
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39537,9 +39976,10 @@
         public class @testclass_callconv
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39590,9 +40030,10 @@
         public class @testclass_etc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39683,9 +40124,10 @@
         public class @testclass_identity
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39720,9 +40162,10 @@
         public class @testclass_port
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39757,9 +40200,10 @@
         public class @testclass_operand
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39794,9 +40238,10 @@
         public class @testclass_sizeof
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39831,9 +40276,10 @@
         public class @testclass_AssertionPropagation
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -39932,9 +40378,10 @@
         public class @testclass_Inline
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40265,9 +40712,10 @@
         public class @testclass_tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40598,9 +41046,10 @@
         public class @testclass_doublealign
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40643,9 +41092,10 @@
         public class @testclass_bigvtbl
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40672,9 +41122,10 @@
         public class @testclass_manyintf
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40781,9 +41232,10 @@
         public class @testclass_mixed
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40810,9 +41262,10 @@
         public class @testclass__8Queens
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40839,9 +41292,10 @@
         public class @testclass_Ackermann
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40868,9 +41322,10 @@
         public class @testclass_AddArray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40897,9 +41352,10 @@
         public class @testclass_Array2
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40926,9 +41382,10 @@
         public class @testclass_BubbleSort
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40955,9 +41412,10 @@
         public class @testclass_BubbleSort2
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -40984,9 +41442,10 @@
         public class @testclass_Fib
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41013,9 +41472,10 @@
         public class @testclass_HeapSort
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41042,9 +41502,10 @@
         public class @testclass_IniArray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41071,9 +41532,10 @@
         public class @testclass_LogicArray
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41100,9 +41562,10 @@
         public class @testclass_Midpoint
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41129,9 +41592,10 @@
         public class @testclass_MulMatrix
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41158,9 +41622,10 @@
         public class @testclass_Pi
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41187,9 +41652,10 @@
         public class @testclass_QuickSort
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41216,9 +41682,10 @@
         public class @testclass_TreeSort
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41245,9 +41712,10 @@
         public class @testclass_XposMatrix
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41274,9 +41742,10 @@
         public class @testclass_FractalPerf
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41303,9 +41772,10 @@
         public class @testclass_ConsoleMandel
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41404,9 +41874,10 @@
         public class @testclass_RyuJIT
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41433,9 +41904,10 @@
         public class @testclass_SIMD
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41846,9 +42318,10 @@
         public class @testclass__102140
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41875,9 +42348,10 @@
         public class @testclass__177066w
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41904,9 +42378,10 @@
         public class @testclass__203962w
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41933,9 +42408,10 @@
         public class @testclass_assemblyversion
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -41962,9 +42438,10 @@
         public class @testclass_assemblynamector
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42015,9 +42492,10 @@
         public class @testclass_methods
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42052,9 +42530,10 @@
         public class @testclass_misc
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42081,9 +42560,10 @@
         public class @testclass_objrefandnonobjrefoverlap
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42206,9 +42686,10 @@
         public class @testclass_coreclr
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42235,9 +42716,10 @@
         public class @testclass_multimodule
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42264,9 +42746,10 @@
         public class @testclass_NativeLibs
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42293,9 +42776,10 @@
         public class @testclass_coverage
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42322,9 +42806,10 @@
         public class @testclass_Compilation
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42359,9 +42844,10 @@
         public class @testclass_readytorun
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]
@@ -42396,9 +42882,10 @@
         public class @testclass_ThreadStatics
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("coreclr");
             }
 
             [TestCleanup]

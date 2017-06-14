@@ -32,6 +32,19 @@ namespace Ll2NativeTests
         /// </summary>
         public TestContext TestContext { get; set; }
 
+        [TestInitialize]
+        [Timeout(36000000)]
+        public void Initialize()
+        {
+            CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
+            CompilerHelper.AssertUiEnabled(true);
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+        }
+
         [TestMethod]
         [Ignore]
         public void GenerateTestFromMonoTests()
@@ -850,149 +863,6 @@ namespace Ll2NativeTests
             {
                 CompilerHelper.CompileAndRun(string.Format("test-anon-{0:00}", index));
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestCoreLib()
-        {
-            // you need to compile GC property to include GC_pthread_create etc.
-            // read Readme.win32 how to compile it for MinGW
-
-            CompilerHelper.GcDebugEnabled = false;
-
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.CoreLibCSProjPath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
-
-            ////CompilerHelper.ExecCmd(
-            ////    "g++",
-            ////    string.Format(
-            ////        "-fno-rtti {0}-o CoreLib.obj -c CoreLib.cpp{1}",
-            ////        CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
-            ////        CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
-        }
-
-        [TestMethod]
-        public void TestBabylonGlut()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\BabylonGlut.csproj"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
-        }
-
-        [TestMethod]
-        public void TestBabylonNativeCsLibraryForIl()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(@" D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\BabylonNativeCsLibraryForIl.csproj"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
-        }
-
-        [TestMethod]
-        public void TestGameLogicForll()
-        {
-            Il2Converter.Convert(
-                Path.GetFullPath(@"D:\Developing\BabylonNative\BabylonNativeCs\GameLogicForll\GameLogicForll.csproj"),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
-        }
-
-        /// <summary>
-        /// </summary>
-        /*
-# typical cmake to build libraries
-cmake_minimum_required(VERSION 2.8)
-
-project (test) 
-
-file(GLOB mscorlib_SRC
-    "M:/mscorlib*.cpp"
-)
-
-file(GLOB system_private_uri_SRC
-    "M:/System.Private.Uri*.cpp"
-)
-
-file(GLOB system_resources_resourceManager_SRC
-    "M:/System.Resources.ResourceManager*.cpp"
-)
-
-file(GLOB system_collections_SRC
-    "M:/System.Collections*.cpp"
-)
-
-file(GLOB system_diagnostics_debug_SRC
-    "M:/System.Diagnostics.Debug*.cpp"
-)
-
-file(GLOB system_runtime_SRC
-    "M:/System.Runtime*.cpp"
-)
-
-file(GLOB system_runtime_extensions_SRC
-    "M:/System.Runtime.Extensions*.cpp"
-)
-
-file(GLOB system_linq_SRC
-    "M:/System.Linq*.cpp"
-)
-
-file(GLOB test_SRC
-    "M:/test-*.cpp"
-)
-
-
-if(DEBUG)		
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti")
-else()
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -std=c++11 -fno-rtti -O3")
-endif()
-
-include_directories("E:/Gits/bdwgc/include")
-link_directories("M:/")
-
-add_library(mscorlib ${mscorlib_SRC})
-add_library(system_private_uri ${system_private_uri_SRC})
-add_library(system_resources_resourceManager ${system_resources_resourceManager_SRC})
-add_library(system_collections ${system_collections_SRC})
-add_library(system_diagnostics_debug ${system_diagnostics_debug_SRC})
-add_library(system_runtime ${system_runtime_SRC})
-add_library(system_runtime_extensions ${system_runtime_extensions_SRC})
-add_library(system_linq ${system_linq_SRC})
-add_executable(test ${test_SRC})
-
-target_link_libraries (test mscorlib system_private_uri system_resources_resourceManager system_collections system_diagnostics_debug system_runtime system_runtime_extensions system_linq "stdc++" "gcmt-lib")
-
-         */
-        [TestMethod]
-        //[Ignore]
-        public void TestMscolibCSNative()
-        {
-            CompilerHelper.GcDebugEnabled = false;
-
-            Il2Converter.Convert(
-                Path.GetFullPath(CompilerHelper.MscorlibCSProjPath),
-                CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false, stubs: true));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestCustomConvert()
-        {
-            //CompilerHelper.Mscorlib = true;
-            //CompilerHelper.MscorlibPath = string.Format(@"{0}mscorlib.dll", CompilerHelper.CoreCLRDlls);
-            //CompilerHelper.AddSystemLinq = true;
-            //CompilerHelper.CompactMode = true;
-            //CompilerHelper.Stubs = true;
-            //CompilerHelper.Split = true;
-            CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
         /// <summary>

@@ -14,9 +14,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -441,9 +442,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -469,9 +471,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -497,9 +500,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -525,9 +529,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -574,9 +579,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -609,9 +615,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -637,9 +644,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -665,9 +673,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -693,9 +702,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -728,9 +738,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -756,9 +767,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -4879,9 +4891,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -4991,9 +5004,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5061,9 +5075,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5103,9 +5118,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5320,9 +5336,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5663,9 +5680,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5754,9 +5772,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5873,9 +5892,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -5915,9 +5935,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6020,9 +6041,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6244,9 +6266,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6482,9 +6505,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6699,9 +6723,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6748,9 +6773,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -6958,9 +6984,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7021,9 +7048,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7049,9 +7077,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7217,9 +7246,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7266,9 +7296,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7294,9 +7325,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -7322,9 +7354,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -13384,9 +13417,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -14602,9 +14636,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -14959,9 +14994,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15092,9 +15128,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15134,9 +15171,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15344,9 +15382,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15428,9 +15467,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15624,9 +15664,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15694,9 +15735,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -15932,9 +15974,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]
@@ -16009,9 +16052,10 @@
         public class @tests
         {
             [TestInitialize]
+            [Timeout(36000000)]
             public void Initialize()
             {
-                CompilerHelper.AssertUiEnabled(false);
+                CompilerHelper.AssertUiEnabled(false); CompilerHelper.DownloadTestsAndBuildCoreLib("mono");
             }
 
             [TestCleanup]

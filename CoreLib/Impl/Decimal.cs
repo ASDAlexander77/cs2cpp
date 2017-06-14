@@ -47,16 +47,16 @@
                         if ((d.hi | d.mid | d.lo) == 0)
                         {
                             d.hi = 0x19999999;
-                            d.mid = unchecked((int)0x99999999);
-                            d.lo = unchecked((int)0x9999999A);
+                            d.mid = unchecked((uint)0x99999999);
+                            d.lo = unchecked((uint)0x9999999A);
                             e++;
                         }
                     }
                 }
 
                 if (e > 0) return false;
-                d.flags = -e << 16;
-                d.flags |= (number->sign ? DECIMAL_NEG : 0) << 24;
+                d.flags = (uint) -e << 16;
+                d.flags |= (number->sign ? SignMask : 0) << 24;
                 value = d;
             }
 
@@ -95,8 +95,8 @@
             var c0 = (value->lo & 0x80000000) > 0 ? 1 : 0;
             var c1 = (value->mid & 0x80000000) > 0 ? 1 : 0;
             value->lo <<= 1;
-            value->mid = value->mid << 1 | c0;
-            value->hi = value->hi << 1 | c1;
+            value->mid = (uint)(value->mid << 1 | c0);
+            value->hi = (uint)(value->hi << 1 | c1);
         }
 
         private unsafe static void DecAddInt32(decimal* value, uint i)
@@ -110,11 +110,11 @@
             }
         }
 
-        private unsafe static bool D32AddCarry(int* value, uint i)
+        private unsafe static bool D32AddCarry(uint* value, uint i)
         {
-            var v = (uint)*value;
+            var v = *value;
             var sum = v + i;
-            *value = (int)sum;
+            *value = sum;
             return sum < v || sum < i;
         }
     }

@@ -98,6 +98,7 @@
     <Compile Include="System\ConsoleSpecialKey.cs" />
     <Compile Include="System\ContextBoundObject.cs" />
     <Compile Include="System\DateTimeKind.cs" />
+    <Compile Include="System\Decimal.DecCalc.cs" />
     <Compile Include="System\DefaultBinder.cs" />
     <Compile Include="System\Diagnostics\Eventing\EventSource.cs" />
     <Compile Include="System\FieldAccessException.cs" />

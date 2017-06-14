@@ -469,6 +469,20 @@ namespace Il2Native.Logic.DOM2
                 effectiveReceiverOpt = new ObjectCreationExpression { Arguments = { receiverOpt }, Type = effectiveReceiverOpt.Type, MethodOwner = MethodOwner };
             }
 
+            if (!effectiveReceiverOpt.IsReference 
+                && effectiveReceiverOpt.Type.IsValueType 
+                && !effectiveReceiverOpt.Type.IsPrimitiveValueType() 
+                && methodSymbol.IsVirtualMethod()
+                && effectiveReceiverOpt is ArrayAccess)
+            {
+                effectiveReceiverOpt = new Cast
+                {
+                    Constrained = true,
+                    Operand = receiverOpt,
+                    Type = methodSymbol.ContainingType
+                };
+            }
+
             if (effectiveReceiverOpt.IsReference && (effectiveReceiverOpt.Type.TypeKind == TypeKind.Interface) && methodSymbol.ContainingType.SpecialType == SpecialType.System_Object)
             {
                 effectiveReceiverOpt = new Conversion
