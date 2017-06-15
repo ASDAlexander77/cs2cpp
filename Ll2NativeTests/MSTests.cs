@@ -825,8 +825,7 @@ namespace Ll2NativeTests
             skip.Add(937); // compilation error
             skip.Add(939); // compilation error
 
-            foreach (var index in Enumerable.Range(1, 941).Where(n => !skip.Contains(n)))
-            ////foreach (var index in new[] { 105, 106, 107 })
+            foreach (var index in Enumerable.Range(1, 946).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
@@ -1053,14 +1052,20 @@ namespace Ll2NativeTests
             skip.Add(354); // BUG! Conflict of names in base interfaces (can be reviewed and fixed)
             skip.Add(590); // enum to String
 
+            skip.Add(602); // internal error in compiler :)
+            skip.Add(606); // Stack<> class is missing in generics
+            skip.Add(610); // Missing RuntimeBinder class
+            skip.Add(616); // compilation error
+
             // !!! NEW: NEEDS TO BE IMPLEMENTED
             skip.Add(592); // Array does not contains "IReadOnlyList" & "IReadOnlyCollection" interfaces
             skip.Add(595); // "is" for generic when T is struct is not implemented
             skip.Add(598); // casting int to object* in virtual generic method
-            skip.Add(602); // internal error in compiler :)
+            skip.Add(620); // virtual generic method conflict with object* type (can be fixed)
+            skip.Add(623); // IL lib
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(605, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
