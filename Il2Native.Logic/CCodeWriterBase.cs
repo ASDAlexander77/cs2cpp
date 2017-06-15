@@ -504,13 +504,13 @@ namespace Il2Native.Logic
             if (methodSymbol.MetadataName == "op_Explicit")
             {
                 this.TextSpan("_");
-                this.WriteTypeSuffix(methodSymbol.ReturnType);
+                this.WriteTypeSuffix(methodSymbol.OriginalDefinition.ReturnType);
             }
             else if (methodSymbol.IsStatic && methodSymbol.MetadataName == "op_Implicit")
             {
                 this.TextSpan("_");
 
-                var effectiveType = methodSymbol.ReturnType;
+                var effectiveType = methodSymbol.OriginalDefinition.ReturnType;
                 var substitutedMethodSymbol = methodSymbol as SubstitutedMethodSymbol;
                 if (substitutedMethodSymbol != null
                     && substitutedMethodSymbol.UnderlyingMethod.ReturnType.TypeKind == TypeKind.TypeParameter)

@@ -76,7 +76,7 @@ namespace Il2Native.Logic.DOM2
 
                 if (this.ValueTypeToClass)
                 {
-                    c.TextSpan("std::remove_pointer<typename valuetype_to_class<");
+                    c.TextSpan("typename std::remove_pointer<typename valuetype_to_class<");
                 }
 
                 c.WriteType(effectiveType, this.ClassCast, valueTypeAsClass: this.ClassCast, containingNamespace: MethodOwner?.ContainingNamespace);

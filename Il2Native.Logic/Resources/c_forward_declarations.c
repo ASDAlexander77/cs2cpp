@@ -98,6 +98,7 @@ template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>> :
 template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>*> : std::true_type {};
 
 template< typename T > struct remove_nullable { typedef T type; };
+template< typename T > struct remove_nullable<CoreLib::System::NullableT1<T>> { typedef T type; };
 template< typename T > struct remove_nullable<CoreLib::System::NullableT1<T>*> { typedef T type; };
 
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
@@ -971,7 +972,7 @@ inline typename std::enable_if<!is_nullable_type<T>::value, T>::type __unbox(T* 
 {
 	if (t == nullptr)
 	{
-		throw __new<CoreLib::System::NullPointerException>();
+		throw __new<CoreLib::System::NullReferenceException>();
 	}
 
 	return *t;
@@ -995,9 +996,24 @@ inline typename std::enable_if<is_class_type<T>::value, T>::type __unbox(object*
 }
 
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_valuetype<T>::type> 
-inline typename std::enable_if<is_value_type<T>::value, _VAL>::type __unbox(object* o)
+inline typename std::enable_if<!is_nullable_type<T>::value && is_value_type<T>::value, _VAL>::type __unbox(object* o)
 {
 	return *cast<_CLASS*>(o);
+}
+
+template <typename T, typename _CLASS = typename valuetype_to_class<typename remove_nullable<T>::type>::type>
+inline typename std::enable_if<is_nullable_type<T>::value && is_value_type<T>::value, T>::type __unbox(object* o)
+{
+	auto p = cast<_CLASS*>(o);
+	if (p != nullptr)
+	{
+		T t;
+		t.value = __unbox(p);
+		t.hasValue = true;
+		return t;
+	}
+
+	return __default<T>();
 }
 
 template <typename T> 
