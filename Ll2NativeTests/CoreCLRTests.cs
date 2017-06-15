@@ -1,14 +1,10 @@
-﻿namespace Ll2NativeTests
+﻿namespace CoreCLR.Ll2NativeTests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using global::Ll2NativeTests;
 
-    namespace @baseservices.@compilerservices.@dynamicobjectproperties
+    namespace CoreCLR.@baseservices.@compilerservices.@dynamicobjectproperties
     {
         [TestClass]
         public class @testclass_dynamicobjectproperties
@@ -78,7 +74,7 @@
 
     }
 
-    namespace @baseservices.@exceptions.@generics
+    namespace CoreCLR.@baseservices.@exceptions.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -628,7 +624,7 @@
 
     }
 
-    namespace @baseservices.@exceptions.@sharedexceptions.@emptystacktrace
+    namespace CoreCLR.@baseservices.@exceptions.@sharedexceptions.@emptystacktrace
     {
         [TestClass]
         public class @testclass_emptystacktrace
@@ -658,7 +654,7 @@
 
     }
 
-    namespace @baseservices.@exceptions.@simple
+    namespace CoreCLR.@baseservices.@exceptions.@simple
     {
         [TestClass]
         public class @testclass_simple
@@ -688,7 +684,7 @@
 
     }
 
-    namespace @baseservices.@exceptions.@unittests
+    namespace CoreCLR.@baseservices.@exceptions.@unittests
     {
         [TestClass]
         public class @testclass_unittests
@@ -774,7 +770,7 @@
 
     }
 
-    namespace @baseservices.@finalization
+    namespace CoreCLR.@baseservices.@finalization
     {
         [TestClass]
         public class @testclass_finalization
@@ -804,7 +800,7 @@
 
     }
 
-    namespace @baseservices.@threading.@currentculture
+    namespace CoreCLR.@baseservices.@threading.@currentculture
     {
         [TestClass]
         public class @testclass_currentculture
@@ -834,7 +830,7 @@
 
     }
 
-    namespace @baseservices.@threading.@generics.@syncdelegate
+    namespace CoreCLR.@baseservices.@threading.@generics.@syncdelegate
     {
         [TestClass]
         public class @testclass_syncdelegate
@@ -1096,7 +1092,7 @@
 
     }
 
-    namespace @baseservices.@threading.@generics.@threadstart
+    namespace CoreCLR.@baseservices.@threading.@generics.@threadstart
     {
         [TestClass]
         public class @testclass_threadstart
@@ -1358,7 +1354,7 @@
 
     }
 
-    namespace @baseservices.@threading.@interlocked.@add
+    namespace CoreCLR.@baseservices.@threading.@interlocked.@add
     {
         [TestClass]
         public class @testclass_add
@@ -1420,7 +1416,7 @@
 
     }
 
-    namespace @baseservices.@threading.@interlocked.@compareexchange
+    namespace CoreCLR.@baseservices.@threading.@interlocked.@compareexchange
     {
         [TestClass]
         public class @testclass_compareexchange
@@ -1466,7 +1462,7 @@
 
     }
 
-    namespace @baseservices.@threading.@interlocked.@exchange
+    namespace CoreCLR.@baseservices.@threading.@interlocked.@exchange
     {
         [TestClass]
         public class @testclass_exchange
@@ -1520,7 +1516,7 @@
 
     }
 
-    namespace @baseservices.@threading.@monitor.@enter
+    namespace CoreCLR.@baseservices.@threading.@monitor.@enter
     {
         [TestClass]
         public class @testclass_enter
@@ -1550,7 +1546,7 @@
 
     }
 
-    namespace @baseservices.@threading.@monitor.@exit
+    namespace CoreCLR.@baseservices.@threading.@monitor.@exit
     {
         [TestClass]
         public class @testclass_exit
@@ -1580,7 +1576,7 @@
 
     }
 
-    namespace @baseservices.@threading.@monitor.@pulse
+    namespace CoreCLR.@baseservices.@threading.@monitor.@pulse
     {
         [TestClass]
         public class @testclass_pulse
@@ -1610,7 +1606,7 @@
 
     }
 
-    namespace @baseservices.@threading.@monitor.@pulseall
+    namespace CoreCLR.@baseservices.@threading.@monitor.@pulseall
     {
         [TestClass]
         public class @testclass_pulseall
@@ -1640,7 +1636,7 @@
 
     }
 
-    namespace @baseservices.@threading.@monitor.@unownedlock
+    namespace CoreCLR.@baseservices.@threading.@monitor.@unownedlock
     {
         [TestClass]
         public class @testclass_unownedlock
@@ -1694,7 +1690,7 @@
 
     }
 
-    namespace @baseservices.@threading.@paramthreadstart
+    namespace CoreCLR.@baseservices.@threading.@paramthreadstart
     {
         [TestClass]
         public class @testclass_paramthreadstart
@@ -1908,7 +1904,7 @@
 
     }
 
-    namespace @baseservices.@threading.@readerwriterlockslim
+    namespace CoreCLR.@baseservices.@threading.@readerwriterlockslim
     {
         [TestClass]
         public class @testclass_readerwriterlockslim
@@ -1954,7 +1950,7 @@
 
     }
 
-    namespace @baseservices.@threading.@threadstatic
+    namespace CoreCLR.@baseservices.@threading.@threadstatic
     {
         [TestClass]
         public class @testclass_threadstatic
@@ -2024,7 +2020,7 @@
 
     }
 
-    namespace @baseservices.@visibility
+    namespace CoreCLR.@baseservices.@visibility
     {
         [TestClass]
         public class @testclass_visibility
@@ -2054,7 +2050,7 @@
 
     }
 
-    namespace @Common.@Coreclr_TestWrapper
+    namespace CoreCLR.@Common.@Coreclr_TestWrapper
     {
         [TestClass]
         public class @testclass_Coreclr_TestWrapper
@@ -2084,7 +2080,7 @@
 
     }
 
-    namespace @Common.@CoreCLRTestLibrary
+    namespace CoreCLR.@Common.@CoreCLRTestLibrary
     {
         [TestClass]
         public class @testclass_CoreCLRTestLibrary
@@ -2162,7 +2158,7 @@
 
     }
 
-    namespace @CoreMangLib.@components.@fileversioninfo
+    namespace CoreCLR.@CoreMangLib.@components.@fileversioninfo
     {
         [TestClass]
         public class @testclass_fileversioninfo
@@ -2192,7 +2188,7 @@
 
     }
 
-    namespace @CoreMangLib.@components.@stopwatch
+    namespace CoreCLR.@CoreMangLib.@components.@stopwatch
     {
         [TestClass]
         public class @testclass_stopwatch
@@ -2230,7 +2226,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@action
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@action
     {
         [TestClass]
         public class @testclass_action
@@ -2268,7 +2264,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@activator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@activator
     {
         [TestClass]
         public class @testclass_activator
@@ -2298,7 +2294,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@argumentexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@argumentexception
     {
         [TestClass]
         public class @testclass_argumentexception
@@ -2328,7 +2324,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@argumentnullexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@argumentnullexception
     {
         [TestClass]
         public class @testclass_argumentnullexception
@@ -2358,7 +2354,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@argumentoutofrangeexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@argumentoutofrangeexception
     {
         [TestClass]
         public class @testclass_argumentoutofrangeexception
@@ -2396,7 +2392,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@arithmeticexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@arithmeticexception
     {
         [TestClass]
         public class @testclass_arithmeticexception
@@ -2426,7 +2422,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@array
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@array
     {
         [TestClass]
         public class @testclass_array
@@ -3096,7 +3092,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@arraytypemismatchexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@arraytypemismatchexception
     {
         [TestClass]
         public class @testclass_arraytypemismatchexception
@@ -3142,7 +3138,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@attribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@attribute
     {
         [TestClass]
         public class @testclass_attribute
@@ -3180,7 +3176,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@attributetargets
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@attributetargets
     {
         [TestClass]
         public class @testclass_attributetargets
@@ -3330,7 +3326,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@attributeusageattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@attributeusageattribute
     {
         [TestClass]
         public class @testclass_attributeusageattribute
@@ -3368,7 +3364,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@badimageformatexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@badimageformatexception
     {
         [TestClass]
         public class @testclass_badimageformatexception
@@ -3430,7 +3426,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@boolean
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@boolean
     {
         [TestClass]
         public class @testclass_boolean
@@ -3644,7 +3640,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@byte
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@byte
     {
         [TestClass]
         public class @testclass_byte
@@ -3874,7 +3870,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@char
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@char
     {
         [TestClass]
         public class @testclass_char
@@ -4280,7 +4276,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@charenumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@charenumerator
     {
         [TestClass]
         public class @testclass_charenumerator
@@ -4342,7 +4338,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@clscompliantattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@clscompliantattribute
     {
         [TestClass]
         public class @testclass_clscompliantattribute
@@ -4380,7 +4376,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@dictionaryentry
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@dictionaryentry
     {
         [TestClass]
         public class @testclass_dictionaryentry
@@ -4426,7 +4422,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@comparer
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@comparer
     {
         [TestClass]
         public class @testclass_comparer
@@ -4480,7 +4476,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictionary
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictionary
     {
         [TestClass]
         public class @testclass_dictionary
@@ -4870,7 +4866,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictionaryenumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictionaryenumerator
     {
         [TestClass]
         public class @testclass_dictionaryenumerator
@@ -4956,7 +4952,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictionarykeycollection
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictionarykeycollection
     {
         [TestClass]
         public class @testclass_dictionarykeycollection
@@ -5090,7 +5086,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictionaryvaluecollection
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictionaryvaluecollection
     {
         [TestClass]
         public class @testclass_dictionaryvaluecollection
@@ -5224,7 +5220,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictkeycollenum
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictkeycollenum
     {
         [TestClass]
         public class @testclass_dictkeycollenum
@@ -5326,7 +5322,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@dictvalcollenum
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@dictvalcollenum
     {
         [TestClass]
         public class @testclass_dictvalcollenum
@@ -5388,7 +5384,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@equalitycomparer
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@equalitycomparer
     {
         [TestClass]
         public class @testclass_equalitycomparer
@@ -5434,7 +5430,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@icollection
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@icollection
     {
         [TestClass]
         public class @testclass_icollection
@@ -5512,7 +5508,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@idictionary
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@idictionary
     {
         [TestClass]
         public class @testclass_idictionary
@@ -5574,7 +5570,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@ienumerable
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@ienumerable
     {
         [TestClass]
         public class @testclass_ienumerable
@@ -5604,7 +5600,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@ienumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@ienumerator
     {
         [TestClass]
         public class @testclass_ienumerator
@@ -5634,7 +5630,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@iequalitycomparer
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@iequalitycomparer
     {
         [TestClass]
         public class @testclass_iequalitycomparer
@@ -5672,7 +5668,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@ilist
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@ilist
     {
         [TestClass]
         public class @testclass_ilist
@@ -5726,7 +5722,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@keynotfoundexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@keynotfoundexception
     {
         [TestClass]
         public class @testclass_keynotfoundexception
@@ -5764,7 +5760,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@keyvaluepair
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@keyvaluepair
     {
         [TestClass]
         public class @testclass_keyvaluepair
@@ -5818,7 +5814,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@list
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@list
     {
         [TestClass]
         public class @testclass_list
@@ -6200,7 +6196,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@queue
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@queue
     {
         [TestClass]
         public class @testclass_queue
@@ -6318,7 +6314,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@queueenumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@queueenumerator
     {
         [TestClass]
         public class @testclass_queueenumerator
@@ -6364,7 +6360,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@stack
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@stack
     {
         [TestClass]
         public class @testclass_stack
@@ -6482,7 +6478,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@generic.@stackenumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@generic.@stackenumerator
     {
         [TestClass]
         public class @testclass_stackenumerator
@@ -6528,7 +6524,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@icollection
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@icollection
     {
         [TestClass]
         public class @testclass_icollection
@@ -6582,7 +6578,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@icomparer
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@icomparer
     {
         [TestClass]
         public class @testclass_icomparer
@@ -6612,7 +6608,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@idictionary
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@idictionary
     {
         [TestClass]
         public class @testclass_idictionary
@@ -6690,7 +6686,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@ienumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@ienumerator
     {
         [TestClass]
         public class @testclass_ienumerator
@@ -6736,7 +6732,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@collections.@ilist
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@collections.@ilist
     {
         [TestClass]
         public class @testclass_ilist
@@ -6774,7 +6770,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@comparison
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@comparison
     {
         [TestClass]
         public class @testclass_comparison
@@ -6820,7 +6816,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@console
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@console
     {
         [TestClass]
         public class @testclass_console
@@ -6858,7 +6854,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@convert
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@convert
     {
         [TestClass]
         public class @testclass_convert
@@ -8608,7 +8604,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@datetime
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@datetime
     {
         [TestClass]
         public class @testclass_datetime
@@ -8918,7 +8914,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@datetimekind
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@datetimekind
     {
         [TestClass]
         public class @testclass_datetimekind
@@ -8964,7 +8960,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@dayofweek
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@dayofweek
     {
         [TestClass]
         public class @testclass_dayofweek
@@ -9042,7 +9038,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@decimal
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@decimal
     {
         [TestClass]
         public class @testclass_decimal
@@ -9464,7 +9460,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@delegate
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@delegate
     {
         [TestClass]
         public class @testclass_delegate
@@ -9550,7 +9546,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@diagnostics.@conditionalattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@diagnostics.@conditionalattribute
     {
         [TestClass]
         public class @testclass_conditionalattribute
@@ -9588,7 +9584,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@diagnostics.@debuggingmodes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@diagnostics.@debuggingmodes
     {
         [TestClass]
         public class @testclass_debuggingmodes
@@ -9650,7 +9646,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@dividebyzeroexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@dividebyzeroexception
     {
         [TestClass]
         public class @testclass_dividebyzeroexception
@@ -9696,7 +9692,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@dllnotfoundexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@dllnotfoundexception
     {
         [TestClass]
         public class @testclass_dllnotfoundexception
@@ -9742,7 +9738,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@double
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@double
     {
         [TestClass]
         public class @testclass_double
@@ -10004,7 +10000,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@enum
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@enum
     {
         [TestClass]
         public class @testclass_enum
@@ -10106,7 +10102,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@environment
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@environment
     {
         [TestClass]
         public class @testclass_environment
@@ -10136,7 +10132,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@eventargs
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@eventargs
     {
         [TestClass]
         public class @testclass_eventargs
@@ -10166,7 +10162,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@eventhandler
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@eventhandler
     {
         [TestClass]
         public class @testclass_eventhandler
@@ -10196,7 +10192,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@eventhandler_generic
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@eventhandler_generic
     {
         [TestClass]
         public class @testclass_eventhandler_generic
@@ -10250,7 +10246,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@exception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@exception
     {
         [TestClass]
         public class @testclass_exception
@@ -10304,7 +10300,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@flagsattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@flagsattribute
     {
         [TestClass]
         public class @testclass_flagsattribute
@@ -10334,7 +10330,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@formatexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@formatexception
     {
         [TestClass]
         public class @testclass_formatexception
@@ -10380,7 +10376,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@gc
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@gc
     {
         [TestClass]
         public class @testclass_gc
@@ -10458,7 +10454,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@calendarweekrule
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@calendarweekrule
     {
         [TestClass]
         public class @testclass_calendarweekrule
@@ -10504,7 +10500,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@charunicodeinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@charunicodeinfo
     {
         [TestClass]
         public class @testclass_charunicodeinfo
@@ -10558,7 +10554,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@compareinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@compareinfo
     {
         [TestClass]
         public class @testclass_compareinfo
@@ -10596,7 +10592,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@compareoptions
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@compareoptions
     {
         [TestClass]
         public class @testclass_compareoptions
@@ -10690,7 +10686,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@cultureinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@cultureinfo
     {
         [TestClass]
         public class @testclass_cultureinfo
@@ -10824,7 +10820,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@datetimeformatinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@datetimeformatinfo
     {
         [TestClass]
         public class @testclass_datetimeformatinfo
@@ -10958,7 +10954,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@datetimestyles
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@datetimestyles
     {
         [TestClass]
         public class @testclass_datetimestyles
@@ -11060,7 +11056,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@numberformatinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@numberformatinfo
     {
         [TestClass]
         public class @testclass_numberformatinfo
@@ -11138,7 +11134,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@numberstyles
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@numberstyles
     {
         [TestClass]
         public class @testclass_numberstyles
@@ -11296,7 +11292,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@regioninfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@regioninfo
     {
         [TestClass]
         public class @testclass_regioninfo
@@ -11382,7 +11378,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@stringinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@stringinfo
     {
         [TestClass]
         public class @testclass_stringinfo
@@ -11484,7 +11480,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@textelementenumerator
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@textelementenumerator
     {
         [TestClass]
         public class @testclass_textelementenumerator
@@ -11546,7 +11542,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@textinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@textinfo
     {
         [TestClass]
         public class @testclass_textinfo
@@ -11624,7 +11620,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@globalization.@unicodecategory
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@globalization.@unicodecategory
     {
         [TestClass]
         public class @testclass_unicodecategory
@@ -11878,7 +11874,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@guid
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@guid
     {
         [TestClass]
         public class @testclass_guid
@@ -12036,7 +12032,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@icomparable
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@icomparable
     {
         [TestClass]
         public class @testclass_icomparable
@@ -12066,7 +12062,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@icomparable_generic
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@icomparable_generic
     {
         [TestClass]
         public class @testclass_icomparable_generic
@@ -12096,7 +12092,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@iconvertible
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@iconvertible
     {
         [TestClass]
         public class @testclass_iconvertible
@@ -12190,7 +12186,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@idisposable
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@idisposable
     {
         [TestClass]
         public class @testclass_idisposable
@@ -12220,7 +12216,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@iformatable
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@iformatable
     {
         [TestClass]
         public class @testclass_iformatable
@@ -12250,7 +12246,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@indexoutofrangeexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@indexoutofrangeexception
     {
         [TestClass]
         public class @testclass_indexoutofrangeexception
@@ -12296,7 +12292,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@int
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@int
     {
         [TestClass]
         public class @testclass_int
@@ -12534,7 +12530,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@int16
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@int16
     {
         [TestClass]
         public class @testclass_int16
@@ -12748,7 +12744,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@int64
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@int64
     {
         [TestClass]
         public class @testclass_int64
@@ -12978,7 +12974,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@intptr
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@intptr
     {
         [TestClass]
         public class @testclass_intptr
@@ -13080,7 +13076,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@invalidcastexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@invalidcastexception
     {
         [TestClass]
         public class @testclass_invalidcastexception
@@ -13126,7 +13122,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@invalidoperationexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@invalidoperationexception
     {
         [TestClass]
         public class @testclass_invalidoperationexception
@@ -13172,7 +13168,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@invalidprogramexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@invalidprogramexception
     {
         [TestClass]
         public class @testclass_invalidprogramexception
@@ -13218,7 +13214,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@binarywriter
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@binarywriter
     {
         [TestClass]
         public class @testclass_binarywriter
@@ -13248,7 +13244,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@directorynotfoundexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@directorynotfoundexception
     {
         [TestClass]
         public class @testclass_directorynotfoundexception
@@ -13286,7 +13282,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@endofstreamexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@endofstreamexception
     {
         [TestClass]
         public class @testclass_endofstreamexception
@@ -13324,7 +13320,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@fileaccess
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@fileaccess
     {
         [TestClass]
         public class @testclass_fileaccess
@@ -13378,7 +13374,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@fileattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@fileattributes
     {
         [TestClass]
         public class @testclass_fileattributes
@@ -13512,7 +13508,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@filemode
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@filemode
     {
         [TestClass]
         public class @testclass_filemode
@@ -13590,7 +13586,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@filenotfoundexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@filenotfoundexception
     {
         [TestClass]
         public class @testclass_filenotfoundexception
@@ -13660,7 +13656,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@fileshare
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@fileshare
     {
         [TestClass]
         public class @testclass_fileshare
@@ -13722,7 +13718,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@filestream
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@filestream
     {
         [TestClass]
         public class @testclass_filestream
@@ -13752,7 +13748,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@ioexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@ioexception
     {
         [TestClass]
         public class @testclass_ioexception
@@ -13790,7 +13786,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@memorystream
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@memorystream
     {
         [TestClass]
         public class @testclass_memorystream
@@ -13868,7 +13864,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@pathtoolongexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@pathtoolongexception
     {
         [TestClass]
         public class @testclass_pathtoolongexception
@@ -13906,7 +13902,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@seekorigin
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@seekorigin
     {
         [TestClass]
         public class @testclass_seekorigin
@@ -13960,7 +13956,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@stream
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@stream
     {
         [TestClass]
         public class @testclass_stream
@@ -14022,7 +14018,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@streamreader
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@streamreader
     {
         [TestClass]
         public class @testclass_streamreader
@@ -14052,7 +14048,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@stringwriter
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@stringwriter
     {
         [TestClass]
         public class @testclass_stringwriter
@@ -14082,7 +14078,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@textreader
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@textreader
     {
         [TestClass]
         public class @testclass_textreader
@@ -14112,7 +14108,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@io.@textwriter
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@io.@textwriter
     {
         [TestClass]
         public class @testclass_textwriter
@@ -14142,7 +14138,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@math
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@math
     {
         [TestClass]
         public class @testclass_math
@@ -14644,7 +14640,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@memberaccessexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@memberaccessexception
     {
         [TestClass]
         public class @testclass_memberaccessexception
@@ -14690,7 +14686,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@methodaccessexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@methodaccessexception
     {
         [TestClass]
         public class @testclass_methodaccessexception
@@ -14736,7 +14732,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@missingfieldexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@missingfieldexception
     {
         [TestClass]
         public class @testclass_missingfieldexception
@@ -14790,7 +14786,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@missingmemberexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@missingmemberexception
     {
         [TestClass]
         public class @testclass_missingmemberexception
@@ -14844,7 +14840,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@missingmethodexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@missingmethodexception
     {
         [TestClass]
         public class @testclass_missingmethodexception
@@ -14898,7 +14894,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@multicastdelegate
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@multicastdelegate
     {
         [TestClass]
         public class @testclass_multicastdelegate
@@ -14968,7 +14964,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@notimplementedexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@notimplementedexception
     {
         [TestClass]
         public class @testclass_notimplementedexception
@@ -15014,7 +15010,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@notsupportedexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@notsupportedexception
     {
         [TestClass]
         public class @testclass_notsupportedexception
@@ -15060,7 +15056,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@nullable
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@nullable
     {
         [TestClass]
         public class @testclass_nullable
@@ -15170,7 +15166,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@nullreferenceexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@nullreferenceexception
     {
         [TestClass]
         public class @testclass_nullreferenceexception
@@ -15200,7 +15196,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@object
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@object
     {
         [TestClass]
         public class @testclass_object
@@ -15286,7 +15282,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@objectdisposedexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@objectdisposedexception
     {
         [TestClass]
         public class @testclass_objectdisposedexception
@@ -15324,7 +15320,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@obsoleteattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@obsoleteattribute
     {
         [TestClass]
         public class @testclass_obsoleteattribute
@@ -15386,7 +15382,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@outofmemoryexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@outofmemoryexception
     {
         [TestClass]
         public class @testclass_outofmemoryexception
@@ -15432,7 +15428,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@overflowexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@overflowexception
     {
         [TestClass]
         public class @testclass_overflowexception
@@ -15478,7 +15474,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@paramarrayattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@paramarrayattribute
     {
         [TestClass]
         public class @testclass_paramarrayattribute
@@ -15508,7 +15504,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@platformnotsupportedexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@platformnotsupportedexception
     {
         [TestClass]
         public class @testclass_platformnotsupportedexception
@@ -15554,7 +15550,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@predicate
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@predicate
     {
         [TestClass]
         public class @testclass_predicate
@@ -15600,7 +15596,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@random
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@random
     {
         [TestClass]
         public class @testclass_random
@@ -15686,7 +15682,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@rankexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@rankexception
     {
         [TestClass]
         public class @testclass_rankexception
@@ -15732,7 +15728,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@ambiguousmatchexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@ambiguousmatchexception
     {
         [TestClass]
         public class @testclass_ambiguousmatchexception
@@ -15778,7 +15774,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assembly
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assembly
     {
         [TestClass]
         public class @testclass_assembly
@@ -15816,7 +15812,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblyconfigurationattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblyconfigurationattribute
     {
         [TestClass]
         public class @testclass_assemblyconfigurationattribute
@@ -15854,7 +15850,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblydefaultaliasattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblydefaultaliasattribute
     {
         [TestClass]
         public class @testclass_assemblydefaultaliasattribute
@@ -15892,7 +15888,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblydelaysignattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblydelaysignattribute
     {
         [TestClass]
         public class @testclass_assemblydelaysignattribute
@@ -15930,7 +15926,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblydescriptionattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblydescriptionattribute
     {
         [TestClass]
         public class @testclass_assemblydescriptionattribute
@@ -15968,7 +15964,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblykeyfileattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblykeyfileattribute
     {
         [TestClass]
         public class @testclass_assemblykeyfileattribute
@@ -16006,7 +16002,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblykeynameattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblykeynameattribute
     {
         [TestClass]
         public class @testclass_assemblykeynameattribute
@@ -16044,7 +16040,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblyname
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblyname
     {
         [TestClass]
         public class @testclass_assemblyname
@@ -16106,7 +16102,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblynameflags
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblynameflags
     {
         [TestClass]
         public class @testclass_assemblynameflags
@@ -16168,7 +16164,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@assemblytitleattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@assemblytitleattribute
     {
         [TestClass]
         public class @testclass_assemblytitleattribute
@@ -16206,7 +16202,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@callingconventions
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@callingconventions
     {
         [TestClass]
         public class @testclass_callingconventions
@@ -16268,7 +16264,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@constructorinfo
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@constructorinfo
     {
         [TestClass]
         public class @testclass_constructorinfo
@@ -16306,7 +16302,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@defaultmemberattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@defaultmemberattribute
     {
         [TestClass]
         public class @testclass_defaultmemberattribute
@@ -16344,7 +16340,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@flowcontrol
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@flowcontrol
     {
         [TestClass]
         public class @testclass_flowcontrol
@@ -16422,7 +16418,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@opcodes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@opcodes
     {
         [TestClass]
         public class @testclass_opcodes
@@ -18348,7 +18344,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@opcodetype
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@opcodetype
     {
         [TestClass]
         public class @testclass_opcodetype
@@ -18410,7 +18406,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@operandtype
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@operandtype
     {
         [TestClass]
         public class @testclass_operandtype
@@ -18568,7 +18564,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@packingsize
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@packingsize
     {
         [TestClass]
         public class @testclass_packingsize
@@ -18662,7 +18658,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@emit.@stackbehaviour
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@emit.@stackbehaviour
     {
         [TestClass]
         public class @testclass_stackbehaviour
@@ -18916,7 +18912,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@eventattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@eventattributes
     {
         [TestClass]
         public class @testclass_eventattributes
@@ -18962,7 +18958,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@fieldattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@fieldattributes
     {
         [TestClass]
         public class @testclass_fieldattributes
@@ -19120,7 +19116,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@methodattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@methodattributes
     {
         [TestClass]
         public class @testclass_methodattributes
@@ -19310,7 +19306,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@methodimplattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@methodimplattributes
     {
         [TestClass]
         public class @testclass_methodimplattributes
@@ -19436,7 +19432,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@parameterattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@parameterattributes
     {
         [TestClass]
         public class @testclass_parameterattributes
@@ -19506,7 +19502,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@propertyattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@propertyattributes
     {
         [TestClass]
         public class @testclass_propertyattributes
@@ -19560,7 +19556,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@targetinvocationexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@targetinvocationexception
     {
         [TestClass]
         public class @testclass_targetinvocationexception
@@ -19598,7 +19594,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@targetparametercountexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@targetparametercountexception
     {
         [TestClass]
         public class @testclass_targetparametercountexception
@@ -19644,7 +19640,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@reflection.@typeattributes
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@reflection.@typeattributes
     {
         [TestClass]
         public class @testclass_typeattributes
@@ -19890,7 +19886,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@resources.@missingmanifestresourceexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@resources.@missingmanifestresourceexception
     {
         [TestClass]
         public class @testclass_missingmanifestresourceexception
@@ -19936,7 +19932,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@resources.@neutralresourceslanguageattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@resources.@neutralresourceslanguageattribute
     {
         [TestClass]
         public class @testclass_neutralresourceslanguageattribute
@@ -19974,7 +19970,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@resources.@resourcemanager
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@resources.@resourcemanager
     {
         [TestClass]
         public class @testclass_resourcemanager
@@ -20004,7 +20000,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@resources.@satellitecontractversionattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@resources.@satellitecontractversionattribute
     {
         [TestClass]
         public class @testclass_satellitecontractversionattribute
@@ -20042,7 +20038,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@accessedthroughpropertyattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@accessedthroughpropertyattribute
     {
         [TestClass]
         public class @testclass_accessedthroughpropertyattribute
@@ -20080,7 +20076,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@compilationrelaxations
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@compilationrelaxations
     {
         [TestClass]
         public class @testclass_compilationrelaxations
@@ -20110,7 +20106,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@compilergeneratedattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@compilergeneratedattribute
     {
         [TestClass]
         public class @testclass_compilergeneratedattribute
@@ -20140,7 +20136,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@customconstantattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@customconstantattribute
     {
         [TestClass]
         public class @testclass_customconstantattribute
@@ -20170,7 +20166,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@indexernameattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@indexernameattribute
     {
         [TestClass]
         public class @testclass_indexernameattribute
@@ -20200,7 +20196,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@internalsvisibletoattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@internalsvisibletoattribute
     {
         [TestClass]
         public class @testclass_internalsvisibletoattribute
@@ -20238,7 +20234,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@methodimploptions
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@methodimploptions
     {
         [TestClass]
         public class @testclass_methodimploptions
@@ -20276,7 +20272,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@runtimecompatibilityattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@runtimecompatibilityattribute
     {
         [TestClass]
         public class @testclass_runtimecompatibilityattribute
@@ -20314,7 +20310,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@compilerservices.@runtimehelpers
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@compilerservices.@runtimehelpers
     {
         [TestClass]
         public class @testclass_runtimehelpers
@@ -20360,7 +20356,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@decimalconstantattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@decimalconstantattribute
     {
         [TestClass]
         public class @testclass_decimalconstantattribute
@@ -20398,7 +20394,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@fixedbufferattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@fixedbufferattribute
     {
         [TestClass]
         public class @testclass_fixedbufferattribute
@@ -20444,7 +20440,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@callingconvention
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@callingconvention
     {
         [TestClass]
         public class @testclass_callingconvention
@@ -20474,7 +20470,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@charset
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@charset
     {
         [TestClass]
         public class @testclass_charset
@@ -20504,7 +20500,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@dllimportattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@dllimportattribute
     {
         [TestClass]
         public class @testclass_dllimportattribute
@@ -20534,7 +20530,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@fieldoffsetattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@fieldoffsetattribute
     {
         [TestClass]
         public class @testclass_fieldoffsetattribute
@@ -20572,7 +20568,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@gchandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@gchandle
     {
         [TestClass]
         public class @testclass_gchandle
@@ -20626,7 +20622,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@gchandletype
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@gchandletype
     {
         [TestClass]
         public class @testclass_gchandletype
@@ -20680,7 +20676,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@inattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@inattribute
     {
         [TestClass]
         public class @testclass_inattribute
@@ -20710,7 +20706,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@layoutkind
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@layoutkind
     {
         [TestClass]
         public class @testclass_layoutkind
@@ -20748,7 +20744,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@marshal
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@marshal
     {
         [TestClass]
         public class @testclass_marshal
@@ -20794,7 +20790,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@marshalasattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@marshalasattribute
     {
         [TestClass]
         public class @testclass_marshalasattribute
@@ -20888,7 +20884,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@outattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@outattribute
     {
         [TestClass]
         public class @testclass_outattribute
@@ -20918,7 +20914,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@preservesigattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@preservesigattribute
     {
         [TestClass]
         public class @testclass_preservesigattribute
@@ -20948,7 +20944,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@safehandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@safehandle
     {
         [TestClass]
         public class @testclass_safehandle
@@ -21058,7 +21054,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@structlayoutattribute
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@structlayoutattribute
     {
         [TestClass]
         public class @testclass_structlayoutattribute
@@ -21120,7 +21116,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtime.@interopservices.@unmanagedtype
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtime.@interopservices.@unmanagedtype
     {
         [TestClass]
         public class @testclass_unmanagedtype
@@ -21150,7 +21146,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtimefieldhandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtimefieldhandle
     {
         [TestClass]
         public class @testclass_runtimefieldhandle
@@ -21188,7 +21184,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtimemethodhandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtimemethodhandle
     {
         [TestClass]
         public class @testclass_runtimemethodhandle
@@ -21226,7 +21222,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@runtimetypehandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@runtimetypehandle
     {
         [TestClass]
         public class @testclass_runtimetypehandle
@@ -21264,7 +21260,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@sbyte
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@sbyte
     {
         [TestClass]
         public class @testclass_sbyte
@@ -21454,7 +21450,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@security.@securityexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@security.@securityexception
     {
         [TestClass]
         public class @testclass_securityexception
@@ -21508,7 +21504,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@single
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@single
     {
         [TestClass]
         public class @testclass_single
@@ -21738,7 +21734,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@string
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@string
     {
         [TestClass]
         public class @testclass_string
@@ -22280,7 +22276,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@stringcompare
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@stringcompare
     {
         [TestClass]
         public class @testclass_stringcompare
@@ -22310,7 +22306,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@stringcomparer
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@stringcomparer
     {
         [TestClass]
         public class @testclass_stringcomparer
@@ -22364,7 +22360,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@stringcomparison
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@stringcomparison
     {
         [TestClass]
         public class @testclass_stringcomparison
@@ -22418,7 +22414,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@szarrayhelper
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@szarrayhelper
     {
         [TestClass]
         public class @testclass_szarrayhelper
@@ -22448,7 +22444,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@decoder
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@decoder
     {
         [TestClass]
         public class @testclass_decoder
@@ -22486,7 +22482,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@encoder
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@encoder
     {
         [TestClass]
         public class @testclass_encoder
@@ -22516,7 +22512,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@encoding
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@encoding
     {
         [TestClass]
         public class @testclass_encoding
@@ -22786,7 +22782,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@stringbuilder
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@stringbuilder
     {
         [TestClass]
         public class @testclass_stringbuilder
@@ -23136,7 +23132,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@unicodeencoding
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@unicodeencoding
     {
         [TestClass]
         public class @testclass_unicodeencoding
@@ -23270,7 +23266,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@text.@utf8encoding
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@text.@utf8encoding
     {
         [TestClass]
         public class @testclass_utf8encoding
@@ -23428,7 +23424,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@threading.@autoresetevent
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@threading.@autoresetevent
     {
         [TestClass]
         public class @testclass_autoresetevent
@@ -23474,7 +23470,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@threading.@interlocked
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@threading.@interlocked
     {
         [TestClass]
         public class @testclass_interlocked
@@ -23608,7 +23604,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@threading.@manualresetevent
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@threading.@manualresetevent
     {
         [TestClass]
         public class @testclass_manualresetevent
@@ -23638,7 +23634,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@threading.@timeout
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@threading.@timeout
     {
         [TestClass]
         public class @testclass_timeout
@@ -23668,7 +23664,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@threading.@waithandle
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@threading.@waithandle
     {
         [TestClass]
         public class @testclass_waithandle
@@ -23714,7 +23710,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@timeoutexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@timeoutexception
     {
         [TestClass]
         public class @testclass_timeoutexception
@@ -23760,7 +23756,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@timespan
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@timespan
     {
         [TestClass]
         public class @testclass_timespan
@@ -24014,7 +24010,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@type
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@type
     {
         [TestClass]
         public class @testclass_type
@@ -24172,7 +24168,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@typecode
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@typecode
     {
         [TestClass]
         public class @testclass_typecode
@@ -24330,7 +24326,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@typeloadexception
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@typeloadexception
     {
         [TestClass]
         public class @testclass_typeloadexception
@@ -24384,7 +24380,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@uint16
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@uint16
     {
         [TestClass]
         public class @testclass_uint16
@@ -24598,7 +24594,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@uint32
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@uint32
     {
         [TestClass]
         public class @testclass_uint32
@@ -24820,7 +24816,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@uint64
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@uint64
     {
         [TestClass]
         public class @testclass_uint64
@@ -25026,7 +25022,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@uintptr
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@uintptr
     {
         [TestClass]
         public class @testclass_uintptr
@@ -25136,7 +25132,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@valuetype
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@valuetype
     {
         [TestClass]
         public class @testclass_valuetype
@@ -25174,7 +25170,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@version
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@version
     {
         [TestClass]
         public class @testclass_version
@@ -25276,7 +25272,7 @@
 
     }
 
-    namespace @CoreMangLib.@cti.@system.@weakreference
+    namespace CoreCLR.@CoreMangLib.@cti.@system.@weakreference
     {
         [TestClass]
         public class @testclass_weakreference
@@ -25362,7 +25358,7 @@
 
     }
 
-    namespace @CoreMangLib.@reflection.@assembly
+    namespace CoreCLR.@CoreMangLib.@reflection.@assembly
     {
         [TestClass]
         public class @testclass_assembly
@@ -25392,7 +25388,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@buffer
+    namespace CoreCLR.@CoreMangLib.@system.@buffer
     {
         [TestClass]
         public class @testclass_buffer
@@ -25422,7 +25418,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@datetime
+    namespace CoreCLR.@CoreMangLib.@system.@datetime
     {
         [TestClass]
         public class @testclass_datetime
@@ -25452,7 +25448,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@delegate.@generics
+    namespace CoreCLR.@CoreMangLib.@system.@delegate.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -25506,7 +25502,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@delegate.@miscellaneous
+    namespace CoreCLR.@CoreMangLib.@system.@delegate.@miscellaneous
     {
         [TestClass]
         public class @testclass_miscellaneous
@@ -25552,7 +25548,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@delegate.@threatmodel.@public
+    namespace CoreCLR.@CoreMangLib.@system.@delegate.@threatmodel.@public
     {
         [TestClass]
         public class @testclass_public
@@ -25590,7 +25586,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@delegate.@threatmodel.@tests
+    namespace CoreCLR.@CoreMangLib.@system.@delegate.@threatmodel.@tests
     {
         [TestClass]
         public class @testclass_tests
@@ -25644,7 +25640,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@exception
+    namespace CoreCLR.@CoreMangLib.@system.@exception
     {
         [TestClass]
         public class @testclass_exception
@@ -25674,7 +25670,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@guid
+    namespace CoreCLR.@CoreMangLib.@system.@guid
     {
         [TestClass]
         public class @testclass_guid
@@ -25704,7 +25700,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@lazyt
+    namespace CoreCLR.@CoreMangLib.@system.@lazyt
     {
         [TestClass]
         public class @testclass_lazyt
@@ -25734,7 +25730,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@reflection.@assembly
+    namespace CoreCLR.@CoreMangLib.@system.@reflection.@assembly
     {
         [TestClass]
         public class @testclass_assembly
@@ -25788,7 +25784,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@resources.@resourcemanager
+    namespace CoreCLR.@CoreMangLib.@system.@resources.@resourcemanager
     {
         [TestClass]
         public class @testclass_resourcemanager
@@ -25818,7 +25814,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@text.@encoding
+    namespace CoreCLR.@CoreMangLib.@system.@text.@encoding
     {
         [TestClass]
         public class @testclass_encoding
@@ -25848,7 +25844,7 @@
 
     }
 
-    namespace @CoreMangLib.@system.@version
+    namespace CoreCLR.@CoreMangLib.@system.@version
     {
         [TestClass]
         public class @testclass_version
@@ -25878,7 +25874,7 @@
 
     }
 
-    namespace @Exceptions.@Finalization
+    namespace CoreCLR.@Exceptions.@Finalization
     {
         [TestClass]
         public class @testclass_Finalization
@@ -25908,7 +25904,7 @@
 
     }
 
-    namespace @GC.@API.@GCSettings
+    namespace CoreCLR.@GC.@API.@GCSettings
     {
         [TestClass]
         public class @testclass_GCSettings
@@ -25962,7 +25958,7 @@
 
     }
 
-    namespace @GC.@Coverage
+    namespace CoreCLR.@GC.@Coverage
     {
         [TestClass]
         public class @testclass_Coverage
@@ -26000,7 +25996,7 @@
 
     }
 
-    namespace @GC.@Features.@HeapExpansion
+    namespace CoreCLR.@GC.@Features.@HeapExpansion
     {
         [TestClass]
         public class @testclass_HeapExpansion
@@ -26046,7 +26042,7 @@
 
     }
 
-    namespace @GC.@Features.@Pinning.@PinningOther
+    namespace CoreCLR.@GC.@Features.@Pinning.@PinningOther
     {
         [TestClass]
         public class @testclass_PinningOther
@@ -26124,7 +26120,7 @@
 
     }
 
-    namespace @GC.@Performance.@Framework
+    namespace CoreCLR.@GC.@Performance.@Framework
     {
         [TestClass]
         public class @testclass_Framework
@@ -26162,7 +26158,7 @@
 
     }
 
-    namespace @GC.@Performance.@Framework.@Metrics
+    namespace CoreCLR.@GC.@Performance.@Framework.@Metrics
     {
         [TestClass]
         public class @testclass_Metrics
@@ -26208,7 +26204,7 @@
 
     }
 
-    namespace @GC.@Performance.@Framework.@Metrics.@Builders
+    namespace CoreCLR.@GC.@Performance.@Framework.@Metrics.@Builders
     {
         [TestClass]
         public class @testclass_Builders
@@ -26286,7 +26282,7 @@
 
     }
 
-    namespace @GC.@Performance.@Tests
+    namespace CoreCLR.@GC.@Performance.@Tests
     {
         [TestClass]
         public class @testclass_Tests
@@ -26380,7 +26376,7 @@
 
     }
 
-    namespace @GC.@Scenarios.@Boxing
+    namespace CoreCLR.@GC.@Scenarios.@Boxing
     {
         [TestClass]
         public class @testclass_Boxing
@@ -26410,7 +26406,7 @@
 
     }
 
-    namespace @GC.@Scenarios.@DoublinkList
+    namespace CoreCLR.@GC.@Scenarios.@DoublinkList
     {
         [TestClass]
         public class @testclass_DoublinkList
@@ -26440,7 +26436,7 @@
 
     }
 
-    namespace @GC.@Scenarios.@FinalNStruct
+    namespace CoreCLR.@GC.@Scenarios.@FinalNStruct
     {
         [TestClass]
         public class @testclass_FinalNStruct
@@ -26470,7 +26466,7 @@
 
     }
 
-    namespace @hosting.@coreclr.@activation.@sxshost
+    namespace CoreCLR.@hosting.@coreclr.@activation.@sxshost
     {
         [TestClass]
         public class @testclass_sxshost
@@ -26516,7 +26512,7 @@
 
     }
 
-    namespace @hosting.@samples.@hosting.@usercode
+    namespace CoreCLR.@hosting.@samples.@hosting.@usercode
     {
         [TestClass]
         public class @testclass_usercode
@@ -26546,7 +26542,7 @@
 
     }
 
-    namespace @hosting.@samples.@resolveevent.@usercodedependency
+    namespace CoreCLR.@hosting.@samples.@resolveevent.@usercodedependency
     {
         [TestClass]
         public class @testclass_usercodedependency
@@ -26576,7 +26572,7 @@
 
     }
 
-    namespace @Interop.@ICastable
+    namespace CoreCLR.@Interop.@ICastable
     {
         [TestClass]
         public class @testclass_ICastable
@@ -26606,7 +26602,7 @@
 
     }
 
-    namespace @Interop.@NativeCallable
+    namespace CoreCLR.@Interop.@NativeCallable
     {
         [TestClass]
         public class @testclass_NativeCallable
@@ -26636,7 +26632,7 @@
 
     }
 
-    namespace @Interop.@ReversePInvoke.@Marshalling
+    namespace CoreCLR.@Interop.@ReversePInvoke.@Marshalling
     {
         [TestClass]
         public class @testclass_Marshalling
@@ -26666,7 +26662,7 @@
 
     }
 
-    namespace @JIT.@CodeGenBringUpTests
+    namespace CoreCLR.@JIT.@CodeGenBringUpTests
     {
         [TestClass]
         public class @testclass_CodeGenBringUpTests
@@ -27744,7 +27740,7 @@
 
     }
 
-    namespace @JIT.@Directed.@Arrays
+    namespace CoreCLR.@JIT.@Directed.@Arrays
     {
         [TestClass]
         public class @testclass_Arrays
@@ -27798,7 +27794,7 @@
 
     }
 
-    namespace @JIT.@Directed.@CheckedCtor
+    namespace CoreCLR.@JIT.@Directed.@CheckedCtor
     {
         [TestClass]
         public class @testclass_CheckedCtor
@@ -27964,7 +27960,7 @@
 
     }
 
-    namespace @JIT.@Directed.@cmov
+    namespace CoreCLR.@JIT.@Directed.@cmov
     {
         [TestClass]
         public class @testclass_cmov
@@ -28114,7 +28110,7 @@
 
     }
 
-    namespace @JIT.@Directed.@Convert
+    namespace CoreCLR.@JIT.@Directed.@Convert
     {
         [TestClass]
         public class @testclass_Convert
@@ -28144,7 +28140,7 @@
 
     }
 
-    namespace @JIT.@Directed.@coverage.@flowgraph
+    namespace CoreCLR.@JIT.@Directed.@coverage.@flowgraph
     {
         [TestClass]
         public class @testclass_flowgraph
@@ -28174,7 +28170,7 @@
 
     }
 
-    namespace @JIT.@Directed.@coverage.@oldtests
+    namespace CoreCLR.@JIT.@Directed.@coverage.@oldtests
     {
         [TestClass]
         public class @testclass_oldtests
@@ -28260,7 +28256,7 @@
 
     }
 
-    namespace @JIT.@Directed.@forceinlining
+    namespace CoreCLR.@JIT.@Directed.@forceinlining
     {
         [TestClass]
         public class @testclass_forceinlining
@@ -28306,7 +28302,7 @@
 
     }
 
-    namespace @JIT.@Directed.@gettypetypeof
+    namespace CoreCLR.@JIT.@Directed.@gettypetypeof
     {
         [TestClass]
         public class @testclass_gettypetypeof
@@ -28336,7 +28332,7 @@
 
     }
 
-    namespace @JIT.@Directed.@intrinsic.@interlocked
+    namespace CoreCLR.@JIT.@Directed.@intrinsic.@interlocked
     {
         [TestClass]
         public class @testclass_interlocked
@@ -28406,7 +28402,7 @@
 
     }
 
-    namespace @JIT.@Directed.@intrinsic.@pow
+    namespace CoreCLR.@JIT.@Directed.@intrinsic.@pow
     {
         [TestClass]
         public class @testclass_pow
@@ -28460,7 +28456,7 @@
 
     }
 
-    namespace @JIT.@Directed.@lifetime
+    namespace CoreCLR.@JIT.@Directed.@lifetime
     {
         [TestClass]
         public class @testclass_lifetime
@@ -28498,7 +28494,7 @@
 
     }
 
-    namespace @JIT.@Directed.@localloc
+    namespace CoreCLR.@JIT.@Directed.@localloc
     {
         [TestClass]
         public class @testclass_localloc
@@ -28528,7 +28524,7 @@
 
     }
 
-    namespace @JIT.@Directed.@Misc.@gettype
+    namespace CoreCLR.@JIT.@Directed.@Misc.@gettype
     {
         [TestClass]
         public class @testclass_gettype
@@ -28558,7 +28554,7 @@
 
     }
 
-    namespace @JIT.@Directed.@newarr
+    namespace CoreCLR.@JIT.@Directed.@newarr
     {
         [TestClass]
         public class @testclass_newarr
@@ -28588,7 +28584,7 @@
 
     }
 
-    namespace @JIT.@Directed.@nullabletypes
+    namespace CoreCLR.@JIT.@Directed.@nullabletypes
     {
         [TestClass]
         public class @testclass_nullabletypes
@@ -28634,7 +28630,7 @@
 
     }
 
-    namespace @JIT.@Directed.@perffix.@commutativecse
+    namespace CoreCLR.@JIT.@Directed.@perffix.@commutativecse
     {
         [TestClass]
         public class @testclass_commutativecse
@@ -28664,7 +28660,7 @@
 
     }
 
-    namespace @JIT.@Directed.@perffix.@primitivevt
+    namespace CoreCLR.@JIT.@Directed.@perffix.@primitivevt
     {
         [TestClass]
         public class @testclass_primitivevt
@@ -28702,7 +28698,7 @@
 
     }
 
-    namespace @JIT.@Directed.@pinvoke
+    namespace CoreCLR.@JIT.@Directed.@pinvoke
     {
         [TestClass]
         public class @testclass_pinvoke
@@ -28740,7 +28736,7 @@
 
     }
 
-    namespace @JIT.@Directed.@PREFIX.@PrimitiveVT
+    namespace CoreCLR.@JIT.@Directed.@PREFIX.@PrimitiveVT
     {
         [TestClass]
         public class @testclass_PrimitiveVT
@@ -28786,7 +28782,7 @@
 
     }
 
-    namespace @JIT.@Directed.@shift
+    namespace CoreCLR.@JIT.@Directed.@shift
     {
         [TestClass]
         public class @testclass_shift
@@ -28864,7 +28860,7 @@
 
     }
 
-    namespace @JIT.@Directed.@StrAccess
+    namespace CoreCLR.@JIT.@Directed.@StrAccess
     {
         [TestClass]
         public class @testclass_StrAccess
@@ -28918,7 +28914,7 @@
 
     }
 
-    namespace @JIT.@Directed.@StructABI
+    namespace CoreCLR.@JIT.@Directed.@StructABI
     {
         [TestClass]
         public class @testclass_StructABI
@@ -28972,7 +28968,7 @@
 
     }
 
-    namespace @JIT.@Directed.@StructPromote
+    namespace CoreCLR.@JIT.@Directed.@StructPromote
     {
         [TestClass]
         public class @testclass_StructPromote
@@ -29090,7 +29086,7 @@
 
     }
 
-    namespace @JIT.@Directed.@TypedReference
+    namespace CoreCLR.@JIT.@Directed.@TypedReference
     {
         [TestClass]
         public class @testclass_TypedReference
@@ -29120,7 +29116,7 @@
 
     }
 
-    namespace @JIT.@Directed.@UnrollLoop
+    namespace CoreCLR.@JIT.@Directed.@UnrollLoop
     {
         [TestClass]
         public class @testclass_UnrollLoop
@@ -29182,7 +29178,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Arrays.@ConstructedTypes.@Jagged
+    namespace CoreCLR.@JIT.@Generics.@Arrays.@ConstructedTypes.@Jagged
     {
         [TestClass]
         public class @testclass_Jagged
@@ -29356,7 +29352,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Arrays.@ConstructedTypes.@MultiDim
+    namespace CoreCLR.@JIT.@Generics.@Arrays.@ConstructedTypes.@MultiDim
     {
         [TestClass]
         public class @testclass_MultiDim
@@ -29426,7 +29422,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Arrays.@TypeParameters.@Jagged
+    namespace CoreCLR.@JIT.@Generics.@Arrays.@TypeParameters.@Jagged
     {
         [TestClass]
         public class @testclass_Jagged
@@ -29464,7 +29460,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Arrays.@TypeParameters.@MultiDim
+    namespace CoreCLR.@JIT.@Generics.@Arrays.@TypeParameters.@MultiDim
     {
         [TestClass]
         public class @testclass_MultiDim
@@ -29502,7 +29498,7 @@
 
     }
 
-    namespace @JIT.@Generics.@ConstrainedCall
+    namespace CoreCLR.@JIT.@Generics.@ConstrainedCall
     {
         [TestClass]
         public class @testclass_ConstrainedCall
@@ -29572,7 +29568,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Constraints
+    namespace CoreCLR.@JIT.@Generics.@Constraints
     {
         [TestClass]
         public class @testclass_Constraints
@@ -29642,7 +29638,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Conversions.@Boxing
+    namespace CoreCLR.@JIT.@Generics.@Conversions.@Boxing
     {
         [TestClass]
         public class @testclass_Boxing
@@ -29672,7 +29668,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Conversions.@Reference
+    namespace CoreCLR.@JIT.@Generics.@Conversions.@Reference
     {
         [TestClass]
         public class @testclass_Reference
@@ -29766,7 +29762,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Coverage
+    namespace CoreCLR.@JIT.@Generics.@Coverage
     {
         [TestClass]
         public class @testclass_Coverage
@@ -29812,7 +29808,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Exceptions
+    namespace CoreCLR.@JIT.@Generics.@Exceptions
     {
         [TestClass]
         public class @testclass_Exceptions
@@ -29930,7 +29926,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Fields
+    namespace CoreCLR.@JIT.@Generics.@Fields
     {
         [TestClass]
         public class @testclass_Fields
@@ -30048,7 +30044,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Instantiation.@Classes
+    namespace CoreCLR.@JIT.@Generics.@Instantiation.@Classes
     {
         [TestClass]
         public class @testclass_Classes
@@ -30134,7 +30130,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Instantiation.@Interfaces
+    namespace CoreCLR.@JIT.@Generics.@Instantiation.@Interfaces
     {
         [TestClass]
         public class @testclass_Interfaces
@@ -30236,7 +30232,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Instantiation.@Structs
+    namespace CoreCLR.@JIT.@Generics.@Instantiation.@Structs
     {
         [TestClass]
         public class @testclass_Structs
@@ -30282,7 +30278,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Locals
+    namespace CoreCLR.@JIT.@Generics.@Locals
     {
         [TestClass]
         public class @testclass_Locals
@@ -30400,7 +30396,7 @@
 
     }
 
-    namespace @JIT.@Generics.@MemberAccess
+    namespace CoreCLR.@JIT.@Generics.@MemberAccess
     {
         [TestClass]
         public class @testclass_MemberAccess
@@ -30486,7 +30482,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Parameters
+    namespace CoreCLR.@JIT.@Generics.@Parameters
     {
         [TestClass]
         public class @testclass_Parameters
@@ -30604,7 +30600,7 @@
 
     }
 
-    namespace @JIT.@Generics.@pinvoke
+    namespace CoreCLR.@JIT.@Generics.@pinvoke
     {
         [TestClass]
         public class @testclass_pinvoke
@@ -30666,7 +30662,7 @@
 
     }
 
-    namespace @JIT.@Generics.@Typeof
+    namespace CoreCLR.@JIT.@Generics.@Typeof
     {
         [TestClass]
         public class @testclass_Typeof
@@ -30768,7 +30764,7 @@
 
     }
 
-    namespace @JIT.@Generics.@TypeParameters
+    namespace CoreCLR.@JIT.@Generics.@TypeParameters
     {
         [TestClass]
         public class @testclass_TypeParameters
@@ -30806,7 +30802,7 @@
 
     }
 
-    namespace @JIT.@jit64.@ebvts.@cs.@generics.@generics
+    namespace CoreCLR.@JIT.@jit64.@ebvts.@cs.@generics.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -30836,7 +30832,7 @@
 
     }
 
-    namespace @JIT.@jit64.@eh.@basics
+    namespace CoreCLR.@JIT.@jit64.@eh.@basics
     {
         [TestClass]
         public class @testclass_basics
@@ -30866,7 +30862,7 @@
 
     }
 
-    namespace @JIT.@jit64.@eh.@Common
+    namespace CoreCLR.@JIT.@jit64.@eh.@Common
     {
         [TestClass]
         public class @testclass_Common
@@ -30896,7 +30892,7 @@
 
     }
 
-    namespace @JIT.@jit64.@eh.@FinallyExec
+    namespace CoreCLR.@JIT.@jit64.@eh.@FinallyExec
     {
         [TestClass]
         public class @testclass_FinallyExec
@@ -30950,7 +30946,7 @@
 
     }
 
-    namespace @JIT.@jit64.@eh.@Leaves
+    namespace CoreCLR.@JIT.@jit64.@eh.@Leaves
     {
         [TestClass]
         public class @testclass_Leaves
@@ -30980,7 +30976,7 @@
 
     }
 
-    namespace @JIT.@jit64.@gc.@misc
+    namespace CoreCLR.@JIT.@jit64.@gc.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -31666,7 +31662,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@dll
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@dll
     {
         [TestClass]
         public class @testclass_dll
@@ -31792,7 +31788,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@testA
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@testA
     {
         [TestClass]
         public class @testclass_testA
@@ -31822,7 +31818,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@testB
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@testB
     {
         [TestClass]
         public class @testclass_testB
@@ -31852,7 +31848,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@testC
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@testC
     {
         [TestClass]
         public class @testclass_testC
@@ -31882,7 +31878,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@testE
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@testE
     {
         [TestClass]
         public class @testclass_testE
@@ -31912,7 +31908,7 @@
 
     }
 
-    namespace @JIT.@jit64.@hfa.@main.@testG
+    namespace CoreCLR.@JIT.@jit64.@hfa.@main.@testG
     {
         [TestClass]
         public class @testclass_testG
@@ -31942,7 +31938,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@cg.@CGRecurse
+    namespace CoreCLR.@JIT.@jit64.@opt.@cg.@CGRecurse
     {
         [TestClass]
         public class @testclass_CGRecurse
@@ -31996,7 +31992,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@cprop
+    namespace CoreCLR.@JIT.@jit64.@opt.@cprop
     {
         [TestClass]
         public class @testclass_cprop
@@ -32034,7 +32030,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@cse
+    namespace CoreCLR.@JIT.@jit64.@opt.@cse
     {
         [TestClass]
         public class @testclass_cse
@@ -32264,7 +32260,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@inl
+    namespace CoreCLR.@JIT.@jit64.@opt.@inl
     {
         [TestClass]
         public class @testclass_inl
@@ -32294,7 +32290,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@lim
+    namespace CoreCLR.@JIT.@jit64.@opt.@lim
     {
         [TestClass]
         public class @testclass_lim
@@ -32324,7 +32320,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@lur
+    namespace CoreCLR.@JIT.@jit64.@opt.@lur
     {
         [TestClass]
         public class @testclass_lur
@@ -32354,7 +32350,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@osr
+    namespace CoreCLR.@JIT.@jit64.@opt.@osr
     {
         [TestClass]
         public class @testclass_osr
@@ -32384,7 +32380,7 @@
 
     }
 
-    namespace @JIT.@jit64.@opt.@rngchk
+    namespace CoreCLR.@JIT.@jit64.@opt.@rngchk
     {
         [TestClass]
         public class @testclass_rngchk
@@ -32470,7 +32466,7 @@
 
     }
 
-    namespace @JIT.@jit64.@rtchecks.@overflow
+    namespace CoreCLR.@JIT.@jit64.@rtchecks.@overflow
     {
         [TestClass]
         public class @testclass_overflow
@@ -32524,7 +32520,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox
     {
         [TestClass]
         public class @testclass_box_unbox
@@ -32554,7 +32550,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@box_unbox
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@box_unbox
     {
         [TestClass]
         public class @testclass_box_unbox
@@ -32920,7 +32916,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@enum
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@enum
     {
         [TestClass]
         public class @testclass_enum
@@ -32966,7 +32962,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@generics
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -33332,7 +33328,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@interface
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@interface
     {
         [TestClass]
         public class @testclass_interface
@@ -33498,7 +33494,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@null
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@null
     {
         [TestClass]
         public class @testclass_null
@@ -33864,7 +33860,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@box_unbox.@value
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@box_unbox.@value
     {
         [TestClass]
         public class @testclass_value
@@ -34230,7 +34226,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass
     {
         [TestClass]
         public class @testclass_castclass
@@ -34260,7 +34256,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass.@castclass
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass.@castclass
     {
         [TestClass]
         public class @testclass_castclass
@@ -34626,7 +34622,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass.@enum
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass.@enum
     {
         [TestClass]
         public class @testclass_enum
@@ -34672,7 +34668,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass.@generics
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -35038,7 +35034,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass.@interface
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass.@interface
     {
         [TestClass]
         public class @testclass_interface
@@ -35204,7 +35200,7 @@
 
     }
 
-    namespace @JIT.@jit64.@valuetypes.@nullable.@castclass.@null
+    namespace CoreCLR.@JIT.@jit64.@valuetypes.@nullable.@castclass.@null
     {
         [TestClass]
         public class @testclass_null
@@ -35570,7 +35566,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Arrays.@lcs
+    namespace CoreCLR.@JIT.@Methodical.@Arrays.@lcs
     {
         [TestClass]
         public class @testclass_lcs
@@ -35656,7 +35652,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Arrays.@misc
+    namespace CoreCLR.@JIT.@Methodical.@Arrays.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -35702,7 +35698,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@AsgOp.@i4
+    namespace CoreCLR.@JIT.@Methodical.@AsgOp.@i4
     {
         [TestClass]
         public class @testclass_i4
@@ -35740,7 +35736,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@AsgOp.@i8
+    namespace CoreCLR.@JIT.@Methodical.@AsgOp.@i8
     {
         [TestClass]
         public class @testclass_i8
@@ -35778,7 +35774,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@AsgOp.@r4
+    namespace CoreCLR.@JIT.@Methodical.@AsgOp.@r4
     {
         [TestClass]
         public class @testclass_r4
@@ -35816,7 +35812,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@AsgOp.@r8
+    namespace CoreCLR.@JIT.@Methodical.@AsgOp.@r8
     {
         [TestClass]
         public class @testclass_r8
@@ -35854,7 +35850,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@callconv
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@callconv
     {
         [TestClass]
         public class @testclass_callconv
@@ -35884,7 +35880,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@functional
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@functional
     {
         [TestClass]
         public class @testclass_functional
@@ -35922,7 +35918,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@misc
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -35968,7 +35964,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@morph
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@morph
     {
         [TestClass]
         public class @testclass_morph
@@ -35998,7 +35994,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@seh
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@seh
     {
         [TestClass]
         public class @testclass_seh
@@ -36028,7 +36024,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Boxing.@xlang
+    namespace CoreCLR.@JIT.@Methodical.@Boxing.@xlang
     {
         [TestClass]
         public class @testclass_xlang
@@ -36066,7 +36062,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@casts.@coverage
+    namespace CoreCLR.@JIT.@Methodical.@casts.@coverage
     {
         [TestClass]
         public class @testclass_coverage
@@ -36152,7 +36148,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@casts.@iface
+    namespace CoreCLR.@JIT.@Methodical.@casts.@iface
     {
         [TestClass]
         public class @testclass_iface
@@ -36182,7 +36178,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@casts.@ilseq
+    namespace CoreCLR.@JIT.@Methodical.@casts.@ilseq
     {
         [TestClass]
         public class @testclass_ilseq
@@ -36212,7 +36208,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@casts.@SEH
+    namespace CoreCLR.@JIT.@Methodical.@casts.@SEH
     {
         [TestClass]
         public class @testclass_SEH
@@ -36250,7 +36246,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@cctor.@misc
+    namespace CoreCLR.@JIT.@Methodical.@cctor.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -36280,7 +36276,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@cctor.@misc.@Desktop
+    namespace CoreCLR.@JIT.@Methodical.@cctor.@misc.@Desktop
     {
         [TestClass]
         public class @testclass_Desktop
@@ -36310,7 +36306,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@cctor.@simple
+    namespace CoreCLR.@JIT.@Methodical.@cctor.@simple
     {
         [TestClass]
         public class @testclass_simple
@@ -36364,7 +36360,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@cctor.@xassem
+    namespace CoreCLR.@JIT.@Methodical.@cctor.@xassem
     {
         [TestClass]
         public class @testclass_xassem
@@ -36426,7 +36422,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Coverage
+    namespace CoreCLR.@JIT.@Methodical.@Coverage
     {
         [TestClass]
         public class @testclass_Coverage
@@ -36456,7 +36452,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@divrem.@div
+    namespace CoreCLR.@JIT.@Methodical.@divrem.@div
     {
         [TestClass]
         public class @testclass_div
@@ -36550,7 +36546,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@divrem.@rem
+    namespace CoreCLR.@JIT.@Methodical.@divrem.@rem
     {
         [TestClass]
         public class @testclass_rem
@@ -36636,7 +36632,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@doublearray
+    namespace CoreCLR.@JIT.@Methodical.@doublearray
     {
         [TestClass]
         public class @testclass_doublearray
@@ -36682,7 +36678,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@dynamic_methods
+    namespace CoreCLR.@JIT.@Methodical.@dynamic_methods
     {
         [TestClass]
         public class @testclass_dynamic_methods
@@ -36712,7 +36708,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@basics
+    namespace CoreCLR.@JIT.@Methodical.@eh.@basics
     {
         [TestClass]
         public class @testclass_basics
@@ -36846,7 +36842,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@common
+    namespace CoreCLR.@JIT.@Methodical.@eh.@common
     {
         [TestClass]
         public class @testclass_common
@@ -36876,7 +36872,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@cs
+    namespace CoreCLR.@JIT.@Methodical.@eh.@cs
     {
         [TestClass]
         public class @testclass_cs
@@ -36906,7 +36902,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@finallyexec
+    namespace CoreCLR.@JIT.@Methodical.@eh.@finallyexec
     {
         [TestClass]
         public class @testclass_finallyexec
@@ -37032,7 +37028,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@generics
+    namespace CoreCLR.@JIT.@Methodical.@eh.@generics
     {
         [TestClass]
         public class @testclass_generics
@@ -37078,7 +37074,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@interactions
+    namespace CoreCLR.@JIT.@Methodical.@eh.@interactions
     {
         [TestClass]
         public class @testclass_interactions
@@ -37140,7 +37136,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@leaves
+    namespace CoreCLR.@JIT.@Methodical.@eh.@leaves
     {
         [TestClass]
         public class @testclass_leaves
@@ -37194,7 +37190,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@nested.@general
+    namespace CoreCLR.@JIT.@Methodical.@eh.@nested.@general
     {
         [TestClass]
         public class @testclass_general
@@ -37272,7 +37268,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@nested.@nonlocalexit
+    namespace CoreCLR.@JIT.@Methodical.@eh.@nested.@nonlocalexit
     {
         [TestClass]
         public class @testclass_nonlocalexit
@@ -37318,7 +37314,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@eh.@rethrow
+    namespace CoreCLR.@JIT.@Methodical.@eh.@rethrow
     {
         [TestClass]
         public class @testclass_rethrow
@@ -37388,7 +37384,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@explicit.@basic
+    namespace CoreCLR.@JIT.@Methodical.@explicit.@basic
     {
         [TestClass]
         public class @testclass_basic
@@ -37474,7 +37470,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@explicit.@coverage
+    namespace CoreCLR.@JIT.@Methodical.@explicit.@coverage
     {
         [TestClass]
         public class @testclass_coverage
@@ -37880,7 +37876,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@explicit.@misc
+    namespace CoreCLR.@JIT.@Methodical.@explicit.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -37966,7 +37962,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@explicit.@rotate
+    namespace CoreCLR.@JIT.@Methodical.@explicit.@rotate
     {
         [TestClass]
         public class @testclass_rotate
@@ -38020,7 +38016,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@bug614098
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@bug614098
     {
         [TestClass]
         public class @testclass_bug614098
@@ -38050,7 +38046,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@bug619534
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@bug619534
     {
         [TestClass]
         public class @testclass_bug619534
@@ -38112,7 +38108,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@bug621705
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@bug621705
     {
         [TestClass]
         public class @testclass_bug621705
@@ -38142,7 +38138,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@bug647189
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@bug647189
     {
         [TestClass]
         public class @testclass_bug647189
@@ -38172,7 +38168,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@dev10_bug675304
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@dev10_bug675304
     {
         [TestClass]
         public class @testclass_dev10_bug675304
@@ -38210,7 +38206,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@dev10_bug679008
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@dev10_bug679008
     {
         [TestClass]
         public class @testclass_dev10_bug679008
@@ -38272,7 +38268,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@flowgraph.@dev10_bug723489
+    namespace CoreCLR.@JIT.@Methodical.@flowgraph.@dev10_bug723489
     {
         [TestClass]
         public class @testclass_dev10_bug723489
@@ -38302,7 +38298,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@fp.@apps
+    namespace CoreCLR.@JIT.@Methodical.@fp.@apps
     {
         [TestClass]
         public class @testclass_apps
@@ -38340,7 +38336,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@fp.@exgen
+    namespace CoreCLR.@JIT.@Methodical.@fp.@exgen
     {
         [TestClass]
         public class @testclass_exgen
@@ -38466,7 +38462,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@FPtrunc
+    namespace CoreCLR.@JIT.@Methodical.@FPtrunc
     {
         [TestClass]
         public class @testclass_FPtrunc
@@ -38504,7 +38500,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@inlining.@bug505642
+    namespace CoreCLR.@JIT.@Methodical.@inlining.@bug505642
     {
         [TestClass]
         public class @testclass_bug505642
@@ -38534,7 +38530,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@int64.@arrays
+    namespace CoreCLR.@JIT.@Methodical.@int64.@arrays
     {
         [TestClass]
         public class @testclass_arrays
@@ -38572,7 +38568,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@int64.@misc
+    namespace CoreCLR.@JIT.@Methodical.@int64.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -38610,7 +38606,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@int64.@signed
+    namespace CoreCLR.@JIT.@Methodical.@int64.@signed
     {
         [TestClass]
         public class @testclass_signed
@@ -38704,7 +38700,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@int64.@superlong
+    namespace CoreCLR.@JIT.@Methodical.@int64.@superlong
     {
         [TestClass]
         public class @testclass_superlong
@@ -38734,7 +38730,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@int64.@unsigned
+    namespace CoreCLR.@JIT.@Methodical.@int64.@unsigned
     {
         [TestClass]
         public class @testclass_unsigned
@@ -38820,7 +38816,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@_25params
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@_25params
     {
         [TestClass]
         public class @testclass__25params
@@ -38866,7 +38862,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@callvirt
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@callvirt
     {
         [TestClass]
         public class @testclass_callvirt
@@ -38896,7 +38892,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@ctor
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@ctor
     {
         [TestClass]
         public class @testclass_ctor
@@ -38926,7 +38922,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@deep
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@deep
     {
         [TestClass]
         public class @testclass_deep
@@ -38956,7 +38952,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@fptr
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@fptr
     {
         [TestClass]
         public class @testclass_fptr
@@ -38986,7 +38982,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@implicit
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@implicit
     {
         [TestClass]
         public class @testclass_implicit
@@ -39016,7 +39012,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Invoke.@SEH
+    namespace CoreCLR.@JIT.@Methodical.@Invoke.@SEH
     {
         [TestClass]
         public class @testclass_SEH
@@ -39054,7 +39050,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@jitinterface
+    namespace CoreCLR.@JIT.@Methodical.@jitinterface
     {
         [TestClass]
         public class @testclass_jitinterface
@@ -39084,7 +39080,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@MDArray.@basics
+    namespace CoreCLR.@JIT.@Methodical.@MDArray.@basics
     {
         [TestClass]
         public class @testclass_basics
@@ -39146,7 +39142,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@MDArray.@DataTypes
+    namespace CoreCLR.@JIT.@Methodical.@MDArray.@DataTypes
     {
         [TestClass]
         public class @testclass_DataTypes
@@ -39272,7 +39268,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@MDArray.@GaussJordan
+    namespace CoreCLR.@JIT.@Methodical.@MDArray.@GaussJordan
     {
         [TestClass]
         public class @testclass_GaussJordan
@@ -39326,7 +39322,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@MDArray.@InnerProd
+    namespace CoreCLR.@JIT.@Methodical.@MDArray.@InnerProd
     {
         [TestClass]
         public class @testclass_InnerProd
@@ -39396,7 +39392,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@NaN
+    namespace CoreCLR.@JIT.@Methodical.@NaN
     {
         [TestClass]
         public class @testclass_NaN
@@ -39514,7 +39510,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@nonvirtualcall
+    namespace CoreCLR.@JIT.@Methodical.@nonvirtualcall
     {
         [TestClass]
         public class @testclass_nonvirtualcall
@@ -39584,7 +39580,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@Overflow
+    namespace CoreCLR.@JIT.@Methodical.@Overflow
     {
         [TestClass]
         public class @testclass_Overflow
@@ -39622,7 +39618,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@refany
+    namespace CoreCLR.@JIT.@Methodical.@refany
     {
         [TestClass]
         public class @testclass_refany
@@ -39700,7 +39696,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@stringintern
+    namespace CoreCLR.@JIT.@Methodical.@stringintern
     {
         [TestClass]
         public class @testclass_stringintern
@@ -39770,7 +39766,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@structs.@systemvbringup
+    namespace CoreCLR.@JIT.@Methodical.@structs.@systemvbringup
     {
         [TestClass]
         public class @testclass_systemvbringup
@@ -39824,7 +39820,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@tailcall.@Desktop
+    namespace CoreCLR.@JIT.@Methodical.@tailcall.@Desktop
     {
         [TestClass]
         public class @testclass_Desktop
@@ -39854,7 +39850,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@tailcall_v4
+    namespace CoreCLR.@JIT.@Methodical.@tailcall_v4
     {
         [TestClass]
         public class @testclass_tailcall_v4
@@ -39884,7 +39880,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@unsafecsharp
+    namespace CoreCLR.@JIT.@Methodical.@unsafecsharp
     {
         [TestClass]
         public class @testclass_unsafecsharp
@@ -39970,7 +39966,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@VT.@callconv
+    namespace CoreCLR.@JIT.@Methodical.@VT.@callconv
     {
         [TestClass]
         public class @testclass_callconv
@@ -40024,7 +40020,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@VT.@etc
+    namespace CoreCLR.@JIT.@Methodical.@VT.@etc
     {
         [TestClass]
         public class @testclass_etc
@@ -40118,7 +40114,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@VT.@identity
+    namespace CoreCLR.@JIT.@Methodical.@VT.@identity
     {
         [TestClass]
         public class @testclass_identity
@@ -40156,7 +40152,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@VT.@port
+    namespace CoreCLR.@JIT.@Methodical.@VT.@port
     {
         [TestClass]
         public class @testclass_port
@@ -40194,7 +40190,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@xxobj.@operand
+    namespace CoreCLR.@JIT.@Methodical.@xxobj.@operand
     {
         [TestClass]
         public class @testclass_operand
@@ -40232,7 +40228,7 @@
 
     }
 
-    namespace @JIT.@Methodical.@xxobj.@sizeof
+    namespace CoreCLR.@JIT.@Methodical.@xxobj.@sizeof
     {
         [TestClass]
         public class @testclass_sizeof
@@ -40270,7 +40266,7 @@
 
     }
 
-    namespace @JIT.@opt.@AssertionPropagation
+    namespace CoreCLR.@JIT.@opt.@AssertionPropagation
     {
         [TestClass]
         public class @testclass_AssertionPropagation
@@ -40372,7 +40368,7 @@
 
     }
 
-    namespace @JIT.@opt.@Inline
+    namespace CoreCLR.@JIT.@opt.@Inline
     {
         [TestClass]
         public class @testclass_Inline
@@ -40706,7 +40702,7 @@
 
     }
 
-    namespace @JIT.@opt.@Inline.@tests
+    namespace CoreCLR.@JIT.@opt.@Inline.@tests
     {
         [TestClass]
         public class @testclass_tests
@@ -41040,7 +41036,7 @@
 
     }
 
-    namespace @JIT.@opt.@perf.@doublealign
+    namespace CoreCLR.@JIT.@opt.@perf.@doublealign
     {
         [TestClass]
         public class @testclass_doublealign
@@ -41086,7 +41082,7 @@
 
     }
 
-    namespace @JIT.@opt.@virtualstubdispatch.@bigvtbl
+    namespace CoreCLR.@JIT.@opt.@virtualstubdispatch.@bigvtbl
     {
         [TestClass]
         public class @testclass_bigvtbl
@@ -41116,7 +41112,7 @@
 
     }
 
-    namespace @JIT.@opt.@virtualstubdispatch.@manyintf
+    namespace CoreCLR.@JIT.@opt.@virtualstubdispatch.@manyintf
     {
         [TestClass]
         public class @testclass_manyintf
@@ -41226,7 +41222,7 @@
 
     }
 
-    namespace @JIT.@opt.@virtualstubdispatch.@mixed
+    namespace CoreCLR.@JIT.@opt.@virtualstubdispatch.@mixed
     {
         [TestClass]
         public class @testclass_mixed
@@ -41256,7 +41252,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@_8Queens
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@_8Queens
     {
         [TestClass]
         public class @testclass__8Queens
@@ -41286,7 +41282,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@Ackermann
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@Ackermann
     {
         [TestClass]
         public class @testclass_Ackermann
@@ -41316,7 +41312,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@AddArray
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@AddArray
     {
         [TestClass]
         public class @testclass_AddArray
@@ -41346,7 +41342,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@Array2
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@Array2
     {
         [TestClass]
         public class @testclass_Array2
@@ -41376,7 +41372,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@BubbleSort
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@BubbleSort
     {
         [TestClass]
         public class @testclass_BubbleSort
@@ -41406,7 +41402,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@BubbleSort2
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@BubbleSort2
     {
         [TestClass]
         public class @testclass_BubbleSort2
@@ -41436,7 +41432,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@Fib
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@Fib
     {
         [TestClass]
         public class @testclass_Fib
@@ -41466,7 +41462,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@HeapSort
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@HeapSort
     {
         [TestClass]
         public class @testclass_HeapSort
@@ -41496,7 +41492,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@IniArray
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@IniArray
     {
         [TestClass]
         public class @testclass_IniArray
@@ -41526,7 +41522,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@LogicArray
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@LogicArray
     {
         [TestClass]
         public class @testclass_LogicArray
@@ -41556,7 +41552,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@Midpoint
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@Midpoint
     {
         [TestClass]
         public class @testclass_Midpoint
@@ -41586,7 +41582,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@MulMatrix
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@MulMatrix
     {
         [TestClass]
         public class @testclass_MulMatrix
@@ -41616,7 +41612,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@Pi
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@Pi
     {
         [TestClass]
         public class @testclass_Pi
@@ -41646,7 +41642,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@QuickSort
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@QuickSort
     {
         [TestClass]
         public class @testclass_QuickSort
@@ -41676,7 +41672,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@TreeSort
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@TreeSort
     {
         [TestClass]
         public class @testclass_TreeSort
@@ -41706,7 +41702,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@BenchI.@XposMatrix
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@BenchI.@XposMatrix
     {
         [TestClass]
         public class @testclass_XposMatrix
@@ -41736,7 +41732,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@FractalPerf
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@FractalPerf
     {
         [TestClass]
         public class @testclass_FractalPerf
@@ -41766,7 +41762,7 @@
 
     }
 
-    namespace @JIT.@Performance.@CodeQuality.@SIMD.@ConsoleMandel
+    namespace CoreCLR.@JIT.@Performance.@CodeQuality.@SIMD.@ConsoleMandel
     {
         [TestClass]
         public class @testclass_ConsoleMandel
@@ -41868,7 +41864,7 @@
 
     }
 
-    namespace @JIT.@RyuJIT
+    namespace CoreCLR.@JIT.@RyuJIT
     {
         [TestClass]
         public class @testclass_RyuJIT
@@ -41898,7 +41894,7 @@
 
     }
 
-    namespace @JIT.@SIMD
+    namespace CoreCLR.@JIT.@SIMD
     {
         [TestClass]
         public class @testclass_SIMD
@@ -42312,7 +42308,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@assemblybugs.@_102140
+    namespace CoreCLR.@Loader.@binding.@assemblies.@assemblybugs.@_102140
     {
         [TestClass]
         public class @testclass__102140
@@ -42342,7 +42338,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@assemblybugs.@_177066w
+    namespace CoreCLR.@Loader.@binding.@assemblies.@assemblybugs.@_177066w
     {
         [TestClass]
         public class @testclass__177066w
@@ -42372,7 +42368,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@assemblybugs.@_203962w
+    namespace CoreCLR.@Loader.@binding.@assemblies.@assemblybugs.@_203962w
     {
         [TestClass]
         public class @testclass__203962w
@@ -42402,7 +42398,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@assemblyversion
+    namespace CoreCLR.@Loader.@binding.@assemblies.@assemblyversion
     {
         [TestClass]
         public class @testclass_assemblyversion
@@ -42432,7 +42428,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@basicapi.@assemblynamector
+    namespace CoreCLR.@Loader.@binding.@assemblies.@basicapi.@assemblynamector
     {
         [TestClass]
         public class @testclass_assemblynamector
@@ -42486,7 +42482,7 @@
 
     }
 
-    namespace @Loader.@binding.@assemblies.@generics.@arilistienum.@methods
+    namespace CoreCLR.@Loader.@binding.@assemblies.@generics.@arilistienum.@methods
     {
         [TestClass]
         public class @testclass_methods
@@ -42524,7 +42520,7 @@
 
     }
 
-    namespace @Loader.@classloader.@explicitlayout.@misc
+    namespace CoreCLR.@Loader.@classloader.@explicitlayout.@misc
     {
         [TestClass]
         public class @testclass_misc
@@ -42554,7 +42550,7 @@
 
     }
 
-    namespace @Loader.@classloader.@explicitlayout.@objrefandnonobjrefoverlap
+    namespace CoreCLR.@Loader.@classloader.@explicitlayout.@objrefandnonobjrefoverlap
     {
         [TestClass]
         public class @testclass_objrefandnonobjrefoverlap
@@ -42680,7 +42676,7 @@
 
     }
 
-    namespace @Loader.@classloader.@nesting.@coreclr
+    namespace CoreCLR.@Loader.@classloader.@nesting.@coreclr
     {
         [TestClass]
         public class @testclass_coreclr
@@ -42710,7 +42706,7 @@
 
     }
 
-    namespace @Loader.@multimodule
+    namespace CoreCLR.@Loader.@multimodule
     {
         [TestClass]
         public class @testclass_multimodule
@@ -42740,7 +42736,7 @@
 
     }
 
-    namespace @Loader.@NativeLibs
+    namespace CoreCLR.@Loader.@NativeLibs
     {
         [TestClass]
         public class @testclass_NativeLibs
@@ -42770,7 +42766,7 @@
 
     }
 
-    namespace @Loader.@versioning.@coverage
+    namespace CoreCLR.@Loader.@versioning.@coverage
     {
         [TestClass]
         public class @testclass_coverage
@@ -42800,7 +42796,7 @@
 
     }
 
-    namespace @managed.@Compilation
+    namespace CoreCLR.@managed.@Compilation
     {
         [TestClass]
         public class @testclass_Compilation
@@ -42838,7 +42834,7 @@
 
     }
 
-    namespace @readytorun
+    namespace CoreCLR.@readytorun
     {
         [TestClass]
         public class @testclass_readytorun
@@ -42876,7 +42872,7 @@
 
     }
 
-    namespace @Threading.@ThreadStatics
+    namespace CoreCLR.@Threading.@ThreadStatics
     {
         [TestClass]
         public class @testclass_ThreadStatics

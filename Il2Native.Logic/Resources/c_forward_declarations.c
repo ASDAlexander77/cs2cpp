@@ -967,9 +967,25 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 
 // Unboxing internals
 template <typename T>
-inline T __unbox(T* t)
+inline typename std::enable_if<!is_nullable_type<T>::value, T>::type __unbox(T* t)
 {
+	if (t == nullptr)
+	{
+		throw __new<CoreLib::System::NullPointerException>();
+	}
+
 	return *t;
+}
+
+template <typename T>
+inline typename std::enable_if<is_nullable_type<T>::value, T>::type __unbox(T* t)
+{
+	if (t != nullptr)
+	{
+		return *t;
+	}
+
+	return __default<T>();
 }
 
 template <typename T> 

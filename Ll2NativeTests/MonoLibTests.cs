@@ -1,14 +1,10 @@
-﻿namespace Ll2NativeTests
+﻿namespace Mono.Ll2NativeTests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using global::Ll2NativeTests;
 
-    namespace @dtest
+    namespace Mono.@dtest
     {
         [TestClass]
         public class @tests
@@ -436,7 +432,7 @@
 
     }
 
-    namespace @dtest_anontype
+    namespace Mono.@dtest_anontype
     {
         [TestClass]
         public class @tests
@@ -465,7 +461,7 @@
 
     }
 
-    namespace @dtest_cls
+    namespace Mono.@dtest_cls
     {
         [TestClass]
         public class @tests
@@ -494,7 +490,7 @@
 
     }
 
-    namespace @dtest_collectioninit
+    namespace Mono.@dtest_collectioninit
     {
         [TestClass]
         public class @tests
@@ -523,7 +519,7 @@
 
     }
 
-    namespace @dtest_error
+    namespace Mono.@dtest_error
     {
         [TestClass]
         public class @tests
@@ -573,7 +569,7 @@
 
     }
 
-    namespace @dtest_etree
+    namespace Mono.@dtest_etree
     {
         [TestClass]
         public class @tests
@@ -609,7 +605,7 @@
 
     }
 
-    namespace @dtest_friend
+    namespace Mono.@dtest_friend
     {
         [TestClass]
         public class @tests
@@ -638,7 +634,7 @@
 
     }
 
-    namespace @dtest_implicitarray
+    namespace Mono.@dtest_implicitarray
     {
         [TestClass]
         public class @tests
@@ -667,7 +663,7 @@
 
     }
 
-    namespace @dtest_iter
+    namespace Mono.@dtest_iter
     {
         [TestClass]
         public class @tests
@@ -696,7 +692,7 @@
 
     }
 
-    namespace @dtest_named
+    namespace Mono.@dtest_named
     {
         [TestClass]
         public class @tests
@@ -732,7 +728,7 @@
 
     }
 
-    namespace @dtest_optional
+    namespace Mono.@dtest_optional
     {
         [TestClass]
         public class @tests
@@ -761,7 +757,7 @@
 
     }
 
-    namespace @gtest
+    namespace Mono.@gtest
     {
         [TestClass]
         public class @tests
@@ -4885,7 +4881,7 @@
 
     }
 
-    namespace @gtest_anontype
+    namespace Mono.@gtest_anontype
     {
         [TestClass]
         public class @tests
@@ -4998,7 +4994,7 @@
 
     }
 
-    namespace @gtest_autoproperty
+    namespace Mono.@gtest_autoproperty
     {
         [TestClass]
         public class @tests
@@ -5069,7 +5065,7 @@
 
     }
 
-    namespace @gtest_collectioninit
+    namespace Mono.@gtest_collectioninit
     {
         [TestClass]
         public class @tests
@@ -5112,7 +5108,7 @@
 
     }
 
-    namespace @gtest_etree
+    namespace Mono.@gtest_etree
     {
         [TestClass]
         public class @tests
@@ -5330,7 +5326,7 @@
 
     }
 
-    namespace @gtest_exmethod
+    namespace Mono.@gtest_exmethod
     {
         [TestClass]
         public class @tests
@@ -5674,7 +5670,7 @@
 
     }
 
-    namespace @gtest_fixedbuffer
+    namespace Mono.@gtest_fixedbuffer
     {
         [TestClass]
         public class @tests
@@ -5766,7 +5762,7 @@
 
     }
 
-    namespace @gtest_friend
+    namespace Mono.@gtest_friend
     {
         [TestClass]
         public class @tests
@@ -5886,7 +5882,7 @@
 
     }
 
-    namespace @gtest_implicitarray
+    namespace Mono.@gtest_implicitarray
     {
         [TestClass]
         public class @tests
@@ -5929,7 +5925,7 @@
 
     }
 
-    namespace @gtest_initialize
+    namespace Mono.@gtest_initialize
     {
         [TestClass]
         public class @tests
@@ -6035,7 +6031,7 @@
 
     }
 
-    namespace @gtest_iter
+    namespace Mono.@gtest_iter
     {
         [TestClass]
         public class @tests
@@ -6260,7 +6256,7 @@
 
     }
 
-    namespace @gtest_lambda
+    namespace Mono.@gtest_lambda
     {
         [TestClass]
         public class @tests
@@ -6499,7 +6495,7 @@
 
     }
 
-    namespace @gtest_linq
+    namespace Mono.@gtest_linq
     {
         [TestClass]
         public class @tests
@@ -6717,7 +6713,7 @@
 
     }
 
-    namespace @gtest_named
+    namespace Mono.@gtest_named
     {
         [TestClass]
         public class @tests
@@ -6767,7 +6763,7 @@
 
     }
 
-    namespace @gtest_optional
+    namespace Mono.@gtest_optional
     {
         [TestClass]
         public class @tests
@@ -6978,7 +6974,7 @@
 
     }
 
-    namespace @gtest_partial
+    namespace Mono.@gtest_partial
     {
         [TestClass]
         public class @tests
@@ -7042,7 +7038,7 @@
 
     }
 
-    namespace @gtest_var
+    namespace Mono.@gtest_var
     {
         [TestClass]
         public class @tests
@@ -7071,7 +7067,7 @@
 
     }
 
-    namespace @gtest_variance
+    namespace Mono.@gtest_variance
     {
         [TestClass]
         public class @tests
@@ -7240,7 +7236,7 @@
 
     }
 
-    namespace @support
+    namespace Mono.@support
     {
         [TestClass]
         public class @tests
@@ -7290,7 +7286,7 @@
 
     }
 
-    namespace @support_test_debug
+    namespace Mono.@support_test_debug
     {
         [TestClass]
         public class @tests
@@ -7319,7 +7315,7 @@
 
     }
 
-    namespace @support_xml
+    namespace Mono.@support_xml
     {
         [TestClass]
         public class @tests
@@ -7348,7 +7344,7 @@
 
     }
 
-    namespace @test
+    namespace Mono.@test
     {
         [TestClass]
         public class @tests
@@ -13411,7 +13407,7 @@
 
     }
 
-    namespace @test_anon
+    namespace Mono.@test_anon
     {
         [TestClass]
         public class @tests
@@ -14630,7 +14626,7 @@
 
     }
 
-    namespace @test_async
+    namespace Mono.@test_async
     {
         [TestClass]
         public class @tests
@@ -14988,7 +14984,7 @@
 
     }
 
-    namespace @test_cls
+    namespace Mono.@test_cls
     {
         [TestClass]
         public class @tests
@@ -15122,7 +15118,7 @@
 
     }
 
-    namespace @test_com
+    namespace Mono.@test_com
     {
         [TestClass]
         public class @tests
@@ -15165,7 +15161,7 @@
 
     }
 
-    namespace @test_debug
+    namespace Mono.@test_debug
     {
         [TestClass]
         public class @tests
@@ -15376,7 +15372,7 @@
 
     }
 
-    namespace @test_externalias
+    namespace Mono.@test_externalias
     {
         [TestClass]
         public class @tests
@@ -15461,7 +15457,7 @@
 
     }
 
-    namespace @test_iter
+    namespace Mono.@test_iter
     {
         [TestClass]
         public class @tests
@@ -15658,7 +15654,7 @@
 
     }
 
-    namespace @test_named
+    namespace Mono.@test_named
     {
         [TestClass]
         public class @tests
@@ -15729,7 +15725,7 @@
 
     }
 
-    namespace @test_partial
+    namespace Mono.@test_partial
     {
         [TestClass]
         public class @tests
@@ -15968,7 +15964,7 @@
 
     }
 
-    namespace @test_var
+    namespace Mono.@test_var
     {
         [TestClass]
         public class @tests
@@ -16046,7 +16042,7 @@
 
     }
 
-    namespace @test_xml
+    namespace Mono.@test_xml
     {
         [TestClass]
         public class @tests

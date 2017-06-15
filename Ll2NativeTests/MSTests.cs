@@ -15,7 +15,6 @@ namespace Ll2NativeTests
     using System.IO;
     using System.Linq;
 
-    using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using TestContext = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
@@ -1060,7 +1059,7 @@ namespace Ll2NativeTests
             skip.Add(598); // casting int to object* in virtual generic method
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(1, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(329, 645).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

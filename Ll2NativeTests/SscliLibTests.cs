@@ -1,14 +1,10 @@
-﻿namespace Ll2NativeTests
+﻿namespace Sscli.Ll2NativeTests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using global::Ll2NativeTests;
 
-    namespace @argiterator
+    namespace Sscli.@argiterator
     {
         [TestClass]
         public class @argiterator
@@ -72,7 +68,7 @@
 
     }
 
-    namespace @array
+    namespace Sscli.@array
     {
         [TestClass]
         public class @array
@@ -465,7 +461,7 @@
 
     }
 
-    namespace @attribute
+    namespace Sscli.@attribute
     {
         [TestClass]
         public class @attribute
@@ -543,7 +539,7 @@
 
     }
 
-    namespace @bitconverter
+    namespace Sscli.@bitconverter
     {
         [TestClass]
         public class @bitconverter
@@ -740,7 +736,7 @@
 
     }
 
-    namespace @boolean
+    namespace Sscli.@boolean
     {
         [TestClass]
         public class @boolean
@@ -818,7 +814,7 @@
 
     }
 
-    namespace @buffer
+    namespace Sscli.@buffer
     {
         [TestClass]
         public class @buffer
@@ -868,7 +864,7 @@
 
     }
 
-    namespace @byte
+    namespace Sscli.@byte
     {
         [TestClass]
         public class @byte
@@ -995,7 +991,7 @@
 
     }
 
-    namespace @char
+    namespace Sscli.@char
     {
         [TestClass]
         public class @char
@@ -1304,7 +1300,7 @@
 
     }
 
-    namespace @charenumerator
+    namespace Sscli.@charenumerator
     {
         [TestClass]
         public class @charenumerator
@@ -1354,7 +1350,7 @@
 
     }
 
-    namespace @collections.@arraylist
+    namespace Sscli.@collections.@arraylist
     {
         [TestClass]
         public class @arraylist
@@ -1747,7 +1743,7 @@
 
     }
 
-    namespace @collections.@bitarray
+    namespace Sscli.@collections.@bitarray
     {
         [TestClass]
         public class @bitarray
@@ -1923,7 +1919,7 @@
 
     }
 
-    namespace @collections.@caseinsensitivecomparer
+    namespace Sscli.@collections.@caseinsensitivecomparer
     {
         [TestClass]
         public class @caseinsensitivecomparer
@@ -1973,7 +1969,7 @@
 
     }
 
-    namespace @collections.@caseinsensitivehashcodeprovider
+    namespace Sscli.@collections.@caseinsensitivehashcodeprovider
     {
         [TestClass]
         public class @caseinsensitivehashcodeprovider
@@ -2023,7 +2019,7 @@
 
     }
 
-    namespace @collections.@collectionbase
+    namespace Sscli.@collections.@collectionbase
     {
         [TestClass]
         public class @collectionbase
@@ -2052,7 +2048,7 @@
 
     }
 
-    namespace @collections.@comparer
+    namespace Sscli.@collections.@comparer
     {
         [TestClass]
         public class @comparer
@@ -2081,7 +2077,7 @@
 
     }
 
-    namespace @collections.@dictionaryentry
+    namespace Sscli.@collections.@dictionaryentry
     {
         [TestClass]
         public class @dictionaryentry
@@ -2124,7 +2120,7 @@
 
     }
 
-    namespace @collections.@hashtable
+    namespace Sscli.@collections.@hashtable
     {
         [TestClass]
         public class @hashtable
@@ -2279,7 +2275,7 @@
 
     }
 
-    namespace @collections.@queue
+    namespace Sscli.@collections.@queue
     {
         [TestClass]
         public class @queue
@@ -2392,7 +2388,7 @@
 
     }
 
-    namespace @collections.@readonlycollectionbase
+    namespace Sscli.@collections.@readonlycollectionbase
     {
         [TestClass]
         public class @readonlycollectionbase
@@ -2421,7 +2417,7 @@
 
     }
 
-    namespace @collections.@sortedlist
+    namespace Sscli.@collections.@sortedlist
     {
         [TestClass]
         public class @sortedlist
@@ -2660,7 +2656,7 @@
 
     }
 
-    namespace @collections.@specialized.@bitvector32
+    namespace Sscli.@collections.@specialized.@bitvector32
     {
         [TestClass]
         public class @bitvector32
@@ -2794,7 +2790,7 @@
 
     }
 
-    namespace @collections.@specialized.@hybriddictionary
+    namespace Sscli.@collections.@specialized.@hybriddictionary
     {
         [TestClass]
         public class @hybriddictionary
@@ -2935,7 +2931,7 @@
 
     }
 
-    namespace @collections.@specialized.@listdictionary
+    namespace Sscli.@collections.@specialized.@listdictionary
     {
         [TestClass]
         public class @listdictionary
@@ -3069,7 +3065,7 @@
 
     }
 
-    namespace @collections.@specialized.@namevaluecollection
+    namespace Sscli.@collections.@specialized.@namevaluecollection
     {
         [TestClass]
         public class @namevaluecollection
@@ -3245,7 +3241,7 @@
 
     }
 
-    namespace @collections.@specialized.@stringcollection
+    namespace Sscli.@collections.@specialized.@stringcollection
     {
         [TestClass]
         public class @stringcollection
@@ -3379,7 +3375,7 @@
 
     }
 
-    namespace @collections.@specialized.@stringdictionary
+    namespace Sscli.@collections.@specialized.@stringdictionary
     {
         [TestClass]
         public class @stringdictionary
@@ -3499,7 +3495,7 @@
 
     }
 
-    namespace @collections.@specialized.@stringenumerator
+    namespace Sscli.@collections.@specialized.@stringenumerator
     {
         [TestClass]
         public class @stringenumerator
@@ -3542,7 +3538,7 @@
 
     }
 
-    namespace @collections.@stack
+    namespace Sscli.@collections.@stack
     {
         [TestClass]
         public class @stack
@@ -3592,7 +3588,7 @@
 
     }
 
-    namespace @convert
+    namespace Sscli.@convert
     {
         [TestClass]
         public class @convert
@@ -3775,7 +3771,7 @@
 
     }
 
-    namespace @datetime
+    namespace Sscli.@datetime
     {
         [TestClass]
         public class @datetime
@@ -4273,7 +4269,7 @@
 
     }
 
-    namespace @dbnull
+    namespace Sscli.@dbnull
     {
         [TestClass]
         public class @dbnull
@@ -4421,7 +4417,7 @@
 
     }
 
-    namespace @decimal
+    namespace Sscli.@decimal
     {
         [TestClass]
         public class @decimal
@@ -4835,7 +4831,7 @@
 
     }
 
-    namespace @delegate
+    namespace Sscli.@delegate
     {
         [TestClass]
         public class @delegate
@@ -4920,7 +4916,7 @@
 
     }
 
-    namespace @double
+    namespace Sscli.@double
     {
         [TestClass]
         public class @double
@@ -5089,7 +5085,7 @@
 
     }
 
-    namespace @enum
+    namespace Sscli.@enum
     {
         [TestClass]
         public class @enum
@@ -5251,7 +5247,7 @@
 
     }
 
-    namespace @environment
+    namespace Sscli.@environment
     {
         [TestClass]
         public class @environment
@@ -5371,7 +5367,7 @@
 
     }
 
-    namespace @eventargs
+    namespace Sscli.@eventargs
     {
         [TestClass]
         public class @eventargs
@@ -5400,7 +5396,7 @@
 
     }
 
-    namespace @exception
+    namespace Sscli.@exception
     {
         [TestClass]
         public class @exception
@@ -5492,7 +5488,7 @@
 
     }
 
-    namespace @guid
+    namespace Sscli.@guid
     {
         [TestClass]
         public class @guid
@@ -5619,7 +5615,7 @@
 
     }
 
-    namespace @int16
+    namespace Sscli.@int16
     {
         [TestClass]
         public class @int16
@@ -5739,7 +5735,7 @@
 
     }
 
-    namespace @int32
+    namespace Sscli.@int32
     {
         [TestClass]
         public class @int32
@@ -5866,7 +5862,7 @@
 
     }
 
-    namespace @int64
+    namespace Sscli.@int64
     {
         [TestClass]
         public class @int64
@@ -5986,7 +5982,7 @@
 
     }
 
-    namespace @intptr
+    namespace Sscli.@intptr
     {
         [TestClass]
         public class @intptr
@@ -6085,7 +6081,7 @@
 
     }
 
-    namespace @io.@binaryreader
+    namespace Sscli.@io.@binaryreader
     {
         [TestClass]
         public class @binaryreader
@@ -6275,7 +6271,7 @@
 
     }
 
-    namespace @io.@binarywriter
+    namespace Sscli.@io.@binarywriter
     {
         [TestClass]
         public class @binarywriter
@@ -6472,7 +6468,7 @@
 
     }
 
-    namespace @io.@bufferedstream
+    namespace Sscli.@io.@bufferedstream
     {
         [TestClass]
         public class @bufferedstream
@@ -6606,7 +6602,7 @@
 
     }
 
-    namespace @io.@directory
+    namespace Sscli.@io.@directory
     {
         [TestClass]
         public class @directory
@@ -6796,7 +6792,7 @@
 
     }
 
-    namespace @io.@directoryinfo
+    namespace Sscli.@io.@directoryinfo
     {
         [TestClass]
         public class @directoryinfo
@@ -7014,7 +7010,7 @@
 
     }
 
-    namespace @io.@file
+    namespace Sscli.@io.@file
     {
         [TestClass]
         public class @file
@@ -7197,7 +7193,7 @@
 
     }
 
-    namespace @io.@fileinfo
+    namespace Sscli.@io.@fileinfo
     {
         [TestClass]
         public class @fileinfo
@@ -7429,7 +7425,7 @@
 
     }
 
-    namespace @io.@filestream
+    namespace Sscli.@io.@filestream
     {
         [TestClass]
         public class @filestream
@@ -7633,7 +7629,7 @@
 
     }
 
-    namespace @io.@memorystream
+    namespace Sscli.@io.@memorystream
     {
         [TestClass]
         public class @memorystream
@@ -7844,7 +7840,7 @@
 
     }
 
-    namespace @io.@path
+    namespace Sscli.@io.@path
     {
         [TestClass]
         public class @path
@@ -7985,7 +7981,7 @@
 
     }
 
-    namespace @io.@stream
+    namespace Sscli.@io.@stream
     {
         [TestClass]
         public class @stream
@@ -8014,7 +8010,7 @@
 
     }
 
-    namespace @io.@streamreader
+    namespace Sscli.@io.@streamreader
     {
         [TestClass]
         public class @streamreader
@@ -8169,7 +8165,7 @@
 
     }
 
-    namespace @io.@streamwriter
+    namespace Sscli.@io.@streamwriter
     {
         [TestClass]
         public class @streamwriter
@@ -8296,7 +8292,7 @@
 
     }
 
-    namespace @io.@stringreader
+    namespace Sscli.@io.@stringreader
     {
         [TestClass]
         public class @stringreader
@@ -8367,7 +8363,7 @@
 
     }
 
-    namespace @io.@stringwriter
+    namespace Sscli.@io.@stringwriter
     {
         [TestClass]
         public class @stringwriter
@@ -8459,7 +8455,7 @@
 
     }
 
-    namespace @math
+    namespace Sscli.@math
     {
         [TestClass]
         public class @math
@@ -8859,7 +8855,7 @@
 
     }
 
-    namespace @random
+    namespace Sscli.@random
     {
         [TestClass]
         public class @random
@@ -8937,7 +8933,7 @@
 
     }
 
-    namespace @runtime.@serialization.@formatterconverter
+    namespace Sscli.@runtime.@serialization.@formatterconverter
     {
         [TestClass]
         public class @formatterconverter
@@ -8966,7 +8962,7 @@
 
     }
 
-    namespace @runtime.@serialization.@formatterservices
+    namespace Sscli.@runtime.@serialization.@formatterservices
     {
         [TestClass]
         public class @formatterservices
@@ -9023,7 +9019,7 @@
 
     }
 
-    namespace @runtime.@serialization.@objectidgenerator
+    namespace Sscli.@runtime.@serialization.@objectidgenerator
     {
         [TestClass]
         public class @objectidgenerator
@@ -9059,7 +9055,7 @@
 
     }
 
-    namespace @runtime.@serialization.@objectmanager
+    namespace Sscli.@runtime.@serialization.@objectmanager
     {
         [TestClass]
         public class @objectmanager
@@ -9158,7 +9154,7 @@
 
     }
 
-    namespace @runtime.@serialization.@pseudomlformatter
+    namespace Sscli.@runtime.@serialization.@pseudomlformatter
     {
         [TestClass]
         public class @pseudomlformatter
@@ -9187,7 +9183,7 @@
 
     }
 
-    namespace @runtime.@serialization.@serializationentry
+    namespace Sscli.@runtime.@serialization.@serializationentry
     {
         [TestClass]
         public class @serializationentry
@@ -9230,7 +9226,7 @@
 
     }
 
-    namespace @runtime.@serialization.@serializationinfo
+    namespace Sscli.@runtime.@serialization.@serializationinfo
     {
         [TestClass]
         public class @serializationinfo
@@ -9329,7 +9325,7 @@
 
     }
 
-    namespace @runtime.@serialization.@serializationinfoenumerator
+    namespace Sscli.@runtime.@serialization.@serializationinfoenumerator
     {
         [TestClass]
         public class @serializationinfoenumerator
@@ -9393,7 +9389,7 @@
 
     }
 
-    namespace @runtime.@serialization.@streamingcontext
+    namespace Sscli.@runtime.@serialization.@streamingcontext
     {
         [TestClass]
         public class @streamingcontext
@@ -9457,7 +9453,7 @@
 
     }
 
-    namespace @runtime.@serialization.@surrogateselector
+    namespace Sscli.@runtime.@serialization.@surrogateselector
     {
         [TestClass]
         public class @surrogateselector
@@ -9521,7 +9517,7 @@
 
     }
 
-    namespace @sbyte
+    namespace Sscli.@sbyte
     {
         [TestClass]
         public class @sbyte
@@ -9655,7 +9651,7 @@
 
     }
 
-    namespace @single
+    namespace Sscli.@single
     {
         [TestClass]
         public class @single
@@ -9817,7 +9813,7 @@
 
     }
 
-    namespace @string
+    namespace Sscli.@string
     {
         [TestClass]
         public class @string
@@ -10455,7 +10451,7 @@
 
     }
 
-    namespace @timespan
+    namespace Sscli.@timespan
     {
         [TestClass]
         public class @timespan
@@ -10729,7 +10725,7 @@
 
     }
 
-    namespace @timezone
+    namespace Sscli.@timezone
     {
         [TestClass]
         public class @timezone
@@ -10758,7 +10754,7 @@
 
     }
 
-    namespace @uint16
+    namespace Sscli.@uint16
     {
         [TestClass]
         public class @uint16
@@ -10892,7 +10888,7 @@
 
     }
 
-    namespace @uint32
+    namespace Sscli.@uint32
     {
         [TestClass]
         public class @uint32
@@ -11026,7 +11022,7 @@
 
     }
 
-    namespace @uint64
+    namespace Sscli.@uint64
     {
         [TestClass]
         public class @uint64
@@ -11160,7 +11156,7 @@
 
     }
 
-    namespace @uintptr
+    namespace Sscli.@uintptr
     {
         [TestClass]
         public class @uintptr
@@ -11259,7 +11255,7 @@
 
     }
 
-    namespace @valuetype
+    namespace Sscli.@valuetype
     {
         [TestClass]
         public class @valuetype
@@ -11302,7 +11298,7 @@
 
     }
 
-    namespace @version
+    namespace Sscli.@version
     {
         [TestClass]
         public class @version
