@@ -69,6 +69,15 @@
                 c.TextSpan("(");
             }
 
+            var castRequired = this.ConversionKind == ConversionKind.Boxing && TypeSource.TypeKind == TypeKind.TypeParameter && Type.TypeKind == TypeKind.TypeParameter;
+            if (castRequired)
+            {
+                c.TextSpan("cast<");
+                c.WriteType(Type, containingNamespace: MethodOwner?.ContainingNamespace);
+                c.TextSpan(">");
+                c.TextSpan("(");
+            }
+
             var effectiveExpression = this.Operand;
             if ((this.ConversionKind == ConversionKind.Boxing || this.ConversionKind == ConversionKind.ImplicitReference) 
                 && this.Operand.IsStaticOrSupportedVolatileWrapperCall())
@@ -113,6 +122,11 @@
                     effectiveExpression.WriteTo(c);
                     c.TextSpan(")");
                 }
+            }
+
+            if (castRequired)
+            {
+                c.TextSpan(")");
             }
 
             if (interfaceCastRequired)

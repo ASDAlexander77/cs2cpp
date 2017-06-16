@@ -813,7 +813,7 @@ inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_in
 		return nullptr;
 	}
 
-	auto d = reinterpret_cast<C>(t->__get_interface(_typeof<C>()));
+	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(_typeof<C>()));
 	if (d == nullptr)
 	{
 		throw __new<CoreLib::System::InvalidCastException>();

@@ -824,6 +824,10 @@ namespace Ll2NativeTests
             skip.Add(936); // lib IL
             skip.Add(937); // compilation error
             skip.Add(939); // compilation error
+            skip.Add(942); // Attributes are not implemented
+            skip.Add(943); // StrictLayout property of a type
+            skip.Add(944); // Finalize conflict names
+            skip.Add(945); // Attributes are not implemented
 
             foreach (var index in Enumerable.Range(1, 946).Where(n => !skip.Contains(n)))
             {
@@ -1041,11 +1045,10 @@ namespace Ll2NativeTests
             // new C++ limitations
             skip.Add(313); // enum to string - not implemented
             skip.Add(343); // using the same name for template and class
-            skip.Add(351); // BOX item to System.Enum cast is not working (can be fixed!!!)
             skip.Add(433); // enum to String
             skip.Add(453); // enum to String
-            skip.Add(544); // Generic method in an abstract - need review
-            skip.Add(558); // Generic method in an abstract - need review
+            skip.Add(544); // Generic method in an abstract - need review (STRUCT to object*)
+            skip.Add(558); // Generic method in an abstract - need review (STRUCT to object*)
 
             // =============================================================
             // new tests: (after im-plementing virtual generic methods
@@ -1060,12 +1063,12 @@ namespace Ll2NativeTests
             // !!! NEW: NEEDS TO BE IMPLEMENTED
             skip.Add(592); // Array does not contains "IReadOnlyList" & "IReadOnlyCollection" interfaces
             skip.Add(595); // "is" for generic when T is struct is not implemented
-            skip.Add(598); // casting int to object* in virtual generic method
-            skip.Add(620); // virtual generic method conflict with object* type (can be fixed)
+            skip.Add(598); // casting int to object* in virtual generic method - need review (STRUCT to object*)
             skip.Add(623); // IL lib
+            skip.Add(646); // Conglict of template and specialized template
 
             ////foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            foreach (var index in Enumerable.Range(1, 645).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 646).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

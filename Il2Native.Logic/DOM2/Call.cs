@@ -393,11 +393,11 @@ namespace Il2Native.Logic.DOM2
 
             if (type.IsGenericType && !type.IsNullable())
             {
-                return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
+                return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
             }
             else
             {
-                return GetTypeForVirtualGenericMethod(method.OriginalDefinition, parameter.OriginalDefinition.Type, parameter.ContainingSymbol);
+                return GetTypeForVirtualGenericMethod(method, parameter.Type, parameter.ContainingSymbol);
             }
         }
 
