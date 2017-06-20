@@ -29,6 +29,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReturnType = "Type".ToSystemType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
                 ContainingType = type;
+                ReceiverType = type;
             }
         }
     }

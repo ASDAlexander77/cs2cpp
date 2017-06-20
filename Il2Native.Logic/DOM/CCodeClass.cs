@@ -12,9 +12,12 @@ namespace Il2Native.Logic.DOM
         {
             this.Type = type;
             this.Declarations = new List<CCodeDeclaration>();
+            this.Definitions = new List<CCodeDefinition>();
         }
 
         public IList<CCodeDeclaration> Declarations { get; private set; }
+
+        public IList<CCodeDefinition> Definitions { get; private set; }
 
         public ITypeSymbol Type { get; set; }
 

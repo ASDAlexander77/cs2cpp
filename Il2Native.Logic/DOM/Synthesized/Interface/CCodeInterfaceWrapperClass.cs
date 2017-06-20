@@ -23,6 +23,7 @@ namespace Il2Native.Logic.DOM
         {
             this.@interface = @interface;
             this.CreateMemebers();
+            this.GetMembersImplementation();
         }
 
         public static string GetName(INamedTypeSymbol type, INamedTypeSymbol @interface)
@@ -34,13 +35,24 @@ namespace Il2Native.Logic.DOM
             return sb.ToString();
         }
 
-        public IEnumerable<CCodeMethodDefinition> GetMembersImplementation()
+        public static NamedTypeImpl GetReceiver(INamedTypeSymbol namedTypeSymbol, INamedTypeSymbol @interface)
         {
-            return this.@interface.GetMembers()
+            return new NamedTypeImpl { Name = GetName(namedTypeSymbol, @interface), ContainingType = namedTypeSymbol };
+        }
+
+        public void GetMembersImplementation()
+        {
+            var namedTypeSymbol = (INamedTypeSymbol)Type;
+            Definitions.Add(new CCodeObjectCastOperatorDefinition(namedTypeSymbol, GetReceiver(namedTypeSymbol, this.@interface)));
+
+            foreach (var method in this.@interface.GetMembers()
                 .OfType<IMethodSymbol>()
                 .Union(this.@interface.EnumerateInterfaceMethods())
                 .Select(this.CreateWrapperMethod)
-                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) });
+                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) }))
+            {
+                Definitions.Add(method);
+            }
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -75,12 +87,6 @@ namespace Il2Native.Logic.DOM
             c.TextSpan("_class{class_}");
             c.WhiteSpace();
             c.TextSpanNewLine("{}");
-
-            // add new method
-            var namedTypeSymbol = (INamedTypeSymbol)Type;
-            // not needed as we use global normal allocator
-            ////new CCodeNewOperatorDeclaration(@interface).WriteTo(c);
-            new CCodeObjectCastOperatorDefinition(namedTypeSymbol).WriteTo(c);
 
             foreach (var declaration in Declarations)
             {
@@ -118,7 +124,9 @@ namespace Il2Native.Logic.DOM
 
         private void CreateMemebers()
         {
+            var namedTypeSymbol = (INamedTypeSymbol)Type;
             Declarations.Add(new CCodeFieldDeclaration(new FieldImpl { Name = "_class", Type = Type }));
+            Declarations.Add(new CCodeObjectCastOperatorDeclaration(namedTypeSymbol, GetReceiver(namedTypeSymbol, this.@interface)));
             foreach (var interfaceMethod in this.@interface.GetMembers().OfType<IMethodSymbol>().Union(this.@interface.EnumerateInterfaceMethods()))
             {
                 Declarations.Add(new CCodeMethodDeclaration(Type, this.CreateWrapperMethod(interfaceMethod)));
@@ -170,7 +178,7 @@ namespace Il2Native.Logic.DOM
 
             return new MethodImpl(method)
             {
-                ReceiverType = new NamedTypeImpl { Name = GetName(namedTypeSymbol, this.@interface), ContainingType = namedTypeSymbol },
+                ReceiverType = GetReceiver(namedTypeSymbol, this.@interface),
                 IsAbstract = false,
                 ContainingNamespace = namedTypeSymbol.ContainingNamespace,
                 // special case to write method name as MetadataName

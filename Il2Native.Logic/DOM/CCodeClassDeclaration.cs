@@ -9,9 +9,11 @@
             this.codeClass = codeClass;
         }
 
+        public CCodeClass CodeClass => codeClass;
+
         public override void WriteTo(CCodeWriterBase c)
         {
-            this.codeClass.WriteTo(c);
+            this.CodeClass.WriteTo(c);
             c.EndStatement();
         }
     }

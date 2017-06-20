@@ -10,38 +10,30 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeObjectCastOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeObjectCastOperatorDeclaration(INamedTypeSymbol type)
-            : base(type, new ObjectCastOperatorMethod(type))
+            : this(type, type)
         {
         }
 
-        public override void WriteTo(CCodeWriterBase c)
+        public CCodeObjectCastOperatorDeclaration(INamedTypeSymbol type, ITypeSymbol receiverType)
+            : base(type, new ObjectCastOperatorMethod(type, receiverType))
         {
-            c.WriteMethodPrefixes(Method, true);
-            c.TextSpan("operator object*");
-            c.WriteMethodParameters(Method, true, MethodBodyOpt != null, containingNamespace: Method.ContainingNamespace);
-            c.WriteMethodSuffixes(Method, true);
-            if (MethodBodyOpt == null)
-            {
-                c.EndStatement();
-            }
-            else
-            {
-                MethodBodyOpt.WriteTo(c);
-            }
         }
 
         public class ObjectCastOperatorMethod : MethodImpl
         {
-            public ObjectCastOperatorMethod(INamedTypeSymbol type)
+            public ObjectCastOperatorMethod(INamedTypeSymbol type, ITypeSymbol receiverType)
             {
-                Name = "operator object*";
+                Name = @"@operator object*";
                 MethodKind = MethodKind.BuiltinOperator;
-                ReceiverType = type;
+                ReceiverType = receiverType;
                 ContainingType = type;
                 ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
-                IsAbstract = true;
+                IsAbstract = receiverType.TypeKind == TypeKind.Interface;
+                IsOverride = receiverType.TypeKind != TypeKind.Interface;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                ReturnType = null;
+                ReturnsVoid = false;
             }
         }
     }

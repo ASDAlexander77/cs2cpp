@@ -574,6 +574,13 @@ namespace Il2Native.Logic
                 this.BuildMethod(method, unit);
             }
 
+            // write interface wrappers
+            foreach (var iface in namedTypeSymbol.Interfaces)
+            {
+                unit.Declarations.Add(new CCodeClassDeclaration(new CCodeInterfaceWrapperClass(namedTypeSymbol, iface)));
+                unit.Declarations.Add(new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface));
+            }
+
             if (isNotModule)
             {
                 BuildMethodTableVariables(type, unit);

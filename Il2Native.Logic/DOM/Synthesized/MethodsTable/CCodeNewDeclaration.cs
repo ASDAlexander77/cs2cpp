@@ -13,7 +13,12 @@ namespace Il2Native.Logic.DOM.Synthesized
         public CCodeNewDeclaration(INamedTypeSymbol type)
             : base(type, new GetTypeMethod(type))
         {
-            MethodBodyOpt = new MethodBody(Method) { Statements = { new ReturnStatement { ExpressionOpt = new ObjectCreationExpression { Type = type, NewOperator = true } } } };
+            MethodBodyOpt = GetMethodBody(type);
+        }
+
+        public MethodBody GetMethodBody(INamedTypeSymbol type)
+        {
+            return new MethodBody(Method) { Statements = { new ReturnStatement { ExpressionOpt = new ObjectCreationExpression { Type = type, NewOperator = true } } } };
         }
 
         public class GetTypeMethod : MethodImpl
@@ -29,6 +34,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReturnType = new TypeImpl { SpecialType = SpecialType.System_Object };
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
                 ContainingType = type;
+                ReceiverType = type;
             }
         }
     }

@@ -493,12 +493,12 @@ namespace Il2Native.Logic
                 else
                 {
                     this.TextSpan("_");
-                    this.WriteNameEnsureCompatible(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                    this.WriteNameEnsureCompatible(symbol);
                 }
             }
             else
             {
-                this.WriteNameEnsureCompatible(symbol, symbol.MethodKind == MethodKind.BuiltinOperator && symbol.ContainingType == null);
+                this.WriteNameEnsureCompatible(symbol);
             }
 
             if (methodSymbol.MetadataName == "op_Explicit")
@@ -772,6 +772,12 @@ namespace Il2Native.Logic
             }
             else
             {
+                // operator <TYPE>
+                if (methodSymbol.ReturnType == null && methodSymbol.MethodKind == MethodKind.BuiltinOperator)
+                {
+                    return;
+                }
+
                 this.WriteType(methodSymbol.ReturnType, allowKeywords: true, containingNamespace: containingNamespace);
             }
 
@@ -795,14 +801,12 @@ namespace Il2Native.Logic
 
         public void WriteName(ISymbol symbol, bool noCleanup = false)
         {
-            var name = symbol.MetadataName ?? symbol.Name;
-            this.TextSpan(noCleanup ? name : name.CleanUpName());
+            this.TextSpan(GetNameToPrint(symbol, noCleanup));
         }
 
         public void WriteNameEnsureCompatible(ISymbol symbol, bool noCleanup = false)
         {
-            var name = symbol.MetadataName ?? symbol.Name;
-            this.TextSpan((noCleanup ? name : name.CleanUpName()).EnsureCompatible());
+            this.TextSpan(GetNameToPrint(symbol, noCleanup).EnsureCompatible());
         }
 
         public void WriteNamespace(INamespaceSymbol namespaceSymbol)
@@ -1362,6 +1366,21 @@ namespace Il2Native.Logic
                 this.EndBlock();
             }
 #endif
+        }
+
+        private static string GetNameToPrint(ISymbol symbol, bool noCleanup)
+        {
+            var name = symbol.MetadataName ?? symbol.Name;
+            if (name.StartsWith("@"))
+            {
+                name = name.Substring(1);
+            }
+            else if (!noCleanup)
+            {
+                name = name.CleanUpName();
+            }
+
+            return name;
         }
     }
 }

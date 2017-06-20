@@ -568,14 +568,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                             definition.WriteTo(c);
                         }
 
-                        if (!stubs)
+                        foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs)))
                         {
-                            var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
-                            // write interface wrappers
-                            foreach (var iface in unit.Type.Interfaces)
-                            {
-                                anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol, true);
-                            }
+                            anyRecord = true;
+                            definition.WriteTo(c);
                         }
 
                         WriteNamespaceClose((INamedTypeSymbol)unit.Type, c);
@@ -894,12 +890,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
             }
 
-            // write interface wrappers
-            foreach (var iface in namedTypeSymbol.Interfaces)
-            {
-                WriteInterfaceWrapper(c, iface, namedTypeSymbol);
-            }
-
             itw.Indent--;
             itw.WriteLine("};");
 
@@ -1026,32 +1016,6 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             c.NewLine();
         }
 
-        private static void WriteInterfaceWrapper(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol)
-        {
-            new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).WriteTo(c);
-            c.EndStatement();
-            new CCodeInterfaceCastOperatorDeclaration(namedTypeSymbol, iface).WriteTo(c);
-        }
-
-        private static bool WriteInterfaceWrapperImplementation(CCodeWriterText c, INamedTypeSymbol iface, INamedTypeSymbol namedTypeSymbol, bool genericHeaderFile = false)
-        {
-            var anyRecord = false;
-
-            foreach (var interfaceMethodWrapper in new CCodeInterfaceWrapperClass(namedTypeSymbol, iface).GetMembersImplementation())
-            {
-                var allowedMethod = !genericHeaderFile || (namedTypeSymbol.IsGenericType || interfaceMethodWrapper.IsGeneric);
-                if (!allowedMethod)
-                {
-                    continue;
-                }
-
-                interfaceMethodWrapper.WriteTo(c);
-                anyRecord = true;
-            }
-
-            return anyRecord;
-        }
-
         private string GetPath(string name, string ext = ".h", string subFolder = "")
         {
             var fullDirPath = Path.Combine(this.currentFolder, subFolder);
@@ -1112,13 +1076,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         definition.WriteTo(c);
                     }
 
-                    if (!stubs)
+                    foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs)))
                     {
-                        // write interface wrappers
-                        foreach (var iface in unit.Type.Interfaces)
-                        {
-                            anyRecord |= WriteInterfaceWrapperImplementation(c, iface, namedTypeSymbol);
-                        }
+                        anyRecord = true;
+                        definition.WriteTo(c);
                     }
 
                     WriteNamespaceClose(namedTypeSymbol, c);

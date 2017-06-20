@@ -15,7 +15,12 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeObjectCastOperatorDefinition : CCodeMethodDefinition
     {
         public CCodeObjectCastOperatorDefinition(INamedTypeSymbol type)
-            : base(new CCodeObjectCastOperatorDeclaration.ObjectCastOperatorMethod(type))
+            : this(type, type)
+        {
+        }
+
+        public CCodeObjectCastOperatorDefinition(INamedTypeSymbol type, ITypeSymbol receiverType)
+            : base(new CCodeObjectCastOperatorDeclaration.ObjectCastOperatorMethod(type, receiverType))
         {
             var expressionOpt = (Expression) new FieldAccess { ReceiverOpt = new ThisReference { Type = type }, Field = new FieldImpl { Name = "_class" } };
             if (type.TypeKind == TypeKind.Interface)
@@ -39,12 +44,6 @@ namespace Il2Native.Logic.DOM.Synthesized
                     }
                 }
             };
-        }
-
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("operator object*()");
-            MethodBodyOpt.WriteTo(c);
         }
     }
 }

@@ -25,22 +25,16 @@ namespace Il2Native.Logic.DOM.Synthesized
             };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.WriteType(Method.ContainingType, valueTypeAsClass: true);
-            c.WhiteSpace();
-            c.TextSpan("operator->()");
-            MethodBodyOpt.WriteTo(c);
-        }
-
         public class ArrowOperatorMethod : MethodImpl
         {
             public ArrowOperatorMethod(INamedTypeSymbol type)
             {
+                Name = "@operator->()";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                ReturnType = type.IsValueType ? new ValueTypeAsClassTypeImpl(type) : type;
             }
         }
     }

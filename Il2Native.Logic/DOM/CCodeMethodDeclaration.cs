@@ -7,6 +7,9 @@ namespace Il2Native.Logic.DOM
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using MethodBody = DOM2.MethodBody;
+    using System;
+    using System.Collections.Generic;
+    using Il2Native.Logic.DOM.Implementations;
 
     public class CCodeMethodDeclaration : CCodeDeclaration
     {
@@ -45,6 +48,25 @@ namespace Il2Native.Logic.DOM
             {
                 return Method.IsExternDeclaration();
             }
+        }
+
+        public CCodeMethodDefinition ToDefinition()
+        {
+            return new CCodeMethodDefinition(Method) { MethodBodyOpt = MethodBodyOpt };
+        }
+
+        public CCodeMethodDeclaration ToDefinition(IList<CCodeDefinition> definitions, INamedTypeSymbol container)
+        {
+            if (definitions == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            var definition = this.ToDefinition();
+            definition.Method = new MethodImpl(definition.Method) { ContainingType = container, ReceiverType = container };
+            definitions.Add(definition);
+            MethodBodyOpt = null;
+            return this;
         }
 
         public override void WriteTo(CCodeWriterBase c)

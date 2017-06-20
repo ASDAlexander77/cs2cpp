@@ -36,6 +36,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReturnsVoid = true;
                 ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Void };
                 Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "target", Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } } }, new ParameterImpl { Name = "value", Type = new TypeImpl { SpecialType = SpecialType.System_Object } });
+                ContainingType = type;
+                ReceiverType = type;
             }
         }
     }

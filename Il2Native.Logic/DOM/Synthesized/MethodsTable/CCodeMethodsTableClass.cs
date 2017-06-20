@@ -3,9 +3,11 @@
 // 
 namespace Il2Native.Logic.DOM
 {
+    using Il2Native.Logic.DOM.Implementations;
     using Il2Native.Logic.DOM.Synthesized;
 
     using Microsoft.CodeAnalysis;
+    using System.Linq;
 
     public class CCodeMethodsTableClass : CCodeClass
     {
@@ -13,6 +15,22 @@ namespace Il2Native.Logic.DOM
             : base(type)
         {
             this.CreateMemebers();
+        }
+
+        public static string InstanceName
+        {
+            get
+            {
+                return "__methods_table";
+            }
+        }
+
+        public static string TypeName
+        {
+            get
+            {
+                return "__type_methods_table";
+            }
         }
 
         public override void WriteTo(CCodeWriterBase c)
@@ -26,7 +44,7 @@ namespace Il2Native.Logic.DOM
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.TextSpan("__methods_table");
+            c.TextSpan(InstanceName);
             c.NewLine();
             c.OpenBlock();
 
@@ -46,6 +64,8 @@ namespace Il2Native.Logic.DOM
         {
             var namedTypeSymbol = (INamedTypeSymbol)Type;
 
+            var methodTableType = new NamedTypeImpl() { Name = TypeName, TypeKind = TypeKind.Unknown, ContainingType = (INamedTypeSymbol)Type };
+
             if (!Type.IsAbstract && (Type.TypeKind == TypeKind.Class || Type.TypeKind == TypeKind.Struct))
             {
                 Declarations.Add(new CCodeNewDeclaration(namedTypeSymbol));
@@ -57,6 +77,12 @@ namespace Il2Native.Logic.DOM
             {
                 Declarations.Add(new CCodeBoxRefDeclaration(namedTypeSymbol));
                 Declarations.Add(new CCodeUnboxToDeclaration(namedTypeSymbol));
+            }
+
+            // transition to external definitions
+            foreach (var declaration in Declarations.OfType<CCodeMethodDeclaration>())
+            {
+                declaration.ToDefinition(Definitions, methodTableType);
             }
         }
 

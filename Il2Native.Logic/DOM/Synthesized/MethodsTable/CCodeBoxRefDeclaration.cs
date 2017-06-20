@@ -29,6 +29,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 IsOverride = true;
                 ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
                 Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } } });
+                ContainingType = type;
+                ReceiverType = type;
             }
         }
     }

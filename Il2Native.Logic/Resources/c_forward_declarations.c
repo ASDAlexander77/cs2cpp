@@ -1063,10 +1063,7 @@ public:
 		throw 0xC000C000;
 	}
 
-	virtual CoreLib::System::Type* __get_type()
-	{
-		throw 0xC000C000;
-	}
+	virtual CoreLib::System::Type* __get_type() = 0;
 
 	// TODO: add new, unbox methods as virtual and/or abstract
 	virtual object* __box_ref(void* ref)
