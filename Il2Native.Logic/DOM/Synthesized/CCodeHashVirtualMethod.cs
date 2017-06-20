@@ -33,8 +33,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     new MethodImpl
                                     {
                                         Name = "__hash_code",
-                                        Parameters = ImmutableArray.Create<IParameterSymbol>(
-                                            new ParameterImpl { Name = "_class", Type = type })
+                                        Parameters = ImmutableArray.Create(type.ToParameter("_class"))
                                     },
                                 Arguments =
                                 {
@@ -56,7 +55,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Int32 };
+                ReturnType = SpecialType.System_Int32.ToType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

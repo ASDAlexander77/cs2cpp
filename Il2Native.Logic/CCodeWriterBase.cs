@@ -472,6 +472,12 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (methodSymbol.MethodKind == MethodKind.BuiltinOperator)
+            {
+                this.TextSpan("operator");
+                this.WhiteSpace();
+            }
+
             if (explicitInterfaceImplementation != null)
             {
                 this.TextSpan(explicitInterfaceImplementation.ContainingType.GetTypeFullName());
@@ -493,12 +499,32 @@ namespace Il2Native.Logic
                 else
                 {
                     this.TextSpan("_");
-                    this.WriteNameEnsureCompatible(symbol);
+                    if (symbol.MethodKind == MethodKind.BuiltinOperator)
+                    {
+                        this.WriteName(symbol, true);
+                    }
+                    else
+                    {
+                        this.WriteNameEnsureCompatible(symbol);
+                    }
                 }
             }
             else
             {
-                this.WriteNameEnsureCompatible(symbol);
+                if (symbol.MethodKind == MethodKind.BuiltinOperator)
+                {
+                    this.WriteName(symbol, true);
+                }
+                else
+                {
+                    this.WriteNameEnsureCompatible(symbol);
+                }
+            }
+
+            if (methodSymbol.MethodKind == MethodKind.BuiltinOperator && string.IsNullOrWhiteSpace(methodSymbol.Name))
+            {
+                // here is operator <TYPE>
+                WriteType(methodSymbol.ReturnType);
             }
 
             if (methodSymbol.MetadataName == "op_Explicit")
@@ -773,7 +799,7 @@ namespace Il2Native.Logic
             else
             {
                 // operator <TYPE>
-                if (methodSymbol.ReturnType == null && methodSymbol.MethodKind == MethodKind.BuiltinOperator)
+                if (methodSymbol.MethodKind == MethodKind.BuiltinOperator && string.IsNullOrWhiteSpace(methodSymbol.Name))
                 {
                     return;
                 }
@@ -1289,7 +1315,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteName(type);
+                this.WriteName(type, type.TypeKind == TypeKind.Unknown);
             }
 
             if (valueName && type.TypeKind == TypeKind.Enum)
@@ -1371,11 +1397,7 @@ namespace Il2Native.Logic
         private static string GetNameToPrint(ISymbol symbol, bool noCleanup)
         {
             var name = symbol.MetadataName ?? symbol.Name;
-            if (name.StartsWith("@"))
-            {
-                name = name.Substring(1);
-            }
-            else if (!noCleanup)
+            if (!noCleanup)
             {
                 name = name.CleanUpName();
             }

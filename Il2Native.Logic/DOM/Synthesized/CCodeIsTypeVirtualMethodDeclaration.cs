@@ -27,8 +27,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new TypeImpl { SpecialType = SpecialType.System_Boolean };
-                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType });
+                ReturnType = SpecialType.System_Boolean.ToType();
+                Parameters = ImmutableArray.Create(type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType.ToParameter("value"));
             }
         }
     }

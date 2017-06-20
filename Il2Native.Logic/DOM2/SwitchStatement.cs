@@ -108,7 +108,7 @@ namespace Il2Native.Logic.DOM2
                     MethodOwner = MethodOwner
                 };
 
-                var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+                var localImplCase = new LocalImpl { Name = "__SwitchCase", Type = SpecialType.System_Int32.ToType() };
                 localCase = new Local
                 {
                     LocalSymbol = localImplCase,
@@ -125,7 +125,7 @@ namespace Il2Native.Logic.DOM2
                                 new AssignmentOperator
                                 {
                                     TypeDeclaration = true,
-                                    Type = new TypeImpl { SpecialType = SpecialType.System_Int32 },
+                                    Type = SpecialType.System_Int32.ToType(),
                                     Left = localCase,
                                     Right = new Literal { Value = ConstantValue.Create(0) },
                                     MethodOwner = MethodOwner
@@ -145,7 +145,7 @@ namespace Il2Native.Logic.DOM2
                                 new AssignmentOperator
                                 {
                                     TypeDeclaration = true,
-                                    Type = new TypeImpl { SpecialType = SpecialType.System_String },
+                                    Type = SpecialType.System_String.ToType(),
                                     Left = local,
                                     Right = this.expression,
                                     MethodOwner = MethodOwner

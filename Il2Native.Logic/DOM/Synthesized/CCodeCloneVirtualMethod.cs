@@ -47,7 +47,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
+                ReturnType = SpecialType.System_Object.ToType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

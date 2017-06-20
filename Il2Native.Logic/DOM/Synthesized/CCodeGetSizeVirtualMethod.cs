@@ -42,7 +42,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_UInt32 };
+                ReturnType = SpecialType.System_UInt32.ToType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

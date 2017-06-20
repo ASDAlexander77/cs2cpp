@@ -394,7 +394,7 @@ namespace Il2Native.Logic
             switch (type.TypeKind)
             {
                 case TypeKind.Pointer:
-                    var pointerType = (IPointerTypeSymbol) type;
+                    var pointerType = (IPointerTypeSymbol)type;
                     return pointerType.PointedAtType.SpecialType == SpecialType.System_Void;
             }
 
@@ -807,6 +807,33 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
+        public static ITypeSymbol ToType(this SpecialType specialType, bool isReference = false)
+        {
+            return new TypeImpl { SpecialType = specialType, IsReferenceType = isReference };
+        }
+
+        public static ITypeSymbol ToPointerType(this ITypeSymbol type)
+        {
+            return new PointerTypeImpl { PointedAtType = type };
+        }
+
+        public static IParameterSymbol ToParameter(this ITypeSymbol type, string parameterName)
+        {
+            return new ParameterImpl
+            {
+                Name = parameterName,
+                Type = type
+            };
+        }
+
+        public static IParameterSymbol ToParameter(this string parameterName)
+        {
+            return new ParameterImpl
+            {
+                Name = parameterName
+            };
+        }
+
         public static ITypeSymbol ToSystemType(this string systemTypeName, bool @struct = false)
         {
             return new NamedTypeImpl
@@ -827,14 +854,25 @@ namespace Il2Native.Logic
                 IsReferenceType = !@struct
             };
         }
+        public static INamedTypeSymbol ToCType(this string typeName)
+        {
+            return new NamedTypeImpl
+            {
+                Name = typeName,
+                TypeKind = TypeKind.Unknown,
+                IsReferenceType = false,
+                IsValueType = true
+            };
+        }
 
-        public static ITypeSymbol ToType(this string typeName, bool @struct = false)
+        public static INamedTypeSymbol ToType(this string typeName, bool @struct = false)
         {
             return new NamedTypeImpl
             {
                 Name = typeName,
                 TypeKind = @struct ? TypeKind.Struct : TypeKind.Class,
-                IsReferenceType = !@struct
+                IsReferenceType = !@struct,
+                IsValueType = @struct
             };
         }
 
@@ -939,8 +977,8 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (namespaceSymbol.ContainingAssembly != null 
-                && otherNamespaceSymbol.ContainingAssembly != null 
+            if (namespaceSymbol.ContainingAssembly != null
+                && otherNamespaceSymbol.ContainingAssembly != null
                 && namespaceSymbol.ContainingAssembly.Name.CompareTo(otherNamespaceSymbol.ContainingAssembly.Name) != 0)
             {
                 return false;

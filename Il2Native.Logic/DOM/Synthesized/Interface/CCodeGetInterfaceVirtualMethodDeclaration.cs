@@ -27,11 +27,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingNamespace = type.ContainingNamespace;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new PointerTypeImpl
-                {
-                    PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void }
-                };
-                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType });
+                ReturnType = SpecialType.System_Void.ToType().ToPointerType();
+                Parameters = ImmutableArray.Create(type.GetBaseType().GetMembers().OfType<IMethodSymbol>().First(m => m.Name == "GetType").ReturnType.ToParameter("value"));
             }
         }
     }

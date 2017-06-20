@@ -96,7 +96,7 @@
             {
                 effectiveExpression = new Conversion
                 {
-                    Type = new NamedTypeImpl { SpecialType = SpecialType.System_Object },
+                    Type = SpecialType.System_Object.ToType(),
                     TypeSource = this.TypeSource,
                     Operand = effectiveExpression,
                     ConversionKind = ConversionKind.ImplicitReference,

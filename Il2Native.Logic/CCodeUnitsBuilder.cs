@@ -131,7 +131,7 @@ namespace Il2Native.Logic
             var cctorBeingCalledField = new FieldImpl
             {
                 Name = "_cctor_being_called",
-                Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
+                Type = SpecialType.System_Boolean.ToType(),
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
                 IsStatic = true,
@@ -146,7 +146,7 @@ namespace Il2Native.Logic
             var cctorCalledField = new FieldImpl
             {
                 Name = "_cctor_called",
-                Type = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean },
+                Type = SpecialType.System_Boolean.ToType(),
                 ContainingType = (INamedTypeSymbol)type,
                 ContainingNamespace = type.ContainingNamespace,
                 IsStatic = true,

@@ -17,9 +17,9 @@ namespace Il2Native.Logic.DOM.Synthesized
             var parameterSymbols = new List<IParameterSymbol>();
             var arguments = new List<Expression>();
 
-            var parameterSymbolSize = new ParameterImpl { Name = "_size" };
+            var parameterSymbolSize = "_size".ToParameter();
             var parameterSize = new Parameter { ParameterSymbol = parameterSymbolSize };
-            var parameterSymboPtr = new ParameterImpl { Name = "_ptr" };
+            var parameterSymboPtr = "_ptr".ToParameter();
             var parameterPtr = new Parameter { ParameterSymbol = parameterSymboPtr };
 
             parameterSymbols.Add(parameterSymbolSize);
@@ -31,20 +31,15 @@ namespace Il2Native.Logic.DOM.Synthesized
             MethodBodyOpt = new MethodBody(Method) { Statements = { new ReturnStatement { ExpressionOpt = parameterPtr } } };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("void* operator new (size_t _size, void* _ptr)");
-            MethodBodyOpt.WriteTo(c);
-        }
-
         public class NewOperatorMethod : MethodImpl
         {
             public NewOperatorMethod(INamedTypeSymbol type)
             {
+                Name = "new";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
-                Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                Parameters = ImmutableArray.Create("size_t".ToCType().ToParameter("_size"), SpecialType.System_Void.ToType().ToPointerType().ToParameter("_ptr"));
             }
         }
     }

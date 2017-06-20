@@ -16,7 +16,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             var binaryOperator = new BinaryOperator
             {
                 Left = new TypeOfOperator { SourceType = new TypeExpression { Type = type } },
-                Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } },
+                Right = new Parameter { ParameterSymbol = "value".ToParameter() },
                 OperatorKind = BinaryOperatorKind.Equal
             };
 
@@ -30,7 +30,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                         {
                             ReceiverOpt = new BaseReference { Type = type.BaseType },
                             Method = new CCodeIsTypeVirtualMethodDeclaration.IsTypeVirtualMethod(type),
-                            Arguments = { new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } } }
+                            Arguments = { new Parameter { ParameterSymbol = "value".ToParameter() } }
                         },
                     OperatorKind = BinaryOperatorKind.LogicalOr
                 };

@@ -29,7 +29,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     {
                                         Operand = expressionOpt,
                                         ConversionKind = ConversionKind.ImplicitReference,
-                                        Type = new TypeImpl { SpecialType = SpecialType.System_Object },
+                                        Type = SpecialType.System_Object.ToType(),
                                         TypeSource = type
                                     };
             }

@@ -83,7 +83,7 @@ namespace Il2Native.Logic.DOM2
                                     {
                                         Constrained = true,
                                         Operand = local,
-                                        Type = new TypeImpl { SpecialType = SpecialType.System_Object }
+                                        Type = SpecialType.System_Object.ToType()
                                     } : local,
                                     Right = new Literal { Value = ConstantValue.Create(null) },
                                     OperatorKind = BinaryOperatorKind.NotEqual

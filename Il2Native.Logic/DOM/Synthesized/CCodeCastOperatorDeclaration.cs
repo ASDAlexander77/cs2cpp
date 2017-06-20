@@ -11,7 +11,7 @@ namespace Il2Native.Logic.DOM.Synthesized
     public class CCodeCastOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
         public CCodeCastOperatorDeclaration(INamedTypeSymbol type)
-            : base(type, new CastOperatorMethod(type))
+            : base(type, new CastOperatorMethod(type, type.IsIntPtrType() ? SpecialType.System_Void.ToType().ToPointerType() : type))
         {
             MethodBodyOpt = new MethodBody(Method)
             {
@@ -30,31 +30,15 @@ namespace Il2Native.Logic.DOM.Synthesized
             };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("operator");
-            c.WhiteSpace();
-            if (Method.ContainingType.IsIntPtrType())
-            {
-                c.TextSpan("void*");
-            }
-            else
-            {
-                c.WriteType(Method.ContainingType);
-            }
-
-            c.TextSpan("()");
-            MethodBodyOpt.WriteTo(c);
-        }
-
         public class CastOperatorMethod : MethodImpl
         {
-            public CastOperatorMethod(INamedTypeSymbol type)
+            public CastOperatorMethod(INamedTypeSymbol type, ITypeSymbol toType)
             {
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                ReturnType = toType;
             }
         }
     }

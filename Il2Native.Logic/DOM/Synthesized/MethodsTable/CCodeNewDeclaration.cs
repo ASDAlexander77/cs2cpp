@@ -31,7 +31,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 IsVirtual = true;
                 IsOverride = true;
                 ReturnsVoid = false;
-                ReturnType = new TypeImpl { SpecialType = SpecialType.System_Object };
+                ReturnType = SpecialType.System_Object.ToType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
                 ContainingType = type;
                 ReceiverType = type;

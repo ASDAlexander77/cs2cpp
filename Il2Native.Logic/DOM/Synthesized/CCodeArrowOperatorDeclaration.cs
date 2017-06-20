@@ -29,7 +29,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             public ArrowOperatorMethod(INamedTypeSymbol type)
             {
-                Name = "@operator->()";
+                Name = "->";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;

@@ -365,20 +365,6 @@ namespace Il2Native.Logic.DOM2
                 };
             }
 
-            // to support anonymous types
-            /*
-            if (method != null && method.ContainingType.IsAnonymousType() && parameter.Type.IsValueType)
-            {
-                var namedTypeImpl = new TypeImpl { SpecialType = SpecialType.System_Object };
-                effectiveExpression = new Conversion
-                {
-                    Type = namedTypeImpl,
-                    ConversionKind = ConversionKind.Boxing,
-                    Operand = effectiveExpression,
-                };
-            }
-            */
-
             return effectiveExpression;
         }
 
@@ -415,9 +401,7 @@ namespace Il2Native.Logic.DOM2
             if (type.TypeKind == TypeKind.Pointer)
             {
                 var sourcePointerType = (IPointerTypeSymbol)type;
-                var pointerType = new PointerTypeImpl();
-                pointerType.PointedAtType = GetTypeForVirtualGenericMethod(method, sourcePointerType.PointedAtType, containingSymbol);
-                return pointerType;
+                return GetTypeForVirtualGenericMethod(method, sourcePointerType.PointedAtType, containingSymbol).ToPointerType();
             }
 
             if (type.TypeKind == TypeKind.TypeParameter)
@@ -431,7 +415,7 @@ namespace Il2Native.Logic.DOM2
                     }
                 }
 
-                return new TypeImpl { SpecialType = SpecialType.System_Object };
+                return SpecialType.System_Object.ToType();
             }
 
             var namedTypeImpl = new NamedTypeImpl((INamedTypeSymbol)type);

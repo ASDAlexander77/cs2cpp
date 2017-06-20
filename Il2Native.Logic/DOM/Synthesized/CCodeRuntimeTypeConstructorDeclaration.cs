@@ -34,7 +34,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     new ObjectCreationExpression
                                     {
                                         Type = type.GetMembers().OfType<IFieldSymbol>().First(f => f.Name == "m_handle").Type,
-                                        Arguments = { new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } } }
+                                        Arguments = { new Parameter { ParameterSymbol = "value".ToParameter() } }
                                     }
                             }
                     }
@@ -51,14 +51,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReceiverType = type;
                 ContainingType = type;
                 ReturnsVoid = true;
-                ReturnType = !cppConst ? new TypeImpl { SpecialType = SpecialType.System_Void } : null;
-                Parameters =
-                    ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl
-                            {
-                                Name = "value",
-                                Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } }
-                            });
+                ReturnType = !cppConst ? SpecialType.System_Void.ToType() : null;
+                Parameters = ImmutableArray.Create(SpecialType.System_Void.ToType().ToPointerType().ToParameter("value"));
             }
         }
     }

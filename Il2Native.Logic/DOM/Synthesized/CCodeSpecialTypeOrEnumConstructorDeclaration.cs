@@ -30,7 +30,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                         ReceiverOpt = new ThisReference { Type = type },
                                         Field = new FieldImpl { Name = "m_value" }
                                     },
-                                Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } }
+                                Right = new Parameter { ParameterSymbol = "value".ToParameter() }
                             }
                     }
                 }
@@ -46,17 +46,13 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReceiverType = type;
                 ContainingType = type;
                 ReturnsVoid = true;
-                ReturnType = !cppConst ? new TypeImpl { SpecialType = SpecialType.System_Void } : null;
+                ReturnType = !cppConst ? SpecialType.System_Void.ToType() : null;
                 Parameters =
-                    ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl
-                            {
-                                Name = "value",
-                                Type =
-                                    type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum
+                    ImmutableArray.Create(
+                                    (type.IsPrimitiveValueType() || type.TypeKind == TypeKind.Enum
                                         ? type
-                                        : type.GetMembers().OfType<IFieldSymbol>().First().Type
-                            });
+                                        : type.GetMembers().OfType<IFieldSymbol>().First().Type)
+                                    .ToParameter("value"));
             }
         }
     }

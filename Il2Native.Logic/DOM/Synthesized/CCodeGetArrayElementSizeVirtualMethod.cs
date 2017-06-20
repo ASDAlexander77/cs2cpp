@@ -24,7 +24,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingType = type;
                 IsVirtual = true;
                 IsAbstract = true;
-                ReturnType = new TypeImpl { SpecialType = SpecialType.System_Int32 };
+                ReturnType = SpecialType.System_Int32.ToType();
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
             }
         }

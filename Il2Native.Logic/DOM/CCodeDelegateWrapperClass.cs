@@ -58,14 +58,14 @@ namespace Il2Native.Logic.DOM
             {
                 methodImpl.Parameters =
                     ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+                        new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter }.ToParameter("m"));
             }
             else
             {
                 methodImpl.Parameters =
                     ImmutableArray.Create<IParameterSymbol>(
-                        new ParameterImpl { Name = "t", Type = new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter } },
-                        new ParameterImpl { Name = "m", Type = new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter } });
+                        new TypeImpl { Name = "_T", TypeKind = TypeKind.TypeParameter }.ToParameter("t"),
+                        new TypeImpl { Name = "_Memptr", TypeKind = TypeKind.TypeParameter }.ToParameter("m"));
             }
 
             if (doNotMergeTemplateParameters)
@@ -250,7 +250,7 @@ namespace Il2Native.Logic.DOM
 
             // if for multiple delegate
             var zero = new Literal { Value = ConstantValue.Create(0) };
-            var invocationCountLocal = new Local { CustomName = "invocationCount", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+            var invocationCountLocal = new Local { CustomName = "invocationCount", Type = SpecialType.System_Int32.ToType() };
             var invocationCount = new AssignmentOperator
             {
                 TypeDeclaration = true,
@@ -273,7 +273,7 @@ namespace Il2Native.Logic.DOM
                 Expression = invocationCount
             };
 
-            var iLocal = new Local { CustomName = "i", Type = new TypeImpl { SpecialType = SpecialType.System_Int32 } };
+            var iLocal = new Local { CustomName = "i", Type = SpecialType.System_Int32.ToType() };
             var invokeResult = new Local { CustomName = "invokeResult", Type = this.invoke.ReturnType };
 
             // call for 'for'
@@ -295,7 +295,7 @@ namespace Il2Native.Logic.DOM
                                         Field = new FieldImpl { Name = "_invocationList", Type = new TypeImpl { } }
                                     },
                                 CCast = true,
-                                Type = new ArrayTypeImpl { ElementType = new NamedTypeImpl { SpecialType = SpecialType.System_Delegate, IsReferenceType = true } }
+                                Type = new ArrayTypeImpl { ElementType = SpecialType.System_Delegate.ToType(true) }
                             },
                             Indices =
                             {
@@ -475,7 +475,7 @@ namespace Il2Native.Logic.DOM
                                                           {
                                                               AccessType = Access.AccessTypes.DoubleColon,
                                                               ReceiverOpt = new TypeExpression { Type = nonStaticType, TypeNameRequred = true },
-                                                              Expression = new Parameter { ParameterSymbol = new ParameterImpl { Name = "_Memptr" } }
+                                                              Expression = new Parameter { ParameterSymbol = "_Memptr".ToParameter() }
                                                           },
                                                   MapPointerCastTypeParameter2 = new TypeExpression { Type = new TypeImpl { TypeKind = TypeKind.TypeParameter, Name = "_Memptr" } },
                                               };

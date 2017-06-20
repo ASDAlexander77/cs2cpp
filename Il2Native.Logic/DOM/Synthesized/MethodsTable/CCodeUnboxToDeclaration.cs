@@ -17,9 +17,9 @@ namespace Il2Native.Logic.DOM.Synthesized
                                       {
                                           CCast = true,
                                           Type = new PointerTypeImpl { PointedAtType = type },
-                                          Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "target", Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } } } } 
+                                          Operand = new Parameter { ParameterSymbol = SpecialType.System_Void.ToType().ToPointerType().ToParameter("target") } 
                                       };
-            var parameterValue = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = new TypeImpl { SpecialType = SpecialType.System_Object } } };
+            var parameterValue = new Parameter { ParameterSymbol = SpecialType.System_Void.ToType().ToParameter("value") };
             var assignStatement = new ExpressionStatement { Expression = new Call { Method = new UnboxToMethod(type, "__unbox_to_t"), Arguments = { parameterTarget, parameterValue } } };
             MethodBodyOpt = new MethodBody(Method) { Statements = { assignStatement } };
         }
@@ -35,7 +35,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 IsOverride = true;
                 ReturnsVoid = true;
                 ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Void };
-                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "target", Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } } }, new ParameterImpl { Name = "value", Type = new TypeImpl { SpecialType = SpecialType.System_Object } });
+                Parameters = ImmutableArray.Create(SpecialType.System_Void.ToType().ToPointerType().ToParameter("target"), SpecialType.System_Object.ToType().ToParameter("value"));
                 ContainingType = type;
                 ReceiverType = type;
             }

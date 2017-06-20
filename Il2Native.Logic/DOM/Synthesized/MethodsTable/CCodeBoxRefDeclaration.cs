@@ -13,8 +13,8 @@ namespace Il2Native.Logic.DOM.Synthesized
         public CCodeBoxRefDeclaration(INamedTypeSymbol type)
             : base(type, new BoxRefMethod(type))
         {
-            var objectType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
-            var returnStatement = new ReturnStatement { ExpressionOpt = new Cast { BoxByRef = true, Type = type, Operand = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value", Type = objectType } } } };
+            var objectType = SpecialType.System_Object.ToType();
+            var returnStatement = new ReturnStatement { ExpressionOpt = new Cast { BoxByRef = true, Type = type, Operand = new Parameter { ParameterSymbol = objectType.ToParameter("value") } } };
             MethodBodyOpt = new MethodBody(Method) { Statements = { returnStatement } };
         }
 
@@ -27,8 +27,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 MethodKind = MethodKind.Ordinary;
                 IsVirtual = true;
                 IsOverride = true;
-                ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Object };
-                Parameters = ImmutableArray.Create<IParameterSymbol>(new ParameterImpl { Name = "value", Type = new PointerTypeImpl { PointedAtType = new TypeImpl { SpecialType = SpecialType.System_Void } } });
+                ReturnType = SpecialType.System_Object.ToType();
+                Parameters = ImmutableArray.Create(SpecialType.System_Void.ToType().ToPointerType().ToParameter("value"));
                 ContainingType = type;
                 ReceiverType = type;
             }

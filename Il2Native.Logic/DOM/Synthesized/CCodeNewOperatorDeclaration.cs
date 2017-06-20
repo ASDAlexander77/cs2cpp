@@ -11,21 +11,13 @@ namespace Il2Native.Logic.DOM.Synthesized
 
     public class CCodeNewOperatorDeclaration : CCodeInternalImplementationMethodDeclaration
     {
-        private bool withFinalization;
-        private bool withExtraParams;
-        private bool debugVersion;
-
         public CCodeNewOperatorDeclaration(INamedTypeSymbol type, bool withFinalization = false, bool withExtraParams = false, bool debugVersion = false)
-            : base(type, new NewOperatorMethod(type))
+            : base(type, new NewOperatorMethod(type, withExtraParams, debugVersion))
         {
-            this.withFinalization = withFinalization;
-            this.withExtraParams = withExtraParams;
-            this.debugVersion = debugVersion;
-
             var parameterSymbols = new List<IParameterSymbol>();
             var arguments = new List<Expression>();
 
-            var parameterSymbolSize = new ParameterImpl { Name = "_size" };
+            var parameterSymbolSize = "_size".ToParameter();
             parameterSymbols.Add(parameterSymbolSize);
 
             if (!withExtraParams)
@@ -35,7 +27,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             }
             else
             {
-                var parameterSymbolCustomSize = new ParameterImpl { Name = "_customSize" };
+                var parameterSymbolCustomSize = "_customSize".ToParameter();
                 var parameterCustomSize = new Parameter { ParameterSymbol = parameterSymbolCustomSize };
 
                 parameterSymbols.Add(parameterSymbolCustomSize);
@@ -44,18 +36,18 @@ namespace Il2Native.Logic.DOM.Synthesized
 
             if (type.IsAtomicType())
             {
-                var parameterSymbolIsAtomicOrTypeDescr = new ParameterImpl { Name = "_is_atomic_or_type_descr" };
+                var parameterSymbolIsAtomicOrTypeDescr = "_is_atomic_or_type_descr".ToParameter();
                 parameterSymbols.Add(parameterSymbolIsAtomicOrTypeDescr);
                 arguments.Add(
                     new FieldAccess
                     {
-                        Field = new FieldImpl { ContainingType = new NamedTypeImpl { Name = "GCAtomic" }, Name = "Default", IsStatic = true }
+                        Field = new FieldImpl { ContainingType = "GCAtomic".ToType(), Name = "Default", IsStatic = true }
                     });
             }
             else
             {
                 // get or create type descriptor
-                var parameterSymbolIsAtomicOrTypeDescr = new ParameterImpl { Name = "_is_atomic_or_type_descr" };
+                var parameterSymbolIsAtomicOrTypeDescr = "_is_atomic_or_type_descr".ToParameter();
                 parameterSymbols.Add(parameterSymbolIsAtomicOrTypeDescr);
 
 
@@ -80,9 +72,9 @@ namespace Il2Native.Logic.DOM.Synthesized
 
             if (debugVersion)
             {
-                var parameterSymbolFile = new ParameterImpl { Name = "_file" };
+                var parameterSymbolFile = "_file".ToParameter();
                 var parameterFile = new Parameter { ParameterSymbol = parameterSymbolFile };
-                var parameterSymbolLine = new ParameterImpl { Name = "_line" };
+                var parameterSymbolLine = "_line".ToParameter();
                 var parameterLine = new Parameter { ParameterSymbol = parameterSymbolLine };
 
                 parameterSymbols.Add(parameterSymbolFile);
@@ -95,7 +87,6 @@ namespace Il2Native.Logic.DOM.Synthesized
             var methodSymbol = new MethodImpl
             {
                 Name = withFinalization ? "__new_set0_with_finalizer" : "__new_set0",
-                MethodKind = MethodKind.BuiltinOperator,
                 Parameters = ImmutableArray.Create(parameterSymbols.ToArray())
             };
 
@@ -108,33 +99,30 @@ namespace Il2Native.Logic.DOM.Synthesized
             MethodBodyOpt = new MethodBody(Method) { Statements = { new ReturnStatement { ExpressionOpt = methodCallExpr } } };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("void* operator new (size_t _size");
-            if (this.withExtraParams)
-            {
-                c.TextSpan(", int32_t _customSize");
-            }
-
-            if (this.debugVersion)
-            {
-                c.TextSpan(", const char* _file, int _line");
-            }
-
-            c.TextSpan(")");
-
-            MethodBodyOpt.WriteTo(c);
-            c.Separate();
-        }
-
         public class NewOperatorMethod : MethodImpl
         {
-            public NewOperatorMethod(INamedTypeSymbol type)
+            public NewOperatorMethod(INamedTypeSymbol type, bool withExtraParams, bool debugVersion)
             {
+                Name = "new";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
-                Parameters = ImmutableArray<IParameterSymbol>.Empty;
+
+                var paramBuilder = ImmutableArray.CreateBuilder<IParameterSymbol>();
+                paramBuilder.Add("size_t".ToType(true).ToParameter("_size"));
+                if (withExtraParams)
+                {
+                    paramBuilder.Add(SpecialType.System_Int32.ToType().ToParameter("_customSize"));
+                }
+
+                if (debugVersion)
+                {
+                    paramBuilder.Add("const char".ToCType().ToPointerType().ToParameter("_file"));
+                    paramBuilder.Add(SpecialType.System_Int32.ToType().ToParameter("_line"));
+                }
+
+                Parameters = paramBuilder.ToImmutableArray();
+                ReturnType = SpecialType.System_Void.ToType().ToPointerType();
             }
         }
     }

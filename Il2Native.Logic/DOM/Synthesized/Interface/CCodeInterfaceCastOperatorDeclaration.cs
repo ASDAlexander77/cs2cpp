@@ -14,7 +14,7 @@ namespace Il2Native.Logic.DOM.Synthesized
         private readonly INamedTypeSymbol type;
 
         public CCodeInterfaceCastOperatorDeclaration(INamedTypeSymbol type, INamedTypeSymbol interfaceSymbol)
-            : base(type, new InterfaceCastOperatorMethod(type))
+            : base(type, new InterfaceCastOperatorMethod(type, interfaceSymbol))
         {
             this.type = type;
             this.interfaceSymbol = interfaceSymbol;
@@ -37,23 +37,15 @@ namespace Il2Native.Logic.DOM.Synthesized
             };
         }
 
-        public override void WriteTo(CCodeWriterBase c)
-        {
-            c.TextSpan("virtual operator");
-            c.WhiteSpace();
-            c.WriteType(this.interfaceSymbol);
-            c.TextSpan("()");
-            MethodBodyOpt.WriteTo(c);
-        }
-
         public class InterfaceCastOperatorMethod : MethodImpl
         {
-            public InterfaceCastOperatorMethod(INamedTypeSymbol type)
+            public InterfaceCastOperatorMethod(INamedTypeSymbol type, INamedTypeSymbol interfaceSymbol)
             {
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
+                ReturnType = interfaceSymbol;
             }
         }
     }

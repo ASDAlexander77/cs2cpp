@@ -23,7 +23,6 @@ namespace Il2Native.Logic.DOM.Synthesized
         {
             public ObjectCastOperatorMethod(INamedTypeSymbol type, ITypeSymbol receiverType)
             {
-                Name = @"@operator object*";
                 MethodKind = MethodKind.BuiltinOperator;
                 ReceiverType = receiverType;
                 ContainingType = type;
@@ -32,7 +31,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 IsAbstract = receiverType.TypeKind == TypeKind.Interface;
                 IsOverride = receiverType.TypeKind != TypeKind.Interface;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
-                ReturnType = null;
+                ReturnType = SpecialType.System_Object.ToType();
                 ReturnsVoid = false;
             }
         }

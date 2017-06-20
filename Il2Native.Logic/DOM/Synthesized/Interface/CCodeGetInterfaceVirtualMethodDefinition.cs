@@ -24,7 +24,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                         Condition = new BinaryOperator
                         {
                             Left = new TypeOfOperator { SourceType = new TypeExpression { Type = @interface } },
-                            Right = new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } },
+                            Right = new Parameter { ParameterSymbol = "value".ToParameter() },
                             OperatorKind = BinaryOperatorKind.Equal
                         },
                         IfStatements = new ReturnStatement
@@ -47,7 +47,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                         {
                             ReceiverOpt = new BaseReference { Type = type.BaseType },
                             Method = new CCodeGetInterfaceVirtualMethodDeclaration.GetInterfaceVirtualMethod(type),
-                            Arguments = { new Parameter { ParameterSymbol = new ParameterImpl { Name = "value" } } }
+                            Arguments = { new Parameter { ParameterSymbol = "value".ToParameter() } }
                         }
                     });
             }

@@ -33,17 +33,9 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     new MethodImpl
                                     {
                                         Name = "__equals_helper",
-                                        Parameters = ImmutableArray.Create<IParameterSymbol>(
-                                            new ParameterImpl
-                                            {
-                                                Name = "_obj1",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Object }
-                                            },
-                                            new ParameterImpl
-                                            {
-                                                Name = "_obj2",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Object }
-                                            })
+                                        Parameters = ImmutableArray.Create(
+                                            SpecialType.System_Object.ToType().ToParameter("_obj1"),
+                                            SpecialType.System_Object.ToType().ToParameter("_obj2"))
                                     },
                                 Arguments =
                                 {
@@ -51,11 +43,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                                     new Parameter
                                     {
                                         ParameterSymbol =
-                                            new ParameterImpl
-                                            {
-                                                Name = "obj",
-                                                Type = new TypeImpl { SpecialType = SpecialType.System_Object }
-                                            }
+                                            SpecialType.System_Object.ToType().ToParameter("obj")
                                     }
                                 }
                             }
@@ -74,13 +62,8 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingType = type;
                 IsVirtual = true;
                 IsOverride = type.BaseType != null;
-                ReturnType = new NamedTypeImpl { SpecialType = SpecialType.System_Boolean };
-                Parameters = ImmutableArray.Create<IParameterSymbol>(
-                    new ParameterImpl
-                    {
-                        Name = "obj",
-                        Type = new TypeImpl { SpecialType = SpecialType.System_Object }
-                    });
+                ReturnType = SpecialType.System_Boolean.ToType();
+                Parameters = ImmutableArray.Create(SpecialType.System_Object.ToType().ToParameter("obj"));
             }
         }
     }
