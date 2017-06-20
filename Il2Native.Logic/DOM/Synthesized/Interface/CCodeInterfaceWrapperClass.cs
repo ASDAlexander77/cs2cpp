@@ -201,7 +201,7 @@ namespace Il2Native.Logic.DOM
 
             public override bool IsGeneric
             {
-                get { return Method.IsGenericMethod && !Method.IsVirtualGenericMethod() && !Method.IsInterfaceGenericMethodSpecialCase(); }
+                get { return this.Method.ContainingType.IsGenericType || (this.Method.IsGenericMethod && !this.Method.IsVirtualGenericMethod() && !Method.IsInterfaceGenericMethodSpecialCase()); }
             }
         }
     }

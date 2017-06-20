@@ -47,7 +47,7 @@ namespace Il2Native.Logic.DOM2
             if (this.ExpressionOpt != null)
             {
                 c.WhiteSpace();
-                if (this.ReturnType != null && this.ReturnType.IsValueType && this.ExpressionOpt is ThisReference)
+                if (this.ReturnType != null && this.ReturnType.IsValueType && !this.ReturnType.IsReferenceType && this.ExpressionOpt is ThisReference)
                 {
                     c.TextSpan("*");
                 }

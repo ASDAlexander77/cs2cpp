@@ -521,7 +521,7 @@ namespace Il2Native.Logic
 
         public static bool IsStaticMethod(this IMethodSymbol methodSymbol)
         {
-            return methodSymbol.IsStatic || (methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor"));
+            return methodSymbol.IsStatic || (methodSymbol.Name != null && methodSymbol.ContainingType != null && methodSymbol.ContainingType.SpecialType == SpecialType.System_String && methodSymbol.Name.StartsWith("Ctor"));
         }
 
         public static bool IsStaticWrapperCall(this Expression expression)

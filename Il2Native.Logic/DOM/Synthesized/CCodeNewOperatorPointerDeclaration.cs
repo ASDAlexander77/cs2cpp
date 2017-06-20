@@ -40,6 +40,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray.Create("size_t".ToCType().ToParameter("_size"), SpecialType.System_Void.ToType().ToPointerType().ToParameter("_ptr"));
+                ReturnType = SpecialType.System_Void.ToType().ToPointerType();
             }
         }
     }

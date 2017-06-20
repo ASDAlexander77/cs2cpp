@@ -52,7 +52,7 @@ namespace Il2Native.Logic.DOM.Synthesized
             public GetTypeDescriptorMethod(INamedTypeSymbol type)
             {
                 Name = "__get_type_descriptor";
-                MethodKind = MethodKind.BuiltinOperator;
+                MethodKind = MethodKind.Ordinary;
                 ReceiverType = type;
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
