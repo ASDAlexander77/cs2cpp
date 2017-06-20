@@ -562,13 +562,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     {
                         WriteNamespaceOpen((INamedTypeSymbol)unit.Type, c);
 
-                        foreach (var definition in unit.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs))
+                        foreach (var definition in unit.Definitions.Where(d => d.IsTemplate && d.IsStub == stubs))
                         {
                             anyRecord = true;
                             definition.WriteTo(c);
                         }
 
-                        foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => d.IsGeneric && d.IsStub == stubs)))
+                        foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => d.IsTemplate && d.IsStub == stubs)))
                         {
                             anyRecord = true;
                             definition.WriteTo(c);
@@ -1070,13 +1070,13 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
                     WriteNamespaceOpen(namedTypeSymbol, c);
 
-                    foreach (var definition in unit.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs))
+                    foreach (var definition in unit.Definitions.Where(d => !d.IsTemplate && d.IsStub == stubs))
                     {
                         anyRecord = true;
                         definition.WriteTo(c);
                     }
 
-                    foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => !d.IsGeneric && d.IsStub == stubs)))
+                    foreach (var definition in unit.Declarations.OfType<CCodeClassDeclaration>().SelectMany(m => m.CodeClass.Definitions.Where(d => !d.IsTemplate && d.IsStub == stubs)))
                     {
                         anyRecord = true;
                         definition.WriteTo(c);

@@ -18,7 +18,7 @@ namespace Il2Native.Logic.DOM
 
         public IFieldSymbol Field { get; set; }
 
-        public override bool IsGeneric
+        public override bool IsTemplate
         {
             get { return this.Field.ContainingType.IsGenericType; }
         }

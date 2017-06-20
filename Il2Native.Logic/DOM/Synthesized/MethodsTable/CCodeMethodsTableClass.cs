@@ -98,7 +98,7 @@ namespace Il2Native.Logic.DOM
             {
             }
 
-            public override bool IsGeneric
+            public override bool IsTemplate
             {
                 get { return Method.IsGenericMethod && !Method.IsVirtualGenericMethod(); }
             }

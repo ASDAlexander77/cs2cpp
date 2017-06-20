@@ -49,7 +49,7 @@ namespace Il2Native.Logic.DOM
                 .OfType<IMethodSymbol>()
                 .Union(this.@interface.EnumerateInterfaceMethods())
                 .Select(this.CreateWrapperMethod)
-                .Select(m => new CCodeMethodDefinitionWrapper(m) { MethodBodyOpt = this.CreateMethodBody(m) }))
+                .Select(m => new CCodeMethodDefinition(m) { MethodBodyOpt = this.CreateMethodBody(m) }))
             {
                 Definitions.Add(method);
             }
@@ -190,19 +190,6 @@ namespace Il2Native.Logic.DOM
         private void Name(CCodeWriterBase c)
         {
             c.TextSpan(GetName((INamedTypeSymbol)Type, this.@interface));
-        }
-
-        public class CCodeMethodDefinitionWrapper : CCodeMethodDefinition
-        {
-            public CCodeMethodDefinitionWrapper(IMethodSymbol method)
-                : base(method)
-            {
-            }
-
-            public override bool IsGeneric
-            {
-                get { return this.Method.ContainingType.IsGenericType || (this.Method.IsGenericMethod && !this.Method.IsVirtualGenericMethod() && !Method.IsInterfaceGenericMethodSpecialCase()); }
-            }
         }
     }
 }

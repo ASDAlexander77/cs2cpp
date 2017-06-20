@@ -7,7 +7,7 @@ namespace Il2Native.Logic
 
     public abstract class CCodeDefinition : CCodeBase
     {
-        public abstract bool IsGeneric
+        public abstract bool IsTemplate
         {
             get;
         }

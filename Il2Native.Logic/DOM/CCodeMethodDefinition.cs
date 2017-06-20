@@ -12,12 +12,22 @@ namespace Il2Native.Logic.DOM
     {
         internal CCodeMethodDefinition(IMethodSymbol method)
         {
-            this.Method = method;
+            Method = method;
         }
 
-        public override bool IsGeneric
+        public override bool IsTemplate
         {
-            get { return this.Method.ContainingType.IsGenericType || (this.Method.IsGenericMethod && !this.Method.IsVirtualGenericMethod()); }
+            get
+            {
+                var methodContainingType = Method.ContainingType;
+                // special case for C++ nested classes
+                if (Method.ReceiverType != null && Method.ReceiverType.TypeKind == TypeKind.Unknown)
+                {
+                    methodContainingType = Method.ReceiverType.ContainingType;
+                }
+
+                return methodContainingType.IsGenericType || (Method.IsGenericMethod && !Method.IsVirtualGenericMethod() && !Method.IsInterfaceGenericMethodSpecialCase());
+            }
         }
 
         public IMethodSymbol Method { get; set; }
