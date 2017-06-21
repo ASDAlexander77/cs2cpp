@@ -11,40 +11,30 @@ namespace Il2Native.Logic.DOM
 
     public class CCodeMethodsTableClass : CCodeClass
     {
+        public const string InstanceName = "_methods_table";
+
+        public const string BaseTypeName = "__methods_table";
+
+        public const string TypeName = "__type_methods_table";
+
         public CCodeMethodsTableClass(INamedTypeSymbol type)
             : base(type)
         {
             this.CreateMemebers();
         }
 
-        public static string InstanceName
-        {
-            get
-            {
-                return "__methods_table";
-            }
-        }
-
-        public static string TypeName
-        {
-            get
-            {
-                return "__type_methods_table";
-            }
-        }
-
         public override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("class");
             c.WhiteSpace();
-            this.Name(c);
+            c.TextSpan(TypeName);
 
             c.WhiteSpace();
             c.TextSpan(":");
             c.WhiteSpace();
             c.TextSpan("public");
             c.WhiteSpace();
-            c.TextSpan(InstanceName);
+            c.TextSpan(BaseTypeName);
             c.NewLine();
             c.OpenBlock();
 
@@ -84,11 +74,6 @@ namespace Il2Native.Logic.DOM
             {
                 declaration.ToDefinition(Definitions, methodTableType);
             }
-        }
-
-        private void Name(CCodeWriterBase c)
-        {
-            c.TextSpan("__type_methods_table");
         }
 
         public class CCodeMethodDefinitionWrapper : CCodeMethodDefinition
