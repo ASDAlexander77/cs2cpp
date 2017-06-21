@@ -29,8 +29,8 @@ namespace Il2Native.Logic.DOM
         public static string GetName(INamedTypeSymbol type, INamedTypeSymbol @interface)
         {
             var sb = new StringBuilder();
-            sb.Append(type.MetadataName.CleanUpName());
-            sb.Append("_");
+            ////sb.Append(type.MetadataName.CleanUpName());
+            ////sb.Append("_");
             GetGenericNameRecursive(sb, @interface);
             return sb.ToString();
         }
