@@ -80,7 +80,7 @@ namespace Il2Native.Logic.DOM
             }
 
             // transition to external definitions
-            foreach (var declaration in Declarations.OfType<CCodeMethodDeclaration>())
+            foreach (var declaration in Declarations.OfType<CCodeMethodDeclaration>().Where(m => m.MethodBodyOpt != null))
             {
                 declaration.ToDefinition(Definitions, methodTableType);
             }

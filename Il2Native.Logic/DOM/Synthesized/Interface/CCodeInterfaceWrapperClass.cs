@@ -180,6 +180,8 @@ namespace Il2Native.Logic.DOM
             {
                 ReceiverType = GetReceiver(namedTypeSymbol, this.@interface),
                 IsAbstract = false,
+                IsOverride = true,
+                IsVirtual = false,
                 ContainingNamespace = namedTypeSymbol.ContainingNamespace,
                 // special case to write method name as MetadataName
                 TypeArguments = ImmutableArray<ITypeSymbol>.Empty,

@@ -281,11 +281,11 @@ namespace Il2Native.Logic
 
             var tableMethodsField = new FieldImpl
             {
-                Name = "_methods_table",
+                Name = CCodeMethodsTableClass.InstanceName,
                 Type =
                     new NamedTypeImpl
                     {
-                        Name = "__type_methods_table",
+                        Name = CCodeMethodsTableClass.TypeName,
                         ContainingSymbol = type,
                         TypeKind = TypeKind.Unknown,
                         ContainingType = (INamedTypeSymbol)type
@@ -585,6 +585,12 @@ namespace Il2Native.Logic
             {
                 BuildMethodTableVariables(type, unit);
                 ////BuildRuntimeInfoVariables(type, unit);
+            }
+
+            // transition all methods which have body into source file
+            foreach (var declaration in unit.Declarations.OfType<CCodeMethodDeclaration>().Where(m => m.MethodBodyOpt != null))
+            {
+                declaration.ToDefinition(unit.Definitions, namedTypeSymbol);
             }
 
             yield return unit;
