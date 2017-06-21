@@ -46,6 +46,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                 ContainingType = type;
                 Parameters = ImmutableArray<IParameterSymbol>.Empty;
                 ReturnType = interfaceSymbol;
+                IsVirtual = true;
             }
         }
     }
