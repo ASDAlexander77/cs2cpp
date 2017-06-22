@@ -989,7 +989,7 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol, bool forwardDeclaration = false)
         {
-            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+            if (namedTypeSymbol.TypeKind == TypeKind.Enum || (forwardDeclaration && namedTypeSymbol.Arity == 0))
             {
                 return;
             }
@@ -1037,7 +1037,7 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
-            if (typeSymbol.TypeKind == TypeKind.Enum)
+            if (typeSymbol.TypeKind == TypeKind.Enum || typeSymbol.Arity == 0)
             {
                 return;
             }
@@ -1287,8 +1287,7 @@ namespace Il2Native.Logic
 
             if (type.IsNested())
             {
-                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
-                var isGeneric = isNestedCppClass && type.ContainingType.IsGenericType;
+                var isGeneric = type.ContainingType.IsGenericType;
                 if (isGeneric && dependantScope)
                 {
                     this.TextSpan("typename");
@@ -1304,8 +1303,6 @@ namespace Il2Native.Logic
                         this.WriteTemplateDefinition(type.ContainingType);
                     }
 
-                    // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
-                    ////this.TextSpan(isNestedCppClass ? "::" : "_");
                     this.TextSpan("::");
                 }
             }
