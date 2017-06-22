@@ -654,7 +654,7 @@ namespace Il2Native.Logic
 
                     anyParameter = true;
 
-                    this.WriteType(CCodeMethodsTableClass.BaseTypeName.ToType());
+                    this.WriteType("__methods_table".ToType());
                     if (!declarationWithingClass)
                     {
                         this.WhiteSpace();
@@ -989,7 +989,7 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDeclaration(INamedTypeSymbol namedTypeSymbol, bool forwardDeclaration = false)
         {
-            if (namedTypeSymbol.TypeKind == TypeKind.Enum || (forwardDeclaration && namedTypeSymbol.Arity == 0))
+            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
             {
                 return;
             }
@@ -1037,7 +1037,7 @@ namespace Il2Native.Logic
 
         public void WriteTemplateDefinition(INamedTypeSymbol typeSymbol, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
-            if (typeSymbol.TypeKind == TypeKind.Enum || typeSymbol.Arity == 0)
+            if (typeSymbol.TypeKind == TypeKind.Enum)
             {
                 return;
             }
@@ -1285,9 +1285,10 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (type.IsNested())
+            if (type.ContainingType != null)
             {
-                var isGeneric = type.ContainingType.IsGenericType;
+                var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
+                var isGeneric = isNestedCppClass && type.ContainingType.IsGenericType;
                 if (isGeneric && dependantScope)
                 {
                     this.TextSpan("typename");
@@ -1303,7 +1304,8 @@ namespace Il2Native.Logic
                         this.WriteTemplateDefinition(type.ContainingType);
                     }
 
-                    this.TextSpan("::");
+                    // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
+                    this.TextSpan(isNestedCppClass ? "::" : "_");
                 }
             }
 

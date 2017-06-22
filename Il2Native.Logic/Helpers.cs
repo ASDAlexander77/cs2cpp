@@ -284,7 +284,7 @@ namespace Il2Native.Logic
                 return namedTypeSymbol.Constructors.First().Parameters.Select(p => p.Type).ToArray();
             }
 
-            return namedTypeSymbol.EnumerateTemplateArgumentsRecursive();
+            return namedTypeSymbol.EnumerateTemplateArgumentsRecusive();
         }
 
         public static IEnumerable<ITypeParameterSymbol> GetTemplateParameters(this INamedTypeSymbol namedTypeSymbol)
@@ -294,7 +294,7 @@ namespace Il2Native.Logic
 
         public static IEnumerable<ITypeSymbol> GetTemplateArguments(this IMethodSymbol methodSymbol)
         {
-            return methodSymbol.EnumerateTemplateArgumentsRecursive();
+            return methodSymbol.EnumerateTemplateArgumentsRecusive();
         }
 
         public static IEnumerable<ITypeParameterSymbol> GetTemplateParameters(this IMethodSymbol methodSymbol)
@@ -365,11 +365,6 @@ namespace Il2Native.Logic
             }
 
             return false;
-        }
-
-        public static bool IsNested(this ITypeSymbol type)
-        {
-            return type != null && type.ContainingType != null;
         }
 
         public static bool IsPrimitiveValueType(this ITypeSymbol type)
@@ -1300,18 +1295,15 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
-        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecursive(this INamedTypeSymbol typeSymbol)
+        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(this INamedTypeSymbol typeSymbol)
         {
-            /*
-            // TODO: remove it after finishing nesting types
             if (typeSymbol.ContainingType != null)
             {
-                foreach (var typeParam in typeSymbol.ContainingType.EnumerateTemplateArgumentsRecursive())
+                foreach (var typeParam in typeSymbol.ContainingType.EnumerateTemplateArgumentsRecusive())
                 {
                     yield return typeParam;
                 }
             }
-            */
 
             foreach (var typeParam in typeSymbol.TypeArguments)
             {
@@ -1335,18 +1327,15 @@ namespace Il2Native.Logic
             }
         }
 
-        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecursive(this IMethodSymbol methodSymbol)
+        private static IEnumerable<ITypeSymbol> EnumerateTemplateArgumentsRecusive(this IMethodSymbol methodSymbol)
         {
-            /*
-            // TODO: remove it after finishing nesting types
             if (methodSymbol.ContainingType != null)
             {
-                foreach (var typeParam in methodSymbol.ContainingType.EnumerateTemplateArgumentsRecursive())
+                foreach (var typeParam in methodSymbol.ContainingType.EnumerateTemplateArgumentsRecusive())
                 {
                     yield return typeParam;
                 }
             }
-            */
 
             if (methodSymbol.IsGenericMethod)
             {
