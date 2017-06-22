@@ -654,7 +654,7 @@ namespace Il2Native.Logic
 
                     anyParameter = true;
 
-                    this.WriteType("__methods_table".ToType());
+                    this.WriteType(CCodeMethodsTableClass.BaseTypeName.ToType());
                     if (!declarationWithingClass)
                     {
                         this.WhiteSpace();
@@ -1285,7 +1285,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (type.ContainingType != null)
+            if (type.IsNested())
             {
                 var isNestedCppClass = type.TypeKind == TypeKind.Unknown;
                 var isGeneric = isNestedCppClass && type.ContainingType.IsGenericType;
@@ -1305,7 +1305,8 @@ namespace Il2Native.Logic
                     }
 
                     // special case for Nested C++ classes, so if TypeKind.Unknown it means that class is C++ nested class
-                    this.TextSpan(isNestedCppClass ? "::" : "_");
+                    ////this.TextSpan(isNestedCppClass ? "::" : "_");
+                    this.TextSpan("::");
                 }
             }
 

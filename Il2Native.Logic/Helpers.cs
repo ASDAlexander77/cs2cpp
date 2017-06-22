@@ -367,6 +367,11 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsNested(this ITypeSymbol type)
+        {
+            return type != null && type.ContainingType != null;
+        }
+
         public static bool IsPrimitiveValueType(this ITypeSymbol type)
         {
             switch (type.SpecialType)

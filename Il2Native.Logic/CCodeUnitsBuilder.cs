@@ -40,6 +40,30 @@ namespace Il2Native.Logic
 
         internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol { get; private set; }
 
+        public static TypeImpl GetTypeHolderOfType(ITypeSymbol type)
+        {
+            var typeHolderType = (TypeImpl)TypeImpl.Wrap(type);
+
+            if (!type.IsAnonymousType())
+            {
+                typeHolderType.Name = typeHolderType.Name + "__type";
+                typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
+            }
+            else
+            {
+                var namedType = (INamedTypeSymbol)type;
+                typeHolderType.Name = namedType.GetAnonymousTypeName() + "__type";
+                typeHolderType.MetadataName = namedType.GetAnonymousTypeName() + "__type";
+            }
+
+            typeHolderType.BaseType = null;
+            typeHolderType.TypeKind = TypeKind.Struct;
+            typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.AllInterfaces = ImmutableArray<INamedTypeSymbol>.Empty;
+            typeHolderType.SpecialType = SpecialType.None;
+            return typeHolderType;
+        }
+
         public IEnumerable<IEnumerable<CCodeUnit>> Build()
         {
             var processedTypes = new HashSet<string>();
@@ -449,7 +473,7 @@ namespace Il2Native.Logic
 
             // to support generic virtual methods
             #region Virtual Generic methods support
-            var methodsTableType = "__methods_table".ToType();
+            var methodsTableType = CCodeMethodsTableClass.BaseTypeName.ToType();
             foreach (var typeParameter in namedTypeSymbol.GetTemplateParameters().Where(t => t.HasConstructorConstraint))
             {
                 this.BuildField(new FieldImpl { Type = methodsTableType, Name = "construct_" + typeParameter.Name }, unit, false);
@@ -602,25 +626,7 @@ namespace Il2Native.Logic
             }
 
             // return type holder class
-            var typeHolderType = (TypeImpl)TypeImpl.Wrap(type);
-
-            if (!type.IsAnonymousType())
-            {
-                typeHolderType.Name = typeHolderType.Name + "__type";
-                typeHolderType.MetadataName = typeHolderType.MetadataName + "__type";
-            }
-            else
-            {
-                var namedType = (INamedTypeSymbol)type;
-                typeHolderType.Name = namedType.GetAnonymousTypeName() + "__type";
-                typeHolderType.MetadataName = namedType.GetAnonymousTypeName() + "__type";
-            }
-
-            typeHolderType.BaseType = null;
-            typeHolderType.TypeKind = TypeKind.Struct;
-            typeHolderType.Interfaces = ImmutableArray<INamedTypeSymbol>.Empty;
-            typeHolderType.AllInterfaces = ImmutableArray<INamedTypeSymbol>.Empty;
-            typeHolderType.SpecialType = SpecialType.None;
+            TypeImpl typeHolderType = GetTypeHolderOfType(type);
 
             var unitTypeHolder = new CCodeUnit(typeHolderType);
             BuildTypeHolderVariables(typeHolderType, unitTypeHolder);

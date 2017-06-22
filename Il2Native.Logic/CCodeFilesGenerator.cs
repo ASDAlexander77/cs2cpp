@@ -412,9 +412,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
 
                 // write forward declaration
-                foreach (var unit in units)
+                foreach (var unit in units.Where(u => !u.Type.IsNested()))
                 {
-                    WriteForwardDeclarationForUnit(unit, itw, c);
+                    WriteForwardDeclaration(unit, itw, c);
                 }
 
                 itw.WriteLine();
@@ -746,7 +746,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             c.EndStatement();
         }
 
-        private static void WriteForwardDeclarationForUnit(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
+        private static void WriteForwardDeclaration(CCodeUnit unit, IndentedTextWriter itw, CCodeWriterText c)
         {
             var namedTypeSymbol = (INamedTypeSymbol)unit.Type;
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
@@ -756,20 +756,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.Write(" { ");
             }
 
-            if (namedTypeSymbol.IsGenericType)
-            {
-                c.WriteTemplateDeclaration(namedTypeSymbol, true);
-            }
-
-            itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
-            itw.Write(" ");
-            c.WriteTypeName(namedTypeSymbol, false);
-            itw.Write("; ");
-
-            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
-            {
-                WriteEnum(itw, c, namedTypeSymbol);
-            }
+            WriteForwardDeclarationNoNamespace(namedTypeSymbol, itw, c);
 
             foreach (var namespaceNode in namedTypeSymbol.ContainingNamespace.EnumNamespaces())
             {
@@ -785,6 +772,24 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.Write(" ");
                 c.WriteTypeName(namedTypeSymbol);
                 itw.WriteLine(";");
+            }
+        }
+
+        private static void WriteForwardDeclarationNoNamespace(INamedTypeSymbol namedTypeSymbol, IndentedTextWriter itw, CCodeWriterText c)
+        {
+            if (namedTypeSymbol.IsGenericType)
+            {
+                c.WriteTemplateDeclaration(namedTypeSymbol, true);
+            }
+
+            itw.Write(namedTypeSymbol.IsValueType ? "struct" : "class");
+            itw.Write(" ");
+            c.WriteTypeName(namedTypeSymbol, false, shortNested: true);
+            itw.Write("; ");
+
+            if (namedTypeSymbol.TypeKind == TypeKind.Enum)
+            {
+                WriteEnum(itw, c, namedTypeSymbol);
             }
         }
 
@@ -840,6 +845,17 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 itw.Write("typedef ");
                 c.WriteTypeFullName(namedTypeSymbol.BaseType, false, containingNamespace: namedTypeSymbol.ContainingNamespace);
                 itw.WriteLine(" base;");
+            }
+
+            // write forward declaration for nested types
+            foreach (var nestedType in namedTypeSymbol.GetTypeMembers().OfType<INamedTypeSymbol>())
+            {
+                WriteForwardDeclarationNoNamespace(nestedType, itw, c);
+                itw.WriteLine();
+
+                // adding type holder
+                WriteForwardDeclarationNoNamespace((INamedTypeSymbol)CCodeUnitsBuilder.GetTypeHolderOfType(nestedType), itw, c);
+                itw.WriteLine();
             }
 
             if (namedTypeSymbol.TypeKind != TypeKind.Enum)
