@@ -863,7 +863,7 @@ namespace Ll2NativeTests
                 138
             });
 
-            foreach (var index in Enumerable.Range(467, 171).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 171).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-anon-{0:00}", index));
             }
