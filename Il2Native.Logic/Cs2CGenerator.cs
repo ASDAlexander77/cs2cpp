@@ -464,12 +464,18 @@ namespace Il2Native.Logic
             }
 
             this.Sources =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
+                project.Root.Elements(ns + "ItemGroup")
+                            .Where(element => ProjectCondition(element, options))
+                            .Elements(ns + "Compile")
+                    .Where(element => ProjectCondition(element, options))
                     .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
                     .ToArray();
 
             this.Impl =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Content")
+                project.Root.Elements(ns + "ItemGroup")
+                            .Where(element => ProjectCondition(element, options))
+                            .Elements(ns + "Content")
+                    .Where(element => ProjectCondition(element, options))
                     .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
                     .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
                     .ToArray();
