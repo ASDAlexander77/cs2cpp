@@ -443,19 +443,8 @@ namespace Il2Native.Logic
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
             var project = XDocument.Load(firstSource);
             var folder = Path.GetDirectoryName(firstSource);
-            this.Sources =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
-                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
-                    .ToArray();
-
-            this.Impl =
-                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Content")
-                    .Select(element => Path.Combine(folder, element.Attribute("Include").Value))
-                    .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
-                    .ToArray();
 
             var options = this.Options;
-
             foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
             {
                 if (!ProjectCondition(elements, options))
@@ -470,9 +459,20 @@ namespace Il2Native.Logic
                         continue;
                     }
 
-                    options[property.Name.LocalName] = property.Value;
+                    options[property.Name.LocalName] = this.FillProperties(property.Value, options);
                 }
             }
+
+            this.Sources =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Compile")
+                    .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
+                    .ToArray();
+
+            this.Impl =
+                project.Root.Elements(ns + "ItemGroup").Elements(ns + "Content")
+                    .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
+                    .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
+                    .ToArray();
 
             this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
             DebugOutput = this.Options["Configuration"] != "Release";
