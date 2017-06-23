@@ -466,7 +466,7 @@ namespace Il2Native.Logic
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
             var project = XDocument.Load(projectPath);
-            var folder = Directory.GetCurrentDirectory();
+            var folder = new FileInfo(projectPath).Directory.FullName;
 
             var options = this.Options;
             foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
