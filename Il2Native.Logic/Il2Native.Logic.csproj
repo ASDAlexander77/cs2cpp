@@ -177,6 +177,7 @@
     </Compile>
     <Compile Include="Cs2CGenerator.cs" />
     <Compile Include="CLangKeywords.cs" />
+    <Compile Include="ProjectLoader.cs" />
     <Compile Include="ProjectProperties.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

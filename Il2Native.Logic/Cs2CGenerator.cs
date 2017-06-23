@@ -49,9 +49,8 @@ namespace Il2Native.Logic
             this.Sources = source;
             this.FirstSource = this.Sources.First();
 
-            this.Options = new ProjectProperties();
-
             DebugOutput = true;
+            this.Options = new ProjectProperties();
             if (args != null && args.Contains("release"))
             {
                 this.Options["Configuration"] = "Release";
@@ -67,7 +66,7 @@ namespace Il2Native.Logic
                 var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
                 this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
                 this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
-                this.ReferencesList = args != null ? args.Where(a => a.StartsWith("ref:")).Select(a => a.Substring("ref:".Length)).ToArray() : null;
+                this.References = args != null ? args.Where(a => a.StartsWith("ref:")).Select(a => a.Substring("ref:".Length)).ToArray() : null;
             }
         }
 
@@ -87,11 +86,13 @@ namespace Il2Native.Logic
         /// </summary>
         public string DefaultDllLocations { get; private set; }
 
+        public IDictionary<string, string> Options { get; private set; }
+
         public bool IsCoreLib
         {
             get
             {
-                return string.IsNullOrWhiteSpace(this.CoreLibPath) && (this.ReferencesList == null || this.ReferencesList.Length == 0);
+                return string.IsNullOrWhiteSpace(this.CoreLibPath) && (this.References == null || this.References.Length == 0);
             }
         }
 
@@ -105,7 +106,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string[] ReferencesList { get; set; }
+        public string[] References { get; set; }
 
         /// <summary>
         /// </summary>
@@ -122,10 +123,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IDictionary<string, string> Options { get; private set; }
-
-        /// <summary>
-        /// </summary>
         protected string[] Sources { get; private set; }
 
         internal IDictionary<string, BoundStatement> BoundBodyByMethodSymbol
@@ -136,11 +133,6 @@ namespace Il2Native.Logic
         internal IDictionary<string, SourceMethodSymbol> SourceMethodByMethodSymbol
         {
             get { return this.sourceMethodByMethodSymbol; }
-        }
-
-        public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)
-        {
-            return Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
         }
 
         public IAssemblySymbol Load()
@@ -168,17 +160,6 @@ namespace Il2Native.Logic
             }
 
             return sb.ToString();
-        }
-
-        private static string GetReferenceValue(XNamespace ns, XElement element)
-        {
-            var xElement = element.Element(ns + "HintPath");
-            if (xElement != null)
-            {
-                return xElement.Value;
-            }
-
-            return element.Attribute("Include").Value;
         }
 
         private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, AssemblyIdentity assemblyIdentity)
@@ -328,40 +309,6 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
         }
 
-        private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
-        {
-            var nestedProject = projectReference.Attribute("Include").Value;
-            var projectFolder = this.GetRealFolderForProject(projectFullFilePath, nestedProject);
-            var projectFile = Path.Combine(projectFolder, Path.GetFileName(nestedProject));
-            return projectFile;
-        }
-
-        private string GetReferenceFromProjectValue(XElement element, string projectFullFilePath)
-        {
-            var referencedProjectFilePath = element.Attribute("Include").Value;
-
-            var filePath = Path.Combine(this.GetRealFolderForProject(projectFullFilePath, referencedProjectFilePath),
-                string.Concat("bin\\", this.Options["Configuration"]),
-                string.Concat(Path.GetFileNameWithoutExtension(referencedProjectFilePath), ".dll"));
-
-            return filePath;
-        }
-
-        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XNamespace ns, XElement xElement)
-        {
-            foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
-            {
-                var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
-                var project = XDocument.Load(projectFile);
-                foreach (var reference in this.LoadReferencesFromProject(projectFile, project, ns))
-                {
-                    yield return reference;
-                }
-
-                yield return this.GetReferenceFromProjectValue(projectReference, prjectFullFilePath);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="identity">
@@ -440,187 +387,13 @@ namespace Il2Native.Logic
 
         private void LoadProject(string firstSource)
         {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            try
-            {
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(firstSource));
+            var projectLoader = new ProjectLoader(this.Options);
+            projectLoader.Load(firstSource);
+            DebugOutput = this.Options["Configuration"] != "Release";
 
-                string[] sources;
-                string[] impl;
-                string[] references;
-                this.LoadProject(firstSource, out sources, out impl, out references);
-
-                this.Sources = sources;
-                this.Impl = impl;
-                this.ReferencesList = references;
-
-                DebugOutput = this.Options["Configuration"] != "Release";
-            }
-            finally
-            {
-                Directory.SetCurrentDirectory(currentDirectory);
-            }
-        }
-
-        private void LoadProject(string projectPath, out string[] sources, out string[] impl, out string[] references)
-        {
-            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(projectPath);
-            var folder = new FileInfo(projectPath).Directory.FullName;
-
-            var options = this.Options;
-            options["MSBuildThisFileDirectory"] = folder + @"\";
-
-            foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
-            {
-                if (!ProjectCondition(elements, options))
-                {
-                    continue;
-                }
-
-                foreach (var property in elements.Elements())
-                {
-                    if (!ProjectCondition(property, options))
-                    {
-                        continue;
-                    }
-
-                    options[property.Name.LocalName] = this.FillProperties(property.Value, options);
-                }
-            }
-
-            sources =
-                project.Root.Elements(ns + "ItemGroup")
-                            .Where(element => ProjectCondition(element, options))
-                            .Elements(ns + "Compile")
-                    .Where(element => ProjectCondition(element, options))
-                    .Select(element => PathCombine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
-                    .ToArray();
-
-            impl =
-                project.Root.Elements(ns + "ItemGroup")
-                            .Where(element => ProjectCondition(element, options))
-                            .Elements(ns + "Content")
-                    .Where(element => ProjectCondition(element, options))
-                    .Select(element => PathCombine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
-                    .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
-                    .ToArray();
-
-            references = this.LoadReferencesFromProject(projectPath, project, ns);
-
-            // load shared items
-            foreach (var element in project.Root.Elements(ns + "Import").Where(e => e.Attributes("Label").Any(a => a.Value == "Shared")))
-            {
-                string[] sourcesLocal;
-                string[] implLocal;
-                string[] referencesLocal;
-                this.LoadProject(this.FillProperties(element.Attribute("Project").Value, options), out sourcesLocal, out implLocal, out referencesLocal);
-
-                // join results
-                sources = sources.Union(sourcesLocal).ToArray();
-                impl = impl.Union(implLocal).ToArray();
-                references = references.Union(referencesLocal).ToArray();
-            }
-        }
-
-        private string PathCombine(string path1, string filePath2)
-        {
-            if (File.Exists(filePath2))
-            {
-                return new FileInfo(filePath2).FullName;
-            }
-
-            var  filePath = Path.Combine(path1, filePath2);
-            if (File.Exists(filePath))
-            {
-                return new FileInfo(filePath).FullName;
-            }
-
-            return filePath;
-        }
-
-        private bool ProjectCondition(XElement element, IDictionary<string, string> options)
-        {
-            var conditionAttribute = element.Attribute("Condition");
-            if (conditionAttribute == null)
-            {
-                return true;
-            }
-
-            return ExecuteCondition(this.FillProperties(conditionAttribute.Value, options));
-        }
-
-        private bool ExecuteCondition(string condition)
-        {
-            var andOperator = condition.IndexOf("and", StringComparison.Ordinal);
-            if (andOperator != -1)
-            {
-                var left = condition.Substring(0, andOperator).Trim();
-                var right = condition.Substring(andOperator + "and".Length).Trim();
-                return ExecuteCondition(left) && ExecuteCondition(right);
-            }
-
-            var orOperator = condition.IndexOf("or", StringComparison.Ordinal);
-            if (orOperator != -1)
-            {
-                var left = condition.Substring(0, orOperator).Trim();
-                var right = condition.Substring(orOperator + "or".Length).Trim();
-                return ExecuteCondition(left) || ExecuteCondition(right);
-            }
-
-            var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
-            if (equalOperator != -1)
-            {
-                var left = condition.Substring(0, equalOperator).Trim();
-                var right = condition.Substring(equalOperator + "==".Length).Trim();
-                return left.Equals(right);
-            }
-
-            var notEqualOperator = condition.IndexOf("!=", StringComparison.Ordinal);
-            if (notEqualOperator != -1)
-            {
-                var left = condition.Substring(0, notEqualOperator).Trim();
-                var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
-                return !left.Equals(right);
-            }
-
-            return !string.IsNullOrWhiteSpace(condition) && condition.Trim() == "true";
-        }
-
-        private string FillProperties(string conditionValue, IDictionary<string, string> options)
-        {
-            var processed = new StringBuilder();
-
-            var lastIndex = 0;
-            var poisition = 0;
-            while (poisition < conditionValue.Length)
-            {
-                poisition = conditionValue.IndexOf('$', lastIndex);
-                if (poisition == -1)
-                {
-                    processed.Append(conditionValue.Substring(lastIndex));
-                    break;
-                }
-                else
-                {
-                    processed.Append(conditionValue.Substring(lastIndex, poisition - lastIndex));
-                }
-
-                var left = conditionValue.IndexOf('(', poisition);
-                var right = conditionValue.IndexOf(')', poisition);
-                if (left == -1 || right == -1)
-                {
-                    ////throw new IndexOutOfRangeException("Condition is not correct");
-                    break;
-                }
-
-                var propertyName = conditionValue.Substring(left + 1, right - left - 1);
-                processed.Append(options[propertyName]);
-
-                lastIndex = right + 1;
-            }
-
-            return processed.ToString();
+            this.Sources = projectLoader.Sources.ToArray();
+            this.Impl = projectLoader.Content.Where(c => c.EndsWith(".c") || c.EndsWith(".cpp") || c.EndsWith(".cxx") || c.EndsWith(".h") || c.EndsWith(".hpp") || c.EndsWith(".hxx")).ToArray();
+            this.References = projectLoader.References.ToArray();
         }
 
         /// <summary>
@@ -642,9 +415,9 @@ namespace Il2Native.Logic
         private HashSet<AssemblyIdentity> LoadReferencesForCompiling(List<MetadataImageReference> assemblies)
         {
             var added = new HashSet<AssemblyIdentity>();
-            if (this.ReferencesList != null)
+            if (this.References != null)
             {
-                foreach (var refItem in this.ReferencesList)
+                foreach (var refItem in this.References)
                 {
                     if (File.Exists(refItem))
                     {
@@ -663,19 +436,6 @@ namespace Il2Native.Logic
             }
 
             return added;
-        }
-
-        private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
-        {
-            var xElement = project.Root;
-            if (xElement != null)
-            {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
-                    .Select(e => GetReferenceValue(ns, e))
-                    .Union(this.GetReferencesFromProject(firstSource, ns, xElement)).ToArray();
-            }
-
-            return null;
         }
 
         /// <summary>
