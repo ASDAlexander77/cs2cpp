@@ -55,8 +55,8 @@ namespace Il2Native.Logic
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
             var project = XDocument.Load(projectPath);
-            this.folder = new FileInfo(projectPath).Directory.FullName;
 
+            this.folder = new FileInfo(projectPath).Directory.FullName;
             this.Options["MSBuildThisFileDirectory"] = folder + @"\";
 
             foreach (var element in project.Root.Elements().Where(i => ProjectCondition(i)))
@@ -83,7 +83,10 @@ namespace Il2Native.Logic
 
         private void LoadImport(XElement element)
         {
+            var folder = this.folder;
             this.LoadProjectInternal(this.FillProperties(element.Attribute("Project").Value));
+            this.folder = folder;
+            this.Options["MSBuildThisFileDirectory"] = folder + @"\";
         }
 
         private void LoadPropertyGroup(XElement element)
