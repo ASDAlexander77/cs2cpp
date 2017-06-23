@@ -59,13 +59,8 @@ namespace Il2Native.Logic
 
             this.Options["MSBuildThisFileDirectory"] = folder + @"\";
 
-            foreach (var element in project.Root.Elements())
+            foreach (var element in project.Root.Elements().Where(i => ProjectCondition(i)))
             {
-                if (!ProjectCondition(element))
-                {
-                    continue;
-                }
-
                 switch (element.Name.LocalName)
                 {
                     case "Import":
