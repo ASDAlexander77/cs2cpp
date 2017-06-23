@@ -469,6 +469,8 @@ namespace Il2Native.Logic
             var folder = new FileInfo(projectPath).Directory.FullName;
 
             var options = this.Options;
+            options["MSBuildThisFileDirectory"] = folder + @"\";
+
             foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
             {
                 if (!ProjectCondition(elements, options))
@@ -492,7 +494,7 @@ namespace Il2Native.Logic
                             .Where(element => ProjectCondition(element, options))
                             .Elements(ns + "Compile")
                     .Where(element => ProjectCondition(element, options))
-                    .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
+                    .Select(element => PathCombine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
                     .ToArray();
 
             impl =
@@ -500,7 +502,7 @@ namespace Il2Native.Logic
                             .Where(element => ProjectCondition(element, options))
                             .Elements(ns + "Content")
                     .Where(element => ProjectCondition(element, options))
-                    .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
+                    .Select(element => PathCombine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
                     .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
                     .ToArray();
 
@@ -521,6 +523,22 @@ namespace Il2Native.Logic
             }
         }
 
+        private string PathCombine(string path1, string filePath2)
+        {
+            if (File.Exists(filePath2))
+            {
+                return new FileInfo(filePath2).FullName;
+            }
+
+            var  filePath = Path.Combine(path1, filePath2);
+            if (File.Exists(filePath))
+            {
+                return new FileInfo(filePath).FullName;
+            }
+
+            return filePath;
+        }
+
         private bool ProjectCondition(XElement element, IDictionary<string, string> options)
         {
             var conditionAttribute = element.Attribute("Condition");
@@ -534,16 +552,39 @@ namespace Il2Native.Logic
 
         private bool ExecuteCondition(string condition)
         {
-            // TODO: finish it properly
-            var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
-            if (equalOperator == -1)
+            var andOperator = condition.IndexOf("and", StringComparison.Ordinal);
+            if (andOperator != -1)
             {
-                return true;
+                var left = condition.Substring(0, andOperator).Trim();
+                var right = condition.Substring(andOperator + "and".Length).Trim();
+                return ExecuteCondition(left) && ExecuteCondition(right);
             }
 
-            var left = condition.Substring(0, equalOperator).Trim();
-            var right = condition.Substring(equalOperator + 2).Trim();
-            return left.Equals(right);
+            var orOperator = condition.IndexOf("or", StringComparison.Ordinal);
+            if (orOperator != -1)
+            {
+                var left = condition.Substring(0, orOperator).Trim();
+                var right = condition.Substring(orOperator + "or".Length).Trim();
+                return ExecuteCondition(left) || ExecuteCondition(right);
+            }
+
+            var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
+            if (equalOperator != -1)
+            {
+                var left = condition.Substring(0, equalOperator).Trim();
+                var right = condition.Substring(equalOperator + "==".Length).Trim();
+                return left.Equals(right);
+            }
+
+            var notEqualOperator = condition.IndexOf("!=", StringComparison.Ordinal);
+            if (notEqualOperator != -1)
+            {
+                var left = condition.Substring(0, notEqualOperator).Trim();
+                var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
+                return !left.Equals(right);
+            }
+
+            return !string.IsNullOrWhiteSpace(condition) && condition.Trim() == "true";
         }
 
         private string FillProperties(string conditionValue, IDictionary<string, string> options)
