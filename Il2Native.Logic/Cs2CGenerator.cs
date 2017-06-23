@@ -440,9 +440,33 @@ namespace Il2Native.Logic
 
         private void LoadProject(string firstSource)
         {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            try
+            {
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(firstSource));
+
+                string[] sources;
+                string[] impl;
+                string[] references;
+                this.LoadProject(firstSource, out sources, out impl, out references);
+
+                this.Sources = sources;
+                this.Impl = impl;
+                this.ReferencesList = references;
+
+                DebugOutput = this.Options["Configuration"] != "Release";
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(currentDirectory);
+            }
+        }
+
+        private void LoadProject(string projectPath, out string[] sources, out string[] impl, out string[] references)
+        {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(firstSource);
-            var folder = Path.GetDirectoryName(firstSource);
+            var project = XDocument.Load(projectPath);
+            var folder = Directory.GetCurrentDirectory();
 
             var options = this.Options;
             foreach (var elements in project.Root.Elements(ns + "PropertyGroup"))
@@ -463,7 +487,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.Sources =
+            sources =
                 project.Root.Elements(ns + "ItemGroup")
                             .Where(element => ProjectCondition(element, options))
                             .Elements(ns + "Compile")
@@ -471,7 +495,7 @@ namespace Il2Native.Logic
                     .Select(element => Path.Combine(folder, this.FillProperties(element.Attribute("Include").Value, options)))
                     .ToArray();
 
-            this.Impl =
+            impl =
                 project.Root.Elements(ns + "ItemGroup")
                             .Where(element => ProjectCondition(element, options))
                             .Elements(ns + "Content")
@@ -480,8 +504,21 @@ namespace Il2Native.Logic
                     .Where(s => s.EndsWith(".cpp") || s.EndsWith(".h"))
                     .ToArray();
 
-            this.ReferencesList = this.LoadReferencesFromProject(firstSource, project, ns);
-            DebugOutput = this.Options["Configuration"] != "Release";
+            references = this.LoadReferencesFromProject(projectPath, project, ns);
+
+            // load shared items
+            foreach (var element in project.Root.Elements(ns + "Import").Where(e => e.Attributes("Label").Any(a => a.Value == "Shared")))
+            {
+                string[] sourcesLocal;
+                string[] implLocal;
+                string[] referencesLocal;
+                this.LoadProject(this.FillProperties(element.Attribute("Project").Value, options), out sourcesLocal, out implLocal, out referencesLocal);
+
+                // join results
+                sources = sources.Union(sourcesLocal).ToArray();
+                impl = impl.Union(implLocal).ToArray();
+                references = references.Union(referencesLocal).ToArray();
+            }
         }
 
         private bool ProjectCondition(XElement element, IDictionary<string, string> options)
