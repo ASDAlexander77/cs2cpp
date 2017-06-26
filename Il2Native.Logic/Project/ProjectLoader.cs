@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-
-namespace Il2Native.Logic
+﻿namespace Il2Native.Logic.Project
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Xml.Linq;
+
     public class ProjectLoader
     {
         private string folder;
@@ -56,8 +57,11 @@ namespace Il2Native.Logic
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
             var project = XDocument.Load(projectPath);
 
-            this.folder = new FileInfo(projectPath).Directory.FullName;
+            var fileInfo = new FileInfo(projectPath);
+            this.folder = fileInfo.Directory.FullName;
             this.Options["MSBuildThisFileDirectory"] = folder + @"\";
+            this.Options["MSBuildThisFile"] = Path.GetFileName(fileInfo.FullName);
+            this.Options["MSBuildThisFileFullPath"] = fileInfo.FullName;
 
             foreach (var element in project.Root.Elements().Where(i => ProjectCondition(i)))
             {
@@ -83,10 +87,12 @@ namespace Il2Native.Logic
 
         private void LoadImport(XElement element)
         {
-            var folder = this.folder;
-            this.LoadProjectInternal(this.FillProperties(element.Attribute("Project").Value));
-            this.folder = folder;
-            this.Options["MSBuildThisFileDirectory"] = folder + @"\";
+            var cloned = new ProjectProperties(this.Options.ToDictionary(k => k.Key, v => v.Value));
+            var value = element.Attribute("Project").Value;
+            Debug.Assert(!value.Contains("[MSBuild]"));
+            Debug.Assert(!value.Contains("Exists"));
+            this.LoadProjectInternal(this.FillProperties(value));
+            this.Options = cloned;
         }
 
         private void LoadPropertyGroup(XElement element)
@@ -219,20 +225,105 @@ namespace Il2Native.Logic
                 }
 
                 var left = conditionValue.IndexOf('(', poisition);
-                var right = conditionValue.IndexOf(')', poisition);
-                if (left == -1 || right == -1)
+                if (left == -1)
                 {
                     ////throw new IndexOutOfRangeException("Condition is not correct");
                     break;
                 }
 
-                var propertyName = conditionValue.Substring(left + 1, right - left - 1);
-                processed.Append(this.Options[propertyName]);
+                conditionValue = FillProperties(conditionValue.Substring(left + 1));
+
+                var right = -1;
+                var propertyNamePosition = -1;
+                var nested = 0;
+                while (++propertyNamePosition < conditionValue.Length)
+                {
+                    if (conditionValue[propertyNamePosition] == '(')
+                    {
+                        nested++;
+                    }
+
+                    if (conditionValue[propertyNamePosition] == ')')
+                    {
+                        if (nested > 0)
+                        {
+                            nested--;
+                            continue;
+                        }
+
+                        right = propertyNamePosition;
+                        break;
+                    }
+                }
+
+                if (right == -1)
+                {
+                    ////throw new IndexOutOfRangeException("Condition is not correct");
+                    break;
+                }
+
+                var propertyNameOfFunctionCall = conditionValue.Substring(0, right).Trim();
+                if (propertyNameOfFunctionCall.EndsWith(")"))
+                {
+                    // function call
+                    var functionResult = ExecuteFunction(propertyNameOfFunctionCall);
+                    processed.Append(functionResult);
+                }
+                else
+                {
+                    var propertyValue = this.Options[propertyNameOfFunctionCall];
+                    processed.Append(propertyValue);
+                }
 
                 lastIndex = right + 1;
             }
 
             return processed.ToString();
+        }
+
+        private string ExecuteFunction(string propertyNameOfFunctionCall)
+        {
+            string functionName;
+            string[] parameters;
+            var parsed = ParseFunction(propertyNameOfFunctionCall, out functionName, out parameters);
+            if (!parsed)
+            {
+                return propertyNameOfFunctionCall;
+            }
+
+            var msbuild = "[MSBuild]::";
+            if (functionName.StartsWith(msbuild))
+            {
+                var clearName = functionName.Substring(msbuild.Length);
+                switch (clearName)
+                {
+                    case "MakeRelative":
+                        return IntrinsicFunctions.MakeRelative(parameters[0], parameters[1]);
+                    case "GetDirectoryNameOfFileAbove":
+                        return IntrinsicFunctions.GetDirectoryNameOfFileAbove(parameters[0], parameters[1]);
+                }
+            }
+
+            return propertyNameOfFunctionCall;
+        }
+
+        private bool ParseFunction(string propertyNameOfFunctionCall, out string functionName, out string[] parameters)
+        {
+            functionName = null;
+            parameters = null;
+
+            var poisition = propertyNameOfFunctionCall.IndexOf('(');
+            if (poisition == -1)
+            {
+                return false;
+            }
+
+            functionName = propertyNameOfFunctionCall.Substring(0, poisition);
+
+            var paramsSubString = propertyNameOfFunctionCall.Substring(poisition + 1, propertyNameOfFunctionCall.Length - poisition - 2);
+            parameters = paramsSubString.Split(',').Select(s => s.Trim()).ToArray();
+
+            return true;
         }
 
         public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)

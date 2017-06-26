@@ -19,6 +19,8 @@ namespace Il2Native.Logic
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CodeAnalysis.Text;
 
+    using Il2Native.Logic.Project;
+
     /// <summary>
     /// </summary>
     public class Cs2CGenerator
