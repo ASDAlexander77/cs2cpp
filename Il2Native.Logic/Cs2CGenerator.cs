@@ -112,6 +112,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string[] Errors { get; set; }
+
+        /// <summary>
+        /// </summary>
         public string SourceFilePath { get; private set; }
 
         /// <summary>
@@ -139,6 +143,11 @@ namespace Il2Native.Logic
 
         public IAssemblySymbol Load()
         {
+            if (this.Errors != null && this.Errors.Any())
+            {
+                return null;
+            }
+
             var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
             if (assemblyMetadata == null)
             {
@@ -390,7 +399,19 @@ namespace Il2Native.Logic
         private void LoadProject(string firstSource)
         {
             var projectLoader = new ProjectLoader(this.Options);
-            projectLoader.Load(firstSource);
+            if (!projectLoader.Load(firstSource))
+            {
+                this.Errors = projectLoader.Errors.ToArray();
+
+                Console.WriteLine(@"Project Errors: {0}", this.Errors.Count());
+                foreach (var diagnostic in this.Errors)
+                {
+                    Console.WriteLine(diagnostic);
+                }
+
+                return;
+            }
+
             DebugOutput = this.Options["Configuration"] != "Release";
 
             this.Sources = projectLoader.Sources.ToArray();

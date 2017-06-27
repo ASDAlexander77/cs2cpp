@@ -17,6 +17,7 @@
             this.Sources = new List<string>();
             this.Content = new List<string>();
             this.References = new List<string>();
+            this.Errors = new List<string>();
             this.Options = options;
         }
 
@@ -26,15 +27,17 @@
 
         public IList<string> References { get; private set; }
 
+        public IList<string> Errors { get; private set; }
+
         public IDictionary<string, string> Options { get; private set; }
 
-        public void Load(string projectFilePath)
+        public bool Load(string projectFilePath)
         {
             var currentDirectory = Directory.GetCurrentDirectory();
             try
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(projectFilePath));
-                this.LoadProjectInternal(projectFilePath);
+                return this.LoadProjectInternal(projectFilePath);
             }
             finally
             {
@@ -52,7 +55,7 @@
             return element.Attribute("Include").Value;
         }
 
-        private void LoadProjectInternal(string projectPath)
+        private bool LoadProjectInternal(string projectPath)
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
             var project = XDocument.Load(projectPath);
@@ -63,18 +66,31 @@
             this.Options["MSBuildThisFile"] = Path.GetFileName(fileInfo.FullName);
             this.Options["MSBuildThisFileFullPath"] = fileInfo.FullName;
 
-            foreach (var element in project.Root.Elements().Where(i => ProjectCondition(i)))
+            var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
+
+            foreach (var element in project.Root.Elements())
             {
                 switch (element.Name.LocalName)
                 {
-                    case "Import":
-                        LoadImport(element);
+                    case "Target":
+                        if (element.Attribute("Name").Value == initialTarget)
+                        {
+                            foreach (var targetElement in element.Elements())
+                            {
+                                if (!ProcessElement(targetElement))
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+
                         break;
-                    case "PropertyGroup":
-                        LoadPropertyGroup(element);
-                        break;
-                    case "ItemGroup":
-                        LoadItemGroup(element);
+                    default:
+                        if (!ProcessElement(element))
+                        {
+                            return false;
+                        }
+
                         break;
                 }
             }
@@ -83,16 +99,51 @@
             {
                 this.References.Add(reference);
             }
+
+            return true;
         }
 
-        private void LoadImport(XElement element)
+        private bool ProcessElement(XElement element)
         {
-            var cloned = new ProjectProperties(this.Options.ToDictionary(k => k.Key, v => v.Value));
+            if (!ProjectCondition(element))
+            {
+                return true;
+            }
+
+            switch (element.Name.LocalName)
+            {
+                case "Import":
+                    if (!LoadImport(element))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case "PropertyGroup":
+                    LoadPropertyGroup(element);
+                    break;
+                case "ItemGroup":
+                    LoadItemGroup(element);
+                    break;
+                case "Error":
+                    ProcessError(element);
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool LoadImport(XElement element)
+        {
+            var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuildThisFile")).ToDictionary(k => k.Key, v => v.Value));
             var value = element.Attribute("Project").Value;
-            Debug.Assert(!value.Contains("[MSBuild]"));
-            Debug.Assert(!value.Contains("Exists"));
-            this.LoadProjectInternal(this.FillProperties(value));
-            this.Options = cloned;
+            var result = this.LoadProjectInternal(this.FillProperties(value));
+            foreach (var copyCloned in cloned)
+            {
+                this.Options[copyCloned.Key] = copyCloned.Value;
+            }
+
+            return result;
         }
 
         private void LoadPropertyGroup(XElement element)
@@ -126,6 +177,11 @@
         private void LoadContent(XElement element)
         {
             this.Content.Add(PathCombine(this.FillProperties(element.Attribute("Include").Value)));
+        }
+
+        private void ProcessError(XElement element)
+        {
+            this.Errors.Add(this.FillProperties(element.Attribute("Text").Value));
         }
 
         private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
@@ -170,19 +226,19 @@
 
         private bool ExecuteCondition(string condition)
         {
-            var andOperator = condition.IndexOf("and", StringComparison.Ordinal);
+            var andOperator = condition.IndexOf( "and ", StringComparison.Ordinal);
             if (andOperator != -1)
             {
                 var left = condition.Substring(0, andOperator).Trim();
-                var right = condition.Substring(andOperator + "and".Length).Trim();
+                var right = condition.Substring(andOperator + " and ".Length).Trim();
                 return ExecuteCondition(left) && ExecuteCondition(right);
             }
 
-            var orOperator = condition.IndexOf("or", StringComparison.Ordinal);
+            var orOperator = condition.IndexOf(" or ", StringComparison.Ordinal);
             if (orOperator != -1)
             {
                 var left = condition.Substring(0, orOperator).Trim();
-                var right = condition.Substring(orOperator + "or".Length).Trim();
+                var right = condition.Substring(orOperator + " or ".Length).Trim();
                 return ExecuteCondition(left) || ExecuteCondition(right);
             }
 
@@ -200,6 +256,13 @@
                 var left = condition.Substring(0, notEqualOperator).Trim();
                 var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
                 return !left.Equals(right);
+            }
+
+            if (condition.EndsWith(")"))
+            {
+                // function call
+                var functionResult = ExecuteFunction(condition);
+                condition = functionResult;
             }
 
             return !string.IsNullOrWhiteSpace(condition) && condition.Trim() == "true";
@@ -302,6 +365,14 @@
                     case "GetDirectoryNameOfFileAbove":
                         return IntrinsicFunctions.GetDirectoryNameOfFileAbove(parameters[0], parameters[1]);
                 }
+            }
+            else if (functionName == "Exists")
+            {
+                return File.Exists(parameters[0]).ToString().ToLower();
+            }
+            else if (functionName == "!Exists")
+            {
+                return (!File.Exists(parameters[0])).ToString().ToLower();
             }
 
             return propertyNameOfFunctionCall;
