@@ -58,7 +58,12 @@
         private bool LoadProjectInternal(string projectPath)
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-            var project = XDocument.Load(projectPath);
+
+            var project = File.Exists(projectPath) ? XDocument.Load(projectPath) : File.Exists(Path.Combine(this.folder, projectPath)) ? XDocument.Load(Path.Combine(this.folder, projectPath)) : null;
+            if (project == null)
+            {
+                throw new FileNotFoundException(projectPath);
+            }
 
             var fileInfo = new FileInfo(projectPath);
             this.folder = fileInfo.Directory.FullName;
@@ -221,17 +226,33 @@
                 return true;
             }
 
-            return ExecuteCondition(this.FillProperties(conditionAttribute.Value));
+            return ExecuteConditionBool(this.FillProperties(conditionAttribute.Value));
         }
 
-        private bool ExecuteCondition(string condition)
+        private bool ExecuteConditionBool (string condition)
         {
-            var andOperator = condition.IndexOf( "and ", StringComparison.Ordinal);
+            return ExecuteCondition(condition) == "true";
+        }
+
+        private string ExecuteCondition(string condition)
+        {
+            if (condition.StartsWith("!"))
+            {
+                var right = condition.Substring(1, condition.Length - 1).Trim();
+                switch (ExecuteCondition(right))
+                {
+                    case "true": return "false";
+                    case "false": return "true";
+                    default: return string.Empty;
+                }
+            }
+
+            var andOperator = condition.IndexOf( " and ", StringComparison.Ordinal);
             if (andOperator != -1)
             {
                 var left = condition.Substring(0, andOperator).Trim();
                 var right = condition.Substring(andOperator + " and ".Length).Trim();
-                return ExecuteCondition(left) && ExecuteCondition(right);
+                return ExecuteConditionBool(left) && ExecuteConditionBool(right) ? "true" : "false";
             }
 
             var orOperator = condition.IndexOf(" or ", StringComparison.Ordinal);
@@ -239,7 +260,7 @@
             {
                 var left = condition.Substring(0, orOperator).Trim();
                 var right = condition.Substring(orOperator + " or ".Length).Trim();
-                return ExecuteCondition(left) || ExecuteCondition(right);
+                return ExecuteConditionBool(left) || ExecuteConditionBool(right) ? "true" : "false";
             }
 
             var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
@@ -247,7 +268,7 @@
             {
                 var left = condition.Substring(0, equalOperator).Trim();
                 var right = condition.Substring(equalOperator + "==".Length).Trim();
-                return left.Equals(right);
+                return left.Equals(right) ? "true" : "false";
             }
 
             var notEqualOperator = condition.IndexOf("!=", StringComparison.Ordinal);
@@ -255,7 +276,7 @@
             {
                 var left = condition.Substring(0, notEqualOperator).Trim();
                 var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
-                return !left.Equals(right);
+                return !left.Equals(right) ? "true" : "false";
             }
 
             if (condition.EndsWith(")"))
@@ -265,7 +286,7 @@
                 condition = functionResult;
             }
 
-            return !string.IsNullOrWhiteSpace(condition) && condition.Trim() == "true";
+            return condition;
         }
 
         private string FillProperties(string conditionValue)
@@ -355,6 +376,7 @@
             }
 
             var msbuild = "[MSBuild]::";
+            var systemDateTime = "[System.DateTime]::";
             if (functionName.StartsWith(msbuild))
             {
                 var clearName = functionName.Substring(msbuild.Length);
@@ -366,14 +388,23 @@
                         return IntrinsicFunctions.GetDirectoryNameOfFileAbove(parameters[0], parameters[1]);
                 }
             }
+            else if (functionName.StartsWith(systemDateTime))
+            {
+                var clearName = functionName.Substring(systemDateTime.Length);
+                switch (clearName)
+                {
+                    case "Now.ToString":
+                        return System.DateTime.Now.ToString(parameters[0]);
+                }
+            }
             else if (functionName == "Exists")
             {
-                return File.Exists(parameters[0]).ToString().ToLower();
+                var trimmed = parameters[0].Trim();
+                var path = trimmed.StartsWith("'") && trimmed.EndsWith("'") ? trimmed.Substring(1, trimmed.Length - 2) : trimmed;
+                return (Directory.Exists(path) || File.Exists(path)).ToString().ToLower();
             }
-            else if (functionName == "!Exists")
-            {
-                return (!File.Exists(parameters[0])).ToString().ToLower();
-            }
+
+            // TODO: finish processing xxx.ToString().Ends() etc constructions
 
             return propertyNameOfFunctionCall;
         }
