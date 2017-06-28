@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{2E6BAEEC-54CA-45D7-9603-ECBDC777052D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,5 +55,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C} = {2E6BAEEC-54CA-45D7-9603-ECBDC777052D}
+		{B501A547-C911-4A05-AC6E-274A50DFF30E} = {2E6BAEEC-54CA-45D7-9603-ECBDC777052D}
 	EndGlobalSection
 EndGlobal
