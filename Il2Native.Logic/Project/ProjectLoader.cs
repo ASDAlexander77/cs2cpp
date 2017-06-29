@@ -231,7 +231,7 @@
 
         private bool ExecuteConditionBool (string condition)
         {
-            return ExecuteCondition(condition) == "true";
+            return ExecuteCondition(condition)?.ToLowerInvariant() == "true";
         }
 
         private string ExecuteCondition(string condition)
@@ -279,11 +279,11 @@
                 return !left.Equals(right) ? "true" : "false";
             }
 
-            if (condition.EndsWith(")"))
+            if (condition.EndsWith(")") || condition.IndexOf('.') != -1)
             {
                 // function call
                 var functionResult = ExecuteFunction(condition);
-                condition = functionResult;
+                condition = functionResult?.ToString();
             }
 
             return condition;
@@ -365,65 +365,130 @@
             return processed.ToString();
         }
 
-        private string ExecuteFunction(string propertyNameOfFunctionCall)
+        private object ExecuteFunction(string propertyNameOfFunctionCallParam)
         {
-            string functionName;
-            string[] parameters;
-            var parsed = ParseFunction(propertyNameOfFunctionCall, out functionName, out parameters);
-            if (!parsed)
+            var propertyNameOfFunctionCall = propertyNameOfFunctionCallParam;
+            object result = null;
+            while (!string.IsNullOrWhiteSpace(propertyNameOfFunctionCall))
             {
-                return propertyNameOfFunctionCall;
-            }
-
-            var msbuild = "[MSBuild]::";
-            var systemDateTime = "[System.DateTime]::";
-            if (functionName.StartsWith(msbuild))
-            {
-                var clearName = functionName.Substring(msbuild.Length);
-                switch (clearName)
+                string typeName;
+                string functionName;
+                string[] parameters;
+                var parsed = ParseFunction(propertyNameOfFunctionCall, out typeName, out functionName, out parameters, out propertyNameOfFunctionCall);
+                if (!parsed)
                 {
-                    case "MakeRelative":
-                        return IntrinsicFunctions.MakeRelative(parameters[0], parameters[1]);
-                    case "GetDirectoryNameOfFileAbove":
-                        return IntrinsicFunctions.GetDirectoryNameOfFileAbove(parameters[0], parameters[1]);
+                    return propertyNameOfFunctionCall;
+                }
+
+                bool isProperty = parameters == null;
+
+                var msbuild = "MSBuild";
+                var systemDateTime = "[System.DateTime]::";
+                if (typeName == msbuild)
+                {
+                    var clearName = functionName.Substring(msbuild.Length);
+                    switch (clearName)
+                    {
+                        case "MakeRelative":
+                            result = IntrinsicFunctions.MakeRelative(parameters[0], parameters[1]);
+                            break;
+                        case "GetDirectoryNameOfFileAbove":
+                            result = IntrinsicFunctions.GetDirectoryNameOfFileAbove(parameters[0], parameters[1]);
+                            break;
+                    }
+                }
+                else if (functionName == "Exists")
+                {
+                    var trimmed = parameters[0].Trim();
+                    var path = trimmed.StartsWith("'") && trimmed.EndsWith("'") ? trimmed.Substring(1, trimmed.Length - 2) : trimmed;
+                    result = (Directory.Exists(path) || File.Exists(path));
+                }
+                else
+                {
+                    Type targetType = null; 
+                    if (!string.IsNullOrWhiteSpace(typeName))
+                    {
+                        targetType = Type.GetType(typeName);
+                    }
+                    else if (result != null)
+                    {
+                        targetType = result.GetType();
+                    }
+
+                    if (parameters == null)
+                    {
+                        var foundProperty = targetType.GetProperty(functionName);
+                        if (foundProperty != null)
+                        {
+                            result = foundProperty.GetValue(result);
+                        }
+                    }
+                    else
+                    {
+                        var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count());
+                        if (foundMethod != null)
+                        {
+                            result = foundMethod.Invoke(result, parameters);
+                        }
+                    }
                 }
             }
-            else if (functionName.StartsWith(systemDateTime))
-            {
-                var clearName = functionName.Substring(systemDateTime.Length);
-                switch (clearName)
-                {
-                    case "Now.ToString":
-                        return System.DateTime.Now.ToString(parameters[0]);
-                }
-            }
-            else if (functionName == "Exists")
-            {
-                var trimmed = parameters[0].Trim();
-                var path = trimmed.StartsWith("'") && trimmed.EndsWith("'") ? trimmed.Substring(1, trimmed.Length - 2) : trimmed;
-                return (Directory.Exists(path) || File.Exists(path)).ToString().ToLower();
-            }
 
-            // TODO: finish processing xxx.ToString().Ends() etc constructions
-
-            return propertyNameOfFunctionCall;
+            return result;
         }
 
-        private bool ParseFunction(string propertyNameOfFunctionCall, out string functionName, out string[] parameters)
+        private bool ParseFunction(string propertyNameOfFunctionCall, out string typeName, out string functionOrPropertyName, out string[] parameters, out string propertyNameOfFunctionCallLeft)
         {
-            functionName = null;
+            typeName = null;
+            functionOrPropertyName = null;
             parameters = null;
+            propertyNameOfFunctionCallLeft = propertyNameOfFunctionCall;
 
-            var poisition = propertyNameOfFunctionCall.IndexOf('(');
-            if (poisition == -1)
+            var isPropertyName = false;
+            var poisition = -1;
+            var nestedPosition = -1;
+            while (++nestedPosition < propertyNameOfFunctionCall.Length)
+            {
+                if (propertyNameOfFunctionCall[nestedPosition] == '[')
+                {
+                    var typeNameBuilder = new StringBuilder();
+                    while (++nestedPosition < propertyNameOfFunctionCall.Length && propertyNameOfFunctionCall[nestedPosition] != ']')
+                    {
+                        typeNameBuilder.Append(propertyNameOfFunctionCall[nestedPosition]);
+                    }
+
+                    typeName = typeNameBuilder.ToString();
+                }
+
+                if (propertyNameOfFunctionCall[nestedPosition] == '.')
+                {
+                    poisition = nestedPosition;
+                    isPropertyName = true;
+                    break;
+                }
+
+                if (propertyNameOfFunctionCall[nestedPosition] == '(')
+                {
+                    poisition = nestedPosition;
+                    break;
+                }
+            }
+
+            if (nestedPosition == propertyNameOfFunctionCall.Length)
             {
                 return false;
             }
 
-            functionName = propertyNameOfFunctionCall.Substring(0, poisition);
+            functionOrPropertyName = propertyNameOfFunctionCall.Substring(0, poisition);
+            if (!isPropertyName)
+            {
+                var poisitionEnd = propertyNameOfFunctionCall.IndexOf(')', poisition);
+                var paramsSubString = propertyNameOfFunctionCall.Substring(poisition + 1, poisitionEnd - poisition - 1);
+                parameters = paramsSubString.Split(',').Select(s => s.Trim()).ToArray();
+                poisition = poisitionEnd;
+            }
 
-            var paramsSubString = propertyNameOfFunctionCall.Substring(poisition + 1, propertyNameOfFunctionCall.Length - poisition - 2);
-            parameters = paramsSubString.Split(',').Select(s => s.Trim()).ToArray();
+            propertyNameOfFunctionCallLeft = propertyNameOfFunctionCall.Substring(poisition + 1, propertyNameOfFunctionCall.Length - poisition - 1);
 
             return true;
         }
