@@ -83,7 +83,7 @@ namespace Il2Native.Logic.Project
                 return path;
             }
 
-            Uri baseUri = new Uri(EnsureTrailingSlash(basePath), UriKind.Absolute); // May throw UriFormatException
+            Uri baseUri = new Uri(Helpers.EnsureTrailingSlash(basePath), UriKind.Absolute); // May throw UriFormatException
 
             Uri pathUri = CreateUriFromPath(path);
 
@@ -157,52 +157,8 @@ namespace Il2Native.Logic.Project
             // Search for a directory that contains that file
             string directoryName = GetDirectoryNameOfFileAbove(startingDirectory, file);
 
-            return String.IsNullOrWhiteSpace(directoryName) ? String.Empty : NormalizePath(directoryName, file);
+            return String.IsNullOrWhiteSpace(directoryName) ? String.Empty : Helpers.NormalizePath(directoryName, file);
         }
 
-        internal static string EnsureTrailingSlash(string fileSpec)
-        {
-            if (!EndsWithSlash(fileSpec))
-            {
-                fileSpec += Path.DirectorySeparatorChar;
-            }
-
-            return fileSpec;
-        }
-
-        internal static bool EndsWithSlash(string fileSpec)
-        {
-            return (fileSpec.Length > 0)
-                ? IsSlash(fileSpec[fileSpec.Length - 1])
-                : false;
-        }
-
-        internal static bool IsSlash(char c)
-        {
-            return ((c == Path.DirectorySeparatorChar) || (c == Path.AltDirectorySeparatorChar));
-        }
-
-        internal static string NormalizeDirectory(params string[] path)
-        {
-            return EnsureTrailingSlash(NormalizePath(path));
-        }
-
-        internal static string NormalizePath(params string[] path)
-        {
-            var localPath = Path.Combine(path);
-            return string.IsNullOrEmpty(localPath) || Path.DirectorySeparatorChar == '\\' ? localPath : localPath.Replace('\\', '/');//.Replace("//", "/");
-        }
-
-        internal static string ValueOrDefault(string conditionValue, string defaultValue)
-        {
-            if (String.IsNullOrEmpty(conditionValue))
-            {
-                return defaultValue;
-            }
-            else
-            {
-                return conditionValue;
-            }
-        }
     }
 }

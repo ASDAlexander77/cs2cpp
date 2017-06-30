@@ -177,6 +177,7 @@
     </Compile>
     <Compile Include="Cs2CGenerator.cs" />
     <Compile Include="CLangKeywords.cs" />
+    <Compile Include="Project\Helpers.cs" />
     <Compile Include="Project\IntrinsicFunctions.cs" />
     <Compile Include="Project\ProjectLoader.cs" />
     <Compile Include="Project\ProjectProperties.cs" />

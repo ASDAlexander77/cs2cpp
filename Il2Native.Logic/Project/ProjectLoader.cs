@@ -38,6 +38,7 @@
             try
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(projectFilePath));
+                BuildWellKnownValues("Project", projectFilePath);
                 return this.LoadProjectInternal(projectFilePath);
             }
             finally
@@ -66,11 +67,7 @@
                 throw new FileNotFoundException(projectPath);
             }
 
-            var fileInfo = new FileInfo(projectPath);
-            this.folder = fileInfo.Directory.FullName;
-            this.Options["MSBuildThisFileDirectory"] = folder + @"\";
-            this.Options["MSBuildThisFile"] = Path.GetFileName(fileInfo.FullName);
-            this.Options["MSBuildThisFileFullPath"] = fileInfo.FullName;
+            BuildWellKnownValues("ThisFile", projectPath);
 
             var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
@@ -109,6 +106,23 @@
             return true;
         }
 
+        private void BuildWellKnownValues(string name, string filePath)
+        {
+            var fileInfo = new FileInfo(filePath);
+            this.folder = fileInfo.Directory.FullName;
+            this.Options[string.Format("MSBuild{0}", name)] = Path.GetFileName(fileInfo.FullName);
+            this.Options[string.Format("MSBuild{0}Name", name)] = Path.GetFileNameWithoutExtension(fileInfo.FullName);
+            this.Options[string.Format("MSBuild{0}FullPath", name)] = Helpers.NormalizePath(fileInfo.FullName);
+            this.Options[string.Format("MSBuild{0}Extension", name)] = fileInfo.Extension;
+            this.Options[string.Format("MSBuild{0}Directory", name)] = Helpers.EnsureTrailingSlash(folder);
+
+            string directory = Path.GetDirectoryName(fileInfo.FullName);
+            int rootLength = Path.GetPathRoot(directory).Length;
+            string directoryNoRoot = directory.Substring(rootLength);
+            directoryNoRoot = Helpers.EnsureTrailingSlash(directoryNoRoot);
+            this.Options[string.Format("MSBuild{0}DirectoryNoRoot", name)] = Helpers.EnsureNoLeadingSlash(directoryNoRoot);
+        }
+
         private bool ProcessElement(XElement element)
         {
             if (!ProjectCondition(element))
@@ -141,7 +155,7 @@
 
         private bool LoadImport(XElement element)
         {
-            var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuildThisFile")).ToDictionary(k => k.Key, v => v.Value));
+            var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
