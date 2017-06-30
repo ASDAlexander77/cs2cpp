@@ -38,6 +38,7 @@
             try
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(projectFilePath));
+                BuildWellKnownValues();
                 BuildWellKnownValues("Project", projectFilePath);
                 return this.LoadProjectInternal(projectFilePath);
             }
@@ -46,6 +47,7 @@
                 Directory.SetCurrentDirectory(currentDirectory);
             }
         }
+
         private static string GetReferenceValue(XNamespace ns, XElement element)
         {
             var xElement = element.Element(ns + "HintPath");
@@ -104,6 +106,13 @@
             }
 
             return true;
+        }
+
+        private void BuildWellKnownValues()
+        {
+            this.Options["MSBuildExtensionsPath"] = @"C:\Program Files (x86)\MSBuild";
+            this.Options["MSBuildExtensionsPath32"] = @"C:\Program Files (x86)\MSBuild";
+            this.Options["MSBuildExtensionsPath64"] = @"C:\Program Files\MSBuild";
         }
 
         private void BuildWellKnownValues(string name, string filePath)
