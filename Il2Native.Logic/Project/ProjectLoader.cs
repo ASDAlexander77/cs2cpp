@@ -347,17 +347,8 @@
                 }
 
                 var propertyNameOfFunctionCall = conditionValue.Substring(0, right).Trim();
-                if (propertyNameOfFunctionCall.EndsWith(")"))
-                {
-                    // function call
-                    var functionResult = ExecuteFunction(propertyNameOfFunctionCall);
-                    processed.Append(functionResult);
-                }
-                else
-                {
-                    var propertyValue = this.Options[propertyNameOfFunctionCall];
-                    processed.Append(propertyValue);
-                }
+                var functionResult = ExecuteFunction(propertyNameOfFunctionCall);
+                processed.Append(functionResult);
 
                 lastIndex = right + 1;
             }
@@ -377,7 +368,7 @@
                 var parsed = ParseFunction(propertyNameOfFunctionCall, out typeName, out functionName, out parameters, out propertyNameOfFunctionCall);
                 if (!parsed)
                 {
-                    return propertyNameOfFunctionCall;
+                    return this.Options[propertyNameOfFunctionCall];
                 }
 
                 bool isProperty = parameters == null;
@@ -414,21 +405,29 @@
                     {
                         targetType = result.GetType();
                     }
-
-                    if (parameters == null)
-                    {
-                        var foundProperty = targetType.GetProperty(functionName);
-                        if (foundProperty != null)
-                        {
-                            result = foundProperty.GetValue(result);
-                        }
-                    }
                     else
                     {
-                        var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count());
-                        if (foundMethod != null)
+                        // this is variable
+                        result = this.Options[functionName];
+                    }
+
+                    if (targetType != null)
+                    {
+                        if (parameters == null)
                         {
-                            result = foundMethod.Invoke(result, parameters);
+                            var foundProperty = targetType.GetProperty(functionName);
+                            if (foundProperty != null)
+                            {
+                                result = foundProperty.GetValue(result);
+                            }
+                        }
+                        else
+                        {
+                            var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count());
+                            if (foundMethod != null)
+                            {
+                                result = foundMethod.Invoke(result, parameters);
+                            }
                         }
                     }
                 }
