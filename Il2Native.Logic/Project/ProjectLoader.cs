@@ -246,20 +246,27 @@
 
         private bool ExecuteConditionBool (string condition)
         {
-            return ExecuteCondition(condition)?.ToLowerInvariant() == "true";
+            var result = ExecuteCondition(condition);
+            if (result is bool)
+            {
+                return (bool)result;
+            }
+
+            return result != null && result.ToString().ToLowerInvariant() == "true";
         }
 
-        private string ExecuteCondition(string condition)
+        private object ExecuteCondition(string condition)
         {
             if (condition.StartsWith("!"))
             {
                 var right = condition.Substring(1, condition.Length - 1).Trim();
-                switch (ExecuteCondition(right))
-                {
-                    case "true": return "false";
-                    case "false": return "true";
-                    default: return string.Empty;
-                }
+                return !ExecuteConditionBool(right);
+            }
+
+            if (condition.StartsWith("(") && condition.EndsWith(")"))
+            {
+                var inner = condition.Substring(1, condition.Length - 2).Trim();
+                return ExecuteCondition(inner);
             }
 
             var andOperator = condition.IndexOf( " and ", StringComparison.Ordinal);
@@ -267,7 +274,7 @@
             {
                 var left = condition.Substring(0, andOperator).Trim();
                 var right = condition.Substring(andOperator + " and ".Length).Trim();
-                return ExecuteConditionBool(left) && ExecuteConditionBool(right) ? "true" : "false";
+                return ExecuteConditionBool(left) && ExecuteConditionBool(right);
             }
 
             var orOperator = condition.IndexOf(" or ", StringComparison.Ordinal);
@@ -275,7 +282,7 @@
             {
                 var left = condition.Substring(0, orOperator).Trim();
                 var right = condition.Substring(orOperator + " or ".Length).Trim();
-                return ExecuteConditionBool(left) || ExecuteConditionBool(right) ? "true" : "false";
+                return ExecuteConditionBool(left) || ExecuteConditionBool(right);
             }
 
             var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
@@ -283,7 +290,7 @@
             {
                 var left = condition.Substring(0, equalOperator).Trim();
                 var right = condition.Substring(equalOperator + "==".Length).Trim();
-                return left.Equals(right) ? "true" : "false";
+                return left.Equals(right);
             }
 
             var notEqualOperator = condition.IndexOf("!=", StringComparison.Ordinal);
@@ -291,22 +298,16 @@
             {
                 var left = condition.Substring(0, notEqualOperator).Trim();
                 var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
-                return !left.Equals(right) ? "true" : "false";
+                return !left.Equals(right);
             }
 
-            if (condition.EndsWith(")") || condition.IndexOf('.') != -1)
-            {
-                // function call
-                var functionResult = ExecuteFunction(condition);
-                condition = functionResult?.ToString();
-            }
-
-            return condition;
+            return ExecuteFunction(condition);
         }
 
-        private string FillProperties(string conditionValue)
+        private string FillProperties(string conditionValueParam)
         {
             var processed = new StringBuilder();
+            string conditionValue = conditionValueParam;
 
             var lastIndex = 0;
             var poisition = 0;
@@ -315,7 +316,6 @@
                 poisition = conditionValue.IndexOf('$', lastIndex);
                 if (poisition == -1)
                 {
-                    processed.Append(conditionValue.Substring(lastIndex));
                     break;
                 }
                 else
@@ -330,7 +330,7 @@
                     break;
                 }
 
-                conditionValue = FillProperties(conditionValue.Substring(left + 1));
+                conditionValue = conditionValue.Substring(left + 1);
 
                 var right = -1;
                 var propertyNamePosition = -1;
@@ -368,6 +368,8 @@
                 lastIndex = right + 1;
             }
 
+            processed.Append(conditionValue.Substring(lastIndex));
+
             return processed.ToString();
         }
 
@@ -384,6 +386,11 @@
                 if (!parsed)
                 {
                     return this.Options[propertyNameOfFunctionCall];
+                }
+
+                if (parameters != null)
+                {
+                    parameters = parameters.Select(p => FillProperties(p)).ToArray();
                 }
 
                 bool isProperty = parameters == null;
@@ -584,7 +591,27 @@
             functionOrPropertyName = propertyNameOfFunctionCall.Substring(startFunctionName, poisition - startFunctionName);
             if (!isPropertyName)
             {
-                var poisitionEnd = propertyNameOfFunctionCall.IndexOf(')', poisition);
+                var poisitionEnd = poisition;
+                var nested = 0;
+                while (++poisitionEnd < propertyNameOfFunctionCall.Length)
+                {
+                    if (propertyNameOfFunctionCall[poisitionEnd] == '(')
+                    {
+                        nested++;
+                    }
+
+                    if (propertyNameOfFunctionCall[poisitionEnd] == ')')
+                    {
+                        if (nested > 0)
+                        {
+                            nested--;
+                            continue;
+                        }
+
+                        break;
+                    }
+                }
+
                 var paramsSubString = propertyNameOfFunctionCall.Substring(poisition + 1, poisitionEnd - poisition - 1);
                 parameters = paramsSubString.Split(',').Select(s => s.Trim()).ToArray();
                 poisition = poisitionEnd;
