@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Xml.Linq;
 
@@ -374,11 +375,9 @@
                 bool isProperty = parameters == null;
 
                 var msbuild = "MSBuild";
-                var systemDateTime = "[System.DateTime]::";
                 if (typeName == msbuild)
                 {
-                    var clearName = functionName.Substring(msbuild.Length);
-                    switch (clearName)
+                    switch (functionName)
                     {
                         case "MakeRelative":
                             result = IntrinsicFunctions.MakeRelative(parameters[0], parameters[1]);
@@ -390,8 +389,7 @@
                 }
                 else if (functionName == "Exists")
                 {
-                    var trimmed = parameters[0].Trim();
-                    var path = trimmed.StartsWith("'") && trimmed.EndsWith("'") ? trimmed.Substring(1, trimmed.Length - 2) : trimmed;
+                    var path = StripQuotes(parameters[0]);
                     result = (Directory.Exists(path) || File.Exists(path));
                 }
                 else
@@ -423,10 +421,11 @@
                         }
                         else
                         {
-                            var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count());
+                            var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count() && m.GetParameters().Zip(parameters, (a, b) => Tuple.Create(a, b)).All(IsAssignable));
+                            Debug.Assert(foundMethod != null, "Method could not be found");
                             if (foundMethod != null)
                             {
-                                result = foundMethod.Invoke(result, parameters);
+                                result = foundMethod.Invoke(result, foundMethod.GetParameters().Zip(parameters, (p, a) => PrepareArgument(p, a)).ToArray());
                             }
                         }
                     }
@@ -434,6 +433,89 @@
             }
 
             return result;
+        }
+
+        private bool IsAssignable(Tuple<ParameterInfo, string> arg)
+        {
+            if (arg.Item1.ParameterType.IsAssignableFrom(arg.Item2.GetType()))
+            {
+                return true;
+            }
+
+            switch (arg.Item1.ParameterType.FullName)
+            {
+                case "System.Char":
+                    return true;
+                case "System.Char[]":
+                    return true;
+                case "System.SByte":
+                    sbyte resultSByte;
+                    return sbyte.TryParse(arg.Item2, out resultSByte);
+                case "System.Int16":
+                    short resultInt16;
+                    return short.TryParse(arg.Item2, out resultInt16);
+                case "System.Int32":
+                    int resultInt32;
+                    return int.TryParse(arg.Item2, out resultInt32);
+                case "System.Int64":
+                    long resultInt64;
+                    return long.TryParse(arg.Item2, out resultInt64);
+                case "System.Byte":
+                    byte resultByte;
+                    return byte.TryParse(arg.Item2, out resultByte);
+                case "System.UInt16":
+                    ushort resultUInt16;
+                    return ushort.TryParse(arg.Item2, out resultUInt16);
+                case "System.UInt32":
+                    uint resultUInt32;
+                    return uint.TryParse(arg.Item2, out resultUInt32);
+                case "System.UInt64":
+                    ulong resultUInt64;
+                    return ulong.TryParse(arg.Item2, out resultUInt64);
+            }
+
+            return false;
+        }
+
+        private object PrepareArgument(ParameterInfo parameter, string argument)
+        {
+            if (parameter.ParameterType.IsAssignableFrom(argument.GetType()))
+            {
+                return StripQuotes(argument);
+            }
+
+            switch (parameter.ParameterType.FullName)
+            {
+                case "System.Char":
+                    return StripQuotes(argument).ToCharArray().First();
+                case "System.Char[]":
+                    return StripQuotes(argument).ToCharArray();
+                case "System.SByte":
+                    return sbyte.Parse(argument);
+                case "System.Int16":
+                    return short.Parse(argument);
+                case "System.Int32":
+                    return int.Parse(argument);
+                case "System.Int64":
+                    return long.Parse(argument);
+                case "System.Byte":
+                    return byte.Parse(argument);
+                case "System.UInt16":
+                    return ushort.Parse(argument);
+                case "System.UInt32":
+                    return uint.Parse(argument);
+                case "System.UInt64":
+                    return ulong.Parse(argument);
+            }
+
+            return argument;
+        }
+
+        private string StripQuotes(string parameter)
+        {
+            var trimmed = parameter.Trim();
+            var strippedOrDefault = trimmed.StartsWith("'") && trimmed.EndsWith("'") ? trimmed.Substring(1, trimmed.Length - 2) : parameter;
+            return strippedOrDefault;
         }
 
         private bool ParseFunction(string propertyNameOfFunctionCall, out string typeName, out string functionOrPropertyName, out string[] parameters, out string propertyNameOfFunctionCallLeft)
@@ -444,6 +526,7 @@
             propertyNameOfFunctionCallLeft = propertyNameOfFunctionCall;
 
             var isPropertyName = false;
+            var startFunctionName = 0;
             var poisition = -1;
             var nestedPosition = -1;
             while (++nestedPosition < propertyNameOfFunctionCall.Length)
@@ -457,6 +540,12 @@
                     }
 
                     typeName = typeNameBuilder.ToString();
+
+                    while (++nestedPosition < propertyNameOfFunctionCall.Length && propertyNameOfFunctionCall[nestedPosition] == ':')
+                    {
+                    }
+
+                    startFunctionName = nestedPosition;
                 }
 
                 if (propertyNameOfFunctionCall[nestedPosition] == '.')
@@ -478,7 +567,7 @@
                 return false;
             }
 
-            functionOrPropertyName = propertyNameOfFunctionCall.Substring(0, poisition);
+            functionOrPropertyName = propertyNameOfFunctionCall.Substring(startFunctionName, poisition - startFunctionName);
             if (!isPropertyName)
             {
                 var poisitionEnd = propertyNameOfFunctionCall.IndexOf(')', poisition);
