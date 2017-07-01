@@ -63,13 +63,15 @@
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-            var project = File.Exists(projectPath) ? XDocument.Load(projectPath) : File.Exists(Path.Combine(this.folder, projectPath)) ? XDocument.Load(Path.Combine(this.folder, projectPath)) : null;
+            var project = File.Exists(projectPath) ? XDocument.Load(projectPath) : null;
             if (project == null)
             {
                 throw new FileNotFoundException(projectPath);
             }
 
             BuildWellKnownValues("ThisFile", projectPath);
+
+            Directory.SetCurrentDirectory(this.folder);
 
             var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
@@ -165,12 +167,16 @@
         private bool LoadImport(XElement element)
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
+            var folder = this.folder;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
             {
                 this.Options[copyCloned.Key] = copyCloned.Value;
             }
+
+            this.folder = folder;
+            Directory.SetCurrentDirectory(this.folder);
 
             return result;
         }
