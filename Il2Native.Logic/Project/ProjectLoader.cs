@@ -84,6 +84,8 @@
 
             BuildWellKnownValues("ThisFile", projectExistPath);
 
+            Directory.SetCurrentDirectory(this.folder);
+
             var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
             foreach (var element in project.Root.Elements())
@@ -217,12 +219,16 @@
         private bool LoadImport(XElement element)
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
+            var folder = this.folder;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
             {
                 this.Options[copyCloned.Key] = copyCloned.Value;
             }
+
+            this.folder = folder;
+            Directory.SetCurrentDirectory(this.folder);
 
             return result;
         }
