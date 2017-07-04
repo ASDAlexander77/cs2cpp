@@ -409,6 +409,10 @@ namespace Il2Native.Logic
                     Console.WriteLine(diagnostic);
                 }
 
+                this.Sources = new string[0];
+                this.Impl = new string[0];
+                this.References = new string[0];
+
                 return;
             }
 

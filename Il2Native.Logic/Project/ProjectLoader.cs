@@ -14,6 +14,8 @@
     {
         private const string msbuildRegistryPath = @"SOFTWARE\Microsoft\MSBuild";
 
+        private static XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+
         private string folder;
 
         public ProjectLoader(IDictionary<string, string> options)
@@ -51,7 +53,7 @@
             }
         }
 
-        private static string GetReferenceValue(XNamespace ns, XElement element)
+        private static string GetReferenceValue(XElement element)
         {
             var xElement = element.Element(ns + "HintPath");
             if (xElement != null)
@@ -64,8 +66,6 @@
 
         private bool LoadProjectInternal(string projectPath)
         {
-            XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-
             var projectSubPath = !string.IsNullOrWhiteSpace(projectPath) ? Path.GetDirectoryName(projectPath) : string.Empty;
             var projectFileName = Path.GetFileName(projectPath);
 
@@ -115,7 +115,7 @@
                 }
             }
 
-            foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project, ns))
+            foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project))
             {
                 this.References.Add(reference);
             }
@@ -225,7 +225,7 @@
                     return false;
                 case "Choose":
                     ProcessChoose(element);
-                    return false;
+                    break;
             }
 
             return true;
@@ -274,7 +274,9 @@
 
         private void LoadCompile(XElement element)
         {
-            this.Sources.Add(PathCombine(this.FillProperties(element.Attribute("Include").Value)));
+            var fullFileName = PathCombine(this.FillProperties(element.Attribute("Include").Value));
+            Debug.Assert(fullFileName.EndsWith(".cs"));
+            this.Sources.Add(fullFileName);
         }
 
         private void LoadContent(XElement element)
@@ -290,10 +292,10 @@
         private void ProcessChoose(XElement element)
         {
             var any = false;
-            foreach (var item in element.Elements("When").Where(i => ProjectCondition(i)))
+            foreach (var item in element.Elements(ns + "When").Where(i => ProjectCondition(i)))
             {
                 any = true;
-                foreach (var subItem in element.Elements())
+                foreach (var subItem in item.Elements())
                 {
                     ProcessElement(subItem);
                 }
@@ -301,9 +303,9 @@
 
             if (!any)
             {
-                foreach (var item in element.Elements("Otherwise"))
+                foreach (var item in element.Elements(ns + "Otherwise"))
                 {
-                    foreach (var subItem in element.Elements())
+                    foreach (var subItem in item.Elements())
                     {
                         ProcessElement(subItem);
                     }
@@ -311,14 +313,14 @@
             }
         }
 
-        private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
+        private string[] LoadReferencesFromProject(string firstSource, XDocument project)
         {
             var xElement = project.Root;
             if (xElement != null)
             {
                 return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
-                    .Select(e => GetReferenceValue(ns, e))
-                    .Union(this.GetReferencesFromProject(firstSource, ns, xElement)).ToArray();
+                    .Select(e => GetReferenceValue(e))
+                    .Union(this.GetReferencesFromProject(firstSource, xElement)).ToArray();
             }
 
             return null;
@@ -752,13 +754,13 @@
 
             return filePath;
         }
-        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XNamespace ns, XElement xElement)
+        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XElement xElement)
         {
             foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
             {
                 var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
                 var project = XDocument.Load(projectFile);
-                foreach (var reference in this.LoadReferencesFromProject(projectFile, project, ns))
+                foreach (var reference in this.LoadReferencesFromProject(projectFile, project))
                 {
                     yield return reference;
                 }
