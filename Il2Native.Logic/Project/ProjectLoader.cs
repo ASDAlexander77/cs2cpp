@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Project
 {
+    using Microsoft.Win32;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -11,6 +12,8 @@
 
     public class ProjectLoader
     {
+        private const string msbuildRegistryPath = @"SOFTWARE\Microsoft\MSBuild";
+
         private string folder;
 
         public ProjectLoader(IDictionary<string, string> options)
@@ -63,13 +66,23 @@
         {
             XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-            var project = File.Exists(projectPath) ? XDocument.Load(projectPath) : File.Exists(Path.Combine(this.folder, projectPath)) ? XDocument.Load(Path.Combine(this.folder, projectPath)) : null;
-            if (project == null)
+            var projectSubPath = !string.IsNullOrWhiteSpace(projectPath) ? Path.GetDirectoryName(projectPath) : string.Empty;
+            var projectFileName = Path.GetFileName(projectPath);
+
+            var projectExistPath = !string.IsNullOrWhiteSpace(projectSubPath) && Directory.GetFiles(projectSubPath, projectFileName).Any()
+                            ? Directory.GetFiles(projectSubPath, projectFileName).First()
+                            : Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).Any() 
+                                ? Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).First()
+                                : null;
+
+            if (projectExistPath == null)
             {
                 throw new FileNotFoundException(projectPath);
             }
 
-            BuildWellKnownValues("ThisFile", projectPath);
+            var project = XDocument.Load(projectExistPath);
+
+            BuildWellKnownValues("ThisFile", projectExistPath);
 
             var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
@@ -100,7 +113,7 @@
                 }
             }
 
-            foreach (var reference in this.LoadReferencesFromProject(projectPath, project, ns))
+            foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project, ns))
             {
                 this.References.Add(reference);
             }
@@ -110,9 +123,48 @@
 
         private void BuildWellKnownValues()
         {
-            this.Options["MSBuildExtensionsPath"] = @"C:\Program Files (x86)\MSBuild";
-            this.Options["MSBuildExtensionsPath32"] = @"C:\Program Files (x86)\MSBuild";
-            this.Options["MSBuildExtensionsPath64"] = @"C:\Program Files\MSBuild";
+            var disk = "C:";
+            var version = "14.0";
+            var path = disk + @"\Program Files (x86)\MSBuild";
+            var path64 = disk + @"\Program Files\MSBuild";
+
+            this.Options["MSBuildExtensionsPath"] = path;
+            this.Options["MSBuildExtensionsPath32"] = path;
+            this.Options["MSBuildExtensionsPath64"] = path64;
+            this.Options["MSBuildToolsPath"] = string.Format(@"{0}\{1}\bin", path, version);
+            this.Options["MSBuildToolsVersion"] = version;
+
+            try
+            {
+                var key = Registry.LocalMachine.OpenSubKey(msbuildRegistryPath);
+                Version registryVersion = new Version("0.0");
+                foreach (var keyVersionStr in key.GetSubKeyNames())
+                {
+                    Version versionKey;
+                    if (Version.TryParse(keyVersionStr, out versionKey) && versionKey > registryVersion)
+                    {
+                        registryVersion = versionKey;
+                        version = registryVersion.ToString();
+
+                        // read paths
+                        var toolsSetKey = Registry.LocalMachine.OpenSubKey(msbuildRegistryPath + @"\ToolsVersions\" + version);
+                        var toolsPath = toolsSetKey.GetValue("MSBuildToolsPath")?.ToString();
+                        if (toolsPath != default(string))
+                        {
+                            path = toolsPath.Split(new string[] { @"\" + version + @"\bin" }, StringSplitOptions.None).First();
+                            this.Options["MSBuildExtensionsPath"] = path;
+                            this.Options["MSBuildExtensionsPath32"] = path;
+                            this.Options["MSBuildExtensionsPath64"] = path.Replace(@" (x86)\", @"\");
+
+                            this.Options["MSBuildToolsPath"] = toolsPath;
+                            this.Options["MSBuildToolsVersion"] = version;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void BuildWellKnownValues(string name, string filePath)
