@@ -389,7 +389,7 @@
                 }
             }
 
-            var andOperator = condition.IndexOf(" and ", start, StringComparison.Ordinal);
+            var andOperator = condition.IndexOf(" and ", start, StringComparison.OrdinalIgnoreCase);
             if (andOperator != -1)
             {
                 var left = condition.Substring(0, andOperator).Trim();
@@ -397,7 +397,7 @@
                 return ExecuteConditionBool(left) && ExecuteConditionBool(right);
             }
 
-            var orOperator = condition.IndexOf(" or ", start, StringComparison.Ordinal);
+            var orOperator = condition.IndexOf(" or ", start, StringComparison.OrdinalIgnoreCase);
             if (orOperator != -1)
             {
                 var left = condition.Substring(0, orOperator).Trim();
@@ -405,7 +405,7 @@
                 return ExecuteConditionBool(left) || ExecuteConditionBool(right);
             }
 
-            var equalOperator = condition.IndexOf("==", start, StringComparison.Ordinal);
+            var equalOperator = condition.IndexOf("==", start, StringComparison.OrdinalIgnoreCase);
             if (equalOperator != -1)
             {
                 var left = condition.Substring(0, equalOperator).Trim();
@@ -413,7 +413,7 @@
                 return left.Equals(right);
             }
 
-            var notEqualOperator = condition.IndexOf("!=", start, StringComparison.Ordinal);
+            var notEqualOperator = condition.IndexOf("!=", start, StringComparison.OrdinalIgnoreCase);
             if (notEqualOperator != -1)
             {
                 var left = condition.Substring(0, notEqualOperator).Trim();
