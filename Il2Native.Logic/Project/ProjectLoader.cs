@@ -161,6 +161,13 @@
                             this.Options["MSBuildToolsPath"] = toolsPath;
                             this.Options["MSBuildToolsVersion"] = version;
                         }
+
+                        var frameworkToolsPath = toolsSetKey.GetValue("MSBuildFrameworkToolsPath")?.ToString();
+                        if (frameworkToolsPath != null)
+                        {
+                            this.Options["MSBuildFrameworkToolsPath"] = frameworkToolsPath;
+                            this.Options["MSBuildFrameworkToolsPath32"] = frameworkToolsPath;
+                        }
                     }
                 }
             }
@@ -193,6 +200,11 @@
                 return true;
             }
 
+            return ProcessElementNoCondition(element);
+        }
+
+        private bool ProcessElementNoCondition(XElement element)
+        {
             switch (element.Name.LocalName)
             {
                 case "Import":
@@ -210,6 +222,9 @@
                     break;
                 case "Error":
                     ProcessError(element);
+                    return false;
+                case "Choose":
+                    ProcessChoose(element);
                     return false;
             }
 
@@ -256,6 +271,7 @@
                 }
             }
         }
+
         private void LoadCompile(XElement element)
         {
             this.Sources.Add(PathCombine(this.FillProperties(element.Attribute("Include").Value)));
@@ -269,6 +285,30 @@
         private void ProcessError(XElement element)
         {
             this.Errors.Add(this.FillProperties(element.Attribute("Text").Value));
+        }
+
+        private void ProcessChoose(XElement element)
+        {
+            var any = false;
+            foreach (var item in element.Elements("When").Where(i => ProjectCondition(i)))
+            {
+                any = true;
+                foreach (var subItem in element.Elements())
+                {
+                    ProcessElement(subItem);
+                }
+            }
+
+            if (!any)
+            {
+                foreach (var item in element.Elements("Otherwise"))
+                {
+                    foreach (var subItem in element.Elements())
+                    {
+                        ProcessElement(subItem);
+                    }
+                }
+            }
         }
 
         private string[] LoadReferencesFromProject(string firstSource, XDocument project, XNamespace ns)
