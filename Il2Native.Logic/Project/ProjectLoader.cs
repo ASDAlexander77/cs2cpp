@@ -366,19 +366,30 @@
 
         private object ExecuteCondition(string condition)
         {
+            var start = 0;
+
             if (condition.StartsWith("!"))
             {
                 var right = condition.Substring(1, condition.Length - 1).Trim();
                 return !ExecuteConditionBool(right);
             }
 
-            if (condition.StartsWith("(") && condition.EndsWith(")"))
+            if (condition.StartsWith("("))
             {
-                var inner = condition.Substring(1, condition.Length - 2).Trim();
-                return ExecuteCondition(inner);
+                var right = FindNextBracket(condition.Substring(1), '(', ')');
+                if (right != -1)
+                {
+                    if (right == condition.Length - 2)
+                    {
+                        var inner = condition.Substring(1, condition.Length - 2).Trim();
+                        return ExecuteCondition(inner);
+                    }
+
+                    start = right;
+                }
             }
 
-            var andOperator = condition.IndexOf( " and ", StringComparison.Ordinal);
+            var andOperator = condition.IndexOf(" and ", start, StringComparison.Ordinal);
             if (andOperator != -1)
             {
                 var left = condition.Substring(0, andOperator).Trim();
@@ -386,7 +397,7 @@
                 return ExecuteConditionBool(left) && ExecuteConditionBool(right);
             }
 
-            var orOperator = condition.IndexOf(" or ", StringComparison.Ordinal);
+            var orOperator = condition.IndexOf(" or ", start, StringComparison.Ordinal);
             if (orOperator != -1)
             {
                 var left = condition.Substring(0, orOperator).Trim();
@@ -394,7 +405,7 @@
                 return ExecuteConditionBool(left) || ExecuteConditionBool(right);
             }
 
-            var equalOperator = condition.IndexOf("==", StringComparison.Ordinal);
+            var equalOperator = condition.IndexOf("==", start, StringComparison.Ordinal);
             if (equalOperator != -1)
             {
                 var left = condition.Substring(0, equalOperator).Trim();
@@ -402,7 +413,7 @@
                 return left.Equals(right);
             }
 
-            var notEqualOperator = condition.IndexOf("!=", StringComparison.Ordinal);
+            var notEqualOperator = condition.IndexOf("!=", start, StringComparison.Ordinal);
             if (notEqualOperator != -1)
             {
                 var left = condition.Substring(0, notEqualOperator).Trim();
@@ -441,29 +452,7 @@
 
                 conditionValue = conditionValue.Substring(left + 1);
 
-                var right = -1;
-                var propertyNamePosition = -1;
-                var nested = 0;
-                while (++propertyNamePosition < conditionValue.Length)
-                {
-                    if (conditionValue[propertyNamePosition] == '(')
-                    {
-                        nested++;
-                    }
-
-                    if (conditionValue[propertyNamePosition] == ')')
-                    {
-                        if (nested > 0)
-                        {
-                            nested--;
-                            continue;
-                        }
-
-                        right = propertyNamePosition;
-                        break;
-                    }
-                }
-
+                var right = FindNextBracket(conditionValue, '(', ')');
                 if (right == -1)
                 {
                     ////throw new IndexOutOfRangeException("Condition is not correct");
@@ -480,6 +469,34 @@
             processed.Append(conditionValue.Substring(lastIndex));
 
             return processed.ToString();
+        }
+
+        private static int FindNextBracket(string value, char leftChar, char rightChar)
+        {
+            var right = -1;
+            var nextPosition = -1;
+            var nested = 0;
+            while (++nextPosition < value.Length)
+            {
+                if (value[nextPosition] == leftChar)
+                {
+                    nested++;
+                }
+
+                if (value[nextPosition] == rightChar)
+                {
+                    if (nested > 0)
+                    {
+                        nested--;
+                        continue;
+                    }
+
+                    right = nextPosition;
+                    break;
+                }
+            }
+
+            return right;
         }
 
         private object ExecuteFunction(string propertyNameOfFunctionCallParam)
@@ -522,6 +539,13 @@
                     var path = StripQuotes(parameters[0]);
                     result = (Directory.Exists(path) || File.Exists(path));
                 }
+                else if (functionName == "HasTrailingSlash")
+                {
+                    var path = StripQuotes(parameters[0]);
+                    var lastCharacter = path[path.Length - 1];
+                    // Either back or forward slashes satisfy the function: this is useful for URL's
+                    return (lastCharacter == Path.DirectorySeparatorChar || lastCharacter == Path.AltDirectorySeparatorChar || lastCharacter == '\\');
+                }
                 else
                 {
                     Type targetType = null; 
@@ -533,10 +557,14 @@
                     {
                         targetType = result.GetType();
                     }
-                    else
+                    else if (isProperty)
                     {
                         // this is variable
                         result = this.Options[functionName];
+                    }
+                    else
+                    {
+                        Debug.Fail("Method '" + functionName + "' could not be found");
                     }
 
                     if (targetType != null)
@@ -722,7 +750,7 @@
                 }
 
                 var paramsSubString = propertyNameOfFunctionCall.Substring(poisition + 1, poisitionEnd - poisition - 1);
-                parameters = paramsSubString.Split(',').Select(s => s.Trim()).ToArray();
+                parameters = paramsSubString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
                 poisition = poisitionEnd;
             }
 
