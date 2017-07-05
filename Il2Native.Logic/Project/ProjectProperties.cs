@@ -3,6 +3,7 @@
 // 
 namespace Il2Native.Logic.Project
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
 
@@ -91,7 +92,7 @@ namespace Il2Native.Logic.Project
             {
                 if (!this.ContainsKey(key))
                 {
-                    return string.Empty;
+                    return Environment.GetEnvironmentVariable(key);
                 }
 
                 return this.dict[key];

@@ -70,11 +70,20 @@
             var projectSubPath = !string.IsNullOrWhiteSpace(projectPath) ? Path.GetDirectoryName(projectPath) : string.Empty;
             var projectFileName = Path.GetFileName(projectPath);
 
-            var projectExistPath = !string.IsNullOrWhiteSpace(projectSubPath) && Directory.GetFiles(projectSubPath, projectFileName).Any()
-                            ? Directory.GetFiles(projectSubPath, projectFileName).First()
-                            : Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).Any()
-                                ? Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).First()
-                                : null;
+            var projectExistPath = string.Empty;
+            try
+            {
+                projectExistPath = !string.IsNullOrWhiteSpace(projectSubPath) && Directory.GetFiles(projectSubPath, projectFileName).Any()
+                                ? Directory.GetFiles(projectSubPath, projectFileName).First()
+                                : Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).Any()
+                                    ? Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).First()
+                                    : null;
+            }
+            catch (Exception)
+            {
+                // TODO: finish evaluating path such as c:\XXX*\**\*.bbb
+                return true;
+            }
 
             if (projectExistPath == null)
             {
@@ -288,7 +297,7 @@
         private bool ProcessTarget(XElement element)
         {
             var name = element.Attribute("Name").Value;
-            if (name == this.initialTarget || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Contains(name) ?? false))
+            if (name == this.initialTarget || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Any(i => i.Trim() == name) ?? false))
             {
                 foreach (var targetElement in element.Elements())
                 {
@@ -576,7 +585,7 @@
                     else if (isProperty)
                     {
                         // this is variable
-                        result = this.Options[functionName];
+                        result = this.Options[functionName] ?? string.Empty;
                     }
                     else
                     {
