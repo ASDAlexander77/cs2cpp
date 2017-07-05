@@ -17,6 +17,7 @@
         private static XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
         private string folder;
+        private string initialTarget;
 
         public ProjectLoader(IDictionary<string, string> options)
         {
@@ -71,7 +72,7 @@
 
             var projectExistPath = !string.IsNullOrWhiteSpace(projectSubPath) && Directory.GetFiles(projectSubPath, projectFileName).Any()
                             ? Directory.GetFiles(projectSubPath, projectFileName).First()
-                            : Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).Any() 
+                            : Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).Any()
                                 ? Directory.GetFiles(Path.Combine(this.folder, projectSubPath), projectFileName).First()
                                 : null;
 
@@ -86,32 +87,13 @@
 
             Directory.SetCurrentDirectory(this.folder);
 
-            var initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
+            this.initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
             foreach (var element in project.Root.Elements())
             {
-                switch (element.Name.LocalName)
+                if (!ProcessElement(element))
                 {
-                    case "Target":
-                        if (element.Attribute("Name").Value == initialTarget)
-                        {
-                            foreach (var targetElement in element.Elements())
-                            {
-                                if (!ProcessElement(targetElement))
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-
-                        break;
-                    default:
-                        if (!ProcessElement(element))
-                        {
-                            return false;
-                        }
-
-                        break;
+                    return false;
                 }
             }
 
@@ -214,6 +196,13 @@
                     }
 
                     break;
+                case "Target":
+                    if (!ProcessTarget(element))
+                    {
+                        return false;
+                    }
+
+                    break;
                 case "PropertyGroup":
                     LoadPropertyGroup(element);
                     break;
@@ -224,7 +213,11 @@
                     ProcessError(element);
                     return false;
                 case "Choose":
-                    ProcessChoose(element);
+                    if (!ProcessChoose(element))
+                    {
+                        return false;
+                    }
+
                     break;
             }
 
@@ -235,6 +228,7 @@
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
             var folder = this.folder;
+            var initialTarget = this.initialTarget;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
@@ -244,6 +238,8 @@
 
             this.folder = folder;
             Directory.SetCurrentDirectory(this.folder);
+
+            this.initialTarget = initialTarget;
 
             return result;
         }
@@ -289,15 +285,33 @@
             this.Errors.Add(this.FillProperties(element.Attribute("Text").Value));
         }
 
-        private void ProcessChoose(XElement element)
+        private bool ProcessTarget(XElement element)
         {
+            var name = element.Attribute("Name").Value;
+            if (name == this.initialTarget || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Contains(name) ?? false))
+            {
+                foreach (var targetElement in element.Elements())
+                {
+                    if (!ProcessElement(targetElement))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool ProcessChoose(XElement element)
+        {
+            var result = true;
             var any = false;
             foreach (var item in element.Elements(ns + "When").Where(i => ProjectCondition(i)))
             {
                 any = true;
                 foreach (var subItem in item.Elements())
                 {
-                    ProcessElement(subItem);
+                    result |= ProcessElement(subItem);
                 }
             }
 
@@ -307,10 +321,12 @@
                 {
                     foreach (var subItem in item.Elements())
                     {
-                        ProcessElement(subItem);
+                        result |= ProcessElement(subItem);
                     }
                 }
             }
+
+            return result;
         }
 
         private string[] LoadReferencesFromProject(string firstSource, XDocument project)
@@ -353,7 +369,7 @@
             return ExecuteConditionBool(this.FillProperties(conditionAttribute.Value));
         }
 
-        private bool ExecuteConditionBool (string condition)
+        private bool ExecuteConditionBool(string condition)
         {
             var result = ExecuteCondition(condition);
             if (result is bool)
@@ -548,7 +564,7 @@
                 }
                 else
                 {
-                    Type targetType = null; 
+                    Type targetType = null;
                     if (!string.IsNullOrWhiteSpace(typeName))
                     {
                         targetType = Type.GetType(typeName);
