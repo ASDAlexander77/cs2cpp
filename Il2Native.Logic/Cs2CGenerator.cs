@@ -232,7 +232,7 @@ namespace Il2Native.Logic
                         SourceText.From(new FileStream(s, FileMode.Open, FileAccess.Read), Encoding.UTF8),
                             new CSharpParseOptions(
                             LanguageVersion.Latest,
-                            preprocessorSymbols: this.Options["DefineConstants"].Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
+                            preprocessorSymbols: (this.Options["DefineConstants"] ?? string.Empty).Split(defineSeparators, StringSplitOptions.RemoveEmptyEntries)),
                             s));
 
             var assemblies = new List<MetadataImageReference>();
