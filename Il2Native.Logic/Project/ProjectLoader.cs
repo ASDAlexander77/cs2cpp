@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Project
 {
+    using Il2Native.Logic.Project.Tasks;
     using Microsoft.Win32;
     using System;
     using System.Collections.Generic;
@@ -227,6 +228,17 @@
                         return false;
                     }
 
+                    break;
+
+                case "GenerateResourcesCode":
+                    // custom task
+                    var generateResourcesCode = new GenerateResourcesCode();
+                    generateResourcesCode.ResxFilePath = this.FillProperties(element.Attribute("ResxFilePath").Value);
+                    generateResourcesCode.OutputSourceFilePath = this.FillProperties(element.Attribute("OutputSourceFilePath").Value);
+                    generateResourcesCode.AssemblyName = this.FillProperties(element.Attribute("AssemblyName").Value);
+                    generateResourcesCode.OmitResourceAccess = true;
+                    generateResourcesCode.DebugOnly = this.Options["Configuration"] != "Release";
+                    generateResourcesCode.Execute();
                     break;
             }
 
