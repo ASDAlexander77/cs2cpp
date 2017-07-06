@@ -458,6 +458,16 @@
                 return !left.Equals(right);
             }
 
+            if (condition.Trim() == "true")
+            {
+                return true;
+            }
+
+            if (condition.Trim() == "false")
+            {
+                return false;
+            }
+
             return ExecuteFunction(condition);
         }
 
