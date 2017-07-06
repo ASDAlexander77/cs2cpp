@@ -61,22 +61,12 @@
 
 #undef min
 #undef max
-#undef INVALID_HANDLE_VALUE
 #undef ZeroMemory
 #undef Yield
 #undef MemoryBarrier
 #undef CreateEvent
 #undef GetFullPathName
 #undef CreateFile
-#undef HKEY_CLASSES_ROOT
-#undef HKEY_CURRENT_USER
-#undef HKEY_LOCAL_MACHINE
-#undef HKEY_USERS
-#undef HKEY_PERFORMANCE_DATA
-#undef HKEY_CURRENT_CONFIG
-#undef HKEY_DYN_DATA
-#undef DEBUG
-#undef EOF
 #undef UInt32x32To64
 
 #ifdef GC_ADD_CALLER

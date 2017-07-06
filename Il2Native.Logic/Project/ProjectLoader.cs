@@ -581,7 +581,7 @@
                             break;
                     }
                 }
-                else if (functionName == "Exists")
+                else if (string.Compare(functionName, "Exists", true) == 0)
                 {
                     var path = StripQuotes(parameters[0]);
                     result = (Directory.Exists(path) || File.Exists(path));
@@ -589,6 +589,11 @@
                 else if (functionName == "HasTrailingSlash")
                 {
                     var path = StripQuotes(parameters[0]);
+                    if (path == null || path.Length == 0)
+                    {
+                        return false;
+                    }
+
                     var lastCharacter = path[path.Length - 1];
                     // Either back or forward slashes satisfy the function: this is useful for URL's
                     return (lastCharacter == Path.DirectorySeparatorChar || lastCharacter == Path.AltDirectorySeparatorChar || lastCharacter == '\\');

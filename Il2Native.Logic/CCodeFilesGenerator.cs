@@ -712,6 +712,14 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         private static void WriteEnum(IndentedTextWriter itw, CCodeWriterText c, INamedTypeSymbol namedTypeSymbol)
         {
             itw.WriteLine();
+            foreach (var constValue in namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.IsConst && f.Name.All(i => char.IsUpper(i) || i == '_')))
+            {
+                c.TextSpan("#undef");
+                c.WhiteSpace();
+                c.WriteName(constValue);
+                c.NewLine();
+            }
+
             itw.Write("enum class ");
             c.WriteTypeName(namedTypeSymbol, false, true);
             itw.Write(" : ");
