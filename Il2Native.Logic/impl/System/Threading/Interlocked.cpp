@@ -56,7 +56,7 @@ namespace CoreLib {
 			}
 
 			// Method : System.Threading.Interlocked.Exchange(ref long, long)
-			int64_tInterlocked::Exchange_Ref(int64_t& location1, int64_t value)
+			int64_t Interlocked::Exchange_Ref(int64_t& location1, int64_t value)
 			{
 #ifdef _MSC_VER
 				return InterlockedExchange64((int64_t volatile*)&location1, value);

@@ -161,7 +161,7 @@ namespace CoreLib {
 			}
 
 			// Method : System.Threading.Thread.GetProcessDefaultStackSize()
-			uint64_tThread::GetProcessDefaultStackSize()
+			uint64_t Thread::GetProcessDefaultStackSize()
 			{
 				throw 0xC000C000;
 			}
@@ -190,7 +190,7 @@ namespace CoreLib {
 			}
 
 			// Method : System.Threading.Thread.GetThreadStateNative()
-			int32_tThread::GetThreadStateNative()
+			int32_t Thread::GetThreadStateNative()
 			{
 				return 0;
 			}
