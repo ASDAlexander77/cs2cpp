@@ -61,6 +61,7 @@
 
 #undef min
 #undef max
+#undef INVALID_HANDLE_VALUE
 #undef ZeroMemory
 #undef Yield
 #undef MemoryBarrier
