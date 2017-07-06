@@ -44,10 +44,12 @@
             var currentDirectory = Directory.GetCurrentDirectory();
             try
             {
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(projectFilePath));
+                var fileInfo = new FileInfo(projectFilePath);
+                var folder = fileInfo.Directory.FullName;
+                Directory.SetCurrentDirectory(folder);
                 BuildWellKnownValues();
-                BuildWellKnownValues("Project", projectFilePath);
-                return this.LoadProjectInternal(projectFilePath);
+                BuildWellKnownValues("Project", fileInfo.FullName);
+                return this.LoadProjectInternal(fileInfo.FullName);
             }
             finally
             {
@@ -83,6 +85,11 @@
             catch (Exception)
             {
                 // TODO: finish evaluating path such as c:\XXX*\**\*.bbb
+                if (!projectPath.Contains("*"))
+                {
+                    throw;
+                }
+
                 return true;
             }
 
